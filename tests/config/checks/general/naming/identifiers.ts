@@ -1,6 +1,5 @@
 export const FRAMEWORK_NAMES = [
     { configuration: 'nextjs', name: 'getServerSideProps', bannedWords: ['get server side props'] },
-    { configuration: 'react', name: 'useSyncExternalStore', bannedWords: ['use sync external store'] },
 ] as const;
 
 export const TEST_PATH_SETTINGS = `level = "all"

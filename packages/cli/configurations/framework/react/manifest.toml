@@ -30,13 +30,6 @@ categories = ["variables"]
 paths = ["**/*.tsx", "**/*.jsx"]
 reason = "A variable that holds a component, such as a memo or lazy result, takes the component's capital."
 
-[[naming.override]]
-allowed_names = ["useSyncExternalStore", "getSnapshot", "getServerSnapshot"]
-categories = ["functions", "methods", "variables"]
-languages = ["typescript", "javascript"]
-paths = ["**"]
-reason = "React defines these subscription and snapshot callback names."
-
 [[tool]]
 kind = "library"
 name = "eslint-plugin-react-hooks"

@@ -213,3 +213,12 @@ test('cors stays a domain word while core and its word forms remain banned', asy
     const checked = await runSandboxCheck(sandbox.path, 'naming/identifiers');
     expect(checked.map(({ line }) => line)).toStrictEqual([2, 3, 4]);
 });
+
+test('snapshot names describe storage and subscription concepts outside tests', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'swift', 'naming'], { level: 'all' }),
+        'backups.js': 'export function createSnapshot(volumeId) { return volumeId; }\n',
+        'Sources/List.swift': 'var snapshot = NSDiffableDataSourceSnapshot<Int, String>()\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toStrictEqual([]);
+});

@@ -84,17 +84,7 @@
             "terms": ["and", "or", "with", "when", "what", "whatever", "once", "plus"]
         },
         "tests": {
-            "terms": [
-                "test case",
-                "testcase",
-                "under test",
-                "undertest",
-                "edge case",
-                "edge cases",
-                "snapshot",
-                "snapshots",
-                "actual"
-            ]
+            "terms": ["test case", "testcase", "under test", "undertest", "edge case", "edge cases", "actual"]
         },
         "folders": {
             "terms": ["shared", "support"]
