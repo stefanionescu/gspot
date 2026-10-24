@@ -10,13 +10,7 @@ import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts
 import { GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { type Writer, type WritePlan, type ApplyReport } from '#cli/types/apply.ts';
 import { planBlock, planRemoval, listStrayPaths, planReplacement } from '#cli/apply/write/plans.ts';
-
-import {
-    MANAGED_KEYS_NOTE,
-    HOOKS_CHANGED_NOTE,
-    INSTALL_FIRST_NOTE,
-    INSTALL_MISSING_NOTE,
-} from '#cli/config/apply/files/generated.ts';
+import { HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/apply/files/generated.ts';
 
 /**
  * Say that the generated files need no change.
@@ -139,6 +133,5 @@ export async function writeGeneratedFiles(
     if ([...report.removed, ...report.written].some((path) => path.startsWith(`${GSPOT_PATHS.hooks}/`)))
         report.notes.push(HOOKS_CHANGED_NOTE);
     await addInstallationNote(session, generated, report);
-    if (generated.managedKeys.length > 0) report.notes.push(MANAGED_KEYS_NOTE);
     return report;
 }

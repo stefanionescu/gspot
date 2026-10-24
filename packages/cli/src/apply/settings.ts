@@ -16,6 +16,7 @@ import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
+import { MANAGED_KEYS_NOTE } from '#cli/config/apply/files/generated.ts';
 import { formatApplyReport, writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import type { Scope, SettingMatch, AvailableSettings } from '#cli/types/settings/inheritance.ts';
@@ -36,6 +37,7 @@ export async function applySettingsEdit(
     const { edit: input, summary } = options;
     using writer = openWriter(repositoryRoot);
     const result = buildEditedSettings(repositoryRoot, input);
+    const previous = generate(await openSession(repositoryRoot));
     const session = await openSession(repositoryRoot, {
         settingsFile: { settings: result.settings, text: result.text },
     });
@@ -57,6 +59,11 @@ export async function applySettingsEdit(
             { cause: error },
         );
     }
+    const keys = new Set(
+        generated.managedKeys.flatMap((file) => file.keys.map(({ key }) => JSON.stringify([file.path, key]))),
+    );
+    if (previous.managedKeys.some((file) => file.keys.some(({ key }) => !keys.has(JSON.stringify([file.path, key])))))
+        report.notes.push(MANAGED_KEYS_NOTE);
     const shown = result.changed ? summary : 'No change: gspot.toml stays the same.';
     return {
         text: `${shown === '' ? '' : shown + '\n'}${formatApplyReport(report)}`,
