@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
-import { MARKER_COMMENT, COMMENT_BOUNDARIES } from '#tests/config/parsers/code/comments.ts';
 import { QUOTED_ESLINT_COMMENTS } from '#tests/config/checks/general/gspot/suppressions/syntax.ts';
+import { MARKER_COMMENT, COMMENT_BOUNDARIES, COMPONENT_SCRIPT_COMMENTS } from '#tests/config/parsers/code/comments.ts';
 
 async function listMarkedLines(path: string, source: string, tags: readonly string[]): Promise<number[]> {
     const comments = await parseComments(path, source, tags);
@@ -32,5 +32,12 @@ test.each(['source.js', 'source.ts'])(
     'comment markers inside strings and templates in %s are not comments',
     async (path) => {
         expect(await listMarkedLines(path, QUOTED_ESLINT_COMMENTS, [])).toStrictEqual([12]);
+    },
+);
+
+test.each([...COMPONENT_SCRIPT_COMMENTS])(
+    'component comments keep script and markup positions in $path',
+    async ({ path, source, lines }) => {
+        expect(await listMarkedLines(path, source, [])).toStrictEqual([...lines]);
     },
 );

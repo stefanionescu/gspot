@@ -11,3 +11,5 @@ export const COMMENT_NODES = ['comment', 'multiline_comment'] as const;
 export const BLOCK_COMMENT_END = /\*\/\s*$/u;
 
 export const HTML_COMMENT_END = /--!?>\s*$/u;
+
+export const ASTRO_FRONT_MATTER = /^\uFEFF?---[\t ]*\r?\n((?:[^\n]*\n)*?)---[\t ]*(?:\r?\n|$)/u;

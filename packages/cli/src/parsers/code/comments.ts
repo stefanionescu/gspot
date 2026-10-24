@@ -20,6 +20,7 @@ import {
     HTML_COMMENT_END,
     QUOTE_CHARACTERS,
     BLOCK_COMMENT_END,
+    ASTRO_FRONT_MATTER,
     YAML_SCALAR_TOKENS,
     SCSS_COMMENT_OPENERS,
     HTML_ALTERNATE_COMMENT_END,
@@ -136,7 +137,41 @@ async function parseMarkdownComments(text: string): Promise<SourceComment[]> {
     return parseSyntaxComments('html', source, text);
 }
 
+async function parseComponentComments(text: string, path: string): Promise<SourceComment[]> {
+    const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
+    const front = path.endsWith('.astro') ? ASTRO_FRONT_MATTER.exec(text) : null;
+    const markup = front === null ? text : masked.slice(0, front[0].length) + text.slice(front[0].length);
+    const tree = await parseSource('html', markup);
+    let script: string;
+    try {
+        const regions = tree.rootNode
+            .descendantsOfType('script_element')
+            .flatMap((node) => node.namedChildren.filter((child) => child.type === 'raw_text'))
+            .map((node) => ({ start: node.startIndex, end: node.endIndex }));
+        if (front !== null) {
+            const start = text.indexOf('\n') + 1;
+            regions.unshift({ start, end: start + (front[1] as string).length });
+        }
+        const pieces: string[] = [];
+        let offset = 0;
+        for (const { start, end } of regions) {
+            pieces.push(masked.slice(offset, start), text.slice(start, end));
+            offset = end;
+        }
+        pieces.push(masked.slice(offset));
+        script = pieces.join('');
+    } finally {
+        tree.delete();
+    }
+    return [...parseJavascriptComments(script, `${path}.ts`), ...(await parseGrammarComments('html', markup))].toSorted(
+        (left, right) => left.line - right.line,
+    );
+}
+
 const COMMENT_PARSERS = new Map<string, CommentParser>([
+    ['.vue', parseComponentComments],
+    ['.svelte', parseComponentComments],
+    ['.astro', parseComponentComments],
     ['.toml', parseTomlComments],
     ['.yaml', parseYamlComments],
     ['.yml', parseYamlComments],

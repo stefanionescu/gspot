@@ -205,3 +205,21 @@ const value = "<!-- marker: Literal sample text. -->";
 ] as const;
 
 export const MARKER_COMMENT = /^(?:\/\/|#|--|<!--) ?marker:/u;
+
+export const COMPONENT_SCRIPT_COMMENTS = [
+    {
+        path: 'App.vue',
+        source: '<template><p>// marker: Template text.</p></template>\n<script lang="ts">\n// marker: Script directive.\nconst sample = "// marker: String text.";\n</script>\n<!-- marker: Markup directive. -->\n',
+        lines: [3, 6],
+    },
+    {
+        path: 'Component.svelte',
+        source: '<script context="module">\n// marker: Module directive.\n</script>\n<script>\n// marker: Instance directive.\n</script>\n<p>// marker: Template text.</p>\n<!-- marker: Markup directive. -->\n',
+        lines: [2, 5, 8],
+    },
+    {
+        path: 'Page.astro',
+        source: '---\n// marker: Front matter directive.\nconst sample = "<!-- marker: String text. -->";\n---\n<p>// marker: Template text.</p>\n<script>\n// marker: Script directive.\n</script>\n<!-- marker: Markup directive. -->\n',
+        lines: [2, 7, 9],
+    },
+] as const;
