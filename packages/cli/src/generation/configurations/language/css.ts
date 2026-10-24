@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { JSON_INDENT } from '#cli/config/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { assertRuleOptionsRun } from '#cli/generation/config-files/rule-options.ts';
 
 import {
     TAILWIND_AT_RULES,
@@ -83,23 +83,6 @@ function buildCssModulesOverrides(
     ];
 }
 
-function assertStylelintRulesRun(rules: string[], activeRules: Set<string>, ruleNames: string[]): void {
-    const refused = rules.filter((rule) => !activeRules.has(rule));
-    if (refused.length === 0) return;
-    throw new GspotError(
-        'settings',
-        refused
-            .map((rule) => {
-                if (STYLELINT_RECOMMENDED_OFF.has(rule))
-                    return `${rule} runs only at level all. gspot sets options only for the rules that run at level recommended.`;
-                return ruleNames.includes(rule)
-                    ? `gspot runs ${rule} at no level, so it takes no options.`
-                    : `${rule} belongs to no plugin that gspot loads.`;
-            })
-            .join('\n'),
-    );
-}
-
 /**
  * Build stylelint.json: the CSS lint presets and rules for this level.
  *
@@ -123,7 +106,12 @@ export function buildStylelintFile(planned: PlannedConfigFile): string {
     const activeRules = new Set(
         [...stylelintRuleNames, 'function-no-unknown'].filter((rule) => isAll || !STYLELINT_RECOMMENDED_OFF.has(rule)),
     );
-    assertStylelintRulesRun(Object.keys(options.rules), activeRules, stylelintRuleNames);
+    assertRuleOptionsRun({
+        chosen: Object.keys(options.rules),
+        running: activeRules,
+        higher: STYLELINT_RECOMMENDED_OFF,
+        level,
+    });
     const chosen = options.rules;
     const tailwind = scopeDependencies.includes('tailwindcss');
     const tailwindAtRules = tailwind ? TAILWIND_AT_RULES : [];

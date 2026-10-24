@@ -45,6 +45,13 @@ export type PlannedNpmProject = {
 
 export type PlannedConfigFile = ConfigFileOwner & { targetPath: string; level: Level; configFile: ConfigFile };
 
+export type RuleOptionsRun = {
+    chosen: string[];
+    running: ReadonlySet<string>;
+    higher: ReadonlySet<string>;
+    level: Level;
+};
+
 export type ConfigFileOutput = { content: string; companions: GeneratedFile[] };
 
 export type ConfigFileBuilder = (planned: PlannedConfigFile) => string | ConfigFileOutput;

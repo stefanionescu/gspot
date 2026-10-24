@@ -81,8 +81,17 @@ test('recommended refuses Stylelint options for a rule it does not run and for a
     });
     const session = await openSession(sandbox.path);
     expect(() => generate(session)).toThrow(
-        'number-max-precision runs only at level all. gspot sets options only for the rules that run at level recommended.\nunknown-rule belongs to no plugin that gspot loads.',
+        'number-max-precision runs only at level all. gspot sets options only for the rules that run at level recommended.\ngspot runs unknown-rule at no level, so it takes no options.',
     );
+});
+
+test('an inactive core Stylelint rule is refused without blaming a missing plugin', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['css'], { tables: '[tools.stylelint.rules]\ncolor-named = "never"\n' }),
+        'source.css': 'a { color: red; }',
+    });
+    const session = await openSession(sandbox.path);
+    expect(() => generate(session)).toThrow('gspot runs color-named at no level, so it takes no options.');
 });
 
 test('a scope with CSS Modules files accepts composes, :global, and @value in them only', async () => {
