@@ -129,9 +129,9 @@ function listShebangTags(firstLine: string): string[] {
     const interpreter = parseShebang(firstLine);
     if (interpreter === undefined) return [];
     const shebang =
-        SHEBANG_INTERPRETERS[interpreter] ?? SHEBANG_INTERPRETERS[interpreter.replace(TRAILING_VERSION, '')];
+        SHEBANG_INTERPRETERS.get(interpreter) ?? SHEBANG_INTERPRETERS.get(interpreter.replace(TRAILING_VERSION, ''));
     if (shebang === undefined) return [];
-    const dialect = INTERPRETER_DIALECTS[interpreter] ?? DEFAULT_DIALECT;
+    const dialect = INTERPRETER_DIALECTS.get(interpreter) ?? DEFAULT_DIALECT;
     const runtime = JAVASCRIPT_RUNTIMES.find((name) => name === interpreter);
     return [
         ...(SHEBANG_TAGS[shebang] ?? []),
@@ -143,7 +143,7 @@ function listShebangTags(firstLine: string): string[] {
 
 function tagTextFile(tags: Set<string>, firstLine: string): FileTags {
     for (const tag of listShebangTags(firstLine)) tags.add(tag);
-    if (Object.values(INTERPRETER_DIALECTS).some((dialect) => tags.has(dialect))) tags.delete(DEFAULT_DIALECT);
+    if (INTERPRETER_DIALECTS.values().some((dialect) => tags.has(dialect))) tags.delete(DEFAULT_DIALECT);
     tags.add(TEXT_TAG);
     return { tags: [...tags], isBinary: false };
 }
@@ -217,7 +217,7 @@ function tagFile(file: ListedFile, prefix: Buffer): FileTags {
     ];
     const tags = new Set<string>([
         ...(EXTENSION_TAGS[extension] ?? []),
-        ...(FILENAME_TAGS[base] ?? []),
+        ...(FILENAME_TAGS.get(base) ?? []),
         ...flags.filter(([isSet]) => isSet).map(([, tag]) => tag),
     ]);
     if (BINARY_EXTENSIONS.has(extension) || prefix.includes(0)) return { tags: [BINARY_TAG, ...tags], isBinary: true };

@@ -17,7 +17,7 @@ import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies/pa
 import { type PackageJson, type DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 
 async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<DependencyFile | undefined> {
-    const parse = REQUIREMENTS_FILE.test(file.path) ? parseRequirements : PARSERS[posix.basename(file.path)];
+    const parse = REQUIREMENTS_FILE.test(file.path) ? parseRequirements : PARSERS.get(posix.basename(file.path));
     if (parse === undefined) return undefined;
     const text = readCachedText(reads, file.path);
     return await parse(file.path, text);

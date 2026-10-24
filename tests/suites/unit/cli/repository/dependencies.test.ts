@@ -164,3 +164,20 @@ test.each([...PYTHON_DEPENDENCY_CASES])(
         ).toStrictEqual(['fastapi', 'friendly-bard']);
     },
 );
+
+test.each(['constructor', 'toString', '__proto__'])(
+    'repository names do not access inherited tables: %s',
+    async (name) => {
+        await using sandbox = await testdir({
+            [name]: 'authored source\n',
+            script: `#!/usr/bin/env ${name}\nprintf "source\\n"\n`,
+        });
+        const repository = await readTestRepository(sandbox.path);
+        expect(repository.files.find((file) => file.path === name)).toMatchObject({ kind: 'source', tags: ['text'] });
+        expect(repository.files.find((file) => file.path === 'script')).toMatchObject({
+            kind: 'source',
+            tags: ['text'],
+        });
+        expect(await readDependencyFiles(createReadCache(sandbox.path), repository.files)).toStrictEqual([]);
+    },
+);

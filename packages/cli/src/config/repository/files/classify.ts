@@ -93,29 +93,29 @@ export const VENDORED_FOLDERS: ReadonlySet<string> = new Set([
     '.build',
 ]);
 
-export const SHEBANG_INTERPRETERS: Readonly<Record<string, string>> = {
-    bash: 'shell',
-    bats: 'shell',
-    sh: 'shell',
-    zsh: 'shell',
-    dash: 'shell',
-    ksh: 'shell',
-    python: 'python',
-    python3: 'python',
-    node: 'node',
-    bun: 'node',
-    deno: 'node',
-    tsx: 'node',
-} as const satisfies Readonly<Record<string, string>>;
+export const SHEBANG_INTERPRETERS: ReadonlyMap<string, string> = new Map<string, string>([
+    ['bash', 'shell'],
+    ['bats', 'shell'],
+    ['sh', 'shell'],
+    ['zsh', 'shell'],
+    ['dash', 'shell'],
+    ['ksh', 'shell'],
+    ['python', 'python'],
+    ['python3', 'python'],
+    ['node', 'node'],
+    ['bun', 'node'],
+    ['deno', 'node'],
+    ['tsx', 'node'],
+]);
 
 export const TRAILING_VERSION = /(?<![\d.])[\d.]+$/u;
 
-export const INTERPRETER_DIALECTS: Readonly<Record<string, string>> = {
-    sh: 'sh',
-    dash: 'sh',
-    zsh: 'zsh',
-    bats: 'bats',
-} as const satisfies Readonly<Record<string, string>>;
+export const INTERPRETER_DIALECTS: ReadonlyMap<string, string> = new Map<string, string>([
+    ['sh', 'sh'],
+    ['dash', 'sh'],
+    ['zsh', 'zsh'],
+    ['bats', 'bats'],
+]);
 
 export const SHEBANG_TAGS: Readonly<Record<string, readonly string[]>> = {
     shell: ['shell', 'executable', 'text'],
@@ -204,21 +204,21 @@ export const LICENSE_FILE = /^(?:LICEN[CS]E|COPYING)(?:$|[.-])/iu;
 
 export const BANNER_BYTES = 1024;
 
-export const FILENAME_TAGS: Readonly<Record<string, readonly string[]>> = {
-    Dockerfile: ['dockerfile', 'text'],
-    Makefile: ['makefile', 'text'],
-    '.gitignore': ['text'],
-    '.gitattributes': ['text'],
-    '.editorconfig': ['ini', 'text'],
-    '.nvmrc': ['text'],
-    '.node-version': ['text'],
-    '.python-version': ['text'],
-    _headers: ['text'],
-    _redirects: ['text'],
-    LICENSE: ['text'],
-    'LICENSE.md': ['markdown', 'text'],
-    CODEOWNERS: ['text'],
-} as const satisfies Readonly<Record<string, readonly string[]>>;
+export const FILENAME_TAGS: ReadonlyMap<string, readonly string[]> = new Map<string, readonly string[]>([
+    ['Dockerfile', ['dockerfile', 'text']],
+    ['Makefile', ['makefile', 'text']],
+    ['.gitignore', ['text']],
+    ['.gitattributes', ['text']],
+    ['.editorconfig', ['ini', 'text']],
+    ['.nvmrc', ['text']],
+    ['.node-version', ['text']],
+    ['.python-version', ['text']],
+    ['_headers', ['text']],
+    ['_redirects', ['text']],
+    ['LICENSE', ['text']],
+    ['LICENSE.md', ['markdown', 'text']],
+    ['CODEOWNERS', ['text']],
+]);
 
 export const DOCKERFILE_NAME = 'Dockerfile';
 

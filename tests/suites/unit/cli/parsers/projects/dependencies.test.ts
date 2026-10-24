@@ -4,7 +4,7 @@ import { captureRejectedError } from '#tests/setup/matchers.ts';
 import { SWIFT_DEPENDENCY_CALLS } from '#tests/config/parsers/projects/dependencies.ts';
 
 test('Swift dependencies include package calls and exclude comments, strings, local paths, and binary targets', async () => {
-    const parsed = await PARSERS['Package.swift']!('Package.swift', SWIFT_DEPENDENCY_CALLS);
+    const parsed = await PARSERS.get('Package.swift')!('Package.swift', SWIFT_DEPENDENCY_CALLS);
     expect(parsed.dependencies).toStrictEqual({ live: 'https://example.com/live.git' });
     expect(parsed.installed).toStrictEqual(parsed.dependencies);
 });
@@ -13,7 +13,7 @@ test.each(['./local-package', 'git+https://example.com/package.git'])(
     'pyproject names an invalid requirement and its fix: %s',
     async (spec) => {
         const parsed = Promise.resolve().then(() =>
-            PARSERS['pyproject.toml']!(
+            PARSERS.get('pyproject.toml')!(
                 'services/api/pyproject.toml',
                 `[project]\ndependencies = [${JSON.stringify(spec)}]\n`,
             ),

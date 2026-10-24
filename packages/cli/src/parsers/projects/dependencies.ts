@@ -193,9 +193,9 @@ export function parseRequirements(path: string, text: string): DependencyFile {
     };
 }
 
-export const PARSERS: Record<string, DependencyFileParser> = {
-    [PACKAGE_JSON]: parsePackageJson,
-    [PYPROJECT_TOML]: parsePyproject,
-    [PACKAGE_SWIFT]: parseSwiftPackage,
-    [PIPFILE]: parsePipfile,
-};
+export const PARSERS: ReadonlyMap<string, DependencyFileParser> = new Map<string, DependencyFileParser>([
+    [PACKAGE_JSON, parsePackageJson],
+    [PYPROJECT_TOML, parsePyproject],
+    [PACKAGE_SWIFT, parseSwiftPackage],
+    [PIPFILE, parsePipfile],
+]);
