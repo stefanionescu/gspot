@@ -28,7 +28,7 @@ export type PnpmPackage = {
 
 export type ToolPackageJson = {
     private: true;
-    devDependencies: Record<string, string> & { '@next/eslint-plugin-next'?: string | undefined };
+    devDependencies: Record<string, string>;
 };
 
 export type YarnSetting = { key: string };

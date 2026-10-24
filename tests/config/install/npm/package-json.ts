@@ -1,9 +1,9 @@
 export const TOOL_REQUIREMENTS = [
     {
-        name: 'a Next major requirement is accepted',
+        name: 'a Next major range is refused',
         dependency: '@next/eslint-plugin-next',
         version: '^15',
-        accepted: true,
+        accepted: false,
     },
     {
         name: 'an exact Next manifest pin is accepted',

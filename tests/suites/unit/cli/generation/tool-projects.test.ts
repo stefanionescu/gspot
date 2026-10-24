@@ -4,14 +4,13 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { captureThrow } from '#tests/setup/matchers.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildNpmProject } from '#cli/generation/tool-projects.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
-import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
+import { isYarnBerry, assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 
 import {
     YARN_CLIENTS,
@@ -85,10 +84,8 @@ test.each([...YARN_CLIENTS])(
     'Yarn $packageManager.version gets the matching tool project settings',
     ({ packageManager, settings }) => {
         const files = buildNpmProject({
-            dependencyFiles: [],
-            scopes: [],
             configurations: [],
-            packageManager: Number(packageManager.version.split('.', 1)[0]) < 2 ? 'npm' : packageManager.name,
+            packageManager: isYarnBerry(packageManager) ? 'yarn' : 'npm',
         });
         expect(files.map((file) => file.path)).toStrictEqual(
             settings ? [GSPOT_PATHS.npmProject, GSPOT_PATHS.yarnSettings] : [GSPOT_PATHS.npmProject],
@@ -97,48 +94,53 @@ test.each([...YARN_CLIENTS])(
     },
 );
 
-test.each([...NEXT_REQUIREMENTS])('Next ESLint plugin follows declared ranges: $name', async (row) => {
-    await using sandbox = await testdir({
-        'project/gspot.toml': buildSandboxSettings(['nextjs'], {
-            scopes: [{ path: 'app/client', configurations: ['nextjs'] }],
-        }),
-        'project/package.json': JSON.stringify({ private: true, dependencies: { next: row.rootRange } }),
-        'project/app/client/source.ts': 'export const count = 1;\n',
-        'node_modules/next/package.json': '{"name":"next","version":"17.0.0"}',
-        ...(row.childRange === undefined
-            ? {}
-            : {
-                  'project/app/package.json': JSON.stringify({ private: true, dependencies: { next: row.childRange } }),
-              }),
-        ...(row.rootVersion === undefined
-            ? {}
-            : { 'project/node_modules/next/package.json': JSON.stringify({ name: 'next', version: row.rootVersion }) }),
-        ...(row.childVersion === undefined
-            ? {}
-            : {
-                  'project/app/node_modules/next/package.json': JSON.stringify({
-                      name: 'next',
-                      version: row.childVersion,
+test.each([...NEXT_REQUIREMENTS])(
+    'Next ESLint plugin keeps its shipped pin across project versions: $name',
+    async (row) => {
+        await using sandbox = await testdir({
+            'project/gspot.toml': buildSandboxSettings(['nextjs'], {
+                scopes: [{ path: 'app/client', configurations: ['nextjs'] }],
+            }),
+            'project/package.json': JSON.stringify({ private: true, dependencies: { next: row.rootRange } }),
+            'project/app/client/source.ts': 'export const count = 1;\n',
+            'node_modules/next/package.json': '{"name":"next","version":"17.0.0"}',
+            ...(row.childRange === undefined
+                ? {}
+                : {
+                      'project/app/package.json': JSON.stringify({
+                          private: true,
+                          dependencies: { next: row.childRange },
+                      }),
                   }),
-              }),
-    });
+            ...(row.rootVersion === undefined
+                ? {}
+                : {
+                      'project/node_modules/next/package.json': JSON.stringify({
+                          name: 'next',
+                          version: row.rootVersion,
+                      }),
+                  }),
+            ...(row.childVersion === undefined
+                ? {}
+                : {
+                      'project/app/node_modules/next/package.json': JSON.stringify({
+                          name: 'next',
+                          version: row.childVersion,
+                      }),
+                  }),
+        });
 
-    const session = await openSession(join(sandbox.path, 'project'));
-    if (row.expected === 'conflict') {
-        expect(captureThrow(() => generate(session))).toBe(
-            'Tool pin @next/eslint-plugin-next conflicts: the root requires ^16; app requires ^15; app/client requires ^15.',
-        );
-    } else {
+        const session = await openSession(join(sandbox.path, 'project'));
         const generated = generate(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
         expect(
             parseToolPackageJson(generated!.content, assertPackageManager(session.packageManager).name).dependencies[
                 '@next/eslint-plugin-next'
             ],
-        ).toBe(row.expected ?? getTool(session.configurations.values(), '@next/eslint-plugin-next').version);
-    }
-});
+        ).toBe(getTool(session.configurations.values(), '@next/eslint-plugin-next').version);
+    },
+);
 
-test('only selected Next.js scopes set the shared plugin version', async () => {
+test('Next.js scopes keep one manifest plugin pin', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], NEXTJS_API_SETTINGS),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
@@ -154,5 +156,5 @@ test('only selected Next.js scopes set the shared plugin version', async () => {
         parseToolPackageJson(output!.content, assertPackageManager(session.packageManager).name).dependencies[
             '@next/eslint-plugin-next'
         ],
-    ).toBe('^16');
+    ).toBe(getTool(session.configurations.values(), '@next/eslint-plugin-next').version);
 });

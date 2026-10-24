@@ -8,10 +8,6 @@ export const PYTHON_TOOL_PROJECT = {
     'requires-python': `==${PYTHON_VERSION}`,
 } as const;
 
-export const NEXT_ESLINT_PLUGIN = '@next/eslint-plugin-next';
-
 export const YARN_TOOL_PROJECT_SETTINGS = 'nodeLinker: node-modules\nenableGlobalCache: true\n';
-
-export const NEXT_PACKAGE = 'next';
 
 export const UV_PROJECT_TABLE = '[tool.uv]';

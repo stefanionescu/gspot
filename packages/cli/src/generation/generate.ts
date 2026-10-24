@@ -193,8 +193,6 @@ export function generate(session: Session): GenerationResult {
         ...(packageManager === undefined
             ? []
             : buildNpmProject({
-                  dependencyFiles: session.repository.dependencyFiles,
-                  scopes,
                   configurations,
                   packageManager: selectToolPackageManager(
                       installedRoot,
