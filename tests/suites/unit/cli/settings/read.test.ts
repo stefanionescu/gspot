@@ -31,6 +31,15 @@ test.each(VALID_LICENSES)('licenses.allowed accepts one SPDX license: %s', (lice
     expect(validateSettingsText(stringify({ licenses: { allowed: [license] } }))).toStrictEqual([]);
 });
 
+test('two import rules cannot share a name', () => {
+    const lower = { name: 'lower', paths: ['lower/**'], can_import: [] };
+    const upper = { name: 'lower', paths: ['upper/**'], can_import: ['lower'] };
+    expect(validateSettingsText(stringify({ import_rule: [lower, upper] }))).toStrictEqual([
+        'gspot.toml: import_rule.1.name: Two [[import_rule]] records name lower. Keep one.',
+    ]);
+    expect(validateSettingsText(stringify({ import_rule: [lower, { ...upper, name: 'upper' }] }))).toStrictEqual([]);
+});
+
 test('rules.exclude accepts a rule file path and a configuration folder', () => {
     const exclude = [findRuleFilePath('engineering', 'ACCESSIBILITY.md'), `${GSPOT_PATHS.configurations}/library`];
     expect(validateSettingsText(stringify({ rules: { exclude } }))).toStrictEqual([]);

@@ -185,6 +185,11 @@ export const settingsSchema = z
     .superRefine((written, context) => {
         const records = [
             {
+                key: 'import_rule',
+                field: 'name',
+                names: written.import_rule.map((rule) => rule.name),
+            },
+            {
                 key: 'scope',
                 field: 'path',
                 names: (written.scope ?? []).map((scope) =>
