@@ -54,8 +54,8 @@ function validateRemovedConfigurations(value: unknown, path: KeyPath): SettingsE
  */
 export function validateSettingReasons(settings: Settings): SettingsError[] {
     function visit(value: unknown, path: KeyPath): SettingsError[] {
-        const [field, , table] = path.toReversed();
-        if (table === 'tools' && field === 'rules') return [];
+        const field = path.at(-1);
+        if (field === 'rules' && path.includes('tools')) return [];
         if (Array.isArray(value)) return value.flatMap((element, index) => visit(element, [...path, index]));
         if (!isTable(value)) return [];
         const reason = value['reason'];

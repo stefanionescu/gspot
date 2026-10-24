@@ -20,9 +20,14 @@ import {
     UNKNOWN_KEY_CASES,
     RULE_FILE_SETTINGS,
     DUPLICATED_REASON_ERRORS,
+    RULE_OPTION_REASON_TABLES,
     INVALID_MARKDOWNLINT_NAMES,
     SCOPE_CONFIGURATION_SETTINGS,
 } from '#tests/config/settings/read.ts';
+
+test.each(RULE_OPTION_REASON_TABLES)('a reason option in $name rules belongs to the lint rule', ({ tables }) => {
+    expect(validateSettingsText(buildSandboxSettings(['javascript'], { tables }))).toStrictEqual([]);
+});
 
 test.each(INVALID_MARKDOWNLINT_NAMES)('markdownlint refuses $name with the rule ID guidance', ({ name, value }) => {
     expect(

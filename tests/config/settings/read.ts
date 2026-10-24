@@ -10,6 +10,18 @@ export const INVALID_MARKDOWNLINT_NAMES = [
     { name: 'whitespace', value: {} },
 ];
 
+export const RULE_OPTION_REASON_TABLES = [
+    { name: 'root', tables: '[tools.eslint.rules]\nno-console = [{ allow = ["warn"], reason = true }]\n' },
+    {
+        name: 'override',
+        tables: '[[tools.eslint.override]]\npaths = ["src/**"]\nrules.no-console = [{ allow = ["warn"], reason = true }]\n',
+    },
+    {
+        name: 'plugin',
+        tables: '[[tools.eslint.plugins]]\nname = "local"\npath = "local.mjs"\nrules.custom = [{ reason = true }]\n',
+    },
+];
+
 export const DUPLICATED_REASON_ERRORS = [
     {
         key: 'limits.file_lines',
