@@ -35,10 +35,22 @@ function parseValueArgument(text: string): unknown {
     return isStructured ? parseStructured(text) : text;
 }
 
+function buildSettingValue(words: unknown[], setting: Setting): ParsedSettingValue {
+    const scalar = words.length === 1 ? words[0] : words;
+    if (setting.type === 'list') return { type: 'list', value: Array.isArray(scalar) ? scalar : words };
+    return { type: 'scalar', value: scalar };
+}
+
 function parseSettingValue(values: string[], setting: Setting): ParsedSettingValue {
-    const parsed = values.map((text) => parseValueArgument(text));
-    const scalar = parsed.length === 1 ? parsed[0] : parsed;
-    const validation = findSettingSchema(setting.name)?.safeParse(scalar);
+    const converted = buildSettingValue(
+        values.map((text) => parseValueArgument(text)),
+        setting,
+    );
+    const parsedValues = [converted, buildSettingValue(values, setting)];
+    const schema = findSettingSchema(setting.name);
+    const chosen =
+        parsedValues.find((parsedValue) => schema?.safeParse(parsedValue.value).success !== false) ?? converted;
+    const validation = schema?.safeParse(chosen.value);
     if (validation?.success === false) {
         const issue = validation.error.issues.find((issue) => issue.code === 'invalid_value');
         if (issue !== undefined)
@@ -47,8 +59,7 @@ function parseSettingValue(values: string[], setting: Setting): ParsedSettingVal
                 `The value ${values.join(' ')} is not valid for ${setting.name}. Use ${issue.values.map(String).join(' or ')}.`,
             );
     }
-    if (setting.type === 'list') return { type: 'list', value: Array.isArray(scalar) ? scalar : parsed };
-    return { type: 'scalar', value: scalar };
+    return chosen;
 }
 
 function parseReasonTable(options: SetOptions): ParsedSettingValue {

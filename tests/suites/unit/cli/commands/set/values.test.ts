@@ -24,6 +24,7 @@ import {
     STOPPED_APPLY_FILES,
     BANNED_WORD_SETTINGS,
     KEPT_SETTING_CHANGES,
+    STRING_SETTING_VALUES,
     RESTRICTED_IMPORT_RECORDS,
 } from '#tests/config/commands/set.ts';
 
@@ -242,4 +243,12 @@ test('spelling.allowed_words keeps one reason for each word through edits', asyn
     }
     const saved = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(saved['spelling']).toStrictEqual({ allowed_words: { Quorbit: SETTING_REASON } });
+});
+
+test.each([...STRING_SETTING_VALUES])('set keeps words as strings for $key: $words', async ({ key, words, value }) => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['set', key, ...words]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(getValueAt(written, key.split('.'))).toStrictEqual(value);
 });

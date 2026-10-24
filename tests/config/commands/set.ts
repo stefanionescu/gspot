@@ -142,3 +142,13 @@ export const UNKNOWN_SETTING_KEYS = [
             'No selected configuration has the setting tools.v8r.extra. The settings that exist under that table are `schema`.',
     },
 ] as const;
+
+export const STRING_SETTING_VALUES = [
+    { key: 'naming.banned_words', words: ['2024'], value: ['2024'] },
+    { key: 'naming.banned_words', words: ['true'], value: ['true'] },
+    { key: 'naming.banned_words', words: ['false'], value: ['false'] },
+    { key: 'ci.linux_runner', words: ['2204'], value: '2204' },
+    { key: 'ci.linux_runner', words: ['true'], value: 'true' },
+    { key: 'ci.setup_command', words: ['make', '2'], value: ['make', '2'] },
+    { key: 'ci.setup_command', words: ['false'], value: ['false'] },
+] as const;
