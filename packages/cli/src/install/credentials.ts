@@ -1,3 +1,4 @@
+import { unescape } from 'node:querystring';
 import { GspotError } from '#cli/system/errors.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 
@@ -30,9 +31,10 @@ export function assertCredentialFreeLockfile(lockfile: string, credentials: stri
  * @returns the password forms to keep out of generated lockfiles and messages.
  */
 export function extractUrlPasswords(url: string): string[] {
+    if (!URL.canParse(url)) return [];
     const password = new URL(url).password;
     if (password.length === 0) return [];
-    return [password, decodeURIComponent(password)];
+    return [password, unescape(password)];
 }
 
 /**

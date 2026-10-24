@@ -1,11 +1,10 @@
 import which from 'which';
 import Config from '@npmcli/config';
-import { isTable } from '#cli/system/tables.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, resolve } from 'node:path';
 import { realpathSync, writeFileSync } from 'node:fs';
 import { NPM_TOOL } from '#cli/config/repository/npm.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { extractUrlPasswords } from '#cli/install/credentials.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import npmDefinitions from '@npmcli/config/lib/definitions/index.js';
@@ -46,7 +45,7 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
     try {
         valid = config.validate();
     } catch (error) {
-        if (isTable(error) && error['code'] === 'ERR_INVALID_URL')
+        if (error instanceof URIError || hasErrorCode(error, 'ERR_INVALID_URL'))
             throw new GspotError('install', 'A registry URL in the .npmrc files is not valid.');
         throw error;
     }
