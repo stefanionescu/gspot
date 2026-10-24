@@ -16,9 +16,9 @@ import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { SETTINGS_FILE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
 import { findRuleFilePath, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/apply/writes.ts';
-import { SETTINGS_FILE, SCHEMA_DIRECTIVE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function writeStrayFile(root: string): void {
@@ -188,16 +188,19 @@ test('a failed version pin write in apply leaves the old version', async () => {
     );
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.versionPin), 'utf8')).toBe('0.0.1\n');
 });
-test('apply puts the schema directive first in a gspot.toml without one, then leaves the file alone', async () => {
+test('apply leaves a settings file without a schema directive unchanged', async () => {
     const settings = buildSandboxSettings([]).replace(SCHEMA_DIRECTIVE_LINE, '');
     await using sandbox = await testdir({ [SETTINGS_FILE]: settings });
 
+    const preview = await runGspot(sandbox.path, ['apply', '--dry-run']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    expect(await readFile(join(sandbox.path, SETTINGS_FILE), 'utf8')).toBe(settings);
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect((JSON.parse(applied.stdout) as ApplyReport).updated).toStrictEqual([SETTINGS_FILE]);
-    expect(await readFile(join(sandbox.path, SETTINGS_FILE), 'utf8')).toBe(`${SCHEMA_DIRECTIVE}\n${settings}`);
+    expect((JSON.parse(applied.stdout) as ApplyReport).updated).toStrictEqual([]);
+    expect(await readFile(join(sandbox.path, SETTINGS_FILE), 'utf8')).toBe(settings);
     const repeated = await runGspot(sandbox.path, ['apply', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     expect((JSON.parse(repeated.stdout) as ApplyReport).updated).toStrictEqual([]);
-    expect(await readFile(join(sandbox.path, SETTINGS_FILE), 'utf8')).toBe(`${SCHEMA_DIRECTIVE}\n${settings}`);
+    expect(await readFile(join(sandbox.path, SETTINGS_FILE), 'utf8')).toBe(settings);
 });

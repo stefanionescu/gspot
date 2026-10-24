@@ -11,10 +11,8 @@ import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { DRY_RUN_NOTE } from '#cli/config/commands/apply.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { listOutdatedFiles } from '#cli/apply/files/outdated.ts';
-import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/apply.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { SETTINGS_FILE, SCHEMA_DIRECTIVE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
 import { formatUpToDate, formatApplyReport, writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 
 function formatOutdatedFiles(outdatedFiles: OutdatedFile[]): string {
@@ -48,11 +46,6 @@ async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
     if (options.isDryRun) return buildDryRunResult(session);
     using log = openWriter(root);
     const report = await writeGeneratedFiles(session, generate(session), log);
-    const settingsFile = readSettingsFile(root);
-    if (!SCHEMA_DIRECTIVE_LINE.test(settingsFile.text)) {
-        writeSettings(log, `${SCHEMA_DIRECTIVE}\n${settingsFile.text}`, settingsFile.original);
-        report.updated.push(SETTINGS_FILE);
-    }
     return { text: formatApplyReport(report), json: report, exitCode: 0 };
 }
 
