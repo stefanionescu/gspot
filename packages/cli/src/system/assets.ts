@@ -14,7 +14,7 @@ Build the path of one asset in the package, for a tool that reads it by path.
 @param path the asset, such as `configurations/language/bash/manifest.toml`.
 @returns the absolute path.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 16 calls in 13 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 calls in 12 files share it.
 export function buildAssetPath(path: string): string {
     return join(packageFolder, path);
 }

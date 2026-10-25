@@ -32,6 +32,6 @@ export const HTML_REPORT_FILE = 'html-validate.json';
 
 export const CSS_EXTENSION = '.css';
 
-export const PURGECSS_PROCESS = 'dist/purgecss-process.js';
+export const PURGECSS_PROCESS = 'purgecss-process';
 
 export const PURGECSS_CONTENT = ['**/*.html', '**/*.js'] as const;

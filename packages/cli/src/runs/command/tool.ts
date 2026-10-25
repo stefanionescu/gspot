@@ -2,7 +2,6 @@ import { runTool } from '#cli/tools/run.ts';
 import { dirname, delimiter } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { getTool } from '#cli/configurations/tools.ts';
-import { buildAssetPath } from '#cli/system/assets.ts';
 import { listOtherTools } from '#cli/planning/tools.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { CheckSession } from '#cli/types/session.ts';
@@ -130,7 +129,7 @@ export async function runCheckTool(
         options,
     );
     const commandArguments =
-        'tool' in command ? [process.execPath, buildAssetPath(command.modulePath), path] : [path, ...command.slice(1)];
+        'tool' in command ? [process.execPath, command.modulePath, path] : [path, ...command.slice(1)];
     const { result, failure } = await runToolProcess(commandArguments, {
         ...options,
         env: buildOtherToolEnvironment(session, listOtherTools(planned.scope, planned.check), env),

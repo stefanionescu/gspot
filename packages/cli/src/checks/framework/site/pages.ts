@@ -16,10 +16,10 @@ import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
-import { join, relative, normalize, isAbsolute } from 'node:path';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import type { SitemapUrls } from '#cli/types/checks/framework/site.ts';
+import { join, extname, relative, normalize, isAbsolute } from 'node:path';
 import { purgecssReportSchema } from '#cli/schemas/checks/framework/site.ts';
 import { PURGECSS_TOOL } from '#cli/config/checks/framework/site/purgecss-process.ts';
 import { listBuiltFiles, readSuccessfulBuild } from '#cli/checks/framework/site/build.ts';
@@ -200,7 +200,10 @@ export async function checkSitePurgecss(session: CheckSession, planned: PlannedC
     const result = await runCheckTool(
         session,
         planned,
-        { tool: PURGECSS_TOOL, modulePath: PURGECSS_PROCESS },
+        {
+            tool: PURGECSS_TOOL,
+            modulePath: join(import.meta.dirname, PURGECSS_PROCESS + extname(import.meta.filename)),
+        },
         { cwd: build.folder, stdin: JSON.stringify({ configFile, css: sheets, content: PURGECSS_CONTENT }) },
     );
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
