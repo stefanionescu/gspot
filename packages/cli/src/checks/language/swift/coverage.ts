@@ -17,7 +17,7 @@ import type { TableSettings } from '#cli/types/settings/file.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
 import { SCRATCH_PATH_FLAG } from '#cli/config/checks/language/swift/cache.ts';
 import { prepareBuild, planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
-import type { CoverageReport, SwiftBuildPlan } from '#cli/types/checks/language/swift.ts';
+import type { CoverageOutput, SwiftBuildPlan } from '#cli/types/checks/language/swift.ts';
 import { xccovSchema, swiftCoverageSchema, packageDescriptionSchema } from '#cli/schemas/checks/language/swift.ts';
 
 import {
@@ -37,7 +37,7 @@ async function measurePackageCoverage(
     plan: Extract<SwiftBuildPlan, { kind: 'package' }>,
     files: Files,
     cwd: string,
-): Promise<CoverageReport> {
+): Promise<CoverageOutput> {
     const tested = await runCheckTool(session, planned, plan.commandArguments, { cwd });
     if (tested.code !== 0) throw new Error(formatOutputTail(tested, 'Swift tests failed'));
     const reported = await runCheckTool(session, planned, [...SWIFT_CODECOV_COMMAND, SCRATCH_PATH_FLAG, plan.scratch], {
@@ -59,7 +59,7 @@ async function measureXcodeCoverage(
     planned: PlannedCheck,
     plan: SwiftBuildPlan,
     cwd: string,
-): Promise<CoverageReport> {
+): Promise<CoverageOutput> {
     const bundle = join(plan.folder, COVERAGE_BUNDLE);
     const tested = await runCheckTool(session, planned, [...plan.commandArguments, ...XCODE_COVERAGE_FLAGS, bundle], {
         cwd,
@@ -76,7 +76,7 @@ async function measureXcodeCoverage(
     return parseToolReport('xccov', viewed.stdout, xccovSchema);
 }
 
-async function measureCoverage(session: CheckSession, planned: PlannedCheck): Promise<CoverageReport> {
+async function measureCoverage(session: CheckSession, planned: PlannedCheck): Promise<CoverageOutput> {
     const plan = planSwiftBuild(session, planned, 'coverage');
     const setup = prepareBuild(session.root, planned.files, plan.folder);
     using files = setup.files;
@@ -93,7 +93,7 @@ function isTargetNamed(target: string, name: string): boolean {
 }
 
 function listCoverageShortfalls(
-    report: CoverageReport,
+    report: CoverageOutput,
     settings: Pick<TableSettings<'coverage'>, 'lines' | 'swift_target'>,
 ): string[] {
     const limits = [
@@ -112,7 +112,7 @@ function listCoverageShortfalls(
     });
 }
 
-function parseSwiftCoverage(text: string, packageText: string, folder: string): CoverageReport {
+function parseSwiftCoverage(text: string, packageText: string, folder: string): CoverageOutput {
     const report = parseToolReport('swift test', text, swiftCoverageSchema);
     const description = parseToolReport('swift package', packageText, packageDescriptionSchema);
     const root = realpathSync(folder);

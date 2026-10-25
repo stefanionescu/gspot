@@ -8,8 +8,8 @@ import type { ConfigFile } from '#cli/types/configurations.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
-import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
+import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { FILE_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { CommandLine, Substitutions, CommandArgument } from '#cli/types/runs/command.ts';
@@ -94,7 +94,7 @@ export function getConfigFilePath(session: Session, planned: PlannedCheck, name:
     const configFile = listConfigFiles(session, planned).find(({ file }) => extractConfigFileName(file) === name);
     if (!configFile)
         throw new Error(`Check ${planned.check.id} names {config_file:${name}} and no configuration writes it.`);
-    return getConfigFileTarget(planned.scope.folder.path, configFile, getConfigFiles(session));
+    return getConfigFileTarget(planned.scope.folder.path, configFile, buildConfigFiles(session));
 }
 
 /**
@@ -140,7 +140,7 @@ Lists the source and config files that a copy needs for a command.
 export function listCopyFiles(session: Session, planned: PlannedCheck, command: string[]): string[] {
     const scope = planned.scope.folder.path;
     const owned = (planned.configuration?.configFiles ?? []).map((configFile) =>
-        getConfigFileTarget(scope, configFile, getConfigFiles(session)),
+        getConfigFileTarget(scope, configFile, buildConfigFiles(session)),
     );
     return [
         ...new Set([

@@ -4,4 +4,4 @@ export type ProseRouteGroup = [ProseRoute, ...ProseRoute[]];
 
 export type ValeAlert = { file: string; line: number; column: number; check: string; message: string };
 
-export type ValeReport = Record<string, { Line: number; Span: [number, number]; Check: string; Message: string }[]>;
+export type ValeOutput = Record<string, { Line: number; Span: [number, number]; Check: string; Message: string }[]>;

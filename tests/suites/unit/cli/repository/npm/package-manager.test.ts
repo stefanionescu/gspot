@@ -10,8 +10,8 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { detectPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
@@ -100,7 +100,7 @@ test('a refused pinned package manager keeps project files and gives no install 
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
     expect(await readFile(join(sandbox.path, 'source'), 'utf8')).toBe('kept\n');
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(previous);
-    expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/bun.lock`))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
 });
 

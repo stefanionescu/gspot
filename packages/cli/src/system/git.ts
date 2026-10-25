@@ -86,7 +86,7 @@ caller overrides apply last.
 @param explicit the environment overrides for this command.
 @returns the environment for the requested Git command.
 */
-export function readGitEnvironment(
+export function buildGitEnvironment(
     cwd: string,
     command: readonly string[],
     explicit: Record<string, string | undefined>,
@@ -139,7 +139,7 @@ export function runGitBlocking(
     options: Omit<SpawnOptions, 'cwd' | 'timeoutSeconds'> = {},
 ): SpawnResult {
     const command = [GIT_PROGRAM, ...commandArguments];
-    const selected = readGitEnvironment(cwd, command, { ...options.env });
+    const selected = buildGitEnvironment(cwd, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
     return spawnProcessBlocking(command, { ...options, env: selected.env, cwd: cwd });
 }
@@ -158,7 +158,7 @@ export async function runGit(
     options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<SpawnResult> {
     const command = [GIT_PROGRAM, ...commandArguments];
-    const selected = readGitEnvironment(cwd, command, { ...options.env });
+    const selected = buildGitEnvironment(cwd, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
     return spawnProcess(command, { ...options, env: selected.env, cwd: cwd });
 }
@@ -179,7 +179,7 @@ export async function runGitStream(
     read: StdoutReader,
 ): Promise<SpawnResult> {
     const command = [GIT_PROGRAM, ...commandArguments];
-    const selected = readGitEnvironment(cwd, command, { ...options.env });
+    const selected = buildGitEnvironment(cwd, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
     return streamProcess(command, { ...options, env: selected.env, cwd: cwd }, read);
 }

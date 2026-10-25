@@ -1,9 +1,9 @@
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { findSystemSkip } from '#cli/planning/skips.ts';
 import { listCheckTools } from '#cli/planning/tools.ts';
 import { formatHeader } from '#cli/generation/header.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { PACKAGE_MANAGERS } from '#cli/config/repository/npm.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
@@ -172,7 +172,7 @@ function spaceWorkflowGroups(workflow: Document): void {
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function listManualLines(command: string, manual: { checks: string[]; tools: string[] }): string[] {
     return [
-        ...(manual.tools.length === 0 ? [] : [`(cd ${DOT_GSPOT} && mise install ${quoteCommand(manual.tools)})`]),
+        ...(manual.tools.length === 0 ? [] : [`(cd ${GSPOT_FOLDER} && mise install ${quoteCommand(manual.tools)})`]),
         `${command} check --only ${quoteArgument(manual.checks.join(CHECK_LIST_SEPARATOR))}`,
     ];
 }

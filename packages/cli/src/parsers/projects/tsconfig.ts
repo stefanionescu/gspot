@@ -1,7 +1,7 @@
 import ts from 'typescript';
 import { readFileSync, realpathSync } from 'node:fs';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { NODE_MODULES } from '#cli/config/files/names.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { join, dirname, resolve, relative } from 'node:path';
@@ -109,7 +109,7 @@ function readCompilerFile(root: string, path: string, reads: ReadCache): string 
     try {
         const segments = local.split('/');
         const dependency = segments.indexOf(NODE_MODULES);
-        if (dependency !== -1 && segments[0] !== DOT_GSPOT) {
+        if (dependency !== -1 && segments[0] !== GSPOT_FOLDER) {
             if (dependency > 0 && isInside(local))
                 readContainedPath(realpathSync(root), segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');

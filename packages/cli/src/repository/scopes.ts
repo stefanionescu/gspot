@@ -1,7 +1,7 @@
 import { resolve, relative } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { LINT_FOLDERS } from '#cli/config/repository/setup.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
@@ -112,7 +112,7 @@ export function findScopeFolders(
         (file) =>
             file.kind === 'source' &&
             !toolOnlyPackages.has(file.path) &&
-            !(file.path.startsWith(`${DOT_GSPOT}/`) || isInInstalledFolder(file.path)) &&
+            !(file.path.startsWith(`${GSPOT_FOLDER}/`) || isInInstalledFolder(file.path)) &&
             LINT_FOLDERS.every((folder) => !file.path.startsWith(`${folder}/`)),
     );
     const folders = listProjectFolders(

@@ -6,8 +6,8 @@ import { stripUndefined } from '#cli/system/tables.ts';
 import { MISE_TOOL } from '#cli/config/tools/locate.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { ToolAvailability } from '#cli/types/tools/run.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { findToolProjectPackage } from '#cli/configurations/tools.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
 import { MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/inspect.ts';
@@ -115,7 +115,7 @@ function inspectExecutable(inspected: InspectedTool): ToolInspection {
     const search = isExternal
         ? { searchFolders: [cwd, root] }
         : {
-              searchFolders: [join(root, DOT_GSPOT), cwd, root],
+              searchFolders: [join(root, GSPOT_FOLDER), cwd, root],
               miseBinPaths,
               toolFolderKind: findToolProjectPackage(tool)?.kind,
           };

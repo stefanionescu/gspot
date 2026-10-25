@@ -12,8 +12,8 @@ import { LEVELS } from '#cli/config/configurations/names.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 
@@ -110,7 +110,7 @@ test.each([...LEVELS])("every configuration's generated config files parse at le
     const output = generate(session);
     const generated = output.files.filter(
         (file) =>
-            !file.path.startsWith(`${DOT_GSPOT}/`) ||
+            !file.path.startsWith(`${GSPOT_FOLDER}/`) ||
             (file.path.startsWith(`${GSPOT_PATHS.configurations}/`) && !file.path.includes('/rules/')),
     );
     for (const file of generated) {

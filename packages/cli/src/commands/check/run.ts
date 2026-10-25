@@ -16,7 +16,7 @@ import { DOCKER_TOOL } from '#cli/config/tools/inspect.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { runCheckCommand } from '#cli/runs/command/check.ts';
+import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
@@ -285,7 +285,7 @@ export async function runCheckCode(
     options: CheckRunOptions = {},
 ): Promise<CheckResult> {
     if (code?.check !== undefined) return runBuiltInCheck(code.check, session, planned);
-    return (code?.run ?? runCheckCommand)(session, planned, {
+    return (code?.run ?? runCommandCheck)(session, planned, {
         ...options,
         listFileArguments: code?.listFileArguments,
         listConfigFiles: code?.listConfigFiles,

@@ -23,7 +23,7 @@ export type SwiftBuildPurpose = 'compile' | 'analyze' | 'coverage' | 'periphery'
 
 export type SwiftBuildSetup = { files: Files; source: string };
 
-export type CoverageReport = { targets: { name: string; lineCoverage: number }[] };
+export type CoverageOutput = { targets: { name: string; lineCoverage: number }[] };
 
 export type SwiftPackageDescription = {
     targets: { name: string; path: string; type: string; module_type: string; sources: string[] }[];

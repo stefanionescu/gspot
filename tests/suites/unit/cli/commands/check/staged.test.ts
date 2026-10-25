@@ -7,9 +7,9 @@ import { createFileTree, type TestdirResult } from 'testdirs';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { rmSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -105,7 +105,7 @@ test('a staged check copies the locked dependencies and leaves the working tree 
         'node_modules/dependency/stamp.txt=snapshot output',
     );
     await createFileTree(sandbox.path, {
-        '.gitignore': `${DOT_GSPOT}/\nnode_modules/\n`,
+        '.gitignore': `${GSPOT_FOLDER}/\nnode_modules/\n`,
         'package.json': JSON.stringify(STAGED_PACKAGE_JSON),
         'package-lock.json': lockfile,
         'node_modules/dependency/package.json':
@@ -155,7 +155,7 @@ test('a staged check keeps each Python scope config and reports the installed de
         checked.report.checks.flatMap((check) => check.findings).map(({ file, rule }) => ({ file, rule })),
     ).toStrictEqual([
         { file: GSPOT_PATHS.miseLockfile, rule: 'missing' },
-        { file: `${DOT_GSPOT}/package-lock.json`, rule: 'missing' },
+        { file: `${GSPOT_FOLDER}/package-lock.json`, rule: 'missing' },
         { file: GSPOT_PATHS.uvLockfile, rule: 'missing' },
     ]);
     const contents = await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')));

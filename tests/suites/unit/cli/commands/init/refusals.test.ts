@@ -6,7 +6,7 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
@@ -94,7 +94,7 @@ test('a linked .gspot folder stops init, and nothing outside changes', async () 
     const project = join(sandbox.path, 'project');
     runGitStep(project, ['init', '--quiet']);
     const outside = join(sandbox.path, 'outside');
-    await symlink(outside, join(project, DOT_GSPOT));
+    await symlink(outside, join(project, GSPOT_FOLDER));
     const refused = await runGspot(project, buildInitArguments(['bash']));
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stderr).toBe(

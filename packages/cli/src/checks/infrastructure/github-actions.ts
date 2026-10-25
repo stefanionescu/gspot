@@ -5,7 +5,7 @@ import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
-import { runCheckCommand } from '#cli/runs/command/check.ts';
+import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { GIT_FOLDER } from '#cli/config/repository/files/tracked.ts';
 import { isMap, isSeq, isAlias, isScalar, type Scalar, parseDocument, type Document } from 'yaml';
@@ -84,7 +84,7 @@ export async function checkGithubActionsActionlint(session: CheckSession, planne
         const replaced = replaceSelfReferences(source);
         if (replaced !== source) replacements.set(file.path, replaced);
     }
-    if (replacements.size === 0) return runCheckCommand(session, planned);
+    if (replacements.size === 0) return runCommandCheck(session, planned);
     using scratch = await createCopy({
         root: session.root,
         paths: [
@@ -104,5 +104,5 @@ export async function checkGithubActionsActionlint(session: CheckSession, planne
         chmodSync(target, PRIVATE_FILE);
         writeFileSync(target, source);
     }
-    return await runCheckCommand(session, planned, { copyRoot: scratch.path });
+    return await runCommandCheck(session, planned, { copyRoot: scratch.path });
 }

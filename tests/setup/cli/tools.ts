@@ -15,9 +15,9 @@ import type { ToolProjectFiles } from '#tests/types/packages.ts';
 import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import type { NpmToolInstall } from '#cli/types/installers/npm.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
 import { readInstallPackageManager } from '#cli/installers/install.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
@@ -31,11 +31,11 @@ export async function readToolProjectFiles(
     packageManager: PackageManager['name'] | 'uv',
 ): Promise<ToolProjectFiles> {
     const isPython = packageManager === 'uv';
-    const lockfilePath = join(root, DOT_GSPOT, isPython ? 'uv.lock' : selectLockfileName(packageManager));
+    const lockfilePath = join(root, GSPOT_FOLDER, isPython ? 'uv.lock' : selectLockfileName(packageManager));
     await using lockfile = await open(lockfilePath, 'r');
     const attributes = await lockfile.stat();
     return {
-        projectFile: await readFile(join(root, DOT_GSPOT, isPython ? 'pyproject.toml' : 'package.json')),
+        projectFile: await readFile(join(root, GSPOT_FOLDER, isPython ? 'pyproject.toml' : 'package.json')),
         lockfilePath,
         lockfile: await lockfile.readFile(),
         mode: attributes.mode,
@@ -107,7 +107,7 @@ List the npm install folder and lockfile of the tool project that exist, to show
 @returns the paths from the repository root.
 */
 export async function listToolInstallFiles(root: string): Promise<string[]> {
-    const paths = [GSPOT_PATHS.nodeModules, `${DOT_GSPOT}/package-lock.json`];
+    const paths = [GSPOT_PATHS.nodeModules, `${GSPOT_FOLDER}/package-lock.json`];
     const found = await Promise.all(paths.map(async (path) => ((await isOnDisk(join(root, path))) ? [path] : [])));
     return found.flat();
 }

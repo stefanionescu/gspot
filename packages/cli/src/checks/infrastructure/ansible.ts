@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { buildFinding } from '#cli/checks/finding.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import type { CheckSession } from '#cli/types/session.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { isInInstalledFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
@@ -24,7 +24,7 @@ async function lintProject(
         ({ path }) =>
             isInScope(path, folder) &&
             children.every((child) => !isInScope(path, child)) &&
-            !(path.startsWith(`${DOT_GSPOT}/`) || isInInstalledFolder(path)) &&
+            !(path.startsWith(`${GSPOT_FOLDER}/`) || isInInstalledFolder(path)) &&
             !path.endsWith(ANSIBLE_CONFIG_EXTENSION),
     );
     if (files.length === 0) return [];

@@ -23,7 +23,7 @@ import {
     BASH_OPTION_COMMANDS,
 } from '#cli/config/checks/language/bash/script-layout.ts';
 
-function checkStrictMode(code: NumberedLine[]): LayoutIssue[] {
+function validateStrictMode(code: NumberedLine[]): LayoutIssue[] {
     const first = code.findIndex((line) => !BASH_OPTION_COMMANDS.some((command) => line.text.startsWith(command)));
     const before = new Set(code.slice(0, first === -1 ? code.length : first).map((line) => line.text));
     return before.has(STRICT_MODE)
@@ -31,7 +31,7 @@ function checkStrictMode(code: NumberedLine[]): LayoutIssue[] {
         : [{ line: code[0]?.number ?? 1, rule: 'strict-mode', text: `Put ${STRICT_MODE} before the first command.` }];
 }
 
-function checkMainFunction(file: ScriptFile, code: NumberedLine[]): LayoutIssue[] {
+function validateMainFunction(file: ScriptFile, code: NumberedLine[]): LayoutIssue[] {
     if (file.functions.length === 0) return [];
     const issues: LayoutIssue[] = [];
     if (file.functions.filter((scriptFunction) => scriptFunction.name === MAIN_FUNCTION).length !== 1)
@@ -42,7 +42,7 @@ function checkMainFunction(file: ScriptFile, code: NumberedLine[]): LayoutIssue[
     return issues;
 }
 
-function checkLibraryLine(line: NumberedLine, file: ScriptFile): LayoutIssue[] {
+function validateLibraryLine(line: NumberedLine, file: ScriptFile): LayoutIssue[] {
     if (line.text.startsWith(SET_COMMAND))
         return [
             { line: line.number, rule: 'library-options', text: 'A sourced library does not change shell options.' },
@@ -55,10 +55,10 @@ function checkLibraryLine(line: NumberedLine, file: ScriptFile): LayoutIssue[] {
         )
     )
         return [];
-    return checkTopLevelLine(line);
+    return validateTopLevelLine(line);
 }
 
-function checkTopLevelLine(line: NumberedLine): LayoutIssue[] {
+function validateTopLevelLine(line: NumberedLine): LayoutIssue[] {
     if (EXIT_CALL.test(line.text))
         return [{ line: line.number, rule: 'library-exit', text: 'A sourced library does not exit.' }];
     if (
@@ -76,7 +76,7 @@ function checkTopLevelLine(line: NumberedLine): LayoutIssue[] {
     ];
 }
 
-function checkLibraryScript(file: ScriptFile, code: NumberedLine[]): LayoutIssue[] {
+function validateLibraryScript(file: ScriptFile, code: NumberedLine[]): LayoutIssue[] {
     const last = code.at(-1);
     if (last?.text === MAIN_CALL)
         return [
@@ -89,10 +89,10 @@ function checkLibraryScript(file: ScriptFile, code: NumberedLine[]): LayoutIssue
     const issues: LayoutIssue[] = [];
     if (file.functions.some((scriptFunction) => scriptFunction.name === MAIN_FUNCTION))
         issues.push({ line: 1, rule: 'library-main', text: 'A sourced library defines no main.' });
-    return [...issues, ...code.flatMap((line) => checkLibraryLine(line, file))];
+    return [...issues, ...code.flatMap((line) => validateLibraryLine(line, file))];
 }
 
-function checkScriptFile(planned: PlannedCheck, file: ScriptFile): Finding[] {
+function validateScriptFile(planned: PlannedCheck, file: ScriptFile): Finding[] {
     const issues: LayoutIssue[] = [];
     if (!BASH_SHEBANGS.has(file.lines[0] ?? ''))
         issues.push({
@@ -101,8 +101,8 @@ function checkScriptFile(planned: PlannedCheck, file: ScriptFile): Finding[] {
             text: `The first line is not one of ${[...BASH_SHEBANGS].join(' or ')}.`,
         });
     const code = listCodeLines(file.code);
-    if (file.isExecutable) issues.push(...checkStrictMode(code), ...checkMainFunction(file, code));
-    else issues.push(...checkLibraryScript(file, code));
+    if (file.isExecutable) issues.push(...validateStrictMode(code), ...validateMainFunction(file, code));
+    else issues.push(...validateLibraryScript(file, code));
     for (const temporary of file.temporaryPaths)
         if (temporary.cleanupLines.length === 0)
             issues.push({
@@ -134,7 +134,7 @@ export async function checkBashScriptLayout(session: Session, planned: PlannedCh
     return scripts
         .filter((file) => !OTHER_SHEBANG.test(file.lines[0] ?? ''))
         .flatMap((file) =>
-            checkScriptFile(planned, file).filter(
+            validateScriptFile(planned, file).filter(
                 (finding) => finding.rule !== 'library-flow' || !isEnvironmentReader(file.path),
             ),
         );

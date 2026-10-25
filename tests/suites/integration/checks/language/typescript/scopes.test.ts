@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -29,7 +29,7 @@ test.each([...LEVELS])(
         await using _sourceChange = await changeAppliedSandbox(installedSandbox(), {
             files: {
                 ...STANDALONE_TYPESCRIPT_FILES,
-                '.gitignore': `${DOT_GSPOT}/\nnode_modules/\n`,
+                '.gitignore': `${GSPOT_FOLDER}/\nnode_modules/\n`,
                 'gspot.toml': buildSandboxSettings(['typescript'], {
                     level,
                     tables: `[[scope]]
@@ -114,7 +114,7 @@ test('typescript/tsc checks a scope through the parent tsconfig, alone when name
             level: 'all',
             scopes: [{ path: 'app', configurations: ['typescript'] }],
         }),
-        '.gitignore': `${DOT_GSPOT}/\nnode_modules/\n`,
+        '.gitignore': `${GSPOT_FOLDER}/\nnode_modules/\n`,
         'tsconfig.json': tsconfig,
         'root.ts': 'export const total = 3;\n',
         'app/source.ts': 'export const active: boolean = 3;\n',

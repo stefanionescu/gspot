@@ -14,8 +14,8 @@ import type { Configuration } from '#cli/types/configurations.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { uvLockSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
 import type { PythonToolProject } from '#cli/types/installers/projects.ts';
 import type { UvLockfile } from '#cli/types/parsers/projects/lockfiles.ts';
@@ -152,7 +152,7 @@ Install the frozen Python tool project in .gspot.
 */
 export async function installPythonTools(install: ToolInstall, executable: string): Promise<string> {
     const { root, toolConfigurations } = install.session;
-    const runFolder = join(root, DOT_GSPOT);
+    const runFolder = join(root, GSPOT_FOLDER);
 
     using settings = createTemporaryFolder();
     const credentials = writePythonSettings(root, settings.path, install.releaseAgeDays);

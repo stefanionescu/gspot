@@ -12,7 +12,7 @@ export type ProjectLicenses = {
     settings: ConfigurationTables['licenses'];
 };
 
-export type PythonLicenseReport = {
+export type PythonLicenseOutput = {
     Name: string;
     Version: string;
     'License-Expression'?: string | undefined;
@@ -22,4 +22,4 @@ export type PythonLicenseReport = {
 
 export type JavascriptPackageLicense = { licenses?: string | string[] | undefined };
 
-export type JavascriptLicenseReport = Record<string, JavascriptPackageLicense>;
+export type JavascriptLicenseOutput = Record<string, JavascriptPackageLicense>;

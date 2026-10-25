@@ -13,8 +13,8 @@ import { preparePythonLockfile } from '#cli/installers/pypi.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { prepareNpmLockfile } from '#cli/installers/npm/project.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { toolAdvisoryReportSchema } from '#tests/schemas/tool-projects.ts';
 import { readToolBinPaths, listExecutablePaths } from '#cli/tools/locate.ts';
 import { readRuntimePins, buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
@@ -37,7 +37,7 @@ async function scanToolProjects(root: string, configurations: Configuration[]) {
             '--format',
             'json',
             '--recursive',
-            join(root, DOT_GSPOT),
+            join(root, GSPOT_FOLDER),
         ],
         { cwd: root },
     );

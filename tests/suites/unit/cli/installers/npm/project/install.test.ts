@@ -11,9 +11,9 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/installers/projects.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/installers/npm/project.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/installers/npm/project.ts';
@@ -30,7 +30,7 @@ async function prepareCredentialProject(root: string, packageJson: string, lockf
         '.npmrc': CREDENTIAL_NPMRC,
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
         [GSPOT_PATHS.npmProject]: packageJson,
-        [`${DOT_GSPOT}/bun.lock`]: lockfile,
+        [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
         [`${GSPOT_PATHS.nodeModules}/authored.txt`]: 'keep installed files',
         'gspot.toml': buildSandboxSettings([]),
     };
@@ -63,7 +63,7 @@ test.each([...FAILED_INSTALL_CASES])(
             '.npmrc': source,
             'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
             [GSPOT_PATHS.npmProject]: previous,
-            [`${DOT_GSPOT}/bun.lock`]: lockfile,
+            [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
             'gspot.toml': buildSandboxSettings([]),
         });
         const session = await openSession(sandbox.path);
@@ -93,7 +93,7 @@ test.each([...FAILED_INSTALL_CASES])(
         });
         expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);
         expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(previous);
-        expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/bun.lock`), 'utf8')).toBe(lockfile);
+        expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`), 'utf8')).toBe(lockfile);
     },
 );
 
@@ -104,7 +104,9 @@ test('an npm install that runs past the time limit names the limit', async () =>
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
         [GSPOT_PATHS.npmProject]: packageJson,
-        [`${DOT_GSPOT}/bun.lock`]: JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.1' } } } }),
+        [`${GSPOT_FOLDER}/bun.lock`]: JSON.stringify({
+            workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
+        }),
     });
     const session = await openSession(sandbox.path);
     using owner = openWriter(sandbox.path);
@@ -180,7 +182,10 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
     const message = lockfileError.message;
     expect(message).toBe('The npm tool project needs Node.js to create its lockfile. Install Node.js.');
     expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.npmProject))).toBe(false);
-    await createFileTree(sandbox.path, { [GSPOT_PATHS.npmProject]: packageJson, [`${DOT_GSPOT}/bun.lock`]: lockfile });
+    await createFileTree(sandbox.path, {
+        [GSPOT_PATHS.npmProject]: packageJson,
+        [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
+    });
     const cached = await prepareNpmLockfile(
         await buildNpmToolInstall(session, owner),
         { path: GSPOT_PATHS.npmProject, content: packageJson },
@@ -188,7 +193,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
     );
     expect(cached.content).toBe(lockfile);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(packageJson);
-    expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/bun.lock`), 'utf8')).toBe(lockfile);
+    expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`), 'utf8')).toBe(lockfile);
 });
 test('a Yarn Classic repository resolves its tool lockfile with npm and the release hold', async () => {
     await using sandbox = await testdir({

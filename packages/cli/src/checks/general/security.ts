@@ -3,10 +3,10 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
-import { runCheckCommand } from '#cli/runs/command/check.ts';
+import { runCommandCheck } from '#cli/runs/command/check.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { SEMGREP_TOOL } from '#cli/config/checks/general/security.ts';
-import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 
 function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
@@ -15,7 +15,7 @@ function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[]
         configuration.configFiles
             .filter((file) => file.tool.includes(SEMGREP_TOOL) && file.target.endsWith('.yml'))
             .filter((file) => file.level !== 'all' || session.settingsFile.settings.level === 'all')
-            .map((file) => getConfigFileTarget(folder.path, file, getConfigFiles(session))),
+            .map((file) => getConfigFileTarget(folder.path, file, buildConfigFiles(session))),
     );
     return [...new Set([...ruleFiles, ...getTable(settings, 'tools.semgrep').rule_files])];
 }
@@ -37,7 +37,7 @@ export async function checkSecuritySemgrep(session: CheckSession, planned: Plann
             cause: 'setting',
             note: 'No selected configuration or tools.semgrep.rule_files supplies local rules.',
         };
-    return runCheckCommand(session, planned, {
+    return runCommandCheck(session, planned, {
         command: [...command, ...rules.flatMap((path) => ['--config', join(session.root, path)])],
     });
 }

@@ -6,7 +6,7 @@ import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
-import { runCheckCommand } from '#cli/runs/command/check.ts';
+import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { getSiblingCommand, runOverPushedCommits } from '#cli/checks/pushed-commits.ts';
 import { MESSAGE_FILE, COMMITLINT_CHECK, GIT_COMMIT_MESSAGE_ARGUMENTS } from '#cli/config/checks/general/commits.ts';
@@ -33,7 +33,7 @@ export async function checkCommitsCommitlintPushed(session: CheckSession, planne
                 note: `Cannot read commit ${commit}: ${read.stderr.trim()}`,
             };
         writeFileSync(commitFile, read.stdout, { mode: PRIVATE_FILE });
-        const checked = await runCheckCommand(
+        const checked = await runCommandCheck(
             session,
             { ...planned, messageFile: commitFile },
             { command: getSiblingCommand(planned, COMMITLINT_CHECK) },

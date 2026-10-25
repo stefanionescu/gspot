@@ -81,7 +81,7 @@ function stripPrefixes(name: string, overrides: CompiledOverride[]): string {
     return result === '' ? name : result;
 }
 
-function checkCase(checked: CheckedIdentifier, name: string, limits: CategoryLimits) {
+function validateCase(checked: CheckedIdentifier, name: string, limits: CategoryLimits) {
     if (limits.caseNames.length === 0) return undefined;
     const isFileName = checked.identifier.category === 'files';
     const digitless = name.replaceAll(DIGIT_RUNS, '');
@@ -102,7 +102,7 @@ function checkCase(checked: CheckedIdentifier, name: string, limits: CategoryLim
           );
 }
 
-function checkDigits(checked: CheckedIdentifier, words: string[], overrides: CompiledOverride[]) {
+function validateDigits(checked: CheckedIdentifier, words: string[], overrides: CompiledOverride[]) {
     if (
         !words.some((segment) => DIGIT.test(segment) && !NUMERIC_WORDS.has(segment)) ||
         overrides.some((override) => override.isDigitsAllowed)
@@ -111,7 +111,7 @@ function checkDigits(checked: CheckedIdentifier, words: string[], overrides: Com
     return buildFinding(checked, checked.place, 'digits', `${checked.prefix}a digit is not a word.`);
 }
 
-function checkLength(checked: CheckedIdentifier, name: string, limits: CategoryLimits) {
+function validateLength(checked: CheckedIdentifier, name: string, limits: CategoryLimits) {
     if (limits.maxChars <= 0 || name.length <= limits.maxChars) return undefined;
     return buildFinding(
         checked,
@@ -121,7 +121,7 @@ function checkLength(checked: CheckedIdentifier, name: string, limits: CategoryL
     );
 }
 
-function checkWordCount(checked: CheckedIdentifier, words: string[], limits: CategoryLimits) {
+function validateWordCount(checked: CheckedIdentifier, words: string[], limits: CategoryLimits) {
     if (limits.maxWords <= 0 || words.length <= limits.maxWords) return undefined;
     return buildFinding(
         checked,
@@ -131,7 +131,7 @@ function checkWordCount(checked: CheckedIdentifier, words: string[], limits: Cat
     );
 }
 
-function checkRepeatedWords(checked: CheckedIdentifier, words: string[], overrides: CompiledOverride[]) {
+function validateRepeatedWords(checked: CheckedIdentifier, words: string[], overrides: CompiledOverride[]) {
     if (overrides.some((override) => override.isRepeatAllowed)) return undefined;
     const repeated = findRepeatedWord(words);
     return repeated === undefined
@@ -163,7 +163,7 @@ function removeAllowedPhrases(sourceWords: string[], phrases: string[][]): strin
     return words;
 }
 
-function checkBannedWords(checked: CheckedIdentifier, nameWords: string[]): Finding | undefined {
+function validateBannedWords(checked: CheckedIdentifier, nameWords: string[]): Finding | undefined {
     const { settings } = checked;
     const terms = checked.isTestFile
         ? settings.bannedWords.filter((term) => term.group !== TEST_TERM_GROUP)
@@ -245,12 +245,12 @@ export function validateIdentifier(identifier: Identifier, naming: FileNaming): 
     const nameWords = splitWords(name);
     const words = splitWords(name.split('.', 1)[0] ?? name).filter((segment) => !DIGITS_ONLY.test(segment));
     const findings = [
-        checkCase(context, name, limits),
-        checkDigits(context, nameWords, overrides),
-        checkLength(context, name, limits),
-        checkWordCount(context, words, limits),
-        checkRepeatedWords(context, words, overrides),
-        checkBannedWords(context, nameWords),
+        validateCase(context, name, limits),
+        validateDigits(context, nameWords, overrides),
+        validateLength(context, name, limits),
+        validateWordCount(context, words, limits),
+        validateRepeatedWords(context, words, overrides),
+        validateBannedWords(context, nameWords),
     ];
     return findings.filter((finding) => finding !== undefined);
 }

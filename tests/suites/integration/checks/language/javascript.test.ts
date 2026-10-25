@@ -10,7 +10,7 @@ import { COMPILER_SOURCE } from '#tests/config/typescript.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
@@ -47,7 +47,7 @@ test("javascript/tsc uses gspot's own TypeScript when the project has none", asy
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(broken.report.checks).toMatchObject([...OWN_TYPESCRIPT_RESULTS]);
     expect(broken.report.checks[0]!.command![0]).toBe(
-        Bun.which('tsc', { PATH: join(root, DOT_GSPOT, NPM_BIN_FOLDER) })!,
+        Bun.which('tsc', { PATH: join(root, GSPOT_FOLDER, NPM_BIN_FOLDER) })!,
     );
     await writeFile(join(root, 'source.js'), 'export const value = 1;\n');
     const corrected = parseCheckReport(await spawnGspot(root, ['check', '--only', 'javascript/tsc', '--json']));

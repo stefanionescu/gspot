@@ -17,11 +17,11 @@ import type { MiseInstall } from '#cli/types/installers/mise.ts';
 import { runRequiredInstallStep } from '#cli/installers/steps.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { redactInstallOutput } from '#cli/installers/credentials.ts';
 import { miseLockfileSchema } from '#cli/schemas/installers/mise.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import type { Tool, MiseToolPin } from '#cli/types/configurations.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
 import { MISE_LOCK_FILE, MISE_CONFIG_FILE } from '#cli/config/files/names.ts';
 import { MISE_TOOL, MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/locate.ts';
@@ -186,7 +186,7 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
         { command: MISE_TRUST_ARGUMENTS, cwd: session.root, env: {} },
         {
             command: [...MISE_INSTALL_ARGUMENTS, ...pins.map((pin) => pin.name)],
-            cwd: join(session.root, DOT_GSPOT),
+            cwd: join(session.root, GSPOT_FOLDER),
             env: MISE_LOCKED_ENVIRONMENT,
         },
     ];

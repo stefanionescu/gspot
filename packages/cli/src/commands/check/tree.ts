@@ -155,7 +155,7 @@ Check the files of one working tree: the repository, or a copy of the staged ind
 @param revision the commit or index that the copy holds, if any.
 @returns the command result.
 */
-export async function checkTree(
+export async function runTreeCheck(
     treeFolder: string,
     options: CheckOptions,
     cancelSignal: AbortSignal,

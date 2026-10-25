@@ -1,12 +1,12 @@
-import { checkTree } from '#cli/commands/check/tree.ts';
 import type { RunReport } from '#cli/types/runs/run.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
+import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { selectPush } from '#cli/repository/revisions/push.ts';
 import { type PushReport, type CheckOptions } from '#cli/types/commands/check.ts';
 import { type PushRevision, type PushedRevisions } from '#cli/types/repository/revisions.ts';
 
-async function checkRevision(
+async function runRevisionCheck(
     root: string,
     options: CheckOptions,
     cancelSignal: AbortSignal,
@@ -14,7 +14,7 @@ async function checkRevision(
 ): Promise<CommandResult<RunReport> | undefined> {
     try {
         using copy = await copyRevision(root, { kind: 'commit', hash: revision.hash }, cancelSignal);
-        return await checkTree(copy.root, options, cancelSignal, {
+        return await runTreeCheck(copy.root, options, cancelSignal, {
             ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
             base: revision.base,
             commits: revision.commits,
@@ -55,7 +55,7 @@ Check each revision that the pre-push input names, each in a copy.
 @param cancelSignal stops the run.
 @returns the command result for the push.
 */
-export async function checkPush(
+export async function runPushCheck(
     root: string,
     options: CheckOptions & { push: NonNullable<CheckOptions['push']> },
     cancelSignal: AbortSignal,
@@ -67,7 +67,7 @@ export async function checkPush(
             ? ['The push sends no commits to check.\n']
             : [];
     for (const revision of selected.revisions) {
-        const result = await checkRevision(root, options, cancelSignal, revision);
+        const result = await runRevisionCheck(root, options, cancelSignal, revision);
         if (result === undefined) break;
         revisions.push({
             hash: revision.hash,

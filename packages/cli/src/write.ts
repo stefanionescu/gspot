@@ -21,7 +21,7 @@ import type { BlockStyle } from '#cli/types/parsers/formats/managed-blocks.ts';
 import { openFiles, walkFiles, removeEmptyFolders } from '#cli/system/files/open.ts';
 import type { WritePlan, ManagedKeys, ReplacementRequest } from '#cli/types/write.ts';
 import { TOML_EXTENSION, EMPTY_JSON_TEXT, WRITER_LOCK_FILE } from '#cli/config/write.ts';
-import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 
 function openManagedKeysFile(path: string, onDisk: FileContents | undefined, keys: ManagedKeys['keys']): EditableFile {
@@ -103,7 +103,7 @@ function readGeneratedPatterns(disk: Files): string[] {
 
 function isOwned(path: string, disk: Files, generatedPatterns: string[]): boolean {
     if (!isInside(path)) return false;
-    if (path.startsWith(`${DOT_GSPOT}/`)) return true;
+    if (path.startsWith(`${GSPOT_FOLDER}/`)) return true;
     const file = disk.readKeepingLinks(path);
     if (file !== undefined && file.isLink !== true && hasGeneratedHeader(file.bytes.toString('utf8'))) return true;
     return generatedPatterns.some((pattern) => buildPathMatcher([pattern])(path));
@@ -120,10 +120,10 @@ export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, ex
     using disk = openFiles(session.root);
     const blockPaths = new Set([AGENTS_FILE, GITIGNORE_FILE, GITATTRIBUTES_FILE]);
     const installations = [GSPOT_PATHS.state, ...Object.values(INSTALLED_TOOL_FOLDERS)];
-    const ownFolder = disk.readStats(DOT_GSPOT);
+    const ownFolder = disk.readStats(GSPOT_FOLDER);
     const ownPaths: string[] = [];
     if (ownFolder !== undefined) {
-        walkFiles(disk, DOT_GSPOT, (path) => {
+        walkFiles(disk, GSPOT_FOLDER, (path) => {
             if (installations.some((folder) => path === folder || path.startsWith(`${folder}/`))) return false;
             if (lstatSync(join(session.root, path)).isDirectory()) return true;
             ownPaths.push(path);

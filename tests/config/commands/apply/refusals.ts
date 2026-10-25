@@ -1,4 +1,4 @@
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 
 export const LINKED_FILE_CASES = [
     {
@@ -11,6 +11,6 @@ export const LINKED_FILE_CASES = [
         path: GSPOT_PATHS.versionPin,
         outside: '0.0.1\n',
         files: { 'project/gspot.toml': 'configurations = []\n' },
-        message: `${DOT_GSPOT}/version is not a regular file. Use a regular file.`,
+        message: `${GSPOT_FOLDER}/version is not a regular file. Use a regular file.`,
     },
 ] as const;

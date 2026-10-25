@@ -2,13 +2,13 @@ import ts from 'typescript';
 import { compareText } from '#cli/system/text.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { buildBaseResult } from '#cli/runs/report.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { runCheckCommand } from '#cli/runs/command/check.ts';
+import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { join, resolve, relative, isAbsolute } from 'node:path';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
@@ -45,7 +45,7 @@ function buildReferenceTsconfig(
     copy: TypeScriptReferenceCopy & { path: string; config: TypeScriptConfiguration },
 ): Record<string, unknown> {
     const { root, copyRoot, path, config } = copy;
-    const output = join(copyRoot, DOT_GSPOT, TSC_REFERENCE_OUTPUT_FOLDER, relative(root, path));
+    const output = join(copyRoot, GSPOT_FOLDER, TSC_REFERENCE_OUTPUT_FOLDER, relative(root, path));
     const base = (config.options.baseUrl ?? config.options['pathsBasePath']) as string;
     const paths =
         config.options.paths === undefined
@@ -91,7 +91,7 @@ export function appendTsbuildinfoFlag(
     name: string,
 ): void {
     if (options?.incremental !== true && options?.composite !== true) return;
-    command.push(TSBUILDINFO_FLAG, join(folder, DOT_GSPOT, name));
+    command.push(TSBUILDINFO_FLAG, join(folder, GSPOT_FOLDER, name));
 }
 
 /**
@@ -179,7 +179,7 @@ export async function runTsc(
         appendTsbuildinfoFlag(command, project?.config.options, tsbuildinfoFolder, TSCONFIG_TSBUILDINFO);
     }
     command.push(...TSC_UNFORMATTED_OUTPUT);
-    return runCheckCommand(session, planned, { command, copyRoot: session.root });
+    return runCommandCheck(session, planned, { command, copyRoot: session.root });
 }
 
 /**

@@ -1,4 +1,4 @@
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 
 export const CACHED_PATHS = [
     '~/.npm/_cacache',
@@ -53,7 +53,7 @@ export const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';
 
 export const CI_CACHE_FILES = [
     GSPOT_PATHS.npmProject,
-    `${DOT_GSPOT}/*lock*`,
+    `${GSPOT_FOLDER}/*lock*`,
     GSPOT_PATHS.pythonProject,
     GSPOT_PATHS.miseProject,
     GSPOT_PATHS.miseLockfile,

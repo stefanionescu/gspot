@@ -11,8 +11,8 @@ import { writeYarnSettings } from '#cli/installers/npm/yarn.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/installers/npm/yarn.ts';
 import { buildPackageManagerCommand } from '#cli/repository/npm/package-manager.ts';
@@ -140,7 +140,7 @@ export async function prepareNpmLockfile(
 ): Promise<GeneratedFile> {
     const { packageManager, registryEnvironment } = install;
     const lockfile = selectLockfileName(packageManager.name);
-    const path = `${DOT_GSPOT}/${lockfile}`;
+    const path = `${GSPOT_FOLDER}/${lockfile}`;
     const previous = install.writer.read(path);
     const saved = previous?.bytes.toString('utf8');
     if (saved !== undefined) {
@@ -168,7 +168,7 @@ export async function installNpmTools(install: NpmToolInstall): Promise<string> 
     const packageManager = install.packageManager;
     install.writer.deleteTree(GSPOT_PATHS.nodeModules);
     await runPackageManager(install, {
-        runFolder: join(root, DOT_GSPOT),
+        runFolder: join(root, GSPOT_FOLDER),
         packageManager,
         commandArguments: [...PACKAGE_MANAGER_ARGUMENTS[packageManager.name].install],
         failure: 'installation failed',

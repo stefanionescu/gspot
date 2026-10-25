@@ -12,7 +12,7 @@ import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
-import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
 import { BUILD_SOURCE_FOLDER } from '#cli/config/checks/language/swift/cache.ts';
@@ -205,7 +205,7 @@ export function listSwiftlintConfigFiles(session: Session, planned: PlannedCheck
             .values()
             .flatMap((configuration) => configuration.configFiles)
             .filter((configFile) => configFile.pointer?.path === SWIFTLINT_CONFIG_FILE)
-            .map((configFile) => getConfigFileTarget(planned.scope.folder.path, configFile, getConfigFiles(session))),
+            .map((configFile) => getConfigFileTarget(planned.scope.folder.path, configFile, buildConfigFiles(session))),
     ];
     for (const file of planned.files) {
         const folders = listEnclosingFolders(posix.dirname(file.path));

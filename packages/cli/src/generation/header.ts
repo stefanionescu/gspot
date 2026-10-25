@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { extractExtension } from '#cli/system/paths.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 
 import {
     JSON_EXTENSIONS,
@@ -18,7 +18,7 @@ Format the header of a generated file outside .gspot.
 @returns the comment block with a final newline, or '' inside .gspot and for JSON that takes no comments.
 */
 export function formatHeader(path: string, notes: string[] = []): string {
-    if (path.startsWith(`${DOT_GSPOT}/`)) return '';
+    if (path.startsWith(`${GSPOT_FOLDER}/`)) return '';
     const extension = extractExtension(path);
     const isSlashComment = SLASH_COMMENT_EXTENSIONS.has(extension) || SLASH_COMMENT_FILES.has(posix.basename(path));
     if (JSON_EXTENSIONS.has(extension) && !isSlashComment) return '';

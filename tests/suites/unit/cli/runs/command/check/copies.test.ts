@@ -11,7 +11,7 @@ import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/uv.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { runCheckCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
+import { runCommandCheck, buildCommandSetup } from '#cli/runs/command/check.ts';
 import { writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 test('a Python check that runs in a copy uses the environment that the working tree installed', async () => {
@@ -69,7 +69,7 @@ test('a command run in a copy finds the other tools beside its program before a 
     using _environment = overrideEnvironment({ PATH: join(sandbox.path, 'inactive') });
     using _which = fakeExecutableLookup(join(sandbox.path, `native/shellcheck${isWindows ? '.cmd' : ''}`));
 
-    const result = await runCheckCommand(buildCheckSession(session), planned, { copyRoot: join(sandbox.path, 'copy') });
+    const result = await runCommandCheck(buildCheckSession(session), planned, { copyRoot: join(sandbox.path, 'copy') });
     expect(result.status, result.note).toBe('passed');
     expect(result.findings).toStrictEqual([]);
 });

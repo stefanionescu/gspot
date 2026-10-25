@@ -27,11 +27,11 @@ Reuse generated settings only while the session keeps the same repository read c
 @param session the current settings, scopes, and repository files.
 @returns the generated settings and scope destinations.
 */
-export function getConfigFiles(session: Session): ConfigFileGeneration {
+export function buildConfigFiles(session: Session): ConfigFileGeneration {
     const repositorySession =
         session.root === session.repository.root ? session : { ...session, root: session.repository.root };
     return getCachedMapValue(session.reads, configFilesKey, session.repository, () =>
-        buildConfigFiles(repositorySession),
+        buildScopeConfigFiles(repositorySession),
     );
 }
 
@@ -121,7 +121,7 @@ function addPointerFiles(
     }
 }
 
-function buildConfigFiles(session: Session): ConfigFileGeneration {
+function buildScopeConfigFiles(session: Session): ConfigFileGeneration {
     const configFiles = listOwnedConfigFiles(session);
     const state: ConfigFileBuildState = { targets: new Map(), files: new Map(), failures: new Map() };
     buildSourceFiles(configFiles, state);

@@ -1,20 +1,20 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { type SemgrepReport } from '#cli/types/runs/output/reports.ts';
+import { type SemgrepOutput } from '#cli/types/runs/output/reports.ts';
 
 const positionSchema = z.object({
     line: z.number().int().positive(),
     col: z.number().int().positive(),
-} satisfies SchemaShape<SemgrepReport['results'][number]['start']>);
+} satisfies SchemaShape<SemgrepOutput['results'][number]['start']>);
 const messageSchema = z.object({ message: z.string().min(1) } satisfies SchemaShape<
-    NonNullable<NonNullable<SemgrepReport['results']>[number]['extra']>
+    NonNullable<NonNullable<SemgrepOutput['results']>[number]['extra']>
 >);
 
 const spansSchema = z.object({ file: z.string().min(1), start: positionSchema } satisfies SchemaShape<
-    NonNullable<SemgrepReport['errors'][number]['spans']>[number]
+    NonNullable<SemgrepOutput['errors'][number]['spans']>[number]
 >);
 const errorTypeSchema = z.union([z.string(), z.tuple([z.string(), z.unknown()])]) satisfies z.ZodType<
-    SemgrepReport['errors'][number]['type']
+    SemgrepOutput['errors'][number]['type']
 >;
 
 const errorsSchema = z.object({
@@ -23,7 +23,7 @@ const errorsSchema = z.object({
     message: z.string().min(1),
     path: z.string().min(1).optional(),
     spans: spansSchema.array().optional(),
-} satisfies SchemaShape<SemgrepReport['errors'][number]>);
+} satisfies SchemaShape<SemgrepOutput['errors'][number]>);
 
 export const semgrepReportSchema = z.object({
     results: z
@@ -32,7 +32,7 @@ export const semgrepReportSchema = z.object({
             path: z.string().min(1),
             start: positionSchema,
             extra: messageSchema,
-        } satisfies SchemaShape<NonNullable<SemgrepReport['results']>[number]>)
+        } satisfies SchemaShape<NonNullable<SemgrepOutput['results']>[number]>)
         .array(),
     errors: errorsSchema.array(),
-} satisfies SchemaShape<SemgrepReport>);
+} satisfies SchemaShape<SemgrepOutput>);

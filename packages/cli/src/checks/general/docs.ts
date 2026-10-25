@@ -79,7 +79,7 @@ function isMissing(token: string, file: string, index: PathIndex): boolean {
     return !index.paths.has(clean) && (index.paths.has(first) || (!first.includes('.') && FILE_EXTENSION.test(clean)));
 }
 
-function checkProseLine(planned: PlannedCheck, file: string, prose: NumberedLine, index: PathIndex): Finding[] {
+function validateProseLine(planned: PlannedCheck, file: string, prose: NumberedLine, index: PathIndex): Finding[] {
     const { number, text: line } = prose;
     const paths = extractPathTokens(line)
         .filter((token) => isMissing(token, file, index))
@@ -200,7 +200,7 @@ export function checkDocsMissingPaths(session: Session, planned: PlannedCheck): 
         const index: PathIndex = { paths: repositoryPaths, isIgnored, tasks: readTaskNames(session, scope) };
         return sources.flatMap((file) => {
             const text = readCachedText(session.reads, file.path);
-            return extractProseLines(text).flatMap((prose) => checkProseLine(planned, file.path, prose, index));
+            return extractProseLines(text).flatMap((prose) => validateProseLine(planned, file.path, prose, index));
         });
     });
 }

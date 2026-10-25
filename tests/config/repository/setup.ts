@@ -1,4 +1,4 @@
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 
 export const LINKED_HOOK_FOLDERS = [
     { path: '.husky', kind: 'husky' },
@@ -95,7 +95,7 @@ export const CI_JOB_DOCUMENTS = [
 export const PRETTIER_SETTINGS_FILES = {
     'src/.prettierrc.json': '{"semi":false}',
     'vendor/.prettierrc.json': '{"semi":true}',
-    [`${DOT_GSPOT}/.prettierrc.json`]: '{"tabWidth":8}',
+    [`${GSPOT_FOLDER}/.prettierrc.json`]: '{"tabWidth":8}',
     [GSPOT_PATHS.npmProject]: 'unowned malformed output',
     'nested/.gspot/package.json': '{}',
 } as const;

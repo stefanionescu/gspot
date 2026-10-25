@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import type { TypecheckResult } from '#tests/types/reports.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
@@ -96,7 +96,7 @@ test.each([...LEVELS])(
                 level,
                 scopes: [{ path: scope, configurations: ['typescript'] }],
             }),
-            '.gitignore': `node_modules/\n${DOT_GSPOT}/\n`,
+            '.gitignore': `node_modules/\n${GSPOT_FOLDER}/\n`,
             [`${scope}/tsconfig.json`]: authored,
             [`${scope}/src/main.ts`]: 'export const echo: number = "wrong";\n',
             [`${scope}/build/cache.tsbuildinfo`]: 'authored metadata\n',
@@ -140,7 +140,7 @@ test.each([...OUTDIR_CASES])('$name', async ({ kind }) => {
     const outsideFiles = await readdir(outside.path);
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-        '.gitignore': `node_modules\n${DOT_GSPOT}\n`,
+        '.gitignore': `node_modules\n${GSPOT_FOLDER}\n`,
         'tsconfig.json': '{"files":[],"references":[{"path":"./app"}]}',
         'app/tsconfig.json': JSON.stringify({
             compilerOptions: {

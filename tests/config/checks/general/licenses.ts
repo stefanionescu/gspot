@@ -1,4 +1,4 @@
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 
 const ABSENT_PACKAGE_LOCKFILE = `[[package]]
 name = "Absent_Package"
@@ -116,11 +116,11 @@ reason = "Reviewed the installed Python package."
 `;
 
 export const LICENSE_TOOL_PROJECT_FILES = {
-    [`${DOT_GSPOT}/probe/pyproject.toml`]: `[project]
+    [`${GSPOT_FOLDER}/probe/pyproject.toml`]: `[project]
 name = "tooling"
 version = "0.0.0"
 `,
-    [`${DOT_GSPOT}/probe/.venv/installed`]: 'Absent_Package@2.0.0',
+    [`${GSPOT_FOLDER}/probe/.venv/installed`]: 'Absent_Package@2.0.0',
 } as const;
 
 export const PYTHON_LICENSE_SOURCES = [

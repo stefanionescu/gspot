@@ -2,7 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 
 test('a check copy builds the config files of the repository, not of the copy folder', async () => {
     await using sandbox = await testdir({
@@ -16,6 +16,6 @@ test('a check copy builds the config files of the repository, not of the copy fo
     });
     await using copy = await testdir({ 'docs/src/index.ts': 'export const value = 1;\n' });
 
-    const copied = getConfigFiles({ ...(await openSession(sandbox.path)), root: copy.path });
-    expect(copied).toStrictEqual(getConfigFiles(await openSession(sandbox.path)));
+    const copied = buildConfigFiles({ ...(await openSession(sandbox.path)), root: copy.path });
+    expect(copied).toStrictEqual(buildConfigFiles(await openSession(sandbox.path)));
 });

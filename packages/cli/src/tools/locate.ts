@@ -7,9 +7,9 @@ import { openFiles } from '#cli/system/files/open.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { listMisePins } from '#cli/configurations/tools.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import type { ExecutableSearch } from '#cli/types/tools/inspection.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { buildVenvBinPath, convertToPosixPath, listExecutableNames } from '#cli/system/paths.ts';
@@ -24,7 +24,7 @@ import {
 
 function listSearchFolders(root: string, options: ExecutableSearch): string[] {
     const { searchFolders, toolFolderKind } = options;
-    if (toolFolderKind === 'npm') return [join(root, DOT_GSPOT, NPM_BIN_FOLDER)];
+    if (toolFolderKind === 'npm') return [join(root, GSPOT_FOLDER, NPM_BIN_FOLDER)];
     if (toolFolderKind === 'python') return [buildVenvBinPath(join(root, GSPOT_PATHS.pythonEnvironment))];
     return [...new Set(searchFolders)].flatMap((folder) => [
         join(folder, NPM_BIN_FOLDER),
@@ -33,7 +33,7 @@ function listSearchFolders(root: string, options: ExecutableSearch): string[] {
 }
 
 function isExecutablePresent(files: Files, root: string, path: string): boolean {
-    if (!isToolProjectPath(root, path)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
+    if (!isInGspotFolder(root, path)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
         files.readCanonicalPath(convertToPosixPath(relative(root, path)));
         return true;
@@ -88,12 +88,12 @@ export function readMiseBinPaths(root: string, toolNames: string[], timeoutSecon
     if (
         toolNames.length === 0 ||
         which.sync(MISE_TOOL, { nothrow: true }) === null ||
-        statSync(join(root, DOT_GSPOT), { throwIfNoEntry: false }) === undefined
+        statSync(join(root, GSPOT_FOLDER), { throwIfNoEntry: false }) === undefined
     )
         return [];
     const command = [...MISE_BIN_PATHS_ARGUMENTS, ...toolNames];
     const result = spawnProcessBlocking(command, {
-        cwd: join(root, DOT_GSPOT),
+        cwd: join(root, GSPOT_FOLDER),
         timeoutSeconds,
         env: TOOL_ENV,
     });
@@ -142,6 +142,6 @@ Check whether a path sits inside the gspot folder, where the npm and Python tool
 @returns whether the path sits inside the gspot folder.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
-export function isToolProjectPath(root: string, path: string): boolean {
-    return convertToPosixPath(relative(root, path)).startsWith(`${DOT_GSPOT}/`);
+export function isInGspotFolder(root: string, path: string): boolean {
+    return convertToPosixPath(relative(root, path)).startsWith(`${GSPOT_FOLDER}/`);
 }

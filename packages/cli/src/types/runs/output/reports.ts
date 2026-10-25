@@ -32,7 +32,7 @@ export type MarkdownlintResult = {
     fixInfo: Record<string, unknown> | null;
 };
 
-export type KnipReport = {
+export type KnipOutput = {
     issues: ({ file: string; owners?: { name: string }[] | undefined } & Partial<
         Record<Exclude<keyof typeof KNIP_ISSUE_MESSAGES, 'cycles' | 'duplicates'>, KnipSymbol[] | undefined>
     > & { cycles?: KnipSymbol[][] | undefined; duplicates?: KnipSymbol[][] | undefined })[];
@@ -64,7 +64,7 @@ export type SarifRun = {
     invocations?: SarifAnalysis[] | undefined;
 };
 
-export type SemgrepReport = {
+export type SemgrepOutput = {
     results: { check_id: string; path: string; start: { line: number; col: number }; extra: { message: string } }[];
     errors: {
         code: number;

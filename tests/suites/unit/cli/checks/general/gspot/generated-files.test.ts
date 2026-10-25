@@ -6,7 +6,7 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
@@ -24,7 +24,7 @@ test('gspot/generated-files reports an edited file with the apply help and passe
     const missingLocks = initial.report.checks[0]!.findings;
     expect(missingLocks).toMatchObject([
         { file: GSPOT_PATHS.miseLockfile, rule: 'missing' },
-        { file: `${DOT_GSPOT}/package-lock.json`, rule: 'missing' },
+        { file: `${GSPOT_FOLDER}/package-lock.json`, rule: 'missing' },
         { file: GSPOT_PATHS.uvLockfile, rule: 'missing' },
     ]);
     const generated = await readFile(join(sandbox.path, shellcheckrc), 'utf8');

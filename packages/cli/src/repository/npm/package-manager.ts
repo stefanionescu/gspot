@@ -4,8 +4,8 @@ import { join, dirname } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { CI_NODE } from '#cli/config/generation/ci.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { VERSION_FLAG } from '#cli/config/tools/versions.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
@@ -115,7 +115,7 @@ export function detectPackageManager(root: string, trackedPaths: string[]): Pack
     const packageJsonPaths = [
         PACKAGE_JSON,
         ...trackedPaths
-            .filter((path) => path.endsWith(`/${PACKAGE_JSON}`) && !path.startsWith(`${DOT_GSPOT}/`))
+            .filter((path) => path.endsWith(`/${PACKAGE_JSON}`) && !path.startsWith(`${GSPOT_FOLDER}/`))
             .toSorted((left, right) => compareText(left, right)),
     ];
     const selected = readFirstPackageManager(root, packageJsonPaths);

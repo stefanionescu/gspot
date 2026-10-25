@@ -4,9 +4,9 @@ import { constants, accessSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { isGitRepository } from '#cli/system/git.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
-import { checkPush } from '#cli/commands/check/push.ts';
-import { checkTree } from '#cli/commands/check/tree.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
+import { runPushCheck } from '#cli/commands/check/push.ts';
+import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { CheckProgress } from '#cli/types/runs/run.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
@@ -169,7 +169,7 @@ function parseCheckFlags(paths: string[], flags: CheckFlags, cwd: string): { roo
     return { root, options };
 }
 
-async function checkStaged(
+async function runStagedCheck(
     root: string,
     options: CheckOptions,
     cancelSignal: AbortSignal,
@@ -177,7 +177,7 @@ async function checkStaged(
     const staged = await readStagedPaths(root, cancelSignal);
     using copy = await copyRevision(root, { kind: 'index' }, cancelSignal);
     const paths = options.paths.map((path) => buildArgumentPath(root, options.cwd, path));
-    return await checkTree(copy.root, { ...options, cwd: copy.root, paths }, cancelSignal, {
+    return await runTreeCheck(copy.root, { ...options, cwd: copy.root, paths }, cancelSignal, {
         ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
         content: 'index',
         cwd: options.cwd,
@@ -197,12 +197,18 @@ async function runCheckSelection(
     if (options.hook === 'pre-push') {
         const input = await readPushInput(cancelSignal);
         const push = { stdin: input, ...(options.paths[0] !== undefined && { remote: options.paths[0] }) };
-        return await checkPush(root, { ...options, paths: [], push }, cancelSignal);
+        return await runPushCheck(root, { ...options, paths: [], push }, cancelSignal);
     }
-    return await (options.staged ? checkStaged(root, options, cancelSignal) : checkTree(root, options, cancelSignal));
+    return await (options.staged
+        ? runStagedCheck(root, options, cancelSignal)
+        : runTreeCheck(root, options, cancelSignal));
 }
 
-async function runCheck(paths: string[], flags: CheckFlags, cwd: string): Promise<CommandResult<CheckCommandJson>> {
+async function runCheckCommand(
+    paths: string[],
+    flags: CheckFlags,
+    cwd: string,
+): Promise<CommandResult<CheckCommandJson>> {
     try {
         return await runCancelableCommand(async (cancelSignal) => {
             const { root, options } = parseCheckFlags(paths, flags, cwd);
@@ -234,6 +240,6 @@ export function registerCheck(program: Command, onResult: CommandCompletion): vo
         .addOption(new Option('--hook <hook>', COMMAND_HELP.check.options['--hook <hook>']).choices(CHECK_HOOKS))
         .option('--verbose', COMMAND_HELP.check.options['--verbose'])
         .action(async (paths, flags) => {
-            onResult(await runCheck(paths, flags, process.cwd()));
+            onResult(await runCheckCommand(paths, flags, process.cwd()));
         });
 }

@@ -1,4 +1,4 @@
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 
 export const AUTO_LF_ATTRIBUTES = ['text=auto', 'eol=lf'] as const;
 
@@ -8,7 +8,7 @@ export const ATTRIBUTE_GLOB_CHARACTERS = /[\\*?[]/gu;
 
 export const LF_ATTRIBUTES = 'text eol=lf';
 
-export const GIT_ATTRIBUTES_BLOCK = `${DOT_GSPOT}/** linguist-generated
-${DOT_GSPOT}/** ${LF_ATTRIBUTES}
+export const GIT_ATTRIBUTES_BLOCK = `${GSPOT_FOLDER}/** linguist-generated
+${GSPOT_FOLDER}/** ${LF_ATTRIBUTES}
 .gitignore ${LF_ATTRIBUTES}
 .gitattributes ${LF_ATTRIBUTES}`;

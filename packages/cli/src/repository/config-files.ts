@@ -2,7 +2,7 @@ import picomatch from 'picomatch';
 import { posix, extname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
@@ -92,7 +92,7 @@ export function listConflictingConfigFiles(
 ): ConflictingConfigFile[] {
     const inventory = new Set(
         files
-            .filter((file) => file.kind === 'source' && !file.path.startsWith(`${DOT_GSPOT}/`))
+            .filter((file) => file.kind === 'source' && !file.path.startsWith(`${GSPOT_FOLDER}/`))
             .map((file) => file.path),
     );
     const selected = [...configurations];

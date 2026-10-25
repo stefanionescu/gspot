@@ -5,7 +5,7 @@ import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { type ApplyReport, type GenerationResult } from '#cli/types/generation/files.ts';
-import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/generation/write.ts';
 import { planBlock, writePlans, planRemovals, listStrayPaths, planManagedKeys, planReplacements } from '#cli/write.ts';
 
@@ -123,8 +123,8 @@ export async function writeGeneratedFiles(
 }
 
 function formatGeneratedChanges(action: string, paths: string[]): string[] {
-    const gspotCount = paths.filter((path) => path.startsWith(`${DOT_GSPOT}/`)).length;
-    const outside = paths.filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
+    const gspotCount = paths.filter((path) => path.startsWith(`${GSPOT_FOLDER}/`)).length;
+    const outside = paths.filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
     const label = action.padEnd('updated  '.length);
     return [
         ...(gspotCount === 0 ? [] : [`${label}${formatCount(gspotCount, 'generated file')}`]),

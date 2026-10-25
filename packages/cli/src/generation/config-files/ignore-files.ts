@@ -3,8 +3,8 @@ import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { listIgnores } from '#cli/settings/scopes.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
@@ -27,7 +27,7 @@ function listGeneratedPaths(session: Session): string[] {
     const paths = configFiles.flatMap((owned) => {
         const { configFile, owner } = owned;
         const sourceTargets =
-            configFile.source === undefined || configFile.target.startsWith(`${DOT_GSPOT}/`)
+            configFile.source === undefined || configFile.target.startsWith(`${GSPOT_FOLDER}/`)
                 ? []
                 : [configFile.per_scope ? joinScope(owner.scope.folder.path, configFile.target) : configFile.target];
         return [
@@ -86,7 +86,7 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
             title: IGNORE_SECTION_TITLES.lockfiles,
             patterns: LOCKFILES.filter((lockfile) =>
                 repository.files.some(
-                    ({ path }) => !path.startsWith(`${DOT_GSPOT}/`) && basename(path) === lockfile.file,
+                    ({ path }) => !path.startsWith(`${GSPOT_FOLDER}/`) && basename(path) === lockfile.file,
                 ),
             ).map(({ file }) => file),
         },

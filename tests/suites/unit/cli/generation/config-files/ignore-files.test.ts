@@ -7,8 +7,8 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { getValueAt } from '#cli/system/tables.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
@@ -138,15 +138,15 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
     const files = generate(session).files;
     const written = files
         .map(({ path }) => path)
-        .filter((path) => !path.startsWith(`${DOT_GSPOT}/`))
+        .filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`))
         .map((path) => `/${path}`);
     const listed = buildIgnoreSections(session)
         .find(({ key }) => key === 'gspot')!
-        .patterns.filter((pattern) => !pattern.startsWith(`${DOT_GSPOT}/`));
+        .patterns.filter((pattern) => !pattern.startsWith(`${GSPOT_FOLDER}/`));
     expect(listed.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
         written.toSorted((left, right) => left.localeCompare(right)),
     );
-    const ruff = files.find(({ path }) => path.startsWith(`${DOT_GSPOT}/`) && path.endsWith('ruff.toml'))!;
+    const ruff = files.find(({ path }) => path.startsWith(`${GSPOT_FOLDER}/`) && path.endsWith('ruff.toml'))!;
     const excluded = (parse(ruff.content) as { 'extend-exclude': string[] })['extend-exclude'];
     expect(excluded).toStrictEqual([
         '../../../../.gspot/**',

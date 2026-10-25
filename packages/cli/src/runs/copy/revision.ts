@@ -1,12 +1,12 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { setImmediate } from 'node:timers/promises';
 import { openFiles } from '#cli/system/files/open.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { writeCopyFiles } from '#cli/runs/copy/files.ts';
 import { runGit, readGitText } from '#cli/system/git.ts';
 import type { GitFile } from '#cli/types/parsers/git.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { DEPENDENCY_FILES } from '#cli/config/runs/copy/files.ts';
 import { copyValePackages } from '#cli/runs/copy/vale-packages.ts';
@@ -96,7 +96,7 @@ function listInstalledDependencies(copyRoot: string, folders: string[]): Depende
                 'copy',
                 'Installed dependencies are tracked in the selected revision. Untrack them before checking again.',
             );
-        return { path, operation: basename(folder) === DOT_GSPOT ? 'link' : 'clone' };
+        return { path, operation: basename(folder) === GSPOT_FOLDER ? 'link' : 'clone' };
     });
 }
 

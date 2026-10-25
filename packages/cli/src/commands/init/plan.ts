@@ -8,10 +8,10 @@ import { compareText, formatCount } from '#cli/system/text.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
 import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
@@ -151,9 +151,9 @@ export function planInitFiles(
     }
     const write: InitPlan['write'] = [
         { path: SETTINGS_FILE, note: `your settings, ${String(settingsText.split('\n').length)} lines` },
-        { path: `${DOT_GSPOT}/`, note: 'generated files and version pin' },
+        { path: `${GSPOT_FOLDER}/`, note: 'generated files and version pin' },
         ...[...generated.files, ...generated.blocks]
-            .filter(({ path }) => !path.startsWith(`${DOT_GSPOT}/`) && change.every((row) => row.path !== path))
+            .filter(({ path }) => !path.startsWith(`${GSPOT_FOLDER}/`) && change.every((row) => row.path !== path))
             .map(({ path }) => {
                 const replaced = conflicts.deleted.find((row) => row.path === path);
                 if (replaced !== undefined)

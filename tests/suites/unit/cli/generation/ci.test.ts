@@ -5,8 +5,8 @@ import { readFile } from 'node:fs/promises';
 import { join, delimiter } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { type Pipeline } from '#cli/types/generation/ci.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
@@ -53,7 +53,7 @@ test('the Slow checks step names every slow check in one comma list', async () =
     const steps = (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps;
     expect(steps.find((step) => step.name === 'Install gspot tools')?.run).toBe(`${command} install`);
     expect(steps.find((step) => step.name === 'Slow checks')?.run).toBe(
-        `(cd ${DOT_GSPOT} && mise install lychee)\n${expected}\n`,
+        `(cd ${GSPOT_FOLDER} && mise install lychee)\n${expected}\n`,
     );
     expect(steps.find((step) => step.name === 'Lint')?.run).toBe(`${command} check --changed "\${GSPOT_CI_BASE}"\n`);
     expect(buildGitlabWorkflow(pipeline).content).toContain(expected);

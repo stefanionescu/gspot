@@ -5,7 +5,7 @@ import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { MARKERS } from '#cli/config/parsers/formats/managed-blocks.ts';
 import type { ConfigFile, Configuration } from '#cli/types/configurations.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
@@ -85,7 +85,7 @@ function isLicenseFile(path: string): boolean {
 
 function findGeneratedKind(path: string, prefix: Buffer): FileClassification | undefined {
     if (path.startsWith(`${GSPOT_PATHS.valePackages}/`)) return { kind: 'vendored', origin: KIND_ORIGINS.gspot };
-    if (path.startsWith(`${DOT_GSPOT}/`)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
+    if (path.startsWith(`${GSPOT_FOLDER}/`)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
     if (BUILD_LAUNCHERS.has(posix.basename(path))) return { kind: 'generated', origin: KIND_ORIGINS.buildLauncher };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
     return hasGeneratedHeader(start) || GENERATOR_OUTPUT_BANNERS.some((banner) => banner.test(start))

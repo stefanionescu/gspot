@@ -13,9 +13,9 @@ import { PYTHON_VERSION } from '#cli/config/installers/pypi.ts';
 import { REGISTRY_HOST } from '#tests/config/setup/sandboxes.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { IndexedPythonProject } from '#tests/types/packages.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { spawnGspot, runGspotStep, applyThenInstall } from '#tests/setup/cli/commands.ts';
@@ -66,7 +66,7 @@ test.each([...PYTHON_PROJECTS])(
         ]);
         for (const step of steps) {
             if (step[0] === 'mise') continue;
-            expect(step[step.indexOf('--project') + 1]).toBe(join(sandbox.path, DOT_GSPOT));
+            expect(step[step.indexOf('--project') + 1]).toBe(join(sandbox.path, GSPOT_FOLDER));
         }
         expect(await readFile(join(sandbox.path, 'pyproject.toml'))).toStrictEqual(rootProject);
         expect(await readFile(join(sandbox.path, '.venv/authored.txt'), 'utf8')).toBe('keep the project environment');

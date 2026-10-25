@@ -6,7 +6,7 @@ import { buildFinding } from '#cli/checks/finding.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { runCheckCommand } from '#cli/runs/command/check.ts';
+import { runCommandCheck } from '#cli/runs/command/check.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
@@ -77,7 +77,7 @@ export async function checkSecretsGitleaksPushed(session: CheckSession, planned:
         (argument) => argument !== GITLEAKS_STAGED_FLAG,
     );
     return runOverPushedCommits(session, planned, (commit) =>
-        runCheckCommand(session, planned, {
+        runCommandCheck(session, planned, {
             command: [...command, GITLEAKS_LOG_FLAG, `${GITLEAKS_LOG_OPTIONS} ${commit} --`],
         }),
     );

@@ -3,11 +3,11 @@ import { realpathSync } from 'node:fs';
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { openFiles } from '#cli/system/files/open.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { isInGspotFolder } from '#cli/tools/locate.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import { isToolProjectPath } from '#cli/tools/locate.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/locate.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
@@ -20,7 +20,7 @@ import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/type
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
         const packageJsonPath = join(folder, PACKAGE_JSON);
-        if (files !== undefined && !isToolProjectPath(root, packageJsonPath)) return undefined;
+        if (files !== undefined && !isInGspotFolder(root, packageJsonPath)) return undefined;
         const parsed =
             files === undefined
                 ? readHostPackage(packageJsonPath)
@@ -32,7 +32,7 @@ function findVersionAbove(files: Files | undefined, root: string, start: string,
 
 function readPackageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
-    using files = isToolProjectPath(root, path) ? openFiles(root) : undefined;
+    using files = isInGspotFolder(root, path) ? openFiles(root) : undefined;
     const folder = dirname(
         files === undefined ? realpathSync(path) : files.readCanonicalPath(convertToPosixPath(relative(root, path))),
     );
@@ -101,7 +101,7 @@ export function readToolVersion(inspected: InspectedTool, path: string): ParsedT
     const npm = tool.installers['npm'];
     const installedVersion = readPackageVersion(root, path, npm?.name);
     const result = spawnProcessBlocking([path, ...(tool.version_command ?? [VERSION_FLAG])], {
-        cwd: isToolProjectPath(root, path) ? join(root, DOT_GSPOT) : cwd,
+        cwd: isInGspotFolder(root, path) ? join(root, GSPOT_FOLDER) : cwd,
         timeoutSeconds,
         env: TOOL_ENV,
     });

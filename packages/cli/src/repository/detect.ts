@@ -1,7 +1,7 @@
 import { formatCount } from '#cli/system/text.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { extractExtension } from '#cli/system/paths.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/files.ts';
@@ -18,7 +18,7 @@ import {
 
 function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFile[], scope: string): ScopeContents {
     const scopeFiles = files.filter(
-        (file) => file.kind === 'source' && !file.path.startsWith(`${DOT_GSPOT}/`) && isInScope(file.path, scope),
+        (file) => file.kind === 'source' && !file.path.startsWith(`${GSPOT_FOLDER}/`) && isInScope(file.path, scope),
     );
     const extensionCounts = new Map<string, number>();
     const shebangs = new Set(

@@ -10,7 +10,7 @@ import { downloadArchive } from '#cli/installers/downloads.ts';
 import { VALE_TOOL, PROSE_GRAMMARS } from '#cli/config/prose.ts';
 import { runRequiredInstallStep } from '#cli/installers/steps.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
 
@@ -87,7 +87,7 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     const available = buildToolAvailability(tool, inspectTool({ ...session, miseBinPaths }, tool));
     if ('status' in available) throw new GspotError('tool', available.note);
     using files = openFiles(root);
-    const temporary = mkdtempSync(join(files.readCanonicalPath(DOT_GSPOT), VALE_INSTALL_PREFIX));
+    const temporary = mkdtempSync(join(files.readCanonicalPath(GSPOT_FOLDER), VALE_INSTALL_PREFIX));
     try {
         const config = join(temporary, GSPOT_PATHS.valeConfigFile);
         const content = buildValeIni({

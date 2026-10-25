@@ -10,24 +10,24 @@ import {
     PYTHON_ENVIRONMENT_FOLDER,
 } from '#cli/config/files/names.ts';
 
-export const DOT_GSPOT = '.gspot';
+export const GSPOT_FOLDER = '.gspot';
 
 export const GSPOT_PATHS = {
-    configurations: `${DOT_GSPOT}/configurations`,
-    hooks: `${DOT_GSPOT}/hooks`,
-    state: `${DOT_GSPOT}/state`,
-    versionPin: `${DOT_GSPOT}/version`,
-    settingsSchema: `${DOT_GSPOT}/${SCHEMA_FILE}`,
-    miseProject: `${DOT_GSPOT}/${MISE_CONFIG_FILE}`,
-    miseLockfile: `${DOT_GSPOT}/${MISE_LOCK_FILE}`,
-    npmProject: `${DOT_GSPOT}/package.json`,
-    nodeModules: `${DOT_GSPOT}/${NODE_MODULES}`,
-    yarnSettings: `${DOT_GSPOT}/${YARN_SETTINGS_FILE}`,
-    pythonProject: `${DOT_GSPOT}/pyproject.toml`,
-    pythonEnvironment: `${DOT_GSPOT}/${PYTHON_ENVIRONMENT_FOLDER}`,
-    uvLockfile: `${DOT_GSPOT}/${PROJECT_UV_LOCKFILE}`,
-    valePackages: `${DOT_GSPOT}/vale`,
-    valeConfigFile: `${DOT_GSPOT}/configurations/general/prose/vale.ini`,
+    configurations: `${GSPOT_FOLDER}/configurations`,
+    hooks: `${GSPOT_FOLDER}/hooks`,
+    state: `${GSPOT_FOLDER}/state`,
+    versionPin: `${GSPOT_FOLDER}/version`,
+    settingsSchema: `${GSPOT_FOLDER}/${SCHEMA_FILE}`,
+    miseProject: `${GSPOT_FOLDER}/${MISE_CONFIG_FILE}`,
+    miseLockfile: `${GSPOT_FOLDER}/${MISE_LOCK_FILE}`,
+    npmProject: `${GSPOT_FOLDER}/package.json`,
+    nodeModules: `${GSPOT_FOLDER}/${NODE_MODULES}`,
+    yarnSettings: `${GSPOT_FOLDER}/${YARN_SETTINGS_FILE}`,
+    pythonProject: `${GSPOT_FOLDER}/pyproject.toml`,
+    pythonEnvironment: `${GSPOT_FOLDER}/${PYTHON_ENVIRONMENT_FOLDER}`,
+    uvLockfile: `${GSPOT_FOLDER}/${PROJECT_UV_LOCKFILE}`,
+    valePackages: `${GSPOT_FOLDER}/vale`,
+    valeConfigFile: `${GSPOT_FOLDER}/configurations/general/prose/vale.ini`,
 } as const;
 
 export const INSTALLED_TOOL_FOLDERS = {
@@ -39,6 +39,6 @@ export const INSTALLED_TOOL_FOLDERS = {
 export const STATE_FOLDER_PATTERN = new RegExp(`(?:^|/)\\${GSPOT_PATHS.state}(?:/|$)`, 'iu');
 
 export const TOOL_LOCKFILES = new Set([
-    ...LOCKFILES.map(({ file }) => `${DOT_GSPOT}/${file}`),
+    ...LOCKFILES.map(({ file }) => `${GSPOT_FOLDER}/${file}`),
     GSPOT_PATHS.miseLockfile,
 ]);

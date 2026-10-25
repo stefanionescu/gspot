@@ -8,8 +8,8 @@ import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import prettierPackage from 'prettier/package.json' with { type: 'json' };
@@ -43,7 +43,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         expect(await readFile(lockfilePath, 'utf8')).toBe(stale);
         const preview = await spawnGspot(root, ['apply', '--dry-run', '--json']);
         expect((JSON.parse(preview.stdout) as DryRunJson).outdated).toContainEqual({
-            path: `${DOT_GSPOT}/${selectLockfileName(toolPackageManager)}`,
+            path: `${GSPOT_FOLDER}/${selectLockfileName(toolPackageManager)}`,
             kind: 'changed',
         });
         const installed = await spawnGspot(root, ['install', '--json']);
@@ -88,7 +88,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         const applied = await spawnGspot(root, ['apply', '--json']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const repaired = JSON.parse(applied.stdout) as ApplyReport;
-        expect(repaired.written).not.toContain(`${DOT_GSPOT}/${selectLockfileName(toolPackageManager)}`);
+        expect(repaired.written).not.toContain(`${GSPOT_FOLDER}/${selectLockfileName(toolPackageManager)}`);
         expect(repaired.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
         const installed = await spawnGspot(root, ['install', '--json']);
@@ -173,7 +173,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
             );
             const status = runGit(clone, ['status', '--porcelain']);
             expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
-            const contents = await readFile(join(clone, DOT_GSPOT, basename(lockfilePath)));
+            const contents = await readFile(join(clone, GSPOT_FOLDER, basename(lockfilePath)));
             expect(contents).toStrictEqual(Buffer.from(lockfile));
             expect(await readFile(join(clone, GSPOT_PATHS.npmProject))).toStrictEqual(Buffer.from(projectFile));
         }

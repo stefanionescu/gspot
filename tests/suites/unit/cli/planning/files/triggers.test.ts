@@ -3,10 +3,10 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { type Session } from '#cli/types/session.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { type Check } from '#cli/types/configurations.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { BASE_CHECK } from '#tests/config/runs/command.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
@@ -25,7 +25,7 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
         await appendFile(join(session.root, '.git/info/exclude'), '\n.gspot/mock-tsc*\n');
     await writeProgramCommand(
         session.root,
-        `${DOT_GSPOT}/mock-tsc`,
+        `${GSPOT_FOLDER}/mock-tsc`,
         'fakes/tool',
         '--line',
         'Project finding',
@@ -39,7 +39,7 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
         stage: TSC_PUSH_OPTIONS.stage,
         runs: 'scope',
         cwd: 'root',
-        command: [join(session.root, `${DOT_GSPOT}/mock-tsc`)],
+        command: [join(session.root, `${GSPOT_FOLDER}/mock-tsc`)],
         output: { format: 'lines' },
         files: configuration.files,
         fix: buildProgramCommand('fakes/tool', '--text', 'restored', '{scope}/source.ts'),

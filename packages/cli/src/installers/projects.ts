@@ -14,8 +14,8 @@ import { type Configuration } from '#cli/types/configurations.ts';
 import type { NpmToolInstall } from '#cli/types/installers/npm.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { StaleLockfile } from '#cli/types/installers/projects.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import type { PythonIndexSettings } from '#cli/types/installers/pypi.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
@@ -47,7 +47,7 @@ function readNpmLockfileState(
     configurations: Session['toolConfigurations'],
     env: Record<string, string>,
 ): StaleLockfile {
-    const path = `${DOT_GSPOT}/${selectLockfileName(name)}`;
+    const path = `${GSPOT_FOLDER}/${selectLockfileName(name)}`;
     const saved = files.read(path);
     if (saved === undefined) return { path, kind: 'missing' };
     const dependencies = listToolProjectPins(configurations).npm;

@@ -12,9 +12,9 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { runGit, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { findRuleFilePath, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -43,7 +43,7 @@ test.each(['absent', 'authored', 'managed'])(
             join(sandbox.path, '.gitattributes'),
             `${source === 'authored' ? '* text=auto eol=lf\n' : ''}${attributes.block}\n`,
         );
-        const outside = generated.files.map(({ path }) => path).filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
+        const outside = generated.files.map(({ path }) => path).filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
         expect(outside).toContain('web app/.stylelintrc.yml');
         const read = runGitStep(sandbox.path, ['check-attr', 'eol', '--', ...outside, 'nested/.editorconfig']);
         expect(read.split('\n')).toStrictEqual([

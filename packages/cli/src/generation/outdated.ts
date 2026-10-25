@@ -7,9 +7,9 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { listStrayPaths, hasManagedKeys } from '#cli/write.ts';
 import { listStaleLockfiles } from '#cli/installers/projects.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
 import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { selectToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/generation/outdated.ts';
@@ -126,7 +126,7 @@ export function listExpectedPaths(
     const project = generated.files.find((file) => file.path === GSPOT_PATHS.npmProject);
     if (packageManager !== undefined && project !== undefined) {
         const name = selectToolPackageManager(toolsRoot, packageManager, timeoutSeconds, reads);
-        paths.add(`${DOT_GSPOT}/${selectLockfileName(name)}`);
+        paths.add(`${GSPOT_FOLDER}/${selectLockfileName(name)}`);
     }
     for (const file of generated.files) {
         if (file.path === GSPOT_PATHS.miseProject) paths.add(GSPOT_PATHS.miseLockfile);

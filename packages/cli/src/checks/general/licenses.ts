@@ -31,7 +31,7 @@ import type {
     AllowedPackage,
     LicensedPackage,
     ProjectLicenses,
-    PythonLicenseReport,
+    PythonLicenseOutput,
 } from '#cli/types/checks/general/licenses.ts';
 import {
     ANY_VERSION,
@@ -91,7 +91,7 @@ async function scanJavascriptLicenses(
     }));
 }
 
-function selectPythonLicense(report: PythonLicenseReport): string {
+function selectPythonLicense(report: PythonLicenseOutput): string {
     const expression = [report['License-Expression'], report['License-Metadata']].find(
         (field) => field !== undefined && field !== UNKNOWN_LICENSE && isSpdxExpression(field),
     );

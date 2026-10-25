@@ -1,10 +1,10 @@
 import { join, posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildUvRunCommand } from '#cli/tools/uv.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import { countCodeLines } from '#cli/checks/code-lines.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
@@ -19,7 +19,7 @@ import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
 import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
-import { runCheckCommand, runCommandGroups } from '#cli/runs/command/check.ts';
+import { runCommandCheck, runCommandGroups } from '#cli/runs/command/check.ts';
 import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { deptrySchema, docstringStyleSchema } from '#cli/schemas/checks/language/python.ts';
 import { findDocstring, PYTHON_SOURCES, parsePythonModule } from '#cli/parsers/code/python.ts';
@@ -64,11 +64,11 @@ export async function checkPythonDeptry(session: CheckSession, planned: PlannedC
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
     const { extend_exclude: exclusions, known_first_party: firstParty } = parseTomlFile(pyproject, text, deptrySchema)
         .tool.deptry;
-    return await runCheckCommand(session, planned, {
+    return await runCommandCheck(session, planned, {
         command: buildUvRunCommand(planned.scope, join(session.root, planned.scope.folder.path), [
             ...DEPTRY_COMMAND,
             ...[
-                String.raw`(^|.*[/\\])${RegExp.escape(DOT_GSPOT)}([/\\]|$)`,
+                String.raw`(^|.*[/\\])${RegExp.escape(GSPOT_FOLDER)}([/\\]|$)`,
                 ...listNestedScopes(
                     session.scopes.map((scope) => scope.folder.path),
                     planned.scope.folder.path,

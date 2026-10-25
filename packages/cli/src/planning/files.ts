@@ -1,6 +1,6 @@
 import { isUtf8 } from 'node:buffer';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { ROOT_RUNS } from '#cli/config/planning/checks.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
@@ -30,7 +30,9 @@ function listProjectCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, sc
     const owners = check.files ?? (configuration?.group === 'language' ? configuration.files : undefined);
     const scopeFiles = listScopeFiles(planned, scopePath, check.runs);
     const projectFiles =
-        configuration === undefined ? scopeFiles : scopeFiles.filter((file) => !file.path.startsWith(`${DOT_GSPOT}/`));
+        configuration === undefined
+            ? scopeFiles
+            : scopeFiles.filter((file) => !file.path.startsWith(`${GSPOT_FOLDER}/`));
     const matches =
         owners === undefined
             ? projectFiles
@@ -77,7 +79,7 @@ function filterNarrowedFiles(planned: PlannedScope, scopeCheck: ScopeCheck, file
     const { narrowedPaths } = planned;
     if (!narrowedPaths) return files;
     const isTouched =
-        narrowedPaths.has(SETTINGS_FILE) || narrowedPaths.values().some((path) => path.startsWith(`${DOT_GSPOT}/`));
+        narrowedPaths.has(SETTINGS_FILE) || narrowedPaths.values().some((path) => path.startsWith(`${GSPOT_FOLDER}/`));
     if (isTouched) return files;
     const inNarrowed = files.filter((file) => narrowedPaths.has(file.path));
     if (inNarrowed.length === 0) return [];
@@ -92,7 +94,7 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
     const paths = [...planned.narrowedPaths].filter(
         (path) =>
             !readable.has(path) &&
-            (configuration === undefined || !path.startsWith(`${DOT_GSPOT}/`)) &&
+            (configuration === undefined || !path.startsWith(`${GSPOT_FOLDER}/`)) &&
             isInScope(path, scopePath) &&
             (check.runs !== 'scope' || children.every((child) => !isInScope(path, child))),
     );

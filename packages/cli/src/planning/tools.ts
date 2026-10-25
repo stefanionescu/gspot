@@ -1,7 +1,7 @@
 import { basename } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
@@ -170,7 +170,7 @@ export function listLicenseProjects(
         files
             .filter(
                 (file) =>
-                    !file.path.startsWith(`${DOT_GSPOT}/`) &&
+                    !file.path.startsWith(`${GSPOT_FOLDER}/`) &&
                     findScopeFolder(file.path, folders).path === scope.folder.path,
             )
             .flatMap((file) => {

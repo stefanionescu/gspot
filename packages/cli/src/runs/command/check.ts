@@ -3,11 +3,11 @@ import { createCopy } from '#cli/runs/copy/files.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { getTool } from '#cli/configurations/tools.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { listOtherTools } from '#cli/planning/tools.ts';
 import { RAN_STATUSES } from '#cli/config/runs/check.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import type { ProcessFailure } from '#cli/types/tools/run.ts';
@@ -102,14 +102,11 @@ function findMissingConfigFile(
     using files = openFiles(session.root);
     const missing = [...configFiles, ...listCommandConfigFiles(session, planned, command)].find(
         (path) =>
-            (path.startsWith(`${DOT_GSPOT}/`) ? files.read(path) : findCachedText(session.reads, path)) === undefined,
+            (path.startsWith(`${GSPOT_FOLDER}/`) ? files.read(path) : findCachedText(session.reads, path)) ===
+            undefined,
     );
     if (missing === undefined) return undefined;
-    return {
-        ...base,
-        status: 'error',
-        note: `The config file ${missing} is missing. Run gspot apply.`,
-    };
+    return { ...base, status: 'error', note: `The config file ${missing} is missing. Run gspot apply.` };
 }
 
 async function runInFolder(run: FolderRun): Promise<CheckResult> {
@@ -325,7 +322,7 @@ Finds the tool and runs the expanded commands of a check.
 @param options the command and copy folder overrides.
 @returns the check result.
 */
-export async function runCheckCommand(
+export async function runCommandCheck(
     session: CheckSession,
     planned: PlannedCheck,
     options: CheckRunOptions = {},
@@ -376,7 +373,7 @@ export async function runCommandGroups(
 ): Promise<CheckResult> {
     let merged = buildBaseResult(planned, session);
     for (const { files, command } of groups) {
-        merged = mergeCheckResults(merged, await runCheckCommand(session, { ...planned, files }, { command }));
+        merged = mergeCheckResults(merged, await runCommandCheck(session, { ...planned, files }, { command }));
         if (!RAN_STATUSES.has(merged.status)) break;
     }
     return merged;

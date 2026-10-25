@@ -11,8 +11,8 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { readSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type ToolPackageJson } from '#cli/types/installers/npm.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
@@ -216,7 +216,7 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
         const stylesheet = posix.join(scope, 'source.css');
         const authoredConfiguration = posix.join(scope, '.stylelintrc.mjs');
         await using sandbox = await testdir({
-            '.gitignore': `${DOT_GSPOT}/\n`,
+            '.gitignore': `${GSPOT_FOLDER}/\n`,
             [packagePath]: packageText,
             [stylesheet]: INVALID_CSS,
             [authoredConfiguration]: 'export default { rules: { "property-no-unknown": null } };\n',

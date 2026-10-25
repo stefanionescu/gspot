@@ -6,7 +6,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { type ApplyReport } from '#cli/types/generation/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { openWriter, writePlans, planReplacements } from '#cli/write.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { SETTINGS_FILE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
@@ -23,7 +23,7 @@ function writeStrayFile(root: string): void {
     writePlans(
         writer,
         planReplacements(writer, [
-            { path: `${DOT_GSPOT}/obsolete/old.txt`, next: { bytes: Buffer.from('installed\n'), mode: 0o644 } },
+            { path: `${GSPOT_FOLDER}/obsolete/old.txt`, next: { bytes: Buffer.from('installed\n'), mode: 0o644 } },
         ]),
     );
 }
@@ -36,8 +36,8 @@ test('apply leaves generated files writable, keeps their bytes, and deletes a st
     writeStrayFile(sandbox.path);
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/obsolete/old.txt`))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/obsolete`))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/obsolete/old.txt`))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/obsolete`))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(true);
     const written = (JSON.parse(applied.stdout) as ApplyReport).written;
     const rulePath = findRuleFilePath('engineering', 'WORKING.md');
@@ -65,10 +65,10 @@ test('apply removes a stray directory link without following it', async () => {
     const root = join(sandbox.path, 'project');
     runGitStep(root, ['init', '--quiet']);
     writeStrayFile(root);
-    await rm(join(root, `${DOT_GSPOT}/obsolete`), { recursive: true });
-    await symlink('../../outside', join(root, `${DOT_GSPOT}/obsolete`));
+    await rm(join(root, `${GSPOT_FOLDER}/obsolete`), { recursive: true });
+    await symlink('../../outside', join(root, `${GSPOT_FOLDER}/obsolete`));
     expect(await runGspot(root, ['apply'])).toHaveProperty('code', 0);
-    expect(await isOnDisk(join(root, `${DOT_GSPOT}/obsolete`))).toBe(false);
+    expect(await isOnDisk(join(root, `${GSPOT_FOLDER}/obsolete`))).toBe(false);
     expect(await readFile(join(sandbox.path, 'outside/old.txt'), 'utf8')).toBe('outside bytes\n');
 });
 
@@ -114,11 +114,11 @@ test('apply rewrites an edited generated file, deletes unknown files in .gspot, 
     const edited = `${await readFile(generated, 'utf8')}# Authored after installation.\n`;
     await chmod(generated, 0o644);
     await writeFile(generated, edited);
-    await writeFile(join(sandbox.path, `${DOT_GSPOT}/authored.txt`), 'Preserve this file.\n');
+    await writeFile(join(sandbox.path, `${GSPOT_FOLDER}/authored.txt`), 'Preserve this file.\n');
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await readFile(generated, 'utf8')).not.toContain('# Authored after installation.');
-    expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/authored.txt`))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/authored.txt`))).toBe(false);
     expect(await readFile(settingsPath, 'utf8')).toBe(settings);
 });
 test('removing rules from a fresh clone removes the managed AGENTS.md block', async () => {

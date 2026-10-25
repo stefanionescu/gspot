@@ -11,7 +11,7 @@ import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 
 test('a copied session generates settings from its replacement inventory and read cache', async () => {
     await using sandbox = await testdir({
@@ -19,13 +19,13 @@ test('a copied session generates settings from its replacement inventory and rea
         'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { rules: true }),
     });
     const opened = await openSession(sandbox.path);
-    const previous = getConfigFiles(opened);
+    const previous = buildConfigFiles(opened);
     await writeFile(join(sandbox.path, 'run'), '#!/usr/bin/env node\nconsole.log(1);\n');
     const fresh = await openSession(sandbox.path);
     const copied = { ...opened, reads: fresh.reads, repository: fresh.repository, scopes: fresh.scopes };
-    const generated = getConfigFiles(copied);
+    const generated = buildConfigFiles(copied);
     expect(generated.files).not.toStrictEqual(previous.files);
-    expect(generated.files).toStrictEqual(getConfigFiles(fresh).files);
+    expect(generated.files).toStrictEqual(buildConfigFiles(fresh).files);
 });
 
 test('a naming-only run leaves mise tool discovery unused', async () => {

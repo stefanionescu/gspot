@@ -4,8 +4,8 @@ import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { quoteArgument } from '#cli/system/text.ts';
 import * as processes from '#cli/system/processes.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -20,7 +20,7 @@ import { BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/config/checks/
 test('build: a push run builds the site without changing committed dist files or Git status', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSiteSettings(buildProgramCommand('fakes/tool', '--write', 'dist/index.html=built')),
-        '.gitignore': `${DOT_GSPOT}/\n`,
+        '.gitignore': `${GSPOT_FOLDER}/\n`,
         'dist/index.html': 'committed output\n',
     });
 

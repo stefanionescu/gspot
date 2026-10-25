@@ -9,7 +9,7 @@ import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import { JSCONFIG_FILE } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
-import { runCheckCommand } from '#cli/runs/command/check.ts';
+import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { groupFilesByScope } from '#cli/repository/scopes.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
@@ -89,7 +89,7 @@ export async function checkJavascriptTsc(session: CheckSession, planned: Planned
     );
     const command = [...JAVASCRIPT_TSC_COMMAND, generatedPath, ...TSC_UNFORMATTED_OUTPUT];
     appendTsbuildinfoFlag(command, project.options, folder.path, JSCONFIG_TSBUILDINFO);
-    const result = await runCheckCommand(session, planned, {
+    const result = await runCommandCheck(session, planned, {
         command,
         copyRoot: folder.path,
     });

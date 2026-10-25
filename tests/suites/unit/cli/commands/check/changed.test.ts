@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildReportingCheck } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -23,7 +23,7 @@ async function prepareChangedRepository(root: string, files: Record<string, stri
 test('--changed compares with the merge base, names its base, and a folder argument stays a path', async () => {
     await using sandbox = await testdir();
     await prepareChangedRepository(sandbox.path, {
-        '.gitignore': `${DOT_GSPOT}/\n`,
+        '.gitignore': `${GSPOT_FOLDER}/\n`,
         'api/source.txt': 'before',
         'web/source.txt': 'before',
     });
@@ -57,7 +57,7 @@ test('--changed compares with the merge base, names its base, and a folder argum
 
 test('--changed without an upstream names the fix, and uses the remote default branch', async () => {
     await using sandbox = await testdir();
-    await prepareChangedRepository(sandbox.path, { '.gitignore': `${DOT_GSPOT}/\n`, 'api/source.txt': 'before' });
+    await prepareChangedRepository(sandbox.path, { '.gitignore': `${GSPOT_FOLDER}/\n`, 'api/source.txt': 'before' });
     runGitStep(sandbox.path, ['init', '-b', 'topic']);
     commitAll(sandbox.path);
     const absent = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', '--json']);
@@ -76,7 +76,7 @@ test('--changed without an upstream names the fix, and uses the remote default b
 test.each(['', '0'.repeat(40)])('--changed %p, as CI gives for a new branch, checks every file', async (base) => {
     await using sandbox = await testdir();
     await prepareChangedRepository(sandbox.path, {
-        '.gitignore': `${DOT_GSPOT}/\n`,
+        '.gitignore': `${GSPOT_FOLDER}/\n`,
         'api/source.txt': 'before',
         'web/source.txt': 'before',
     });

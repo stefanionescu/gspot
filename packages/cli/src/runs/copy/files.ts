@@ -3,8 +3,8 @@ import { setImmediate } from 'node:timers/promises';
 import type { Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { NODE_MODULES } from '#cli/config/files/names.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
@@ -112,18 +112,18 @@ Selects the paths and installed dependency trees for a copy of the working tree.
 */
 export function selectCopyPaths(root: string, paths: string[], scopes: string[]): CopyPaths {
     const projects = paths.flatMap((path) =>
-        DEPENDENCY_FILES.has(posix.basename(path)) && posix.basename(posix.dirname(path)) !== DOT_GSPOT
+        DEPENDENCY_FILES.has(posix.basename(path)) && posix.basename(posix.dirname(path)) !== GSPOT_FOLDER
             ? [posix.dirname(path)]
             : [],
     );
     const dependencies = [
-        ...new Set([DOT_GSPOT, ...scopes, ...projects].map((project) => posix.join(project, NODE_MODULES))),
+        ...new Set([GSPOT_FOLDER, ...scopes, ...projects].map((project) => posix.join(project, NODE_MODULES))),
     ]
         .filter((path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined)
         .map(
             (path): DependencyCopy => ({
                 path,
-                operation: path === posix.join(DOT_GSPOT, NODE_MODULES) ? 'link' : 'clone',
+                operation: path === posix.join(GSPOT_FOLDER, NODE_MODULES) ? 'link' : 'clone',
             }),
         );
     return {

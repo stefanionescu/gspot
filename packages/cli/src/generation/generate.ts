@@ -14,13 +14,13 @@ import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/configurations/names.ts';
-import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/installers/npm/yarn.ts';
 import { buildPointerFieldEdits } from '#cli/generation/config-files/pointers.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
-import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { buildBunScannerEdits } from '#cli/generation/configurations/general/dependencies.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { isConfigurationSelected, listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/installers/projects.ts';
 import { selectToolPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
@@ -97,7 +97,7 @@ function buildAttributesBlock(outsidePaths: string[], authored: string): string 
 
 function buildGitignoreBlock(): string {
     const toolProjectPaths = [...Object.values(INSTALLED_TOOL_FOLDERS), GSPOT_PATHS.state].map((path) => `${path}/`);
-    return [...toolProjectPaths, `${DOT_GSPOT}/${YARN_INSTALL_SETTINGS_FILE}`].join('\n');
+    return [...toolProjectPaths, `${GSPOT_FOLDER}/${YARN_INSTALL_SETTINGS_FILE}`].join('\n');
 }
 
 function addManagedBlocks(session: Session, rules: RuleFile[], generated: GenerationResult): void {
@@ -106,7 +106,7 @@ function addManagedBlocks(session: Session, rules: RuleFile[], generated: Genera
         repository,
         reads,
     } = session;
-    const outsidePaths = generated.files.map(({ path }) => path).filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
+    const outsidePaths = generated.files.map(({ path }) => path).filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
     const text = findCachedText(reads, GITATTRIBUTES_FILE) ?? '';
     const authored = stripBlock(text, { path: GITATTRIBUTES_FILE, style: 'hash' });
     if (repository.hasGit) {
@@ -157,7 +157,7 @@ export function generate(session: Session): GenerationResult {
         blocks: [],
         managedKeys: [],
     };
-    const configFiles = getConfigFiles(session);
+    const configFiles = buildConfigFiles(session);
     const [failure] = configFiles.failures.values().flatMap((failures) => failures.values());
     if (failure !== undefined) throw failure;
     generated.files.push(...configFiles.files);

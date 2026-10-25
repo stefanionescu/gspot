@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { join, dirname, delimiter } from 'node:path';
 import { getTool } from '#cli/configurations/tools.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
@@ -159,7 +159,7 @@ test.each([...PARTIAL_FIX_CASES])(
     async ({ configuration, check, path, tables, sample, partial, corrected }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([configuration], { level: 'all', tables }),
-            '.gitignore': `${DOT_GSPOT}/\n`,
+            '.gitignore': `${GSPOT_FOLDER}/\n`,
             [path]: sample,
         });
 

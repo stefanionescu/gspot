@@ -12,8 +12,8 @@ import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { limitCommand } from '#tests/setup/system/processes.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runGit, commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
@@ -215,7 +215,7 @@ test('a linked .gspot folder stops check, and nothing outside changes', async ()
     const project = join(sandbox.path, 'project');
     runGitStep(project, ['init', '--quiet']);
     const outside = join(sandbox.path, 'outside');
-    await symlink(outside, join(project, DOT_GSPOT));
+    await symlink(outside, join(project, GSPOT_FOLDER));
     const refused = await runGspot(project, ['check', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(JSON.parse(refused.stdout)).toStrictEqual({

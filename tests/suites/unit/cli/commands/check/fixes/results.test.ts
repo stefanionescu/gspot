@@ -7,7 +7,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { buildProgramPin } from '#tests/setup/cli/tools.ts';
-import { runCheckCommand } from '#cli/runs/command/check.ts';
+import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
@@ -149,7 +149,7 @@ test('a failed version check blocks a check and its fix without changing source 
     planned.check.fix![0] = 'version-teller';
     using _which = fakeExecutableLookup(process.execPath);
 
-    const checked = await runCheckCommand(buildCheckSession(session), planned);
+    const checked = await runCommandCheck(buildCheckSession(session), planned);
     expect(checked.status).toBe('error');
     expect(checked.note).toBe('The version command of version-teller exited 7: 3.8.1');
     const fixedRun = await runFixers(buildCheckSession(session), [planned], { isDryRun: false });

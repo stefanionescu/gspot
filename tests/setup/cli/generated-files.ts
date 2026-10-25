@@ -5,7 +5,7 @@ import type { Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
-import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { listRuleFiles, readConfigurations } from '#cli/configurations/manifests.ts';
 
@@ -19,7 +19,7 @@ export function findConfigFilePath(session: Session, tool: string, scopePath = '
         .find((file) => extractConfigFileName(file.file) === tool);
     if (declaration === undefined)
         throw new Error(`The sandbox generates no ${tool} file for ${scopePath || 'the root'}.`);
-    return getConfigFileTarget(scopePath, declaration, getConfigFiles(session));
+    return getConfigFileTarget(scopePath, declaration, buildConfigFiles(session));
 }
 
 /**

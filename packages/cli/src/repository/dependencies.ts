@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/files/names.ts';
@@ -34,7 +34,8 @@ Read the supported dependency files for dependency and runtime detection.
 export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]): Promise<DependencyFile[]> {
     const dependencies: DependencyFile[] = [];
     for (const file of files) {
-        if (file.kind !== 'source' || file.path.startsWith(`${DOT_GSPOT}/`) || isInInstalledFolder(file.path)) continue;
+        if (file.kind !== 'source' || file.path.startsWith(`${GSPOT_FOLDER}/`) || isInInstalledFolder(file.path))
+            continue;
         const dependencyFile = await readDependencyFile(reads, file);
         if (dependencyFile !== undefined) dependencies.push(dependencyFile);
     }

@@ -3,7 +3,7 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 
 import {
     type SwiftCoverage,
-    type CoverageReport,
+    type CoverageOutput,
     type SwiftPackageDescription,
 } from '#cli/types/checks/language/swift.ts';
 
@@ -41,7 +41,7 @@ export const swiftCoverageSchema = z.object({
 export const xccovSchema = z.object({
     targets: z
         .object({ name: z.string().min(1), lineCoverage: z.number().min(0).max(1) } satisfies SchemaShape<
-            CoverageReport['targets'][number]
+            CoverageOutput['targets'][number]
         >)
         .array(),
-} satisfies SchemaShape<CoverageReport>);
+} satisfies SchemaShape<CoverageOutput>);

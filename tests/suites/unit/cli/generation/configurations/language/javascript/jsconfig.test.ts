@@ -4,7 +4,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -39,7 +39,7 @@ test('a jsconfig beside a tsconfig keeps authored exclusions and lists only trac
     expect(jsconfig.files).toStrictEqual(['../../../../cloudflare-env.d.ts']);
     expect(jsconfig.exclude).toStrictEqual(
         [
-            `${DOT_GSPOT}/**`,
+            `${GSPOT_FOLDER}/**`,
             'eslint.config.mjs',
             '.editorconfig',
             'prettier.config.mjs',

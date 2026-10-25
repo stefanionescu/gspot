@@ -16,7 +16,7 @@ export type ComposeService = {
 
 export type ComposeConfiguration = { services?: Record<string, ComposeService> | undefined };
 
-export type TrivyImageReport = {
+export type TrivyImageOutput = {
     Results?:
         | {
               Vulnerabilities?: { VulnerabilityID: string; PkgName: string }[] | undefined;

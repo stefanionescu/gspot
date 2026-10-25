@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { WRITER_LOCK_FILE } from '#cli/config/write.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { startCommand } from '#tests/setup/system/processes.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
@@ -99,7 +99,7 @@ test('a malformed reason reports a settings error and apply preserves the author
         'gspot.toml:4: limits.file_lines.reason: The value 42 is not valid for limits.file_lines.reason. Use a valid string value: Why this code needs more than the default; required when you raise the value.\n',
     );
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(source);
-    expect(await isOnDisk(join(sandbox.path, DOT_GSPOT))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, GSPOT_FOLDER))).toBe(false);
 });
 test.each([...LINKED_FILE_CASES])(
     'apply --dry-run refuses a $path that links outside the repository and writes nothing',
