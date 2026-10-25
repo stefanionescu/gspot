@@ -161,6 +161,18 @@ function parsePbxproj(text: string): ParsedPbxproj {
 }
 
 /**
+Check whether a managed folder holds a file that none of its exceptions leaves out.
+
+@param file the repository-relative file.
+@param folders the managed folders of a project or a target.
+@returns whether one of the folders holds the file.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
+export function isInFolders(file: string, folders: readonly Folder[]): boolean {
+    return folders.some(({ path, excluded }) => file.startsWith(path) && !excluded.has(file));
+}
+
+/**
 Find the Swift sources and managed folders that belong to project targets.
 
 @param text the project.pbxproj contents.

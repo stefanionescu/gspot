@@ -15,8 +15,8 @@ import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { TableSettings } from '#cli/types/settings/file.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
-import { buildPlan, prepareBuild } from '#cli/checks/language/swift/cache.ts';
 import { SCRATCH_PATH_FLAG } from '#cli/config/checks/language/swift/cache.ts';
+import { prepareBuild, planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import type { CoverageReport, SwiftBuildPlan } from '#cli/types/checks/language/swift.ts';
 import { xccovSchema, swiftCoverageSchema, packageDescriptionSchema } from '#cli/schemas/checks/language/swift.ts';
 
@@ -77,7 +77,7 @@ async function measureXcodeCoverage(
 }
 
 async function measureCoverage(session: Session, planned: PlannedCheck): Promise<CoverageReport> {
-    const plan = buildPlan(session, planned, 'coverage');
+    const plan = planSwiftBuild(session, planned, 'coverage');
     const setup = prepareBuild(session.root, planned.files, plan.folder);
     using files = setup.files;
     const cwd = join(setup.source, planned.scope.folder.path);
@@ -87,6 +87,11 @@ async function measureCoverage(session: Session, planned: PlannedCheck): Promise
         : await measureXcodeCoverage(session, planned, plan, cwd);
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
+function isTargetNamed(target: string, name: string): boolean {
+    return target === name || target === `${name}${APP_TARGET_SUFFIX}`;
+}
+
 function listCoverageShortfalls(
     report: CoverageReport,
     settings: Pick<TableSettings<'coverage'>, 'lines' | 'swift_target'>,
@@ -94,17 +99,11 @@ function listCoverageShortfalls(
     const limits = [
         ...settings.swift_target,
         ...report.targets
-            .filter((target) =>
-                settings.swift_target.every(
-                    (limit) => !(target.name === limit.name || target.name === `${limit.name}${APP_TARGET_SUFFIX}`),
-                ),
-            )
+            .filter((target) => !settings.swift_target.some((limit) => isTargetNamed(target.name, limit.name)))
             .map((target) => ({ name: target.name, lines: settings.lines })),
     ];
     return limits.flatMap((limit) => {
-        const target = report.targets.find(
-            (each) => each.name === limit.name || each.name === `${limit.name}${APP_TARGET_SUFFIX}`,
-        );
+        const target = report.targets.find((each) => isTargetNamed(each.name, limit.name));
         if (target === undefined) return [`The coverage report has no target named ${limit.name}.`];
         const covered = Math.floor(target.lineCoverage * MAX_PERCENTAGE);
         return covered >= limit.lines

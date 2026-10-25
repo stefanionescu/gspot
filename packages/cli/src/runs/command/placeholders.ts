@@ -80,20 +80,19 @@ function expandArgument(
 }
 
 /**
-Find the config file that {config_file:<name>} names, with the configurations of the check first.
+Find the path of the config file that {config_file:<name>} names, with the configurations of the check first.
 
 @param session the repository and its configurations.
 @param planned the check that names it.
 @param name the config file path without its extensions.
-@returns the [[config_file]] table of that config file.
+@returns the repository-relative path of that config file for the scope of the check.
+@throws the build failure of that config file in the scope.
 */
-export function getConfigFile(session: Session, planned: PlannedCheck, name: string): ConfigFile {
-    const target = listConfigFiles(session, planned).find(
-        (configFile) => extractConfigFileName(configFile.file) === name,
-    );
-    if (!target)
+export function getConfigFilePath(session: Session, planned: PlannedCheck, name: string): string {
+    const configFile = listConfigFiles(session, planned).find(({ file }) => extractConfigFileName(file) === name);
+    if (!configFile)
         throw new Error(`Check ${planned.check.id} names {config_file:${name}} and no configuration writes it.`);
-    return target;
+    return getConfigFileTarget(planned.scope.folder.path, configFile, getConfigFiles(session));
 }
 
 /**
@@ -114,13 +113,7 @@ export function listCommandConfigFiles(session: Session, planned: PlannedCheck, 
                     .matchAll(CONFIG_FILE_PLACEHOLDER)
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
-                    .map((name) =>
-                        getConfigFileTarget(
-                            planned.scope.folder.path,
-                            getConfigFile(session, planned, name),
-                            getConfigFiles(session),
-                        ),
-                    )
+                    .map((name) => getConfigFilePath(session, planned, name))
                     .toArray();
                 const pointed = segment
                     .matchAll(POINTER_PLACEHOLDER)
@@ -192,11 +185,9 @@ export function replacePlaceholders(
         .replaceAll(LEVEL_PLACEHOLDER, (_match, recommended: string, all: string) =>
             session.settingsFile.settings.level === 'all' ? all : recommended,
         )
-        .replaceAll(CONFIG_FILE_PLACEHOLDER, (_match, name: string) => {
-            const configFile = getConfigFile(session, planned, name);
-            const target = getConfigFileTarget(planned.scope.folder.path, configFile, getConfigFiles(session));
-            return convertToSystemPath(join(session.root, target));
-        })
+        .replaceAll(CONFIG_FILE_PLACEHOLDER, (_match, name: string) =>
+            convertToSystemPath(join(session.root, getConfigFilePath(session, planned, name))),
+        )
         .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) =>
             convertToSystemPath(selectPointerPath(session, substitutions.scope, name)),
         )

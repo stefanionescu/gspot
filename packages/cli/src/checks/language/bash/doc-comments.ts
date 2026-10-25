@@ -4,7 +4,7 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import type { ScriptFunction } from '#cli/types/parsers/code/bash.ts';
-import { MAIN_FUNCTION } from '#cli/config/checks/language/bash/script-layout.ts';
+import { MAIN_FUNCTION } from '#cli/config/checks/language/bash/scripts.ts';
 
 import {
     WORD,
@@ -26,7 +26,7 @@ function findCommentBlock(lines: string[], start: number): string[] {
     return block;
 }
 
-function isMeaningful(name: string, summary: string): boolean {
+function hasWordsBeyondName(name: string, summary: string): boolean {
     const nameWords = new Set(name.replace(LEADING_UNDERSCORES, '').split('_'));
     const words = summary
         .matchAll(WORD)
@@ -52,13 +52,13 @@ function validateDocComment(
             rule: 'summary-line',
             message: `The comment above ${scriptFunction.name} does not open with "# ${scriptFunction.name}: ...".`,
         };
-    if (!isMeaningful(scriptFunction.name, first.slice(head.length)))
+    if (!hasWordsBeyondName(scriptFunction.name, first.slice(head.length)))
         return {
             rule: 'vague-summary',
             message: `The summary of ${scriptFunction.name} says nothing beyond its name.`,
         };
     const positions = BASH_DOC_SECTIONS.map((section) => block.indexOf(section)).filter((position) => position >= 0);
-    if (positions.some((position, index) => !(index === 0 || position > (positions[index - 1] ?? -1))))
+    if (positions.some((position, index) => index > 0 && position <= (positions[index - 1] ?? -1)))
         return {
             rule: 'section-order',
             message: `Order the doc sections of ${scriptFunction.name} as Globals, Arguments, Outputs, Returns.`,

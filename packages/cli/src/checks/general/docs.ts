@@ -14,10 +14,10 @@ import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import { TRAILING_SLASH } from '#cli/config/files/path-patterns.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/runs/output/text.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
-import { joinScope, findScopeFolder } from '#cli/repository/scopes.ts';
 import { LICENSE_FILE } from '#cli/config/repository/files/classify.ts';
 import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
 import { buildGitignoreTest } from '#cli/repository/files/gitignore.ts';
+import { joinScope, groupFilesByScope } from '#cli/repository/scopes.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
 import type { PathIndex, TaskNames } from '#cli/types/checks/general/docs.ts';
@@ -68,12 +68,6 @@ function listRepositoryPaths(session: Session, planned: PlannedCheck): Set<strin
     for (const check of checks) repositoryPaths.add(check.id);
     for (const check of Object.values(session.settingsFile.settings.commandChecks)) repositoryPaths.add(check.id);
     return repositoryPaths;
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function readMiseTasks(session: Session, file: string): string[] {
-    const text = findCachedText(session.reads, file);
-    return text === undefined ? [] : parseMiseTasks(text, file);
 }
 
 function isMissing(token: string, file: string, index: PathIndex): boolean {
@@ -134,7 +128,10 @@ function readTaskNames(session: Session, scope: string): TaskNames {
     }
     return {
         mise: new Set([
-            ...files.flatMap((file) => readMiseTasks(session, file)),
+            ...files.flatMap((file) => {
+                const text = findCachedText(session.reads, file);
+                return text === undefined ? [] : parseMiseTasks(text, file);
+            }),
             ...ancestors.flatMap(({ path }) => {
                 const folder = posix.join(path, MISE_TASKS_FOLDER);
                 return session.repository.files
@@ -198,7 +195,7 @@ export function checkDocsMissingPaths(session: Session, planned: PlannedCheck): 
         session.reads,
         session.repository.files.map((file) => file.path),
     );
-    const projects = Map.groupBy(files, (file) => findScopeFolder(file.path, session.repository.scopeFolders).path);
+    const projects = groupFilesByScope(files, session.repository.scopeFolders);
     return [...projects].flatMap(([scope, sources]) => {
         const index: PathIndex = { paths: repositoryPaths, isIgnored, tasks: readTaskNames(session, scope) };
         return sources.flatMap((file) => {
@@ -230,7 +227,7 @@ export function checkDocsRequiredFiles(session: Session, planned: PlannedCheck):
         );
     if (
         planned.scope.folder.path === '' &&
-        [...repositoryPaths].every((path) => !(!path.includes('/') && LICENSE_FILE.test(path)))
+        ![...repositoryPaths].some((path) => !path.includes('/') && LICENSE_FILE.test(path))
     )
         findings.push(
             buildFinding(planned, { file: LICENSE_PATH }, 'missing-license', 'The root has no LICENSE file.'),

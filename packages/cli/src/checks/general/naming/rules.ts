@@ -105,7 +105,7 @@ function checkCase(checked: CheckedIdentifier, name: string, limits: CategoryLim
 
 function checkDigits(checked: CheckedIdentifier, words: string[], overrides: CompiledOverride[]) {
     if (
-        words.every((segment) => !(DIGIT.test(segment) && !NUMERIC_WORDS.has(segment))) ||
+        !words.some((segment) => DIGIT.test(segment) && !NUMERIC_WORDS.has(segment)) ||
         overrides.some((override) => override.isDigitsAllowed)
     )
         return undefined;
@@ -164,9 +164,8 @@ function removeAllowedPhrases(sourceWords: string[], phrases: string[][]): strin
     return words;
 }
 
-function checkBannedWords(checked: CheckedIdentifier, nameWords: string[]): Finding[] {
+function checkBannedWords(checked: CheckedIdentifier, nameWords: string[]): Finding | undefined {
     const { settings } = checked;
-    const findings: Finding[] = [];
     const terms = checked.isTestFile
         ? settings.bannedWords.filter((term) => term.group !== TEST_TERM_GROUP)
         : settings.bannedWords;
@@ -176,16 +175,14 @@ function checkBannedWords(checked: CheckedIdentifier, nameWords: string[]): Find
             (term.categories === undefined || term.categories.includes(checked.identifier.category)) &&
             hasTerm(words, term.words),
     );
-    if (banned !== undefined)
-        findings.push(
-            buildFinding(
-                checked,
-                checked.place,
-                'banned-word',
-                `${checked.prefix}"${banned.word}" is banned (${banned.setting}).`,
-            ),
-        );
-    return findings;
+    return banned === undefined
+        ? undefined
+        : buildFinding(
+              checked,
+              checked.place,
+              'banned-word',
+              `${checked.prefix}"${banned.word}" is banned (${banned.setting}).`,
+          );
 }
 
 function findRepeatedWord(words: string[]): string | undefined {
@@ -215,14 +212,10 @@ function buildIdentifierLimits(
     const base = settings.limitsFor(identifier.language, identifier.category);
     const parent = findParentCategory(identifier.category);
     if (identifier.language === 'python' && RUFF_CATEGORIES.has(identifier.category)) return { ...base, caseNames: [] };
+    const caseOverride = overrides.findLast((override) => override.cases !== undefined);
     return identifier.language === 'swift' && SWIFTLINT_PARENTS.has(parent)
         ? { ...base, caseNames: [], maxChars: 0 }
-        : { ...base, caseNames: listCaseNames(base, identifier, overrides) };
-}
-
-function listCaseNames(base: CategoryLimits, identifier: Identifier, overrides: CompiledOverride[]): NamingCase[] {
-    const caseOverride = overrides.findLast((override) => override.cases !== undefined);
-    return [...(caseOverride?.cases ?? base.caseNames), ...(identifier.addedCases ?? [])];
+        : { ...base, caseNames: [...(caseOverride?.cases ?? base.caseNames), ...(identifier.addedCases ?? [])] };
 }
 
 /**
@@ -259,7 +252,7 @@ export function validateIdentifier(identifier: Identifier, naming: FileNaming): 
         checkLength(context, name, limits),
         checkWordCount(context, words, limits),
         checkRepeatedWords(context, words, overrides),
-        ...checkBannedWords(context, nameWords),
+        checkBannedWords(context, nameWords),
     ];
     return findings.filter((finding) => finding !== undefined);
 }

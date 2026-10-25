@@ -176,7 +176,6 @@ export async function checkNginxSyntax(session: Session, planned: PlannedCheck):
     const paths = listSourcePaths(planned.files, [NGINX_CONF]);
     if (paths.length === 0) return { findings: [], files: [] };
     using workFolder = createTemporaryFolder();
-    const work = workFolder.path;
     const certificate = await runCheckTool(
         session,
         planned,
@@ -184,11 +183,11 @@ export async function checkNginxSyntax(session: Session, planned: PlannedCheck):
             OPENSSL_PROGRAM,
             ...CERTIFICATE_ARGUMENTS,
             OPENSSL_KEY_FLAG,
-            join(work, NGINX_KEY_FILE),
+            join(workFolder.path, NGINX_KEY_FILE),
             OPENSSL_CERTIFICATE_FLAG,
-            join(work, NGINX_CERTIFICATE_FILE),
+            join(workFolder.path, NGINX_CERTIFICATE_FILE),
         ],
-        { cwd: work },
+        { cwd: workFolder.path },
     );
     if (certificate.code !== 0)
         throw new Error(
@@ -197,7 +196,7 @@ export async function checkNginxSyntax(session: Session, planned: PlannedCheck):
     const findings: Finding[] = [];
     const checked = new Set<string>();
     for (const path of paths) {
-        const result = await testNginxFile(session, planned, path, work, image);
+        const result = await testNginxFile(session, planned, path, workFolder.path, image);
         findings.push(...result.findings);
         for (const file of result.files) checked.add(file);
     }

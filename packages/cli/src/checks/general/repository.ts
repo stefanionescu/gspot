@@ -8,12 +8,12 @@ import { SYMLINK_MODE } from '#cli/config/files/modes.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { lstatSync, realpathSync, readlinkSync } from 'node:fs';
 import { join, posix, dirname, resolve, relative } from 'node:path';
 import { isInside, extractParentFolder } from '#cli/system/paths.ts';
 import { LFS_FILTER } from '#cli/config/repository/files/classify.ts';
-import { joinScope, findScopeFolder } from '#cli/repository/scopes.ts';
 
 /**
 Reports each tracked file over `repository.max_file_kilobytes`, except generated, vendored, and Git Large File Storage (LFS) files.
@@ -51,23 +51,27 @@ Reports indexed files that the scope configurations mark as untracked.
 */
 export function checkRepositoryLocalFiles(session: Session, planned: PlannedCheck): Finding[] {
     const scopes = session.scopes.map(({ folder }) => folder);
-    const matchers = session.scopes.map(({ folder, configurations, settings }) => {
-        const matches = buildPathMatcher(configurations.flatMap((configuration) => configuration.ignored_paths));
-        const examples = new Set(getTable(settings, 'secrets').env_examples);
-        return {
-            scope: folder,
-            matches: (path: string) =>
-                matches(path) &&
-                (!examples.has(posix.basename(path)) || matches(joinScope(extractParentFolder(path), ''))),
-        };
-    });
+    const matchers = new Map(
+        session.scopes.map(({ folder, configurations, settings }): [string, (path: string) => boolean] => {
+            const matches = buildPathMatcher(configurations.flatMap((configuration) => configuration.ignored_paths));
+            const examples = new Set(getTable(settings, 'secrets').env_examples);
+            return [
+                folder.path,
+                (path) => {
+                    const parent = extractParentFolder(path);
+                    return (
+                        matches(path) &&
+                        (!examples.has(posix.basename(path)) || matches(parent === '' ? parent : `${parent}/`))
+                    );
+                },
+            ];
+        }),
+    );
     const tracked = [...new Set(session.repository.index.map(({ path }) => path))]
-        .filter((path) =>
-            matchers.some(
-                ({ scope, matches }) =>
-                    findScopeFolder(path, scopes).path === scope.path && matches(posix.relative(scope.path, path)),
-            ),
-        )
+        .filter((path) => {
+            const scope = findScopeFolder(path, scopes).path;
+            return matchers.get(scope)?.(posix.relative(scope, path)) === true;
+        })
         .map((path) =>
             buildFinding(
                 planned,

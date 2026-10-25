@@ -8,8 +8,8 @@ import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { readParsedFile } from '#cli/checks/syntax.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { parseCheckedFile } from '#cli/checks/syntax.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
@@ -39,15 +39,14 @@ import {
     SERVICE_ROLE_KEY_EXTENSIONS,
 } from '#cli/config/checks/platform/supabase.ts';
 
-function walkSqlTree(value: unknown, visit: (key: string, child: unknown) => void): void {
-    if (Array.isArray(value)) {
-        for (const child of value) walkSqlTree(child, visit);
-    } else if (value !== null && typeof value === 'object') {
-        for (const [key, child] of Object.entries(value)) {
-            visit(key, child);
-            walkSqlTree(child, visit);
-        }
-    }
+function listStringConstants(value: unknown): string[] {
+    if (Array.isArray(value)) return value.flatMap((child) => listStringConstants(child));
+    if (!isTable(value)) return [];
+    return Object.entries(value).flatMap(([key, child]) => {
+        const literal =
+            key === 'A_Const' && isTable(child) && isTable(child['sval']) ? child['sval']['sval'] : undefined;
+        return typeof literal === 'string' ? [literal, ...listStringConstants(child)] : listStringConstants(child);
+    });
 }
 
 function buildDenoJsonArguments(root: string, folder: string): string[] {
@@ -63,10 +62,10 @@ function normalizeDenoPath(root: string, locator: string): string {
     return local === '' || !isInside(local) ? path : local;
 }
 
-function parseDenoCheckError(session: Session, planned: PlannedCheck, folder: string, stderr: string): Finding {
+function parseDenoCheckError(session: Session, planned: PlannedCheck, entrypoint: string, stderr: string): Finding {
     const output = stripVTControlCharacters(stderr);
     const place = DENO_LOCATION.exec(output)?.groups;
-    const file = place?.['file'] === undefined ? `${folder}/index.ts` : normalizeDenoPath(session.root, place['file']);
+    const file = place?.['file'] === undefined ? entrypoint : normalizeDenoPath(session.root, place['file']);
     const first = output.split('\n').find((line) => line.trim() !== '') ?? 'The deno check command failed.';
     return buildFinding(planned, { file, line: Number(place?.['line'] ?? 1) }, 'type-error', first.trim());
 }
@@ -79,7 +78,7 @@ function readSupabaseProjectFile(
     const text = findCachedText(session.reads, local);
     return text === undefined
         ? undefined
-        : readParsedFile(planned, local, () => parseTomlFile(local, text, supabaseProjectFileSchema));
+        : parseCheckedFile(planned, local, () => parseTomlFile(local, text, supabaseProjectFileSchema));
 }
 
 function listFunctionEntrypoints(planned: PlannedCheck): string[] {
@@ -128,9 +127,7 @@ export async function checkSupabaseStoragePolicies(session: Session, planned: Pl
     if (parsed === undefined) return [];
     if ('error' in parsed) return [parsed.error];
     const at = { file: joinScope(planned.scope.folder.path, SUPABASE_PROJECT_FILE), line: 1 };
-    const projectFile = parsed.value;
     const migrations = await readParsedMigrations(session, planned);
-    const policed = new Set<string>();
     const policies = migrations
         .flatMap((migration) => migration.statements)
         .flatMap((statement) =>
@@ -140,13 +137,8 @@ export async function checkSupabaseStoragePolicies(session: Session, planned: Pl
                 ? [statement.fields]
                 : [],
         );
-    for (const fields of policies)
-        walkSqlTree([fields.qual, fields.with_check], (key, node) => {
-            if (key !== 'A_Const' || !isTable(node)) return;
-            const literal = isTable(node['sval']) ? node['sval']['sval'] : undefined;
-            if (typeof literal === 'string') policed.add(literal);
-        });
-    return (projectFile.storage?.buckets === undefined ? [] : Object.keys(projectFile.storage.buckets))
+    const policed = new Set(policies.flatMap((fields) => listStringConstants([fields.qual, fields.with_check])));
+    return (parsed.value.storage?.buckets === undefined ? [] : Object.keys(parsed.value.storage.buckets))
         .filter((bucket) => !policed.has(bucket))
         .map((bucket) =>
             buildFinding(
@@ -218,7 +210,7 @@ export async function checkSupabaseDenoCheck(session: Session, planned: PlannedC
             [...DENO_CHECK_COMMAND, join(session.root, entrypoint)],
             folder,
         );
-        if (result.code !== 0) findings.push(parseDenoCheckError(session, planned, folder, result.stderr));
+        if (result.code !== 0) findings.push(parseDenoCheckError(session, planned, entrypoint, result.stderr));
     }
     return findings;
 }
@@ -245,7 +237,7 @@ export function checkSupabaseServiceRoleKey(session: Session, planned: PlannedCh
         readCachedText(session.reads, file.path)
             .split('\n')
             .flatMap((text, index): Finding[] => {
-                if (SERVICE_ROLE_KEY_NAMES.every((name) => !text.includes(name))) return [];
+                if (!SERVICE_ROLE_KEY_NAMES.some((name) => text.includes(name))) return [];
                 const message =
                     'This file names a privileged Supabase key, which bypasses row level security, outside the paths allowed to hold it.';
                 return [buildFinding(planned, { file: file.path, line: index + 1 }, 'service-role-key', message)];

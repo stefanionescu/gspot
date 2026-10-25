@@ -45,12 +45,11 @@ function replaceReference(text: string, reference: Scalar): string {
                   ...token.props.map((prop) => ('source' in prop ? prop.offset + prop.source.length : token.offset)),
               )
             : token.offset;
-    const source = token.source;
-    const replaced = source.replace(
+    const replaced = token.source.replace(
         SELF_REPOSITORY_MARKER,
         (_, prefix: string, marker: string) => prefix + (marker === '$' ? '.' : marker.replace(/24$/u, '2e')),
     );
-    return text.slice(0, start) + replaced + text.slice(start + source.length);
+    return text.slice(0, start) + replaced + text.slice(start + token.source.length);
 }
 
 function replaceSelfReferences(text: string): string {

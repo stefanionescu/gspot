@@ -58,10 +58,10 @@ export async function checkTsc(session: Session, planned: PlannedCheck): Promise
         scratch.path,
         session.root,
     );
-    return references === undefined ? result : leaveChildScopeFindings(session, planned, result);
+    return references === undefined ? result : removeChildScopeFindings(session, planned, result);
 }
 
-function leaveChildScopeFindings(session: Session, planned: PlannedCheck, result: CheckResult): CheckResult {
+function removeChildScopeFindings(session: Session, planned: PlannedCheck, result: CheckResult): CheckResult {
     const checked = new Set(
         session.configuredChecks
             .filter(({ check }) => check.id === planned.check.id)

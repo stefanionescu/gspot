@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
-import type { ImportedFile, PythonSearch, LocatedImport } from '#cli/types/checks/general/structure.ts';
+import type { PythonSearch, LocatedImport } from '#cli/types/checks/general/structure.ts';
 
 import {
     RELATIVE_IMPORT,
@@ -22,11 +22,6 @@ function findAbsoluteModule(dotted: string, search: PythonSearch): string | unde
     return undefined;
 }
 
-function findFirstModule(imports: { module: string; path: string | undefined }[]): ImportedFile[] {
-    const found = imports.find((imported) => imported.path !== undefined);
-    return found?.path === undefined ? [] : [{ module: found.module, path: found.path }];
-}
-
 function listImportedNames(node: Node): (string | undefined)[] {
     const names = node
         .childrenForFieldName('name')
@@ -38,17 +33,14 @@ function listImportedNames(node: Node): (string | undefined)[] {
 
 function listAbsoluteImports(node: Node, module: string, search: PythonSearch): LocatedImport[] {
     return listImportedNames(node).flatMap((name) => {
-        const inner = name === undefined ? undefined : [module, name].join('.');
-        return findFirstModule([
-            ...(inner === undefined ? [] : [{ module: inner, path: findAbsoluteModule(inner, search) }]),
-            { module, path: findAbsoluteModule(module, search) },
-        ]).map((found) => ({ node, ...found }));
+        if (name !== undefined) {
+            const inner = [module, name].join('.');
+            const innerPath = findAbsoluteModule(inner, search);
+            if (innerPath !== undefined) return [{ node, module: inner, path: innerPath }];
+        }
+        const path = findAbsoluteModule(module, search);
+        return path === undefined ? [] : [{ node, module, path }];
     });
-}
-
-function joinRelativeName(prefix: string, name: string | undefined): string {
-    if (name === undefined) return prefix;
-    return prefix.endsWith('.') ? prefix + name : [prefix, name].join('.');
 }
 
 function listRelativeImports(node: Node, prefix: Node, file: string, search: PythonSearch): LocatedImport[] {
@@ -56,18 +48,13 @@ function listRelativeImports(node: Node, prefix: Node, file: string, search: Pyt
     const dotted = prefix.namedChildren.find((child) => child.type === 'dotted_name')?.text ?? '';
     const folder = posix.join(posix.dirname(file), ...Array.from({ length: dots - 1 }, () => '..'));
     return listImportedNames(node).flatMap((name) => {
-        const inner = name === undefined ? undefined : [dotted, name].filter(Boolean).join('.');
-        return findFirstModule([
-            ...(inner === undefined
-                ? []
-                : [
-                      {
-                          module: joinRelativeName(prefix.text, name),
-                          path: findModuleFile(folder, inner, search.files),
-                      },
-                  ]),
-            { module: prefix.text, path: findModuleFile(folder, dotted, search.files) },
-        ]).map((found) => ({ node, ...found }));
+        if (name !== undefined) {
+            const innerPath = findModuleFile(folder, [dotted, name].filter(Boolean).join('.'), search.files);
+            const module = prefix.text.endsWith('.') ? prefix.text + name : [prefix.text, name].join('.');
+            if (innerPath !== undefined) return [{ node, module, path: innerPath }];
+        }
+        const path = findModuleFile(folder, dotted, search.files);
+        return path === undefined ? [] : [{ node, module: prefix.text, path }];
     });
 }
 

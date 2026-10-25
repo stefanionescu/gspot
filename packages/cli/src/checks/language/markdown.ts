@@ -9,10 +9,16 @@ import { readCachedText } from '#cli/system/files/reads.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import { JSONC_OPTIONS } from '#cli/config/parsers/formats/json.ts';
+import type { CodeFence } from '#cli/types/parsers/formats/markdown.ts';
 import type { ParseCache, GrammarName } from '#cli/types/parsers/code/grammars.ts';
-import type { FenceParser, FenceSyntaxError } from '#cli/types/checks/language/markdown.ts';
 import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser';
 
+import type {
+    FenceParser,
+    FenceSyntaxError,
+    FormatFenceParser,
+    GrammarFenceParser,
+} from '#cli/types/checks/language/markdown.ts';
 import {
     ELLIPSIS_LINE,
     FENCE_PARSERS,
@@ -23,7 +29,13 @@ import {
     ELLIPSIS_ARGUMENTS,
     JSON_FENCE_OPTIONS,
     CAMEL_CASE_BOUNDARY,
+    GRAMMAR_FENCE_PARSERS,
 } from '#cli/config/checks/language/markdown.ts';
+
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report a type predicate.
+function isGrammarFenceParser(parser: FenceParser): parser is GrammarFenceParser {
+    return (GRAMMAR_FENCE_PARSERS as readonly string[]).includes(parser);
+}
 
 function findJsonSyntaxError(body: string, options: ParseOptions): FenceSyntaxError | undefined {
     const errors: ParseError[] = [];
@@ -66,34 +78,38 @@ async function findTreeSyntaxError(
     }
 }
 
+const FORMAT_FENCE_READERS: Record<FormatFenceParser, (body: string) => FenceSyntaxError | undefined> = {
+    json: (body) => findJsonSyntaxError(body, JSON_FENCE_OPTIONS),
+    jsonc: (body) => findJsonSyntaxError(body, JSONC_OPTIONS),
+    toml: findTomlSyntaxError,
+    yaml: findYamlSyntaxError,
+};
+
+async function findFenceSyntaxError(
+    fence: CodeFence,
+    parser: FenceParser,
+    cache: ParseCache,
+): Promise<FenceSyntaxError | undefined> {
+    const omitted = parser === 'bash' ? OMITTED_BASH_LINE : '';
+    const body = fence.body
+        .split('\n')
+        .map((line) => (ELLIPSIS_LINE.test(line) ? omitted : line))
+        .join('\n')
+        .replaceAll(ELLIPSIS_ARGUMENTS, () => EMPTY_ARGUMENTS)
+        .replaceAll(ANGLE_PLACEHOLDER, () => PLACEHOLDER_VALUE);
+    const error = isGrammarFenceParser(parser)
+        ? await findTreeSyntaxError(parser, body, cache)
+        : FORMAT_FENCE_READERS[parser](body);
+    return error === undefined ? undefined : { ...error, line: fence.startLine + error.line };
+}
+
 async function validateCodeFences(text: string, cache: ParseCache): Promise<FenceSyntaxError[]> {
-    const readers: Record<
-        FenceParser,
-        (body: string) => FenceSyntaxError | undefined | Promise<FenceSyntaxError | undefined>
-    > = {
-        json: (body) => findJsonSyntaxError(body, JSON_FENCE_OPTIONS),
-        jsonc: (body) => findJsonSyntaxError(body, JSONC_OPTIONS),
-        toml: findTomlSyntaxError,
-        yaml: findYamlSyntaxError,
-        bash: (body) => findTreeSyntaxError('bash', body, cache),
-        typescript: (body) => findTreeSyntaxError('typescript', body, cache),
-        tsx: (body) => findTreeSyntaxError('tsx', body, cache),
-        javascript: (body) => findTreeSyntaxError('javascript', body, cache),
-        python: (body) => findTreeSyntaxError('python', body, cache),
-    };
     const errors: FenceSyntaxError[] = [];
     for (const fence of listCodeFences(text)) {
         const parser = FENCE_PARSERS[fence.language];
         if (typeof parser !== 'string' || fence.body.trim() === '') continue;
-        const omitted = parser === 'bash' ? OMITTED_BASH_LINE : '';
-        const body = fence.body
-            .split('\n')
-            .map((line) => (ELLIPSIS_LINE.test(line) ? omitted : line))
-            .join('\n')
-            .replaceAll(ELLIPSIS_ARGUMENTS, () => EMPTY_ARGUMENTS)
-            .replaceAll(ANGLE_PLACEHOLDER, () => PLACEHOLDER_VALUE);
-        const error = await readers[parser](body);
-        if (error !== undefined) errors.push({ ...error, line: fence.startLine + error.line });
+        const error = await findFenceSyntaxError(fence, parser, cache);
+        if (error !== undefined) errors.push(error);
     }
     return errors;
 }

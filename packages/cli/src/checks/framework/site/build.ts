@@ -1,8 +1,8 @@
+import { join, relative } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { join, relative, normalize } from 'node:path';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
@@ -38,10 +38,9 @@ function getSiteBuild(session: Session, planned: PlannedCheck): Promise<SiteBuil
     const held = scopeBuilds.get(key);
     if (held !== undefined) return held;
     const running = (async () => {
-        const resources = session.resources;
-        resources.defer(() => scopeBuilds.delete(key));
+        session.resources.defer(() => scopeBuilds.delete(key));
         const folder = await createCheckCopy(session, planned);
-        return runSiteBuild(session, planned, resources.use(folder).path);
+        return runSiteBuild(session, planned, session.resources.use(folder).path);
     })();
     scopeBuilds.set(key, running);
     return running;
@@ -68,18 +67,6 @@ export function listBuiltFiles(folder: string): string[] {
         return false;
     });
     return found.toSorted((left, right) => compareText(left, right));
-}
-
-/**
-Maps a built file to its repository path.
-
-@param planned the scope with the build folder setting.
-@param path the file path inside the build folder.
-@returns the repository-relative path.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 1 file share it.
-export function buildRepositoryPath(planned: Pick<PlannedCheck, 'scope'>, path: string): string {
-    return `${getTable(planned.scope.settings, 'site')['build_folder']}/${convertToPosixPath(normalize(path))}`;
 }
 
 /**

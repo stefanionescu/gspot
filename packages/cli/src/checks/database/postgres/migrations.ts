@@ -23,8 +23,7 @@ const MIGRATIONS = { create: () => new Map<string, Promise<Migration[]>>() };
 async function parseMigrations(session: Session, paths: Pick<Migration, 'path' | 'version'>[]): Promise<Migration[]> {
     const migrations: Migration[] = [];
     for (const { path, version } of paths) {
-        const cached = readCachedText(session.reads, path);
-        const text = readForwardText(cached);
+        const text = extractForwardText(readCachedText(session.reads, path));
         const name = posix.basename(path);
         const parsed = await parseSqlFile(text, session.reads);
         migrations.push({
@@ -98,12 +97,12 @@ export async function readParsedMigrations(session: Session, planned: PlannedChe
 }
 
 /**
-Read only the forward statements of a migration.
+Extract the forward statements of a migration.
 
 @param text the migration source.
 @returns the text before the down-migration marker.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function readForwardText(text: string): string {
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
+export function extractForwardText(text: string): string {
     return text.split(MIGRATION_DOWN, 1)[0] ?? '';
 }

@@ -6,9 +6,9 @@ import { type RunResult } from '#cli/types/runs/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import * as environment from '#cli/system/environment.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { buildPlan } from '#cli/checks/language/swift/cache.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { planSandboxCheck, redirectCacheFolder } from '#tests/setup/cli/checks.ts';
@@ -47,7 +47,7 @@ test.each([...XCTEST_FAILURES])(
         await writeFile(join(sandbox.path, 'gspot.toml'), XCTEST_SETTINGS);
         const session = await openSession(sandbox.path);
         const viewed = join(
-            buildPlan(session, planSandboxCheck(session, 'swift/coverage'), 'coverage').folder,
+            planSwiftBuild(session, planSandboxCheck(session, 'swift/coverage'), 'coverage').folder,
             'source/viewed.txt',
         );
         expect((await isOnDisk(viewed)) ? await readFile(viewed, 'utf8') : undefined).toBe(
@@ -97,7 +97,7 @@ test('swift/coverage: XCTest coverage refuses an external result link and remove
         xcrun: ['--line', JSON.stringify({ targets: [{ name: 'Example', lineCoverage: 1 }] })],
     };
     const session = await openSession(sandbox.path);
-    const cache = buildPlan(session, planSandboxCheck(session, 'swift/coverage'), 'coverage').folder;
+    const cache = planSwiftBuild(session, planSandboxCheck(session, 'swift/coverage'), 'coverage').folder;
     await writeFile(join(outside.path, 'authored.txt'), 'preserved');
     await mkdir(cache, { recursive: true });
     const bundle = join(cache, 'coverage.xcresult');

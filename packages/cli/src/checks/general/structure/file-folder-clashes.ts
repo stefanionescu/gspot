@@ -18,7 +18,7 @@ export function checkStructureFileFolderClashes(_session: Session, planned: Plan
     return files.flatMap((file) => {
         const stem = extractBaseName(file.path);
         const siblings = tree.get(extractParentFolder(file.path)) ?? [];
-        if (siblings.every((sibling) => !(sibling.kind === 'folder' && sibling.name === stem))) return [];
+        if (!siblings.some((sibling) => sibling.kind === 'folder' && sibling.name === stem)) return [];
         return [
             buildFinding(
                 planned,

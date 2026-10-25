@@ -7,12 +7,12 @@ import { listOutdatedFiles } from '#cli/apply/outdated.ts';
 import { getToolName } from '#cli/configurations/tools.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
-import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { groupFilesByScope } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
@@ -99,12 +99,11 @@ function findReasonAbove(previous: SourceComment | undefined, comment: SourceCom
 }
 
 function listSuppressionSyntaxes(scope: Scope): SuppressionSyntax[] {
-    const configurations = scope.configurations;
-    const checks = configurations.flatMap((configuration) =>
+    const checks = scope.configurations.flatMap((configuration) =>
         configuration.checks.map((check) => ({ check, files: check.files ?? configuration.files })),
     );
     const definitions = new Map(
-        configurations.flatMap((configuration) =>
+        scope.configurations.flatMap((configuration) =>
             configuration.tools.flatMap((tool) =>
                 tool.suppression === undefined ? [] : [[tool.name, tool.suppression] as const],
             ),
@@ -119,7 +118,7 @@ function listSuppressionSyntaxes(scope: Scope): SuppressionSyntax[] {
                 readers.some(
                     ({ files }) =>
                         listCoveredFiles(files, [file], {
-                            configurations,
+                            configurations: scope.configurations,
                             scopePath: scope.folder.path,
                             settings: scope.settings,
                         }).length > 0,
@@ -183,24 +182,20 @@ function checkSuppressionComment(
 }
 
 function listExpiredIgnores(session: Session, planned: PlannedCheck): Finding[] {
-    const { settings } = session.settingsFile;
     const today = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
-    const expired = new Map(
-        settings.ignore.flatMap((ignore, index) => {
-            const date = ignore.until?.toISOString();
-            return date === undefined || today < date ? [] : [[index, { record: ignore, date }] as const];
-        }),
-    );
-    if (expired.size === 0) return [];
-    return [...expired].map(([index, ignore]) =>
-        buildFinding(
-            planned,
-            { file: SETTINGS_FILE, line: findSettingLine(session.settingsFile, ['ignore', index]) },
-            'expired-ignore',
-            `This ignore of ${ignore.record.check ?? 'every check'} ended on ${ignore.date}.`,
-            { help: EXPIRED_IGNORE_HELP },
-        ),
-    );
+    return session.settingsFile.settings.ignore.flatMap((ignore, index) => {
+        const date = ignore.until?.toISOString();
+        if (date === undefined || today < date) return [];
+        return [
+            buildFinding(
+                planned,
+                { file: SETTINGS_FILE, line: findSettingLine(session.settingsFile, ['ignore', index]) },
+                'expired-ignore',
+                `This ignore of ${ignore.check ?? 'every check'} ended on ${date}.`,
+                { help: EXPIRED_IGNORE_HELP },
+            ),
+        ];
+    });
 }
 
 /**
@@ -212,18 +207,14 @@ reason, and ignores past their until date.
 @returns the findings.
 */
 export async function checkGspotSuppressions(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const scopes = session.scopes.map((scope) => scope.folder);
-    const scopesByPath = new Map(session.scopes.map((scope) => [scope.folder.path, scope]));
+    const filesByScope = groupFilesByScope(
+        planned.files.filter((file) => file.kind === 'source' && file.tags.includes('text')),
+        session.scopes.map((scope) => scope.folder),
+    );
     const found: Finding[] = listExpiredIgnores(session, planned);
-    for (const [scopePath, scope] of scopesByPath) {
+    for (const scope of session.scopes) {
         const syntaxes = listSuppressionSyntaxes(scope);
-        for (const file of planned.files) {
-            if (
-                file.kind !== 'source' ||
-                !file.tags.includes('text') ||
-                findScopeFolder(file.path, scopes).path !== scopePath
-            )
-                continue;
+        for (const file of filesByScope.get(scope.folder.path) ?? []) {
             const forms = syntaxes.filter((form) => form.covers(file));
             const source = readCachedText(session.reads, file.path);
             const comments = await parseComments(file.path, source, file.tags);
@@ -277,13 +268,13 @@ export function checkGspotUnmatchedPaths(session: Session, planned: PlannedCheck
             }
             return pattern;
         };
+        const settings = Object.entries(table.written).filter(([key]) => key !== 'scope');
         mapSettingPaths(
             schema,
-            Object.fromEntries(
-                Object.entries(table.written)
-                    .filter(([key]) => key !== 'scope')
-                    .toSorted(([left], [right]) => Number(right === 'ignore') - Number(left === 'ignore')),
-            ),
+            Object.fromEntries([
+                ...settings.filter(([key]) => key === 'ignore'),
+                ...settings.filter(([key]) => key !== 'ignore'),
+            ]),
             visit,
             [],
         );

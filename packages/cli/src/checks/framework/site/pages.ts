@@ -5,25 +5,24 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { join, relative, isAbsolute } from 'node:path';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
-import { getConfigFile } from '#cli/runs/command/placeholders.ts';
+import { join, relative, normalize, isAbsolute } from 'node:path';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import type { SitemapUrls } from '#cli/types/checks/framework/site.ts';
-import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { purgecssReportSchema } from '#cli/schemas/checks/framework/site.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { PURGECSS } from '#cli/config/checks/framework/site/purgecss-process.ts';
-import { listBuiltFiles, getSuccessfulBuild, buildRepositoryPath } from '#cli/checks/framework/site/build.ts';
+import { listBuiltFiles, getSuccessfulBuild } from '#cli/checks/framework/site/build.ts';
 
 import {
     LYCHEE,
@@ -41,6 +40,11 @@ import {
     HTML_VALIDATE_CONFIG_FLAG,
     HTML_VALIDATE_FORMATTER_FLAG,
 } from '#cli/config/checks/framework/site/pages.ts';
+
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in this file share it.
+function joinBuildFolder(planned: Pick<PlannedCheck, 'scope'>, path: string): string {
+    return `${getTable(planned.scope.settings, 'site')['build_folder']}/${convertToPosixPath(normalize(path))}`;
+}
 
 function parseSitemapUrl(value: string): URL | undefined {
     const url = URL.parse(value);
@@ -65,7 +69,7 @@ function readSitemapLocations(folder: string, file: string, planned: PlannedChec
             findings.push(
                 buildFinding(
                     planned,
-                    { file: buildRepositoryPath(planned, file), ...getPosition(text, match.index) },
+                    { file: joinBuildFolder(planned, file), ...getPosition(text, match.index) },
                     'invalid-url',
                     `The sitemap lists ${value}, which is not an absolute URL with valid escapes.`,
                 ),
@@ -134,7 +138,7 @@ export async function checkSiteLychee(session: Session, planned: PlannedCheck): 
             parseOutput(planned.check, result.stdout, result.stderr, { root: build.folder, cwd: build.folder }),
             LYCHEE,
         );
-        findings.push(...parsed.map((finding) => ({ ...finding, file: buildRepositoryPath(planned, finding.file) })));
+        findings.push(...parsed.map((finding) => ({ ...finding, file: joinBuildFolder(planned, finding.file) })));
     }
     return findings;
 }
@@ -152,14 +156,7 @@ export async function checkSiteHtmlValidate(session: Session, planned: PlannedCh
         .filter((path) => path.endsWith(HTML_EXTENSION))
         .map((path) => join(build.folder, path));
     if (pages.length === 0) return [];
-    const configFile = join(
-        session.root,
-        getConfigFileTarget(
-            planned.scope.folder.path,
-            getConfigFile(session, planned, HTML_VALIDATE),
-            getConfigFiles(session),
-        ),
-    );
+    const configFile = join(session.root, getConfigFilePath(session, planned, HTML_VALIDATE));
     using reports = createTemporaryFolder();
     const command = [
         HTML_VALIDATE,
@@ -181,7 +178,7 @@ export async function checkSiteHtmlValidate(session: Session, planned: PlannedCh
         findings.push(
             ...parsed.map((finding) => ({
                 ...finding,
-                file: buildRepositoryPath(planned, finding.file),
+                file: joinBuildFolder(planned, finding.file),
             })),
         );
     }
@@ -199,14 +196,7 @@ export async function checkSitePurgecss(session: Session, planned: PlannedCheck)
     const build = await getSuccessfulBuild(session, planned);
     const sheets = listBuiltFiles(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
     if (sheets.length === 0) return [];
-    const configFile = join(
-        session.root,
-        getConfigFileTarget(
-            planned.scope.folder.path,
-            getConfigFile(session, planned, PURGECSS),
-            getConfigFiles(session),
-        ),
-    );
+    const configFile = join(session.root, getConfigFilePath(session, planned, PURGECSS));
     const result = await runCheckTool(
         session,
         planned,
@@ -220,7 +210,7 @@ export async function checkSitePurgecss(session: Session, planned: PlannedCheck)
             buildFinding(
                 planned,
                 {
-                    file: buildRepositoryPath(
+                    file: joinBuildFolder(
                         planned,
                         isAbsolute(sheet.file) ? relative(build.folder, sheet.file) : sheet.file,
                     ),
@@ -248,7 +238,7 @@ export async function checkSiteSize(session: Session, planned: PlannedCheck): Pr
     const build = await getSuccessfulBuild(session, planned);
     const sizes = new Map(
         listBuiltFiles(build.folder)
-            .map((source) => ({ source, path: buildRepositoryPath(planned, source) }))
+            .map((source) => ({ source, path: joinBuildFolder(planned, source) }))
             .filter(({ path }) => limits.some((limit) => limit.isCounted(path)))
             .map(({ source, path }) => [path, gzipSync(readBytes(build.folder, source)).length]),
     );
@@ -289,7 +279,7 @@ export async function checkSiteSitemap(session: Session, planned: PlannedCheck):
             buildFinding(
                 planned,
                 {
-                    file: buildRepositoryPath(planned, sitemapFile),
+                    file: joinBuildFolder(planned, sitemapFile),
                     line: 1,
                 },
                 'missing-page',
@@ -298,13 +288,12 @@ export async function checkSiteSitemap(session: Session, planned: PlannedCheck):
         );
     const unlisted = [...files]
         .filter(
-            (path) =>
-                path.endsWith(HTML_EXTENSION) && !listed.has(path) && !isLeftOut(buildRepositoryPath(planned, path)),
+            (path) => path.endsWith(HTML_EXTENSION) && !listed.has(path) && !isLeftOut(joinBuildFolder(planned, path)),
         )
         .map((path) =>
             buildFinding(
                 planned,
-                { file: buildRepositoryPath(planned, path), line: 1 },
+                { file: joinBuildFolder(planned, path), line: 1 },
                 'unlisted-page',
                 'The build wrote this page, and the sitemap does not list it.',
             ),

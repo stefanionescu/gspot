@@ -19,5 +19,3 @@ export const BASH_SHEBANGS: ReadonlySet<string> = new Set(['#!/usr/bin/env bash'
 export const DECLARATION_WORDS = new Set(['export', 'readonly', 'local', 'declare', 'typeset']);
 
 export const OTHER_SHEBANG = /^#!.*\b(?:zsh|sh|dash|ksh)\b/u;
-
-export const MAIN_FUNCTION = 'main';

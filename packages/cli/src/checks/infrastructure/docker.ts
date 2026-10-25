@@ -10,14 +10,12 @@ import { FILE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { getConfigFile } from '#cli/runs/command/placeholders.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
-import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
 import { DOCKERFILE_NAME } from '#cli/config/repository/files/classify.ts';
 import { readCachedText, findCachedText } from '#cli/system/files/reads.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { composeSchema, imageReportSchema } from '#cli/schemas/checks/infrastructure/docker.ts';
 
 import {
@@ -139,9 +137,9 @@ function listMissingPatterns(required: string[], text: string): string[] {
         if (IGNORE_PATTERN_FORMS.some(([prefix, suffix]) => lines.includes(`${prefix}${pattern}${suffix}`)))
             return false;
         if (last === -1) return true;
-        return after.every((line) => !line.startsWith('!'))
-            ? false
-            : pattern.startsWith('**/') || after.includes(`!${pattern}`);
+        return (
+            after.some((line) => line.startsWith('!')) && (pattern.startsWith('**/') || after.includes(`!${pattern}`))
+        );
     });
 }
 
@@ -198,18 +196,10 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Find
 }
 
 async function scanImage(session: Session, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
-    const configFile = getConfigFile(session, planned, TRIVY_CONFIG_FILE);
-    const targets = getConfigFiles(session);
-    const result = await runCheckTool(
-        session,
-        planned,
-        [
-            ...TRIVY_IMAGE_COMMAND,
-            join(session.root, getConfigFileTarget(planned.scope.folder.path, configFile, targets)),
-            image,
-        ],
-        { cwd: session.root },
-    );
+    const configFile = join(session.root, getConfigFilePath(session, planned, TRIVY_CONFIG_FILE));
+    const result = await runCheckTool(session, planned, [...TRIVY_IMAGE_COMMAND, configFile, image], {
+        cwd: session.root,
+    });
     if (result.code !== 0 && result.code !== TRIVY_FINDINGS_EXIT_CODE) {
         const output = result.stderr.trim() === '' ? result : { stdout: '', stderr: result.stderr };
         const detail = formatOutputTail(output, `exit ${String(result.code)}`);

@@ -34,7 +34,7 @@ export function addIdentifier(
     name = node.text.replaceAll(NAME_QUOTE, ''),
 ): void {
     if (name === '' || name === '_') return;
-    found.out.push(
+    found.identifiers.push(
         createIdentifier(found, {
             line: node.startPosition.row + 1,
             column: node.startPosition.column + 1,

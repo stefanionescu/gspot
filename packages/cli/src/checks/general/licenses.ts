@@ -41,11 +41,6 @@ import {
     CLASSIFIER_SEPARATOR,
 } from '#cli/config/checks/general/licenses.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function isAllowed(license: string, allowed: readonly string[]): boolean {
-    return isSpdxExpression(license) ? satisfies(license, allowed) : false;
-}
-
 function isSpdxExpression(license: string): boolean {
     try {
         parseExpression(license);
@@ -126,15 +121,7 @@ async function scanPythonLicenses(session: Session, planned: PlannedCheck, start
     }));
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function hasProjectDependencies(session: Session, dependencyFile: string): boolean {
-    return (
-        basename(dependencyFile) !== PACKAGE_JSON ||
-        (readDependencySpecifiers(session.reads, dependencyFile)?.size ?? 0) > 0
-    );
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function normalizeIdentity(identity: string): string {
     const split = splitIdentity(identity);
     return split === undefined
@@ -143,7 +130,7 @@ function normalizeIdentity(identity: string): string {
 }
 
 async function scanProject(session: Session, planned: PlannedCheck, project: LicenseProject): Promise<ProjectLicenses> {
-    const { dependencyFile, scope } = project;
+    const { dependencyFile, scope, settings } = project;
     const folder = dirname(dependencyFile);
     const { scan, start, lockfiles, ecosystem } =
         basename(dependencyFile) === PACKAGE_JSON
@@ -159,7 +146,6 @@ async function scanProject(session: Session, planned: PlannedCheck, project: Lic
                   lockfiles: PYTHON_LOCKFILES,
                   ecosystem: 'python' as const,
               };
-    const settings = project.settings;
     const scanned = await scan(session, { ...planned, scope }, start);
     if (scanned.length === 0)
         throw new Error(
@@ -179,27 +165,27 @@ async function scanLicenses(session: Session, planned: PlannedCheck) {
     if (projects.length === 0) throw new GspotError('skip', 'Set licenses.allowed to check licenses.');
     const inventories: ProjectLicenses[] = [];
     for (const project of projects) {
-        if (project.skip === undefined && hasProjectDependencies(session, project.dependencyFile))
+        if (
+            project.skip === undefined &&
+            (basename(project.dependencyFile) !== PACKAGE_JSON ||
+                (readDependencySpecifiers(session.reads, project.dependencyFile)?.size ?? 0) > 0)
+        )
             inventories.push(await scanProject(session, planned, project));
     }
-    return {
-        inventories,
-        skipped: projects.filter(({ skip }) => skip !== undefined).map(({ dependencyFile }) => dependencyFile),
-    };
+    return { inventories, hasSkipped: projects.some(({ skip }) => skip !== undefined) };
 }
 
 function isPackageAllowed(record: AllowedPackage, identity: string, ecosystem: ProjectLicenses['ecosystem']): boolean {
     const split = splitIdentity(identity);
-    const wanted = splitIdentity(
-        ecosystem === 'python'
-            ? normalizeIdentity(`${record.name}@${record.version}`)
-            : `${record.name}@${record.version}`,
-    );
-    if (split === undefined || wanted === undefined || !buildPathMatcher([wanted[0]])(split[0])) return false;
+    const name =
+        ecosystem === 'python' ? record.name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-') : record.name;
+    if (split === undefined || !buildPathMatcher([name])(split[0])) return false;
     if ([ANY_VERSION, split[1]].includes(record.version)) return true;
-    return semver.valid(split[1]) === null || semver.validRange(record.version) === null
-        ? false
-        : semver.satisfies(split[1], record.version, { includePrerelease: true });
+    return (
+        semver.valid(split[1]) !== null &&
+        semver.validRange(record.version) !== null &&
+        semver.satisfies(split[1], record.version, { includePrerelease: true })
+    );
 }
 
 function isRecordInUse(record: AllowedPackage, project: ProjectLicenses): boolean {
@@ -208,10 +194,9 @@ function isRecordInUse(record: AllowedPackage, project: ProjectLicenses): boolea
     return identities.some((identity) => isPackageAllowed(record, identity, ecosystem));
 }
 
-function listStaleRecords(planned: PlannedCheck, inventories: ProjectLicenses[], skipped: string[]): Finding[] {
-    if (skipped.length > 0) return [];
+function listStaleRecords(planned: PlannedCheck, inventories: ProjectLicenses[]): Finding[] {
     return getTable(planned.scope.settings, 'licenses')
-        .allowed_package.filter((record) => inventories.every((project) => !isRecordInUse(record, project)))
+        .allowed_package.filter((record) => !inventories.some((project) => isRecordInUse(record, project)))
         .map((record) =>
             buildFinding(
                 planned,
@@ -230,11 +215,11 @@ Reports disallowed licenses of locked packages, and allowed_package records that
 @returns the findings.
 */
 export async function checkLicensesAllowed(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const { inventories, skipped } = await scanLicenses(session, planned);
+    const { inventories, hasSkipped } = await scanLicenses(session, planned);
     const findings = inventories.flatMap(({ dependencyFile, packages, ecosystem, settings }) => {
         return packages.flatMap(({ name, license }) => {
             const isListed = settings.allowed_package.some((record) => isPackageAllowed(record, name, ecosystem));
-            if (isListed || isAllowed(license, settings.allowed)) return [];
+            if (isListed || (isSpdxExpression(license) && satisfies(license, settings.allowed))) return [];
             return [
                 buildFinding(
                     planned,
@@ -245,5 +230,5 @@ export async function checkLicensesAllowed(session: Session, planned: PlannedChe
             ];
         });
     });
-    return [...findings, ...listStaleRecords(planned, inventories, skipped)];
+    return hasSkipped ? findings : [...findings, ...listStaleRecords(planned, inventories)];
 }

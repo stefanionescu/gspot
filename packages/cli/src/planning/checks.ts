@@ -2,14 +2,15 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { findFirstSkip } from '#cli/planning/skips.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
+import { listNestedScopes } from '#cli/repository/scopes.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { COVERAGE_DIMENSIONS } from '#cli/config/planning/checks.ts';
 import type { Check, ScopeCheck } from '#cli/types/configurations.ts';
+import { isRootOnlyCheck, selectCheckFiles } from '#cli/planning/files.ts';
 import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/planning.ts';
-import { isRootOnlyCheck, listChildScopes, selectCheckFiles } from '#cli/planning/files.ts';
 
 function listScopeChecks(session: Session, scope: Scope): ScopeCheck[] {
     const isRoot = scope.folder.path === '';
@@ -98,6 +99,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const plannedRepositoryChecks = new Set<string>();
     const host = { platform: getOperatingSystem(), arch: process.arch };
     const narrowedPaths = buildNarrowedPaths(options);
+    const scopePaths = session.scopes.map(({ folder }) => folder.path);
     return session.scopes.map((scope) => {
         const context: PlannedScope = {
             session,
@@ -105,7 +107,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
             options,
             host,
             narrowedPaths,
-            children: listChildScopes(session.scopes, scope),
+            children: listNestedScopes(scopePaths, scope.folder.path),
         };
         return planScope(context, plannedRepositoryChecks);
     });

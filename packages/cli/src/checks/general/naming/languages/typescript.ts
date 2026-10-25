@@ -53,19 +53,12 @@ function isImportedName(node: Node): boolean {
     return callee?.type === 'import' || callee?.text === 'require';
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function isComponentFactory(declarator: Node): boolean {
-    const value = declarator.childForFieldName('value');
-    return value?.type === 'call_expression'
-        ? COMPONENT_FACTORY.test(value.childForFieldName('function')?.text ?? '')
-        : false;
-}
-
 function addDeclarator(found: FileIdentifiers, declarator: Node): void {
-    const start = found.out.length;
+    const start = found.identifiers.length;
     addPattern(found, declarator.childForFieldName('name'), 'variables');
-    if (isComponentFactory(declarator))
-        for (const identifier of found.out.slice(start)) identifier.addedCases = ['pascal'];
+    const value = declarator.childForFieldName('value');
+    if (value?.type === 'call_expression' && COMPONENT_FACTORY.test(value.childForFieldName('function')?.text ?? ''))
+        for (const identifier of found.identifiers.slice(start)) identifier.addedCases = ['pascal'];
 }
 
 function addNamed(found: FileIdentifiers, root: Node): void {
@@ -99,12 +92,12 @@ Lists the names that a TypeScript or JavaScript file declares.
 @returns the declared names.
 */
 export function extractTypescriptIdentifiers(syntaxRoot: Node, file: string, language: string): Identifier[] {
-    const found: FileIdentifiers = { file, language, out: [] };
+    const found: FileIdentifiers = { file, language, identifiers: [] };
     addNamed(found, syntaxRoot);
     addEnumCases(found, syntaxRoot);
     const declarators = syntaxRoot.descendantsOfType('variable_declarator').filter((node) => !isImportedName(node));
     for (const node of declarators) addDeclarator(found, node);
     const callables = syntaxRoot.descendantsOfType([...TYPESCRIPT_CALLABLE_NODES]);
     for (const node of callables) addParameters(found, node);
-    return found.out;
+    return found.identifiers;
 }

@@ -28,15 +28,11 @@ function addClasses(found: FileIdentifiers, root: Node): void {
     }
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function unwrapSplat(node: Node | null): Node | null {
-    return node === null || !PYTHON_SPLAT_NODES.has(node.type) ? node : (node.namedChildren[0] ?? null);
-}
-
 function findParameterName(parameter: Node): Node | null {
     if (parameter.type === 'identifier') return parameter;
     const inner = PYTHON_SPLAT_NODES.has(parameter.type) ? parameter : parameter.childForFieldName('name');
-    return unwrapSplat(inner ?? parameter.namedChildren[0] ?? null);
+    const node = inner ?? parameter.namedChildren[0] ?? null;
+    return node === null || !PYTHON_SPLAT_NODES.has(node.type) ? node : (node.namedChildren[0] ?? null);
 }
 
 function addParameters(found: FileIdentifiers, definition: Node): void {
@@ -116,9 +112,9 @@ Lists the names that a Python module declares.
 @returns the declared names.
 */
 export function extractPythonIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
-    const found: FileIdentifiers = { file, language: 'python', out: [] };
+    const found: FileIdentifiers = { file, language: 'python', identifiers: [] };
     addClasses(found, syntaxRoot);
     addFunctions(found, syntaxRoot);
     addAssignments(found, syntaxRoot);
-    return found.out;
+    return found.identifiers;
 }

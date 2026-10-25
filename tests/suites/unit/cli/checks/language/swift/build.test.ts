@@ -14,8 +14,8 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { buildPlan, prepareBuild } from '#cli/checks/language/swift/cache.ts';
 import { listSwiftlintConfigFiles } from '#cli/checks/language/swift/build.ts';
+import { prepareBuild, planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 
 import {
     runSandboxCheck,
@@ -59,8 +59,8 @@ test('analyzer: swift/swiftlint-analyze removes its own old compiler files and l
     await using prepared = await prepareSwiftCheck(sandbox, 'swift/swiftlint-analyze');
 
     const input = prepared.planned;
-    const compile = buildPlan(prepared.session, input);
-    const analyzer = buildPlan(prepared.session, input, 'analyze');
+    const compile = planSwiftBuild(prepared.session, input);
+    const analyzer = planSwiftBuild(prepared.session, input, 'analyze');
     if (analyzer.kind !== 'package') throw new Error('Expected a Swift package build.');
     const compilerState = join(compile.folder, 'package', 'state');
     const analyzerState = join(analyzer.scratch, 'state');
@@ -151,7 +151,7 @@ test('compiler: canceled Swift compilation refuses to launch the compiler', asyn
     const run = resources.use(spyOn(processes, 'spawnProcess'));
     const compilation = await runChecks(prepared.session, buildRunOptions({ only: ['swift/build'] }));
     expect(compilation.report.checks).toMatchObject([{ status: 'error', note: 'The check was canceled.' }]);
-    const analyzer = buildPlan(prepared.session, input, 'analyze');
+    const analyzer = planSwiftBuild(prepared.session, input, 'analyze');
     if (analyzer.kind !== 'package') throw new Error('Expected a Swift package build.');
     await mkdir(analyzer.scratch, { recursive: true });
     const state = join(analyzer.scratch, 'state');
@@ -172,7 +172,7 @@ test('compiler: swift/build refuses a response file outside the compiler cache a
     });
 
     const input = prepared.planned;
-    const plan = buildPlan(prepared.session, input);
+    const plan = planSwiftBuild(prepared.session, input);
 
     const spawn = spyOn(processes, 'spawnProcess').mockResolvedValue(
         buildProcessResult({ stdout: `swiftc @${join(sandbox.path, 'external-response')}` }),
@@ -203,7 +203,7 @@ test('compiler: a Swift build whose source file is missing removes its build.loc
     });
     const session = await openSession(sandbox.path);
     const input = planSandboxCheck(session, 'swift/build');
-    const plan = buildPlan(session, input);
+    const plan = planSwiftBuild(session, input);
     await rm(join(sandbox.path, 'Main.swift'));
     const run = resources.use(spyOn(processes, 'spawnProcess'));
     const missingSourceError = await captureRejection(findBuiltInCheck('swift/build')(session, input));

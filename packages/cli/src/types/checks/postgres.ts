@@ -6,12 +6,12 @@ type SourceStatement = { path: string; offset: number; text: string };
 
 export type StatementReader<Kind extends keyof SqlNodeFields> = (
     statement: SqlStatement<Kind>,
-    state: DatabaseSchema,
+    state: SchemaState,
     migration: Migration,
 ) => void;
 
 export type SchemaAlterations = Partial<
-    Record<NonNullable<AlterTableCmd['subtype']>, (state: DatabaseSchema, at: Location, command: AlterTableCmd) => void>
+    Record<NonNullable<AlterTableCmd['subtype']>, (state: SchemaState, at: Location, command: AlterTableCmd) => void>
 >;
 
 export type Migration = {
@@ -30,7 +30,7 @@ export type Schema = {
     indexed: Map<string, string[][]>;
 };
 
-export type DatabaseSchema = Pick<Schema, 'tables' | 'secured'> & {
+export type SchemaState = Pick<Schema, 'tables' | 'secured'> & {
     indexes: { schema: string | undefined; table: string; name: string; columns: string[]; constraint: string }[];
     constraints: Map<string, Map<string, Schema['foreignKeys'][number]>>;
 };

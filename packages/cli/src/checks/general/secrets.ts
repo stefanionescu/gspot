@@ -8,6 +8,7 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/code/environment.ts';
@@ -29,7 +30,7 @@ async function readEnvironmentReferences(
     environmentFunctions: string[],
 ): Promise<EnvironmentRead[]> {
     const text = readCachedText(session.reads, path);
-    if (!path.endsWith('.py')) return listJavascriptEnvironmentReads(path, text, environmentFunctions);
+    if (!path.endsWith(PYTHON_EXTENSION)) return listJavascriptEnvironmentReads(path, text, environmentFunctions);
     const tree = await parseSource('python', text, session);
     try {
         return listPythonEnvironmentReads(tree.rootNode, environmentFunctions);
@@ -38,7 +39,7 @@ async function readEnvironmentReferences(
     }
 }
 
-function findMissingEnvironmentKeys(
+function listMissingEnvironmentKeys(
     planned: PlannedCheck,
     path: string,
     reads: EnvironmentRead[],
@@ -117,7 +118,7 @@ export async function checkSecretsEnvExamples(session: Session, planned: Planned
     const findings: Finding[] = [];
     for (const file of sourceFiles) {
         const reads = await readEnvironmentReferences(session, file.path, environmentFunctions);
-        findings.push(...findMissingEnvironmentKeys(planned, file.path, reads, exampleKeys));
+        findings.push(...listMissingEnvironmentKeys(planned, file.path, reads, exampleKeys));
     }
     return findings;
 }

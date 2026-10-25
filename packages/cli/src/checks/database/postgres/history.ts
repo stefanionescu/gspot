@@ -8,7 +8,7 @@ import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
 import { readHead, readBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
-import { readMigrations, readForwardText, readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
+import { readMigrations, extractForwardText, readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 
 const COMMITTED_MIGRATIONS = { create: () => new Map<string, Promise<Map<string, string>>>() };
 
@@ -126,7 +126,7 @@ export async function checkPostgresEditedMigrations(session: Session, planned: P
         .filter((migration) => frozen.has(migration.path))
         .flatMap((migration): Finding[] => {
             const committed = texts.get(migration.path);
-            if (committed === undefined || readForwardText(committed) === migration.text) return [];
+            if (committed === undefined || extractForwardText(committed) === migration.text) return [];
             return [
                 buildFinding(
                     planned,

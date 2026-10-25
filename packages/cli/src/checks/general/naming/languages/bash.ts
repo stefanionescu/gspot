@@ -30,9 +30,9 @@ Lists the functions and variables that a shell script declares.
 @returns the declared names.
 */
 export function extractBashIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
-    const found: FileIdentifiers = { file, language: 'bash', out: [] };
+    const found: FileIdentifiers = { file, language: 'bash', identifiers: [] };
     addFunctions(found, syntaxRoot);
     addAssignments(found, syntaxRoot);
     addDeclarations(found, syntaxRoot);
-    return found.out;
+    return found.identifiers;
 }

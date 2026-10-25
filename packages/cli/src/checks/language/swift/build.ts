@@ -11,13 +11,13 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
-import { getConfigFile } from '#cli/runs/command/placeholders.ts';
+import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
 import { BUILD_SOURCE_FOLDER } from '#cli/config/checks/language/swift/cache.ts';
 import { type SwiftBuildPlan, type SwiftBuildOutput } from '#cli/types/checks/language/swift.ts';
-import { buildPlan, prepareBuild, getScopeBuildFolder } from '#cli/checks/language/swift/cache.ts';
+import { prepareBuild, planSwiftBuild, getScopeBuildFolder } from '#cli/checks/language/swift/cache.ts';
 
 import {
     RULE_SUFFIX,
@@ -110,7 +110,7 @@ Builds the scope and reports the compiler errors.
 @returns the findings.
 */
 export async function checkSwiftBuild(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const plan = buildPlan(session, planned);
+    const plan = planSwiftBuild(session, planned);
     const { output, code, source } = await runSwiftBuild(session, planned, plan);
     const restored = output.replaceAll(removePrivatePrefix(source), () => removePrivatePrefix(session.root));
     const found = parseOutputFindings(session, planned, restored, {
@@ -147,17 +147,10 @@ Runs the SwiftLint analyzer rules over the compiler log of the build.
 @returns the findings.
 */
 export async function checkSwiftSwiftlintAnalyze(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const plan = buildPlan(session, planned, 'analyze');
+    const plan = planSwiftBuild(session, planned, 'analyze');
     const build = await runSwiftBuild(session, planned, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
-    const configFile = join(
-        session.root,
-        getConfigFileTarget(
-            planned.scope.folder.path,
-            getConfigFile(session, planned, SWIFTLINT_CONFIG_NAME),
-            getConfigFiles(session),
-        ),
-    );
+    const configFile = join(session.root, getConfigFilePath(session, planned, SWIFTLINT_CONFIG_NAME));
     const commandArguments = [
         ...SWIFTLINT_ANALYZE_COMMAND,
         SWIFTLINT_CONFIG_FLAG,
@@ -182,14 +175,7 @@ Runs Periphery over the project and reports every declaration nothing uses.
 */
 export async function checkSwiftPeriphery(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const folder = getScopeBuildFolder(session.installedRoot, planned.scope.folder.path, 'periphery');
-    const configFile = join(
-        session.root,
-        getConfigFileTarget(
-            planned.scope.folder.path,
-            getConfigFile(session, planned, PERIPHERY_CONFIG_FILE),
-            getConfigFiles(session),
-        ),
-    );
+    const configFile = join(session.root, getConfigFilePath(session, planned, PERIPHERY_CONFIG_FILE));
     const commandArguments = [...PERIPHERY_COMMAND, configFile];
     const setup = prepareBuild(session.root, planned.files, folder);
     using files = setup.files;

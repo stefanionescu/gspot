@@ -5,8 +5,8 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import { countCodeLines } from '#cli/checks/code-lines.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
+import { COMMENT_MARKERS } from '#cli/config/checks/code-lines.ts';
 import { parseGrammarComments } from '#cli/parsers/code/comments.ts';
-import { COMMENT_MARKERS } from '#cli/config/checks/general/structure/long-files.ts';
 
 /**
 Reports source files over the code-line limit of their language.

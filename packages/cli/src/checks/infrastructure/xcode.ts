@@ -4,16 +4,16 @@ import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { readParsedFile } from '#cli/checks/syntax.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { parseCheckedFile } from '#cli/checks/syntax.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { PBXPROJ, SWIFT_EXTENSION } from '#cli/config/files/names.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
+import { isInFolders, parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import { stringsFileSchema, assetContentsSchema } from '#cli/schemas/checks/infrastructure/xcode.ts';
 
 import {
@@ -46,15 +46,11 @@ export function checkXcodeFilesWithoutTarget(session: Session, planned: PlannedC
     if (projects.length === 0) return [];
     const referenced = new Set(projects.flatMap((project) => [...project.sources]));
     const folders = projects.flatMap((project) => project.folders);
-    const tree = listSourcePaths(planned.files, [SWIFT_EXTENSION]).filter(
+    const swiftFiles = listSourcePaths(planned.files, [SWIFT_EXTENSION]).filter(
         (file) => posix.basename(file) !== PACKAGE_SWIFT,
     );
-    return tree
-        .filter(
-            (file) =>
-                !referenced.has(file) &&
-                folders.every(({ path, excluded }) => !file.startsWith(path) || excluded.has(file)),
-        )
+    return swiftFiles
+        .filter((file) => !referenced.has(file) && !isInFolders(file, folders))
         .map((file) =>
             buildFinding(planned, { file, line: 1 }, 'untargeted', 'This Swift file is in no target of the project.'),
         );
@@ -79,11 +75,10 @@ export function checkXcodeAssets(session: Session, planned: PlannedCheck): Findi
         .flatMap((path) => {
             const text = readCachedText(session.reads, path);
             const at = { file: path, line: 1 };
-            const parsed = readParsedFile(planned, path, () => parseJsonFile(path, text, assetContentsSchema));
+            const parsed = parseCheckedFile(planned, path, () => parseJsonFile(path, text, assetContentsSchema));
             if ('error' in parsed) return [parsed.error];
             if (!path.endsWith(IMAGE_SET)) return [];
-            const contents = parsed.value;
-            const names = (contents.images ?? []).flatMap((image) =>
+            const names = (parsed.value.images ?? []).flatMap((image) =>
                 image.filename === undefined ? [] : [image.filename],
             );
             if (names.length === 0)
@@ -111,11 +106,11 @@ export function checkXcodeUnusedAssets(session: Session, planned: PlannedCheck):
         .filter((path) => {
             const name = getAssetSetName(path);
             const assignment = new RegExp(String.raw`=\s*${RegExp.escape(name)}\s*(?:;|$)`, 'mu');
-            return sourceTexts.every(
+            return !sourceTexts.some(
                 (text) =>
-                    !text.includes(`"${name}"`) &&
-                    !text.includes(`.${camelCase(name.replace(ASSET_KIND_SUFFIX, '').split(NOT_WORD))}`) &&
-                    !assignment.test(text),
+                    text.includes(`"${name}"`) ||
+                    text.includes(`.${camelCase(name.replace(ASSET_KIND_SUFFIX, '').split(NOT_WORD))}`) ||
+                    assignment.test(text),
             );
         })
         .map((path) =>
@@ -139,10 +134,9 @@ export function checkXcodeXcstrings(session: Session, planned: PlannedCheck): Fi
     return listSourcePaths(planned.files, [XCSTRINGS_SUFFIX]).flatMap((path) => {
         const text = readCachedText(session.reads, path);
         const at = { file: path, line: 1 };
-        const parsed = readParsedFile(planned, path, () => parseJsonFile(path, text, stringsFileSchema));
+        const parsed = parseCheckedFile(planned, path, () => parseJsonFile(path, text, stringsFileSchema));
         if ('error' in parsed) return [parsed.error];
-        const xcstrings = parsed.value;
-        const strings = (xcstrings.strings === undefined ? [] : Object.entries(xcstrings.strings)).filter(
+        const strings = (parsed.value.strings === undefined ? [] : Object.entries(parsed.value.strings)).filter(
             ([, localized]) => localized.shouldTranslate !== false,
         );
         const locales = new Set(
@@ -150,7 +144,7 @@ export function checkXcodeXcstrings(session: Session, planned: PlannedCheck): Fi
                 localized.localizations === undefined ? [] : Object.keys(localized.localizations),
             ),
         );
-        locales.delete(xcstrings.sourceLanguage ?? DEFAULT_SOURCE_LANGUAGE);
+        locales.delete(parsed.value.sourceLanguage ?? DEFAULT_SOURCE_LANGUAGE);
         return strings.flatMap(([key, localized]) => {
             const missing = [...locales].filter((locale) => localized.localizations?.[locale] === undefined);
             if (missing.length === 0) return [];

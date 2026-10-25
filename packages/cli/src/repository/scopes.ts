@@ -45,7 +45,7 @@ Lists the scopes inside another scope, excluding that scope itself.
 @param scope the parent folder, empty for the repository root.
 @returns the nested paths in their original order.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 5 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 11 calls in 8 files share it.
 export function listNestedScopes(paths: readonly string[], scope: string): string[] {
     return paths.filter((path) => path !== scope && isInScope(path, scope));
 }
@@ -180,4 +180,19 @@ export function findScopeFolder(path: string, scopeFolders: ScopeFolder[]): Scop
             .filter((scope) => scope.path !== '' && isInScope(path, scope.path))
             .toSorted((left, right) => right.path.length - left.path.length)[0] ?? root
     );
+}
+
+/**
+Group files by their scope: the deepest scope that contains each file, else the root.
+
+@param files the files to place.
+@param scopeFolders the scopes to search.
+@returns the files of each scope path, in their order.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 5 files share it.
+export function groupFilesByScope<File extends Pick<TrackedFile, 'path'>>(
+    files: readonly File[],
+    scopeFolders: ScopeFolder[],
+): Map<string, File[]> {
+    return Map.groupBy(files, (file) => findScopeFolder(file.path, scopeFolders).path);
 }

@@ -104,8 +104,7 @@ function isTrivialFile(syntaxRoot: Node, language: ParsedLanguage): boolean {
 function formatAccessorName(node: Node, label: string): string {
     let declaration = node.parent;
     while (declaration !== null) {
-        const type = declaration.type;
-        if (SWIFT_ACCESSOR_OWNERS.has(type)) break;
+        if (SWIFT_ACCESSOR_OWNERS.has(declaration.type)) break;
         declaration = declaration.parent;
     }
     if (declaration === null) return label;

@@ -3,7 +3,7 @@ import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
-import { MAIN_FUNCTION } from '#cli/config/checks/language/bash/script-layout.ts';
+import { MAIN_FUNCTION } from '#cli/config/checks/language/bash/scripts.ts';
 
 /**
 Reports each function that no script calls, except main.

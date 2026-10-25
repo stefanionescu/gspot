@@ -23,7 +23,8 @@ test('a project with its own tsconfig.json gets a tsconfig that extends it and a
 
     const session = await openSession(sandbox.path);
     const scope = session.scopes[0]!;
-    const path = writeScopeTsconfig(session, scope, join(sandbox.path, GSPOT_PATHS.state, 'tsconfig.json'));
+    const path = join(sandbox.path, GSPOT_PATHS.state, 'tsconfig.json');
+    writeScopeTsconfig(session, scope, path);
     const parsed = parseJsonFile(path, await readFile(path, 'utf8'));
     expect(parsed).toMatchObject({
         extends: '../../tsconfig.json',
@@ -44,11 +45,8 @@ test('projects without tsconfig.json get required options and framework options 
     const session = await openSession(sandbox.path, { installedRoot });
     const projects = await Promise.all(
         session.scopes.map(async (scope) => {
-            const path = writeScopeTsconfig(
-                session,
-                scope,
-                join(sandbox.path, GSPOT_PATHS.state, scope.folder.path, 'tsconfig.json'),
-            );
+            const path = join(sandbox.path, GSPOT_PATHS.state, scope.folder.path, 'tsconfig.json');
+            writeScopeTsconfig(session, scope, path);
             const config = parseJsonFile(path, await readFile(path, 'utf8'));
             const compilerOptions = config['compilerOptions'] as Record<string, unknown>;
             compilerOptions['typeRoots'] = (compilerOptions['typeRoots'] as string[]).map((root) => {

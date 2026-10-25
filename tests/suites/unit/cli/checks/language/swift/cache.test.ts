@@ -17,7 +17,7 @@ import { simulateOperatingSystem } from '#tests/setup/system/platform.ts';
 import { SWIFT_BUILD_COMMANDS } from '#cli/config/checks/language/swift/cache.ts';
 import { SWIFT_PACKAGE_HEADER } from '#tests/config/checks/language/swift/samples.ts';
 import { rm, open, stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { buildPlan, prepareBuild, getScopeBuildFolder } from '#cli/checks/language/swift/cache.ts';
+import { prepareBuild, planSwiftBuild, getScopeBuildFolder } from '#cli/checks/language/swift/cache.ts';
 import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/checks/language/swift/cache.ts';
 
 import {
@@ -43,7 +43,7 @@ test.each(['default', 'platform=macOS'])(
         const input = planSandboxCheck(session, 'swift/build');
         for (const purpose of ['compile', 'analyze', 'coverage'] as const) {
             const folder = getScopeBuildFolder(session.installedRoot, '', purpose);
-            expect(buildPlan(session, input, purpose)).toStrictEqual({
+            expect(planSwiftBuild(session, input, purpose)).toStrictEqual({
                 kind: 'xcode',
                 purpose,
                 folder,
@@ -73,7 +73,7 @@ test.each([...SWIFT_PROJECT_SELECTION_CASES])(
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, 'swift/build', { scope });
         expect(getTable(input.scope.settings, 'swift').xcode_project).toBe(project);
-        const plan = buildPlan(session, input);
+        const plan = planSwiftBuild(session, input);
         const container = project.endsWith('.xcworkspace') ? '-workspace' : '-project';
         expect(plan.commandArguments[plan.commandArguments.indexOf(container) + 1]).toBe(argument);
     },
@@ -90,7 +90,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
 
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, check);
-        expect(() => buildPlan(session, input, purpose)).toThrow(
+        expect(() => planSwiftBuild(session, input, purpose)).toThrow(
             new GspotError('skip', 'Set swift.xcode_project or add Package.swift in this scope.'),
         );
         using _executables = fakeToolExecutables(
@@ -117,7 +117,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
         });
         const checkedSession = await openSession(sandbox.path);
         const packageInput = planSandboxCheck(checkedSession, 'swift/build');
-        const plan = buildPlan(checkedSession, packageInput, purpose);
+        const plan = planSwiftBuild(checkedSession, packageInput, purpose);
         const folder = getScopeBuildFolder(checkedSession.installedRoot, '', purpose);
         const scratch = join(folder, 'package');
         expect(plan).toStrictEqual({
@@ -140,7 +140,7 @@ test('build cache rejects external output links and concurrent writers', async (
     });
     const session = await openSession(sandbox.path);
     const input = planSandboxCheck(session, 'swift/build');
-    const folder = buildPlan(session, input).folder;
+    const folder = planSwiftBuild(session, input).folder;
     const held = prepareBuild(session.root, input.files, folder).files;
     expect(await isOnDisk(join(folder, 'build.lock'))).toBe(true);
     expect(() => prepareBuild(session.root, input.files, folder)).toThrow(
@@ -179,8 +179,8 @@ test('the Swift build folder lives in the gspot cache and differs between reposi
     const firstInput = planSandboxCheck(firstSession, 'swift/build');
     const secondSession = await openSession(second.path);
     const secondInput = planSandboxCheck(secondSession, 'swift/build');
-    const folder = buildPlan(firstSession, firstInput).folder;
-    expect(folder).not.toBe(buildPlan(secondSession, secondInput).folder);
+    const folder = planSwiftBuild(firstSession, firstInput).folder;
+    expect(folder).not.toBe(planSwiftBuild(secondSession, secondInput).folder);
     expect(folder).toStartWith(readCacheFolder() + sep);
 });
 test('Swift build side effects stay in the source copy and do not reach later runs', async () => {
@@ -281,7 +281,7 @@ test('concurrent Swift compilation and Periphery keep separate source and build 
             ]),
         ).toStrictEqual([[], []]);
         expect(new Set(folders).size).toBe(2);
-        const compilePlan = buildPlan(prepared.session, compile);
+        const compilePlan = planSwiftBuild(prepared.session, compile);
         const peripheryFolder = getScopeBuildFolder(session.installedRoot, periphery.scope.folder.path, 'periphery');
         expect(compilePlan.folder).not.toBe(peripheryFolder);
         if (compilePlan.kind !== 'package') throw new Error('Expected a Swift package build.');
@@ -303,8 +303,8 @@ test('two copies of one repository with the same installed root share one build 
     const firstInput = planSandboxCheck(firstSession, 'swift/build');
     const secondSession = await openSession(second.path, { installedRoot: installed.path });
     const secondInput = planSandboxCheck(secondSession, 'swift/build');
-    const firstFolder = buildPlan(firstSession, firstInput).folder;
-    const secondFolder = buildPlan(secondSession, secondInput).folder;
+    const firstFolder = planSwiftBuild(firstSession, firstInput).folder;
+    const secondFolder = planSwiftBuild(secondSession, secondInput).folder;
     expect(firstFolder).toBe(secondFolder);
-    expect(firstFolder).toBe(buildPlan(session, installedInput).folder);
+    expect(firstFolder).toBe(planSwiftBuild(session, installedInput).folder);
 });

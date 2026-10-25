@@ -130,7 +130,7 @@ Plans the build of a scope: the command, its folder, and its log path.
 @param purpose the tool whose build needs its own cache, compile by default.
 @returns the command, build folder, and log path.
 */
-export function buildPlan(
+export function planSwiftBuild(
     session: Session,
     planned: PlannedCheck,
     purpose: Exclude<SwiftBuildPurpose, 'periphery'> = 'compile',
@@ -143,7 +143,7 @@ export function buildPlan(
         xcode_destination: destination,
     } = getTable(planned.scope.settings, 'swift');
     if (project === undefined) {
-        if (session.repository.files.every(({ path }) => path !== joinScope(planned.scope.folder.path, PACKAGE_SWIFT)))
+        if (!session.repository.files.some(({ path }) => path === joinScope(planned.scope.folder.path, PACKAGE_SWIFT)))
             throw new GspotError('skip', 'Set swift.xcode_project or add Package.swift in this scope.');
         const scratch = join(folder, PACKAGE_SCRATCH_FOLDER);
         return {

@@ -32,6 +32,16 @@ function listElementAttributes(element: Node): MarkupAttribute[] {
         }));
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
+function findScriptType(attributes: MarkupAttribute[]): string {
+    return (
+        attributes
+            .find((attribute) => attribute.name === 'type')
+            ?.value.trim()
+            .toLowerCase() ?? ''
+    );
+}
+
 function isActiveResource(attribute: MarkupAttribute, url: URL, scriptType: string): boolean {
     if (attribute.element === 'script') return EXECUTABLE_SCRIPT_TYPES.has(scriptType);
     const attributes = DOCUMENT_URL_ATTRIBUTES[attribute.element];
@@ -56,12 +66,11 @@ function checkInlineScripts(planned: PlannedCheck, source: SourceTree): Finding[
         )
         .flatMap((element) => {
             const attributes = listElementAttributes(element);
-            const scriptType =
-                attributes
-                    .find((attribute) => attribute.name === 'type')
-                    ?.value.trim()
-                    .toLowerCase() ?? '';
-            if (!EXECUTABLE_SCRIPT_TYPES.has(scriptType) || attributes.some((each) => each.name === 'src')) return [];
+            if (
+                !EXECUTABLE_SCRIPT_TYPES.has(findScriptType(attributes)) ||
+                attributes.some((each) => each.name === 'src')
+            )
+                return [];
             return [
                 buildFinding(
                     planned,
@@ -76,11 +85,7 @@ function checkInlineScripts(planned: PlannedCheck, source: SourceTree): Finding[
 function checkScriptAttributes(planned: PlannedCheck, source: SourceTree): Finding[] {
     return source.rootNode.descendantsOfType(['element', 'script_element']).flatMap((element) => {
         const attributes = listElementAttributes(element);
-        const scriptType =
-            attributes
-                .find((each) => each.name === 'type')
-                ?.value.trim()
-                .toLowerCase() ?? '';
+        const scriptType = findScriptType(attributes);
         return attributes.flatMap((attribute) => {
             const position = getNodePlace(source.path, attribute.node);
             if (EVENT_ATTRIBUTE.test(attribute.name))

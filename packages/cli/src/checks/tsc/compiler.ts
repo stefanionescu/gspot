@@ -139,7 +139,7 @@ export function isProjectChecked(
 }
 
 /**
-Runs tsc on a project and keeps the build information in metadataRoot.
+Runs tsc on a project and keeps the build information in tsbuildinfoFolder.
 
 @param session the repository or its copy.
 @param planned the tsc check for one scope.

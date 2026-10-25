@@ -3,13 +3,13 @@ import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
-import { readParsedFile } from '#cli/checks/syntax.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { parseCheckedFile } from '#cli/checks/syntax.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { messagesSchema } from '#cli/schemas/checks/translations.ts';
-import type { MessageFiles } from '#cli/types/checks/translations.ts';
+import type { MessageFiles, ParsedMessage } from '#cli/types/checks/translations.ts';
 import { ARGUMENT_FORMATS, MESSAGE_FILE_SUFFIX } from '#cli/config/checks/translations.ts';
 import { TYPE, parse, type MessageFormatElement } from '@formatjs/icu-messageformat-parser';
 
@@ -22,13 +22,14 @@ function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
     return new Map(pairs);
 }
 
-function validateMessage(text: string): string | undefined {
-    if (text.trim() === '') return 'The message is empty.';
+function parseMessage(text: string): ParsedMessage {
     try {
-        parse(text);
-        return undefined;
+        return { elements: parse(text), error: text.trim() === '' ? 'The message is empty.' : undefined };
     } catch (error) {
-        return `The message does not parse: ${error instanceof Error ? error.message : 'a syntax error'}.`;
+        return {
+            elements: undefined,
+            error: `The message does not parse: ${error instanceof Error ? error.message : 'a syntax error'}.`,
+        };
     }
 }
 
@@ -45,16 +46,13 @@ function findBaseFile(path: string, messageFiles: MessageFiles): string {
 function compareMessages(
     planned: PlannedCheck,
     path: string,
-    messages: Map<string, string>,
-    baseMessages: Map<string, string>,
+    messages: Map<string, ParsedMessage>,
+    baseMessages: Map<string, ParsedMessage>,
 ): Finding[] {
     const base = getTable(planned.scope.settings, 'translations').base_locale;
-    const broken = [...messages].flatMap(([key, text]) => {
-        const message = validateMessage(text);
-        return message === undefined
-            ? []
-            : [buildFinding(planned, { file: path, line: 1 }, 'message', `${key}: ${message}`)];
-    });
+    const broken = [...messages].flatMap(([key, { error }]) =>
+        error === undefined ? [] : [buildFinding(planned, { file: path, line: 1 }, 'message', `${key}: ${error}`)],
+    );
     const missing = baseMessages
         .keys()
         .filter((key) => !messages.has(key))
@@ -67,9 +65,12 @@ function compareMessages(
             ),
         )
         .toArray();
-    const changed = [...messages].flatMap(([key, text]) => {
-        const baseText = baseMessages.get(key);
-        const message = baseText === undefined ? undefined : compareMessageArguments(text, baseText, base);
+    const changed = [...messages].flatMap(([key, { elements }]) => {
+        const baseElements = baseMessages.get(key)?.elements;
+        const message =
+            elements === undefined || baseElements === undefined
+                ? undefined
+                : compareMessageArguments(elements, baseElements, base);
         return message === undefined
             ? []
             : [buildFinding(planned, { file: path, line: 1 }, 'message-arguments', `${key}: ${message}`)];
@@ -96,15 +97,13 @@ function listArgumentNames(elements: MessageFormatElement[]): string[] {
     });
 }
 
-function compareMessageArguments(text: string, baseText: string, base: string): string | undefined {
-    let argumentNames: Set<string>;
-    let baseArgumentNames: Set<string>;
-    try {
-        argumentNames = new Set(listArgumentNames(parse(text)));
-        baseArgumentNames = new Set(listArgumentNames(parse(baseText)));
-    } catch {
-        return undefined;
-    }
+function compareMessageArguments(
+    elements: MessageFormatElement[],
+    baseElements: MessageFormatElement[],
+    base: string,
+): string | undefined {
+    const argumentNames = new Set(listArgumentNames(elements));
+    const baseArgumentNames = new Set(listArgumentNames(baseElements));
     const missing = baseArgumentNames.difference(argumentNames).values().toArray();
     const unexpected = argumentNames.difference(baseArgumentNames).values().toArray();
     if (missing.length === 0 && unexpected.length === 0) return undefined;
@@ -121,17 +120,18 @@ function readMessageFiles(
     planned: PlannedCheck,
     files: string[],
     messageFiles: MessageFiles,
-): { messagesByPath: Map<string, Map<string, string>>; findings: Finding[] } {
-    const messagesByPath = new Map<string, Map<string, string>>();
+): { messagesByPath: Map<string, Map<string, ParsedMessage>>; findings: Finding[] } {
+    const messagesByPath = new Map<string, Map<string, ParsedMessage>>();
     const findings: Finding[] = [];
     const paths = new Set([...files, ...files.map((file) => findBaseFile(file, messageFiles))]);
     for (const path of paths) {
         if (!messageFiles.paths.has(path)) continue;
-        const messages = readParsedFile(planned, path, () =>
+        const messages = parseCheckedFile(planned, path, () =>
             flattenMessages(parseJsonFile(path, readCachedText(session.reads, path), messagesSchema)),
         );
         if ('error' in messages) findings.push(messages.error);
-        else messagesByPath.set(path, messages.value);
+        else
+            messagesByPath.set(path, new Map(messages.value.entries().map(([key, text]) => [key, parseMessage(text)])));
     }
     return { messagesByPath, findings };
 }
@@ -176,8 +176,8 @@ export function checkTranslationsMessages(session: Session, planned: PlannedChec
         );
     return files.flatMap((path) => {
         const basePath = findBaseFile(path, messageFiles);
-        const messages = messagesByPath.get(path) as Map<string, string>;
-        const baseMessages = messagesByPath.get(basePath) as Map<string, string>;
+        const messages = messagesByPath.get(path) as Map<string, ParsedMessage>;
+        const baseMessages = messagesByPath.get(basePath) as Map<string, ParsedMessage>;
         return compareMessages(planned, path, messages, baseMessages);
     });
 }

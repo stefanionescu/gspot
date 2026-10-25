@@ -2,7 +2,6 @@ import { join, posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { type Session } from '#cli/types/session.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
-import { listChildScopes } from '#cli/planning/files.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import { buildUvRunCommand } from '#cli/tools/python.ts';
@@ -12,15 +11,16 @@ import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getTable, getLimit } from '#cli/settings/scopes.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/files/names.ts';
-import { joinScope, isInScope } from '#cli/repository/scopes.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { buildFinding, getNodePlace } from '#cli/runs/finding.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
+import { COMMENT_MARKERS } from '#cli/config/checks/code-lines.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
 import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
 import { runCheckCommand, runCommandGroups } from '#cli/runs/command/check.ts';
-import { COMMENT_MARKERS } from '#cli/config/checks/general/structure/long-files.ts';
+import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { deptrySchema, docstringStyleSchema } from '#cli/schemas/checks/language/python.ts';
 import { findDocstring, PYTHON_SOURCES, parsePythonModule } from '#cli/parsers/code/python.ts';
 import { type PydoclintOptions, type PythonDocstringStyle } from '#cli/types/checks/language/python.ts';
@@ -59,19 +59,20 @@ Runs deptry on the scope. Passes the project's extend_exclude list again with .g
 @returns the check result.
 */
 export async function checkPythonDeptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const text = findCachedText(session.reads, joinScope(planned.scope.folder.path, PYPROJECT_TOML));
+    const pyproject = joinScope(planned.scope.folder.path, PYPROJECT_TOML);
+    const text = findCachedText(session.reads, pyproject);
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
-    const { extend_exclude: exclusions, known_first_party: firstParty } = parseTomlFile(
-        joinScope(planned.scope.folder.path, PYPROJECT_TOML),
-        text,
-        deptrySchema,
-    ).tool.deptry;
+    const { extend_exclude: exclusions, known_first_party: firstParty } = parseTomlFile(pyproject, text, deptrySchema)
+        .tool.deptry;
     return await runCheckCommand(session, planned, {
         command: buildUvRunCommand(planned.scope, join(session.root, planned.scope.folder.path), [
             ...DEPTRY_COMMAND,
             ...[
                 String.raw`(^|.*[/\\])${RegExp.escape(DOT_GSPOT)}([/\\]|$)`,
-                ...listChildScopes(session.scopes, planned.scope).map((path) => {
+                ...listNestedScopes(
+                    session.scopes.map((scope) => scope.folder.path),
+                    planned.scope.folder.path,
+                ).map((path) => {
                     const child = posix
                         .relative(planned.scope.folder.path, path)
                         .split('/')
@@ -126,7 +127,7 @@ Checks each Python function against limits.function_lines, counting code lines o
 */
 export async function checkPythonFunctionSize(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const limit = getLimit(planned.scope.settings, 'function_lines', 'python');
-    const files = planned.files.filter((file) => file.path.endsWith('.py'));
+    const files = planned.files.filter((file) => file.path.endsWith(PYTHON_EXTENSION));
     const findings = await Promise.all(files.map((file) => listLongFunctions(session, planned, file.path, limit)));
     return findings.flat();
 }
@@ -140,8 +141,8 @@ Reports hand-kept requirements files and unmanaged pip installs, so pyproject.to
 */
 export function checkPythonPipInstalls(session: Session, planned: PlannedCheck): Finding[] {
     if (
-        (planned.check.files?.filenames ?? []).every((file) =>
-            planned.files.every(({ path }) => path !== joinScope(planned.scope.folder.path, file)),
+        !(planned.check.files?.filenames ?? []).some((file) =>
+            planned.files.some(({ path }) => path === joinScope(planned.scope.folder.path, file)),
         )
     )
         throw new GspotError('skip', 'This check needs uv.lock, poetry.lock, or pdm.lock in this scope.');
@@ -254,9 +255,10 @@ Runs pydoclint with the declared docstring style, or with the style each file us
 @returns the check result, with earlier findings kept when a later batch fails.
 */
 export async function checkPythonPydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+    const pyproject = joinScope(planned.scope.folder.path, PYPROJECT_TOML);
     const configured = parsePydoclintOptions(
-        joinScope(planned.scope.folder.path, PYPROJECT_TOML),
-        findCachedText(session.reads, joinScope(planned.scope.folder.path, PYPROJECT_TOML)) ?? '',
+        pyproject,
+        findCachedText(session.reads, pyproject) ?? '',
         planned.scope.settings.values['tools.ruff']?.docstring_convention,
     );
     const groups = await groupByDocstringStyle(session, planned.files, configured.style);
@@ -295,9 +297,12 @@ files of this run.
 */
 export async function checkPythonVulture(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scope = planned.scope.folder.path;
-    const children = listChildScopes(session.scopes, planned.scope);
+    const children = listNestedScopes(
+        session.scopes.map(({ folder }) => folder.path),
+        scope,
+    );
     const sources = session.repository.files
-        .filter((file) => file.kind === 'source' && file.path.endsWith('.py'))
+        .filter((file) => file.kind === 'source' && file.path.endsWith(PYTHON_EXTENSION))
         .filter((file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)))
         .map((file) => file.path);
     if (sources.length === 0) return [];

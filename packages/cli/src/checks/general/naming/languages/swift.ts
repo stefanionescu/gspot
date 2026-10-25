@@ -68,10 +68,10 @@ Lists the names that a Swift file declares.
 @returns the declared names.
 */
 export function extractSwiftIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
-    const found: FileIdentifiers = { file, language: 'swift', out: [] };
+    const found: FileIdentifiers = { file, language: 'swift', identifiers: [] };
     addTypes(found, syntaxRoot);
     addFunctions(found, syntaxRoot);
     addNames(found, syntaxRoot);
     addCases(found, syntaxRoot);
-    return found.out;
+    return found.identifiers;
 }

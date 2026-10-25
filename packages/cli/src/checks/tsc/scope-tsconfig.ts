@@ -1,10 +1,9 @@
 import ts from 'typescript';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { join, dirname, relative } from 'node:path';
 import type { Session } from '#cli/types/session.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
-import { findScopeFolder } from '#cli/repository/scopes.ts';
-import { join, dirname, resolve, relative } from 'node:path';
-import type { PlannedTsconfig } from '#cli/types/checks/tsc.ts';
+import { groupFilesByScope } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/checks/tsc/compiler.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
@@ -21,17 +20,18 @@ import {
     TYPESCRIPT_TSCONFIG_CHECK,
 } from '#cli/config/checks/tsc/scope-tsconfig.ts';
 
-function buildTsconfig(planned: PlannedTsconfig): Record<string, unknown> {
-    const { root, typeRootsFolder, reads, target, scope, files, scopes, options } = planned;
-    const scopeFiles = files.filter(
-        (file) =>
-            (file.tags.includes(TYPESCRIPT_TAG) || DECLARATION_EXTENSIONS.includes(extractExtension(file.path))) &&
-            findScopeFolder(file.path, scopes).path === scope,
+function buildTsconfig(session: Session, scope: Scope, file: string): Record<string, unknown> {
+    const { root, installedRoot, reads } = session;
+    const ownFiles =
+        groupFilesByScope(session.repository.files, session.repository.scopeFolders).get(scope.folder.path) ?? [];
+    const scopeFiles = ownFiles.filter(
+        (ownFile) =>
+            ownFile.tags.includes(TYPESCRIPT_TAG) || DECLARATION_EXTENSIONS.includes(extractExtension(ownFile.path)),
     );
     const authored = readTsconfigProject(
         root,
-        scope,
-        scopeFiles.map((file) => file.path),
+        scope.folder.path,
+        scopeFiles.map((scopeFile) => scopeFile.path),
         reads,
     );
     const projectRoots =
@@ -39,10 +39,13 @@ function buildTsconfig(planned: PlannedTsconfig): Record<string, unknown> {
             {},
             {
                 getCurrentDirectory: () =>
-                    join(typeRootsFolder, authored === undefined ? scope : relative(root, dirname(authored.path))),
+                    join(
+                        installedRoot,
+                        authored === undefined ? scope.folder.path : relative(root, dirname(authored.path)),
+                    ),
             },
         ) ?? [];
-    const folder = dirname(resolve(root, target));
+    const folder = dirname(file);
     const typeRoots = projectRoots.map((path) => convertToPosixPath(relative(folder, path)));
     if (authored !== undefined)
         return {
@@ -52,20 +55,17 @@ function buildTsconfig(planned: PlannedTsconfig): Record<string, unknown> {
                 ...(authored.config.options.typeRoots === undefined && { typeRoots }),
             },
         };
-    const sources = scopeFiles.filter((file) => file.kind === 'source');
-    const components = files.filter(
-        (file) =>
-            file.kind === 'source' && file.tags.includes('svelte') && findScopeFolder(file.path, scopes).path === scope,
-    );
+    const sources = scopeFiles.filter((scopeFile) => scopeFile.kind === 'source');
+    const components = ownFiles.filter((ownFile) => ownFile.kind === 'source' && ownFile.tags.includes('svelte'));
     return {
         compilerOptions: {
             ...TYPESCRIPT_DEFAULTS,
-            ...options,
+            ...selectCheckedTsconfigOptions(session.settingsFile.settings.level, scope),
             typeRoots,
         },
-        files: sources.map((file) => convertToPosixPath(relative(folder, join(root, file.path)))),
+        files: sources.map((source) => convertToPosixPath(relative(folder, join(root, source.path)))),
         ...(components.length > 0 && {
-            include: components.map((file) => convertToPosixPath(relative(folder, join(root, file.path)))),
+            include: components.map((component) => convertToPosixPath(relative(folder, join(root, component.path)))),
         }),
     };
 }
@@ -105,28 +105,10 @@ Writes the tsconfig for a scope, which extends the tsconfig of the scope when it
 
 @param session the repository and read cache.
 @param scope where tsc runs, with its settings.
-@param target where to write the tsconfig.
-@returns the absolute path.
+@param file the absolute path to write the tsconfig to.
 */
-export function writeScopeTsconfig(
-    session: Pick<Session, 'root' | 'installedRoot' | 'reads' | 'settingsFile'> & {
-        repository: Pick<Session['repository'], 'files' | 'scopeFolders'>;
-    },
-    scope: Scope,
-    target: string,
-): string {
-    const input: PlannedTsconfig = {
-        root: session.root,
-        typeRootsFolder: session.installedRoot,
-        reads: session.reads,
-        target: convertToPosixPath(relative(session.root, target)),
-        scope: scope.folder.path,
-        files: session.repository.files,
-        scopes: session.repository.scopeFolders,
-        options: selectCheckedTsconfigOptions(session.settingsFile.settings.level, scope),
-    };
-    const file = join(input.root, input.target);
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
+export function writeScopeTsconfig(session: Session, scope: Scope, file: string): void {
     mkdirSync(dirname(file), { recursive: true });
-    writeFileSync(file, JSON.stringify(buildTsconfig(input)));
-    return file;
+    writeFileSync(file, JSON.stringify(buildTsconfig(session, scope, file)));
 }

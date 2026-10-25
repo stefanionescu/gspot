@@ -67,10 +67,6 @@ function listLooseDefiners(migrations: Migration[]): Map<string, MigrationStatem
     return definers;
 }
 
-function listMigrationStatements(migrations: Migration[]): MigrationStatement[] {
-    return migrations.flatMap((migration) => migration.statements.map((statement) => ({ migration, statement })));
-}
-
 /**
 Reports each table in a client schema with row security off.
 
@@ -109,7 +105,9 @@ export async function checkPostgresGrants(session: Session, planned: PlannedChec
         migrations.map(({ path }) => path),
         getTable(planned.scope.settings, 'postgres').frozen_through,
     );
-    return listMigrationStatements(migrations.filter(({ path }) => !frozen.has(path)))
+    return migrations
+        .filter(({ path }) => !frozen.has(path))
+        .flatMap((migration) => migration.statements.map((statement) => ({ migration, statement })))
         .filter(({ statement }) => {
             let grant: GrantStmt | undefined;
             if (statement.kind === 'GrantStmt') grant = statement.fields;

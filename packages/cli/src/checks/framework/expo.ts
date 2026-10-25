@@ -19,13 +19,6 @@ import {
     EXPO_DOCTOR_COMMAND,
 } from '#cli/config/checks/framework/expo.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function isBlockEnd(line: string): boolean {
-    return line === '' || BLOCK_END_PREFIXES.some((prefix) => line.startsWith(prefix))
-        ? true
-        : PASSED_CHECKS.test(line);
-}
-
 function parseExpoDoctor(stdout: string): string[] {
     const lines = stripVTControlCharacters(stdout)
         .split('\n')
@@ -34,7 +27,10 @@ function parseExpoDoctor(stdout: string): string[] {
         const description = FAILED_CHECK.exec(line)?.groups?.['description'];
         if (description === undefined) return [];
         const rest = lines.slice(index + 1);
-        const end = rest.findIndex((next) => isBlockEnd(next));
+        const end = rest.findIndex(
+            (next) =>
+                next === '' || BLOCK_END_PREFIXES.some((prefix) => next.startsWith(prefix)) || PASSED_CHECKS.test(next),
+        );
         const issues = end === -1 ? rest : rest.slice(0, end);
         return [[description, ...issues].join(' ')];
     });

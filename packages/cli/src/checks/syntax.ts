@@ -12,7 +12,11 @@ Parse a check input and turn a file error into a syntax finding.
 @param parse the parser of the file.
 @returns the parsed value or a syntax finding.
 */
-export function readParsedFile<Value>(planned: PlannedCheck, path: string, parse: () => Value): Parsed<Value, Finding> {
+export function parseCheckedFile<Value>(
+    planned: PlannedCheck,
+    path: string,
+    parse: () => Value,
+): Parsed<Value, Finding> {
     try {
         return { value: parse() };
     } catch (error) {

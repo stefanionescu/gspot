@@ -16,8 +16,7 @@ Reports each asset that no text file in the scope or the index names.
 @returns the findings.
 */
 export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): Finding[] {
-    const files = planned.files;
-    const local = new Set(files.map((file) => file.path));
+    const local = new Set(planned.files.map((file) => file.path));
     const paths = new Set([
         ...local,
         ...session.repository.index
@@ -33,7 +32,7 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
         })
         .filter((source) => source !== undefined)
         .toArray();
-    return files
+    return planned.files
         .filter(
             (file) =>
                 ASSET_FOLDER.test(file.path) &&
@@ -42,9 +41,8 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
         )
         .filter((file) => {
             const name = posix.basename(file.path);
-            return texts.every(
-                ({ path, text }) =>
-                    !text.includes(local.has(path) ? name : posix.relative(extractParentFolder(path), file.path)),
+            return !texts.some(({ path, text }) =>
+                text.includes(local.has(path) ? name : posix.relative(extractParentFolder(path), file.path)),
             );
         })
         .map((file) =>

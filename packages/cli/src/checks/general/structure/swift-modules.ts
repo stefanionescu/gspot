@@ -4,10 +4,10 @@ import type { Session } from '#cli/types/session.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import { PBXPROJ, SWIFT_EXTENSION } from '#cli/config/files/names.ts';
 import type { SwiftModule } from '#cli/types/checks/general/structure.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
+import { isInFolders, parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 
 import {
     SWIFTPM_TARGET_FOLDERS,
@@ -56,11 +56,7 @@ function listXcodeModules(session: Session, path: string, swiftFiles: string[]):
     const project = parseProjectSources(readCachedText(session.reads, path), path);
     return project.targets.map((target) => ({
         name: target.name.replaceAll(SWIFT_MODULE_NAME_CHARACTERS, '_'),
-        files: swiftFiles.filter(
-            (file) =>
-                target.sources.includes(file) ||
-                target.folders.some(({ path: folder, excluded }) => file.startsWith(folder) && !excluded.has(file)),
-        ),
+        files: swiftFiles.filter((file) => target.sources.includes(file) || isInFolders(file, target.folders)),
     }));
 }
 

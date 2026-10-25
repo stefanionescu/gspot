@@ -146,7 +146,15 @@ export async function checkGeneratorOutputs(session: Session, planned: PlannedCh
     );
     const cwd = join(folder.path, planned.scope.folder.path);
     const outputFiles = { root: folder.path, scope: planned.scope.folder.path, patterns, targets, excluded };
-    const before = readOutputContents(outputFiles);
+    const stdoutPaths = new Set(targets.filter((target) => target.kind === 'stdout').map((target) => target.path));
+    const before = new Map(
+        readOutputContents(outputFiles)
+            .entries()
+            .map(([path, bytes]): [string, Buffer] => [
+                path,
+                stdoutPaths.has(path) ? Buffer.from(bytes.toString('utf8').trim()) : bytes,
+            ]),
+    );
     const commandArguments = expandCommand({ ...session, root: folder.path }, planned, declaration, {
         ...values,
         root: folder.path,
@@ -159,17 +167,12 @@ export async function checkGeneratorOutputs(session: Session, planned: PlannedCh
         stdout = result.stdout;
     }
     const after = readOutputContents(outputFiles);
-    const stdoutPaths = new Set(targets.filter((target) => target.kind === 'stdout').map((target) => target.path));
     for (const path of stdoutPaths) after.set(path, Buffer.from(stdout.trim()));
     return [...new Set([...before.keys(), ...after.keys()])]
         .filter((path) => {
             const was = before.get(path);
             const now = after.get(path);
-            return (
-                was === undefined ||
-                now === undefined ||
-                (stdoutPaths.has(path) ? was.toString('utf8').trim() !== now.toString('utf8') : !was.equals(now))
-            );
+            return was === undefined || now === undefined || !was.equals(now);
         })
         .toSorted((left, right) => compareText(left, right))
         .map((path) =>

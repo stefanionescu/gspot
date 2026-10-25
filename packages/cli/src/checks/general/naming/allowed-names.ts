@@ -3,9 +3,9 @@ import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { groupFilesByScope } from '#cli/repository/scopes.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import type { FileNames } from '#cli/types/checks/general/naming.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/checks/general/naming/source-names.ts';
@@ -14,15 +14,9 @@ import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/general
 async function readSourceNames(session: Session, planned: PlannedCheck): Promise<FileNames[]> {
     const files: FileNames[] = [];
     const containers = readNamingDefaults().path_containers;
+    const filesByScope = groupFilesByScope(planned.files, session.repository.scopeFolders);
     for (const scope of session.scopes) {
-        const scopeInput = {
-            ...planned,
-            scope,
-            files: planned.files.filter(
-                (file) => findScopeFolder(file.path, session.repository.scopeFolders).path === scope.folder.path,
-            ),
-        };
-        const named = listNamedFiles(scopeInput);
+        const named = listNamedFiles({ ...planned, scope, files: filesByScope.get(scope.folder.path) ?? [] });
         for (const { file, language } of named) {
             const stem = buildFileIdentifier(file.path, language, containers);
             const folders = buildFolderIdentifiers(file.path, language, containers);
@@ -32,17 +26,11 @@ async function readSourceNames(session: Session, planned: PlannedCheck): Promise
                 language,
                 session,
             );
-            if (error !== undefined) {
-                files.push({ path: file.path, stem: stem.name, declarations: undefined, folders, names: [] });
-                continue;
-            }
-            const declarations = identifiers.map((identifier) => identifier.name);
             files.push({
                 path: file.path,
                 stem: stem.name,
-                declarations,
+                declarations: error === undefined ? identifiers.map((identifier) => identifier.name) : undefined,
                 folders,
-                names: [stem.name, ...folders.map((identifier) => identifier.name), ...declarations],
             });
         }
     }
@@ -66,7 +54,8 @@ export async function checkNamingAllowedNames(session: Session, planned: Planned
                 .filter((file) => matches(file.path))
                 .flatMap((file) => {
                     if (file.declarations === undefined) return [];
-                    if (override.categories === undefined) return file.names;
+                    if (override.categories === undefined)
+                        return [file.stem, ...file.folders.map((identifier) => identifier.name), ...file.declarations];
                     return override.categories.includes('files')
                         ? [...file.declarations, file.stem]
                         : file.declarations;

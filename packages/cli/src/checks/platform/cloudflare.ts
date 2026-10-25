@@ -42,7 +42,7 @@ function parseHeadersFile(text: string): ParsedHeadersFile {
     for (const line of splitContentLines(text)) {
         if (!/^\s/u.test(line.text)) {
             blocks.push({ path: line.text.trim(), headers: [] });
-            if (PATH_PREFIXES.every((prefix) => !line.text.startsWith(prefix)))
+            if (!PATH_PREFIXES.some((prefix) => line.text.startsWith(prefix)))
                 errors.push({
                     number: line.number,
                     text: 'Start this block with a path beginning with / or an https:// address.',
@@ -69,8 +69,7 @@ function listMissingHeaders(blocks: HeaderBlock[]): string[] {
 }
 
 function validateRedirects(text: string): NumberedLine[] {
-    const contentLines = splitContentLines(text);
-    return contentLines.flatMap((line) => {
+    return splitContentLines(text).flatMap((line) => {
         const segments = line.text.trim().split(/\s+/u);
         const [source = '', , status] = segments;
         if (segments.length < REDIRECT_FIELDS.minimum || segments.length > REDIRECT_FIELDS.maximum)
@@ -80,7 +79,7 @@ function validateRedirects(text: string): NumberedLine[] {
                     text: 'Write a redirect as a source, a destination, and an optional status.',
                 },
             ];
-        if (PATH_PREFIXES.every((prefix) => !source.startsWith(prefix)))
+        if (!PATH_PREFIXES.some((prefix) => source.startsWith(prefix)))
             return [{ number: line.number, text: 'Start the redirect source with / or https://.' }];
         if (status === undefined) return [];
         const isRedirectStatus = REDIRECT_STATUS_CODES.has(status);

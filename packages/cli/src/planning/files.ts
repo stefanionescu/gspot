@@ -11,8 +11,8 @@ import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
-import { isInScope, joinScope, findScopeFolder } from '#cli/repository/scopes.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/configurations.ts';
+import { isInScope, joinScope, findScopeFolder, listNestedScopes } from '#cli/repository/scopes.ts';
 
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
     const prefix = joinScope(scopePath, '');
@@ -125,7 +125,13 @@ List the files that the configurations of a check own, apart from the files of a
 */
 export function listCheckedFiles(scopes: Scope[], check: PlannedCheck): TrackedFile[] {
     const owners = check.check.files ?? check.configuration?.files;
-    const children = check.check.runs === 'scope' ? listChildScopes(scopes, check.scope) : [];
+    const children =
+        check.check.runs === 'scope'
+            ? listNestedScopes(
+                  scopes.map(({ folder }) => folder.path),
+                  check.scope.folder.path,
+              )
+            : [];
     const files = check.files.filter((file) => children.every((child) => !isInScope(file.path, child)));
     return owners === undefined
         ? []
@@ -134,18 +140,6 @@ export function listCheckedFiles(scopes: Scope[], check: PlannedCheck): TrackedF
               scopePath: check.scope.folder.path,
               settings: check.scope.settings,
           });
-}
-
-/**
-List the scopes nested inside a scope. Their files belong to them, not to it.
-
-@param scopes the scopes of this run.
-@param scope the parent scope.
-@returns the child scope paths.
-*/
-export function listChildScopes(scopes: Scope[], scope: Scope): string[] {
-    const own = scope.folder.path;
-    return scopes.map((each) => each.folder.path).filter((path) => path !== '' && path !== own && isInScope(path, own));
 }
 
 /**

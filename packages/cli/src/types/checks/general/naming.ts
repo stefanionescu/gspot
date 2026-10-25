@@ -36,7 +36,6 @@ export type NamedFile = { file: TrackedFile; language: string };
 export type FileNames = {
     path: string;
     stem: string;
-    names: string[];
     declarations: string[] | undefined;
     folders: Identifier[];
 };
@@ -55,6 +54,6 @@ export type Identifier = {
 
 export type SqlNamed = { category: NamedCategory; name: string; location?: number; offset?: number };
 
-export type FileIdentifiers = { file: string; language: string; out: Identifier[] };
+export type FileIdentifiers = { file: string; language: string; identifiers: Identifier[] };
 
 export type IdentifierRead = { identifiers: Identifier[]; error: SqlFile['error'] };
