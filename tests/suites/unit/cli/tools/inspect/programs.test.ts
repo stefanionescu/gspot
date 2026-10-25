@@ -105,7 +105,6 @@ async function installMiseTsc(root: string, status: number) {
         ),
     );
     const paths = listExecutablePaths(join(root, 'work'), 'tsc', {
-        search: 'mise',
         timeoutSeconds: SETTING_DEFINITIONS['tool_timeout_seconds'].default,
         searchFolders: [join(root, 'work')],
     });
@@ -128,6 +127,20 @@ test('mise finds no program when its lookup exits 1', async () => {
     await using sandbox = await testdir({ 'work/.keep': '', 'copy/.keep': '' });
     const { paths } = await installMiseTsc(sandbox.path, 1);
     expect(paths).toStrictEqual([]);
+});
+
+test('a pinned program whose only executable is a mise shim that mise cannot resolve is missing', async () => {
+    await using sandbox = await testdir({ 'work/.keep': '' });
+    const root = sandbox.path;
+    const failure = ['--stderr', 'mise ERROR Config files are not trusted.\n', '--exit', '1'];
+    await writeProgramCommand(root, 'mise/shims/vale', 'fakes/tool', ...failure);
+    await writeProgramCommand(root, 'bin/mise', 'fakes/tool', ...failure);
+    using _environment = overrideEnvironment({ MISE_DATA_DIR: join(root, 'mise') });
+    using _which = fakeExecutableLookup((name) =>
+        join(root, name === 'mise' ? 'bin' : 'mise/shims', `${name}${isWindows ? '.cmd' : ''}`),
+    );
+    const inspection = inspectTool(buildToolSearch(join(root, 'work')), buildProgramPin('vale', '3.24.0'));
+    expect(inspection).toStrictEqual({ name: 'vale', state: 'missing', want: '3.24.0', help: 'Run gspot install.' });
 });
 
 test('a tool project program linked outside the repository is refused before it runs', async () => {

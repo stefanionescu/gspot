@@ -37,7 +37,7 @@ function inspectLibraryCommand(inspected: InspectedTool, command: string[]): Too
     const { root, cwd, tool, timeoutSeconds } = inspected;
     const program = command[0] as string;
     const commandArguments = command.slice(1);
-    const [path] = listExecutablePaths(root, program, { search: 'mise', timeoutSeconds, searchFolders: [cwd, root] });
+    const [path] = listExecutablePaths(root, program, { timeoutSeconds, searchFolders: [cwd, root] });
     return path === undefined
         ? buildMissingInspection(inspected)
         : inspectExecutablePath({ ...inspected, tool: { ...tool, version_command: commandArguments } }, path);
@@ -95,7 +95,6 @@ function inspectProjectExecutable(inspected: InspectedTool): ToolInspection | un
     const [project] = listRepositoryExecutablePaths(root, tool.name, { searchFolders: [cwd, root] });
     if (project !== undefined) return inspectExecutablePath(inspected, project);
     const [toolProjectPath] = listExecutablePaths(root, tool.name, {
-        search: 'mise',
         timeoutSeconds,
         searchFolders: [cwd, root],
         toolFolderKind: toolProjectPackage.kind,
@@ -114,9 +113,8 @@ function inspectExecutable(inspected: InspectedTool): ToolInspection {
     if (project !== undefined) return project;
     const isExternal = tool.system === true;
     const search = isExternal
-        ? { search: 'mise' as const, searchFolders: [cwd, root] }
+        ? { searchFolders: [cwd, root] }
         : {
-              search: 'path' as const,
               searchFolders: [join(root, DOT_GSPOT), cwd, root],
               miseBinPaths,
               toolFolderKind: findToolProjectPackage(tool)?.kind,

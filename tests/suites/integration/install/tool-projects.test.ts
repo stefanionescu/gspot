@@ -64,7 +64,6 @@ test('every shipped npm and Python tool lockfile has only dated accepted advisor
         [GSPOT_PATHS.npmProject, GSPOT_PATHS.pythonProject].toSorted((left, right) => left.localeCompare(right)),
     );
     const [uvPath = UV_TOOL] = listExecutablePaths(session.installedRoot, UV_TOOL, {
-        search: 'path',
         searchFolders: [],
         miseBinPaths: readToolBinPaths(session),
         timeoutSeconds: session.timeoutSeconds,

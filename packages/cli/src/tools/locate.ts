@@ -105,7 +105,8 @@ export function readMiseBinPaths(repositoryRoot: string, toolNames: string[], ti
 }
 
 /**
-List every executable with the name, in the order that gspot prefers.
+List every executable with the name, in the order that gspot prefers. A mise shim on the search path gives the
+program that mise selects for the repository, or nothing when mise selects none.
 
 @param repositoryRoot the base for repository searches and the fallback mise query.
 @param name the executable to find.
@@ -116,18 +117,14 @@ List every executable with the name, in the order that gspot prefers.
 export function listExecutablePaths(
     repositoryRoot: string,
     name: string,
-    options: ExecutableSearch & { timeoutSeconds: number; search: 'mise' | 'path' },
+    options: ExecutableSearch & { timeoutSeconds: number },
 ): string[] {
     const found = listRepositoryExecutablePaths(repositoryRoot, name, options);
     if (isAbsolute(name) || options.toolFolderKind !== undefined) return found;
     const programs = (options.miseBinPaths ?? [])
         .flatMap((folder) => listExecutableNames(name).map((file) => join(folder, file)))
         .filter((path) => statSync(path, { throwIfNoEntry: false }) !== undefined);
-    const paths =
-        options.search === 'mise'
-            ? listMiseExecutablePaths(repositoryRoot, name, options.timeoutSeconds)
-            : (which.sync(name, { nothrow: true, all: true }) ?? []);
-    return [...programs, ...found, ...paths];
+    return [...programs, ...found, ...listMiseExecutablePaths(repositoryRoot, name, options.timeoutSeconds)];
 }
 
 /**

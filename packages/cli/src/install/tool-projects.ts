@@ -127,7 +127,6 @@ export async function installToolProjects(install: ToolInstall, miseBinPaths: st
     const uvPath =
         mise !== null || which.sync(UV_TOOL, { nothrow: true }) !== null
             ? (listExecutablePaths(session.installedRoot, UV_TOOL, {
-                  search: 'path',
                   searchFolders: [],
                   miseBinPaths,
                   timeoutSeconds: session.timeoutSeconds,
