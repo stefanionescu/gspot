@@ -1,5 +1,6 @@
 import { statSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
+import { stripVTControlCharacters } from 'node:util';
 import { join, relative, isAbsolute } from 'node:path';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
@@ -190,7 +191,7 @@ export function formatOutputTail(
         return 'The tool ran out of memory. It most likely read build output or a bundle: keep that folder in .gitignore, or add an [[ignore]] with its paths.';
     const output = [result.stderr, result.stdout]
         .map((stream) =>
-            stream
+            stripVTControlCharacters(stream)
                 .split('\n')
                 .filter((line) => options.verbose === true || !/^\s+at /u.test(line))
                 .join('\n')

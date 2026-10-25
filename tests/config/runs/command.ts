@@ -97,3 +97,17 @@ export const WORKSPACE_SCOPE_CASES = [
     { scope: 'package', expected: ['--workspace', 'package'] },
     { scope: 'source', expected: [] },
 ] as const;
+
+export const ASTRO_CHECK_SUMMARY = [
+    '\u001B[1mResult (1 file): \u001B[22m',
+    '- \u001B[1m\u001B[31m1 error\u001B[39m\u001B[22m',
+].join('\n');
+
+export const ASTRO_CHECK_OUTPUT = [
+    "\u001B[96msrc/env.ts\u001B[0m:\u001B[93m1\u001B[0m:\u001B[93m14\u001B[0m - \u001B[91merror\u001B[0m\u001B[90m ts(2322): \u001B[0mType 'string' is not assignable to type 'number'.",
+    '',
+    "\u001B[7m1\u001B[0m export const count: number = 'three';",
+    '\u001B[7m \u001B[0m \u001B[91m             ~~~~~\u001B[0m',
+    '',
+    ASTRO_CHECK_SUMMARY,
+].join('\n');

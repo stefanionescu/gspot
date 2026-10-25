@@ -84,4 +84,4 @@ extensions = [".astro"]
 
 [check.output]
 format = "regex"
-pattern = "^(?<file>[^:\\s][^:]*\\.astro):(?<line>\\d+):(?<column>\\d+) - (?:error|warning) (?<rule>[a-z-]+\\(\\d+\\)): (?<message>.*)$"
+pattern = "^(?<file>[^:\\s][^:]*):(?<line>\\d+):(?<column>\\d+) - (?:error|warning) (?<rule>[a-z-]+\\(\\d+\\)): (?<message>.*)$"

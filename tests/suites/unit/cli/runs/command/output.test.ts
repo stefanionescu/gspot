@@ -11,6 +11,7 @@ import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { TAIL_LINES } from '#cli/config/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { isReportedCrash, formatOutputTail, parseCommandFindings } from '#cli/runs/command/output.ts';
@@ -21,6 +22,8 @@ import {
     LOCATED_CHECK,
     FILELESS_CHECKS,
     REGEX_OUTPUT_CASES,
+    ASTRO_CHECK_OUTPUT,
+    ASTRO_CHECK_SUMMARY,
     MISSING_LOCATED_FILE,
     ESLINT_MANIFEST_TOOL,
 } from '#tests/config/runs/command.ts';
@@ -277,4 +280,32 @@ test('a crash tail hides stack frames at the beginning of either stream', () => 
     expect(formatOutputTail(result, '', { verbose: true })).toBe(
         'at error (stderr.js:2:3)\nError: stderr cause\nat output (stdout.js:1:2)\nError: stdout cause',
     );
+});
+
+test('astro check reads a TypeScript diagnostic from colored output, and its crash note holds no color codes', async () => {
+    await using sandbox = await testdir({ 'src/env.ts': "export const count: number = 'three';\n" });
+    const check = readConfigurations()
+        .get('astro')!
+        .checks.find((each) => each.id === 'astro/astro-check')!;
+    const paths = { cwd: sandbox.path, root: sandbox.path };
+    const reported = parseCommandFindings(
+        { check },
+        buildProcessResult({ code: 1, stdout: ASTRO_CHECK_OUTPUT }),
+        paths,
+    );
+    expect(reported.findings).toMatchObject([
+        {
+            file: 'src/env.ts',
+            line: 1,
+            column: 14,
+            rule: 'ts(2322)',
+            message: "Type 'string' is not assignable to type 'number'.",
+        },
+    ]);
+    const crashed = parseCommandFindings(
+        { check },
+        buildProcessResult({ code: 1, stdout: ASTRO_CHECK_SUMMARY }),
+        paths,
+    );
+    expect(crashed).toStrictEqual({ note: 'astro/astro-check failed with exit 1:\nResult (1 file): \n- 1 error' });
 });
