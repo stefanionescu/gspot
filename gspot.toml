@@ -353,7 +353,6 @@ paths = ["packages/cli/src/types/**"]
 [[import_rule]]
 name = "system"
 paths = ["packages/cli/src/system/**"]
-can_import = ["cli-config", "cli-types"]
 
 [[import_rule]]
 name = "parsers"
@@ -362,7 +361,6 @@ paths = ["packages/cli/src/parsers/**", "packages/cli/src/schemas/parsers/**"]
 [[import_rule]]
 name = "configurations"
 paths = ["packages/cli/src/configurations/**", "packages/cli/src/schemas/configurations/**"]
-can_import = ["cli-config", "cli-types", "system", "parsers"]
 
 [[import_rule]]
 name = "repository"
@@ -381,16 +379,16 @@ name = "planning"
 paths = ["packages/cli/src/planning/**"]
 
 [[import_rule]]
+name = "session"
+paths = ["packages/cli/src/session.ts"]
+
+[[import_rule]]
 name = "generation"
 paths = ["packages/cli/src/generation/**"]
 
 [[import_rule]]
 name = "tools"
 paths = ["packages/cli/src/tools/**"]
-
-[[import_rule]]
-name = "session"
-paths = ["packages/cli/src/session.ts"]
 
 [[import_rule]]
 name = "install"
