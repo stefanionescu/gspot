@@ -19,7 +19,7 @@ export async function runOverPushedCommits(
     perCommit: (commit: string) => CheckResult | Promise<CheckResult>,
 ): Promise<CheckResult> {
     let result = { ...buildBaseResult(planned, session), fileCount: 0 };
-    const commits = planned.commits ?? (await readPushedCommits(session.root, session.cancelSignal));
+    const commits = planned.commits ?? (await readPushedCommits(session.installedRoot, session.cancelSignal));
     if (!Array.isArray(commits)) return { ...result, status: 'error', note: commits.error };
     for (const commit of commits) {
         result = mergeCheckResults(result, await perCommit(commit));

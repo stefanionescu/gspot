@@ -258,6 +258,25 @@ test('staged checks read an indexed file when its working file is missing', asyn
     expect(await isOnDisk(join(sandbox.path, 'script with spaces.sh'))).toBe(false);
 });
 
+test('a staged check reads the pushed commits of the repository, not of the index copy', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([], { level: 'all' }) });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    runGitStep(sandbox.path, ['add', '-A']);
+    runGitStep(sandbox.path, ['commit', '-qm', 'chore: start']);
+    await writeFile(join(sandbox.path, 'notes.md'), '# Notes\n');
+    runGitStep(sandbox.path, ['add', '-A']);
+    runGitStep(sandbox.path, ['commit', '-qm', 'Pushed already']);
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+    runGitStep(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
+    await writeFile(join(sandbox.path, 'notes.md'), '# Staged notes\n');
+    runGitStep(sandbox.path, ['add', '-A']);
+    const commandArguments = ['check', '--staged', '--only', 'commits/commitlint-pushed', '--json'];
+    const result = parseCheckReport(await runGspot(sandbox.path, commandArguments));
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.report.checks[0]).toMatchObject({ status: 'passed', note: 'Checked 0 commit messages.' });
+});
+
 function isCaseFolding(): boolean {
     const root = mkdtempSync(join(tmpdir(), 'gspot-case-'));
     try {
