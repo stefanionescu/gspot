@@ -64,8 +64,7 @@ function isFirstOnLine(text: string, comment: TSESTree.Comment): boolean {
     return BLANK.test(text.slice(comment.range[0] - comment.loc.start.column, comment.range[0]));
 }
 
-function mergeCommentLines(source: TSESLint.SourceCode): TSESTree.Comment[] {
-    const text = source.getText();
+function mergeCommentLines(source: TSESLint.SourceCode, text: string): TSESTree.Comment[] {
     const blocks: TSESTree.Comment[] = [];
     let previous: TSESTree.Comment | undefined;
     for (const comment of source.getAllComments()) {
@@ -103,12 +102,11 @@ function getStatementOffset(node: TSESTree.Node): number {
 }
 
 function isLeading(
-    source: TSESLint.SourceCode,
+    text: string,
     comment: TSESTree.Comment,
     node: TSESTree.Node,
     comments: TSESTree.Comment[],
 ): boolean {
-    const text = source.getText();
     const start = getStatementOffset(node);
     if (comment.range[1] > start || !isFirstOnLine(text, comment)) return false;
     let between = text.slice(comment.range[1], start);
@@ -124,8 +122,7 @@ function isLeading(
     return BLANK.test(between) && between.split('\n').length - 1 <= LEADING_COMMENT_LINE_BREAKS;
 }
 
-function buildRemovalRange(source: TSESLint.SourceCode, comment: TSESTree.Comment): [number, number] {
-    const text = source.getText();
+function buildRemovalRange(source: TSESLint.SourceCode, text: string, comment: TSESTree.Comment): [number, number] {
     const lineStart = source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 });
     const newline = text.indexOf('\n', comment.range[1]);
     const end = newline === -1 ? text.length : newline;
@@ -157,26 +154,26 @@ export const noCommentsInImports = createRule<[], 'comment'>({
     create(context) {
         const source = context.sourceCode;
         const text = source.getText();
-        const comments = mergeCommentLines(source);
+        const comments = mergeCommentLines(source, text);
         return {
             Program(node) {
                 for (const { first, last } of groupImportBlocks(node.body, context.languageOptions.sourceType)) {
-                    const other = node.body[node.body.indexOf(last) + 1];
-                    const end = other === undefined ? text.length : getStatementOffset(other);
-                    const violating = comments.find(
+                    const nextStatement = node.body[node.body.indexOf(last) + 1];
+                    const end = nextStatement === undefined ? text.length : getStatementOffset(nextStatement);
+                    const misplaced = comments.find(
                         (comment) =>
                             comment.range[0] > first.range[0] &&
                             comment.range[1] <= end &&
                             !isToolDirective(comment.value) &&
-                            (other === undefined || !isLeading(source, comment, other, comments)),
+                            (nextStatement === undefined || !isLeading(text, comment, nextStatement, comments)),
                     );
-                    if (violating === undefined) continue;
-                    const isAfterImports = violating.loc.start.line > last.loc.end.line;
+                    if (misplaced === undefined) continue;
+                    const isAfterImports = misplaced.loc.start.line > last.loc.end.line;
                     context.report({
-                        loc: violating.loc,
+                        loc: misplaced.loc,
                         messageId: 'comment',
                         fix(fixer) {
-                            const removal = buildRemovalRange(source, violating);
+                            const removal = buildRemovalRange(source, text, misplaced);
                             if (isAfterImports) {
                                 const rest = text.slice(removal[1]);
                                 removal[1] += rest.length - rest.trimStart().length;
@@ -185,7 +182,7 @@ export const noCommentsInImports = createRule<[], 'comment'>({
                                 fixer.removeRange(removal),
                                 fixer.insertTextBefore(
                                     first,
-                                    `${source.getText(violating)}${isAfterImports ? '\n\n' : '\n'}`,
+                                    `${source.getText(misplaced)}${isAfterImports ? '\n\n' : '\n'}`,
                                 ),
                             ];
                         },

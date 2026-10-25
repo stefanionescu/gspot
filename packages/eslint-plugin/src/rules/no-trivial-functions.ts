@@ -1,20 +1,53 @@
+import { unwrap } from '../syntax.ts';
 import { createRule } from '../create-rule.ts';
-import { TYPE_ONLY } from '../config/syntax.ts';
-import type { ImplementedFunction } from '../types/syntax.ts';
+import { FUNCTION_TYPES } from '../config/syntax.ts';
+import type { FunctionNode } from '../types/syntax.ts';
 import type { TrivialFunctionsOptions } from '../types/rules.ts';
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { unwrap, countStatements, findOutermostValue } from '../syntax.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
+    TYPE_ONLY,
     OPTIONS_SCHEMA,
     FUNCTION_SELECTOR,
     PASSED_VALUE_TYPES,
     INLINE_VALUE_PARENTS,
+    EXECUTABLE_DECLARATIONS,
     FUNCTION_MEMBER_PARENTS,
+    TRANSPARENT_EXPRESSIONS,
+    NON_EXECUTABLE_STATEMENTS,
     TRIVIAL_FUNCTION_STATEMENTS,
 } from '../config/rules/no-trivial-functions.ts';
 
-function isInlineValue(node: ImplementedFunction): boolean {
+const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
+
+function listChildNodes(
+    node: TSESTree.Node,
+    visitorKeys: Readonly<Record<string, readonly string[]>>,
+): TSESTree.Node[] {
+    return (visitorKeys[node.type] ?? []).flatMap((key) => {
+        const child: unknown = node[key as keyof TSESTree.Node];
+        if (Array.isArray(child)) return child.filter((nested: unknown) => nested !== null) as TSESTree.Node[];
+        return child !== null && typeof child === 'object' ? [child as TSESTree.Node] : [];
+    });
+}
+
+function countStatements(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
+    if (TYPE_ONLY.has(node.type)) return 0;
+    if ('declare' in node && node.declare) return 0;
+    const isExpressionBody =
+        FUNCTION_TYPES.has(node.type) && (node as FunctionNode).body.type !== AST_NODE_TYPES.BlockStatement;
+    const isStatement = node.type.endsWith('Statement') && !NON_EXECUTABLE_STATEMENTS.has(node.type);
+    const own = Number(isExpressionBody || isStatement || EXECUTABLE_DECLARATIONS.has(node.type));
+    return listChildNodes(node, visitorKeys).reduce((total, child) => total + countStatements(child, visitorKeys), own);
+}
+
+function findOutermostValue(node: TSESTree.Expression): TSESTree.Expression {
+    let value = node;
+    while (isTransparentExpression(value.parent)) value = value.parent;
+    return value;
+}
+
+function isInlineValue(node: FunctionNode): boolean {
     if (FUNCTION_MEMBER_PARENTS.has(node.parent.type)) return true;
     if (node.type === AST_NODE_TYPES.FunctionDeclaration || node.id !== null) return false;
     const value = findOutermostValue(node);
@@ -24,9 +57,7 @@ function isInlineValue(node: ImplementedFunction): boolean {
 function isValueSlot(value: TSESTree.Expression): boolean {
     const parent = value.parent;
     switch (parent.type) {
-        case AST_NODE_TYPES.Property: {
-            return true;
-        }
+        case AST_NODE_TYPES.Property:
         case AST_NODE_TYPES.MethodDefinition:
         case AST_NODE_TYPES.PropertyDefinition: {
             return true;
@@ -76,7 +107,7 @@ function isPassThrough(node: TSESTree.Node | null): boolean {
     }
 }
 
-function isPassThroughBody(body: ImplementedFunction['body']): boolean {
+function isPassThroughBody(body: FunctionNode['body']): boolean {
     if (body.type !== AST_NODE_TYPES.BlockStatement) return isPassThrough(body);
     return body.body.every((statement) => {
         if (TYPE_ONLY.has(statement.type) || ('declare' in statement && statement.declare)) return true;
@@ -108,7 +139,7 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
     create(context, [options]) {
         const limit = options.trivialFunctionStatements;
         return {
-            [`${FUNCTION_SELECTOR}:exit`](node: ImplementedFunction) {
+            [`${FUNCTION_SELECTOR}:exit`](node: FunctionNode) {
                 const count = countStatements(node, context.sourceCode.visitorKeys);
                 if (
                     count > limit ||

@@ -4,9 +4,9 @@ import { createRule } from '../create-rule.ts';
 import { convertToPosixPath } from '../syntax.ts';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
 import type { ImportSource } from '../types/syntax.ts';
+import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { RuleContext, ImportBoundariesOptions } from '../types/rules.ts';
 import { IMPORT_SELECTOR, RELATIVE_PREFIXES } from '../config/rules/imports.ts';
-import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { QUERY, TRAILING_SLASH, OPTIONS_SCHEMA, DEFAULT_BOUNDARY_FOLDERS } from '../config/rules/import-boundaries.ts';
 
 function getLintedPath(context: RuleContext): string | undefined {
@@ -17,22 +17,15 @@ function getLintedPath(context: RuleContext): string | undefined {
     return absolute.startsWith(`${root}/`) ? absolute.slice(root.length + 1) : undefined;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function getImportedPath(importer: string, source: string): string | undefined {
-    return RELATIVE_PREFIXES.every((prefix) => !source.startsWith(prefix))
-        ? undefined
-        : posix.join(posix.dirname(importer), source.replace(QUERY, ''));
-}
-
 function matchAlias(importedPath: string, pattern: string, target: string): string | undefined {
     const keyStar = pattern.indexOf('*');
     const targetStar = target.indexOf('*');
     if (keyStar === -1 || targetStar === -1) return importedPath === target ? pattern : undefined;
     const targetStart = target.slice(0, targetStar);
     const targetEnd = target.slice(targetStar + 1);
-    return importedPath.startsWith(targetStart) && importedPath.endsWith(targetEnd)
-        ? `${pattern.slice(0, keyStar)}${importedPath.slice(targetStart.length, importedPath.length - targetEnd.length)}${pattern.slice(keyStar + 1)}`
-        : undefined;
+    if (!importedPath.startsWith(targetStart) || !importedPath.endsWith(targetEnd)) return undefined;
+    const middle = importedPath.slice(targetStart.length, importedPath.length - targetEnd.length);
+    return `${pattern.slice(0, keyStar)}${middle}${pattern.slice(keyStar + 1)}`;
 }
 
 function findAlias(importedPath: string, aliases: Record<string, string>): string | undefined {
@@ -85,35 +78,32 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
         const isBoundary = picomatch([...folders], { dot: true });
         const folder = findBoundary(posix.dirname(relative), isBoundary);
         if (folder === undefined) return {};
-        const check = (node: TSESTree.Node | null): void => {
-            if (node === null) return;
-            const source = ASTUtils.getStringIfConstant(node);
-            if (source === null || isExternal(source)) return;
-            const target = getImportedPath(relative, source);
-            if (target === undefined || isWithinFolder(target, folder)) return;
-            const alias = findAlias(target, aliases);
-            if (alias === undefined) {
-                context.report({
-                    node,
-                    messageId: 'escape',
-                    data: { source, folder, target: findBoundary(posix.dirname(target), isBoundary) ?? target },
-                });
-            } else {
-                context.report({
-                    node,
-                    messageId: 'alias',
-                    data: { alias, source },
-                    fix: (fixer) =>
-                        node.type === AST_NODE_TYPES.Literal
-                            ? fixer.replaceText(node, `${node.raw.charAt(0)}${alias}${node.raw.charAt(0)}`)
-                            : null,
-                });
-            }
-        };
         return {
-            // eslint-disable-next-line gspot/no-trivial-functions -- reason: ESLint calls it for each matching node.
-            [IMPORT_SELECTOR](node: ImportSource) {
-                check(node.source);
+            [IMPORT_SELECTOR]({ source: node }: ImportSource) {
+                if (node === null) return;
+                const source = ASTUtils.getStringIfConstant(node);
+                if (source === null || isExternal(source)) return;
+                if (RELATIVE_PREFIXES.every((prefix) => !source.startsWith(prefix))) return;
+                const target = posix.join(posix.dirname(relative), source.replace(QUERY, ''));
+                if (isWithinFolder(target, folder)) return;
+                const alias = findAlias(target, aliases);
+                if (alias === undefined) {
+                    context.report({
+                        node,
+                        messageId: 'escape',
+                        data: { source, folder, target: findBoundary(posix.dirname(target), isBoundary) ?? target },
+                    });
+                } else {
+                    context.report({
+                        node,
+                        messageId: 'alias',
+                        data: { alias, source },
+                        fix: (fixer) =>
+                            node.type === AST_NODE_TYPES.Literal
+                                ? fixer.replaceText(node, `${node.raw.charAt(0)}${alias}${node.raw.charAt(0)}`)
+                                : null,
+                    });
+                }
             },
         };
     },

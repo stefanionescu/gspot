@@ -1,3 +1,4 @@
+import { TYPE_ASSERTION_NODES } from '../syntax.ts';
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 
 export const OPTIONS_SCHEMA = {
@@ -27,3 +28,11 @@ export const FUNCTION_SELECTOR = ':matches(FunctionDeclaration, FunctionExpressi
 export const FUNCTION_MEMBER_PARENTS = new Set<string>(['Property', 'MethodDefinition', 'PropertyDefinition']);
 
 export const PASSED_VALUE_TYPES = new Set<string>(['Identifier', 'Literal', 'ThisExpression', 'Super']);
+
+export const TYPE_ONLY = new Set(['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSDeclareFunction']);
+
+export const EXECUTABLE_DECLARATIONS = new Set(['VariableDeclaration', 'TSEnumDeclaration', 'ClassDeclaration']);
+
+export const NON_EXECUTABLE_STATEMENTS = new Set(['BlockStatement', 'EmptyStatement']);
+
+export const TRANSPARENT_EXPRESSIONS = ['ConditionalExpression', 'LogicalExpression', ...TYPE_ASSERTION_NODES] as const;

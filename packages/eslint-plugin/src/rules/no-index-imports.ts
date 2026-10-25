@@ -46,9 +46,7 @@ export const noIndexImports = createRule<[], 'index'>({
                     node.callee.property.type !== AST_NODE_TYPES.Identifier
                 )
                     return;
-                const framework = node.callee.object.name;
-                if (!Object.hasOwn(MODULE_MOCK_METHODS, framework)) return;
-                if (MODULE_MOCK_METHODS[framework as keyof typeof MODULE_MOCK_METHODS].has(node.callee.property.name))
+                if (MODULE_MOCK_METHODS.get(node.callee.object.name)?.has(node.callee.property.name) === true)
                     check(node.arguments[0]);
             },
         };

@@ -26,5 +26,3 @@ export type DocumentedRuleCreator = <Options extends readonly unknown[], Message
     name: string;
     meta: TSESLint.RuleMetaData<MessageIds, RuleDocs, Options> & { docs: RuleDocs & TSESLint.RuleMetaDataDocs };
 };
-
-export type SchemaLocationOptions = [{ folders: readonly string[] }];

@@ -1,8 +1,7 @@
 import { Linter } from 'eslint';
 import { test, expect } from 'bun:test';
 import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
-import type { SchemaLocationOptions } from '#eslint-plugin/types/rules.ts';
-import { schemaLocation } from '#eslint-plugin-repository/schema-location.ts';
+import { schemaLocation, type SchemaLocationOptions } from '#eslint-plugin-repository/schema-location.ts';
 
 createRuleTester().run<'location', [Partial<SchemaLocationOptions[0]>]>('schema-location', schemaLocation, {
     valid: [
