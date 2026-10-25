@@ -1,12 +1,11 @@
 import { runTool } from '#cli/tools/run.ts';
 import { dirname, delimiter } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import { type Session } from '#cli/types/session.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
-import { getMiseBinPaths } from '#cli/tools/locate.ts';
 import { listOtherTools } from '#cli/planning/tools.ts';
 import type { Tool } from '#cli/types/configurations.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
@@ -14,10 +13,15 @@ import { foldVariableName, readEnvironmentVariable } from '#cli/system/environme
 import type { ProcessFailure, ToolRunOptions, ToolAvailability } from '#cli/types/tools/run.ts';
 import type { CheckTool, CheckToolOptions, CheckToolProgram, ToolProcessResult } from '#cli/types/runs/command.ts';
 
-function getCheckTool(session: Session, planned: PlannedCheck, name: string, options: CheckToolOptions): CheckTool {
+function getCheckTool(
+    session: CheckSession,
+    planned: PlannedCheck,
+    name: string,
+    options: CheckToolOptions,
+): CheckTool {
     const tool = getTool(session.configurations.values(), name);
     const env = { ...planned.check.env, ...options.env };
-    const availability = findTool(session, options.cwd, tool);
+    const availability = readToolAvailability(session, options.cwd, tool);
     if ('status' in availability) {
         if (availability.status === 'error') throw new Error(availability.note);
         throw new GspotError('tool', availability.note);
@@ -58,7 +62,7 @@ export async function runToolProcess(
 }
 
 /**
-Finds the executable of a declared tool, or why it cannot run.
+Read the executable of a declared tool and its version, or why it cannot run.
 
 @param session the repository and tool paths.
 @param cwd the working folder.
@@ -66,9 +70,11 @@ Finds the executable of a declared tool, or why it cannot run.
 @returns the executable path or its installation failure.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 4 files share it.
-export function findTool(session: Session, cwd: string, tool: Tool): ToolAvailability {
-    const miseBinPaths = getMiseBinPaths(session);
-    return buildToolAvailability(tool, inspectTool({ ...session, cwd, miseBinPaths }, tool));
+export function readToolAvailability(session: CheckSession, cwd: string, tool: Tool): ToolAvailability {
+    return buildToolAvailability(
+        tool,
+        inspectTool({ ...session, cwd, miseBinPaths: session.readMiseBinPaths() }, tool),
+    );
 }
 
 /**
@@ -80,7 +86,7 @@ Add the folders of the installed other tools of a check to the process `PATH`, a
 @returns the environment with their folders on `PATH`.
 */
 export function buildOtherToolEnvironment(
-    session: Session,
+    session: CheckSession,
     names: string[],
     env: Record<string, string>,
 ): Record<string, string> {
@@ -88,7 +94,7 @@ export function buildOtherToolEnvironment(
         .map(
             (name) =>
                 inspectTool(
-                    { ...session, miseBinPaths: getMiseBinPaths(session) },
+                    { ...session, miseBinPaths: session.readMiseBinPaths() },
                     getTool(session.configurations.values(), name),
                 ).path,
         )
@@ -112,7 +118,7 @@ Run the tool of a check with the tool time limit and failure handling.
 @returns the process output.
 */
 export async function runCheckTool(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     command: readonly string[] | CheckToolProgram,
     options: CheckToolOptions,

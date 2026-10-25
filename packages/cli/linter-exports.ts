@@ -16,11 +16,6 @@ import { eslintPresetSchema, eslintPresetsSchema } from '#cli/schemas/configurat
 import { testsManifestSchema, packageIdentitySchema } from '#cli/schemas/configurations/linter-exports.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/configurations/language/javascript/eslint/presets.ts';
 
-import {
-    LINTER_PACKAGES,
-    PRESET_BLOCK_KEYS,
-    LINTER_INSTALL_FOLDER,
-} from '#cli/config/configurations/linter-exports.ts';
 import type {
     GlobalsModule,
     PrettierModule,
@@ -29,6 +24,32 @@ import type {
     InstalledPackage,
     EslintRuleModule,
 } from '#cli/types/linter-exports.ts';
+
+const LINTER_PACKAGES = {
+    eslint: {
+        module: 'eslint/use-at-your-own-risk',
+        nameList: { file: 'configurations/language/javascript/eslint-rule-names.json' },
+    },
+    globals: {
+        module: 'globals',
+        nameList: { file: 'configurations/language/javascript/eslint-global-names.json' },
+    },
+    stylelint: {
+        module: 'stylelint',
+        nameList: { file: 'configurations/language/css/stylelint-rule-names.json' },
+    },
+    standard: { module: 'stylelint-config-standard' },
+    prettier: { module: 'prettier' },
+} as const;
+
+const LINTER_INSTALL_FOLDER = {
+    manifest: 'package.json',
+    install: ['bun', 'install', '--ignore-scripts'],
+    sample: 'capture.css',
+    testsManifest: '../../tests/package.json',
+} as const;
+
+const PRESET_BLOCK_KEYS = ['files', 'ignores', 'basePath', 'rules'] as const;
 
 function findInstalledPackage(folder: string, packageName: string, moduleName: string): InstalledPackage {
     const modulePath = fileURLToPath(import.meta.resolve(moduleName, join(folder, LINTER_INSTALL_FOLDER.manifest)));

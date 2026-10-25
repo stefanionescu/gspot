@@ -1,10 +1,10 @@
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
-import { stringify } from '@decimalturn/toml-patch';
 import { parseSettings } from '#cli/settings/read.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import { formatSchema } from '#cli/schemas/settings/fields.ts';
 import { isTable, getValueAt, createTable } from '#cli/system/tables.ts';
 import { mergeIgnores, buildSettingsText } from '#cli/settings/text/build.ts';
 import { parseTomlText, isReasonedValue, readSettingsFile } from '#cli/settings/file.ts';
@@ -27,11 +27,11 @@ input.table in place.
 export function buildEditedSettings(repositoryRoot: string, edit: SettingsEdit): EditedSettings {
     const { text, table } = edit;
     if (Array.isArray(table['ignore'])) table['ignore'] = mergeIgnores(table['ignore'] as TomlTable[]);
-    const settings = parseSettings(stringify(table), repositoryRoot);
+    const format = formatSchema.safeParse(table['format']).data ?? formatSchema.parse({});
     const next = isDeepStrictEqual(table, parseTomlText(text, SETTINGS_FILE))
         ? text
-        : buildSettingsText(text, table, settings.format);
-    return { text: next, settings, changed: next !== text };
+        : buildSettingsText(text, table, format);
+    return { text: next, settings: parseSettings(next, repositoryRoot), changed: next !== text };
 }
 
 /**

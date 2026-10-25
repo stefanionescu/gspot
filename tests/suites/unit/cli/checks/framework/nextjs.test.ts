@@ -8,7 +8,6 @@ import * as processes from '#cli/system/processes.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { runCheckCode } from '#cli/commands/check/run.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -16,6 +15,7 @@ import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 
 import {
@@ -80,7 +80,7 @@ test.each(['', 'app'])(
     'nextjs/tsc in scope %j reports its finding, passes after the fix, and leaves tsconfig.json, .next, and next-env.d.ts unchanged',
     async (scope) => {
         await using sandbox = await testdir();
-        const session = await prepareNextjsBuild(sandbox.path, scope);
+        const session = buildCheckSession(await prepareNextjsBuild(sandbox.path, scope));
 
         const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
             (check) => check.scope.folder.path === scope,
@@ -157,7 +157,9 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
         await writeFile(join(sandbox.path, 'tsconfig.json'), 'Concurrent developer edit\n');
         return buildProcessResult({ code: 1, stderr: `Error: ${message}` });
     });
-    const error = await captureRejection(runCheckCode(session, planned, findCheckCode(planned.check)));
+    const error = await captureRejection(
+        runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check)),
+    );
     expect(error.message).toBe(`The next typegen command failed: Error: ${message}`);
     expect(scratch).not.toBe('');
     expect(await isOnDisk(scratch)).toBe(false);
@@ -187,7 +189,7 @@ test.each(['', 'apps/web'])(
             return buildProcessResult();
         });
         const { folders, commands } = fakes;
-        const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+        const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
         expect(result).toMatchObject({ status: 'passed', findings: [] });
         const copy = folders[0]!;
         expect(folders).toStrictEqual([copy, copy]);

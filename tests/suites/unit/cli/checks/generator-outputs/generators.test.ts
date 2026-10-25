@@ -5,12 +5,12 @@ import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { findCheckCode } from '#cli/checks/registry.ts';
-import { runCheckCode } from '#cli/commands/check/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { GENERATOR_CASES } from '#tests/config/checks/generator-outputs.ts';
+import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 
 async function prepareGeneratorCheck(root: string, row: (typeof GENERATOR_CASES)[number]) {
     await createFileTree(root, {
@@ -37,15 +37,17 @@ test.each([...GENERATOR_CASES])(
     async (row) => {
         await using sandbox = await testdir();
         const { session, planned } = await prepareGeneratorCheck(sandbox.path, row);
-        const error = await captureRejection(runCheckCode(session, planned, findCheckCode(planned.check)));
+        const error = await captureRejection(
+            runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check)),
+        );
         expect(error.message).toBe('The generator command failed: Generation failed\nfailure');
         await writeFile(join(sandbox.path, 'schema.txt'), 'changed');
-        const stale = await runCheckCode(session, planned, findCheckCode(planned.check));
+        const stale = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
         expect(stale.findings.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
             { check: row.check, file: row.output, rule: 'stale' },
         ]);
         await writeFile(join(sandbox.path, 'schema.txt'), 'dirty');
-        const fresh = await runCheckCode(session, planned, findCheckCode(planned.check));
+        const fresh = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
         expect(fresh.findings).toStrictEqual([]);
         expect(await readFile(join(sandbox.path, row.output), 'utf8')).toBe('dirty');
         expect(await readFile(join(sandbox.path, 'notes.txt'), 'utf8')).toBe('Keep project notes\n');

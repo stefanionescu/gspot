@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { openSession } from '#cli/session.ts';
-import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { findText } from '#cli/system/files/reads.ts';
@@ -10,6 +9,7 @@ import type { Command } from '@commander-js/extra-typings';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import { explainSetting } from '#cli/commands/explain/setting.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
@@ -60,7 +60,7 @@ function explainNamed(session: Session | undefined, subject: string): Explanatio
 }
 
 async function runExplainCommand(cwd: string, subject: string): Promise<CommandResult> {
-    const root = findRoot(cwd);
+    const root = readRepositoryRoot(cwd);
 
     const session = findText(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
 

@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import type { Session } from '#cli/types/session.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
@@ -57,7 +57,7 @@ Runs svelte-check on the scope for compiler warnings, accessibility warnings, an
 @param planned the scope to check.
 @returns one finding for each error and warning.
 */
-export async function checkSvelteCheck(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSvelteCheck(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     using runtime = createTemporaryFolder();
     const target = join(runtime.path, TSCONFIG_COPY_FOLDER, planned.scope.folder.path, TSCONFIG_FILE);
     writeScopeTsconfig(session, planned.scope, target);

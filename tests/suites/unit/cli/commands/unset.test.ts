@@ -1,11 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import type { ApplyReport } from '#cli/types/apply.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { UNSET_REFUSALS } from '#tests/config/commands/unset.ts';
-import { MANAGED_KEYS_NOTE } from '#cli/config/apply/generated.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test.each([...UNSET_REFUSALS])(
@@ -21,7 +19,7 @@ test.each([...UNSET_REFUSALS])(
     },
 );
 
-test('unset warns when the Bun scanner remains after its setting goes', async () => {
+test('unset leaves the Bun scanner in bunfig.toml after its setting goes', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             tables: 'dependencies.bun_scanner = "@socketsecurity/bun-security-scanner"\n',
@@ -31,11 +29,10 @@ test('unset warns when the Bun scanner remains after its setting goes', async ()
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const previous = await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8');
-    const unset = await runGspot(sandbox.path, ['unset', 'dependencies.bun_scanner', '--json']);
+    const unset = await runGspot(sandbox.path, ['unset', 'dependencies.bun_scanner']);
     expect(unset.code, unset.stdout + unset.stderr).toBe(0);
-    expect((JSON.parse(unset.stdout) as ApplyReport).notes).toContain(MANAGED_KEYS_NOTE);
     expect(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8')).toBe(previous);
-    const repeated = await runGspot(sandbox.path, ['apply', '--json']);
+    const repeated = await runGspot(sandbox.path, ['apply']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect((JSON.parse(repeated.stdout) as ApplyReport).notes).not.toContain(MANAGED_KEYS_NOTE);
+    expect(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8')).toBe(previous);
 });

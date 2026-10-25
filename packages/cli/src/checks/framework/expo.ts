@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/session.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
@@ -43,7 +43,7 @@ Runs Expo Doctor in a scope that depends on expo.
 @param planned the scope to check.
 @returns one finding per failed Doctor check.
 */
-export async function checkExpoDoctor(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkExpoDoctor(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     const path = joinScope(planned.scope.folder.path, PACKAGE_JSON);
     if (findInstalledDependency(session.root, path, EXPO_PACKAGE) === undefined)
         throw new GspotError(

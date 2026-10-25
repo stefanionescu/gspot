@@ -18,7 +18,7 @@ export type OutdatedFile = {
     diff?: string;
 };
 
-export type SaveSettingsOptions = { edit: SettingsEdit; summary: string };
+export type SaveSettingsOptions = { edit: SettingsEdit; summary: string; notes?: string[] };
 
 export type ConfigurationsOptions = { cwd: string; configurations: string[]; scope?: string };
 

@@ -6,6 +6,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
 import { planFixer, buildFixerSettings } from '#tests/setup/cli/runs.ts';
@@ -34,7 +35,7 @@ test("a fixer's {root} environment paths point into the copy during a dry run", 
         ),
     );
     planned.check.env = { SANDBOX_SETTINGS: '{root}/café settings.txt' };
-    const result = await runFixers(session, [planned], { isDryRun: true });
+    const result = await runFixers(buildCheckSession(session), [planned], { isDryRun: true });
     expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
     expect(result.diffs).toStrictEqual([buildSourceDiff('scratch corrected')]);
     const executionRoot = await readFile(trace, 'utf8');
@@ -71,7 +72,7 @@ test.each([false, true])(
         );
         planned.check.run_in_copy = true;
         planned.check.exit_codes = [3];
-        const result = await runFixers(session, [planned], { isDryRun: preview });
+        const result = await runFixers(buildCheckSession(session), [planned], { isDryRun: preview });
         expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'corrected');
         expect(await readFile(join(sandbox.path, 'unowned.json'), 'utf8')).toBe('{}');
@@ -104,14 +105,14 @@ test('a fix in a copy refuses to overwrite a file changed while it ran, and remo
         ),
     );
     planned.check.run_in_copy = true;
-    const rejection = await captureRejection(runFixers(session, [planned], { isDryRun: false }));
+    const rejection = await captureRejection(runFixers(buildCheckSession(session), [planned], { isDryRun: false }));
     expect(rejection.message).toBe('z-last.txt changed while gspot wrote it. Run the command again.');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('isolated correction');
     expect(await readFile(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
     expect(await isOnDisk(await readFile(trace, 'utf8'))).toBe(false);
     const corrected = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'));
     corrected.check.run_in_copy = true;
-    const correctedRun = await runFixers(session, [corrected], { isDryRun: false });
+    const correctedRun = await runFixers(buildCheckSession(session), [corrected], { isDryRun: false });
     expect(correctedRun.results[0]).toMatchObject({
         status: 'changed',
         changed: ['source.txt'],
@@ -129,7 +130,7 @@ test('a failed dry-run fix removes its copy and keeps the source bytes', async (
     const temporary = join(sandbox.path, 'scratch');
     await mkdir(temporary);
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-    const report = await runFixers(session, [planned], { isDryRun: true });
+    const report = await runFixers(buildCheckSession(session), [planned], { isDryRun: true });
     expect(report.results).toMatchObject([{ status: 'failed' }]);
     expect(await readdir(temporary)).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
@@ -149,7 +150,7 @@ test.each([...COPY_FAILURES])('a failed $operation removes the copy', async ({ o
     const temporary = join(sandbox.path, 'scratch');
     await mkdir(temporary);
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-    const error = await captureRejection(runFixers(session, [planned], { isDryRun: true }));
+    const error = await captureRejection(runFixers(buildCheckSession(session), [planned], { isDryRun: true }));
     expect(error.message).toContain(message);
     expect(await readdir(temporary)).toStrictEqual([]);
     if (operation === 'copy') {
@@ -175,7 +176,7 @@ test.each([false, true])(
         );
         planned.check.run_in_copy = isolated;
         session.cancelSignal = controller.signal;
-        const execution = runFixers(session, [planned], { isDryRun: false });
+        const execution = runFixers(buildCheckSession(session), [planned], { isDryRun: false });
         try {
             expect(await waitForFile(ready)).toBe(true);
             const pid = Number(await readFile(ready, 'utf8'));
@@ -195,7 +196,7 @@ test.each([false, true])(
         }
         delete session.cancelSignal;
         const correctedRun = await runFixers(
-            session,
+            buildCheckSession(session),
             [planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'))],
             {
                 isDryRun: false,

@@ -232,11 +232,6 @@ allowed_names = ["checkPostgresDefinerSearchPath", "checkPostgresRowLevelSecurit
 reason = "Each check function is named check, then its configuration, then its check name."
 
 [[naming.override]]
-paths = ["packages/cli/src/configurations/validation.ts"]
-allowed_names = ["validateSnapshots", "snapshots", "snapshot"]
-reason = "The shipped naming defaults no longer ban snapshot; the pinned gspot still does."
-
-[[naming.override]]
 paths = ["packages/cli/src/types/settings/file.ts", "packages/cli/src/types/settings/tables.ts"]
 allowed_names = ["max_list_item_words"]
 reason = "gspot.toml names this setting prose.max_list_item_words."
@@ -321,7 +316,7 @@ paths = ["packages/cli/src/**"]
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 
 [tools.knip]
-entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/local/plugin.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config-files/purgecss.ts", "packages/cli/src/configurations/linter-exports.ts"]
+entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/local/plugin.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config-files/purgecss.ts", "packages/cli/linter-exports.ts"]
 
 [[scope]]
 path = "docs"
@@ -412,7 +407,7 @@ paths = ["packages/cli/src/commands/**", "packages/cli/src/schemas/commands.ts"]
 
 [[import_rule]]
 name = "main"
-paths = ["packages/cli/src/main.ts", "packages/cli/src/bin.ts"]
+paths = ["packages/cli/src/main.ts", "packages/cli/src/bin.ts", "packages/cli/linter-exports.ts"]
 
 [[import_rule]]
 name = "plugin-config"

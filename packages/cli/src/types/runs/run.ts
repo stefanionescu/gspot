@@ -1,5 +1,5 @@
-import type { Session } from '#cli/types/session.ts';
 import type { FixReport } from '#cli/types/runs/fixes.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import type { IgnoreRecord } from '#cli/types/settings/file.ts';
 import type { PushInput } from '#cli/types/repository/revisions.ts';
@@ -19,7 +19,7 @@ export type RunOptions = PlanOptions & {
 };
 
 export type Run = {
-    session: Session;
+    session: CheckSession;
     options: RunOptions;
 };
 
@@ -40,6 +40,6 @@ export type RunReport = {
     exitCode: number;
 };
 
-export type PlanAfterFixes = { planned: PlannedCheck[]; fixes: FixReport | undefined };
+export type PlanAfterFixes = { session: CheckSession; planned: PlannedCheck[]; fixes: FixReport | undefined };
 
 export type CheckProgress = { finished: number; total: number; comparison: RunReport['comparison'] };

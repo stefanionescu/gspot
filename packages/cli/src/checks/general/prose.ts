@@ -1,10 +1,10 @@
 import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/session.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { hasValePackages } from '#cli/install/vale.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
@@ -39,7 +39,7 @@ function assertValeRan(result: SpawnResult): void {
 }
 
 async function runValeOnPaths(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     routes: ProseRoute[],
     command: string[],
@@ -67,7 +67,7 @@ async function runValeOnPaths(
 }
 
 async function runValeOnStdin(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     route: ProseRoute,
     command: string[],
@@ -114,7 +114,7 @@ Runs Vale on the scope files, by path where Vale has a grammar and through stdin
 @param planned the scope to check.
 @returns the findings.
 */
-export async function checkProseVale(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkProseVale(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     if (!hasValePackages(session.installedRoot, session.settingsFile.settings.level))
         throw new GspotError('tool', 'The Vale packages are not installed. Run gspot install.');
     const command = [VALE_TOOL, '--config', join(session.root, GSPOT_PATHS.valeConfigFile), ...VALE_ARGUMENTS];

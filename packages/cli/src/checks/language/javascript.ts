@@ -2,7 +2,6 @@ import ts from 'typescript';
 import { GspotError } from '#cli/system/errors.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
-import type { Session } from '#cli/types/session.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
@@ -13,6 +12,7 @@ import type { CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { groupFilesByScope } from '#cli/repository/scopes.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
@@ -55,7 +55,7 @@ Type-checks JavaScript with the type declarations the project uses.
 @param planned the JavaScript compiler check.
 @returns the check result.
 */
-export async function checkJavascriptTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkJavascriptTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.scope.folder.path;
     if (listCheckedFiles(session.scopes, planned).length === 0)
         return { ...buildBaseResult(planned, session), fileCount: 0 };

@@ -8,7 +8,7 @@ import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/apply/generated.ts';
-import { planBlock, writePlans, planRemoval, listStrayPaths, planManagedKeys, planReplacement } from '#cli/write.ts';
+import { planBlock, writePlans, planRemovals, listStrayPaths, planManagedKeys, planReplacements } from '#cli/write.ts';
 
 /**
 Say that the generated files need no change.
@@ -91,21 +91,22 @@ export async function writeGeneratedFiles(
     };
     const paths = listExpectedPaths(session, generated);
     const managedKeyPlans = generated.managedKeys.map((output) => planManagedKeys(writer, output.path, output.keys));
-    const replacements = generated.files.map((file) =>
-        planReplacement(writer, {
+    const replacements = planReplacements(
+        writer,
+        generated.files.map((file) => ({
             path: file.path,
             next: {
                 bytes: Buffer.from(file.content),
                 mode: file.executable === true ? EXECUTABLE_FILE : OWNER_WRITABLE_FILE,
             },
             expected: file.kind === 'lock' ? file.read : reviewed?.get(file.path),
-        }),
+        })),
     );
     const reviewedPlans = [...replacements, ...managedKeyPlans].map((plan) =>
         reviewed?.has(plan.path) === true ? { ...plan, before: reviewed.get(plan.path) } : plan,
     );
     const blocks = generated.blocks.map((block) => planBlock(writer, block.path, block.block, block.style));
-    const pruning = listStrayPaths(session, paths).map((path) => planRemoval(writer, path));
+    const pruning = planRemovals(writer, listStrayPaths(session, paths));
     writePlans(writer, [...reviewedPlans, ...blocks, ...pruning]);
     removeUnusedToolFolders(writer, paths);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));

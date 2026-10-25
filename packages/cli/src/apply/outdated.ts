@@ -4,14 +4,14 @@ import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { OutdatedFile } from '#cli/types/apply.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { listStrayPaths, hasManagedKeys } from '#cli/write.ts';
+import { selectLockfileName } from '#cli/install/npm/lockfiles.ts';
 import { listStaleLockfiles } from '#cli/install/tool-projects.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/apply/outdated.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { selectToolPackageManager } from '#cli/repository/npm/package-manager.ts';
@@ -92,7 +92,10 @@ Find changed, missing, or stray generated files. Managed blocks and file edits c
 @returns the outdated files in path order.
 */
 export async function listOutdatedFiles(
-    session: Pick<Session, 'root' | 'packageManager' | 'repository' | 'installedRoot' | 'reads' | 'timeoutSeconds'>,
+    session: Pick<
+        Session,
+        'root' | 'packageManager' | 'repository' | 'installedRoot' | 'reads' | 'timeoutSeconds' | 'toolConfigurations'
+    >,
     generated: GenerationResult,
 ): Promise<OutdatedFile[]> {
     using files = openFiles(session.root);
@@ -124,7 +127,7 @@ export function listExpectedPaths(
     const project = generated.files.find((file) => file.path === GSPOT_PATHS.npmProject);
     if (packageManager !== undefined && project !== undefined) {
         const name = selectToolPackageManager(installedRoot, packageManager, timeoutSeconds, reads);
-        paths.add(parseToolPackageJson(project.content, name).lockfilePath);
+        paths.add(`${DOT_GSPOT}/${selectLockfileName(name)}`);
     }
     for (const file of generated.files) {
         if (file.path === GSPOT_PATHS.miseProject) paths.add(GSPOT_PATHS.miseLockfile);

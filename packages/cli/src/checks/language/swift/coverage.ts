@@ -1,7 +1,6 @@
 import { realpathSync } from 'node:fs';
 import { getTable } from '#cli/settings/scopes.ts';
 import { join, resolve, relative } from 'node:path';
-import type { Session } from '#cli/types/session.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { MAX_PERCENTAGE } from '#cli/config/units.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -10,6 +9,7 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
@@ -32,7 +32,7 @@ import {
 } from '#cli/config/checks/language/swift/coverage.ts';
 
 async function measurePackageCoverage(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     plan: Extract<SwiftBuildPlan, { kind: 'package' }>,
     files: Files,
@@ -55,7 +55,7 @@ async function measurePackageCoverage(
 }
 
 async function measureXcodeCoverage(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     plan: SwiftBuildPlan,
     cwd: string,
@@ -76,7 +76,7 @@ async function measureXcodeCoverage(
     return parseToolReport('xccov', viewed.stdout, xccovSchema);
 }
 
-async function measureCoverage(session: Session, planned: PlannedCheck): Promise<CoverageReport> {
+async function measureCoverage(session: CheckSession, planned: PlannedCheck): Promise<CoverageReport> {
     const plan = planSwiftBuild(session, planned, 'coverage');
     const setup = prepareBuild(session.root, planned.files, plan.folder);
     using files = setup.files;
@@ -145,7 +145,7 @@ Runs the tests with coverage and compares each target with the line limit or its
 @param planned the scope and coverage limits.
 @returns the findings.
 */
-export async function checkSwiftCoverage(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSwiftCoverage(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     const settings = getTable(planned.scope.settings, 'coverage');
     const report = await measureCoverage(session, planned);
     return listCoverageShortfalls(report, settings).map((text) =>

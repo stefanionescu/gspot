@@ -1,7 +1,6 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { parseTomlText } from '#cli/settings/file.ts';
-import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { SCHEMA_DIRECTIVE } from '#cli/config/settings/file.ts';
@@ -10,6 +9,7 @@ import { LAYOUT_CASES } from '#tests/config/settings/text/layout.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildInitSettings } from '#cli/commands/init/settings-text.ts';
 import { PREFACE_BODY } from '#cli/config/commands/init/settings-text.ts';
+import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { ARRAY_COMMENT_CASES } from '#tests/config/settings/text/array-comments.ts';
 import { setKey, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import { IGNORE_COMMENT_CASES } from '#tests/config/settings/text/ignore-comments.ts';
@@ -38,7 +38,11 @@ test('setting level keeps the schema directive first and the opening init commen
     await using sandbox = await testdir();
     const reads = createReadCache(sandbox.path);
     const configurations = readConfigurations();
-    const repository = await readRepository(reads, { generatedPaths: [], scopes: [], configurations });
+    const repository = await readRepository(reads, await listRepositoryFiles(reads), {
+        generatedPaths: [],
+        scopes: [],
+        configurations,
+    });
     const text = buildInitSettings(
         { configurations: [], scopes: [], hooks: false, ci: 'none', rules: true },
         repository,

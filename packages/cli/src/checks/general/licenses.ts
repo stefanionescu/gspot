@@ -6,10 +6,10 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, basename } from 'node:path';
 import parseExpression from 'spdx-expression-parse';
-import type { Session } from '#cli/types/session.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { listLicenseProjects } from '#cli/planning/tools.ts';
@@ -59,7 +59,7 @@ function assertInstalled(planned: PlannedCheck, name: string, start: string): vo
 }
 
 async function readLicenseOutput<Value>(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     command: [string, ...string[]],
     cwd: string,
@@ -71,7 +71,7 @@ async function readLicenseOutput<Value>(
 }
 
 async function scanJavascriptLicenses(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     start: string,
 ): Promise<LicensedPackage[]> {
@@ -104,7 +104,11 @@ function selectPythonLicense(report: PythonLicenseReport): string {
         : (report['License-Metadata'] ?? report['License-Classifier'] ?? UNKNOWN_LICENSE);
 }
 
-async function scanPythonLicenses(session: Session, planned: PlannedCheck, start: string): Promise<LicensedPackage[]> {
+async function scanPythonLicenses(
+    session: CheckSession,
+    planned: PlannedCheck,
+    start: string,
+): Promise<LicensedPackage[]> {
     assertInstalled(planned, PYTHON_ENVIRONMENT_FOLDER, start);
     const installed = join(start, PYTHON_ENVIRONMENT_FOLDER);
     using scratch = createTemporaryFolder();
@@ -129,7 +133,11 @@ function normalizeIdentity(identity: string): string {
         : `${split[0].toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${split[1]}`;
 }
 
-async function scanProject(session: Session, planned: PlannedCheck, project: LicenseProject): Promise<ProjectLicenses> {
+async function scanProject(
+    session: CheckSession,
+    planned: PlannedCheck,
+    project: LicenseProject,
+): Promise<ProjectLicenses> {
     const { dependencyFile, scope, settings } = project;
     const folder = dirname(dependencyFile);
     const { scan, start, lockfiles, ecosystem } =
@@ -160,7 +168,7 @@ async function scanProject(session: Session, planned: PlannedCheck, project: Lic
     return { dependencyFile, packages, locked: [...(lockedKeys ?? [])], ecosystem, settings };
 }
 
-async function scanLicenses(session: Session, planned: PlannedCheck) {
+async function scanLicenses(session: CheckSession, planned: PlannedCheck) {
     const projects = listLicenseProjects(planned.files, session.scopes, session.settingsFile.settings, planned.check);
     if (projects.length === 0) throw new GspotError('skip', 'Set licenses.allowed to check licenses.');
     const inventories: ProjectLicenses[] = [];
@@ -214,7 +222,7 @@ Reports disallowed licenses of locked packages, and allowed_package records that
 @param planned the scopes whose dependencies to scan.
 @returns the findings.
 */
-export async function checkLicensesAllowed(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkLicensesAllowed(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     const { inventories, hasSkipped } = await scanLicenses(session, planned);
     const findings = inventories.flatMap(({ dependencyFile, packages, ecosystem, settings }) => {
         return packages.flatMap(({ name, license }) => {

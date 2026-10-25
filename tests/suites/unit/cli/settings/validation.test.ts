@@ -17,6 +17,7 @@ import {
     ORDERED_IMPORT_RULES,
     REFUSED_RULE_OPTIONS,
     SETTING_RULE_OPTIONS,
+    REFUSED_SCOPE_FOLDERS,
     BOUNDARY_IMPORT_RULES,
     INVALID_SETTING_MESSAGES,
 } from '#tests/config/settings/validation.ts';
@@ -91,6 +92,11 @@ test.each([...UNSAFE_SCOPE_PATHS])('scope refuses the path %s', (path) => {
     expect(() => parseSettings(stringify({ scope: [{ path }] }), sandbox.path)).toThrow(
         'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
     );
+});
+
+test.each([...REFUSED_SCOPE_FOLDERS])('scope refuses the folder $path', ({ path, message }) => {
+    using sandbox = createTemporaryFolder();
+    expect(() => parseSettings(stringify({ scope: [{ path }] }), sandbox.path)).toThrow(message);
 });
 
 test('relative folders with spaces, percent signs and Unicode are accepted', async () => {

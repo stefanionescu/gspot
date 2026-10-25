@@ -1,5 +1,4 @@
 import { join, posix } from 'node:path';
-import { type Session } from '#cli/types/session.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
@@ -11,6 +10,7 @@ import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
@@ -107,7 +107,7 @@ Validates each Compose project with its overrides.
 @param planned the Compose check and its files.
 @returns the check result.
 */
-export async function checkDockerCompose(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkDockerCompose(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const groups = groupComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
     return runCommandGroups(
         session,
@@ -195,7 +195,7 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Find
         });
 }
 
-async function scanImage(session: Session, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
+async function scanImage(session: CheckSession, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
     const configFile = join(session.root, getConfigFilePath(session, planned, TRIVY_CONFIG_FILE));
     const result = await runCheckTool(session, planned, [...TRIVY_IMAGE_COMMAND, configFile, image], {
         cwd: session.root,
@@ -225,7 +225,7 @@ Scans each literal service image once and reports its findings in every Compose 
 @param planned the scope files to read.
 @returns the findings.
 */
-export async function checkDockerTrivyImage(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkDockerTrivyImage(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     const scanned = new Map<string, ImageFinding[]>();
     const findings: Finding[] = [];
     const files = Map.groupBy(readComposeDocuments(session, planned).declarations, ({ path }) => path);

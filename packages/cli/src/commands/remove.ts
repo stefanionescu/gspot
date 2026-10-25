@@ -11,6 +11,7 @@ import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import { deleteKey, getScopeTable } from '#cli/settings/edit.ts';
 import { type ConfigurationsOptions } from '#cli/types/apply.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
+import { MANAGED_KEYS_NOTE } from '#cli/config/apply/generated.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
@@ -90,9 +91,15 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const unchanged = options.configurations.filter((name) => !selected.includes(name));
     const summary =
         formatConfigurationChange(removed, unchanged, where) + removeUnusedSettings(input.table, configurations, scope);
+    const ownsManagedKeys = configurations
+        .values()
+        .filter((configuration) => removed.includes(configuration.name))
+        .flatMap((configuration) => configuration.tools)
+        .some((tool) => tool.replace_key?.some((replacement) => replacement.pointer === true) === true);
     return applySettingsEdit(root, {
         edit: input,
         summary,
+        notes: ownsManagedKeys ? [MANAGED_KEYS_NOTE] : [],
     });
 }
 

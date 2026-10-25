@@ -22,11 +22,13 @@ version_pattern = "markdownlint-cli2 v(\\d+\\.\\d+\\.\\d+)"
 per_scope = true
 pointer = { path = ".markdownlint.jsonc", body = "{ \"extends\": {target_json} }\n", inherit = true }
 target = "markdownlint.jsonc"
+tool = "markdownlint-cli2"
 
 [[config_file]]
 per_scope = true
 source = "markdownlint-cli2.ts"
 target = "markdownlint-cli2.mjs"
+tool = "markdownlint-cli2"
 
 [[check]]
 command = ["markdownlint-cli2", "--no-globs", "--config", "{config_file:markdownlint-cli2}", "{files}"]

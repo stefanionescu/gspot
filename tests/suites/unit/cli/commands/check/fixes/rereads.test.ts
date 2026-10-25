@@ -32,7 +32,7 @@ test('a fix run rereads the repository and keeps the package scopes it found', a
     );
 });
 
-test('checks refresh the file inventory after a fixer creates a source', async () => {
+test('checks read a new file inventory after a fixer creates a source and leave the session they got as it was', async () => {
     await using sandbox = await testdir({
         'source.txt': 'input',
         'gspot.toml': buildSandboxSettings([], {
@@ -57,10 +57,10 @@ test('checks refresh the file inventory after a fixer creates a source', async (
     const result = await runChecks(session, options);
     expect(result.report.exitCode).toBe(0);
     expect(result.report.checks[0]!.fileCount).toBe(2);
-    expect(session.repository.files.map((file) => file.path)).toStrictEqual(['added.txt', 'gspot.toml', 'source.txt']);
+    expect(session.repository.files.map((file) => file.path)).toStrictEqual(['gspot.toml', 'source.txt']);
 });
 
-test('a fix run rereads the package.json it changed and keeps the dependencies of the other packages', async () => {
+test('a fix run writes the package.json it changed and leaves the dependency files of the session it got as they were', async () => {
     await using sandbox = await testdir({
         ...REACT_VUE_PACKAGES,
         'gspot.toml': buildSandboxSettings(['javascript'], {
@@ -91,7 +91,7 @@ test('a fix run rereads the package.json it changed and keeps the dependencies o
     expect(result.fixes?.results).toMatchObject([
         { check: 'project/update-package', status: 'changed', changed: ['package.json'] },
     ]);
-    expect(listProjectDependencyNames(session.repository.dependencyFiles, '')).toStrictEqual([]);
+    expect(listProjectDependencyNames(session.repository.dependencyFiles, '')).toStrictEqual(['react']);
     expect(listProjectDependencyNames(session.repository.dependencyFiles, 'app')).toStrictEqual(['vue']);
     expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(ROOT_PACKAGE_WITHOUT_DEPENDENCIES);
     expect(await readFile(join(sandbox.path, 'app/package.json'), 'utf8')).toBe(REACT_VUE_PACKAGES['app/package.json']);

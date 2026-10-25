@@ -31,6 +31,7 @@ table = "sqlfluff"
 [[config_file]]
 per_scope = true
 target = "sqlfluff.cfg"
+tool = "sqlfluff"
 
 [[check]]
 command = ["sqlfluff", "lint", "--config", "{config_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]

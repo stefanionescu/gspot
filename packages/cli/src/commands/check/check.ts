@@ -1,7 +1,6 @@
 import { resolve } from 'node:path';
 import { addAbortSignal } from 'node:stream';
 import { constants, accessSync } from 'node:fs';
-import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isGitRepository } from '#cli/system/git.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
@@ -10,6 +9,7 @@ import { checkTree } from '#cli/commands/check/tree.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { CheckProgress } from '#cli/types/runs/run.ts';
+import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { printProgress } from '#cli/commands/check/report.ts';
 import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
@@ -162,7 +162,7 @@ function parseCheckFlags(paths: string[], flags: CheckFlags, cwd: string): { roo
         throw new GspotError('arguments', '--dry-run previews the fixes. Add --fix.');
     const options = buildCheckOptions(paths, flags, cwd);
     assertCheckSelection(options, flags);
-    const root = findRoot(options.cwd);
+    const root = readRepositoryRoot(options.cwd);
     assertGitSelection(root, options);
     assertMessageSelection(options, paths);
     assertReadableMessageFile(options);

@@ -1,5 +1,4 @@
 import { openSession } from '#cli/session.ts';
-import { findRoot } from '#cli/repository/read.ts';
 import { type Session } from '#cli/types/session.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { isRootOnlyCheck } from '#cli/planning/files.ts';
@@ -8,6 +7,7 @@ import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type Settings } from '#cli/types/settings/file.ts';
+import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
@@ -113,7 +113,7 @@ function formatCheckState(check: PlannedCheck | undefined): string {
 }
 
 async function runListCommand(cwd: string, kind: ListKind): Promise<CommandResult> {
-    const root = findRoot(cwd);
+    const root = readRepositoryRoot(cwd);
 
     const session = await openSession(root);
     return kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session);

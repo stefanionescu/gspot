@@ -5,7 +5,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { GspotError } from '#cli/system/errors.ts';
 import { NON_UTF8_BLOCK_CASES } from '#tests/config/write.ts';
-import { planBlock, openWriter, writePlans, planRemoval } from '#cli/write.ts';
+import { planBlock, openWriter, writePlans, planRemovals } from '#cli/write.ts';
 
 test.each([...NON_UTF8_BLOCK_CASES])(
     'block updates and removal refuse non-UTF-8 $path with a file error and keep its bytes',
@@ -20,7 +20,7 @@ test.each([...NON_UTF8_BLOCK_CASES])(
             message: `${path} is not UTF-8 text. Save it as UTF-8, then run the command again.`,
         });
         expect(() => planBlock(writer, path, 'instructions', style)).toThrow(failure);
-        expect(() => planRemoval(writer, path)).toThrow(failure);
+        expect(() => planRemovals(writer, [path])).toThrow(failure);
         expect(await readFile(join(sandbox.path, path))).toStrictEqual(bytes);
     },
 );
@@ -44,7 +44,7 @@ test('managed block updates and removal keep your text around the block', async 
     );
     firstWriter[Symbol.dispose]();
     using writer = openWriter(sandbox.path);
-    writePlans(writer, [planRemoval(writer, 'AGENTS.md')]);
+    writePlans(writer, planRemovals(writer, ['AGENTS.md']));
     expect(writer.read('AGENTS.md')!.bytes.toString('utf8')).toBe(prefix + previous + suffix);
 });
 
@@ -54,6 +54,6 @@ test('removing the only block deletes the file', async () => {
     using writer = openWriter(sandbox.path);
 
     writePlans(writer, [planBlock(writer, 'AGENTS.md', 'instructions', 'markdown')]);
-    writePlans(writer, [planRemoval(writer, 'AGENTS.md')]);
+    writePlans(writer, planRemovals(writer, ['AGENTS.md']));
     expect(writer.read('AGENTS.md')).toBeUndefined();
 });

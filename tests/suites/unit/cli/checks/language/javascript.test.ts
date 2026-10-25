@@ -9,13 +9,13 @@ import { findCheckCode } from '#cli/checks/registry.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runChecks, runCheckCode } from '#cli/commands/check/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { EMPTY_PROJECT_RESULT } from '#tests/config/checks/language/javascript.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/projects/tsconfig.ts';
+import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 
 test('javascript/tsc checks a stale jsconfig and skips an absent one with apply advice', async () => {
     await using sandbox = await testdir({
@@ -65,7 +65,7 @@ test('javascript/tsc excludes type roots inherited from folders above the reposi
     });
     const session = await openSession(root);
     const planned = planChecks(session, buildRunOptions({ only: ['javascript/tsc'] }))[0]!;
-    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+    const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
     expect(result.findings).toStrictEqual([]);
     expect(boundary).toHaveBeenCalledTimes(1);
 });
@@ -92,5 +92,7 @@ test('a scope whose jsconfig lists no JavaScript file passes with nothing to com
         only: ['javascript/tsc'],
         staged: ['gspot.toml'],
     }).find((check) => check.scope.folder.path === 'site')!;
-    expect(await runCheckCode(reopened, site, findCheckCode(site.check))).toStrictEqual(EMPTY_PROJECT_RESULT);
+    expect(await runCheckCode(buildCheckSession(reopened), site, findCheckCode(site.check))).toStrictEqual(
+        EMPTY_PROJECT_RESULT,
+    );
 });

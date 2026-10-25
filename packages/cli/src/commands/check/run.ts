@@ -3,13 +3,12 @@ import { join, relative } from 'node:path';
 import { availableParallelism } from 'node:os';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
-import { findTool } from '#cli/runs/command/tool.ts';
-import type { Session } from '#cli/types/session.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
 import { readSessionRepository } from '#cli/session.ts';
+import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { FixReport } from '#cli/types/runs/fixes.ts';
@@ -19,9 +18,12 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import type { IgnoreRecord } from '#cli/types/settings/file.ts';
 import { INCOMPLETE_STATUSES } from '#cli/config/runs/report.ts';
+import { readToolAvailability } from '#cli/runs/command/tool.ts';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import { SHORT_HASH_LENGTH } from '#cli/config/commands/check/check.ts';
 import { RAN_STATUSES, FAILED_STATUSES } from '#cli/config/runs/check.ts';
@@ -39,21 +41,26 @@ function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     );
 }
 
-async function refreshAfterFixes(session: Session): Promise<void> {
-    session.reads = createReadCache(session.root);
-    session.repository = await readSessionRepository({
+async function readSessionAfterFixes(session: CheckSession): Promise<CheckSession> {
+    const reads = createReadCache(session.root);
+    const repository = await readSessionRepository({
         settings: session.settingsFile.settings,
-        text: session.settingsFile.text,
         configurations: session.configurations,
-        reads: session.reads,
+        reads,
+        listing: await listRepositoryFiles(reads),
     });
-    session.inspections.clear();
+    return { ...session, reads, repository, inspections: new Map() };
 }
 
-function findUnrunnableResult(session: Session, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {
+function findUnrunnableResult(
+    session: CheckSession,
+    planned: PlannedCheck,
+    base: CheckResult,
+): CheckResult | undefined {
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: 'The check was canceled.' };
     if (planned.check.needs?.includes('docker') !== true) return undefined;
-    return 'status' in findTool(session, session.root, getTool(session.configurations.values(), DOCKER_TOOL))
+    return 'status' in
+        readToolAvailability(session, session.root, getTool(session.configurations.values(), DOCKER_TOOL))
         ? { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE }
         : undefined;
 }
@@ -159,15 +166,15 @@ async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckR
     });
 }
 
-async function planAfterFixes(session: Session, options: RunOptions): Promise<PlanAfterFixes> {
+async function planAfterFixes(session: CheckSession, options: RunOptions): Promise<PlanAfterFixes> {
     const planned = planChecks(session, options);
-    if (!options.fix) return { planned, fixes: undefined };
+    if (!options.fix) return { session, planned, fixes: undefined };
     const fixes = await runFixers(session, planned, {
         isDryRun: options.isDryRun,
     });
-    if (options.isDryRun) return { planned, fixes };
-    await refreshAfterFixes(session);
-    return { planned: planChecks(session, options), fixes };
+    if (options.isDryRun) return { session, planned, fixes };
+    const fixed = await readSessionAfterFixes(session);
+    return { session: fixed, planned: planChecks(fixed, options), fixes };
 }
 
 function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
@@ -227,11 +234,11 @@ Plan and run the checks, after the fixers when --fix asks, then drop ignored fin
 */
 export async function runChecks(session: Session, options: RunOptions): Promise<RunResult> {
     const started = new Date();
-    const { planned, fixes } = await planAfterFixes(session, options);
+    const { session: checked, planned, fixes } = await planAfterFixes(buildCheckSession(session), options);
     const active = planned.filter((check) => isActive(check) && check.skip === undefined);
-    const ran = await runActiveChecks({ session, options }, active);
+    const ran = await runActiveChecks({ session: checked, options }, active);
     const report = buildRunReport({
-        session,
+        session: checked,
         options,
         started,
         planned,
@@ -240,6 +247,24 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
         fixes,
     });
     return fixes ? { report, planned, fixes } : { report, planned };
+}
+
+/**
+Give a session the reader of the program folders of its mise tools, which asks mise once, when a check first needs a
+tool.
+
+@param session the repository and its tools.
+@returns the session that the checks of one run share.
+*/
+export function buildCheckSession(session: Session): CheckSession {
+    let miseBinPaths: string[] | undefined;
+    return {
+        ...session,
+        readMiseBinPaths: () => {
+            miseBinPaths ??= readToolBinPaths(session);
+            return miseBinPaths;
+        },
+    };
 }
 
 /**
@@ -252,7 +277,7 @@ Run a built-in check or the command of its implementation.
 @returns the check result.
 */
 export async function runCheckCode(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     code: CheckCode | undefined,
     options: CheckRunOptions = {},
@@ -267,7 +292,7 @@ export async function runCheckCode(
 
 async function runBuiltInCheck(
     builtInCheck: BuiltInCheck,
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
 ): Promise<CheckResult> {
     const started = performance.now();

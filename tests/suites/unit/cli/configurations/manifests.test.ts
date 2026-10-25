@@ -1,5 +1,4 @@
 import { test, expect } from 'bun:test';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
@@ -9,8 +8,6 @@ import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
 
 import {
     SEMGREP_ASSETS,
-    VALID_SCAN_CHECK,
-    SINGLE_CONFIG_FILES,
     CONFIGURATION_TABLE,
     EXAMPLE_MANIFEST_PATH,
     MINIMUM_VERSION_CASES,
@@ -73,19 +70,6 @@ test.each([
     expect(configurations.get('consumer')!.tools).toStrictEqual(configurations.get('owner')!.tools);
 });
 
-test('a config file that names no tool and no check goes to the only tool of its configuration', async () => {
-    const configurations = await readTestManifests(
-        { [EXAMPLE_MANIFEST_PATH]: CONFIGURATION_TABLE + SINGLE_CONFIG_FILES + VALID_SCAN_CHECK },
-        SEMGREP_ASSETS,
-    );
-    const configuration = configurations.get('example')!;
-
-    expect(configuration.configFiles.map(({ target, tool, check }) => [target, tool, check])).toStrictEqual([
-        [`${GSPOT_PATHS.configurations}/language/example/semgrep/first.yml`, ['semgrep'], []],
-        [`${GSPOT_PATHS.configurations}/language/example/semgrep/second.yml`, [], ['example/scan']],
-    ]);
-});
-
 test('only declared config files are loaded and each record sets its tool and scope', async () => {
     const configurations = await readTestManifests(
         {
@@ -113,25 +97,6 @@ test.each([...MANIFEST_INVARIANT_CASES])(
         expect(error.message).toBe(`The configuration manifest for \`example\` is not valid:\n${message}`);
     },
 );
-
-test.each(['example-names.json', 'eslint-presets.json'])('the loader refuses a stale %s snapshot', async (name) => {
-    const path = `configurations/language/example/${name}`;
-    const snapshot = { package: 'probe', version: '2.0.0', names: [] };
-    const preset = {
-        package: 'probe',
-        version: '2.0.0',
-        source: 'configs.recommended',
-        blocks: [{ parser: false, rules: {} }],
-    };
-    const files = {
-        [EXAMPLE_MANIFEST_PATH]: CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nnpm = "probe"\nversion = "1.0.0"\n',
-        [path]: JSON.stringify(name.endsWith('-names.json') ? snapshot : { recommended: preset }),
-    };
-    const versionError = await captureRejection(readTestManifests(files, [path]));
-    expect(versionError.message).toBe(
-        'The configuration manifest for `example` is not valid:\nprobe snapshot version 2.0.0 does not match its npm pin.',
-    );
-});
 
 test('a mise installer with options inherits its tool record version', () => {
     expect(

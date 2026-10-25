@@ -12,6 +12,7 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { runGit, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
@@ -90,6 +91,29 @@ test.each([true, false])(
         expect(await readFile(path, 'utf8')).toBe(installed);
     },
 );
+
+test('every shipped configuration together generates each path once, ignoring case', async () => {
+    const names = readConfigurations()
+        .values()
+        .filter((configuration) => !configuration.always_selected)
+        .map(({ name }) => name)
+        .toArray();
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(names, {
+            level: 'all',
+            rules: true,
+            tables: '[hooks]\nenabled = true\n\n[ci]\nenabled = true\n',
+            scopes: [{ path: 'app', configurations: names }],
+        }),
+        'app/package.json': '{"private":true}',
+    });
+    const generated = generate(await openSession(sandbox.path));
+    const paths = [...generated.files, ...generated.blocks, ...generated.managedKeys].map(({ path }) =>
+        path.normalize('NFC').toLowerCase(),
+    );
+    expect(paths).toContain('app/.stylelintrc.yml');
+    expect(paths.filter((path, index) => paths.indexOf(path) !== index)).toStrictEqual([]);
+});
 
 test('generated scope settings stay identical across process collations', async () => {
     await using sandbox = await testdir({

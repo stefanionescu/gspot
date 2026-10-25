@@ -1,11 +1,9 @@
 import { join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
-import { getUvPath } from '#cli/tools/locate.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { getTool } from '#cli/configurations/tools.ts';
 import { runInstallStep } from '#cli/install/steps.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
@@ -17,14 +15,16 @@ import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import type { ToolPyproject } from '#cli/types/install/tool-projects.ts';
 import { uvLockSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
+import { buildPythonProjectTable } from '#cli/generation/tool-projects.ts';
 import type { UvLockfile } from '#cli/types/parsers/projects/lockfiles.ts';
+import { getTool, listToolProjectPins } from '#cli/configurations/tools.ts';
+import type { PythonToolProject } from '#cli/types/install/tool-projects.ts';
 import { type UvCommand, type PythonIndexSettings } from '#cli/types/install/python.ts';
+import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/install/python.ts';
 import { PROJECT_UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { UV_TOOL, UV_PROJECT_FLAGS, UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/python.ts';
 import { PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
-import { uvSettingsSchema, toolPyprojectSchema, uvProjectSettingsSchema } from '#cli/schemas/install/python.ts';
 import { redactInstallOutput, extractUrlPasswords, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
 
 import {
@@ -102,15 +102,17 @@ Resolve the Python tool lockfile outside the repository before writing it.
 
 @param install what install needs for this step.
 @param toolProjectFile the generated pyproject.toml.
+@param executable the path of uv.
 
 @returns credential-free lockfile bytes.
 */
 export async function preparePythonLockfile(
     install: ToolInstall,
     toolProjectFile: GeneratedFile,
+    executable: string,
 ): Promise<GeneratedFile> {
     const { root } = install.session;
-    const project = toolPyprojectSchema.parse(parse(toolProjectFile.content));
+    const project = buildPythonProjectTable(install.session.toolConfigurations);
     const previous = install.writer.read(GSPOT_PATHS.uvLockfile);
     const saved = previous?.bytes.toString('utf8');
     const { settings: indexes, credentials: savedCredentials } = readPythonSettings(root);
@@ -126,7 +128,7 @@ export async function preparePythonLockfile(
     await runUv(install, {
         runFolder,
         commandArguments: UV_LOCKFILE_ARGUMENTS,
-        executable: getUvPath(install.session),
+        executable,
         credentials,
     });
     const lockfile = readFileSync(join(runFolder, PROJECT_UV_LOCKFILE), 'utf8');
@@ -148,9 +150,7 @@ Install the frozen Python tool project in .gspot.
 @returns the install summary.
 */
 export async function installPythonTools(install: ToolInstall, executable: string): Promise<string> {
-    const { root } = install.session;
-    const toolProjectFile = install.writer.read(GSPOT_PATHS.pythonProject);
-    if (toolProjectFile === undefined) return '';
+    const { root, toolConfigurations } = install.session;
     const runFolder = join(root, DOT_GSPOT);
 
     using settings = createTemporaryFolder();
@@ -164,35 +164,34 @@ export async function installPythonTools(install: ToolInstall, executable: strin
             configFile: join(settings.path, UV_SETTINGS_FILE),
         });
     }
-    const project = toolPyprojectSchema.parse(parse(toolProjectFile.bytes.toString('utf8')));
-    return `installed ${formatCount(project.project.dependencies.length, 'Python tool')} in ${GSPOT_PATHS.pythonEnvironment}`;
+    const count = listToolProjectPins(toolConfigurations).python.length;
+    return `installed ${formatCount(count, 'Python tool')} in ${GSPOT_PATHS.pythonEnvironment}`;
 }
 
 /**
 Compare a Python tool project with the pins recorded in its uv lockfile.
 
-@param project the parsed tool project file.
+@param project the project table of the tool project.
 @param lockfile the recorded uv.lock contents.
 @param indexes the configured Python index settings.
 @returns whether the two files describe the same requirements.
 */
 export function isPythonLockfileFresh(
-    project: ToolPyproject,
+    project: PythonToolProject,
     lockfile: string | undefined,
     indexes: PythonIndexSettings['settings'],
 ): lockfile is string {
     if (lockfile === undefined) return false;
-    const projectTable = project.project;
     const saved = parsePythonToolLockfile(lockfile);
     if (saved === undefined) return false;
     if (!hasAllowedPythonOrigins(saved, indexes)) return false;
     const projectPackage = saved.package.find(
-        (lockedPackage) => lockedPackage.name === projectTable.name && lockedPackage.source?.virtual === '.',
+        (lockedPackage) => lockedPackage.name === project.name && lockedPackage.source?.virtual === '.',
     );
-    if (projectPackage === undefined || saved['requires-python'] !== projectTable['requires-python']) return false;
+    if (projectPackage === undefined || saved['requires-python'] !== project['requires-python']) return false;
     const pins = parseExactRequirements(projectPackage);
     if (pins === undefined) return false;
-    const expected = projectTable.dependencies
+    const expected = project.dependencies
         .map((value) =>
             value.replace(REQUIREMENT_PACKAGE_NAME, (name) =>
                 name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-'),

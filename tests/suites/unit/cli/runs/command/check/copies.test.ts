@@ -7,6 +7,7 @@ import { planChecks } from '#cli/planning/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/python.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
@@ -28,12 +29,16 @@ test('a Python check that runs in a copy uses the environment that the working t
     const planned = planChecks(session, buildRunOptions({ only: ['python/basedpyright'] })).find(
         ({ check }) => check.id === 'python/basedpyright',
     )!;
-    expect(buildCommandSetup(session, planned, {}).env[UV_PROJECT_ENVIRONMENT]).toBe(join(working.path, '.venv'));
+    expect(buildCommandSetup(session, planned, { options: {}, root: session.root }).env[UV_PROJECT_ENVIRONMENT]).toBe(
+        join(working.path, '.venv'),
+    );
     const inPlace = await openSession(working.path);
     const local = planChecks(inPlace, buildRunOptions({ only: ['python/basedpyright'] })).find(
         ({ check }) => check.id === 'python/basedpyright',
     )!;
-    expect(buildCommandSetup(inPlace, local, {}).env).not.toHaveProperty('UV_PROJECT_ENVIRONMENT');
+    expect(buildCommandSetup(inPlace, local, { options: {}, root: inPlace.root }).env).not.toHaveProperty(
+        'UV_PROJECT_ENVIRONMENT',
+    );
 });
 
 test('a command run in a copy finds the other tools beside its program before a PATH entry', async () => {
@@ -64,7 +69,7 @@ test('a command run in a copy finds the other tools beside its program before a 
     using _environment = overrideEnvironment({ PATH: join(sandbox.path, 'inactive') });
     using _which = fakeExecutableLookup(join(sandbox.path, `native/shellcheck${isWindows ? '.cmd' : ''}`));
 
-    const result = await runCheckCommand(session, planned, { copyRoot: join(sandbox.path, 'copy') });
+    const result = await runCheckCommand(buildCheckSession(session), planned, { copyRoot: join(sandbox.path, 'copy') });
     expect(result.status, result.note).toBe('passed');
     expect(result.findings).toStrictEqual([]);
 });

@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import type { Session } from '#cli/types/session.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import { isInInstalledFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
@@ -14,7 +14,7 @@ import { isInScope, joinScope, listNestedScopes, findProjectFolder } from '#cli/
 import { LINT_LINE, ANSIBLE_CONFIG_FILE, ANSIBLE_CONFIG_EXTENSION } from '#cli/config/checks/infrastructure/ansible.ts';
 
 async function lintProject(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     folder: string,
     folders: string[],
@@ -30,7 +30,7 @@ async function lintProject(
     if (files.length === 0) return [];
     const cwd = join(session.root, folder);
     const selected = { ...planned, files };
-    const substitutions = buildCommandSubstitutions(session, selected, cwd);
+    const substitutions = buildCommandSubstitutions(session.root, selected, cwd);
     const commandArguments = expandCommand(session, selected, planned.check.command as string[], substitutions).filter(
         (argument) => typeof argument === 'string',
     );
@@ -58,7 +58,7 @@ Runs ansible-lint on each playbook project.
 @param planned the scope files to lint.
 @returns the findings.
 */
-export async function checkAnsibleLint(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkAnsibleLint(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     const folders = listSourcePaths(planned.files, [ANSIBLE_CONFIG_FILE])
         .map((path) => findProjectFolder(path, ANSIBLE_CONFIG_FILE))
         .filter((folder) => folder !== undefined);

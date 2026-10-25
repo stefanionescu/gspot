@@ -2,18 +2,25 @@ import { z } from 'zod';
 import { ciSchema } from '#cli/schemas/settings/ci.ts';
 import { type SchemaShape } from '#cli/types/shapes.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
+import { isPortablePath } from '#cli/system/files/names.ts';
 import { hooksSchema } from '#cli/schemas/settings/hooks.ts';
 import { rulesSchema } from '#cli/schemas/settings/rules.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
+import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { SETTINGS_EXAMPLES, NAMED_FINDING_CHECKS } from '#cli/config/settings/file.ts';
 import { levelSchema, commandCheckFields } from '#cli/schemas/configurations/fields.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 import { type WrittenScope, type ParsedSettings, type WrittenSettings } from '#cli/types/settings/file.ts';
 
+import {
+    GSPOT_FOLDER_PATH,
+    SETTINGS_EXAMPLES,
+    SCOPE_PATH_MESSAGES,
+    NAMED_FINDING_CHECKS,
+} from '#cli/config/settings/file.ts';
 import {
     formatSchema,
     relativePath,
@@ -144,7 +151,13 @@ const scopeBody = {
 };
 
 export const scopeSchema = z.strictObject({
-    path: relativePath.describe(SETTING_DEFINITIONS['scope.path'].description),
+    path: relativePath
+        .refine((path) => isPortablePath(trimTrailingSlashes(path)), SCOPE_PATH_MESSAGES.portable)
+        .refine((path) => {
+            const folder = path.normalize('NFC');
+            return !GSPOT_FOLDER_PATH.test(folder) && !STATE_FOLDER_PATTERN.test(folder);
+        }, SCOPE_PATH_MESSAGES.gspot)
+        .describe(SETTING_DEFINITIONS['scope.path'].description),
     configurations: z
         .string()
         .array()

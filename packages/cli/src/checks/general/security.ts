@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
-import { type Session } from '#cli/types/session.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import { SEMGREP_TOOL } from '#cli/config/checks/general/security.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
@@ -27,7 +27,7 @@ Runs Semgrep with the rule files of the scope.
 @param planned the check for one scope.
 @returns the check result.
 */
-export async function checkSecuritySemgrep(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkSecuritySemgrep(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const command = planned.check.command as string[];
     const rules = listSemgrepRuleFiles(session, planned);
     if (rules.length === 0)

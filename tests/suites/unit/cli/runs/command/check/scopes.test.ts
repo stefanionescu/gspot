@@ -22,7 +22,7 @@ test('a command in a scope runs in the scope folder with paths relative to it', 
     const planned = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
     expect(planned.map((check) => check.scope.folder.path)).toStrictEqual(['', scope]);
     for (const check of planned) {
-        const setup = buildCommandSetup(session, check, {});
+        const setup = buildCommandSetup(session, check, { options: {}, root: session.root });
         expect(setup.cwd).toBe(join(sandbox.path, check.scope.folder.path));
         expect(setup.files).toStrictEqual(['./--config=x.swift']);
         expect(setup.substitutions.files).toStrictEqual(['./--config=x.swift']);

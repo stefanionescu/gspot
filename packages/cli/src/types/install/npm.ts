@@ -1,6 +1,9 @@
 import type { ToolInstall, ToolPackageManager } from '#cli/types/install/tools.ts';
 
-export type NpmToolInstall = ToolInstall & { packageManager: ToolPackageManager };
+export type NpmToolInstall = ToolInstall & {
+    packageManager: ToolPackageManager;
+    registryEnvironment: Record<string, string>;
+};
 
 export type PackageManagerRequest = {
     runFolder: string;

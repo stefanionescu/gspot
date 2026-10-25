@@ -15,6 +15,7 @@ version = "1.51.1"
 [[config_file]]
 per_scope = true
 target = "typos.toml"
+tool = "typos"
 
 [[check]]
 command = ["typos", "--isolated", "--config", "{config_file:typos}", "--force-exclude", "--format", "json", "--color", "never", "{files}"]

@@ -91,18 +91,22 @@ function removeBlock(path: string, onDisk: FileContents): FileContents | undefin
     return next === '' ? undefined : { bytes: Buffer.from(next), mode: onDisk.mode };
 }
 
-function isOwned(path: string, disk: Files): boolean {
+function readGeneratedPatterns(disk: Files): string[] {
+    const attributesFile = disk.read(GITATTRIBUTES_FILE);
+    if (attributesFile === undefined) return [];
+    const block =
+        findBlockBody(attributesFile.bytes.toString('utf8'), { path: GITATTRIBUTES_FILE, style: 'hash' }) ?? '';
+    return parseAttributePatterns(block, '.')
+        .filter(({ attributes }) => attributes.includes('linguist-generated'))
+        .map(({ pattern }) => pattern);
+}
+
+function isOwned(path: string, disk: Files, generatedPatterns: string[]): boolean {
     if (!isInside(path)) return false;
     if (path.startsWith(`${DOT_GSPOT}/`)) return true;
     const file = disk.readKeepingLinks(path);
     if (file !== undefined && file.isLink !== true && hasGeneratedHeader(file.bytes.toString('utf8'))) return true;
-    const attributesFile = disk.read(GITATTRIBUTES_FILE);
-    if (attributesFile === undefined) return false;
-    const block =
-        findBlockBody(attributesFile.bytes.toString('utf8'), { path: GITATTRIBUTES_FILE, style: 'hash' }) ?? '';
-    return parseAttributePatterns(block, '.').some(
-        ({ pattern, attributes }) => attributes.includes('linguist-generated') && buildPathMatcher([pattern])(path),
-    );
+    return generatedPatterns.some((pattern) => buildPathMatcher([pattern])(path));
 }
 
 /**
@@ -126,6 +130,7 @@ export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, ex
             return false;
         });
     }
+    const generatedPatterns = readGeneratedPatterns(disk);
     const writtenPaths = new Set([
         ...ownPaths,
         ...session.repository.files.filter(({ kind }) => kind === 'generated').map(({ path }) => path),
@@ -134,7 +139,7 @@ export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, ex
     return [...writtenPaths].filter((path) => {
         if (installations.some((folder) => path === folder || path.startsWith(`${folder}/`))) return false;
         if (expected.has(path)) return false;
-        if (isOwned(path, disk)) return true;
+        if (isOwned(path, disk, generatedPatterns)) return true;
         if (!blockPaths.has(path)) return false;
         const text = disk.read(path)?.bytes.toString('utf8');
         return text !== undefined && findBlockSpan(text, { path, style: getBlockStyle(path) }) !== undefined;
@@ -142,23 +147,30 @@ export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, ex
 }
 
 /**
-Plan a replacement: refuse authored bytes that nobody reviewed.
+Plan replacements: refuse authored bytes that nobody reviewed.
 
 @param writer the locked repository handle.
-@param request the new bytes and any reviewed file contents.
-@returns the write plan, with an unchanged, changed, or preserved status.
+@param requests the new bytes and any reviewed file contents of each file.
+@returns one write plan for each request, with an unchanged, changed, or preserved status.
 */
-export function planReplacement(writer: Files, request: ReplacementRequest): WritePlan {
-    const { path, next, expected } = request;
-    const onDisk = next.isLink === true ? writer.readKeepingLinks(path) : writer.read(path);
-    if (onDisk !== undefined && !isSameContents(onDisk, next) && !isOwned(path, writer) && expected === undefined)
-        return { path, before: onDisk, status: 'preserved' };
-    return {
-        path,
-        before: expected ?? onDisk,
-        after: next,
-        status: isSameContents(onDisk, next) ? 'unchanged' : 'changed',
-    };
+export function planReplacements(writer: Files, requests: ReplacementRequest[]): WritePlan[] {
+    const generatedPatterns = readGeneratedPatterns(writer);
+    return requests.map(({ path, next, expected }): WritePlan => {
+        const onDisk = next.isLink === true ? writer.readKeepingLinks(path) : writer.read(path);
+        if (
+            onDisk !== undefined &&
+            !isSameContents(onDisk, next) &&
+            !isOwned(path, writer, generatedPatterns) &&
+            expected === undefined
+        )
+            return { path, before: onDisk, status: 'preserved' };
+        return {
+            path,
+            before: expected ?? onDisk,
+            after: next,
+            status: isSameContents(onDisk, next) ? 'unchanged' : 'changed',
+        };
+    });
 }
 
 /**
@@ -182,23 +194,26 @@ export function planBlock(writer: Files, path: string, body: string, style: Bloc
 }
 
 /**
-Plan the removal of an owned file, or of its managed block.
+Plan the removal of owned files, or of their managed blocks.
 
 @param writer the locked repository handle.
-@param path the stale generated file.
-@returns the old bytes, and any authored text left after the managed block goes.
+@param paths the stale generated files.
+@returns for each file, the old bytes, and any authored text left after the managed block goes.
 */
-export function planRemoval(writer: Files, path: string): WritePlan {
-    const onDisk = writer.readKeepingLinks(path);
-    if (onDisk === undefined) return { path, before: onDisk, status: 'unchanged' };
-    if (isOwned(path, writer)) return { path, before: onDisk, status: 'changed' };
-    const next = removeBlock(path, onDisk);
-    return {
-        path,
-        before: onDisk,
-        ...(next === undefined ? {} : { after: next }),
-        status: isSameContents(onDisk, next) ? 'unchanged' : 'changed',
-    };
+export function planRemovals(writer: Files, paths: string[]): WritePlan[] {
+    const generatedPatterns = readGeneratedPatterns(writer);
+    return paths.map((path): WritePlan => {
+        const onDisk = writer.readKeepingLinks(path);
+        if (onDisk === undefined) return { path, before: onDisk, status: 'unchanged' };
+        if (isOwned(path, writer, generatedPatterns)) return { path, before: onDisk, status: 'changed' };
+        const next = removeBlock(path, onDisk);
+        return {
+            path,
+            before: onDisk,
+            ...(next === undefined ? {} : { after: next }),
+            status: isSameContents(onDisk, next) ? 'unchanged' : 'changed',
+        };
+    });
 }
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.

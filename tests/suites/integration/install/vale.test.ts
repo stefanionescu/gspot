@@ -96,7 +96,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         );
         using writer = openWriter(sandbox.path);
         const request = buildToolInstall(session, writer);
-        const failure = await captureRejection(installValePackages(request));
+        const failure = await captureRejection(installValePackages(request, []));
         expect(failure.message).toEndWith(message);
         expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
             'previous bytes\n',
@@ -107,7 +107,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         await writeProgramCommand(sandbox.path, 'node_modules/.bin/vale', 'fakes/vale', '../../../vale', version);
         await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['prose'], { level: 'all' }));
         const fixed = buildToolInstall(await openSession(sandbox.path), writer);
-        expect(await installValePackages(fixed)).toBe(`installed Vale packages in ${GSPOT_PATHS.valePackages}`);
+        expect(await installValePackages(fixed, [])).toBe(`installed Vale packages in ${GSPOT_PATHS.valePackages}`);
         expect(fixed.steps).toStrictEqual([
             [executable, '--config', expect.stringContaining('vale-') as string, 'sync'],
         ]);

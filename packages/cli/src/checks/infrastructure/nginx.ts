@@ -1,7 +1,6 @@
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/session.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
@@ -9,6 +8,7 @@ import { DOCKER_TOOL } from '#cli/config/tools/inspect.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import { parseNginxDirectives } from '#cli/parsers/formats/nginx.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
@@ -89,7 +89,7 @@ function buildSyntaxResult(
 }
 
 async function testNginxFile(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     path: string,
     work: string,
@@ -171,7 +171,7 @@ Tests every tracked nginx.conf with the server's own parser.
 @param planned the scope files and nginx image.
 @returns one finding for each file nginx refuses.
 */
-export async function checkNginxSyntax(session: Session, planned: PlannedCheck): Promise<BuiltInCheckResult> {
+export async function checkNginxSyntax(session: CheckSession, planned: PlannedCheck): Promise<BuiltInCheckResult> {
     const image = getTable(planned.scope.settings, 'tools.nginx')['image'];
     const paths = listSourcePaths(planned.files, [NGINX_CONF]);
     if (paths.length === 0) return { findings: [], files: [] };

@@ -5,6 +5,7 @@ import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/session.ts';
 import { PROSE_GRAMMARS } from '#cli/config/prose.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import type { Level } from '#cli/types/configurations.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 
 import {
@@ -78,19 +79,42 @@ Build vale.ini: the Vale style locations and rule levels for the prose checks.
 @returns the Vale style locations and rule levels for the prose checks.
 */
 export function buildValeIniFile(planned: PlannedConfigFile): string {
-    const isAll = planned.level === 'all';
-    const folders = isAll ? [VALE_STYLES_PATH, GSPOT_PATHS.valePackages] : [VALE_STYLES_PATH];
-    const styles = folders.map((path) => relative(dirname(planned.targetPath), path));
-    const packages = VALE_PACKAGES.map(
-        (name) =>
-            `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${VALE_PACKAGE_RELEASES[name].version}/${name}.zip`,
-    );
+    const folders = planned.level === 'all' ? [VALE_STYLES_PATH, GSPOT_PATHS.valePackages] : [VALE_STYLES_PATH];
+    return buildValeIni({
+        level: planned.level,
+        stylesPaths: folders.map((path) => relative(dirname(planned.targetPath), path)),
+        packages: VALE_PACKAGES.map(
+            (name) =>
+                `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${VALE_PACKAGE_RELEASES[name].version}/${name}.zip`,
+        ),
+    });
+}
+
+/**
+Build the text of a vale.ini from its style folders and package sources.
+
+@param ini the level, the style folders in the order Vale reads them, and the package sources.
+@param ini.level recommended or all; level all adds the packages and their rules.
+@param ini.stylesPaths the style folders; Vale installs packages in the last one.
+@param ini.packages the package archives: each a URL or a local path.
+@returns the vale.ini text.
+*/
+export function buildValeIni({
+    level,
+    stylesPaths,
+    packages,
+}: {
+    level: Level;
+    stylesPaths: string[];
+    packages: string[];
+}): string {
+    const isAll = level === 'all';
     const formats = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
         'format' in grammar ? [[extension.slice(1), grammar.format] as const] : [],
     );
     const lines = [
         ...(isAll ? ['# Vale reads both StylesPath lines in order and installs packages in the last folder.'] : []),
-        ...styles.map((path) => `StylesPath = ${path}`),
+        ...stylesPaths.map((path) => `StylesPath = ${path}`),
         'MinAlertLevel = suggestion',
         `SkippedScopes = ${VALE_SKIPPED_SCOPES}`,
         ...(isAll ? [`Packages = ${packages.join(', ')}`, 'Vocab = words'] : []),

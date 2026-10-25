@@ -5,7 +5,6 @@ import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/session.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
-import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
@@ -13,6 +12,7 @@ import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 
 test.skipIf(isWindows)('a command check whose program lost its execute bit errors with exit code 2', async () => {
     await using sandbox = await createGitSandbox({});
@@ -62,7 +62,7 @@ test('per-file failures name the selected file', async () => {
     const session = await openSession(sandbox.path);
     const plans = planChecks(session, { stage: 'all', only: ['project/file-result'] });
     const planned = plans[0]!;
-    const failed = await runCheckCommand(session, planned);
+    const failed = await runCheckCommand(buildCheckSession(session), planned);
     expect(failed.status).toBe('failed');
     expect(failed.findings.map((finding) => finding.file)).toStrictEqual(['inputs/café source.txt']);
 });
@@ -88,7 +88,7 @@ test.skipIf(isWindows)('a per-file process killed by a signal is an error, not a
     const session = await openSession(sandbox.path);
     const plans = planChecks(session, { stage: 'all', only: ['project/termination'] });
     const planned = plans[0]!;
-    const failed = await runCheckCommand(session, planned);
+    const failed = await runCheckCommand(buildCheckSession(session), planned);
     expect(failed.status).toBe('error');
     expect(failed.findings).toStrictEqual([]);
 });
@@ -101,7 +101,10 @@ test('a command check whose config file is missing errors before it runs and nam
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'commit', only: ['format/prettier'] })[0]!;
     const command = ['prettier', '--config', '{config_file:prettier}', '{files}'];
-    const result = await runCheckCommand(session, { ...planned, check: { ...planned.check, command } });
+    const result = await runCheckCommand(buildCheckSession(session), {
+        ...planned,
+        check: { ...planned.check, command },
+    });
     expect(result).toMatchObject({
         status: 'error',
         note: 'The config file .gspot/configurations/general/format/prettier.json is missing. Run gspot apply.',

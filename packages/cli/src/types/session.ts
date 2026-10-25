@@ -5,6 +5,7 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import type { ToolInspection } from '#cli/types/tools/inspection.ts';
+import type { RepositoryListing } from '#cli/types/repository/read.ts';
 import { type StartRunner, type PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
 
 export type Session = {
@@ -12,9 +13,7 @@ export type Session = {
     toolConfigurations: Configuration[];
     timeoutSeconds: number;
     root: string;
-    uvPath?: string;
     inspections: Map<string, ToolInspection>;
-    miseBinPaths?: string[];
     startRunner: StartRunner;
     installedRoot: string;
     reads: ReadCache;
@@ -25,4 +24,15 @@ export type Session = {
     configurations: Map<string, Configuration>;
     repository: Repository;
     scopes: Scope[];
+};
+
+export type CheckSession = Session & { readMiseBinPaths: () => string[] };
+
+export type SessionOptions = {
+    installedRoot?: string;
+    reads?: ReadCache;
+    listing?: RepositoryListing;
+    settingsFile?: SettingsFile;
+    resources?: DisposableStack;
+    cancelSignal?: AbortSignal | undefined;
 };

@@ -2,7 +2,6 @@ import { gzipSync } from 'node:zlib';
 import { pathToFileURL } from 'node:url';
 import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import type { Session } from '#cli/types/session.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
@@ -10,6 +9,7 @@ import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
@@ -22,7 +22,7 @@ import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import type { SitemapUrls } from '#cli/types/checks/framework/site.ts';
 import { purgecssReportSchema } from '#cli/schemas/checks/framework/site.ts';
 import { PURGECSS_TOOL } from '#cli/config/checks/framework/site/purgecss-process.ts';
-import { listBuiltFiles, getSuccessfulBuild } from '#cli/checks/framework/site/build.ts';
+import { listBuiltFiles, readSuccessfulBuild } from '#cli/checks/framework/site/build.ts';
 
 import {
     INDEX_PAGE,
@@ -114,8 +114,8 @@ Reports broken links between built pages, stylesheets, and fragments.
 @param planned the scope whose site to check.
 @returns one finding for each broken link.
 */
-export async function checkSiteLychee(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const build = await getSuccessfulBuild(session, planned);
+export async function checkSiteLychee(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
+    const build = await readSuccessfulBuild(session, planned);
     const pages = new Set(listBuiltFiles(build.folder));
     const location = readSitemapUrls(build.folder, pages, planned).urls[0];
     const paths = [...pages].filter((path) => path.endsWith(HTML_EXTENSION));
@@ -150,8 +150,8 @@ Runs html-validate on every built page with the config file for built output.
 @param planned the scope whose site to check.
 @returns the findings.
 */
-export async function checkSiteHtmlValidate(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const build = await getSuccessfulBuild(session, planned);
+export async function checkSiteHtmlValidate(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
+    const build = await readSuccessfulBuild(session, planned);
     const pages = listBuiltFiles(build.folder)
         .filter((path) => path.endsWith(HTML_EXTENSION))
         .map((path) => join(build.folder, path));
@@ -192,8 +192,8 @@ Reports selectors in built stylesheets that no built page or script uses.
 @param planned the scope whose site to check.
 @returns one finding for each unused selector.
 */
-export async function checkSitePurgecss(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const build = await getSuccessfulBuild(session, planned);
+export async function checkSitePurgecss(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
+    const build = await readSuccessfulBuild(session, planned);
     const sheets = listBuiltFiles(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
     if (sheets.length === 0) return [];
     const configFile = join(session.root, getConfigFilePath(session, planned, PURGECSS_TOOL));
@@ -230,12 +230,12 @@ Compares the compressed size of built files with each size limit.
 @param planned the scope with the size limits.
 @returns one finding per exceeded limit.
 */
-export async function checkSiteSize(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSiteSize(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     const limits = getTable(planned.scope.settings, 'site').size_limit.map((limit) => ({
         ...limit,
         isCounted: buildPathMatcher(limit.paths),
     }));
-    const build = await getSuccessfulBuild(session, planned);
+    const build = await readSuccessfulBuild(session, planned);
     const sizes = new Map(
         listBuiltFiles(build.folder)
             .map((source) => ({ source, path: joinBuildFolder(planned, source) }))
@@ -265,8 +265,8 @@ Reports sitemap URLs with no built page, and built pages the sitemap leaves out 
 @param planned the scope whose site to check.
 @returns the findings.
 */
-export async function checkSiteSitemap(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const build = await getSuccessfulBuild(session, planned);
+export async function checkSiteSitemap(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
+    const build = await readSuccessfulBuild(session, planned);
     const files = new Set(listBuiltFiles(build.folder));
     const sitemapFile = [...files].find((file) => SITEMAP_FILE.test(file));
     if (sitemapFile === undefined) return [];

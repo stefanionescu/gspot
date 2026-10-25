@@ -4,17 +4,17 @@ import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { quoteArgument } from '#cli/system/text.ts';
 import * as processes from '#cli/system/processes.ts';
-import { runChecks } from '#cli/commands/check/run.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 import { findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSiteSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { listBuiltFiles, getSuccessfulBuild } from '#cli/checks/framework/site/build.ts';
+import { listBuiltFiles, readSuccessfulBuild } from '#cli/checks/framework/site/build.ts';
 import { BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/config/checks/framework/site/build.ts';
 
 test('build: a push run builds the site without changing committed dist files or Git status', async () => {
@@ -47,8 +47,8 @@ test('build: a build that reads an untracked file fails until the file is in the
     expect(summary).toBe(`${command.map((argument) => quoteArgument(argument)).join(' ')} did not build the site.`);
     expect(output).toContain("ENOENT: no such file or directory, lstat 'local-input.txt'");
     const checkedSession = await openSession(sandbox.path, { resources });
-    const corrected = await getSuccessfulBuild(
-        checkedSession,
+    const corrected = await readSuccessfulBuild(
+        buildCheckSession(checkedSession),
         planSandboxCheck(checkedSession, 'site/build', { paths: ['local-input.txt'] }),
     );
     expect(corrected.isBuilt).toBe(true);
@@ -111,7 +111,7 @@ test("build: a scope's site build copies only the workspace packages it depends 
     using resources = new DisposableStack();
     const session = await openSession(sandbox.path, { resources });
     const input = planSandboxCheck(session, 'site/build', { scope: 'web' });
-    const built = await getSuccessfulBuild(session, input);
+    const built = await readSuccessfulBuild(buildCheckSession(session), input);
     expect(built.isBuilt, built.failure).toBe(true);
     expect(await readFile(join(built.folder, 'index.html'), 'utf8')).toBe('<h1>Workspace site</h1>');
     expect(await isOnDisk(join(built.cwd, '../packages/unused/private.txt'))).toBe(false);

@@ -5,6 +5,7 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
+import type { PythonToolProject } from '#cli/types/install/tool-projects.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 
@@ -82,15 +83,26 @@ Build the Python tool project that holds the Python lint tools.
 @returns the Python tool project files, or none without Python tools.
 */
 export function buildPythonProject(configurations: Configuration[], days: number): GeneratedFile[] {
-    const { python: dependencies } = listToolProjectPins(configurations);
-    if (dependencies.length === 0) return [];
+    const project = buildPythonProjectTable(configurations);
+    if (project.dependencies.length === 0) return [];
     return [
         {
             path: GSPOT_PATHS.pythonProject,
             content:
-                stringify({ project: { ...PYTHON_TOOL_PROJECT, dependencies } }, CONFIG_FILE_TOML_FORMAT) +
+                stringify({ project }, CONFIG_FILE_TOML_FORMAT) +
                 `\n${UV_PROJECT_TABLE}\n` +
                 stringify({ package: false, 'exclude-newer': `${String(days)} days` }, CONFIG_FILE_TOML_FORMAT),
         },
     ];
+}
+
+/**
+Build the project table of the Python tool project: its name, its Python version, and the tool pins.
+
+@param configurations the configurations in use.
+@returns the project table that pyproject.toml holds.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 3 files share it.
+export function buildPythonProjectTable(configurations: Configuration[]): PythonToolProject {
+    return { ...PYTHON_TOOL_PROJECT, dependencies: listToolProjectPins(configurations).python };
 }

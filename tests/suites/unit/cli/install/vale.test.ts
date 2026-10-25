@@ -48,7 +48,7 @@ test('at level recommended install installs no Vale packages', async () => {
     const session = await openSession(sandbox.path);
     using writer = openWriter(sandbox.path);
     const context = buildToolInstall(session, writer);
-    expect(await installValePackages(context)).toBe('');
+    expect(await installValePackages(context, [])).toBe('');
     expect(context.steps).toStrictEqual([]);
     expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.valePackages))).toBe(false);
 });
@@ -65,7 +65,7 @@ test('a changed Vale archive is refused before sync and preserves installed pack
     using _request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('replaced archive'));
     using writer = openWriter(sandbox.path);
     const install = buildToolInstall(session, writer);
-    const error = await captureRejection(installValePackages(install));
+    const error = await captureRejection(installValePackages(install, []));
     expect(error.message).toBe(
         'The Vale package Google failed SHA-256 verification. gspot kept the installed packages.',
     );

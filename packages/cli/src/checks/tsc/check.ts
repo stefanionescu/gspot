@@ -1,5 +1,4 @@
 import { join, dirname, relative } from 'node:path';
-import type { Session } from '#cli/types/session.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -7,6 +6,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/checks/tsc/compiler.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
@@ -19,7 +19,7 @@ Runs tsc on a project, or on every project that a solution tsconfig names.
 @param planned the compiler check for one scope.
 @returns the check result.
 */
-export async function checkTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const project = readTsconfigProject(
         session.root,
         planned.scope.folder.path,

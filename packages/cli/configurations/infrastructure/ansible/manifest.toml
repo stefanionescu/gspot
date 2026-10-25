@@ -15,6 +15,7 @@ version = "26.10.1"
 [[config_file]]
 per_scope = true
 target = "ansible-lint.yml"
+tool = "ansible-lint"
 
 [[check]]
 command = ["ansible-lint", "-c", "{config_file:ansible-lint}", "--offline", "--nocolor", "-f", "pep8", "--profile", "{level:moderate:production}"]

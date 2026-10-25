@@ -3,7 +3,6 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { type Session } from '#cli/types/session.ts';
-import { runChecks } from '#cli/commands/check/run.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
@@ -18,6 +17,7 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { mkdir, unlink, readFile, appendFile } from 'node:fs/promises';
 import { TWO_SCOPES_SETTINGS } from '#tests/config/planning/samples.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
 import {
@@ -112,10 +112,10 @@ test('a fixer of a deleted trigger path restores it, and a dry run leaves it del
     const api = planChecks(session, { ...TSC_PUSH_OPTIONS, changed: paths }).find(
         (check) => check.scope.folder.path === 'api',
     )!;
-    const preview = await runFixers(session, [api], { isDryRun: true });
+    const preview = await runFixers(buildCheckSession(session), [api], { isDryRun: true });
     expect(preview.changed).toStrictEqual(['api/source.ts']);
     expect(await isOnDisk(join(sandbox.path, 'api/source.ts'))).toBe(false);
-    const applied = await runFixers(session, [api], { isDryRun: false });
+    const applied = await runFixers(buildCheckSession(session), [api], { isDryRun: false });
     expect(applied.changed).toStrictEqual(['api/source.ts']);
     expect(await readFile(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
 });

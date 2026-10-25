@@ -1,6 +1,5 @@
 import { join, posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import { type Session } from '#cli/types/session.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
@@ -14,6 +13,7 @@ import { REQUIREMENTS_FILE } from '#cli/config/files/names.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import { COMMENT_MARKERS } from '#cli/config/checks/code-lines.ts';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import { buildFinding, getNodePlace } from '#cli/checks/finding.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
@@ -58,7 +58,7 @@ Runs deptry on the scope. Passes the project's extend_exclude list again with .g
 @param planned the dependency check and its scope.
 @returns the check result.
 */
-export async function checkPythonDeptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkPythonDeptry(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const pyproject = joinScope(planned.scope.folder.path, PYPROJECT_TOML);
     const text = findCachedText(session.reads, pyproject);
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
@@ -254,7 +254,7 @@ Runs pydoclint with the declared docstring style, or with the style each file us
 @param planned the docstring check for one scope.
 @returns the check result, with earlier findings kept when a later batch fails.
 */
-export async function checkPythonPydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkPythonPydoclint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const pyproject = joinScope(planned.scope.folder.path, PYPROJECT_TOML);
     const configured = parsePydoclintOptions(
         pyproject,
@@ -295,7 +295,7 @@ files of this run.
 @param planned the scope, its files, and the repository files.
 @returns each unused definition and each line of unreachable code.
 */
-export async function checkPythonVulture(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkPythonVulture(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     const scope = planned.scope.folder.path;
     const children = listNestedScopes(
         session.scopes.map(({ folder }) => folder.path),

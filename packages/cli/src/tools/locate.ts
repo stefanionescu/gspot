@@ -3,7 +3,6 @@ import { statSync } from 'node:fs';
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { type Session } from '#cli/types/session.ts';
-import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { listMisePins } from '#cli/configurations/tools.ts';
@@ -132,38 +131,14 @@ export function listExecutablePaths(
 }
 
 /**
-Read and cache the installed mise folders when a tool search needs them.
+Ask mise for the program folders of the mise tools that the selected configurations pin.
 
-@param session the run whose tools select the mise query.
-@returns the folders that mise installed.
+@param session the configurations of the run, the working tree with the installed tools, and the time limit.
+@returns the executable folders that mise installed.
 */
-export function getMiseBinPaths(session: Session): string[] {
-    if (session.miseBinPaths !== undefined) return session.miseBinPaths;
+export function readToolBinPaths(session: Pick<Session, 'scopes' | 'installedRoot' | 'timeoutSeconds'>): string[] {
     const pins = listMisePins(listSelectedConfigurations(session.scopes));
-    session.miseBinPaths = readMiseBinPaths(
-        session.installedRoot,
-        [...new Set(pins.map((pin) => pin.name))],
-        session.timeoutSeconds,
-    );
-    return session.miseBinPaths;
-}
-
-/**
-Locate uv when a Python installation needs it, and reuse it for the run.
-
-@param session the working tree and its tool search cache.
-@returns the uv program to run.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
-export function getUvPath(session: Session): string {
-    session.uvPath ??=
-        listExecutablePaths(session.installedRoot, UV_TOOL, {
-            search: 'path',
-            searchFolders: [],
-            miseBinPaths: getMiseBinPaths(session),
-            timeoutSeconds: session.timeoutSeconds,
-        })[0] ?? UV_TOOL;
-    return session.uvPath;
+    return readMiseBinPaths(session.installedRoot, [...new Set(pins.map((pin) => pin.name))], session.timeoutSeconds);
 }
 
 /**

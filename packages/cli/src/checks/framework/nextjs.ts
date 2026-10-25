@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import { type Session } from '#cli/types/session.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { getTool } from '#cli/configurations/tools.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
@@ -37,7 +37,7 @@ Generates Next.js route types and runs the TypeScript check in the same copy.
 @param planned the Next.js compiler check.
 @returns the compiler findings and status.
 */
-export async function checkNextjsTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkNextjsTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     using scratchFolder = await createCheckCopy(session, planned);
     const root = scratchFolder.path;

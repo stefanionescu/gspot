@@ -8,6 +8,7 @@ import { planChecks } from '#cli/planning/checks.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { FAILED_RUN } from '#tests/config/runs/samples.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
+import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { TAIL_LINES } from '#cli/config/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -136,13 +137,13 @@ test.each(['{file}', '{files}'])(
         const plans = planChecks(session, { stage: 'all', only: ['project/exit-contract'] });
         const planned = plans[0]!;
         planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
-        const finding = await runCheckCommand(session, planned);
+        const finding = await runCheckCommand(buildCheckSession(session), planned);
         expect(finding.status).toBe('failed');
         expect(finding.findings).toStrictEqual([
             matchFields({ file: source, line: 1, message: 'Located defect before exit' }),
         ]);
         planned.check.command = buildProgramCommand('fakes/tool', '--line', located, '--exit', '7', placeholder);
-        const fatal = await runCheckCommand(session, planned);
+        const fatal = await runCheckCommand(buildCheckSession(session), planned);
         expect(fatal.status).toBe('error');
         expect(fatal.findings).toStrictEqual([]);
         expect(fatal.note).toBe(`${process.execPath} failed with exit 7:\n${located}`);
@@ -168,10 +169,10 @@ test('per-file failures drop only the header lines the tool declares', async () 
 
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'commit', only: ['project/native'] })[0]!;
-    const unfiltered = await runCheckCommand(session, planned);
+    const unfiltered = await runCheckCommand(buildCheckSession(session), planned);
     expect(unfiltered.status).toBe('failed');
     expect(unfiltered.findings).toMatchObject([{ file: 'source.txt', message: 'Banner: scanner 1' }]);
-    const filtered = await runCheckCommand(session, {
+    const filtered = await runCheckCommand(buildCheckSession(session), {
         ...planned,
         tool: { ...planned.tool!, finding_header_pattern: '^Banner:' },
     });
@@ -226,7 +227,7 @@ test('a finding in a folder outside the scope keeps its repository path when the
     planned.check.command = [...SCOPE_PATH_CHECK.command];
     planned.check.output = SCOPE_PATH_CHECK.output;
 
-    const checked = await runCheckCommand(session, planned);
+    const checked = await runCheckCommand(buildCheckSession(session), planned);
 
     expect(checked.findings.map(({ file }) => file)).toStrictEqual(['lib/x.ts', 'app/src/a.swift']);
 });

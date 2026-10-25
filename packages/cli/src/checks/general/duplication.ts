@@ -1,11 +1,11 @@
 import { writeFileSync } from 'node:fs';
-import type { Session } from '#cli/types/session.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
@@ -31,7 +31,7 @@ Runs jscpd over the scope and reports the clones.
 @param planned the scope whose source files to compare.
 @returns the findings.
 */
-export async function checkDuplicationJscpd(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkDuplicationJscpd(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     using workFolder = createTemporaryFolder();
     const owned = new Set(
         filterSourceConfigurations(planned.scope.configurations).flatMap((configuration) =>

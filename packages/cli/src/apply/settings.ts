@@ -1,6 +1,5 @@
 import { openWriter } from '#cli/write.ts';
 import { openSession } from '#cli/session.ts';
-import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { writeSettings } from '#cli/settings/file.ts';
@@ -9,11 +8,11 @@ import { generate } from '#cli/generation/generate.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
+import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import { MANAGED_KEYS_NOTE } from '#cli/config/apply/generated.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
@@ -27,7 +26,7 @@ import type { ApplyReport, SaveSettingsOptions, SettingsEditContext, Configurati
 Edit settings, check them, and write them and their generated files. Installs nothing.
 
 @param repositoryRoot the folder where gspot writes settings and generated files.
-@param options the settings edit and its summary.
+@param options the settings edit, its summary, and the notes that the report adds after its own.
 @returns the apply report and whether the written settings changed.
 */
 export async function applySettingsEdit(
@@ -37,7 +36,6 @@ export async function applySettingsEdit(
     const { edit, summary } = options;
     using writer = openWriter(repositoryRoot);
     const result = buildEditedSettings(repositoryRoot, edit);
-    const previous = generate(await openSession(repositoryRoot));
     const session = await openSession(repositoryRoot, {
         settingsFile: { settings: result.settings, text: result.text },
     });
@@ -58,11 +56,7 @@ export async function applySettingsEdit(
             { cause: error },
         );
     }
-    const keys = new Set(
-        generated.managedKeys.flatMap((file) => file.keys.map(({ key }) => JSON.stringify([file.path, key]))),
-    );
-    if (previous.managedKeys.some((file) => file.keys.some(({ key }) => !keys.has(JSON.stringify([file.path, key])))))
-        report.notes.push(MANAGED_KEYS_NOTE);
+    report.notes.push(...(options.notes ?? []));
     const shown = result.changed ? summary : 'No change: gspot.toml stays the same.';
     return {
         text: `${shown}\n${formatApplyReport(report)}`,
@@ -80,7 +74,7 @@ writes into.
 @returns the settings and the gspot.toml text before the edit, the scope as a repository path, and its table.
 */
 export function prepareSettingsEdit(cwd: string, scope?: string): SettingsEditContext {
-    const root = findRoot(cwd);
+    const root = readRepositoryRoot(cwd);
     const input = readSettingsEdit(root);
     const reads = createReadCache(root);
     const settings = parseSettings(input.text, root);

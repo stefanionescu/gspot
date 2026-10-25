@@ -1,3 +1,5 @@
+import { SCOPE_PATH_MESSAGES } from '#cli/config/settings/file.ts';
+
 export const INVALID_SETTING_MESSAGES = [
     {
         name: 'an unknown root key',
@@ -56,6 +58,17 @@ export const UNSAFE_SCOPE_PATHS = [
     'bad\0path',
     'api\n/../../outside',
     '',
+] as const;
+
+export const REFUSED_SCOPE_FOLDERS = [
+    { path: '.gspot/tools', message: SCOPE_PATH_MESSAGES.gspot },
+    { path: '.GSPOT', message: SCOPE_PATH_MESSAGES.gspot },
+    { path: 'apps/.gspot/state', message: SCOPE_PATH_MESSAGES.gspot },
+    { path: 'apps/COM1', message: SCOPE_PATH_MESSAGES.portable },
+    { path: 'apps/web.', message: SCOPE_PATH_MESSAGES.portable },
+    { path: 'apps//web', message: SCOPE_PATH_MESSAGES.portable },
+    { path: 'apps/./web', message: SCOPE_PATH_MESSAGES.portable },
+    { path: 'apps/a<b', message: SCOPE_PATH_MESSAGES.portable },
 ] as const;
 
 export const UNTIL_DATE_CASES = [

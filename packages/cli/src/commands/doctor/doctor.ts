@@ -1,17 +1,17 @@
 import { join } from 'node:path';
 import { openSession } from '#cli/session.ts';
-import { findRoot } from '#cli/repository/read.ts';
 import { getColors } from '#cli/system/terminal.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import type { Session } from '#cli/types/session.ts';
 import { readHookStatus } from '#cli/install/hooks.ts';
-import { getMiseBinPaths } from '#cli/tools/locate.ts';
 import { EXIT_FINDINGS } from '#cli/config/terminal.ts';
+import { readToolBinPaths } from '#cli/tools/locate.ts';
 import type { Command } from '@commander-js/extra-typings';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { CI_FILE_LABELS } from '#cli/config/commands/ci.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
@@ -93,16 +93,14 @@ function inspectScopeTools(session: Session): ToolInspection[] {
     const pins = listDistinctTools(session.toolConfigurations).filter(
         (tool) => findMissingBuild(tool, { platform, arch: process.arch }) === undefined,
     );
+    const miseBinPaths = readToolBinPaths(session);
     for (const { folder, configurations } of session.scopes) {
         const toolNames = new Set(
             configurations.flatMap((configuration) => configuration.tools).map((tool) => tool.name),
         );
         for (const tool of pins) {
             if (!toolNames.has(tool.name)) continue;
-            const inspection = inspectTool(
-                { ...session, cwd: join(session.root, folder.path), miseBinPaths: getMiseBinPaths(session) },
-                tool,
-            );
+            const inspection = inspectTool({ ...session, cwd: join(session.root, folder.path), miseBinPaths }, tool);
             inspections.set(JSON.stringify(inspection), inspection);
         }
     }
@@ -147,7 +145,7 @@ function formatDoctorReport(report: DoctorReport): string {
 }
 
 async function runDoctorCommand(cwd: string): Promise<CommandResult> {
-    const root = findRoot(cwd);
+    const root = readRepositoryRoot(cwd);
     const session = await openSession(root);
     const report = buildDoctorReport(session, readVersionPin(root));
     return {

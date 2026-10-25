@@ -1,6 +1,5 @@
 import { registerAdd } from '#cli/commands/add.ts';
 import { registerSet } from '#cli/commands/set.ts';
-import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { registerList } from '#cli/commands/list.ts';
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
@@ -16,6 +15,7 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { registerCheck } from '#cli/commands/check/check.ts';
 import { registerUnignore } from '#cli/commands/unignore.ts';
+import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { registerDoctor } from '#cli/commands/doctor/doctor.ts';
 import { assertVersionPin } from '#cli/repository/version-pin.ts';
 import { registerExplain } from '#cli/commands/explain/explain.ts';
@@ -165,7 +165,7 @@ export async function runProgram(commandArguments: string[]): Promise<number> {
     program.hook('preAction', (_program, command) => {
         if (GIT_COMMANDS.has(command.name()) && !isGitRepository(process.cwd()))
             throw new GspotError('git', 'gspot needs a Git repository. Run git init, then gspot init.');
-        if (VERSION_PIN_COMMANDS.has(command.name())) assertVersionPin(findRoot(process.cwd()));
+        if (VERSION_PIN_COMMANDS.has(command.name())) assertVersionPin(readRepositoryRoot(process.cwd()));
     });
     try {
         if (commandArguments[0] === '--version' && commandArguments.length > 1)

@@ -18,190 +18,238 @@ version = "3.24.0"
 
 [[config_file]]
 target = "vale.ini"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/acronyms.yml"
+tool = "vale"
 
 [[config_file]]
 target = "styles/gspot/alt-text.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/banned-headings.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/heading-case.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/item-length.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/paragraph-length.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/sentence-length.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/title-case.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/config/vocabularies/words/accept.txt"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/numbered-units.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/future.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/modals.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/product-centric-writing.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/contractions.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/hedging.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/since.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/leading-conjunctions.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/date-ordinals.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/suspended-hyphens.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/locations.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/obvious-fields.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/symbols.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/merge-conflict-markers.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/tree-blocks.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/percentage-numbers.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/currency.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/marketing.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/straight-quotes.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/placeholders.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/history.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/em-dashes.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/en-dashes.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/ordinal-adverbs.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/interface-verbs.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/punctuated-headings.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/file-paths.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/self-reference.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/jargon.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/session-identifiers.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/url-prepositions.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/version-range.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/time-ranges.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/conscious-language.yml"
+tool = "vale"
 
 [[config_file]]
 level = "all"
 target = "styles/gspot/idioms.yml"
+tool = "vale"
 
 [[config_file]]
 target = "styles/LICENSES.md"
+tool = "vale"
 
 [[config_file]]
 target = "styles/gspot/link-text.yml"
+tool = "vale"
 
 [[config_file]]
 target = "styles/gspot/dates.yml"
+tool = "vale"
 
 [[check]]
 example = "`Release on 03/04/2026.` reports an ambiguous date. Write `Release on March 4, 2026.` instead."

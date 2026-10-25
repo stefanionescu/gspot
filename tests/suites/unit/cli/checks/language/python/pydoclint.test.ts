@@ -8,7 +8,6 @@ import { type Session } from '#cli/types/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
-import { runCheckCode } from '#cli/commands/check/run.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
@@ -17,6 +16,7 @@ import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { PYPROJECT } from '#tests/config/checks/language/python/project.ts';
+import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 
 import {
     FAILED_STYLE_BATCH,
@@ -34,7 +34,7 @@ test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting,
     );
     const { session, planned } = prepared;
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());
-    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+    const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
     expect(result.status).toBe('passed');
     const commandArguments = run.mock.calls[0]![0];
     expect({
@@ -86,7 +86,7 @@ test('pydoclint keeps earlier style findings when a later style batch fails', as
             }),
         )
         .mockResolvedValueOnce(buildProcessResult(FAILED_STYLE_BATCH));
-    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+    const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
     expect(result.status).toBe('error');
     expect(result.fileCount).toBe(2);
     expect(result.findings).toStrictEqual([

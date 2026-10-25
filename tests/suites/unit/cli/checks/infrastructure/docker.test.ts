@@ -5,12 +5,12 @@ import { planChecks } from '#cli/planning/checks.ts';
 import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
-import { runCheckCode } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 
 import {
@@ -48,7 +48,7 @@ test.each([...COMPOSE_PAIRING_CASES])(
         resources.use(fakes);
         const toolRun = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult()));
         const planned = planChecks(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
-        const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+        const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
         expect(result.findings).toStrictEqual([]);
         expect(result.status).toBe('passed');
         expect(toolRun.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([

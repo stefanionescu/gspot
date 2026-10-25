@@ -5,7 +5,6 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import * as processes from '#cli/system/processes.ts';
-import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
@@ -13,6 +12,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/configurations.ts';
 import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
+import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { isActive, planChecks, stripCoverageArguments } from '#cli/planning/checks.ts';
 
 import {
@@ -37,8 +37,8 @@ test('coverage arguments leave other commands, your own checks, and given argume
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'push', only: ['project/tests'] })[0]!;
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());
-    const authored = await runCheckCommand(session, planned);
-    const supplied = await runCheckCommand(session, planned, { command });
+    const authored = await runCheckCommand(buildCheckSession(session), planned);
+    const supplied = await runCheckCommand(buildCheckSession(session), planned, { command });
     expect(authored.status).toBe('passed');
     expect(supplied.status).toBe('passed');
     expect(run.mock.calls.map(([commandArguments]) => commandArguments)).toStrictEqual([command, command]);

@@ -6,7 +6,6 @@ import { findCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import { buildJsonSchema } from '#cli/settings/json-schema.ts';
 import type { RuleFile } from '#cli/types/generation/rules.ts';
-import { assertWritablePath } from '#cli/system/files/names.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
@@ -136,19 +135,6 @@ function addManagedBlocks(session: Session, rules: RuleFile[], generated: Genera
     generated.blocks.push({ path: AGENTS_FILE, block, style: 'markdown' });
 }
 
-function assertDistinctPaths(generated: GenerationResult): void {
-    const paths = new Map<string, string>();
-    const files = [...generated.files, ...generated.blocks, ...generated.managedKeys];
-    for (const file of files) {
-        assertWritablePath(file.path);
-        const key = file.path.normalize('NFC').toLowerCase();
-        const previous = paths.get(key);
-        if (previous !== undefined)
-            throw new Error(`Two generated files have the same path: ${previous} and ${file.path}.`);
-        paths.set(key, file.path);
-    }
-}
-
 /**
 Generate every file in memory, and write nothing.
 
@@ -197,6 +183,5 @@ export function generate(session: Session): GenerationResult {
     generated.files.push(...rules.map(({ target: path, content }) => ({ path, content })));
     addManagedBlocks(session, rules, generated);
     generated.files = generated.files.toSorted((left, right) => compareText(left.path, right.path));
-    assertDistinctPaths(generated);
     return generated;
 }

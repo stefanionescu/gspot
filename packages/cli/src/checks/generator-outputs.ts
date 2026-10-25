@@ -1,6 +1,5 @@
 import { join, posix } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
-import type { Session } from '#cli/types/session.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
@@ -12,6 +11,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { Substitutions } from '#cli/types/runs/command.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import { type GeneratorOutput } from '#cli/types/configurations.ts';
 import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
 import { readBytes, findCachedText } from '#cli/system/files/reads.ts';
@@ -104,7 +104,7 @@ function listGeneratorOutputs(
 }
 
 function planGeneratorRun(session: Session, planned: PlannedCheck): GeneratorRun | undefined {
-    const values = buildCommandSubstitutions(session, planned, join(session.root, planned.scope.folder.path));
+    const values = buildCommandSubstitutions(session.root, planned, join(session.root, planned.scope.folder.path));
     const declaration = planned.check.command ?? [];
     const command = expandCommand(session, planned, declaration, values);
     if (command.length === 0) return undefined;
@@ -129,7 +129,7 @@ Runs the declared generator in a copy and reports missing or changed generator o
 @param planned the generator check and its scope.
 @returns one finding per missing or stale file.
 */
-export async function checkGeneratorOutputs(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkGeneratorOutputs(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     const run = planGeneratorRun(session, planned);
     if (run === undefined) return [];
     const { values, commandText, declaration, patterns, targets, selected } = run;
@@ -155,10 +155,7 @@ export async function checkGeneratorOutputs(session: Session, planned: PlannedCh
                 stdoutPaths.has(path) ? Buffer.from(bytes.toString('utf8').trim()) : bytes,
             ]),
     );
-    const commandArguments = expandCommand({ ...session, root: folder.path }, planned, declaration, {
-        ...values,
-        root: folder.path,
-    });
+    const commandArguments = expandCommand(session, planned, declaration, { ...values, root: folder.path });
     const commands = buildFileCommandLines(commandArguments, selected);
     let stdout = '';
     for (const commandLine of commands) {

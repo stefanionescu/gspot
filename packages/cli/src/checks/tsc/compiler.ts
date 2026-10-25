@@ -1,7 +1,6 @@
 import ts from 'typescript';
 import { compareText } from '#cli/system/text.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
-import type { Session } from '#cli/types/session.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
@@ -11,6 +10,7 @@ import type { CheckResult } from '#cli/types/runs/check.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { join, resolve, relative, isAbsolute } from 'node:path';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import type { TypeScriptReferenceCopy } from '#cli/types/checks/tsc.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
@@ -148,7 +148,7 @@ Runs tsc on a project and keeps the build information in tsbuildinfoFolder.
 @returns the check result.
 */
 export async function runTsc(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     tsbuildinfoFolder: string,
     project: TypeScriptProject | undefined,

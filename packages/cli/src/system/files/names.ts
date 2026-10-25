@@ -1,5 +1,4 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
 
 import {
     DEVICE_NAME,
@@ -9,22 +8,23 @@ import {
     UNSAFE_PATH_MESSAGE,
 } from '#cli/config/system/files/names.ts';
 
-function splitPortablePath(path: string): string[] {
-    const segments = path.split('/');
-    if (
-        segments.some(
+/**
+Check that every segment of a path can name a file on every system that gspot supports.
+
+@param path a repository-relative path with forward slashes.
+@returns whether every segment has text, avoids dot segments and device names, and holds no character that Windows refuses.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
+export function isPortablePath(path: string): boolean {
+    return path
+        .split('/')
+        .every(
             (segment) =>
-                RESERVED_SEGMENTS.has(segment) ||
-                UNSAFE_CHARACTERS.test(segment) ||
-                UNSAFE_PATH_END.test(segment) ||
-                DEVICE_NAME.test(segment),
-        )
-    )
-        throw new GspotError(
-            'filesystem',
-            UNSAFE_PATH_MESSAGE.replace('{path}', () => JSON.stringify(path)),
+                !RESERVED_SEGMENTS.has(segment) &&
+                !UNSAFE_CHARACTERS.test(segment) &&
+                !UNSAFE_PATH_END.test(segment) &&
+                !DEVICE_NAME.test(segment),
         );
-    return segments;
 }
 
 /**
@@ -34,23 +34,15 @@ Split a path into segments, and refuse an empty, dot, parent, or null segment.
 @returns the segments of the path.
 */
 export function splitSystemPath(path: string): string[] {
-    if (process.platform === 'win32') return splitPortablePath(path);
     const segments = path.split('/');
-    if (segments.some((segment) => RESERVED_SEGMENTS.has(segment) || segment.includes('\0')))
+    const isUnsafe =
+        process.platform === 'win32'
+            ? !isPortablePath(path)
+            : segments.some((segment) => RESERVED_SEGMENTS.has(segment) || segment.includes('\0'));
+    if (isUnsafe)
         throw new GspotError(
             'filesystem',
             UNSAFE_PATH_MESSAGE.replace('{path}', () => JSON.stringify(path)),
         );
     return segments;
-}
-
-/**
-Keep write plans outside the gspot state folder.
-
-@param path the proposed file.
-*/
-export function assertWritablePath(path: string): void {
-    splitPortablePath(path);
-    if (STATE_FOLDER_PATTERN.test(path.normalize('NFC')))
-        throw new GspotError('filesystem', `${path} is inside .gspot/state. Choose a path outside it.`);
 }

@@ -1,7 +1,6 @@
 import { openWriter } from '#cli/write.ts';
 import { openSession } from '#cli/session.ts';
 import { formatCount } from '#cli/system/text.ts';
-import { findRoot } from '#cli/repository/read.ts';
 import { type Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { type OutdatedFile } from '#cli/types/apply.ts';
@@ -10,6 +9,7 @@ import { listOutdatedFiles } from '#cli/apply/outdated.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
+import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/apply.ts';
@@ -58,7 +58,7 @@ async function buildDryRunResult(session: Session): Promise<CommandResult> {
 }
 
 async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
-    const root = findRoot(options.cwd);
+    const root = readRepositoryRoot(options.cwd);
     const session = await openSession(root);
     if (options.isDryRun) return buildDryRunResult(session);
     using writer = openWriter(root);

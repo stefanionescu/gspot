@@ -68,6 +68,22 @@ test('changing an until date in place rewrites it and keeps its comment', async 
     expect(result.text).toBe(DATED_IGNORE.replace('2099-05-20', '2099-05-21').replace('\n#', '\n\n#'));
 });
 
+test('an invalid edited value reports its line in the edited gspot.toml', async () => {
+    await using sandbox = await testdir();
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        `${INITIAL_SETTINGS}# Authored limits.\n[limits]\nfile_lines = 100\n`,
+    );
+    const valid = readSettingsEdit(sandbox.path);
+    setKey(valid.table, 'limits.function_lines', 20);
+    const line = buildEditedSettings(sandbox.path, valid).text.split('\n').indexOf('function_lines = 20') + 1;
+    const invalid = readSettingsEdit(sandbox.path);
+    setKey(invalid.table, 'limits.function_lines', 'long');
+    expect(() => buildEditedSettings(sandbox.path, invalid)).toThrow(
+        `gspot.toml:${String(line)}: limits.function_lines:`,
+    );
+});
+
 test('reordering keys does not change the file', async () => {
     await using sandbox = await testdir();
     const source = `${INITIAL_SETTINGS}level = "all"\n`;

@@ -1,33 +1,31 @@
 import { createHash } from 'node:crypto';
 import { VALE_TOOL } from '#cli/config/prose.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { join, dirname, resolve } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
-import { readText } from '#cli/system/files/reads.ts';
 import { getTool } from '#cli/configurations/tools.ts';
-import { getMiseBinPaths } from '#cli/tools/locate.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { join, posix, dirname, resolve } from 'node:path';
 import { downloadArchive } from '#cli/install/downloads.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { runRequiredInstallStep } from '#cli/install/steps.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
+import { buildValeIni } from '#cli/generation/configurations/general/prose.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
 
-import {
-    VALE_PACKAGES,
-    VALE_PACKAGE_RELEASES,
-    VALE_PACKAGE_REPOSITORY,
-} from '#cli/config/generation/configurations/general/prose.ts';
 import {
     VALE_ARCHIVE_LIMIT,
     VALE_INSTALL_PREFIX,
     VALE_PACKAGE_FOLDERS,
-    VALE_PACKAGES_PATTERN,
     VALE_INSTALL_ARGUMENTS,
-    VALE_STYLES_PATH_PATTERN,
 } from '#cli/config/install/vale.ts';
+import {
+    VALE_PACKAGES,
+    VALE_STYLES_PATH,
+    VALE_PACKAGE_RELEASES,
+    VALE_PACKAGE_REPOSITORY,
+} from '#cli/config/generation/configurations/general/prose.ts';
 
 async function downloadValePackages(install: ToolInstall, folder: string): Promise<string[]> {
     const packages: string[] = [];
@@ -68,33 +66,29 @@ export function hasValePackages(repositoryRoot: string, level: Settings['level']
 Download the Vale packages for the level, and replace the installed ones. Needs the network.
 
 @param install what install needs for this step.
+@param miseBinPaths the program folders that mise installed, where Vale may sit.
 @returns the install summary.
 */
-export async function installValePackages(install: ToolInstall): Promise<string> {
+export async function installValePackages(install: ToolInstall, miseBinPaths: string[]): Promise<string> {
     const { session } = install;
     const { root } = session;
     const level = session.settingsFile.settings.level;
     if (level === 'recommended') return '';
     const tool = getTool(session.toolConfigurations, VALE_TOOL);
-    const available = buildToolAvailability(
-        tool,
-        inspectTool({ ...session, miseBinPaths: getMiseBinPaths(session) }, tool),
-    );
+    const available = buildToolAvailability(tool, inspectTool({ ...session, miseBinPaths }, tool));
     if ('status' in available) throw new GspotError('tool', available.note);
     using files = openFiles(root);
     const temporary = mkdtempSync(join(files.readCanonicalPath(DOT_GSPOT), VALE_INSTALL_PREFIX));
     try {
         const config = join(temporary, GSPOT_PATHS.valeConfigFile);
-        const text = readText(root, GSPOT_PATHS.valeConfigFile);
-        const last = [...text.matchAll(VALE_STYLES_PATH_PATTERN)].at(-1);
-        const packages = await downloadValePackages(install, temporary);
-        const content = text
-            .replaceAll(VALE_PACKAGES_PATTERN, `Packages = ${packages.join(', ')}`)
-            .replaceAll(VALE_STYLES_PATH_PATTERN, (line, path: string, offset: number) =>
-                offset === last?.index
-                    ? line
-                    : `StylesPath = ${convertToPosixPath(resolve(root, dirname(GSPOT_PATHS.valeConfigFile), path.trim()))}`,
-            );
+        const content = buildValeIni({
+            level,
+            stylesPaths: [
+                convertToPosixPath(resolve(root, VALE_STYLES_PATH)),
+                posix.relative(posix.dirname(GSPOT_PATHS.valeConfigFile), GSPOT_PATHS.valePackages),
+            ],
+            packages: await downloadValePackages(install, temporary),
+        });
         mkdirSync(dirname(config), { recursive: true });
         writeFileSync(config, content);
         const command = [available.path, '--config', config, ...VALE_INSTALL_ARGUMENTS];

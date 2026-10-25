@@ -3,9 +3,9 @@ import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
-import { runCheckCode } from '#cli/commands/check/run.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { MISSING_OPENAPI_FINDINGS } from '#tests/config/checks/generator-outputs.ts';
 
 test('a missing OpenAPI document is reported before generation', async () => {
@@ -21,7 +21,7 @@ test('a missing OpenAPI document is reported before generation', async () => {
     const session = await openSession(sandbox.path);
     const input = planSandboxCheck(session, 'openapi/stale-document');
     const run = resources.use(spyOn(processes, 'spawnProcess'));
-    const missingResult = await runCheckCode(session, input, findCheckCode(input.check));
+    const missingResult = await runCheckCode(buildCheckSession(session), input, findCheckCode(input.check));
     expect(missingResult.findings).toMatchObject([...MISSING_OPENAPI_FINDINGS]);
     expect(run).not.toHaveBeenCalled();
 });

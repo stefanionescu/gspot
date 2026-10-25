@@ -2,12 +2,12 @@ import { posix } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { type Session } from '#cli/types/session.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
@@ -72,7 +72,7 @@ Scans each pushed commit with Gitleaks, so a secret removed before the last comm
 @param planned the Gitleaks check and commit range.
 @returns the check result.
 */
-export async function checkSecretsGitleaksPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkSecretsGitleaksPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const command = getSiblingCommand(planned, GITLEAKS_STAGED_CHECK).filter(
         (argument) => argument !== GITLEAKS_STAGED_FLAG,
     );

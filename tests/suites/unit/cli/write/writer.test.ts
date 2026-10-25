@@ -6,17 +6,20 @@ import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
-import { planBlock, openWriter, writePlans, planReplacement, planManagedKeys } from '#cli/write.ts';
+import { planBlock, openWriter, writePlans, planManagedKeys, planReplacements } from '#cli/write.ts';
 
 test('a batch writes binary bytes, and a removal plan deletes one file and keeps the other', async () => {
     await using sandbox = await testdir();
     using writer = openWriter(sandbox.path);
     const first = Buffer.from([0, 255, 10]);
     const second = Buffer.from([255, 0, 13]);
-    writePlans(writer, [
-        planReplacement(writer, { path: `${DOT_GSPOT}/first.bin`, next: { bytes: first, mode: 0o644 } }),
-        planReplacement(writer, { path: `${DOT_GSPOT}/second.bin`, next: { bytes: second, mode: 0o644 } }),
-    ]);
+    writePlans(
+        writer,
+        planReplacements(writer, [
+            { path: `${DOT_GSPOT}/first.bin`, next: { bytes: first, mode: 0o644 } },
+            { path: `${DOT_GSPOT}/second.bin`, next: { bytes: second, mode: 0o644 } },
+        ]),
+    );
     expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/first.bin`))).toStrictEqual(first);
     expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/second.bin`))).toStrictEqual(second);
     writePlans(writer, [
@@ -35,13 +38,15 @@ test.each(['replacement', 'block', 'keys'] as const)(
 
         const plans = {
             replacement: () =>
-                planReplacement(writer, {
-                    path: 'config.toml',
-                    next: { bytes: Buffer.from('strict = false\n'), mode: 0o444 },
-                    expected: writer.read('config.toml'),
-                }),
-            block: () => planBlock(writer, 'config.toml', 'managed content', 'hash'),
-            keys: () => planManagedKeys(writer, 'config.toml', [{ key: ['extends'], value: './managed.json' }]),
+                planReplacements(writer, [
+                    {
+                        path: 'config.toml',
+                        next: { bytes: Buffer.from('strict = false\n'), mode: 0o444 },
+                        expected: writer.read('config.toml'),
+                    },
+                ]),
+            block: () => [planBlock(writer, 'config.toml', 'managed content', 'hash')],
+            keys: () => [planManagedKeys(writer, 'config.toml', [{ key: ['extends'], value: './managed.json' }])],
         };
         const plan = plans[kind]();
         expect(writer.read('config.toml')).toStrictEqual({
@@ -50,7 +55,7 @@ test.each(['replacement', 'block', 'keys'] as const)(
         });
         await writeFile(join(sandbox.path, 'config.toml'), 'edited = true\n');
         expect(() => {
-            writePlans(writer, [plan]);
+            writePlans(writer, plan);
         }).toThrow(new GspotError('filesystem', 'config.toml changed while gspot wrote it. Run the command again.'));
         expect(writer.read('config.toml')).toStrictEqual({
             bytes: Buffer.from('edited = true\n'),
@@ -63,12 +68,13 @@ test('a batch writes the files before an edited one and refuses the edited one',
 
     using writer = openWriter(sandbox.path);
 
-    const plans = ['first.txt', 'last.txt'].map((path) =>
-        planReplacement(writer, {
+    const plans = planReplacements(
+        writer,
+        ['first.txt', 'last.txt'].map((path) => ({
             path,
             next: { bytes: Buffer.from('replacement'), mode: 0o644 },
             expected: writer.read(path),
-        }),
+        })),
     );
     await writeFile(join(sandbox.path, 'last.txt'), 'authored after plan');
     expect(() => {
@@ -82,18 +88,22 @@ test('a file gspot does not own refuses the whole batch and leaves every file as
 
     using writer = openWriter(sandbox.path);
 
-    writePlans(writer, [
-        planReplacement(writer, {
-            path: `${DOT_GSPOT}/owned.txt`,
-            next: { bytes: Buffer.from('installed'), mode: 0o644 },
-            expected: writer.read(`${DOT_GSPOT}/owned.txt`),
-        }),
-    ]);
-    const plans = [`${DOT_GSPOT}/owned.txt`, 'authored.txt'].map((path) =>
-        planReplacement(writer, {
+    writePlans(
+        writer,
+        planReplacements(writer, [
+            {
+                path: `${DOT_GSPOT}/owned.txt`,
+                next: { bytes: Buffer.from('installed'), mode: 0o644 },
+                expected: writer.read(`${DOT_GSPOT}/owned.txt`),
+            },
+        ]),
+    );
+    const plans = planReplacements(
+        writer,
+        [`${DOT_GSPOT}/owned.txt`, 'authored.txt'].map((path) => ({
             path,
             next: { bytes: Buffer.from('replacement'), mode: 0o644 },
-        }),
+        })),
     );
     expect(() => {
         writePlans(writer, plans);
@@ -127,13 +137,12 @@ test.each(
             writePlans(firstWriter, [{ path: 'authored.json', before: read, status: 'changed' }]);
         }).toThrow(new GspotError('filesystem', 'authored.json changed before removal. Run the command again.'));
         expect(() => {
-            writePlans(firstWriter, [
-                planReplacement(firstWriter, {
-                    path: 'authored.json',
-                    next: { bytes: Buffer.from('{}\n'), mode: 0o444 },
-                    expected: read,
-                }),
-            ]);
+            writePlans(
+                firstWriter,
+                planReplacements(firstWriter, [
+                    { path: 'authored.json', next: { bytes: Buffer.from('{}\n'), mode: 0o444 }, expected: read },
+                ]),
+            );
         }).toThrow(new GspotError('filesystem', 'authored.json changed while gspot wrote it. Run the command again.'));
         expect(firstWriter.read('authored.json')).toStrictEqual(edited);
         await writeFile(path, read.bytes);

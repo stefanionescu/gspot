@@ -9,22 +9,22 @@ import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { findSystemSkip } from '#cli/planning/skips.ts';
 import { listCheckTools } from '#cli/planning/tools.ts';
-import { readMiseBinPaths } from '#cli/tools/locate.ts';
-import type { Tool } from '#cli/types/configurations.ts';
 import { downloadArchive } from '#cli/install/downloads.ts';
-import { writePlans, planReplacement } from '#cli/write.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { writePlans, planReplacements } from '#cli/write.ts';
+import type { MiseInstall } from '#cli/types/install/mise.ts';
 import { runRequiredInstallStep } from '#cli/install/steps.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { redactInstallOutput } from '#cli/install/credentials.ts';
+import { miseLockfileSchema } from '#cli/schemas/install/mise.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import type { Tool, MiseToolPin } from '#cli/types/configurations.ts';
+import { readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
 import { MISE_LOCK_FILE, MISE_CONFIG_FILE } from '#cli/config/files/names.ts';
 import { MISE_TOOL, MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/locate.ts';
-import { miseProjectSchema, miseLockfileSchema } from '#cli/schemas/install/mise.ts';
 import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/configurations/tools.ts';
 
 import {
@@ -78,15 +78,14 @@ function hasMiseChecksums(locked: object): boolean {
 }
 
 /**
-Compare the mise project pins with the versions recorded in its lockfile.
+Compare the mise pins with the versions recorded in the mise lockfile.
 
-@param project the generated mise.toml.
+@param pins the mise pins of the configurations in use.
 @param lockfile the recorded lockfile, if present.
 @returns whether every tool has its exact locked version.
 */
-export function isMiseLockfileFresh(project: string, lockfile: string | undefined): boolean {
-    const expected = parseTomlFile(GSPOT_PATHS.miseProject, project, miseProjectSchema).tools;
-    if (Object.keys(expected).length === 0) return true;
+export function isMiseLockfileFresh(pins: MiseToolPin[], lockfile: string | undefined): boolean {
+    if (pins.length === 0) return true;
     if (lockfile === undefined) return false;
     let parsed;
     try {
@@ -96,21 +95,26 @@ export function isMiseLockfileFresh(project: string, lockfile: string | undefine
         return false;
     }
     if (!parsed.success) return false;
-    return Object.entries(expected).every(
-        ([name, pin]) =>
-            parsed.data.tools[name]?.some(
-                (locked) => locked.version === (isTable(pin) ? pin['version'] : pin) && hasMiseChecksums(locked),
+    return pins.every(
+        (pin) =>
+            parsed.data.tools[pin.name]?.some(
+                (locked) => locked.version === pin.version && hasMiseChecksums(locked),
             ) === true,
     );
 }
 
-async function addMissingChecksums(install: ToolInstall, lockfile: string): Promise<string> {
+async function addMissingChecksums(install: ToolInstall, lockfile: string, output: string): Promise<string> {
     const sections = await Promise.all(
         lockfile.split(MISE_LOCK_SECTION_START).map(async (section) => {
             const [header = '', ...lines] = section.split('\n');
+            if (!MISE_PLATFORM_HEADER.test(header)) return section;
             const url = MISE_URL_LINE.exec(section)?.groups?.['url'];
-            if (!MISE_PLATFORM_HEADER.test(header) || url === undefined || MISE_CHECKSUM_LINE.test(section))
-                return section;
+            if (url === undefined)
+                throw new GspotError(
+                    'install',
+                    `mise lock left a tool without a download URL, so gspot kept the existing files. Its output:\n${output}`,
+                );
+            if (MISE_CHECKSUM_LINE.test(section)) return section;
             const bytes = await downloadArchive(install, {
                 url,
                 name: 'the mise tool archive',
@@ -127,7 +131,7 @@ async function addMissingChecksums(install: ToolInstall, lockfile: string): Prom
 async function prepareMiseLockfile(install: ToolInstall): Promise<void> {
     const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
     const saved = install.writer.read(GSPOT_PATHS.miseLockfile);
-    if (isMiseLockfileFresh(project.content, saved?.bytes.toString('utf8'))) return;
+    if (isMiseLockfileFresh(listMisePins(install.session.toolConfigurations), saved?.bytes.toString('utf8'))) return;
     using scratch = createTemporaryFolder();
     writeFileSync(join(scratch.path, MISE_CONFIG_FILE), project.content);
     if (saved !== undefined) writeFileSync(join(scratch.path, MISE_LOCK_FILE), saved.bytes);
@@ -139,32 +143,31 @@ async function prepareMiseLockfile(install: ToolInstall): Promise<void> {
         });
         output = redactInstallOutput(result, []);
     }
-    const content = await addMissingChecksums(install, readFileSync(join(scratch.path, MISE_LOCK_FILE), 'utf8'));
-    if (!isMiseLockfileFresh(project.content, content))
-        throw new GspotError(
-            'install',
-            `mise lock left a tool without a download URL or checksum, so gspot kept the existing files. Its output:\n${output}`,
-        );
-    const lockfile: GeneratedFile = { path: GSPOT_PATHS.miseLockfile, content, kind: 'lock', read: saved };
-    install.generated.files.push(lockfile);
-    writePlans(install.writer, [
-        planReplacement(install.writer, {
-            path: lockfile.path,
-            next: { bytes: Buffer.from(content), mode: OWNER_WRITABLE_FILE },
-            expected: saved,
-        }),
-    ]);
+    const content = await addMissingChecksums(
+        install,
+        readFileSync(join(scratch.path, MISE_LOCK_FILE), 'utf8'),
+        output,
+    );
+    writePlans(
+        install.writer,
+        planReplacements(install.writer, [
+            {
+                path: GSPOT_PATHS.miseLockfile,
+                next: { bytes: Buffer.from(content), mode: OWNER_WRITABLE_FILE },
+                expected: saved,
+            },
+        ]),
+    );
 }
 
 /**
-Install the mise tools, and read their executable folders again.
+Install the mise tools, and read their executable folders.
 
 @param install what install needs for this step.
-@returns the trust note, or the note about missing programs.
+@returns the trust note, or the note about missing programs, and the folders of the programs that mise installed.
 */
-export async function installMiseTools(install: ToolInstall): Promise<string> {
+export async function installMiseTools(install: ToolInstall): Promise<MiseInstall> {
     const { session, tools, misePath, steps } = install;
-    const timeoutSeconds = session.timeoutSeconds;
     const { pins, hookTools } = selectHookTools(session, tools);
     if (misePath === null) {
         const missing = pins.flatMap((pin) => {
@@ -174,10 +177,11 @@ export async function installMiseTools(install: ToolInstall): Promise<string> {
                     : (hookTools.find((tool) => findMisePin(tool)?.name === pin.name) as Tool).name;
             return which.sync(name, { nothrow: true }) === null ? [`${name} ${pin.version}`] : [];
         });
-        return missing.length === 0 ? '' : `Install mise, or install these tools yourself: ${missing.join(', ')}`;
+        const note = missing.length === 0 ? '' : `Install mise, or install these tools yourself: ${missing.join(', ')}`;
+        return { note, binPaths: [] };
     }
     if (listMisePins(session.toolConfigurations).length > 0) await prepareMiseLockfile(install);
-    if (pins.length === 0) return '';
+    if (pins.length === 0) return { note: '', binPaths: readToolBinPaths(session) };
     const commands = [
         { command: MISE_TRUST_ARGUMENTS, cwd: session.root, env: {} },
         {
@@ -190,7 +194,8 @@ export async function installMiseTools(install: ToolInstall): Promise<string> {
         await runRequiredInstallStep(install, command, { cwd, env, name: `The command ${command.join(' ')}` });
     const names = pins.map((pin) => pin.name);
     steps.push([...MISE_BIN_PATHS_ARGUMENTS, ...names]);
-    session.miseBinPaths = readMiseBinPaths(session.root, names, timeoutSeconds);
-    delete session.uvPath;
-    return 'trusted .gspot/mise.toml for mise';
+    return {
+        note: 'trusted .gspot/mise.toml for mise',
+        binPaths: readMiseBinPaths(session.root, names, session.timeoutSeconds),
+    };
 }

@@ -4,19 +4,19 @@ import { parseSyml } from '@yarnpkg/parsers';
 import { isDeepStrictEqual } from 'node:util';
 import { modify, applyEdits } from 'jsonc-parser';
 import { GspotError } from '#cli/system/errors.ts';
+import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
-import { selectLockfileName } from '#cli/install/npm/package-json.ts';
 import { NPM_SETTING_PREFIX } from '#cli/config/install/npm/project.ts';
 import type { BunPackage, LockedTarball } from '#cli/types/install/npm.ts';
-import type { YarnPackage } from '#cli/types/parsers/projects/lockfiles.ts';
 import type { DependencyMap } from '#cli/types/parsers/projects/dependencies.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { PNPM_PEER_START, PNPM_ROOT_IMPORTER } from '#cli/config/parsers/projects/lockfiles.ts';
 import { bunLockSchema, yarnLockSchema, yarnPackageSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
+import type { Lockfile, YarnPackage, ToolProjectLockfileName } from '#cli/types/parsers/projects/lockfiles.ts';
 import { INTEGRITY, LOCKFILE_WORKSPACE_KEYS, YARN_DESCRIPTOR_SEPARATOR } from '#cli/config/install/npm/lockfiles.ts';
 
 import {
@@ -245,4 +245,18 @@ export function isLockfileFresh(
         if (isInvalidLockfile(error)) return false;
         throw error;
     }
+}
+
+/**
+Select the lockfile name for the package manager of an npm tool project.
+
+@param packageManager the validated name.
+@returns the lockfile basename that LOCKFILES declares.
+*/
+export function selectLockfileName(packageManager: PackageManager['name']): ToolProjectLockfileName {
+    return (
+        LOCKFILES.filter((lockfile) => 'toolProject' in lockfile).find(
+            (lockfile) => lockfile.packageManager === packageManager,
+        ) as Extract<Lockfile, { toolProject: true }>
+    ).file;
 }

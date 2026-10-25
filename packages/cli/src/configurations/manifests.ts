@@ -10,27 +10,9 @@ import { compareText, formatSimilarNames } from '#cli/system/text.ts';
 import { manifestSchema } from '#cli/schemas/configurations/manifest.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations/names.ts';
 import { RULES_FOLDER, MANIFEST_FILE } from '#cli/config/configurations/manifests.ts';
-import { buildManifestError, validateConfigurations } from '#cli/configurations/validation.ts';
 import type { Tool, Check, Configuration, ParsedManifest, ConfigurationCheck } from '#cli/types/configurations.ts';
 
 let shippedConfigurations: Map<string, Configuration> | undefined;
-
-function findOnlyToolName(tools: unknown): string | undefined {
-    if (!Array.isArray(tools) || tools.length !== 1) return undefined;
-    const tool: unknown = tools.at(0);
-    return isTable(tool) && typeof tool['name'] === 'string' ? tool['name'] : undefined;
-}
-
-function fillConfigFileTools(configFiles: unknown, tools: unknown): unknown {
-    if (configFiles !== undefined && !Array.isArray(configFiles)) return configFiles;
-    const records: unknown[] = configFiles === undefined ? [] : configFiles;
-    const tool = findOnlyToolName(tools);
-    return records.map((record) =>
-        tool === undefined || !isTable(record) || record['tool'] !== undefined || record['check'] !== undefined
-            ? record
-            : { ...record, tool },
-    );
-}
 
 function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configuration> {
     const toolsByName = listManifestTools(manifests);
@@ -56,7 +38,6 @@ function parseManifest(text: string, configurationFolder: string): ParsedManifes
     const parsed = parseToml(text) as Record<string, unknown>;
     const result = manifestSchema.safeParse({
         ...parsed,
-        config_file: fillConfigFileTools(parsed['config_file'], parsed['tool']),
         folder: configurationFolder,
         configuration: {
             ...(isTable(parsed['configuration']) && parsed['configuration']),
@@ -79,14 +60,12 @@ function readShippedConfigurations(): Map<string, Configuration> {
         const manifest = parseManifest(readFileSync(buildAssetPath(path), 'utf8'), folder);
         manifests.set(manifest.configuration.name, manifest);
     }
-    const configurations = buildConfigurations(
+    return buildConfigurations(
         manifests
             .values()
             .toArray()
             .toSorted((first, second) => compareText(first.configuration.name, second.configuration.name)),
     );
-    validateConfigurations(configurations);
-    return configurations;
 }
 
 /**
@@ -142,6 +121,14 @@ export function listChecksById(configurations: Iterable<Configuration>): Map<str
         }
     }
     return checks;
+}
+
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
+function buildManifestError(configuration: string, errors: string[]): GspotError {
+    return new GspotError(
+        'configuration',
+        [`The configuration manifest for \`${configuration}\` is not valid:`, ...errors].join('\n'),
+    );
 }
 
 function listManifestTools(manifests: Iterable<ParsedManifest>): Map<string, Tool> {

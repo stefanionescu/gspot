@@ -7,7 +7,7 @@ import { type ApplyReport } from '#cli/types/apply.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { openWriter, writePlans, planReplacement } from '#cli/write.ts';
+import { openWriter, writePlans, planReplacements } from '#cli/write.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { SETTINGS_FILE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
 import { INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/apply/generated.ts';
@@ -20,12 +20,12 @@ import { FORMAT_SETTINGS, RULES_WRITTEN_FILES, PRETTIER_PATH_IGNORE } from '#tes
 function writeStrayFile(root: string): void {
     using writer = openWriter(root);
 
-    writePlans(writer, [
-        planReplacement(writer, {
-            path: `${DOT_GSPOT}/obsolete/old.txt`,
-            next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
-        }),
-    ]);
+    writePlans(
+        writer,
+        planReplacements(writer, [
+            { path: `${DOT_GSPOT}/obsolete/old.txt`, next: { bytes: Buffer.from('installed\n'), mode: 0o644 } },
+        ]),
+    );
 }
 
 test('apply leaves generated files writable, keeps their bytes, and deletes a stray owned file and its folder', async () => {

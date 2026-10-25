@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { findRoot } from '#cli/repository/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { isGitRepository } from '#cli/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
@@ -20,7 +20,7 @@ test.each([...ROOT_DISCOVERY_CASES])(
     async ({ files, start }) => {
         await using sandbox = await testdir({ ...files, 'nested/source.ts': 'export {});\n' });
 
-        expect(findRoot(join(sandbox.path, start))).toBe(sandbox.path);
+        expect(readRepositoryRoot(join(sandbox.path, start))).toBe(sandbox.path);
     },
 );
 test.each([...OUTSIDE_LINK_CASES])('the repository file list leaves out the outside link %s', async (name, target) => {
@@ -93,7 +93,7 @@ test('a .git file that points at a missing folder is reported, not read as a fol
 
     const listError = await captureRejection(readIndexFiles(sandbox.path));
     expect(listError.message).toStartWith('Git ls-files failed');
-    expect(() => findRoot(sandbox.path)).toThrow(`Git could not open ${sandbox.path}:`);
+    expect(() => readRepositoryRoot(sandbox.path)).toThrow(`Git could not open ${sandbox.path}:`);
     expect(() => isGitRepository(sandbox.path)).toThrow('is a work tree (exit 128)');
 });
 test('a missing git program is reported instead of a successful walk', async () => {
@@ -104,7 +104,7 @@ test('a missing git program is reported instead of a successful walk', async () 
     resources.use(overrideEnvironment({ PATH: empty.path }));
     const missingGitError = await captureRejection(readIndexFiles(sandbox.path));
     expect(missingGitError.message).toMatch(/Git ls-files failed.*(?:not found|not recognized)/su);
-    expect(() => findRoot(sandbox.path)).toThrow(/Git could not open [^:]*:.*(?:not found|not recognized)/su);
+    expect(() => readRepositoryRoot(sandbox.path)).toThrow(/Git could not open [^:]*:.*(?:not found|not recognized)/su);
     expect(() => isGitRepository(sandbox.path)).toThrow(
         /Git could not tell whether .* is a work tree.*(?:not found|not recognized)/su,
     );

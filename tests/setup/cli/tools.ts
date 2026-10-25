@@ -7,16 +7,18 @@ import type { Files } from '#cli/types/system/files.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import { runtimePinsSchema } from '#tests/schemas/runner.ts';
-import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
+import type { NpmToolInstall } from '#cli/types/install/npm.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
 import { readInstallPackageManager } from '#cli/install/tools.ts';
 import { getTable, findRootScope } from '#cli/settings/scopes.ts';
+import { selectLockfileName } from '#cli/install/npm/lockfiles.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { selectLockfileName } from '#cli/install/npm/package-json.ts';
+import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
+import type { ToolInstall, ToolPackageManager } from '#cli/types/install/tools.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 
@@ -47,7 +49,7 @@ Build the tool install for a sandbox.
 @returns the session, writer, generated files, and tools that the install steps read.
 */
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 13 calls in 3 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 15 calls in 6 files share it.
 export function buildToolInstall(session: Session, writer: Files): ToolInstall {
     return {
         session,
@@ -58,6 +60,23 @@ export function buildToolInstall(session: Session, writer: Files): ToolInstall {
         tools: listDistinctTools(session.toolConfigurations),
         misePath: null,
         steps: [],
+    };
+}
+
+/**
+Build the npm tool install for a sandbox whose session has a package manager, with its registry settings.
+
+@param session the open sandbox.
+@param writer holds the repository lock and saves files.
+@returns the tool install with the package manager and the registry variables that the npm steps read.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 2 files share it.
+export async function buildNpmToolInstall(session: Session, writer: Files): Promise<NpmToolInstall> {
+    const install = buildToolInstall(session, writer);
+    return {
+        ...install,
+        packageManager: install.packageManager as ToolPackageManager,
+        registryEnvironment: await readRegistryEnvironment(session.root),
     };
 }
 

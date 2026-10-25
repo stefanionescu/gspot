@@ -20,6 +20,7 @@ pointer = true
 
 [[config_file]]
 target = "commitlint.json"
+tool = "commitlint"
 
 [[check]]
 command = ["commitlint", "--config", "{config_file:commitlint}", "--edit", "{message_file}"]

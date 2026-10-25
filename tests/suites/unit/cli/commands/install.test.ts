@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
@@ -5,7 +7,7 @@ import { readTree } from '#tests/setup/system/files.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { FAILED_NPM_VERSION } from '#tests/config/commands/install.ts';
+import { FAILED_NPM_VERSION, OUTDATED_TOOL_PROJECTS } from '#tests/config/commands/install.ts';
 
 test('apply starts no npm, and install reports a failed npm version lookup in text and JSON', async () => {
     await using sandbox = await createGitSandbox({
@@ -69,3 +71,26 @@ test('an unexpected error during install prints the internal error once and chan
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
+
+test.each([...OUTDATED_TOOL_PROJECTS])(
+    'install refuses $name before it runs a tool, and changes nothing',
+    async ({ path, text }) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['bash']),
+            'entry.sh': 'echo example\n',
+        });
+        const applied = await runGspot(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await writeFile(join(sandbox.path, path), text);
+        const before = await readTree(sandbox.path);
+        using spawned = spyOn(processes, 'spawnProcess');
+        const refused = await runGspot(sandbox.path, ['install', '--json']);
+        expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+        expect(JSON.parse(refused.stdout)).toStrictEqual({
+            error: 'install',
+            message: 'The tool projects in .gspot do not match gspot.toml. Run gspot apply first.',
+        });
+        expect(spawned).not.toHaveBeenCalled();
+        expect(await readTree(sandbox.path)).toStrictEqual(before);
+    },
+);

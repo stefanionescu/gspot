@@ -1,7 +1,7 @@
 import { join, posix } from 'node:path';
 import { createCopy } from '#cli/runs/copy/files.ts';
-import { type Session } from '#cli/types/session.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
@@ -71,7 +71,7 @@ Runs actionlint. If a workflow or action uses a $/ reference, checks a copy with
 @param planned the actionlint check and its files.
 @returns the check result.
 */
-export async function checkGithubActionsActionlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkGithubActionsActionlint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const replacements = new Map<string, string>();
     const actionFiles = new Map(
         [

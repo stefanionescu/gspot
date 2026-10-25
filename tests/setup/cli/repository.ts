@@ -1,7 +1,7 @@
-import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { SOURCE_KIND } from '#cli/config/repository/files/classify.ts';
+import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/files.ts';
 
 /**
@@ -21,9 +21,10 @@ export function buildTrackedFile(path: string, tags: string[] = ['text']): Track
 Read the files of a sandbox with the shipped configurations, no scopes, and no generated or vendored paths.
 */
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 34 calls in 6 files share it.
-export function readTestRepository(root: string): Promise<Repository> {
-    return readRepository(createReadCache(root), {
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 37 calls in 9 files share it.
+export async function readTestRepository(root: string): Promise<Repository> {
+    const reads = createReadCache(root);
+    return readRepository(reads, await listRepositoryFiles(reads), {
         generatedPaths: [],
         scopes: [],
         configurations: readConfigurations(),

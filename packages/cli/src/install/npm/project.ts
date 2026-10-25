@@ -9,18 +9,17 @@ import { writeYarnSettings } from '#cli/install/npm/yarn.ts';
 import { rmSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { YARN_SETTINGS_FILE } from '#cli/config/files/names.ts';
+import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
-import { type NpmToolProject } from '#cli/types/install/tool-projects.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm/yarn.ts';
 import { buildPackageManagerCommand } from '#cli/repository/npm/package-manager.ts';
-import { isLockfileFresh, stripBunRegistryUrls } from '#cli/install/npm/lockfiles.ts';
+import { writeNpmrc, extractRegistryCredentials } from '#cli/install/npm/registry.ts';
 import { prepareReleaseAge, writeBunReleaseAge } from '#cli/install/npm/release-age.ts';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
-import { writeNpmrc, readRegistryEnvironment, extractRegistryCredentials } from '#cli/install/npm/registry.ts';
+import { isLockfileFresh, selectLockfileName, stripBunRegistryUrls } from '#cli/install/npm/lockfiles.ts';
 import { type NpmToolInstall, type PackageManagerRun, type PackageManagerRequest } from '#cli/types/install/npm.ts';
 
 import {
@@ -36,11 +35,7 @@ import {
 
 async function createNpmLockfile(
     install: NpmToolInstall,
-    toolProjectFile: GeneratedFile,
-    project: NpmToolProject,
-    saved: string | undefined,
-    yarn: string | undefined,
-    env: Record<string, string>,
+    { toolProjectFile, lockfile, yarn }: { toolProjectFile: GeneratedFile; lockfile: string; yarn: string | undefined },
 ): Promise<string> {
     const packageManager = install.packageManager;
     if (which.sync(NODE_TOOL, { nothrow: true }) === null)
@@ -48,32 +43,22 @@ async function createNpmLockfile(
     using scratch = createTemporaryFolder();
     const runFolder = scratch.path;
     writeFileSync(join(runFolder, PACKAGE_JSON), toolProjectFile.content);
-
     if (yarn !== undefined) writeFileSync(join(runFolder, YARN_SETTINGS_FILE), yarn);
-    if (saved !== undefined && isLockfileFresh(packageManager.name, saved, project.dependencies, env))
-        writeFileSync(join(runFolder, project.lockfile), saved);
     const lockfileArguments = PACKAGE_MANAGER_ARGUMENTS[packageManager.name].lockfile;
     const run = await runPackageManager(install, {
         runFolder,
         packageManager,
         commandArguments: prepareReleaseAge(runFolder, lockfileArguments, packageManager, install.releaseAgeDays),
         failure: 'lockfile resolution failed',
-        env,
+        env: install.registryEnvironment,
     });
-    const lockfilePath = join(runFolder, project.lockfile);
-    let lockfile = readFileSync(lockfilePath, 'utf8');
+    const content = readFileSync(join(runFolder, lockfile), 'utf8');
     assertCredentialFreeLockfile(
-        lockfile,
+        content,
         run.credentials,
         'The package manager wrote registry credentials into its lockfile. gspot kept the existing files.',
     );
-    if (packageManager.name === 'bun') lockfile = stripBunRegistryUrls(lockfile, run.env);
-    if (!isLockfileFresh(packageManager.name, lockfile, project.dependencies, run.env))
-        throw new GspotError(
-            'install',
-            `${packageManager.name} wrote a tool lockfile that does not match the tool project. gspot kept the existing files.`,
-        );
-    return lockfile;
+    return packageManager.name === 'bun' ? stripBunRegistryUrls(content, run.env) : content;
 }
 
 async function runPackageManager(install: ToolInstall, request: PackageManagerRequest): Promise<PackageManagerRun> {
@@ -153,27 +138,23 @@ export async function prepareNpmLockfile(
     toolProjectFile: GeneratedFile,
     yarn: string | undefined,
 ): Promise<GeneratedFile> {
-    const { root } = install.session;
-    const packageManager = install.packageManager;
-    const project = parseToolPackageJson(toolProjectFile.content, packageManager.name);
-    const previous = install.writer.read(project.lockfilePath);
+    const { packageManager, registryEnvironment } = install;
+    const lockfile = selectLockfileName(packageManager.name);
+    const path = `${DOT_GSPOT}/${lockfile}`;
+    const previous = install.writer.read(path);
     const saved = previous?.bytes.toString('utf8');
-    const env = await readRegistryEnvironment(root);
-    if (saved !== undefined)
+    if (saved !== undefined) {
         assertCredentialFreeLockfile(
             saved,
-            extractRegistryCredentials(env),
+            extractRegistryCredentials(registryEnvironment),
             'The npm lockfile holds the registry credentials of the repository. gspot kept the existing files. Remove the credentials from the registry URL.',
         );
-    if (
-        install.writer.read(GSPOT_PATHS.npmProject)?.bytes.equals(Buffer.from(toolProjectFile.content)) === true &&
-        saved !== undefined &&
-        isLockfileFresh(packageManager.name, saved, project.dependencies, env)
-    ) {
-        return { path: project.lockfilePath, content: saved, kind: 'lock', read: previous };
+        const dependencies = listToolProjectPins(install.session.toolConfigurations).npm;
+        if (isLockfileFresh(packageManager.name, saved, dependencies, registryEnvironment))
+            return { path, content: saved, kind: 'lock', read: previous };
     }
-    const lockfile = await createNpmLockfile(install, toolProjectFile, project, saved, yarn, env);
-    return { path: project.lockfilePath, content: lockfile, kind: 'lock', read: previous };
+    const content = await createNpmLockfile(install, { toolProjectFile, lockfile, yarn });
+    return { path, content, kind: 'lock', read: previous };
 }
 
 /**
@@ -183,19 +164,16 @@ Install the npm tool project in .gspot.
 @returns the install summary.
 */
 export async function installNpmTools(install: NpmToolInstall): Promise<string> {
-    const { root } = install.session;
-    const toolProjectFile = install.writer.read(GSPOT_PATHS.npmProject);
-    if (toolProjectFile === undefined) return '';
+    const { root, toolConfigurations } = install.session;
     const packageManager = install.packageManager;
-    const project = parseToolPackageJson(toolProjectFile.bytes.toString('utf8'), packageManager.name);
     install.writer.deleteTree(GSPOT_PATHS.nodeModules);
-    const runFolder = join(root, DOT_GSPOT);
     await runPackageManager(install, {
-        runFolder,
+        runFolder: join(root, DOT_GSPOT),
         packageManager,
         commandArguments: [...PACKAGE_MANAGER_ARGUMENTS[packageManager.name].install],
         failure: 'installation failed',
-        env: await readRegistryEnvironment(root),
+        env: install.registryEnvironment,
     });
-    return `installed ${formatCount(Object.keys(project.dependencies).length, 'npm tool')} in ${GSPOT_PATHS.nodeModules} (${packageManager.name} ${packageManager.version})`;
+    const count = Object.keys(listToolProjectPins(toolConfigurations).npm).length;
+    return `installed ${formatCount(count, 'npm tool')} in ${GSPOT_PATHS.nodeModules} (${packageManager.name} ${packageManager.version})`;
 }

@@ -1,13 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
+import type { ToolPackageJson } from '#cli/types/install/npm.ts';
 import { type EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
@@ -32,14 +31,12 @@ test.each([...IMPORT_RULE_CASES])(
         const settings = buildSandboxSettings(['typescript'], { level, tables: IMPORT_RULE_TABLES[declarations] });
         await createFileTree(sandbox.path, { ...IMPORT_RULE_FILES, 'gspot.toml': settings });
         const eslint = await createEslint(sandbox.path);
-        const session = await openSession(sandbox.path);
-        const packages = parseToolPackageJson(
+        const packages = JSON.parse(
             await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8'),
-            session.packageManager!.name,
-        );
+        ) as ToolPackageJson;
         const isEnabled = level === 'all' || declarations !== 'none';
-        expect(Object.hasOwn(packages.dependencies, 'eslint-plugin-boundaries')).toBe(isEnabled);
-        expect(Object.hasOwn(packages.dependencies, 'eslint-import-resolver-typescript')).toBe(true);
+        expect(Object.hasOwn(packages.devDependencies, 'eslint-plugin-boundaries')).toBe(isEnabled);
+        expect(Object.hasOwn(packages.devDependencies, 'eslint-import-resolver-typescript')).toBe(true);
         if (!isEnabled) await unlink(join(sandbox.path, 'node_modules/eslint-plugin-boundaries'));
         async function lintFiles() {
             const files = ['app/source.ts', 'apps/api/app/source.ts'];

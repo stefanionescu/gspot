@@ -4,7 +4,7 @@ import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { writePlans, planReplacement } from '#cli/write.ts';
+import { writePlans, planReplacements } from '#cli/write.ts';
 import { parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
@@ -70,16 +70,13 @@ Write gspot.toml only while the file on disk still matches the one that the edit
 export function writeSettings(writer: Files, text: string, previous: FileContents | undefined): void {
     const next = { bytes: Buffer.from(text), mode: previous?.mode ?? OWNER_WRITABLE_FILE };
     if (isDeepStrictEqual(next, previous)) return;
-    writePlans(writer, [
-        {
-            ...planReplacement(writer, {
-                path: SETTINGS_FILE,
-                next,
-                expected: previous,
-            }),
+    writePlans(
+        writer,
+        planReplacements(writer, [{ path: SETTINGS_FILE, next, expected: previous }]).map((plan) => ({
+            ...plan,
             before: previous,
-        },
-    ]);
+        })),
+    );
 }
 
 /**

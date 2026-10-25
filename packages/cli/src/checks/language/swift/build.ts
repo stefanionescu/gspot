@@ -1,6 +1,5 @@
 import { compareText } from '#cli/system/text.ts';
 import { join, posix, relative } from 'node:path';
-import type { Session } from '#cli/types/session.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
@@ -11,6 +10,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
@@ -83,7 +83,11 @@ function expandResponseFiles(line: string, folder: string, files: Files): string
     });
 }
 
-async function runSwiftBuild(session: Session, planned: PlannedCheck, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
+async function runSwiftBuild(
+    session: CheckSession,
+    planned: PlannedCheck,
+    plan: SwiftBuildPlan,
+): Promise<SwiftBuildOutput> {
     return getCachedMapValue(session.reads, SWIFT_BUILD_OUTPUTS, plan.folder, async () => {
         const setup = prepareBuild(session.root, planned.files, plan.folder);
         using files = setup.files;
@@ -109,7 +113,7 @@ Builds the scope and reports the compiler errors.
 @param planned the scope to build.
 @returns the findings.
 */
-export async function checkSwiftBuild(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSwiftBuild(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     const plan = planSwiftBuild(session, planned);
     const { output, code, source } = await runSwiftBuild(session, planned, plan);
     const restored = output.replaceAll(removePrivatePrefix(source), () => removePrivatePrefix(session.root));
@@ -121,7 +125,7 @@ export async function checkSwiftBuild(session: Session, planned: PlannedCheck): 
 }
 
 async function runCopiedTool(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     run: { source: string; commandArguments: string[]; defaultRule: string; tool: string },
 ): Promise<Finding[]> {
@@ -146,7 +150,7 @@ Runs the SwiftLint analyzer rules over the compiler log of the build.
 @param planned the scope to analyze.
 @returns the findings.
 */
-export async function checkSwiftSwiftlintAnalyze(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSwiftSwiftlintAnalyze(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     const plan = planSwiftBuild(session, planned, 'analyze');
     const build = await runSwiftBuild(session, planned, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
@@ -173,7 +177,7 @@ Runs Periphery over the project and reports every declaration nothing uses.
 @param planned the scope to scan.
 @returns the findings.
 */
-export async function checkSwiftPeriphery(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSwiftPeriphery(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     const folder = getScopeBuildFolder(session.installedRoot, planned.scope.folder.path, 'periphery');
     const configFile = join(session.root, getConfigFilePath(session, planned, PERIPHERY_TOOL));
     const commandArguments = [...PERIPHERY_COMMAND, configFile];

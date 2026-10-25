@@ -59,12 +59,12 @@ export async function installTools(
             steps,
         };
         await assertPackageManagerVersion(context);
-        const toolNote = await installMiseTools(context);
-        notes.push(...(await installToolProjects(context)));
+        const mise = await installMiseTools(context);
+        notes.push(...(await installToolProjects(context, mise.binPaths)));
         if (configurations.some((configuration) => configuration.tools.some((tool) => tool.name === VALE_TOOL))) {
-            notes.push(await installValePackages(context));
+            notes.push(await installValePackages(context, mise.binPaths));
         }
-        notes.push(installHooks(session, steps), toolNote);
+        notes.push(installHooks(session, steps), mise.note);
         return { note: notes.filter(Boolean).join('\n'), steps };
     } catch (error) {
         session.cancelSignal?.throwIfAborted();

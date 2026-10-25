@@ -1,25 +1,25 @@
 import { planChecks } from '#cli/planning/checks.ts';
-import type { Session } from '#cli/types/session.ts';
 import { parseSettings } from '#cli/settings/read.ts';
-import { readRepository } from '#cli/repository/read.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
+import type { Settings } from '#cli/types/settings/file.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import { selectToolConfigurations } from '#cli/planning/tools.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
+import type { Session, SessionOptions } from '#cli/types/session.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import type { RepositoryListing } from '#cli/types/repository/read.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
-import type { Settings, SettingsFile } from '#cli/types/settings/file.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
+import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
+import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 import type { PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
 import { applyDetectedDefaults, buildAvailableSettings } from '#cli/settings/available.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/npm/package-manager.ts';
-import { classifyFile, listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 
 function buildScopes(
     settings: Settings,
@@ -44,56 +44,37 @@ function buildScopes(
 }
 
 /**
-Read and classify the repository from the authored settings and scopes.
+Classify the listed files of the repository from the authored settings and scopes.
 
-@param input the inputs of the initial repository read.
+@param input the inputs of the repository read.
 @param input.settings the authored settings and scope configuration.
-@param input.text the gspot.toml text as written.
 @param input.configurations the shipped configuration declarations.
 @param input.reads the current repository cache and root folder.
+@param input.listing the files of the repository.
 @returns the inventory used both before and after fixes.
 */
 export async function readSessionRepository({
     settings,
-    text,
     configurations,
     reads,
+    listing,
 }: {
     settings: Settings;
-    text: SettingsFile['text'];
     configurations: Map<string, Configuration>;
     reads: ReadCache;
+    listing: RepositoryListing;
 }): Promise<Repository> {
     const selected = new Map(
         ['', ...Object.keys(settings.scopes)].map((path) => [path, selectForScope(settings, path, configurations)]),
     );
-    const generatedPaths = listConfigurationGeneratedPaths(selected);
-    const repository = await readRepository(reads, {
-        generatedPaths,
+    return readRepository(reads, listing, {
+        generatedPaths: listConfigurationGeneratedPaths(selected),
         scopes: Object.entries(settings.scopes).map(([path, scope]) => ({
             path,
             configurations: scope.configurations,
         })),
         configurations,
     });
-    if (!repository.files.some((file) => file.path === SETTINGS_FILE)) {
-        const bytes = Buffer.from(text);
-        reads.sources.set(SETTINGS_FILE, bytes);
-        repository.files.push(
-            classifyFile(
-                reads.root,
-                {
-                    path: SETTINGS_FILE,
-                    executable: false,
-                    symlink: false,
-                    size: bytes.length,
-                },
-                bytes,
-                { generatedPaths, attributes: repository.attributes },
-            ),
-        );
-    }
-    return repository;
 }
 
 /**
@@ -103,6 +84,7 @@ Open a repository session. Refuse invalid settings or configuration choices.
 @param options where the tools sit, and what the run already read.
 @param options.installedRoot the working repository with the installed tools.
 @param options.reads the run cache.
+@param options.listing the files of the repository, or none to list them.
 @param options.settingsFile the settings to use, or none to read them from the repository.
 @param options.resources the cleanup stack of the caller.
 @param options.cancelSignal stops the operations of this session.
@@ -113,16 +95,11 @@ export async function openSession(
     {
         installedRoot = rootPath,
         reads = createReadCache(rootPath),
+        listing,
         settingsFile: requestedSettings,
         resources = new DisposableStack(),
         cancelSignal,
-    }: {
-        installedRoot?: string;
-        reads?: ReadCache;
-        settingsFile?: SettingsFile;
-        resources?: DisposableStack;
-        cancelSignal?: AbortSignal | undefined;
-    } = {},
+    }: SessionOptions = {},
 ): Promise<Session> {
     let settingsFile = requestedSettings;
     if (settingsFile === undefined) {
@@ -132,7 +109,12 @@ export async function openSession(
     const root = reads.root;
     const configurations = readConfigurations();
     const settings = settingsFile.settings;
-    const repository = await readSessionRepository({ settings, text: settingsFile.text, configurations, reads });
+    const repository = await readSessionRepository({
+        settings,
+        configurations,
+        reads,
+        listing: listing ?? (await listRepositoryFiles(reads)),
+    });
     let pin: PackageManagerPin | undefined;
     const readPackageManager = () =>
         (pin ??= detectPackageManager(

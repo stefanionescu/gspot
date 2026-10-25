@@ -7,10 +7,10 @@ import { parse } from '@decimalturn/toml-patch';
 import { getTool } from '#cli/configurations/tools.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import type { ToolPackageJson } from '#cli/types/install/npm.ts';
 import { buildNpmProject } from '#cli/generation/tool-projects.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { toolPyprojectSchema } from '#cli/schemas/install/python.ts';
-import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
+import type { PythonToolProject } from '#cli/types/install/tool-projects.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
 
 import {
@@ -33,9 +33,9 @@ test.each([...STYLESHEET_CASES])(
         const session = await openSession(sandbox.path);
         const packageJsonFile = generate(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
         expect(
-            Object.keys(
-                parseToolPackageJson(packageJsonFile.content, session.packageManager!.name).dependencies,
-            ).includes('postcss-html'),
+            Object.keys((JSON.parse(packageJsonFile.content) as ToolPackageJson).devDependencies).includes(
+                'postcss-html',
+            ),
         ).toBe(row.needsHtmlParser);
     },
 );
@@ -53,12 +53,12 @@ test('a React Native project without Expo installs no Expo or DOM lint plugins',
 
     const session = await openSession(sandbox.path);
     const generated = generate(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
-    const project = parseToolPackageJson(generated.content, session.packageManager!.name);
-    expect(project.dependencies).not.toHaveProperty('eslint-plugin-react-native');
-    expect(project.dependencies).toHaveProperty('@react-native/eslint-plugin');
-    expect(project.dependencies).not.toHaveProperty('eslint-plugin-expo');
-    expect(project.dependencies).not.toHaveProperty('expo-doctor');
-    expect(project.dependencies).not.toHaveProperty('eslint-plugin-jsx-a11y-x');
+    const project = JSON.parse(generated.content) as ToolPackageJson;
+    expect(project.devDependencies).not.toHaveProperty('eslint-plugin-react-native');
+    expect(project.devDependencies).toHaveProperty('@react-native/eslint-plugin');
+    expect(project.devDependencies).not.toHaveProperty('eslint-plugin-expo');
+    expect(project.devDependencies).not.toHaveProperty('expo-doctor');
+    expect(project.devDependencies).not.toHaveProperty('eslint-plugin-jsx-a11y-x');
 });
 
 test.each([...LICENSE_TOOL_CASES])(
@@ -74,14 +74,14 @@ test.each([...LICENSE_TOOL_CASES])(
         const session = await openSession(sandbox.path);
         const generated = generate(session);
         const npmProject = generated.files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
-        expect(parseToolPackageJson(npmProject.content, session.packageManager!.name).dependencies).toHaveProperty(
+        expect((JSON.parse(npmProject.content) as ToolPackageJson).devDependencies).toHaveProperty(
             'license-checker-rseidelsohn',
         );
         const pythonProject = generated.files.find(({ path }) => path === GSPOT_PATHS.pythonProject)!;
         expect(
-            toolPyprojectSchema
-                .parse(parse(pythonProject.content))
-                .project.dependencies.some((dependency) => dependency.startsWith('pip-licenses')),
+            (parse(pythonProject.content) as { project: PythonToolProject }).project.dependencies.some((dependency) =>
+                dependency.startsWith('pip-licenses'),
+            ),
         ).toBe(false);
     },
 );
@@ -135,11 +135,9 @@ test.each([...NEXT_REQUIREMENTS])(
 
         const session = await openSession(join(sandbox.path, 'project'));
         const generated = generate(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
-        expect(
-            parseToolPackageJson(generated!.content, session.packageManager!.name).dependencies[
-                '@next/eslint-plugin-next'
-            ],
-        ).toBe(getTool(session.configurations.values(), '@next/eslint-plugin-next').version);
+        expect((JSON.parse(generated!.content) as ToolPackageJson).devDependencies['@next/eslint-plugin-next']).toBe(
+            getTool(session.configurations.values(), '@next/eslint-plugin-next').version,
+        );
     },
 );
 
@@ -155,7 +153,7 @@ test('Next.js scopes keep one manifest plugin pin', async () => {
 
     const session = await openSession(sandbox.path);
     const output = generate(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
-    expect(
-        parseToolPackageJson(output!.content, session.packageManager!.name).dependencies['@next/eslint-plugin-next'],
-    ).toBe(getTool(session.configurations.values(), '@next/eslint-plugin-next').version);
+    expect((JSON.parse(output!.content) as ToolPackageJson).devDependencies['@next/eslint-plugin-next']).toBe(
+        getTool(session.configurations.values(), '@next/eslint-plugin-next').version,
+    );
 });

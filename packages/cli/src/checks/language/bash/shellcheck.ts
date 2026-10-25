@@ -1,4 +1,4 @@
-import { type Session } from '#cli/types/session.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
@@ -13,7 +13,7 @@ Runs ShellCheck, and passes a dialect only for scripts without a shebang.
 @param planned the ShellCheck check and its files.
 @returns the check result.
 */
-export async function checkBashShellcheck(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkBashShellcheck(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const groups = Map.groupBy(planned.files, (file) => {
         if (file.path.endsWith(BATS_EXTENSION) || file.path.endsWith(`.${DEFAULT_DIALECT}`)) return undefined;
         return readCachedText(session.reads, file.path).startsWith('#!') ? undefined : DEFAULT_DIALECT;

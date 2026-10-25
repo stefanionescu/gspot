@@ -11,12 +11,12 @@ import { classifyFile } from '#cli/repository/files/classify.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { detectSwiftTags } from '#cli/repository/files/swift-tags.ts';
-import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { readCachedText, readCachedPrefix } from '#cli/system/files/reads.ts';
 import { SWIFT_EXTENSION, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { readIndexFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { runGitBlocking, isGitRepository, isNotRepository } from '#cli/system/git.ts';
 import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
+import type { RepositoryListing, RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 import { FILE_PREFIX_BYTES, GIT_CHECK_ATTRIBUTES_ARGUMENTS } from '#cli/config/repository/read.ts';
 import { mergeAttributes, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
@@ -32,9 +32,35 @@ function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Re
 }
 
 /**
-Read the tracked files, dependency files, and the written and discovered scopes.
+List the tracked files and the untracked files that Git does not ignore. Each file comes with its first bytes and its Git
+attributes.
 
 @param reads the run cache.
+@returns the files, the Git index, and the attributes of each file.
+*/
+export async function listRepositoryFiles(reads: ReadCache): Promise<RepositoryListing> {
+    const root = reads.root;
+    const hasGit = isGitRepository(root);
+    const index = hasGit ? await readIndexFiles(root) : [];
+    const listedFiles = await listTrackedFiles(root, index, { hasGit });
+    const attributes = hasGit
+        ? readAttributes(
+              root,
+              listedFiles.map((listedFile) => listedFile.path),
+          )
+        : new Map<string, Record<string, string>>();
+    const files = listedFiles.map((listedFile) => ({
+        ...listedFile,
+        prefix: listedFile.symlink ? Buffer.alloc(0) : readCachedPrefix(reads, listedFile.path, FILE_PREFIX_BYTES),
+    }));
+    return { root, hasGit, index, attributes, files };
+}
+
+/**
+Classify the listed files, and read the dependency files and the written and discovered scopes.
+
+@param reads the run cache.
+@param listing the files that listRepositoryFiles found.
 @param options what the read needs.
 @param options.generatedPaths the generated and vendored path rules.
 @param options.scopes the written scope tables.
@@ -43,25 +69,14 @@ Read the tracked files, dependency files, and the written and discovered scopes.
 */
 export async function readRepository(
     reads: ReadCache,
+    listing: RepositoryListing,
     { generatedPaths, scopes, configurations }: RepositoryReadOptions,
 ): Promise<Repository> {
-    const root = reads.root;
-    const hasGit = isGitRepository(root);
-    const index = hasGit ? await readIndexFiles(root) : [];
-    const listedFiles = await listTrackedFiles(root, index, { hasGit });
+    const { root, hasGit, index, attributes } = listing;
     using files = openFiles(root);
     const tracked: TrackedFile[] = [];
-    const attributes = hasGit
-        ? readAttributes(
-              root,
-              listedFiles.map((listedFile) => listedFile.path),
-          )
-        : new Map<string, Record<string, string>>();
-    for (const listedFile of listedFiles) {
-        const prefix = listedFile.symlink
-            ? Buffer.alloc(0)
-            : readCachedPrefix(reads, listedFile.path, FILE_PREFIX_BYTES);
-        const file = classifyFile(root, listedFile, prefix, { generatedPaths, attributes });
+    for (const listedFile of listing.files) {
+        const file = classifyFile(root, listedFile, listedFile.prefix, { generatedPaths, attributes });
         if (!listedFile.symlink && file.kind === 'source' && file.path.endsWith(SWIFT_EXTENSION)) {
             const tags = await detectSwiftTags(file.path, readCachedText(reads, file.path));
             file.tags.push(...tags);
@@ -126,13 +141,13 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
 }
 
 /**
-Find the Git top level, or the nearest settings folder outside Git.
+Read the top level from Git, or find the nearest settings folder outside a repository.
 Without settings outside Git, return the starting folder.
 
 @param start where the search begins.
 @returns the settings folder, Git top level, or starting folder outside Git.
 */
-export function findRoot(start: string): string {
+export function readRepositoryRoot(start: string): string {
     const folder = realpathSync(start);
     const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS, { env: GIT_LOCALE });
     if (top.code === 0) return resolve(top.stdout.replace(TRAILING_NEWLINE, ''));

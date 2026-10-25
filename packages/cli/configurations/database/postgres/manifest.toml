@@ -25,6 +25,7 @@ version = "2.70.0"
 [[config_file]]
 per_scope = true
 target = "squawk.toml"
+tool = "squawk"
 
 [[check]]
 command = ["squawk", "--config", "{config_file:squawk}", "--reporter", "json", "{files}"]

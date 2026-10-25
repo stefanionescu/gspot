@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { isPortablePath } from '#cli/system/files/names.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { assertWritablePath } from '#cli/system/files/names.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { link, stat, symlink, readFile } from 'node:fs/promises';
 import { OUTSIDE_LINKS, MODE_REPLACEMENTS } from '#tests/config/system/files/open.ts';
@@ -19,14 +19,7 @@ test.skipIf(isWindows)(
         const previous = { bytes: Buffer.from('inside'), mode: 0o640 };
         root.write(path, previous, undefined);
         expect(root.read(path)).toStrictEqual(previous);
-        expect(() => {
-            assertWritablePath(path);
-        }).toThrow(
-            matchFields({
-                message:
-                    '"folder/a\\n\\"\u{E9}:?.txt" is not a safe repository-relative path. Choose a path inside the repository.',
-            }),
-        );
+        expect(isPortablePath(path)).toBe(false);
         const link = { bytes: Buffer.from(path), mode: 0o777, isLink: true as const };
         await symlink(path, join(sandbox.path, 'linked'));
         expect(root.readKeepingLinks('linked')).toStrictEqual(link);

@@ -72,7 +72,8 @@ function expandArgument(
     if (workspace !== undefined) {
         if (
             substitutions.scope === '' ||
-            statSync(join(session.root, substitutions.scope, PACKAGE_JSON), { throwIfNoEntry: false }) === undefined
+            statSync(join(substitutions.root, substitutions.scope, PACKAGE_JSON), { throwIfNoEntry: false }) ===
+                undefined
         )
             return [];
         return [workspace, substitutions.scope];
@@ -187,7 +188,7 @@ export function replacePlaceholders(
             session.settingsFile.settings.level === 'all' ? all : recommended,
         )
         .replaceAll(CONFIG_FILE_PLACEHOLDER, (_match, name: string) =>
-            convertToSystemPath(join(session.root, getConfigFilePath(session, planned, name))),
+            convertToSystemPath(join(substitutions.root, getConfigFilePath(session, planned, name))),
         )
         .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) =>
             convertToSystemPath(selectPointerPath(session, substitutions.scope, name)),

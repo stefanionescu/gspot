@@ -3,20 +3,21 @@ import { test, expect } from 'bun:test';
 import { openWriter } from '#cli/write.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
+import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { listMisePins } from '#cli/configurations/tools.ts';
 import { writeGeneratedFiles } from '#cli/apply/generated.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { preparePythonLockfile } from '#cli/install/python.ts';
-import type { NpmToolInstall } from '#cli/types/install/npm.ts';
 import { prepareNpmLockfile } from '#cli/install/npm/project.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { toolAdvisoryReportSchema } from '#tests/schemas/tool-projects.ts';
-import { readRuntimePins, buildToolInstall } from '#tests/setup/cli/tools.ts';
+import { readToolBinPaths, listExecutablePaths } from '#cli/tools/locate.ts';
+import { readRuntimePins, buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import { TOOL_ADVISORY_EXCEPTIONS } from '#tests/config/integration/install/tool-projects.ts';
 
 async function scanToolProjects(root: string, configurations: Configuration[]) {
@@ -55,18 +56,24 @@ test('every shipped npm and Python tool lockfile has only dated accepted advisor
     const generated = generate(session);
     using writer = openWriter(sandbox.path);
     await writeGeneratedFiles(session, generated, writer);
-    const install = buildToolInstall(session, writer) as NpmToolInstall;
+    const install = await buildNpmToolInstall(session, writer);
     const projects = generated.files.filter(
         ({ path }) => path === GSPOT_PATHS.npmProject || path === GSPOT_PATHS.pythonProject,
     );
     expect(projects.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
         [GSPOT_PATHS.npmProject, GSPOT_PATHS.pythonProject].toSorted((left, right) => left.localeCompare(right)),
     );
+    const [uvPath = UV_TOOL] = listExecutablePaths(session.installedRoot, UV_TOOL, {
+        search: 'path',
+        searchFolders: [],
+        miseBinPaths: readToolBinPaths(session),
+        timeoutSeconds: session.timeoutSeconds,
+    });
     for (const project of projects) {
         const lockfile =
             project.path === GSPOT_PATHS.npmProject
                 ? await prepareNpmLockfile(install, project, undefined)
-                : await preparePythonLockfile(install, project);
+                : await preparePythonLockfile(install, project, uvPath);
         await writeFile(join(sandbox.path, lockfile.path), lockfile.content);
     }
     const report = await scanToolProjects(sandbox.path, session.toolConfigurations);

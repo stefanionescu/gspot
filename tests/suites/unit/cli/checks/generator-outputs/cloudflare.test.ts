@@ -8,7 +8,6 @@ import { getTool } from '#cli/configurations/tools.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { runCheckCode } from '#cli/commands/check/run.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
@@ -16,6 +15,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { UNTRACKED_CLOUDFLARE_FINDINGS } from '#tests/config/checks/generator-outputs.ts';
 
 async function mockWrangler(root: string): Promise<DisposableStack> {
@@ -49,7 +49,7 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
     resources.use(await mockWrangler(sandbox.path));
     const run = resources.use(spyOnWranglerTypes(source));
     const planned = planSandboxCheck(session, 'cloudflare/stale-types', { scope: 'workers/api' });
-    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+    const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
     expect(result.findings).toStrictEqual([]);
     expect(run.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([
         ['types', 'cloudflare-env.d.ts', '--env-interface', 'CloudflareEnv'],
@@ -79,13 +79,21 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
         types_interface: 'CloudflareEnv',
     });
     const untrackedCheck = planSandboxCheck(untracked, 'cloudflare/stale-types');
-    const untrackedResult = await runCheckCode(untracked, untrackedCheck, findCheckCode(untrackedCheck.check));
+    const untrackedResult = await runCheckCode(
+        buildCheckSession(untracked),
+        untrackedCheck,
+        findCheckCode(untrackedCheck.check),
+    );
     expect(untrackedResult.findings).toMatchObject([...UNTRACKED_CLOUDFLARE_FINDINGS]);
     expect(run).not.toHaveBeenCalled();
     commitAll(sandbox.path);
     const tracked = await openSession(sandbox.path);
     const trackedCheck = planSandboxCheck(tracked, 'cloudflare/stale-types');
-    const trackedResult = await runCheckCode(tracked, trackedCheck, findCheckCode(trackedCheck.check));
+    const trackedResult = await runCheckCode(
+        buildCheckSession(tracked),
+        trackedCheck,
+        findCheckCode(trackedCheck.check),
+    );
     expect(trackedResult.findings).toStrictEqual([]);
     expect(run.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([
         ['types', 'cloudflare-env.d.ts', '--env-interface', 'CloudflareEnv'],

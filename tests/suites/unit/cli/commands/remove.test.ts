@@ -10,6 +10,7 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import { listToolInstallFiles } from '#tests/setup/cli/tools.ts';
 import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
+import { MANAGED_KEYS_NOTE } from '#cli/config/apply/generated.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { readSandboxSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -208,4 +209,19 @@ test('remove names only removed configurations in a mixed request', async () => 
     const settings = readSandboxSettings(sandbox.path);
     expect(settings.configurations).toStrictEqual([]);
     expect(settings.removed_configurations).toStrictEqual(['bash']);
+});
+
+test('remove notes the package.json keys that stay after css goes, and bash adds no such note', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['css', 'bash']),
+        'style.css': 'a { color: red; }\n',
+        'source.sh': 'echo example\n',
+    });
+    const reason = 'The front end moved to another repository.';
+    const css = await runGspot(sandbox.path, ['remove', 'css', '--reason', reason, '--json']);
+    expect(css.code, css.stdout + css.stderr).toBe(0);
+    expect((JSON.parse(css.stdout) as ApplyReport).notes).toContain(MANAGED_KEYS_NOTE);
+    const bash = await runGspot(sandbox.path, ['remove', 'bash', '--reason', reason, '--json']);
+    expect(bash.code, bash.stdout + bash.stderr).toBe(0);
+    expect((JSON.parse(bash.stdout) as ApplyReport).notes).not.toContain(MANAGED_KEYS_NOTE);
 });

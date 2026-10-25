@@ -14,8 +14,8 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { PYTHON_VERSION } from '#cli/config/install/python.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { toolPyprojectSchema } from '#cli/schemas/install/python.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import type { PythonToolProject } from '#cli/types/install/tool-projects.ts';
 
 import {
     installPythonTools,
@@ -36,7 +36,7 @@ import {
 
 const projectText = PYTHON_TOOL_PROJECT.replaceAll('{python-version}', () => PYTHON_VERSION);
 
-const pythonProject = toolPyprojectSchema.parse(parse(projectText));
+const pythonProject = (parse(projectText) as { project: PythonToolProject }).project;
 const lockfileText = PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', () => PYTHON_VERSION);
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
@@ -86,16 +86,16 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     });
     using writer = openWriter(sandbox.path);
     const session = await openSession(sandbox.path);
-    session.uvPath = 'synthetic-uv';
     const read = writer.read.bind(writer);
     using _read = spyOn(writer, 'read').mockImplementation((path) =>
         path === GSPOT_PATHS.uvLockfile ? undefined : read(path),
     );
     const lockfileError = await captureRejection(
-        preparePythonLockfile(buildToolInstall(session, writer), {
-            path: GSPOT_PATHS.pythonProject,
-            content: projectText,
-        }),
+        preparePythonLockfile(
+            buildToolInstall(session, writer),
+            { path: GSPOT_PATHS.pythonProject, content: projectText },
+            'synthetic-uv',
+        ),
     );
     expect(lockfileError).toMatchObject(LOCKFILE_PASSWORD_ERROR);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(lockfileText);
@@ -124,7 +124,7 @@ test('uv installs the tool project with its own Python, whatever UV_PYTHON and .
 test('the uv lockfile check ignores name spelling and requirement order and refuses invalid TOML and a range', () => {
     expect(isPythonLockfileFresh(pythonProject, lockfileText, {})).toBe(true);
     expect(isPythonLockfileFresh(pythonProject, 'not valid =', {})).toBe(false);
-    const rangedProject = toolPyprojectSchema.parse(parse(projectText.replace('==1.2.3', '>=1.2.3')));
+    const rangedProject = (parse(projectText.replace('==1.2.3', '>=1.2.3')) as { project: PythonToolProject }).project;
     const exists = isPythonLockfileFresh(rangedProject, lockfileText, {});
     expect(exists).toBe(false);
 });

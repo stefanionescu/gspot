@@ -16,9 +16,9 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { writeGeneratedFiles } from '#cli/apply/generated.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runChecks, runCheckCode } from '#cli/commands/check/run.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 
 import {
@@ -47,7 +47,7 @@ test('actionlint copies root actions and unchanged actions outside .github with 
         return buildProcessResult();
     });
     const planned = planChecks(session, buildRunOptions({ only: ['github-actions/actionlint'] }))[0]!;
-    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+    const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
     expect(result.findings).toStrictEqual([]);
     expect(boundary).toHaveBeenCalledTimes(1);
     for (const [path, source] of Object.entries(OUTSIDE_GITHUB_ACTIONS))
@@ -107,7 +107,7 @@ test.each([...WORKFLOW_TEXT_CASES])(
             return buildProcessResult();
         });
         const [planned] = planChecks(session, { stage: 'commit', only: ['github-actions/actionlint'] });
-        const result = await runCheckCode(session, planned!, findCheckCode(planned!.check));
+        const result = await runCheckCode(buildCheckSession(session), planned!, findCheckCode(planned!.check));
         expect(result.status, JSON.stringify(result)).toBe('passed');
         expect(run).toHaveBeenCalledTimes(1);
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(before);
@@ -143,7 +143,7 @@ test.each([...ACTIONLINT_EXITS])(
         const plans = planChecks(session, { stage: 'commit', only: ['github-actions/actionlint'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };
-        const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+        const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
         expect(result.status, JSON.stringify(result)).toBe(status);
         const workspace = await readFile(record, 'utf8');
         expect(workspace).not.toBe(sandbox.path);

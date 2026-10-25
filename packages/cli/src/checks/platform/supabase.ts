@@ -4,7 +4,6 @@ import { isTable } from '#cli/system/tables.ts';
 import { join, posix, relative } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Parsed } from '#cli/types/shapes.ts';
-import type { Session } from '#cli/types/session.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -16,6 +15,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
@@ -100,7 +100,7 @@ function listFunctionEntrypoints(planned: PlannedCheck): string[] {
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 async function runDenoCommand(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     command: readonly string[],
     folder: string,
@@ -157,7 +157,7 @@ Runs deno lint on each edge function.
 @param planned the scope files to lint.
 @returns the findings.
 */
-export async function checkSupabaseDenoLint(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSupabaseDenoLint(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const entrypoint of listFunctionEntrypoints(planned)) {
         const folder = posix.dirname(entrypoint);
@@ -200,7 +200,7 @@ Reports the first type error of each edge function, from deno check on its entry
 @param planned the scope files to check.
 @returns the findings.
 */
-export async function checkSupabaseDenoCheck(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSupabaseDenoCheck(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const entrypoint of listFunctionEntrypoints(planned)) {
         const folder = posix.dirname(entrypoint);

@@ -8,8 +8,8 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { symlink, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runChecks, runCheckCode } from '#cli/commands/check/run.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 
 test('a [[command_check]] with outputs reports an output that differs from what its command writes', async () => {
     await using sandbox = await testdir();
@@ -52,7 +52,7 @@ test('generator output patterns omit directory links', async () => {
             generator_outputs: [{ kind: 'pattern' as const, path: 'generated/**' }],
         },
     };
-    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+    const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
     expect(result.findings).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'generated/regular/output.txt'), 'utf8')).toBe('generated\n');
 });

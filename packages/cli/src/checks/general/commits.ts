@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { runGit } from '#cli/system/git.ts';
-import { type Session } from '#cli/types/session.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
+import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
@@ -18,7 +18,7 @@ Checks every pushed commit message, including empty commits that change no files
 @param planned the commitlint check and commit range.
 @returns the check result.
 */
-export async function checkCommitsCommitlintPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkCommitsCommitlintPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     using folder = createTemporaryFolder();
     const commitFile = join(folder.path, MESSAGE_FILE);
     let count = 0;

@@ -1,7 +1,6 @@
 import { compareText } from '#cli/system/text.ts';
 import { buildDiff } from '#cli/apply/outdated.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
@@ -13,11 +12,12 @@ import type { CheckRunOptions } from '#cli/types/runs/check.ts';
 import type { CommandLaunch } from '#cli/types/runs/command.ts';
 import { FIX_ROUNDS } from '#cli/config/commands/check/fixes.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import { findTool, runToolProcess } from '#cli/runs/command/tool.ts';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import type { FixReport, FixResult } from '#cli/types/runs/fixes.ts';
 import { createCopy, selectCopyPaths } from '#cli/runs/copy/files.ts';
 import type { GrammarName } from '#cli/types/parsers/code/grammars.ts';
 import type { FixRounds, PathBytes } from '#cli/types/commands/check.ts';
+import { runToolProcess, readToolAvailability } from '#cli/runs/command/tool.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { prepareCommand, prepareCommandIn, buildCommandSetup, createCommandCopy } from '#cli/runs/command/check.ts';
 
@@ -65,11 +65,11 @@ async function runFixInCopy(
         options,
     }: { session: Session; root: string; command: string[]; toolPath: string; options: CheckRunOptions },
 ): Promise<FixResult> {
-    const source = { ...session, root };
     using scratch = await createCommandCopy(planned, {
-        session: source,
+        session,
+        root,
         command,
-        configFiles: options.listConfigFiles?.(source, planned) ?? [],
+        configFiles: options.listConfigFiles?.(session, planned) ?? [],
     });
     const setup = prepareCommandIn(scratch.path, planned, { session, command, toolPath, options });
     using files = openFiles(root);
@@ -95,7 +95,7 @@ function mergeResults(first: FixResult | undefined, next: FixResult): FixResult 
 }
 
 async function runFixTool(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     { root, command, tool }: { root: string; command: string[]; tool: Tool },
 ): Promise<FixResult> {
@@ -105,8 +105,8 @@ async function runFixTool(
         listConfigFiles: code?.listConfigFiles,
     };
     const selected = { ...planned, tool };
-    const setup = buildCommandSetup(session, selected, options);
-    const availability = findTool(session, setup.cwd, tool);
+    const setup = buildCommandSetup(session, selected, { options, root: session.root });
+    const availability = readToolAvailability(session, setup.cwd, tool);
     if ('status' in availability)
         return { check: planned.check.id, status: 'failed', changed: [], note: availability.note };
     const toolPath = availability.path;
@@ -119,7 +119,7 @@ async function runFixTool(
     return runFixCommands(session, planned, fixSetup);
 }
 
-async function runFixer(session: Session, planned: PlannedCheck, root: string): Promise<FixResult> {
+async function runFixer(session: CheckSession, planned: PlannedCheck, root: string): Promise<FixResult> {
     const check = planned.check.id;
     if (session.cancelSignal?.aborted === true)
         return { check, status: 'failed', changed: [], note: 'The fix was canceled.' };
@@ -156,7 +156,7 @@ function listChangedPaths(before: PathBytes, after: PathBytes): string[] {
 }
 
 async function runFixerRounds(
-    session: Session,
+    session: CheckSession,
     checks: PlannedCheck[],
     sourceRoot: string,
     paths: string[],
@@ -216,7 +216,7 @@ Runs fixes in passes and collects their results. A dry run always removes its co
 @returns the fix results, changed paths, and dry-run diffs.
 */
 export async function runFixers(
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck[],
     { isDryRun }: { isDryRun: boolean },
 ): Promise<FixReport> {

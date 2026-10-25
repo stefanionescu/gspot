@@ -161,7 +161,7 @@ test('per-file commands keep the arguments after the file', async () => {
     const setup = prepareCommand(planned, {
         session,
         command: planned.check.command!,
-        setup: buildCommandSetup(session, planned, {}),
+        setup: buildCommandSetup(session, planned, { options: {}, root: session.root }),
         toolPath: process.execPath,
     });
     const result = await spawnProcess(setup.commandLines[0]!.commandArguments, {
@@ -192,7 +192,7 @@ test.each([...SHFMT_INDENT_CASES])(
         const command = prepareCommand(planned!, {
             session,
             command: planned!.check.command!,
-            setup: buildCommandSetup(session, planned!, {}),
+            setup: buildCommandSetup(session, planned!, { options: {}, root: session.root }),
             toolPath: process.execPath,
         });
         expect(command.commandArguments[command.commandArguments.indexOf('-i') + 1]).toBe(expected);

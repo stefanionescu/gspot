@@ -6,6 +6,7 @@ import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readGitSetting } from '#cli/system/git.ts';
 import type { WritePlan } from '#cli/types/apply.ts';
+import type { Session } from '#cli/types/session.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { findText } from '#cli/system/files/reads.ts';
@@ -20,18 +21,20 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { writeGeneratedFiles } from '#cli/apply/generated.ts';
 import { DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
+import type { SettingsFile } from '#cli/types/settings/file.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
-import { findRoot, readRepository } from '#cli/repository/read.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { RepositorySetup } from '#cli/types/repository/setup.ts';
-import type { Files, FileContents } from '#cli/types/system/files.ts';
+import type { RepositoryListing } from '#cli/types/repository/read.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup.ts';
 import { listForeignDisableComments } from '#cli/commands/init/eslint-disable-comments.ts';
+import { type Files, type ReadCache, type FileContents } from '#cli/types/system/files.ts';
 import { planInitFiles, formatInitPlan, formatDetection } from '#cli/commands/init/plan.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings-text.ts';
+import { readRepository, readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts';
 import { listCommittedPaths, readConflictingConfigFiles } from '#cli/commands/init/conflicting-config-files.ts';
 
 import {
@@ -51,7 +54,7 @@ import type {
 } from '#cli/types/commands/init.ts';
 
 async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJson>> {
-    const root = findRoot(options.cwd);
+    const root = readRepositoryRoot(options.cwd);
     if (findText(root, SETTINGS_FILE) !== undefined)
         throw new GspotError(
             'settings',
@@ -119,10 +122,31 @@ function assertConflictingFilesCommitted(root: string, paths: string[]): void {
         );
 }
 
+async function openPlannedSession(
+    root: string,
+    { reads, listing, settingsFile }: { reads: ReadCache; listing: RepositoryListing; settingsFile: SettingsFile },
+): Promise<Session> {
+    const bytes = Buffer.from(settingsFile.text);
+    reads.sources.set(SETTINGS_FILE, bytes);
+    const trackedSettings = {
+        path: SETTINGS_FILE,
+        executable: false,
+        symlink: false,
+        size: bytes.length,
+        prefix: bytes,
+    };
+    return openSession(root, {
+        settingsFile,
+        reads,
+        listing: { ...listing, files: [...listing.files, trackedSettings] },
+    });
+}
+
 async function planInit(root: string, options: InitOptions): Promise<InitPlanning> {
     const reads = createReadCache(root);
     const configurations = readConfigurations();
-    const repository = await readRepository(reads, { generatedPaths: [], scopes: [], configurations });
+    const listing = await listRepositoryFiles(reads);
+    const repository = await readRepository(reads, listing, { generatedPaths: [], scopes: [], configurations });
     const initConfigurations = selectForInit({ repository, configurations, options });
     const repositorySetup = readRepositorySetup(reads, repository);
     const ciProvider = detectCiProvider(root, repositorySetup);
@@ -134,7 +158,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
     const draft = buildSettingsDraft(initConfigurations, answers, options);
     const settingsText = buildInitSettings(draft, repository, configurations);
     const settings = parseSettings(settingsText, root);
-    const session = await openSession(root, { settingsFile: { settings, text: settingsText } });
+    const session = await openPlannedSession(root, { reads, listing, settingsFile: { settings, text: settingsText } });
     const everySelected = listSelectedConfigurations(session.scopes);
     const applicable = session.toolConfigurations;
     const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));

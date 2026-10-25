@@ -3,7 +3,6 @@ import { openSession } from '#cli/session.ts';
 import { type Session } from '#cli/types/session.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { runCheckCode } from '#cli/commands/check/run.ts';
 import * as environment from '#cli/system/environment.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
@@ -12,6 +11,7 @@ import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 
 /**
@@ -110,7 +110,7 @@ export async function runSandboxCheck(
     using resources = new DisposableStack();
     const session = await openSession(root, { resources: options.resources ?? resources });
     const planned = planSandboxCheck(session, checkId, options);
-    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+    const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
     return result.findings;
 }
 
@@ -137,7 +137,7 @@ export function findBuiltInCheck(checkId: string): (session: Session, planned: P
     const check = findCheckCode({ id: checkId })?.check;
     if (check === undefined) throw new Error(`${checkId} has no built-in check.`);
     return async (session, planned) => {
-        const result = await check(session, planned);
+        const result = await check(buildCheckSession(session), planned);
         return Array.isArray(result) ? result : result.findings;
     };
 }

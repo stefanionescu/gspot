@@ -1,5 +1,5 @@
-import type { Session } from '#cli/types/session.ts';
 import type { CHECK_STATUSES } from '#cli/config/runs/check.ts';
+import type { Session, CheckSession } from '#cli/types/session.ts';
 import type { SkipCause, PlannedCheck } from '#cli/types/planning.ts';
 
 type CheckStatus = (typeof CHECK_STATUSES)[number];
@@ -8,7 +8,7 @@ export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun
     Pick<CheckRunOptions, 'listFileArguments' | 'listConfigFiles'>;
 
 type CheckRun = (
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
     options?: CheckRunOptions,
 ) => CheckResult | Promise<CheckResult>;
@@ -24,7 +24,7 @@ export type CheckRunOptions = {
 export type BuiltInCheckResult = { findings: Finding[]; files: string[] };
 
 export type BuiltInCheck = (
-    session: Session,
+    session: CheckSession,
     planned: PlannedCheck,
 ) => Finding[] | BuiltInCheckResult | Promise<Finding[] | BuiltInCheckResult>;
 

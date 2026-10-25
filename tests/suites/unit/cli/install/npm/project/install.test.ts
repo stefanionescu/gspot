@@ -8,8 +8,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildToolInstall } from '#tests/setup/cli/tools.ts';
-import type { NpmToolInstall } from '#cli/types/install/npm.ts';
+import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
+import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -36,7 +36,7 @@ async function prepareCredentialProject(root: string, packageJson: string, lockf
     };
     await createFileTree(root, files);
     using owner = openWriter(root);
-    const install = buildToolInstall(await openSession(root), owner) as NpmToolInstall;
+    const install = await buildNpmToolInstall(await openSession(root), owner);
     const error = await captureRejection(
         prepareNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: CREDENTIAL_PACKAGE_JSON }, undefined),
     );
@@ -79,9 +79,9 @@ test.each([...FAILED_INSTALL_CASES])(
         );
         const installationError = await captureRejection(
             frozen
-                ? installNpmTools(buildToolInstall(session, owner) as NpmToolInstall)
+                ? installNpmTools(await buildNpmToolInstall(session, owner))
                 : prepareNpmLockfile(
-                      buildToolInstall(session, owner) as NpmToolInstall,
+                      await buildNpmToolInstall(session, owner),
                       { path: GSPOT_PATHS.npmProject, content: packageJson },
                       undefined,
                   ),
@@ -113,7 +113,7 @@ test('an npm install that runs past the time limit names the limit', async () =>
             buildProcessResult(command.at(-1) === '--version' ? { stdout: '1.4.2\n' } : { code: 1, timedOut: true }),
         ),
     );
-    const error = await captureRejection(installNpmTools(buildToolInstall(session, owner) as NpmToolInstall));
+    const error = await captureRejection(installNpmTools(await buildNpmToolInstall(session, owner)));
     const message = error.message;
     expect(message).toStartWith(
         'The command mise exec node@24 bun@1.4.2 -- bun install --frozen-lockfile --linker hoisted --config=',
@@ -152,19 +152,19 @@ test('a lockfile that the package manager writes with registry credentials is re
 });
 
 test('a missing Node stops npm before it writes a lockfile and keeps a cached lockfile', async () => {
-    const packageJson = JSON.stringify({
-        ...NPM_TOOL_PROJECT,
-        devDependencies: { prettier: '3.8.1' },
-    });
-    const lockfile = JSON.stringify({
-        workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
-        packages: { prettier: ['prettier@3.8.1', '', {}, 'sha512-YQ=='] },
-    });
     await using sandbox = await testdir({
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
         'gspot.toml': buildSandboxSettings([]),
     });
     const session = await openSession(sandbox.path);
+    const pins = listToolProjectPins(session.toolConfigurations).npm;
+    const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: pins });
+    const lockfile = JSON.stringify({
+        workspaces: { '': { devDependencies: pins } },
+        packages: Object.fromEntries(
+            Object.entries(pins).map(([name, version]) => [name, [`${name}@${version}`, '', {}, 'sha512-YQ==']]),
+        ),
+    });
     using _path = overrideEnvironment({
         PATH: join(sandbox.path, 'missing-bin'),
         MISE_DATA_DIR: join(sandbox.path, 'missing-mise'),
@@ -172,7 +172,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
     using owner = openWriter(sandbox.path);
     const lockfileError = await captureRejection(
         prepareNpmLockfile(
-            buildToolInstall(session, owner) as NpmToolInstall,
+            await buildNpmToolInstall(session, owner),
             { path: GSPOT_PATHS.npmProject, content: packageJson },
             undefined,
         ),
@@ -182,7 +182,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
     expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.npmProject))).toBe(false);
     await createFileTree(sandbox.path, { [GSPOT_PATHS.npmProject]: packageJson, [`${DOT_GSPOT}/bun.lock`]: lockfile });
     const cached = await prepareNpmLockfile(
-        buildToolInstall(session, owner) as NpmToolInstall,
+        await buildNpmToolInstall(session, owner),
         { path: GSPOT_PATHS.npmProject, content: packageJson },
         undefined,
     );
@@ -209,7 +209,7 @@ test('a Yarn Classic repository resolves its tool lockfile with npm and the rele
     });
     const session = await openSession(sandbox.path);
     using writer = openWriter(sandbox.path);
-    const install = buildToolInstall(session, writer) as NpmToolInstall;
+    const install = await buildNpmToolInstall(session, writer);
     const lockfile = await prepareNpmLockfile(
         install,
         { path: GSPOT_PATHS.npmProject, content: JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: {} }) },

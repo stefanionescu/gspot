@@ -1,4 +1,4 @@
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 
 export const SETTINGS_FILE = 'gspot.toml';
 
@@ -64,3 +64,10 @@ export const SETTINGS_EXAMPLES = [
     { import_rule: [{ name: 'core', paths: ['src/core/**'] }] },
 ] as const;
 export const NAMED_FINDING_CHECKS: ReadonlySet<string> = new Set(['structure/trivial-functions', 'python/vulture']);
+
+export const GSPOT_FOLDER_PATH = new RegExp(`^\\${DOT_GSPOT}(?:/|$)`, 'iu');
+
+export const SCOPE_PATH_MESSAGES = {
+    portable: String.raw`Use folder names that work on every system: no empty or dot segment, no \ : < > " | ? * or control character, no name that ends in a dot or a space, and no device name such as nul.`,
+    gspot: `gspot writes its own files in ${DOT_GSPOT}. Choose a scope folder outside it.`,
+} as const;
