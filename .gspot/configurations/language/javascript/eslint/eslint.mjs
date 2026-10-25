@@ -120,8 +120,6 @@ export default [
             "**/.env.*",
             "**/*.log",
             "packages/*/dist/**",
-            "packages/*/LICENSE.md",
-            "packages/cli/README.md",
             "packages/cli/grammars/**",
             "docs/dist/**",
             "docs/.astro/**",

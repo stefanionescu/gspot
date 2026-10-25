@@ -14,9 +14,7 @@ build/
 /docs/dist/
 /findings/
 /packages/*/dist/
-/packages/*/LICENSE.md
 /packages/cli/grammars/
-/packages/cli/README.md
 node_modules/
 
 # Files that gspot generates

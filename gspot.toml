@@ -493,7 +493,7 @@ reason = "This sample URL holds a session identifier so that the Vale test sees 
 [[ignore]]
 check = "prose/vale"
 rule = "write-good.E-Prime"
-paths = ["README.md", "docs/src/content/docs/start/overview.md"]
+paths = ["README.md", "packages/cli/README.md", "docs/src/content/docs/start/overview.md"]
 reason = "These files open with the owner's product description, which keeps its wording."
 
 [[ignore]]

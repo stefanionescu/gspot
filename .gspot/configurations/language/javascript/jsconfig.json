@@ -21,8 +21,6 @@
         "../../../../packages/eslint-plugin/**/.env.*",
         "../../../../packages/eslint-plugin/**/*.log",
         "../../../../packages/eslint-plugin/packages/*/dist/**",
-        "../../../../packages/eslint-plugin/packages/*/LICENSE.md",
-        "../../../../packages/eslint-plugin/packages/cli/README.md",
         "../../../../packages/eslint-plugin/packages/cli/grammars/**",
         "../../../../packages/eslint-plugin/docs/dist/**",
         "../../../../packages/eslint-plugin/docs/.astro/**",
