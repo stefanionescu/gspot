@@ -8,10 +8,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BUN_PROJECT_FILES } from '#tests/config/checks/general/dependencies.ts';
 
 test('react-versions reports react and react-dom that lock different versions, and nothing when they match', async () => {
-    const MATCHED_REACT_FILES = Object.fromEntries(
-        Object.entries(BUN_PROJECT_FILES).map(([path, text]) => [path, text.replaceAll('19.0.0', '19.1.0')]),
-    );
-
     await using sandbox = await testdir({
         ...BUN_PROJECT_FILES,
         'gspot.toml': buildSandboxSettings(['react-dom']),
@@ -25,7 +21,8 @@ test('react-versions reports react and react-dom that lock different versions, a
                 'react 19.1.0 and react-dom 19.0.0 differ, and React stops at run time when they do. Install the same version of both.',
         }),
     ]);
-    for (const [path, text] of Object.entries(MATCHED_REACT_FILES)) await writeFile(join(sandbox.path, path), text);
+    for (const [path, text] of Object.entries(BUN_PROJECT_FILES))
+        await writeFile(join(sandbox.path, path), text.replaceAll('19.0.0', '19.1.0'));
     expect(await runSandboxCheck(sandbox.path, 'react-dom/react-versions')).toStrictEqual([]);
 });
 

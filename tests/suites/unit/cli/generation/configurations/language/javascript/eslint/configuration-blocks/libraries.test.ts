@@ -40,8 +40,6 @@ test('Drizzle reports delete and update without where only for its client names'
 test.each([...LEVELS])(
     'the translations configuration reports literal UI text outside the test files of each scope at %s',
     async (level) => {
-        const TRANSLATION_SOURCE = 'export const element = <p>Hello there</p>;\n';
-
         await using sandbox = await testdir();
         const tested = ['qa/entry.jsx', 'app/qa/entry.jsx', 'app/verification/entry.jsx', 'app/deep/qa/entry.jsx'];
         const ordinary = new Set(['source.jsx', 'app/source.jsx', 'app/deep/source.jsx']);
@@ -52,7 +50,10 @@ test.each([...LEVELS])(
             }),
             'package.json': '{"private":true,"type":"module"}\n',
             ...Object.fromEntries(
-                [...tested, ...ordinary, 'sibling/source.jsx'].map((path) => [path, TRANSLATION_SOURCE]),
+                [...tested, ...ordinary, 'sibling/source.jsx'].map((path) => [
+                    path,
+                    'export const element = <p>Hello there</p>;\n',
+                ]),
             ),
         });
         const eslint = await createEslint(sandbox.path);
@@ -70,16 +71,14 @@ test.each([...LEVELS])(
 test.each([...LEVELS])(
     'at %s, Zustand store files keep your import restrictions and other files get the Zustand restriction',
     async (level) => {
-        const ZUSTAND_TABLES = `[tools.eslint]
-restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
-[zustand]
-store_files = ["**/store.js"]
-`;
-
         await using sandbox = await testdir({
             ...ZUSTAND_FILES,
             'gspot.toml': buildSandboxSettings(['javascript', 'zustand'], {
-                tables: ZUSTAND_TABLES,
+                tables: `[tools.eslint]
+restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
+[zustand]
+store_files = ["**/store.js"]
+`,
                 level,
             }),
         });

@@ -18,10 +18,10 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
             ignore: [{ check: 'spelling/typos', paths, reason }],
         }),
     };
-    const settingsText = {
+    const files = {
         'gspot.toml': buildSandboxSettings(['spelling'], settings),
     };
-    await using sandbox = await testdir(settingsText);
+    await using sandbox = await testdir(files);
 
     const session = await openSession(sandbox.path);
     const output = generate(session);

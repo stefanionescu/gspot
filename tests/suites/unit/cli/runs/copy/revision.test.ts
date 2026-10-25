@@ -6,30 +6,15 @@ import { testdir, createFileTree } from 'testdirs';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { type ProcessOutput } from '#tests/types/processes.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { GIT_HOOK_REPORT } from '#tests/config/runs/copy/revision.ts';
-import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readHead, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { readIndexFiles, listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { chmod, mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function runGitHook(worktree: string, index: string, folder: string, report: string): ProcessOutput {
-    return runGit(worktree, ['-c', `core.hooksPath=${join(folder, 'hook')}`, 'commit', '-qm', 'hook'], {
-        GIT_INDEX_FILE: index,
-        GIT_CONFIG_COUNT: '1',
-        GIT_CONFIG_KEY_0: 'gspot.boundary',
-        GIT_CONFIG_VALUE_0: 'inherited',
-        GSPOT_HOOK_RUNTIME: process.execPath,
-        GSPOT_HOOK_PROBE: buildProgramArguments('processes/revisions')[0]!,
-        GSPOT_HOOK_TIMEOUT: String(SETTING_DEFINITIONS['tool_timeout_seconds'].default),
-        GSPOT_HOOK_REPORT: report,
-    });
-}
+import { mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
 
 test('a revision copy of a nested gspot.toml keeps the repository around it', async () => {
     await using sandbox = await testdir();
@@ -97,13 +82,15 @@ test('a Git hook in a linked worktree copies the index and the commit, and keeps
     const staged = runGit(worktree, ['add', 'nested/source.txt'], { GIT_INDEX_FILE: index });
     expect(staged.code, staged.stderr).toBe(0);
     await writeFile(join(worktree, 'nested/source.txt'), 'working\n');
-    await createFileTree(sandbox.path, {
-        'hook/pre-commit':
-            '#!/bin/sh\n"$GSPOT_HOOK_RUNTIME" "$GSPOT_HOOK_PROBE" "$GSPOT_HOOK_TIMEOUT" "$GSPOT_HOOK_REPORT"\n',
-    });
-    await chmod(join(sandbox.path, 'hook/pre-commit'), 0o755);
     const report = join(sandbox.path, 'report.json');
-    const result = runGitHook(worktree, index, sandbox.path, report);
+    const timeout = String(SETTING_DEFINITIONS['tool_timeout_seconds'].default);
+    const hooks = await writeProgramCommand(sandbox.path, 'hook/pre-commit', 'processes/revisions', timeout, report);
+    const result = runGit(worktree, ['-c', `core.hooksPath=${hooks}`, 'commit', '-qm', 'hook'], {
+        GIT_INDEX_FILE: index,
+        GIT_CONFIG_COUNT: '1',
+        GIT_CONFIG_KEY_0: 'gspot.boundary',
+        GIT_CONFIG_VALUE_0: 'inherited',
+    });
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(JSON.parse(await readFile(report, 'utf8'))).toStrictEqual(GIT_HOOK_REPORT);
     expect(runGitStep(worktree, ['symbolic-ref', 'HEAD'])).toBe('refs/heads/hook-probe');

@@ -95,8 +95,8 @@ test('file-name separators follow the current platform', async () => {
 });
 
 test('a svelte-check failure line is an error, not a clean result', async () => {
-    const runSvelteCheckError = await captureRejection(
+    const error = await captureRejection(
         runSvelteCheck('1758823456790 FAILURE "Failed to locate tsconfig or jsconfig"'),
     );
-    expect(runSvelteCheckError.message).toBe('The svelte-check run failed: Failed to locate tsconfig or jsconfig');
+    expect(error.message).toBe('The svelte-check run failed: Failed to locate tsconfig or jsconfig');
 });

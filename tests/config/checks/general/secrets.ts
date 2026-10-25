@@ -104,3 +104,45 @@ export const ENVIRONMENT_SCOPE_RESULTS = [
         findings: [{ file: 'sibling/source.ts', line: 1, rule: 'missing-key' }],
     },
 ] as const;
+
+export const READER_PROJECT_FILES = {
+    'config/example.env': 'export KNOWN=example\n# ignored\n',
+    'source.ts': `Bun.env.KNOWN; Bun.env.MISSING; process.env["MISSING"];
+config.$env("CUSTOM");
+$readEnv("DOLLAR");
+otherconfig.$env("UNDECLARED"); process.env.MISSING;
+`,
+    'reader.py': `import os; read_env("PYTHON"); read_env("PYTHON"); os.environ["MISSING"]; os.getenv("OTHER");
+os.environ.get("OTHER");
+`,
+    'notes.txt': 'Bun.env.TEXT; $readEnv("TEXT");\n',
+} as const;
+
+export const READER_PROJECT_TABLES = `[secrets]
+env_examples = ["example.env"]
+environment_functions = ["config.$env", "$readEnv", "read_env"]
+`;
+
+export const SCOPE_READER_PROJECT_FILES = {
+    '.env.example': 'APP_MISSING=example\n',
+    'source.ts': 'root_env("ROOT_MISSING");\n',
+    'app/project.env': 'APP_KEY=example\nSIBLING_MISSING=example\n',
+    'app/source.ts': 'config.$env("APP_KEY"); $readEnv("APP_MISSING");\n',
+    'sibling/.env.example': 'KNOWN=example\n',
+    'sibling/source.ts': 'Bun.env.SIBLING_MISSING;\n',
+} as const;
+
+export const SCOPE_READER_PROJECT_TABLES = `[secrets]
+environment_functions = ["root_env"]
+[[scope]]
+path = "app"
+
+[scope.secrets]
+env_examples = ["project.env"]
+environment_functions = ["config.$env", "$readEnv"]
+[[scope]]
+path = "sibling"
+
+[scope.secrets]
+env_examples = [".env.example"]
+`;

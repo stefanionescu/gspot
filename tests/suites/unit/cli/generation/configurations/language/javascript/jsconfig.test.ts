@@ -5,14 +5,14 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 test('a jsconfig beside a tsconfig keeps authored exclusions and lists only tracked declaration files', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'typescript']),
         '.gitignore': '.next/\n.open-next/\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*.ts"],"exclude":["vendor"]}',
@@ -23,7 +23,6 @@ test('a jsconfig beside a tsconfig keeps authored exclusions and lists only trac
         '.open-next/worker.js': 'export const bundle = 1;\n',
     });
 
-    runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, [
         'add',
         '--',

@@ -38,3 +38,34 @@ test('apply starts no npm, and install reports a failed npm version lookup in te
     expect(boundary).toHaveBeenCalledWith(['npm', '--version'], expect.objectContaining({ cwd: sandbox.path }));
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
+
+test('an unexpected error during install prints the internal error once and changes nothing', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown']),
+        'README.md': '# Example\n',
+    });
+
+    const applied = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const before = await readTree(sandbox.path);
+    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command) =>
+        command[0] === 'npm'
+            ? Promise.reject(new Error('Unexpected process failure.'))
+            : Promise.resolve(buildProcessResult()),
+    );
+    const human = await runGspot(sandbox.path, ['install']);
+    expect(human.code, human.stdout + human.stderr).toBe(2);
+    expect(human.stdout).toBe('');
+    const message =
+        'gspot stopped because of an internal error: Unexpected process failure. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.';
+    expect(human.stderr).toBe(`${message}\n`);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const failed = await runGspot(sandbox.path, ['install', '--json']);
+    expect(failed.code).toBe(2);
+    expect(failed.stderr).toBe('');
+    expect(JSON.parse(failed.stdout)).toStrictEqual({
+        error: 'unexpected',
+        message,
+    });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});

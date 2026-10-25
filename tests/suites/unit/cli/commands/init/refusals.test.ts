@@ -5,11 +5,11 @@ import { WRITER_LOCK_FILE } from '#cli/config/write.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { UNCOMMITTED_FORMAT_CASES } from '#tests/config/commands/init/conflicting-config-files.ts';
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {
@@ -26,8 +26,7 @@ test('init with an unknown configuration exits 2 and writes nothing', async () =
 });
 
 test('init refuses an unreadable package.json before writing', async () => {
-    await using sandbox = await testdir({ 'package.json': '{', 'source.ts': 'export {};\n' });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'package.json': '{', 'source.ts': 'export {};\n' });
 
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, buildInitArguments([]));
@@ -63,8 +62,7 @@ test('init in a repository that already has gspot.toml exits 2 and changes nothi
 });
 
 test('init --json without --yes names --yes before reading the repository', async () => {
-    await using sandbox = await testdir({ 'package.json': '{' });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'package.json': '{' });
 
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--json']);
@@ -76,8 +74,7 @@ test('init --json without --yes names --yes before reading the repository', asyn
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 test('init without a terminal names --yes once and writes only after --yes', async () => {
-    await using sandbox = await testdir({ 'control.txt': 'preserve this source\n' });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'control.txt': 'preserve this source\n' });
 
     const commandArguments = buildInitArguments([]).filter((argument) => argument !== '--yes');
     const before = await readTree(sandbox.path);

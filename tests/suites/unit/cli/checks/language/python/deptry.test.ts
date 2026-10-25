@@ -41,7 +41,7 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
                 [join(scope, 'main.py'), 'VALUE = 1\n'],
             ]),
         ),
-        [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'deptry')]: 'fixture',
+        [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'deptry')]: 'stub',
     });
     const { checked, commands } = await runFakeDeptry(sandbox.path);
 
@@ -82,7 +82,7 @@ test('deptry counts python.externals as first party beside the known_first_party
         'pyproject.toml':
             '[project]\nname = "example"\nversion = "1.0.0"\n[tool.deptry]\nknown_first_party = ["nodes"]\n',
         'main.py': 'import folder_paths\n',
-        [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'deptry')]: 'fixture',
+        [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'deptry')]: 'stub',
     });
     const { commands } = await runFakeDeptry(sandbox.path);
     const command = commands.find((command) => command.includes('deptry'))!;

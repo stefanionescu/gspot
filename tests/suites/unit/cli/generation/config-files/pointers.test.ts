@@ -12,14 +12,16 @@ import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildPointerFiles } from '#cli/generation/config-files/pointers.ts';
-import { XCTEST_POINTER_CASES, MARKDOWNLINT_SCOPE_TABLES } from '#tests/config/generation/config-files/pointers.ts';
+
+import {
+    MODULE_VALUE,
+    XCTEST_POINTER_CASES,
+    MARKDOWNLINT_SCOPE_TABLES,
+} from '#tests/config/generation/config-files/pointers.ts';
 
 test.each([...XCTEST_POINTER_CASES])(
     'XCTest folder pointers keep their SwiftLint overrides in scope "$scope"',
     async ({ scope, pointers }) => {
-        const OMITTED_SWIFT_SCOPE =
-            '[[scope]]\npath = "omitted"\nremoved_configurations = { value = ["swift"], reason = "This scope does not use Swift or its generated pointers." }\n';
-
         await using sandbox = await testdir();
         const prefix = scope === '' ? '' : `${scope}/`;
         const folder = scope.startsWith('AppTests') ? scope : `${prefix}AppTests`;
@@ -31,7 +33,7 @@ test.each([...XCTEST_POINTER_CASES])(
                     ...(scope === '' ? [] : [{ path: scope, configurations: ['swift'] }]),
                     { path: child, configurations: ['swift'] },
                 ],
-                tables: OMITTED_SWIFT_SCOPE,
+                tables: '[[scope]]\npath = "omitted"\nremoved_configurations = { value = ["swift"], reason = "This scope does not use Swift or its generated pointers." }\n',
             }),
             [`${folder}/Value.swift`]: 'import XCTest\n',
             [`${folder}/Deep/Value.swift`]: 'import XCTest\n',
@@ -49,10 +51,6 @@ test.each([...XCTEST_POINTER_CASES])(
 );
 
 test('JavaScript pointers import modules from folders with URI characters and Unicode', async () => {
-    const MODULE_VALUE = { location: 'the requested module' } as const;
-
-    const MODULE_PATHS = ['100%', '#fragment', '?query', "author's", 'café'] as const;
-
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['javascript']) });
 
     const session = await openSession(sandbox.path);
@@ -60,7 +58,9 @@ test('JavaScript pointers import modules from folders with URI characters and Un
     const configFile = configuration.configFiles
         .filter((file) => file.source !== undefined)
         .find((file) => file.pointer?.body.includes('{target_module}') === true)!;
-    const components = MODULE_PATHS.filter((component) => !isWindows || !component.includes('?'));
+    const components = ['100%', '#fragment', '?query', "author's", 'café'].filter(
+        (component) => !isWindows || !component.includes('?'),
+    );
     const paths = [];
     for (const [index, component] of components.entries()) {
         const target = `generated/${component}/owner.mjs`;

@@ -34,13 +34,13 @@ test('--changed compares with the merge base, names its base, and a folder argum
     await writeFile(join(sandbox.path, 'api/source.txt'), 'committed change');
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'web/source.txt'), 'working change');
-    const selected = parseCheckReport(
+    const checked = parseCheckReport(
         await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', '--json', '--', 'api']),
     );
-    expect(selected.code, selected.stdout + selected.stderr).toBe(1);
-    expect(selected.report.comparison).toStrictEqual({ content: 'working-tree', reference: 'refs/heads/base' });
-    expect(selected.report.checks[0]?.reproduce).toBe('gspot check api --only sandbox/paths --changed refs/heads/base');
-    expect(selected.report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    expect(checked.report.comparison).toStrictEqual({ content: 'working-tree', reference: 'refs/heads/base' });
+    expect(checked.report.checks[0]?.reproduce).toBe('gspot check api --only sandbox/paths --changed refs/heads/base');
+    expect(checked.report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'api/source.txt',
     ]);
     const explicit = parseCheckReport(
@@ -96,7 +96,6 @@ test.each(['', '0'.repeat(40)])('--changed %p, as CI gives for a new branch, che
 
 test('a shallow clone explains how to fetch the missing history', async () => {
     await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
     const source = join(sandbox.path, 'source');
     await prepareChangedRepository(source, { 'api/source.txt': 'before' });
     runGitStep(source, ['init', '-b', 'main']);

@@ -11,16 +11,6 @@ import { LocalDate, stringify, parse as parseToml } from '@decimalturn/toml-patc
 import { SPECIAL_CHARACTER_FILES, SPECIAL_CHARACTER_SETTINGS } from '#tests/config/generation/config-files/build.ts';
 
 test('keys and values with quotes, backslashes, newlines, and accented letters stay literal in JSON and YAML config files', async () => {
-    const REGISTRIES = ['null', 'registry.example.com:5000'] as const;
-
-    const XCODE_SCHEME = 'null';
-
-    const XCODE_PROJECT = 'ios/App # café.xcodeproj';
-
-    const SPECIAL_CHARACTER_VALUE = 'yes: # quoted "value"';
-
-    const SPECIAL_CHARACTER_KEY = 'custom"key\\name\ncafé';
-
     await using sandbox = await testdir({
         'gspot.toml': stringify(SPECIAL_CHARACTER_SETTINGS),
         ...SPECIAL_CHARACTER_FILES,
@@ -32,7 +22,7 @@ test('keys and values with quotes, backslashes, newlines, and accented letters s
         ({ path }) => path === findManifestTarget('markdown', 'markdownlint.jsonc'),
     )!;
     expect(parseJsonc(markdownRules.content)).toMatchObject({
-        MD044: { names: [SPECIAL_CHARACTER_KEY, SPECIAL_CHARACTER_VALUE] },
+        MD044: { names: ['custom"key\\name\ncafé', 'yes: # quoted "value"'] },
     });
     const yaml = new Map(
         output.files
@@ -40,11 +30,11 @@ test('keys and values with quotes, backslashes, newlines, and accented letters s
             .map((file) => [file.path, parseYaml(file.content) as unknown]),
     );
     expect(yaml.get(findManifestTarget('swift', 'periphery.yml'))).toMatchObject({
-        project: XCODE_PROJECT,
-        schemes: [XCODE_SCHEME],
+        project: 'ios/App # café.xcodeproj',
+        schemes: ['null'],
     });
     expect(yaml.get(findManifestTarget('docker', 'hadolint.yml'))).toMatchObject({
-        trustedRegistries: REGISTRIES,
+        trustedRegistries: ['null', 'registry.example.com:5000'] as const,
     });
     expect(yaml.get(findManifestTarget('data-files', 'yamllint.yml'))).toMatchObject({
         rules: { truthy: { 'allowed-values': ['yes', 'no'] } },

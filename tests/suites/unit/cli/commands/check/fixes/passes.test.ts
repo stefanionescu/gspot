@@ -1,16 +1,16 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
+import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/session.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { type RunOptions } from '#cli/types/runs/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { SQL_COMMAND_CHECK_TABLES } from '#tests/config/commands/samples.ts';
 import { FIX_LINTER_CASES } from '#tests/config/commands/check/fixes/passes.ts';
 import { runGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -18,8 +18,7 @@ import { runGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/co
 test.each([...FIX_LINTER_CASES])(
     'after --fix, the $configuration check status matches what the linter still reports',
     async (row) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({});
         const check = readConfigurations()
             .get(row.configuration)!
             .checks.find((check) => check.id === `${row.configuration}/${row.tool}`)!;
@@ -69,8 +68,7 @@ test.each([...FIX_LINTER_CASES])(
 );
 
 test('after --fix, the checks read the fixed file and other files stay as they were', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['sql'], {
         level: 'all',
         tables: `[tools.sqlfluff]\ndialect = "postgres"\n${stringify({
@@ -80,7 +78,7 @@ test('after --fix, the checks read the fixed file and other files stay as they w
                     command: buildProgramCommand('fakes/tool'),
                     paths: ['query.sql'],
                     stage: 'commit',
-                    fix: [process.execPath, 'correct.cjs', '{files}'],
+                    fix: buildProgramCommand('fakes/tool', '--text', 'select 1;\n', '{files}'),
                     output: { format: 'none' },
                 },
             ],
@@ -90,7 +88,6 @@ test('after --fix, the checks read the fixed file and other files stay as they w
         'gspot.toml': settings + SQL_COMMAND_CHECK_TABLES,
         'query.sql': 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n',
         'notes.txt': 'Authored notes.\n',
-        'correct.cjs': String.raw`const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "select 1;\n");`,
     });
     const session = await openSession(sandbox.path);
     const options = buildRunOptions({ only: ['project/read-sql', 'project/correct-sql'] });

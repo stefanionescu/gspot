@@ -3,7 +3,7 @@ import type { IgnoreRecord } from '#cli/types/settings/file.ts';
 export const SEMGREP_IGNORE: IgnoreRecord = {
     check: 'security/semgrep',
     rule: 'js/file-system-race',
-    paths: ['fixture.js'],
+    paths: ['sample.js'],
     reason: 'The sandbox owns its temporary files.',
 };
 

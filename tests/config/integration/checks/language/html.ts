@@ -26,8 +26,6 @@ export const CONTROLLED_PLAYBACK_PAGE = `<!doctype html>
 </html>
 `;
 
-export const AUTOPLAY_SCOPE_TABLES = `[[scope]]\npath = "app"\nconfigurations = ["site"]\n[scope.site]\nbuild_command = ["node", "build.mjs"]\n`;
-
 export const AUTOPLAY_CHECKS = [
     {
         check: 'html/html-validate',

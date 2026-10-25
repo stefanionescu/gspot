@@ -3,16 +3,15 @@ import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { COPY_PAGE_BUILD } from '#tests/config/integration/checks/samples.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     HTML_SANDBOX,
     AUTOPLAY_PAGE,
     AUTOPLAY_CHECKS,
-    AUTOPLAY_SCOPE_TABLES,
     CONTROLLED_PLAYBACK_PAGE,
 } from '#tests/config/integration/checks/language/html.ts';
 
@@ -26,11 +25,14 @@ test.each([...AUTOPLAY_CHECKS])(
             row.scope === ''
                 ? [{ check: row.check, scope: 'app', status: 'skipped' as const, fileCount: 0, findings: [] }]
                 : [];
+        const build = buildProgramCommand('fakes/site-build', '--copy', 'page.html=dist/index.html');
         const sourceFiles = {
-            'gspot.toml': buildSandboxSettings(['html'], { level: 'all', tables: AUTOPLAY_SCOPE_TABLES }),
+            'gspot.toml': buildSandboxSettings(['html'], {
+                level: 'all',
+                tables: `[[scope]]\npath = "app"\nconfigurations = ["site"]\n[scope.site]\nbuild_command = ${JSON.stringify(build)}\n`,
+            }),
             'index.html': AUTOPLAY_PAGE,
             'app/page.html': AUTOPLAY_PAGE,
-            'app/build.mjs': COPY_PAGE_BUILD,
         };
         await using _sourceChange = await applySandboxChanges(
             installedSandbox(),
@@ -58,6 +60,5 @@ test.each([...AUTOPLAY_CHECKS])(
         ]);
         expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(settings);
         expect(await readFile(join(root, row.preserved), 'utf8')).toBe(AUTOPLAY_PAGE);
-        expect(await readFile(join(root, 'app/build.mjs'), 'utf8')).toBe(COPY_PAGE_BUILD);
     },
 );

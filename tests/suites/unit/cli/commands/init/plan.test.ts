@@ -78,8 +78,7 @@ test('the init plan groups test runners and infrastructure under their own label
 
 test('the init plan lists each submodule once and reads none of it', async () => {
     await using sandbox = await testdir();
-    await using outside = await testdir();
-    runGitStep(outside.path, ['init', '--quiet']);
+    await using outside = await createGitSandbox({});
     await createFileTree(sandbox.path, { 'README.md': 'Repository\n' });
     await createFileTree(outside.path, { 'package.json': '{' });
     commitAll(sandbox.path);
@@ -178,8 +177,7 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
 test.each([false, true])(
     'init distinguishes existing CI from the provider of the planned workflow (GitHub origin: %p)',
     async (github) => {
-        await using sandbox = await testdir({ 'package.json': '{"private":true}\n' });
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({ 'package.json': '{"private":true}\n' });
         if (github) runGitStep(sandbox.path, ['remote', 'add', 'origin', 'https://github.com/example/project.git']);
         const result = await runGspot(sandbox.path, ['init', '--dry-run']);
         expect(result.code, result.stdout + result.stderr).toBe(0);

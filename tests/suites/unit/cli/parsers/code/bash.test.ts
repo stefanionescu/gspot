@@ -64,7 +64,7 @@ test('literal trap handlers count as calls while expanded trap bodies stay unint
 });
 
 test.each([...QUOTED_TRAP_CALLS])(
-    'quoted trap $source retains literal command argument counts',
+    'quoted trap $source keeps literal command argument counts',
     async ({ source, counts }) => {
         const parsed = await parseBashScript(source);
         expect(parsed.calls.filter(({ name }) => name === 'cleanup').map(({ count }) => count)).toStrictEqual([

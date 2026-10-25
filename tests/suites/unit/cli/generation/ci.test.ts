@@ -1,31 +1,23 @@
 import { parse } from 'yaml';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { join, delimiter } from 'node:path';
 import { openSession } from '#cli/session.ts';
-import { chmod, readFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { type Pipeline } from '#cli/types/generation/ci.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
+import { LINT_STEPS, SETUP_CASES, LINUX_PIPELINE, SETUP_ARGUMENTS } from '#tests/config/generation/ci.ts';
 
-import {
-    LINT_STEPS,
-    SETUP_CASES,
-    SETUP_SCRIPT,
-    LINUX_PIPELINE,
-    SETUP_ARGUMENTS,
-    FAKE_MISE_SCRIPT,
-    FAKE_GSPOT_SCRIPT,
-} from '#tests/config/generation/ci.ts';
-
-async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline> {
-    const settingsText = await testdir({
+async function buildPipeline(): Promise<Pipeline> {
+    await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['docs'], {
             tables: stringify({
                 command_check: [{ id: 'project/audit', paths: ['**/*'], stage: 'manual', command: ['echo', 'sample'] }],
@@ -34,21 +26,18 @@ async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline>
         'README.md': '# Example\n',
         'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
     });
-    const sandbox = resources.use(settingsText);
     const session = await openSession(sandbox.path);
-    const pipeline: Pipeline = {
+    return {
         ...LINUX_PIPELINE,
         manualChecks: session.configuredChecks.filter(({ check }) =>
             ['docs/lychee-external', 'project/audit'].includes(check.id),
         ),
         tools: session.configurations.get('docs')!.tools.filter((tool) => tool.name === 'lychee'),
     };
-    return pipeline;
 }
 
 test('the GitHub workflow has one lint job, which ends with the slow checks only when there are some', async () => {
-    await using resources = new AsyncDisposableStack();
-    const pipeline = await buildPipeline(resources);
+    const pipeline = await buildPipeline();
 
     const workflow = parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow;
     expect(Object.keys(workflow.jobs)).toStrictEqual(['lint']);
@@ -58,8 +47,7 @@ test('the GitHub workflow has one lint job, which ends with the slow checks only
 });
 
 test('the Slow checks step names every slow check in one comma list', async () => {
-    await using resources = new AsyncDisposableStack();
-    const pipeline = await buildPipeline(resources);
+    const pipeline = await buildPipeline();
     const command = "mise exec node@24 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3' -- gspot";
     const expected = `${command} check --only 'docs/lychee-external,project/audit'`;
     const steps = (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps;
@@ -75,8 +63,7 @@ test('the Slow checks step names every slow check in one comma list', async () =
 });
 
 test('pushes run the job on the default branch only, and the slow checks only on those pushes', async () => {
-    await using resources = new AsyncDisposableStack();
-    const pipeline = await buildPipeline(resources);
+    const pipeline = await buildPipeline();
 
     const job = (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!;
     expect(job.if).toBe("github.event_name != 'push' || github.ref_name == github.event.repository.default_branch");
@@ -86,8 +73,7 @@ test('pushes run the job on the default branch only, and the slow checks only on
 });
 
 test('the cache key covers the gspot version, the tool files, and the project lockfiles, and the cache is saved before the checks', async () => {
-    await using resources = new AsyncDisposableStack();
-    const pipeline = await buildPipeline(resources);
+    const pipeline = await buildPipeline();
 
     const steps = (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps;
     const restore = steps.find((step) => step.name === 'Restore caches')!;
@@ -103,8 +89,7 @@ test('the cache key covers the gspot version, the tool files, and the project lo
 });
 
 test('only the steps that install tools receive the GitHub token for mise', async () => {
-    await using resources = new AsyncDisposableStack();
-    const pipeline = await buildPipeline(resources);
+    const pipeline = await buildPipeline();
 
     const workflow = parse(
         buildGithubWorkflow({
@@ -120,9 +105,8 @@ test('only the steps that install tools receive the GitHub token for mise', asyn
     expect(tokenSteps).toStrictEqual(['lint: Install gspot tools', 'lint: Slow checks']);
 });
 
-test('a Swift scope adds a macOS job, each job names its system, and the Linux job uses the chosen runner', async () => {
-    await using resources = new AsyncDisposableStack();
-    const pipeline = await buildPipeline(resources);
+test('a Swift scope adds a macOS job, each job names its system, and the Linux job uses the Linux runner', async () => {
+    const pipeline = await buildPipeline();
 
     const workflow = parse(
         buildGithubWorkflow({ ...pipeline, hasSwift: true, linuxRunner: 'linux-large' }).content,
@@ -138,46 +122,46 @@ test('a Swift scope adds a macOS job, each job names its system, and the Linux j
 test.each([...SETUP_CASES])(
     'the %s job keeps setup exit %i and literal arguments before gspot',
     async (provider, setupExit) => {
-        await using resources = new AsyncDisposableStack();
-        const selectedPipeline = await buildPipeline(resources);
-
-        await using sandbox = await testdir({
-            'bin/mise': FAKE_MISE_SCRIPT,
-            'bin/gspot': FAKE_GSPOT_SCRIPT,
-            'bin/project setup': SETUP_SCRIPT,
-        });
-
-        for (const name of ['mise', 'gspot', 'project setup']) await chmod(join(sandbox.path, 'bin', name), 0o755);
+        const pipeline = await buildPipeline();
+        await using sandbox = await testdir();
         const commands = join(sandbox.path, 'commands.log');
-        const argumentsPath = join(sandbox.path, 'arguments.log');
-        const pipeline = {
-            ...selectedPipeline,
+        const bin = await writeProgramCommand(sandbox.path, 'bin/mise', 'fakes/exec');
+        await writeProgramCommand(sandbox.path, 'bin/gspot', 'fakes/tool', '--log-arguments', commands, '--');
+        await writeProgramCommand(
+            sandbox.path,
+            'bin/project setup',
+            'fakes/tool',
+            '--log-arguments',
+            commands,
+            '--stdout',
+            'setup out\n',
+            '--stderr',
+            'setup err\n',
+            '--exit',
+            String(setupExit),
+            '--',
+        );
+        const setupPipeline = {
+            ...pipeline,
             manualChecks: [],
             tools: [],
-            setupCommand: [join(sandbox.path, 'bin', 'project setup'), ...SETUP_ARGUMENTS],
+            setupCommand: [join(bin, 'project setup'), ...SETUP_ARGUMENTS],
         };
         const script =
             provider === 'github'
-                ? (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps.flatMap(
+                ? (parse(buildGithubWorkflow(setupPipeline).content) as GithubWorkflow).jobs['lint']!.steps.flatMap(
                       (step) => (step.run === undefined ? [] : step.run),
                   )
-                : (parse(buildGitlabWorkflow(pipeline).content) as GitlabPipeline).gspot.script;
+                : (parse(buildGitlabWorkflow(setupPipeline).content) as GitlabPipeline).gspot.script;
         const result = await runCommand(['bash', '-e', '-c', script.join('\n')], {
             cwd: sandbox.path,
-            env: {
-                PATH: `${join(sandbox.path, 'bin')}${delimiter}${readEnvironmentVariable('PATH') ?? ''}`,
-                GSPOT_COMMAND_LOG: commands,
-                GSPOT_SETUP_ARGUMENTS: argumentsPath,
-                GSPOT_SETUP_EXIT: String(setupExit),
-            },
+            env: { PATH: `${bin}${delimiter}${readEnvironmentVariable('PATH') ?? ''}` },
         });
         expect(result.code, result.stdout + result.stderr).toBe(setupExit);
         expect(result.stdout).toBe('setup out\n');
         expect(result.stderr).toBe('setup err\n');
-        expect(await readFile(commands, 'utf8')).toBe(
-            setupExit === 0 ? 'setup\ninstall\ncheck --changed \n' : 'setup\n',
-        );
-        expect(await readFile(argumentsPath, 'utf8')).toBe(`${SETUP_ARGUMENTS.join('\n')}\n`);
+        const gspotCalls = setupExit === 0 ? '["install"]\n["check","--changed",""]\n' : '';
+        expect(await readFile(commands, 'utf8')).toBe(`${JSON.stringify(SETUP_ARGUMENTS)}\n${gspotCalls}`);
         expect(await isOnDisk(join(sandbox.path, 'unexpected'))).toBe(false);
     },
 );

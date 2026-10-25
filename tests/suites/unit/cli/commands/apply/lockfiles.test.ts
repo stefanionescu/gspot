@@ -1,15 +1,13 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 test('a lockfile-only dry run names install as the repair', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'source.js': 'export {};\n',
     });
-    runGitStep(sandbox.path, ['init', '-q']);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code).toBe(0);
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run']);

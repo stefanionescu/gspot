@@ -1,23 +1,22 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/session.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
 import { QUALITY_FIX, SCOPE_FINDINGS, QUALITY_COMMAND, SCOPE_CHECK_FILES } from '#tests/config/commands/check/run.ts';
 
 test('an aborted run stops its command and reports cancellation on every system', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const marker = join(sandbox.path, 'command-ready');
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
@@ -49,8 +48,7 @@ test('an aborted run stops its command and reports cancellation on every system'
     await waitForExit(Number(await readFile(marker, 'utf8')));
 });
 test('a path ignore keeps the check and its fixer off those paths, and a run of only ignored paths is skipped', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings([], {
         tables: stringify({
             command_check: [
@@ -99,8 +97,7 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
     expect(await readFile(join(sandbox.path, 'fixed.txt'), 'utf8')).toBe(fixed);
 });
 test('a path ignore covers its own paths, not the scopes below or beside it', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash'], {
         tables: stringify({
             ignore: [

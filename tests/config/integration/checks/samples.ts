@@ -1,10 +1,5 @@
 import { HELLO_EDGE_FUNCTION } from '#tests/config/checks/platform/supabase.ts';
 
-export const COPY_PAGE_BUILD = `import { mkdirSync, copyFileSync } from 'node:fs';
-mkdirSync('dist', { recursive: true });
-copyFileSync('page.html', 'dist/index.html');
-`;
-
 export const ARITHMETIC_MODULE = `"""Arithmetic examples used by these tests."""
 
 def double(value: int) -> int:

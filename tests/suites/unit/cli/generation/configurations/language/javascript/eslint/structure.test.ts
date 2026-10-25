@@ -15,9 +15,13 @@ import {
     IMPORT_CASES,
     IMPORT_FILES,
     TRIVIAL_RULES,
+    STARTER_SOURCE,
+    REEXPORT_CASES,
     ENTRYPOINT_TABLES,
+    ENTRYPOINT_SOURCE,
     ENTRYPOINT_FOLDERS,
     LEVEL_REEXPORT_CASES,
+    TRIVIAL_ENTRYPOINT_FILES,
 } from '#tests/config/generation/configurations/language/javascript/eslint/structure.ts';
 
 async function listTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
@@ -48,13 +52,6 @@ async function assertSourceRules(
 }
 
 test.each([...LEVELS])('Knip entry files still get the trivial-file rules at %s, in nested scopes', async (level) => {
-    const TRIVIAL_ENTRYPOINT_FILES = ['api/src/main.js', 'api/src/task.js', 'src/main.js', 'src/task.js'] as const;
-
-    const STARTER_SOURCE =
-        'export function start() { const target = document.querySelector("#app"); if (!target) throw new Error("Missing application target"); target.textContent = "Started"; }\n';
-
-    const ENTRYPOINT_SOURCE = "export { start } from './start.js';\n";
-
     await using sandbox = await testdir({
         'package.json': '{"name":"entry-sandbox","private":true,"type":"module"}',
         'src/start.js': STARTER_SOURCE,
@@ -189,12 +186,6 @@ test('a JSON import attribute is accepted where your import extensions need a su
 test.each([...LEVEL_REEXPORT_CASES])(
     'at %s with reexports = %s, import, re-export and barrel rules apply in root and child scopes',
     async (level, reexports) => {
-        const REEXPORT_CASES = [
-            ['export * from "./owner.js";\n', 1],
-            ['export { value } from "./owner.js";\n', 1],
-            ['const value = 1; export { value };\n', 0],
-        ] as const;
-
         await using sandbox = await testdir({
             ...IMPORT_FILES,
             'gspot.toml': buildSandboxSettings(['typescript'], {

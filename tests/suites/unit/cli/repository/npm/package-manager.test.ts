@@ -1,17 +1,18 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
-import { chmod, readFile } from 'node:fs/promises';
 import * as processes from '#cli/system/processes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { detectPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 
@@ -23,12 +24,9 @@ import {
 } from '#tests/config/repository/npm/package-manager.ts';
 
 test('without a packageManager field or Bun on PATH, the tool project uses npm at the version it prints', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
-    await using bin = await testdir({ npm: '#!/bin/sh\necho 10.9.0\n', 'npm.cmd': '@echo 10.9.0\r\n' });
-    runGitStep(bin.path, ['init', '--quiet']);
-
-    await chmod(join(bin.path, 'npm'), 0o755);
+    await using sandbox = await createGitSandbox({});
+    await using bin = await testdir();
+    await writeProgramCommand(bin.path, 'npm', 'fakes/tool', '--line', '10.9.0');
     using _environment = overrideEnvironment({ PATH: bin.path });
     const installer = detectPackageManager(sandbox.path, []);
     expect(installer).toStrictEqual({ name: 'npm' });
@@ -48,8 +46,7 @@ test('without a packageManager field or Bun on PATH, the tool project uses npm a
 test.each([...PACKAGE_MANAGER_PIN_CASES])(
     '%s names the package manager and its version',
     async (_, files, expected) => {
-        await using sandbox = await testdir(files);
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox(files);
 
         const { name, version } = detectPackageManager(sandbox.path, []);
         expect([name, version]).toStrictEqual(expected.split('@'));
@@ -111,8 +108,7 @@ test('a refused pinned package manager keeps project files and gives no install 
 test.each([...UNSUPPORTED_PACKAGE_MANAGERS])(
     'unsupported $field values identify the package.json field',
     async ({ field, written, packageJson }) => {
-        await using sandbox = await testdir({ 'package.json': JSON.stringify(packageJson) });
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({ 'package.json': JSON.stringify(packageJson) });
         expect(await captureRejection(Promise.try(() => detectPackageManager(sandbox.path, [])))).toMatchObject({
             code: 'install',
             message: `package.json: ${field} is "${written}"; gspot supports npm, bun, pnpm, yarn with an exact version, such as pnpm@9.0.0. Change the field.`,

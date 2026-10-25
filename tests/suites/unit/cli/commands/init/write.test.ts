@@ -9,13 +9,14 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { fakeTerminals } from '#tests/setup/system/fakes.ts';
 import { TEST_VERSION } from '#tests/config/commands/samples.ts';
 import { rm, stat, readFile, writeFile } from 'node:fs/promises';
 import { EDITED_STYLELINT_PACKAGE } from '#tests/config/apply.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
 import { CSS_MANAGED_PLAN_CHANGES } from '#tests/config/commands/init/write.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { INVALID_CSS, SQLFLUFF_KEPT_NOTE } from '#tests/config/commands/init/samples.ts';
 
 test.each([
@@ -97,8 +98,7 @@ test('init keeps the old config file when the generated one cannot be written', 
 
 test('init refuses to write package.json when one of its managed fields changed after the plan, and keeps its bytes and mode', async () => {
     using mockResources = new DisposableStack();
-    await using sandbox = await testdir({ 'package.json': STYLELINT_PACKAGE_JSON, 'source.css': INVALID_CSS });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'package.json': STYLELINT_PACKAGE_JSON, 'source.css': INVALID_CSS });
 
     const preview = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'css', '--json']);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
@@ -182,13 +182,11 @@ async function simulateInteractiveTerminal(): Promise<AsyncDisposable> {
     resources.defer(async () => {
         await mock.module('std-env', () => previousEnvironment);
     });
-    for (const stream of [process.stdin, process.stdout]) {
-        const descriptor = Object.getOwnPropertyDescriptor(stream, 'isTTY');
-        Object.defineProperty(stream, 'isTTY', { configurable: true, value: true });
-        resources.defer(() => {
-            if (descriptor === undefined) Reflect.deleteProperty(stream, 'isTTY');
-            else Object.defineProperty(stream, 'isTTY', descriptor);
-        });
-    }
+    resources.use(
+        fakeTerminals([
+            [process.stdin, true],
+            [process.stdout, true],
+        ]),
+    );
     return resources;
 }

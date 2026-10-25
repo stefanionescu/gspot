@@ -4,11 +4,11 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
 import { generate } from '#cli/generation/generate.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/cli.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -21,10 +21,9 @@ import { HOOK_CASES, START_COMMANDS, HOOK_LEVEL_CASES } from '#tests/config/gene
 test.each([...HOOK_LEVEL_CASES])(
     'at level $level, gspot writes check hooks and guarded Git LFS hooks',
     async ({ level, hooks }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([], { level, tables: HOOKS_SETTINGS }),
         });
-        runGitStep(sandbox.path, ['init', '-q']);
         const written = generate(await openSession(sandbox.path)).files.filter((file) =>
             file.path.startsWith(`${GSPOT_PATHS.hooks}/`),
         );
@@ -42,11 +41,10 @@ test.each(
 )(
     'each hook script uses the $program start command to run one check, with gspot.toml at $place',
     async ({ program, packageManager, prefix, folder }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             [join(folder, 'gspot.toml')]: buildSandboxSettings([], { rules: true }),
         });
 
-        runGitStep(sandbox.path, ['init', '-q']);
         const root = join(sandbox.path, folder);
         if (packageManager !== undefined)
             await writeFile(
@@ -103,8 +101,7 @@ test.each(
 );
 
 test('a hook says how to install mise when mise is missing', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '-q']);
+    await using sandbox = await createGitSandbox({});
     const hook = buildHookFiles(
         selectStartRunner(sandbox.path),
         HOOK_CASES.map(([name]) => name),

@@ -5,9 +5,9 @@ import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
 import { parseSettings } from '#cli/settings/read.ts';
 import { REFUSAL_FILES } from '#tests/config/commands/set.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
 import { runGspot, expectRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
@@ -173,8 +173,7 @@ test('ignore merges matching paths, keeps different reasons apart, and an entry 
 
 test('a refused ignore reason is an argument error and leaves settings unchanged', async () => {
     const settings = buildSandboxSettings([]);
-    await using sandbox = await testdir({ 'gspot.toml': settings });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': settings });
     const result = await runGspot(sandbox.path, ['ignore', '--paths', 'vendor/**', '--reason', 'x', '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
@@ -188,8 +187,7 @@ test.each(['2020-01-01', new Date().toISOString().slice(0, 10)])(
     'ignore refuses expiry %s without changing settings',
     async (until) => {
         const settings = buildSandboxSettings(['bash']);
-        await using sandbox = await testdir({ 'gspot.toml': settings });
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({ 'gspot.toml': settings });
         const result = await runGspot(sandbox.path, [
             'ignore',
             'bash/shellcheck',
@@ -209,8 +207,10 @@ test.each(['2020-01-01', new Date().toISOString().slice(0, 10)])(
 );
 
 test('a rule ignore summary names the rule and its paths', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']), 'entry.sh': 'echo example\n' });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'entry.sh': 'echo example\n',
+    });
     const result = await runGspot(sandbox.path, [
         'ignore',
         'bash/shellcheck',

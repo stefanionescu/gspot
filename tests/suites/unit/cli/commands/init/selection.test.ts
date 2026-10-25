@@ -14,7 +14,7 @@ import { type ToolPackageJson } from '#cli/types/install/npm.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/configurations.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { runGspot, buildInitArguments, expectRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -54,12 +54,11 @@ test.each([...CONFIGURATION_CHOICES])(
 );
 
 test('init leaves javascript out of a root package.json with only tool dependencies and selects it in the app package scope', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'package.json': TOOL_ONLY_PACKAGE,
         'app/package.json': '{"name":"example-app","private":true}\n',
         'app/server.js': 'export const port = 8080;\n',
     });
-    runGitStep(sandbox.path, ['init', '--quiet']);
 
     const before = await readTree(sandbox.path);
     const commandArguments = [...buildInitArguments([]).filter((argument) => argument !== '--yes'), '--dry-run'];
@@ -97,14 +96,13 @@ test('init leaves javascript out of a root package.json with only tool dependenc
 });
 
 test('the JavaScript tools and the ESLint config file appear only after gspot add javascript for a new Node script, at both levels', async () => {
-    await using sandbox = await testdir({ 'package.json': TOOL_ONLY_PACKAGE, ...PYTHON_SOURCE });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'package.json': TOOL_ONLY_PACKAGE, ...PYTHON_SOURCE });
 
     const initialized = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     for (const level of LEVELS) {
-        const selected = await runGspot(sandbox.path, ['set', 'level', level]);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+        const levelSet = await runGspot(sandbox.path, ['set', 'level', level]);
+        expect(levelSet.code, levelSet.stdout + levelSet.stderr).toBe(0);
         const contents = (
             JSON.parse(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')) as ToolPackageJson
         ).devDependencies;

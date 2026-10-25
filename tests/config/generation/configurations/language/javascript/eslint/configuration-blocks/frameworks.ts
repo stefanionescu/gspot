@@ -100,3 +100,26 @@ export const NEXTJS_ROUTE_PROJECTS = {
     'apps/second/src/pages/index.jsx': 'export default function Home() { return <a href="/about">About</a>; }\n',
     'apps/empty/component.jsx': 'export function Empty() { return <p>Empty</p>; }\n',
 };
+
+export const EXPRESS_SOURCE =
+    'import value from "#lib/owner";\nresponse.json({ message: `Item ${identifier}` });\ncustom.info(`Item ${identifier}`);\n';
+
+export const EXPRESS_FINDINGS = {
+    recommended: [
+        { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 1 },
+        { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 2 },
+        { file: 'api/source.js', rule: 'no-restricted-syntax', line: 1 },
+        { file: 'api/source.js', rule: 'no-restricted-syntax', line: 2 },
+        { file: 'source.js', rule: 'no-restricted-syntax', line: 1 },
+    ],
+    all: [
+        { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 1 },
+        { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 2 },
+        { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 3 },
+        { file: 'api/source.js', rule: 'no-restricted-syntax', line: 1 },
+        { file: 'api/source.js', rule: 'no-restricted-syntax', line: 2 },
+        { file: 'api/source.js', rule: 'no-restricted-syntax', line: 3 },
+        { file: 'source.js', rule: 'no-restricted-syntax', line: 1 },
+        { file: 'source.js', rule: 'no-restricted-syntax', line: 3 },
+    ],
+} as const;

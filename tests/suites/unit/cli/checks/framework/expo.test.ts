@@ -21,16 +21,14 @@ import {
 } from '#tests/config/checks/framework/expo.ts';
 
 test('Expo Doctor reports each failed check once in each app folder', async () => {
-    const DOCTOR_FINDING_MESSAGES = [
-        'Check that packages match versions required by installed Expo SDK The following packages should be updated for best compatibility with the installed expo version: react-native@0.81.4 - expected version: 0.81.5',
-        'Check for app config fields that may not be synced in a non-CNG project This project contains native project folders but also has native configuration properties in app.json.',
-    ] as const;
-
     await using apps = await prepareExpoApps({ code: 1, stdout: FAILED_DOCTOR_REPORT });
     for (const scope of APP_FOLDERS) {
         const findings = await runSandboxCheck(apps.path, 'expo/expo-doctor', { scope });
         expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual(
-            DOCTOR_FINDING_MESSAGES.map((message) => ({
+            [
+                'Check that packages match versions required by installed Expo SDK The following packages should be updated for best compatibility with the installed expo version: react-native@0.81.4 - expected version: 0.81.5',
+                'Check for app config fields that may not be synced in a non-CNG project This project contains native project folders but also has native configuration properties in app.json.',
+            ].map((message) => ({
                 file: `${scope}/package.json`,
                 line: 1,
                 rule: 'failed-check',
@@ -42,14 +40,10 @@ test('Expo Doctor reports each failed check once in each app folder', async () =
 });
 
 test('Expo Doctor output without a failed check is a check error that keeps its error text', async () => {
-    const UNSTRUCTURED_DOCTOR_RUN = { code: 1, stderr: 'Unable to read Expo configuration' } as const;
-
-    await using apps = await prepareExpoApps(UNSTRUCTURED_DOCTOR_RUN);
+    await using apps = await prepareExpoApps({ code: 1, stderr: 'Unable to read Expo configuration' } as const);
     for (const scope of APP_FOLDERS) {
-        const runSandboxCheckError = await captureRejection(runSandboxCheck(apps.path, 'expo/expo-doctor', { scope }));
-        expect(runSandboxCheckError.message).toBe(
-            'The expo-doctor command failed (exit 1): Unable to read Expo configuration',
-        );
+        const error = await captureRejection(runSandboxCheck(apps.path, 'expo/expo-doctor', { scope }));
+        expect(error.message).toBe('The expo-doctor command failed (exit 1): Unable to read Expo configuration');
     }
     expect(apps.folders).toStrictEqual(APP_FOLDERS.map((scope) => join(apps.path, scope)));
 });

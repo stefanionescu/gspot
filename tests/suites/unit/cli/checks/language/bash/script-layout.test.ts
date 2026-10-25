@@ -14,10 +14,8 @@ import {
 const bashSandbox = shareBashSandbox();
 
 test('an environment reader that only its scope declares may run top-level commands', async () => {
-    const ENVIRONMENT_READER_SCOPE_FILES = { 'tools/env.sh': '#!/usr/bin/env bash\nload_environment\n' } as const;
-
     await using sandbox = await testdir({
-        ...ENVIRONMENT_READER_SCOPE_FILES,
+        'tools/env.sh': '#!/usr/bin/env bash\nload_environment\n',
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', tables: ENVIRONMENT_READER_SCOPE_TABLES }),
     });
     expect(await runSandboxCheck(sandbox.path, 'bash/script-layout', { scope: 'tools' })).toStrictEqual([]);

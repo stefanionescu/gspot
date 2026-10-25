@@ -1,18 +1,17 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/session.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildCommandSetup } from '#cli/runs/command/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { CHILD_SCOPE_SETTINGS } from '#tests/config/runs/command.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 test('a command in a scope runs in the scope folder with paths relative to it', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const scope = 'apps/café [web]';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: scope }] }),

@@ -5,16 +5,16 @@ import type { ApplyReport } from '#cli/types/apply.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { createFileTree, type TestdirResult } from 'testdirs';
 import { type DryRunJson } from '#cli/types/commands/apply.ts';
 import { TEST_VERSION } from '#tests/config/commands/samples.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/setup/sandboxes.ts';
-import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { GSPOT_PATHS, TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import { MISSING_GENERATED_PATHS } from '#tests/config/commands/apply/dry-run.ts';
 
@@ -116,8 +116,7 @@ test('apply --dry-run shows a hand edit of the ESLint config file as a diff with
 });
 
 test('turning rules off lists the same rule files as stray in apply --dry-run as apply then removes', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings([], { rules: true, tables: '[rules]\nenabled = true\n' });
     await createFileTree(sandbox.path, { 'gspot.toml': settings });
     expect(await runGspot(sandbox.path, ['apply'])).toHaveProperty('code', 0);
@@ -142,8 +141,7 @@ test('turning rules off lists the same rule files as stray in apply --dry-run as
     for (const path of ownedPaths) expect(await isOnDisk(join(sandbox.path, path))).toBe(false);
 });
 test('apply --dry-run lists missing generated files and writes nothing', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash']);
     await createFileTree(sandbox.path, { 'gspot.toml': settings, 'entry.sh': 'echo example\n' });
     const before = await readTree(sandbox.path);
@@ -190,8 +188,10 @@ test('apply --dry-run after apply leaves missing tool lockfiles for install', as
     expect(structured.stderr).toBe('');
     const result = JSON.parse(structured.stdout) as DryRunJson;
     expect(result.pin).toStrictEqual({ from: cliPackage.version, to: cliPackage.version });
-    expect(result.outdated.length).toBeGreaterThan(0);
-    expect(result.outdated.every(({ path, kind }) => TOOL_LOCKFILES.has(path) && kind === 'missing')).toBe(true);
+    expect(result.outdated).toStrictEqual([
+        { path: GSPOT_PATHS.miseLockfile, kind: 'missing' },
+        { path: GSPOT_PATHS.uvLockfile, kind: 'missing' },
+    ]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

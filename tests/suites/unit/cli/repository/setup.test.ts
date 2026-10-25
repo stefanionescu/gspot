@@ -3,10 +3,10 @@ import { join, dirname } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { listConflictingConfigFiles } from '#cli/repository/config-files.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 import { readHooks, readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
@@ -89,9 +89,8 @@ test.each([...LINKED_RULE_FOLDERS])(
 );
 test('hook discovery keeps spaces in core.hooksPath and refuses a broken Git configuration', async () => {
     const hooksPath = ' .custom hooks';
-    await using sandbox = await testdir({ [`${hooksPath}/pre-commit`]: '#!/bin/sh\nexit 0\n' });
+    await using sandbox = await createGitSandbox({ [`${hooksPath}/pre-commit`]: '#!/bin/sh\nexit 0\n' });
 
-    runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
     expect(readHooks(sandbox.path)).toStrictEqual([{ kind: 'hooksPath', path: hooksPath, files: ['pre-commit'] }]);
     const previous = await readFile(join(sandbox.path, '.git/config'));
@@ -138,8 +137,7 @@ test('hook discovery reports other hook folders and leaves gspot and task script
     ]);
 });
 test('Husky 9 counts as Husky, and its stub folder is no hook file', async () => {
-    await using sandbox = await testdir({ '.husky/pre-commit': 'npm test\n', ...HUSKY_STUBS });
-    runGitStep(sandbox.path, ['init', '-q']);
+    await using sandbox = await createGitSandbox({ '.husky/pre-commit': 'npm test\n', ...HUSKY_STUBS });
     runGitStep(sandbox.path, ['config', 'core.hooksPath', '.husky/_']);
     expect(readHooks(sandbox.path)).toStrictEqual([{ kind: 'husky', path: '.husky', files: ['pre-commit'] }]);
 });
@@ -206,9 +204,8 @@ test.each([...SIMPLE_GIT_HOOKS_PACKAGES])(
     },
 );
 test('hook discovery lists a hooks folder once when core.hooksPath names it by its absolute path', async () => {
-    await using sandbox = await testdir({ '.githooks/pre-commit': '#!/bin/sh\nexit 0\n' });
+    await using sandbox = await createGitSandbox({ '.githooks/pre-commit': '#!/bin/sh\nexit 0\n' });
 
-    runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['config', 'core.hooksPath', join(sandbox.path, '.githooks')]);
     expect(readHooks(sandbox.path)).toStrictEqual([{ kind: 'hooksPath', path: '.githooks', files: ['pre-commit'] }]);
 });

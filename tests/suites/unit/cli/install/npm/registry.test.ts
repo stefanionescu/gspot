@@ -9,7 +9,7 @@ test.each([...NPMRC_REFUSALS])(
     async ({ source, message }) => {
         await using sandbox = await testdir({ '.npmrc': source, 'package.json': '{"private":true}\n' });
 
-        const readRegistryEnvironmentError = await captureRejection(readRegistryEnvironment(sandbox.path));
-        expect(readRegistryEnvironmentError).toMatchObject({ name: 'GspotError', code: 'install', message });
+        const error = await captureRejection(readRegistryEnvironment(sandbox.path));
+        expect(error).toMatchObject({ name: 'GspotError', code: 'install', message });
     },
 );

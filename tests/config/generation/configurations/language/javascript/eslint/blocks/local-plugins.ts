@@ -82,3 +82,9 @@ export const DUPLICATE_PLUGIN_ERROR = {
     message:
         'tools.eslint.plugins: local names two modules, tools/lint/first.mjs and tools/lint/second.mjs. Give each its own prefix.',
 } as const;
+
+export const LOCAL_PLUGIN_TABLES = `[[tools.eslint.plugins]]
+name = "local"
+path = "tools/lint/plugin.mjs"
+rules = { "no-forbidden" = [] }
+`;

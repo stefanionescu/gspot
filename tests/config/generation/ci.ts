@@ -1,22 +1,5 @@
 import type { Pipeline } from '#cli/types/generation/ci.ts';
 
-export const FAKE_MISE_SCRIPT = `#!/bin/sh
-[ "$1" = exec ] || exit 2
-shift
-while [ "$#" -gt 0 ] && [ "$1" != -- ]; do shift; done
-[ "$1" = -- ] || exit 2
-shift
-exec "$@"
-`;
-
-export const FAKE_GSPOT_SCRIPT = String.raw`#!/bin/sh
-printf '%s\n' "$*" >> "$GSPOT_COMMAND_LOG"
-case "$1" in
-    install | check) exit 0 ;;
-    *) exit 2 ;;
-esac
-`;
-
 export const SETUP_CASES = [
     ['github', 0],
     ['github', 29],
@@ -32,14 +15,6 @@ export const SETUP_ARGUMENTS = [
     'x; touch unexpected',
     'line\nbreak',
 ] as const;
-
-export const SETUP_SCRIPT = String.raw`#!/bin/sh
-printf '%s\n' "$@" > "$GSPOT_SETUP_ARGUMENTS"
-printf 'setup\n' >> "$GSPOT_COMMAND_LOG"
-printf 'setup out\n'
-printf 'setup err\n' >&2
-exit "$GSPOT_SETUP_EXIT"
-`;
 
 export const LINUX_PIPELINE: Omit<Pipeline, 'manualChecks' | 'tools'> = {
     version: '1.2.3',

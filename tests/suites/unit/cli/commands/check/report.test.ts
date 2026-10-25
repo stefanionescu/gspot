@@ -1,28 +1,30 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { test, spyOn, expect } from 'bun:test';
 import { stripVTControlCharacters } from 'node:util';
 import { type RunReport } from '#cli/types/runs/run.ts';
 import { setOutputOptions } from '#cli/system/terminal.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { fakeTerminals } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PROGRESS_CLEAR } from '#cli/config/commands/check/check.ts';
 import { FINDINGS_SHOWN } from '#cli/config/commands/check/report.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { printProgress, formatRunReport } from '#cli/commands/check/report.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
     DURATION,
     VERBOSITY_FILES,
+    FINDINGS_REPORT,
     NO_COLOR_SETTINGS,
     FAILED_REPORT_TEXT,
     VERBOSITY_ARGUMENTS,
     FAILED_CHECK_REPORT,
     SKIPPED_REPORT_CHECKS,
     COMPARISON_NOTICE_CASES,
+    VERBOSE_FINDINGS_REPORT,
     CHECK_REPORT_COMPARISONS,
 } from '#tests/config/commands/check/report.ts';
 
@@ -45,7 +47,7 @@ test('check prints the first findings and the count of the rest, and --json keep
     const result = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS]);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(result.stderr).toBe('');
-    expect(result.stdout.replaceAll(DURATION, '0.0s')).toBe(buildVerbosityReport(false));
+    expect(result.stdout.replaceAll(DURATION, '0.0s')).toBe(FINDINGS_REPORT);
     await assertJsonFindings(sandbox.path, VERBOSITY_ARGUMENTS);
 });
 
@@ -56,7 +58,7 @@ test('check --verbose prints every finding and the command', async () => {
     const result = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS, '--verbose']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(result.stderr).toBe('');
-    expect(result.stdout.replaceAll(DURATION, '0.0s')).toBe(buildVerbosityReport(true));
+    expect(result.stdout.replaceAll(DURATION, '0.0s')).toBe(VERBOSE_FINDINGS_REPORT);
 });
 
 test('the summary counts skipped checks apart from passed ones, and an empty run still prints its exit code', () => {
@@ -134,30 +136,19 @@ test('the report prints planned skips once with their reason only in verbose out
 test('terminal progress rewrites one status line and log output stays empty', () => {
     const terminal: string[] = [];
     const log: string[] = [];
-    const stderr = process.stderr;
     using _environment = overrideEnvironment({ NO_COLOR: undefined });
-    using resources = new DisposableStack();
-    for (const [stream, key] of [
-        [process.stdout, 'isTTY'],
-        [stderr, 'write'],
-        [stderr, 'isTTY'],
-    ] as const) {
-        const descriptor = Object.getOwnPropertyDescriptor(stream, key);
-        resources.defer(() => {
-            if (descriptor === undefined) Reflect.deleteProperty(stream, key);
-            else Object.defineProperty(stream, key, descriptor);
-        });
-    }
-    Object.defineProperty(process.stdout, 'isTTY', { value: true, configurable: true });
     for (const [isTTY, lines] of [
         [true, terminal],
         [false, log],
     ] as const) {
-        Object.defineProperty(stderr, 'isTTY', { value: isTTY, configurable: true });
-        stderr.write = (chunk) => {
+        using _terminals = fakeTerminals([
+            [process.stdout, true],
+            [process.stderr, isTTY],
+        ]);
+        using _write = spyOn(process.stderr, 'write').mockImplementation((chunk) => {
             lines.push(String(chunk));
             return true;
-        };
+        });
         for (let index = 0; index < 5; index++) printProgress({ finished: index + 1, total: 5, comparison: undefined });
     }
     expect(terminal).toStrictEqual(
@@ -170,18 +161,12 @@ test('terminal progress rewrites one status line and log output stays empty', ()
 });
 
 test('NO_COLOR prints findings without color on terminal streams', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': NO_COLOR_SETTINGS });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': NO_COLOR_SETTINGS });
 
-    using resources = new DisposableStack();
-    for (const stream of [process.stdout, process.stderr]) {
-        const previous = Object.getOwnPropertyDescriptor(stream, 'isTTY');
-        resources.defer(() => {
-            if (previous === undefined) Reflect.deleteProperty(stream, 'isTTY');
-            else Object.defineProperty(stream, 'isTTY', previous);
-        });
-        Object.defineProperty(stream, 'isTTY', { value: true, configurable: true });
-    }
+    using _terminals = fakeTerminals([
+        [process.stdout, true],
+        [process.stderr, true],
+    ]);
     const result = await runGspot(sandbox.path, ['check', '--only', 'gspot/unmatched-paths'], {
         NO_COLOR: '1',
         CI: '',
@@ -244,26 +229,3 @@ test('a finding message occupies one report line', () => {
     expect(text).toContain('First line. Second line. Third line.');
     expect(text).not.toContain('\nSecond line.');
 });
-
-function buildVerbosityReport(isVerbose: boolean): string {
-    const total = String(FINDINGS_SHOWN + 1);
-    return [
-        'Checked the files changed since HEAD.',
-        `example/findings  failed  ${total} findings`,
-        ...(isVerbose ? [`  $ ${process.execPath} findings.ts`] : []),
-        ...Array.from(
-            { length: isVerbose ? FINDINGS_SHOWN + 1 : FINDINGS_SHOWN },
-            (_, index) => `  finding ${String(index + 1)}.`,
-        ),
-        '  help: Read the command output; this repository declares the check.',
-        ...(isVerbose ? [] : ['  and 1 more (--verbose prints every finding)']),
-        '  run again: gspot check --only example/findings --changed HEAD',
-        '',
-        ...(isVerbose
-            ? ['example/passing  passed  1 file  0.0s', `  $ ${buildProgramCommand('fakes/tool').join(' ')}`, '']
-            : []),
-        `Failed: 1 check with ${total} findings. Passed: 1 check. Skipped: 0 checks.`,
-        'Time: 0.0s. Exit code 1.',
-        '',
-    ].join('\n');
-}

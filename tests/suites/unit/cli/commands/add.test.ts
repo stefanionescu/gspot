@@ -9,7 +9,7 @@ import { listToolInstallFiles } from '#tests/setup/cli/tools.ts';
 import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { readSandboxSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
@@ -80,8 +80,7 @@ test.each([false, true])(
 
 test('add names every unknown configuration before changing the settings', async () => {
     const text = 'configurations = []\n';
-    await using sandbox = await testdir({ 'gspot.toml': text });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': text });
     const result = await runGspot(sandbox.path, ['add', 'not-a-real-config-a', 'not-a-real-config-b']);
     expect(result.code).toBe(2);
     expect(result.stdout).toBe('');
@@ -90,8 +89,7 @@ test('add names every unknown configuration before changing the settings', async
 });
 
 test('add names only added configurations in a mixed request', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']) });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
     const result = await runGspot(sandbox.path, ['add', 'bash', 'markdown']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout.split('\n', 1)[0]).toBe('Added markdown. bash is already selected.');

@@ -8,7 +8,7 @@ import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { type PathExplanation } from '#cli/types/commands/explain.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
     PATH_IGNORES,
@@ -21,8 +21,7 @@ import {
 } from '#tests/config/commands/explain/subjects.ts';
 
 test('a path explanation lists the command checks and the ignores that apply', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings([], {
         rules: true,
         scopes: [{ path: 'api', configurations: [] }],
@@ -143,8 +142,7 @@ test.each([...UNKNOWN_SUBJECT_CASES])(
 test.each([...CONFIGURATION_DETECTION_LINES])(
     'explain $configuration lists the detection rules and file tags',
     async ({ configuration, lines }) => {
-        await using sandbox = await testdir({ 'README.md': '# Example\n' });
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({ 'README.md': '# Example\n' });
         const result = await runGspot(sandbox.path, ['explain', configuration]);
         expect({ code: result.code, stderr: result.stderr }).toStrictEqual({ code: 0, stderr: '' });
         expect(
@@ -156,8 +154,7 @@ test.each([...CONFIGURATION_DETECTION_LINES])(
 test.each([...CHECK_TOOL_MINIMUMS])(
     'explain <check> lists the minimum versions of the tools that the check runs, not of every tool of its configuration: $check',
     async ({ check, tools }) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({});
         const configurations = readConfigurations();
         const expected = tools.map((name) => {
             const minimum = getTool(configurations.values(), name).min_version;

@@ -8,13 +8,13 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { type ToolPackageJson } from '#cli/types/install/npm.ts';
 import { readSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { SQL_COMMAND_CHECK_TABLES } from '#tests/config/commands/samples.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { GOOGLE_PYPROJECT } from '#tests/config/checks/language/python/project.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { stat, chmod, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 import { INVALID_CSS, SQLFLUFF_KEPT_NOTE } from '#tests/config/commands/init/samples.ts';
 import { runGspot, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
@@ -38,12 +38,11 @@ import {
 test.each([...HOOKS_PATH_CASES])(
     'the init plan tells hook scripts in the source apart from the hooks folder Git uses ($hooksPath)',
     async ({ hooksPath, line }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'hooks/use-thing.ts': HOOK_NAMED_SOURCE,
             ...(hooksPath !== '' && { [`${hooksPath}/pre-commit`]: '#!/bin/sh\nexit 0\n' }),
         });
 
-        runGitStep(sandbox.path, ['init', '-q']);
         if (hooksPath !== '') runGitStep(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
         const result = await runGspot(sandbox.path, [
             ...buildInitArguments(['bash', 'javascript', 'spelling', 'markdown']),
@@ -92,8 +91,7 @@ test('the init plan deletes the conflicting config files and lists the lint fold
     expect(await isOnDisk(join(sandbox.path, 'quality/lint.sh'))).toBe(true);
 });
 test.each(['setup.cfg', 'tox.ini'])('init leaves a shared %p in place and names its SQLFluff section', async (path) => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     await createFileTree(sandbox.path, { [path]: SHARED_SETUP_CONFIG, 'query.sql': 'SELECT 1;\n' });
     await chmod(join(sandbox.path, path), 0o640);
     const initialized = await runGspot(sandbox.path, buildInitArguments(['sql'], { json: true }));
@@ -121,8 +119,8 @@ test('init deletes the .sqlfluffignore of the db package, and project/read-sql t
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
-    const selected = await runGspot(sandbox.path, ['set', 'level', 'all']);
-    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+    const levelSet = await runGspot(sandbox.path, ['set', 'level', 'all']);
+    expect(levelSet.code, levelSet.stdout + levelSet.stderr).toBe(0);
     const dialect = await runGspot(sandbox.path, ['set', 'tools.sqlfluff.dialect', 'postgres', '--scope', 'db']);
     expect(dialect.code, dialect.stdout + dialect.stderr).toBe(0);
     const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'project/read-sql', '--json']));
@@ -134,8 +132,7 @@ test('init deletes the .sqlfluffignore of the db package, and project/read-sql t
 test.each([true, false])(
     'init keeps a linked shared file and the bytes and mode of the file it links to (dry run: %p)',
     async (isDryRun) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({});
         await createFileTree(sandbox.path, { 'settings/shared.cfg': LINKED_SETUP_CONFIG, 'query.sql': 'SELECT 1;\n' });
         const target = join(sandbox.path, 'settings/shared.cfg');
         await chmod(target, 0o640);
@@ -161,8 +158,7 @@ test.each([true, false])(
 test.each([...REPLACED_PYPROJECT_TABLES])(
     'init names the $table table it leaves in pyproject.toml',
     async ({ configuration, text, source, note, generated }) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({});
         const path = 'pyproject.toml';
         const previous = `${GOOGLE_PYPROJECT}[tool.unrelated]\nkeep = true\n\n${text}`;
         await createFileTree(sandbox.path, {
@@ -241,8 +237,8 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
         for (const { path, text } of unchangedFiles)
             expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
         for (const level of LEVELS) {
-            const selected = await runGspot(sandbox.path, ['set', 'level', level]);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            const levelSet = await runGspot(sandbox.path, ['set', 'level', level]);
+            expect(levelSet.code, levelSet.stdout + levelSet.stderr).toBe(0);
             await writeFile(join(sandbox.path, stylesheet), INVALID_CSS);
             const invalid = await runCommand(command, { cwd: sandbox.path });
             expect(invalid.code, invalid.stdout + invalid.stderr).toBe(0);

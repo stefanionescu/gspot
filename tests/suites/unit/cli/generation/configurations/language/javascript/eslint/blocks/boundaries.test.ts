@@ -17,6 +17,7 @@ import {
     TEST_IMPORT_CASES,
     ENVIRONMENT_TABLES,
     IMPORT_RULE_TABLES,
+    TEST_IMPORT_TSCONFIG,
     BOUNDARY_IMPORT_TABLES,
     TEST_IMPORT_RULE_CASES,
     REFUSED_IMPORT_MESSAGES,
@@ -27,8 +28,6 @@ import {
 test.each([...IMPORT_RULE_CASES])(
     '$level loads eslint-plugin-boundaries for $declarations import rules',
     async ({ level, declarations }) => {
-        const IMPORT_RULE_CORRECTED_SOURCE = "import { value } from './value.js';\nexport const result = value;\n";
-
         await using sandbox = await testdir();
         const settings = buildSandboxSettings(['typescript'], { level, tables: IMPORT_RULE_TABLES[declarations] });
         await createFileTree(sandbox.path, { ...IMPORT_RULE_FILES, 'gspot.toml': settings });
@@ -77,7 +76,10 @@ test.each([...IMPORT_RULE_CASES])(
         });
         await Promise.all(
             ['app/source.ts', 'apps/api/app/source.ts'].map((file) =>
-                writeFile(join(sandbox.path, file), IMPORT_RULE_CORRECTED_SOURCE),
+                writeFile(
+                    join(sandbox.path, file),
+                    "import { value } from './value.js';\nexport const result = value;\n",
+                ),
             ),
         );
         expect(await lintFiles()).toStrictEqual({ configured, findings: [] });
@@ -116,22 +118,14 @@ test('import rules skip your test files in each scope and check other files', as
 test.each([...LEVELS])(
     'a file outside test_files may not import a test file, in root and child scopes, at %s',
     async (level) => {
-        const TEST_IMPORT_PATHS = {
-            'src/value.ts': 'export const value = 1;\nexport type Value = number;\n',
-            'tests/value.ts': 'export const value = 1;\nexport type Value = number;\n',
-            'other/value.test.ts': 'export const value = 1;\n',
-        } as const;
-
-        const TEST_IMPORT_TSCONFIG =
-            '{"compilerOptions":{"strict":true,"noEmit":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","baseUrl":".","paths":{"@/*":["./*"]},"types":[]},"include":["**/*.ts"]}';
-
-        const TEST_IMPORT_TABLES = `[[scope]]
+        await using sandbox = await testdir();
+        const settings = buildSandboxSettings(['typescript'], {
+            level,
+            tables: `[[scope]]
 path = "app"
 configurations = ["typescript"]
-`;
-
-        await using sandbox = await testdir();
-        const settings = buildSandboxSettings(['typescript'], { level, tables: TEST_IMPORT_TABLES });
+`,
+        });
         await createFileTree(sandbox.path, {
             'gspot.toml': settings,
             'package.json': '{"private":true,"type":"module"}',
@@ -139,7 +133,11 @@ configurations = ["typescript"]
             'app/tsconfig.json': TEST_IMPORT_TSCONFIG,
             ...Object.fromEntries(
                 ['', 'app/'].flatMap((prefix) =>
-                    Object.entries(TEST_IMPORT_PATHS).map(([path, source]) => [prefix + path, source]),
+                    Object.entries({
+                        'src/value.ts': 'export const value = 1;\nexport type Value = number;\n',
+                        'tests/value.ts': 'export const value = 1;\nexport type Value = number;\n',
+                        'other/value.test.ts': 'export const value = 1;\n',
+                    } as const).map(([path, source]) => [prefix + path, source]),
                 ),
             ),
         });
@@ -162,8 +160,6 @@ configurations = ["typescript"]
 test.each([...LEVELS])(
     'environment reads are allowed only in environment_readers files of each scope at %s',
     async (level) => {
-        const ENVIRONMENT_REEXPORT = "export * from './other.js';\nconst port = import.meta.env.PORT;\n";
-
         await using sandbox = await testdir();
         const settings = buildSandboxSettings(['typescript'], { level, tables: ENVIRONMENT_TABLES });
         const paths = [...ENVIRONMENT_READER_PATHS];
@@ -198,7 +194,9 @@ test.each([...LEVELS])(
                 ),
             ).toStrictEqual([]);
         }
-        await createFileTree(sandbox.path, { 'app/src/source.js': ENVIRONMENT_REEXPORT });
+        await createFileTree(sandbox.path, {
+            'app/src/source.js': "export * from './other.js';\nconst port = import.meta.env.PORT;\n",
+        });
         expect(
             await listLintFindings(eslint, sandbox.path, ['app/src/source.js'], ['no-restricted-syntax']),
         ).toStrictEqual(

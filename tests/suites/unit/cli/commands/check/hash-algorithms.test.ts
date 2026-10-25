@@ -9,7 +9,7 @@ import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 async function runChangeChecks(format: 'sha1' | 'sha256'): Promise<unknown> {
-    const settingsText = {
+    const files = {
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
                 command_check: [buildReportingCheck({ id: 'sandbox/report', paths: ['src/**'], stage: 'commit' })],
@@ -17,7 +17,7 @@ async function runChangeChecks(format: 'sha1' | 'sha256'): Promise<unknown> {
         }),
         'src/kept.ts': 'export {};\n',
     };
-    await using sandbox = await testdir(settingsText);
+    await using sandbox = await testdir(files);
 
     runGitStep(sandbox.path, ['init', '-q', `--object-format=${format}`]);
     runGitStep(sandbox.path, ['add', '-A']);

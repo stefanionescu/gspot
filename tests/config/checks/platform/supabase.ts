@@ -76,3 +76,5 @@ export const SERVICE_ROLE_CLIENTS = {
     'server/allowed.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
     'notes.txt': 'SUPABASE_SERVICE_ROLE_KEY\n',
 } as const;
+
+export const AVATARS_BUCKET_CONFIG = '[storage.buckets.avatars]\npublic = false\n';

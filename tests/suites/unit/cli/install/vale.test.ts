@@ -65,8 +65,8 @@ test('a changed Vale archive is refused before sync and preserves installed pack
     using _request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('replaced archive'));
     using writer = openWriter(sandbox.path);
     const install = buildToolInstall(session, writer);
-    const installValePackagesError = await captureRejection(installValePackages(install));
-    expect(installValePackagesError.message).toBe(
+    const error = await captureRejection(installValePackages(install));
+    expect(error.message).toBe(
         'The Vale package Google failed SHA-256 verification. gspot kept the installed packages.',
     );
     expect(install.steps).toStrictEqual([]);

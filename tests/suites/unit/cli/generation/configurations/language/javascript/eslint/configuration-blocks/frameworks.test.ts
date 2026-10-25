@@ -10,7 +10,9 @@ import { createEslint, readEslintRules, listLintFindings } from '#tests/setup/es
 import {
     MOBILE_FILES,
     SERVER_FILES,
+    EXPRESS_SOURCE,
     COMPONENT_FILES,
+    EXPRESS_FINDINGS,
     HTML_INJECTION_CASES,
     NEXTJS_ROUTE_PROJECTS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/frameworks.ts';
@@ -80,13 +82,6 @@ test.each([...HTML_INJECTION_CASES])(
 test.each([...LEVELS])(
     'Express selectors and security rules apply in the Express scope at their level (%s)',
     async (level) => {
-        const EXPRESS_SAMPLE_LINES = { aliasImport: 1, responseMessage: 2, logMessage: 3 } as const;
-
-        const ALIAS_IMPORT = 'import value from "#lib/owner";\n';
-
-        const RESPONSE_MESSAGES =
-            'response.json({ message: `Item ${identifier}` });\ncustom.info(`Item ${identifier}`);\n';
-
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], {
                 level,
@@ -96,9 +91,9 @@ test.each([...LEVELS])(
             }),
             'package.json': '{"private":true,"type":"module","imports":{"#lib/*":"./*.js"}}',
             'owner.js': 'export const value = 1;',
-            'source.js': ALIAS_IMPORT + RESPONSE_MESSAGES,
-            'api/source.js': ALIAS_IMPORT + RESPONSE_MESSAGES,
-            'api/child/source.js': ALIAS_IMPORT + RESPONSE_MESSAGES,
+            'source.js': EXPRESS_SOURCE,
+            'api/source.js': EXPRESS_SOURCE,
+            'api/child/source.js': EXPRESS_SOURCE,
         });
 
         const eslint = await createEslint(sandbox.path);
@@ -111,17 +106,9 @@ test.each([...LEVELS])(
         expect(root.rules['security/detect-child-process']![0]).toBe(level === 'all' ? 2 : 0);
         expect(root.rules['security/detect-possible-timing-attacks']![0]).toBe(level === 'all' ? 2 : 0);
         const files = ['source.js', 'api/source.js', 'api/child/source.js'];
-        const expected = files
-            .flatMap((file) => {
-                const { aliasImport, responseMessage, logMessage } = EXPRESS_SAMPLE_LINES;
-                const elevated =
-                    file === 'source.js' ? [aliasImport, logMessage] : [aliasImport, responseMessage, logMessage];
-                const recommended = file === 'source.js' ? [aliasImport] : [aliasImport, responseMessage];
-                const lines = level === 'all' ? elevated : recommended;
-                return lines.map((line) => ({ file, rule: 'no-restricted-syntax', line }));
-            })
-            .toSorted((left, right) => left.file.localeCompare(right.file) || left.line - right.line);
-        expect(await listLintFindings(eslint, sandbox.path, files, ['no-restricted-syntax'])).toStrictEqual(expected);
+        expect(await listLintFindings(eslint, sandbox.path, files, ['no-restricted-syntax'])).toStrictEqual([
+            ...EXPRESS_FINDINGS[level],
+        ]);
     },
 );
 

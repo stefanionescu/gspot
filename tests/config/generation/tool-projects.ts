@@ -1,3 +1,5 @@
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
+
 export const NEXT_REQUIREMENTS = [
     {
         name: 'an uninstalled project',
@@ -97,3 +99,13 @@ export const STYLESHEET_CASES = [
         needsHtmlParser: false,
     },
 ] as const;
+
+export const REACT_NATIVE_TSCONFIG = {
+    compilerOptions: {
+        ...STRICT_COMPILER_OPTIONS,
+        module: 'ESNext',
+        moduleResolution: 'Bundler',
+        jsx: 'react-jsx',
+    },
+    include: ['src'],
+} as const;

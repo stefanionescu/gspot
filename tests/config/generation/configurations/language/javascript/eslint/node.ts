@@ -259,3 +259,10 @@ export const PACKAGE_MANAGER_LEVELS = [
     { level: 'recommended', severity: 0 },
     { level: 'all', severity: 2 },
 ] as const;
+
+export const ENGINE_FINDINGS = [
+    { ruleId: 'n/no-unsupported-features/es-builtins', line: 1 },
+    { ruleId: 'n/no-unsupported-features/node-builtins', line: 2 },
+] as const;
+
+export const ENGINE_SOURCE = 'export const grouped = Object.groupBy([1], String);\nprocess.loadEnvFile();\n';

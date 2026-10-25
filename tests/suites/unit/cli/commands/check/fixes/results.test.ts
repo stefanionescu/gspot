@@ -152,7 +152,6 @@ test('a failed version check blocks a check and its fix without changing source 
 
 test('a fixer that leaves a code file that fails to parse is named in the fix report', async () => {
     await using sandbox = await testdir();
-    const breaker = String.raw`const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "import Hls, type { A } from 'hls.js';\n");`;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
@@ -163,7 +162,12 @@ test('a fixer that leaves a code file that fails to parse is named in the fix re
                         stage: 'commit',
                         paths: ['*.ts'],
                         command: buildProgramCommand('fakes/tool'),
-                        fix: [process.execPath, 'breaker.cjs', '{files}'],
+                        fix: buildProgramCommand(
+                            'fakes/tool',
+                            '--text',
+                            "import Hls, type { A } from 'hls.js';\n",
+                            '{files}',
+                        ),
                         output: { format: 'none' },
                     },
                 ],
@@ -171,7 +175,6 @@ test('a fixer that leaves a code file that fails to parse is named in the fix re
         }),
         'client.ts': "import Hls from 'hls.js';\nexport { Hls };\n",
         'notes.ts': "export const note = 'kept';\n",
-        'breaker.cjs': breaker,
     });
     const session = await openSession(sandbox.path);
     const result = await runChecks(session, { ...buildRunOptions({ only: ['project/merge-imports'] }), fix: true });

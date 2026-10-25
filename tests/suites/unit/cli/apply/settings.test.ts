@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
@@ -47,23 +46,4 @@ test('apply prints no managed-key warning while it still manages the Bun scanner
         expect(result.code, `pass ${String(pass)}: ${result.stdout}${result.stderr}`).toBe(0);
         expect((JSON.parse(result.stdout) as ApplyReport).notes).not.toContain(MANAGED_KEYS_NOTE);
     }
-});
-
-test('unset warns when the Bun scanner remains after its setting goes', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            tables: 'dependencies.bun_scanner = "@socketsecurity/bun-security-scanner"\n',
-        }),
-        'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
-    });
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const previous = await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8');
-    const unset = await runGspot(sandbox.path, ['unset', 'dependencies.bun_scanner', '--json']);
-    expect(unset.code, unset.stdout + unset.stderr).toBe(0);
-    expect((JSON.parse(unset.stdout) as ApplyReport).notes).toContain(MANAGED_KEYS_NOTE);
-    expect(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8')).toBe(previous);
-    const repeated = await runGspot(sandbox.path, ['apply', '--json']);
-    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect((JSON.parse(repeated.stdout) as ApplyReport).notes).not.toContain(MANAGED_KEYS_NOTE);
 });

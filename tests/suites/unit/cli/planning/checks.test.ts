@@ -9,10 +9,10 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/configurations.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { isActive, planChecks, stripCoverageArguments } from '#cli/planning/checks.ts';
 
 import {
@@ -141,7 +141,7 @@ Release on 03/04/2026.
     },
 );
 test.each([...LEVELS])('%s plans history checks once at the root and only for pushed commits', async (level) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['commits', 'secrets'], {
             level,
             scopes: [{ path: 'app', configurations: ['commits', 'secrets'] }],
@@ -159,7 +159,6 @@ test.each([...LEVELS])('%s plans history checks once at the root and only for pu
         'source.txt': 'Root source.\n',
         'app/source.txt': 'Child source.\n',
     });
-    runGitStep(sandbox.path, ['init']);
     const session = await openSession(sandbox.path);
     const names = [...(level === 'all' ? ['commits/commitlint-pushed'] : []), 'secrets/gitleaks-pushed'];
     const planned = planChecks(session, {

@@ -25,6 +25,12 @@ export const PROGRAM_NAMES = [
     'processes/revisions',
     'processes/manifests',
     'processes/environment',
+    'processes/assets',
+    'processes/eslint-plugin',
+    'fakes/exec',
+    'fakes/generator',
+    'fakes/site-build',
+    'fakes/package-bin',
 ] as const;
 
 export const WAIT_INTERVAL_MILLISECONDS = 60_000;
@@ -80,6 +86,8 @@ export const CHECK_STAGED_COPY_OPTIONS = {
 } as const;
 
 export const EXECUTABLE_BITS = 0o111;
+
+export const SITE_BUILD_OPTIONS = { copy: { type: 'string', multiple: true }, import: { type: 'string' } } as const;
 
 export const IMPORT_DEPENDENCY_OPTIONS = { name: { type: 'string' }, write: { type: 'string' } } as const;
 

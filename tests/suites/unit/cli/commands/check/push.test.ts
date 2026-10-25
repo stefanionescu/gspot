@@ -7,11 +7,11 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { CLI_BIN, runGspot } from '#tests/setup/cli/commands.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check/push.ts';
 import { preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { PUSH_CONTENT, BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 async function assertWorkingTreeKept(root: string, head: string): Promise<void> {
     expect(runGitStep(root, ['rev-parse', 'HEAD'])).toBe(head);
@@ -33,8 +33,7 @@ async function runBrokenPushCheck(root: string, base: string, broken: string): P
 test.each(['local', 'remote'] as const)(
     'missing %s objects stop a pre-push check and leave the working tree as it was',
     async (side) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({});
         const { base, reviewed, broken } = await preparePushRepository(sandbox.path);
         const missing = await runGspot(
             sandbox.path,
@@ -51,8 +50,7 @@ test.each(['local', 'remote'] as const)(
 );
 
 test('a new branch compares with the remote-tracking commit, and with a fetch mapping with the mapped commit', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const { base, reviewed, broken, zero } = await preparePushRepository(sandbox.path);
     runGitStep(sandbox.path, ['remote', 'add', 'origin', 'unused']);
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
@@ -75,8 +73,7 @@ test('a new branch compares with the remote-tracking commit, and with a fetch ma
 });
 
 test('a new branch still compares with refs/remotes/origin/main when the fetch refspecs map branches elsewhere or exclude main', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const { base, reviewed, broken, zero } = await preparePushRepository(sandbox.path);
     runGitStep(sandbox.path, ['remote', 'add', 'origin', 'unused']);
     runGitStep(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']);
@@ -94,8 +91,7 @@ test('a new branch still compares with refs/remotes/origin/main when the fetch r
 });
 
 test('a new branch whose remote has no fetched commits checks every file of the tree', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const { reviewed, broken, zero } = await preparePushRepository(sandbox.path);
     const noRemote = await runGspot(
         sandbox.path,
@@ -115,15 +111,14 @@ test('a new branch whose remote has no fetched commits checks every file of the 
 });
 
 test('an annotated tag of a commit is checked while blob tags, blobs, and deleted refs are skipped', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const { base, reviewed, broken, zero } = await preparePushRepository(sandbox.path);
     runGitStep(sandbox.path, ['tag', '-a', '-m', 'reviewed tag', 'reviewed-tag', reviewed]);
     const tag = runGitStep(sandbox.path, ['rev-parse', 'reviewed-tag']);
     const blob = runGitStep(sandbox.path, ['hash-object', '-w', 'changed.sh']);
     runGitStep(sandbox.path, ['tag', '-a', '-m', 'data tag', 'data', blob]);
     const tagged = runGitStep(sandbox.path, ['rev-parse', 'refs/tags/data']);
-    const selected = await runGspot(
+    const pushed = await runGspot(
         sandbox.path,
         PUSH_CHECK_COMMAND,
         {},
@@ -131,8 +126,8 @@ test('an annotated tag of a commit is checked while blob tags, blobs, and delete
             stdin: `refs/tags/reviewed-tag ${tag} refs/tags/reviewed-tag ${base}\nrefs/tags/data ${tagged} refs/tags/data ${'e'.repeat(base.length)}\nrefs/tags/blob ${blob} refs/tags/blob ${zero}\n(delete) ${zero} refs/heads/removed ${'f'.repeat(base.length)}\n`,
         },
     );
-    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-    const report = JSON.parse(selected.stdout) as PushReport;
+    expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
+    const report = JSON.parse(pushed.stdout) as PushReport;
     expect(report.revisions.map(({ hash }) => hash)).toStrictEqual([reviewed]);
     expect(report.skipped).toStrictEqual([
         { ref: 'refs/tags/data', hash: tagged, reason: 'non-commit object' },
@@ -143,8 +138,7 @@ test('an annotated tag of a commit is checked while blob tags, blobs, and delete
 });
 
 test('pre-push checks the pushed commits, not the repaired working tree', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const { base, reviewed, broken } = await preparePushRepository(sandbox.path);
     const passing = await runGspot(
         sandbox.path,
@@ -170,8 +164,7 @@ test('pre-push checks the pushed commits, not the repaired working tree', async 
 });
 
 test('the pre-push report prints a command that reproduces the same findings', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const { base, broken } = await preparePushRepository(sandbox.path);
     const failedReport = await runBrokenPushCheck(sandbox.path, base, broken);
     const reproduction = failedReport.checks.map(({ reproduce }) => reproduce);
@@ -198,8 +191,7 @@ test('the pre-push report prints a command that reproduces the same findings', a
 });
 
 test('pre-push reports each pushed ref against its own commit', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const { base, reviewed, broken } = await preparePushRepository(sandbox.path);
     const multiple = await runGspot(
         sandbox.path,
@@ -221,8 +213,7 @@ test('pre-push reports each pushed ref against its own commit', async () => {
 });
 
 test('pre-push checks a commit pushed to two refs once', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const { base, reviewed, broken } = await preparePushRepository(sandbox.path);
     const duplicated = await runGspot(
         sandbox.path,
@@ -240,8 +231,7 @@ test('pre-push checks a commit pushed to two refs once', async () => {
 });
 
 test('pre-push of a forced rewind checks the rewound commit', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const { base, broken } = await preparePushRepository(sandbox.path);
     const forced = await runGspot(
         sandbox.path,

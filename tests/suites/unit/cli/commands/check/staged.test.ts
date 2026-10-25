@@ -3,23 +3,22 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { createFileTree, type TestdirResult } from 'testdirs';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { rmSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { STAGED_PACKAGE_JSON } from '#tests/config/commands/check/staged.ts';
 import { stat, chmod, mkdir, unlink, readFile, writeFile } from 'node:fs/promises';
 
 async function createCaseClashingSandbox(): Promise<TestdirResult> {
-    const sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    const sandbox = await createGitSandbox({});
     try {
         const check = {
             command: buildProgramCommand('checks/contents', '{files}'),
@@ -33,7 +32,6 @@ async function createCaseClashingSandbox(): Promise<TestdirResult> {
             }),
             'docs/guide.md': '# Guide\n',
         });
-        runGitStep(sandbox.path, ['init', '-q']);
         runGitStep(sandbox.path, ['add', '-A']);
         runGitStep(sandbox.path, ['commit', '-qm', 'base']);
         for (const [path, text] of [
@@ -52,8 +50,7 @@ async function createCaseClashingSandbox(): Promise<TestdirResult> {
 }
 
 test('a staged check reads index bytes and file modes, converts no line endings, and writes nothing into the working tree', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const command = buildProgramCommand(
         'checks/staged',
         '--payload',
@@ -79,7 +76,6 @@ test('a staged check reads index bytes and file modes, converts no line endings,
         }),
     });
     await chmod(join(sandbox.path, 'task.sh'), 0o755);
-    runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['add', '-A']);
     await writeFile(join(sandbox.path, 'payload.dat'), Buffer.from([0, 1, 2]));
     await chmod(join(sandbox.path, 'task.sh'), 0o644);
@@ -95,8 +91,7 @@ test('a staged check reads index bytes and file modes, converts no line endings,
 });
 
 test('a staged check copies the locked dependencies and leaves the working tree as it was', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const lockfile = JSON.stringify({
         name: STAGED_PACKAGE_JSON.name,
         lockfileVersion: 3,
@@ -125,7 +120,6 @@ test('a staged check copies the locked dependencies and leaves the working tree 
             }),
         }),
     });
-    runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['add', '-A']);
     const commandArguments = ['check', '--staged', '--only', 'project/dependencies', '--json'];
     const first = await runGspot(sandbox.path, commandArguments);
@@ -137,8 +131,7 @@ test('a staged check copies the locked dependencies and leaves the working tree 
 });
 
 test('a staged check keeps each Python scope config and reports the installed dependency note for an unstaged pyproject.toml change', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const project = '[project]\nname = "example"\nversion = "0.0.0"\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['python'], {
@@ -151,7 +144,6 @@ test('a staged check keeps each Python scope config and reports the installed de
         'child/main.py': 'value = 2\n',
     });
     for (const scope of ['', 'child']) await mkdir(join(sandbox.path, scope, '.venv'));
-    runGitStep(sandbox.path, ['init', '-q']);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     runGitStep(sandbox.path, ['add', '-A']);
@@ -215,11 +207,9 @@ test.skipIf(!isCaseFolding())(
 );
 
 test('staged checks use index bytes and settings on an unborn branch while preserving unstaged edits', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK });
     await createFileTree(sandbox.path, { 'gspot.toml': settings, 'script with spaces.sh': 'if then\n' });
-    runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['add', '-A']);
     const index = runGitStep(sandbox.path, ['ls-files', '--stage', '-z']);
     await writeFile(join(sandbox.path, 'script with spaces.sh'), 'echo repaired only in the working tree\n');
@@ -254,12 +244,11 @@ test('staged checks use index bytes and settings on an unborn branch while prese
 });
 
 test('staged checks read an indexed file when its working file is missing', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'script with spaces.sh': 'echo indexed\n',
     });
 
-    runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['add', '-A']);
     const commandArguments = ['check', '--staged', '--only', 'project/bash-syntax', '--json'];
     await unlink(join(sandbox.path, 'script with spaces.sh'));

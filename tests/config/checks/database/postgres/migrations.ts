@@ -25,3 +25,5 @@ export const POSTGRES_CHECKS = [
     'postgres/definer-search-path',
     'postgres/foreign-key-indexes',
 ] as const;
+
+export const MALFORMED_MIGRATION_PATH = 'migrations/20240201_teams.sql';

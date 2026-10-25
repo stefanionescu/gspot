@@ -13,16 +13,12 @@ import { findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     POSTGRES_CHECKS,
+    MALFORMED_MIGRATION_PATH,
     MALFORMED_MIGRATION_FILES,
     DEFAULT_MIGRATION_FOLDER_FILES,
 } from '#tests/config/checks/database/postgres/migrations.ts';
 
 test('postgres/migration-order reports a migration that does not parse at its line and column, the other postgres checks skip, and the fixed migration passes', async () => {
-    const SECURED_TEAMS_SQL =
-        'CREATE TABLE teams (id integer PRIMARY KEY);\nALTER TABLE teams ENABLE ROW LEVEL SECURITY;\n';
-
-    const MALFORMED_MIGRATION_PATH = 'migrations/20240201_teams.sql';
-
     await using sandbox = await testdir(MALFORMED_MIGRATION_FILES);
     const checks = [...POSTGRES_CHECKS];
 
@@ -45,7 +41,10 @@ test('postgres/migration-order reports a migration that does not parse at its li
                 note: 'A migration does not parse. postgres/migration-order reports where.',
             })),
     );
-    await writeFile(join(sandbox.path, MALFORMED_MIGRATION_PATH), SECURED_TEAMS_SQL);
+    await writeFile(
+        join(sandbox.path, MALFORMED_MIGRATION_PATH),
+        'CREATE TABLE teams (id integer PRIMARY KEY);\nALTER TABLE teams ENABLE ROW LEVEL SECURITY;\n',
+    );
     const fixed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: checks }));
 
     expect(fixed.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual(

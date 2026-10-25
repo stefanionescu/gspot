@@ -155,3 +155,6 @@ export const ENVIRONMENT_READER_PATHS = [
     'literal/src/source.js',
     'literal/config/env.js',
 ] as const;
+
+export const TEST_IMPORT_TSCONFIG =
+    '{"compilerOptions":{"strict":true,"noEmit":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","baseUrl":".","paths":{"@/*":["./*"]},"types":[]},"include":["**/*.ts"]}';

@@ -70,10 +70,8 @@ test.each(['stdout', 'stderr'])(
             );
         });
 
-        const runSandboxCheckError = await captureRejection(runSandboxCheck(session.root, 'nginx/syntax'));
-        expect(runSandboxCheckError.message).toBe(
-            `The openssl command could not write the temporary certificate: ${message}`,
-        );
+        const error = await captureRejection(runSandboxCheck(session.root, 'nginx/syntax'));
+        expect(error.message).toBe(`The openssl command could not write the temporary certificate: ${message}`);
         expect(spawn).toHaveBeenCalledTimes(1);
         for (const folder of folders) {
             expect(folder).not.toBe(sandbox.path);

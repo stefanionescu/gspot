@@ -6,13 +6,13 @@ import { readGitSetting } from '#cli/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/cli.ts';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { installHooks, readHookStatus } from '#cli/install/hooks.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH, HOOK_CONFIGURATION_CASES } from '#tests/config/install/hooks.ts';
 
@@ -20,8 +20,7 @@ test.each([...HOOK_REPOSITORIES])(
     'a repository with $name keeps its hooks, gets the lines to add, and is ready only after both lines',
     async (provider) => {
         const { startProgram } = provider;
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({});
         const { files, setting, gitHook } = provider;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings([], {
@@ -29,7 +28,6 @@ test.each([...HOOK_REPOSITORIES])(
             }),
             ...files,
         });
-        runGitStep(sandbox.path, ['init', '-q']);
         if (setting !== undefined) runGitStep(sandbox.path, [...setting]);
         if (gitHook) await writeFile(join(sandbox.path, '.git/hooks/pre-commit'), '#!/bin/sh\nexit 0\n');
         const before = readGitSetting(sandbox.path, 'core.hooksPath');
@@ -43,7 +41,10 @@ test.each([...HOOK_REPOSITORIES])(
         const session = await openSession(sandbox.path);
         const text = installHooks(session, steps);
         const command = startProgram === 'mise' ? 'mise exec -- gspot' : 'npm exec --no -- gspot';
-        expect({ steps, text }).toStrictEqual({ steps: [], text: buildHookInstructions(provider.location, command) });
+        expect({ steps, text }).toStrictEqual({
+            steps: [],
+            text: `hooks already run from ${provider.location}; add these gspot lines to them:\n  pre-commit: ${command} check --hook pre-commit\n  pre-push: ${command} check --hook pre-push -- "$@"`,
+        });
         expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(before);
         for (const { path, content } of authored)
             expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
@@ -68,11 +69,10 @@ test.each([...HOOK_REPOSITORIES])(
 test.each([...HOOK_CONFIGURATION_CASES])(
     'hooks in $path are ready only after both commands',
     async ({ path, oneHook, bothHooks }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
             [path]: oneHook,
         });
-        runGitStep(sandbox.path, ['init', '-q']);
         const session = await openSession(sandbox.path);
         expect(readHookStatus(session, session.repository).ready).toBe(false);
         await writeFile(join(sandbox.path, path), bothHooks);
@@ -84,9 +84,8 @@ test.each([...HOOK_CONFIGURATION_CASES])(
 );
 
 test('a gspot.toml without hooks installs none', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
 
-    runGitStep(sandbox.path, ['init', '-q']);
     const steps: (readonly string[])[] = [];
     const session = await openSession(sandbox.path);
     expect(installHooks(session, steps)).toBe('');
@@ -163,9 +162,7 @@ test('the hooks that git lfs install wrote are not other hooks, so install point
     );
     await writeFile(join(sandbox.path, '.git/hooks/post-merge'), '#!/bin/sh\ngit lfs post-merge "$@"\necho custom\n');
     runGitStep(sandbox.path, ['config', '--unset', 'core.hooksPath']);
-    expect(installHooks(session, [])).toBe(buildHookInstructions('.git/hooks', 'mise exec -- gspot'));
+    expect(installHooks(session, [])).toBe(
+        'hooks already run from .git/hooks; add these gspot lines to them:\n  pre-commit: mise exec -- gspot check --hook pre-commit\n  pre-push: mise exec -- gspot check --hook pre-push -- "$@"',
+    );
 });
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function buildHookInstructions(location: string, command: string): string {
-    return `hooks already run from ${location}; add these gspot lines to them:\n  pre-commit: ${command} check --hook pre-commit\n  pre-push: ${command} check --hook pre-push -- "$@"`;
-}

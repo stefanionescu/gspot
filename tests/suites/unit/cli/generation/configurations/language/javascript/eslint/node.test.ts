@@ -12,8 +12,10 @@ import {
     ENGINE_PATHS,
     ENGINE_PHASES,
     ENGINE_SCOPES,
+    ENGINE_SOURCE,
     UNLINTED_FILES,
     ENGINE_PACKAGES,
+    ENGINE_FINDINGS,
     NODE_SCRIPT_CASES,
     NODE_SCRIPT_FILES,
     NODE_SCRIPT_RULES,
@@ -26,13 +28,6 @@ import {
 test.each([...ENGINE_PHASES])(
     `ESLint reports Node APIs newer than the engines of each file's package ($name)`,
     async (phase) => {
-        const ENGINE_FINDINGS = [
-            { ruleId: 'n/no-unsupported-features/es-builtins', line: 1 },
-            { ruleId: 'n/no-unsupported-features/node-builtins', line: 2 },
-        ] as const;
-
-        const ENGINE_SOURCE = 'export const grouped = Object.groupBy([1], String);\nprocess.loadEnvFile();\n';
-
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: ENGINE_SCOPES }),
             ...ENGINE_PACKAGES,

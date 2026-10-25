@@ -100,3 +100,8 @@ export const LOGO_IMAGE_SET = {
         'App/Home.swift': 'let logo = Image("Logo")\n',
     },
 } as const;
+
+export const SINGLE_FILE_PBXPROJ = GROUPED_PBXPROJ.replace('files = (B1, B2,);', 'files = (B2,);').replace(
+    'fileSystemSynchronizedGroups = (SYNC,);',
+    '',
+);

@@ -18,21 +18,7 @@ test('finding settings outside Git needs one Git lookup', async () => {
     expect(boundary).toHaveBeenCalledTimes(1);
 });
 
-test('a Git refusal while finding the root stays a Git error', async () => {
-    await using sandbox = await testdir();
-    using boundary = spyOn(git, 'runGitBlocking').mockReturnValue(
-        buildProcessResult({ code: 128, stderr: 'fatal: detected dubious ownership\n' }),
-    );
-    const error = await captureRejection(Promise.try(() => findRoot(sandbox.path)));
-    expect(error).toMatchObject({
-        name: 'GspotError',
-        code: 'git',
-        message: `Git could not open ${sandbox.path}: fatal: detected dubious ownership`,
-    });
-    expect(boundary).toHaveBeenCalledTimes(1);
-});
-
-test('a real Git ownership refusal while finding the root stays a Git error', async () => {
+test('a Git ownership refusal while finding the root stays a Git error', async () => {
     await using sandbox = await testdir({ 'source.txt': 'source\n' });
     commitAll(sandbox.path);
     using _environment = overrideEnvironment(DUBIOUS_GIT_ENVIRONMENT);

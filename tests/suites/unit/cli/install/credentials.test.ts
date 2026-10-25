@@ -15,7 +15,7 @@ test('a URL that does not parse has no password, and a bare percent stays as wri
 });
 
 test.each([...LEAKED_LOCKFILES])(
-    'a lockfile that holds a registry password in %s is refused with the given message, and a clean one passes',
+    'a lockfile that holds a registry password in %s is refused with the message, and a clean one passes',
     (lockfile) => {
         const passwords = ['synthetic/password+with spaces'];
         const failure = 'Existing files were preserved.';

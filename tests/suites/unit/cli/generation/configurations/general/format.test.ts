@@ -19,12 +19,12 @@ test.each([...EDITORCONFIG_SELECTOR_ERRORS])(
     'a format override selector that EditorConfig cannot express is a settings error ($pattern)',
     async ({ pattern, message }) => {
         const format = { override: [{ paths: [pattern], indent_width: 2 }] };
-        const settingsText = generateFile(
+        const generated = generateFile(
             buildSandboxSettings(['javascript'], { rules: true, tables: stringify({ format }) }),
             'eslint.config.mjs',
             { 'app/source.js': 'export {};\n' },
         );
-        const error = await captureRejection(settingsText);
+        const error = await captureRejection(generated);
         expect(error).toMatchObject({ name: 'GspotError', code: 'settings', message });
     },
 );

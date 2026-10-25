@@ -8,11 +8,11 @@ import { openSession } from '#cli/session.ts';
 import { getValueAt } from '#cli/system/tables.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { writeGeneratedFiles } from '#cli/apply/generated.ts';
 import { generateFile } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildIgnoreSections } from '#cli/generation/config-files/ignore-files.ts';
 
 import {
@@ -46,14 +46,12 @@ test('shared Markdown settings leave inherited pointers out of generated path ig
 test.each([...PRETTIER_IGNORE_CASES])(
     'the generated .prettierignore ignores $file: $ignored',
     async ({ file, ignored }) => {
-        const PRETTIER_IGNORE_ATTRIBUTES = '/generated/** linguist-generated\n/vendored/** linguist-vendored\n';
-
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(PRETTIER_IGNORE_SETTINGS.configurations, {
                 rules: true,
                 tables: stringify({ ignore: PRETTIER_IGNORE_SETTINGS.ignore }),
             }),
-            '.gitattributes': PRETTIER_IGNORE_ATTRIBUTES,
+            '.gitattributes': '/generated/** linguist-generated\n/vendored/** linguist-vendored\n',
             'package.json': '{"packageManager":"pnpm@9.0.0"}',
             'source.ts': 'export const value = 1;\n',
             [file]: 'const value={enabled:true};\n',
@@ -130,8 +128,7 @@ test.each([...LANGUAGE_IGNORES])(
 );
 
 test('the ignore lists name only the files that gspot writes, and Ruff gets only folders and Python files', async () => {
-    await using sandbox = await testdir(IGNORE_LIST_REPOSITORY);
-    runGitStep(sandbox.path, ['init', '-q']);
+    await using sandbox = await createGitSandbox(IGNORE_LIST_REPOSITORY);
     const session = await openSession(sandbox.path);
     const files = generate(session).files;
     const written = files
@@ -156,12 +153,11 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
 });
 
 test('a second apply writes the same files when .prettierignore covers every source file', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
         'source/build/value.js': 'export const value = 1;\n',
         'coverage/value.js': 'export const value = 1;\n',
     });
-    runGitStep(sandbox.path, ['init', '-q']);
     const outputs: string[][] = [];
     for (const _pass of [1, 2]) {
         const session = await openSession(sandbox.path);
@@ -202,12 +198,11 @@ test('root paths in the generated-files section are anchored, so an authored too
 });
 
 test('changing tracked gitignore patterns leaves generated tool configurations unchanged', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'spelling']),
         '.gitignore': '',
         'source.js': 'export const value = 1;\n',
     });
-    runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['add', '--', 'gspot.toml', '.gitignore', 'source.js']);
     const before = generate(await openSession(sandbox.path)).files.filter(({ path }) =>
         ['.prettierignore', 'typos.toml', 'knip.json', 'eslint.mjs'].some((name) => path.endsWith(name)),

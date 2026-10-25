@@ -149,3 +149,24 @@ export function fakeExecutableLookup(
         return found;
     }) as typeof executables.sync);
 }
+
+/**
+Mark each stream as a terminal or not, and restore the streams when the scope ends.
+
+@param terminals each stream with its terminal flag.
+@returns a resource that restores the old values.
+*/
+export function fakeTerminals(
+    terminals: readonly (readonly [NodeJS.ReadStream | NodeJS.WriteStream, boolean])[],
+): Disposable {
+    using resources = new DisposableStack();
+    for (const [stream, isTTY] of terminals) {
+        const descriptor = Object.getOwnPropertyDescriptor(stream, 'isTTY');
+        resources.defer(() => {
+            if (descriptor === undefined) Reflect.deleteProperty(stream, 'isTTY');
+            else Object.defineProperty(stream, 'isTTY', descriptor);
+        });
+        Object.defineProperty(stream, 'isTTY', { value: isTTY, configurable: true });
+    }
+    return resources.move();
+}

@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { openWriter } from '#cli/write.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { writeGeneratedFiles } from '#cli/apply/generated.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import type { EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
@@ -62,11 +62,11 @@ test('level all keeps every rule that recommended turns on for a React file', as
 });
 
 test('all applies your rule options except in script and test files', async () => {
-    const LEVEL_RULE_OPTIONS =
-        '[limits.javascript]\ntrivial_function_statements = 4\n[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n';
-
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: LEVEL_RULE_OPTIONS }),
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            level: 'all',
+            tables: '[limits.javascript]\ntrivial_function_statements = 4\n[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n',
+        }),
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',
         'scripts/run.js': '',
@@ -76,38 +76,37 @@ test('all applies your rule options except in script and test files', async () =
     const eslint = await createEslint(sandbox.path);
     const source = (await eslint.calculateConfigForFile('source.js')) as EslintConfiguration;
     const script = (await eslint.calculateConfigForFile('scripts/run.js')) as EslintConfiguration;
-    const test = (await eslint.calculateConfigForFile('tests/example.test.js')) as EslintConfiguration;
+    const testFile = (await eslint.calculateConfigForFile('tests/example.test.js')) as EslintConfiguration;
     expect(source.rules['n/no-process-exit']![0]).toBe(2);
     expect(script.rules['n/no-process-exit']![0]).toBe(0);
-    expect(test.rules['jsdoc/require-description']![0]).toBe(0);
+    expect(testFile.rules['jsdoc/require-description']![0]).toBe(0);
     expect(source.rules['gspot/no-trivial-functions']).toStrictEqual([2, { trivialFunctionStatements: 4 }]);
 });
 
 test('recommended refuses options for a rule of level all, a rule that runs at no level, and a rule of no loaded plugin', async () => {
-    const UNAPPLIED_RULE_REFUSALS = [
-        'n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level recommended.',
-        'gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.',
-        'gspot runs acme/foo at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.',
-    ] as const;
-
-    const UNAPPLIED_RULE_OPTIONS =
-        '[tools.eslint.rules]\n"n/no-process-exit" = []\n"id-length" = []\n"acme/foo" = []\n';
-
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'recommended', tables: UNAPPLIED_RULE_OPTIONS }),
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            level: 'recommended',
+            tables: '[tools.eslint.rules]\n"n/no-process-exit" = []\n"id-length" = []\n"acme/foo" = []\n',
+        }),
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',
     });
     const refused = await runGspot(sandbox.path, ['apply']);
     expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe(`${UNAPPLIED_RULE_REFUSALS.join('\n')}\n`);
+    expect(refused.stderr).toBe(
+        `${[
+            'n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level recommended.',
+            'gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.',
+            'gspot runs acme/foo at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.',
+        ].join('\n')}\n`,
+    );
 });
 
 test.each([...LEVELS])(
     'layout rules stay off and empty-object fallbacks are reported only at level all (%s)',
     async (level) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({});
         const settings = buildSandboxSettings(['javascript'], { level });
         await createFileTree(sandbox.path, {
             'gspot.toml': settings,
@@ -143,8 +142,7 @@ test.each([...LEVELS])(
 );
 
 test('switching the level and back writes the same files', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     await writeFile(join(sandbox.path, 'source.js'), 'export const value = 1;\n');
     const outputs: { path: string; content: string }[][] = [];
     for (const level of ['recommended', 'all', 'recommended'] as const) {

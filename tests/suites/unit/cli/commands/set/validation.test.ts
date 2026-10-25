@@ -1,15 +1,13 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test.each([false, true])('set validates the value before its reason: %s', async (hasReason) => {
     const settings = buildSandboxSettings(['structure']);
-    await using sandbox = await testdir({ 'gspot.toml': settings });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': settings });
     const result = await runGspot(sandbox.path, [
         'set',
         'limits.file_lines',

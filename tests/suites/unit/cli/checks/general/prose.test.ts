@@ -142,8 +142,8 @@ test.each(['diagnostic text', '{"file.md":[{}]}'])('the Vale check refuses malfo
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
 
     resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout })));
-    const runSandboxCheckError = await captureRejection(runSandboxCheck(session.root, 'prose/vale'));
-    expect(runSandboxCheckError.message).toBe('Vale printed output that gspot cannot read.');
+    const error = await captureRejection(runSandboxCheck(session.root, 'prose/vale'));
+    expect(error.message).toBe('Vale printed output that gspot cannot read.');
 });
 
 test('the Vale check fails with the error line Vale prints when Vale exits non-zero', async () => {

@@ -12,7 +12,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolPyprojectSchema } from '#cli/schemas/install/python.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
 
 import {
     YARN_CLIENTS,
@@ -20,6 +19,7 @@ import {
     NEXT_REQUIREMENTS,
     LICENSE_TOOL_CASES,
     NEXTJS_API_SETTINGS,
+    REACT_NATIVE_TSCONFIG,
 } from '#tests/config/generation/tool-projects.ts';
 
 test.each([...STYLESHEET_CASES])(
@@ -41,16 +41,6 @@ test.each([...STYLESHEET_CASES])(
 );
 
 test('a React Native project without Expo installs no Expo or DOM lint plugins', async () => {
-    const REACT_NATIVE_TSCONFIG = {
-        compilerOptions: {
-            ...STRICT_COMPILER_OPTIONS,
-            module: 'ESNext',
-            moduleResolution: 'Bundler',
-            jsx: 'react-jsx',
-        },
-        include: ['src'],
-    } as const;
-
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript', 'react-native']),
         'package.json': JSON.stringify({

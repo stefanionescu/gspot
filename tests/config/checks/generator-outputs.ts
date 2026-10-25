@@ -1,11 +1,3 @@
-export const GENERATOR_SCRIPT = `import { readFileSync, writeFileSync } from 'node:fs';
-const output = process.argv[2];
-const state = readFileSync('schema.txt', 'utf8');
-writeFileSync(output, state);
-console.log(state);
-if (state === 'failure') { console.error('Generation failed'); process.exitCode = 1; }
-`;
-
 export const GENERATOR_CASES = [
     {
         configuration: 'openapi',
@@ -30,6 +22,8 @@ generate_command = ["bun", "generate.ts", "openapi.json"]
         tables: '[supabase]\ntypes_file = "database.ts"\n',
     },
 ] as const;
+
+export const DATABASE_SCHEMAS = ['public', 'private', 'audit'] as const;
 
 export const SUPABASE_TYPES_OUTPUT = 'export type Database = { public: { Tables: {} } };\n';
 

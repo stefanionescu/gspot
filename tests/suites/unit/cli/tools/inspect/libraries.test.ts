@@ -42,7 +42,7 @@ test('a library that is absent is missing, and one off its pin is reported', asy
     expect(laterVersion.found).toBe('6.0.0');
 });
 
-test('a system library is read from the chosen project, not from the tool project', async () => {
+test('a system library is read from the requested project, not from the tool project', async () => {
     await using sandbox = await testdir({
         [`${GSPOT_PATHS.nodeModules}/@vitest/coverage-v8/package.json`]:
             '{"name":"@vitest/coverage-v8","version":"4.1.11"}',

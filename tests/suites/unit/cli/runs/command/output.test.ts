@@ -18,10 +18,9 @@ import {
     BASE_CHECK,
     ESLINT_CRASH,
     LOCATED_CHECK,
-    LOCATED_OUTPUT,
     FILELESS_CHECKS,
     SCOPE_PATH_CHECK,
-    TIMESTAMP_OUTPUT,
+    REGEX_OUTPUT_CASES,
     MISSING_LOCATED_FILE,
     ESLINT_MANIFEST_TOOL,
     BANNER_FAILURE_COMMAND,
@@ -55,30 +54,12 @@ test(`a tool's crash pattern marks a crash for a check without its own pattern`,
     expect(isReportedCrash(BASE_CHECK, undefined, buildProcessResult(ESLINT_CRASH))).toBe(false);
 });
 
-test('regex output that names no real file, or nothing, on a failed run is a check error, and output with one real file keeps every finding', async () => {
-    await using sandbox = await testdir({
-        'source.txt': 'source',
-    });
-
+test.each([...REGEX_OUTPUT_CASES])('$title', async ({ result, expected }) => {
+    await using sandbox = await testdir({ 'source.txt': 'source' });
     const planned = { check: LOCATED_CHECK, tool: { name: 'tool', installers: {}, kind: 'program' as const } };
-    const paths = { cwd: sandbox.path, root: sandbox.path };
     expect(
-        parseCommandFindings(planned, buildProcessResult({ ...FAILED_RUN, stdout: TIMESTAMP_OUTPUT }), paths).note,
-    ).toBe('tool failed with exit 1:\n2026-09-19T02: FATAL');
-    expect(parseCommandFindings(planned, buildProcessResult(FAILED_RUN), paths).note).toBe(
-        'tool failed with exit 1 and printed nothing.',
-    );
-    expect(
-        parseCommandFindings(
-            planned,
-            buildProcessResult({ ...FAILED_RUN, stdout: TIMESTAMP_OUTPUT + LOCATED_OUTPUT }),
-            paths,
-        ).findings,
-    ).toStrictEqual([
-        { check: LOCATED_CHECK.id, file: '2026-09-19T02', message: 'FATAL', help: '', fixable: false },
-        { check: LOCATED_CHECK.id, file: 'source.txt', message: 'located defect', help: '', fixable: false },
-    ]);
-    expect(parseCommandFindings(planned, buildProcessResult(), paths).findings).toStrictEqual([]);
+        parseCommandFindings(planned, buildProcessResult(result), { cwd: sandbox.path, root: sandbox.path }),
+    ).toStrictEqual(expected);
 });
 
 test.each([...FILELESS_CHECKS])('$id accepts a fileless result without classifying it as a crash', async (check) => {
@@ -128,16 +109,16 @@ test('an ESLint finding whose source text holds a module error word stays a find
 test.each(['{file}', '{files}'])(
     'declared exit codes tell partial findings from a fatal %s run',
     async (placeholder) => {
-        await using sandbox = await testdir();
         const source = 'input.txt';
-        await createFileTree(sandbox.path, {
+        const located = `${source}:1: Located defect before exit`;
+        await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings([], {
                 rules: true,
                 tables: stringify({
                     command_check: [
                         {
                             id: 'project/exit-contract',
-                            command: [process.execPath, 'checker.cjs', placeholder],
+                            command: buildProgramCommand('fakes/tool', '--line', located, '--exit', '1', placeholder),
                             paths: [source],
                             stage: 'commit',
                             exit_codes: [1],
@@ -149,9 +130,7 @@ test.each(['{file}', '{files}'])(
                     ],
                 }),
             }),
-            [source]: '1',
-            'checker.cjs':
-                'const fs = require("node:fs"); const file = process.argv[2]; const status = Number(fs.readFileSync(file, "utf8")); if (status !== 0) console.log(`${file}:1: Located defect before exit`); process.exitCode = status;',
+            [source]: 'input\n',
         });
         const session = await openSession(sandbox.path);
         const plans = planChecks(session, { stage: 'all', only: ['project/exit-contract'] });
@@ -162,11 +141,11 @@ test.each(['{file}', '{files}'])(
         expect(finding.findings).toStrictEqual([
             matchFields({ file: source, line: 1, message: 'Located defect before exit' }),
         ]);
-        await writeFile(join(sandbox.path, source), '7');
+        planned.check.command = buildProgramCommand('fakes/tool', '--line', located, '--exit', '7', placeholder);
         const fatal = await runCheckCommand(session, planned);
         expect(fatal.status).toBe('error');
         expect(fatal.findings).toStrictEqual([]);
-        expect(fatal.note).toBe(`${process.execPath} failed with exit 7:\ninput.txt:1: Located defect before exit`);
+        expect(fatal.note).toBe(`${process.execPath} failed with exit 7:\n${located}`);
     },
 );
 

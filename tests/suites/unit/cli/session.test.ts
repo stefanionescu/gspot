@@ -27,13 +27,14 @@ test('a copied session generates settings from its replacement inventory and rea
 test('a naming-only run leaves mise tool discovery unused', async () => {
     await using sandbox = await testdir(MISE_SESSION_FILES);
     await using programs = await testdir();
-    const bin = await writeProgramCommand(programs.path, 'mise', 'fakes/tool', '--log-arguments', '../mise-calls.log');
+    const log = join(sandbox.path, 'mise-calls.log');
+    const bin = await writeProgramCommand(programs.path, 'mise', 'fakes/tool', '--log-arguments', log);
     using _environment = overrideEnvironment({ PATH: `${bin}${delimiter}${readEnvironmentVariable('PATH') ?? ''}` });
     const session = await openSession(sandbox.path);
     using _resources = session.resources;
     const result = await runChecks(session, buildRunOptions({ only: ['naming/identifiers'] }));
     expect(result.report.exitCode).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, 'mise-calls.log'))).toBe(false);
+    expect(await isOnDisk(log)).toBe(false);
 });
 
 test('a run uses the cancel signal supplied when its session opens', async () => {

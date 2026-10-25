@@ -31,14 +31,10 @@ test.each([...COMPOSITE_INDEX_CASES])(
 );
 
 test('foreign-key-indexes reports a foreign key column that no index leads with and passes after an index on it', async () => {
-    const MEMBER_INDEX_SQL = 'CREATE INDEX members_team_id ON members (team_id);\n';
-
-    const MEMBER_TABLES_SQL =
-        'CREATE TABLE teams (id bigint PRIMARY KEY);\nCREATE TABLE members (id bigint PRIMARY KEY, team_id bigint REFERENCES teams (id));\n';
-
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
-        'migrations/1_members.sql': MEMBER_TABLES_SQL,
+        'migrations/1_members.sql':
+            'CREATE TABLE teams (id bigint PRIMARY KEY);\nCREATE TABLE members (id bigint PRIMARY KEY, team_id bigint REFERENCES teams (id));\n',
     });
     expect(await runSandboxCheck(sandbox.path, 'postgres/foreign-key-indexes')).toStrictEqual([
         matchFields({
@@ -48,6 +44,9 @@ test('foreign-key-indexes reports a foreign key column that no index leads with 
             message: 'public.members (team_id) is a foreign key and no index leads with these columns.',
         }),
     ]);
-    await writeFile(join(sandbox.path, 'migrations/2_index.sql'), MEMBER_INDEX_SQL);
+    await writeFile(
+        join(sandbox.path, 'migrations/2_index.sql'),
+        'CREATE INDEX members_team_id ON members (team_id);\n',
+    );
     expect(await runSandboxCheck(sandbox.path, 'postgres/foreign-key-indexes')).toStrictEqual([]);
 });

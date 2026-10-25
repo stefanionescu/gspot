@@ -149,8 +149,8 @@ test.each([...COPY_FAILURES])('a failed $operation removes the copy', async ({ o
     const temporary = join(sandbox.path, 'scratch');
     await mkdir(temporary);
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-    const runFixersError = await captureRejection(runFixers(session, [planned], { isDryRun: true }));
-    expect(runFixersError.message).toContain(message);
+    const error = await captureRejection(runFixers(session, [planned], { isDryRun: true }));
+    expect(error.message).toContain(message);
     expect(await readdir(temporary)).toStrictEqual([]);
     if (operation === 'copy') {
         const attributes = await stat(join(sandbox.path, 'source.txt'));
@@ -206,7 +206,7 @@ test.each([false, true])(
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
     },
 );
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 1 file share it.
 function buildSourceDiff(after: string): string {
     return `===================================================================\n--- a/source.txt\n+++ b/source.txt\n@@ -1,1 +1,1 @@\n-original\n\\ No newline at end of file\n+${after}\n\\ No newline at end of file\n`;
 }

@@ -12,7 +12,7 @@ import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 
 test.each(buildProcessBackends())(
-    '$name: a chosen program runs its sibling commands before unrelated PATH tools',
+    '$name: a program runs its sibling commands before unrelated PATH tools',
     async (backend) => {
         await using sandbox = await testdir();
         await writeProgramCommand(sandbox.path, 'selected/parent', 'processes/command', 'sibling');
@@ -116,7 +116,7 @@ test('a process canceled before it starts reports the cancellation', async () =>
 });
 
 test.each(buildProcessBackends())(
-    '$name: keeps stdin, argument boundaries, final newlines, and the given environment',
+    '$name: keeps stdin, argument boundaries, final newlines, and the environment',
     async (backend) => {
         await using sandbox = await testdir();
         const input = 'line one\nline two\n';

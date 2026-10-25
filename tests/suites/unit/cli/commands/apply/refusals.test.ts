@@ -16,8 +16,7 @@ import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { LINKED_FILE_CASES } from '#tests/config/commands/apply/refusals.ts';
 
 test('a broken managed block stops apply before generated files change', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const authored = `# Preserve this file
 <!-- >>> gspot managed >>> -->
 Unclosed instructions.
@@ -52,8 +51,7 @@ test('apply refuses an empty writer lock left after a crash and names the lock t
 test.each([['a live process', undefined], ...(isWindows ? [] : [['process 1', '1:held'] as const])] as const)(
     'apply refuses a writer lock held by %s and names the process and the lock',
     async (_, holder) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({});
         const command = buildProgramCommand('fakes/tool', '--wait');
         await using sleeper = holder === undefined ? startCommand(command, { cwd: sandbox.path }) : undefined;
         const lock = holder ?? `${String(sleeper!.child.pid)}:held`;
@@ -85,8 +83,7 @@ test('apply --json prints one error object when an unowned file blocks generatio
     expect(await readFile(join(sandbox.path, '.editorconfig'), 'utf8')).toBe('root = true\n');
 });
 test('a malformed reason reports a settings error and apply preserves the authored settings', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const source = buildSandboxSettings(['site'], {
         tables: '[limits]\nfile_lines = { value = 1000, reason = 42 }\n',
     });

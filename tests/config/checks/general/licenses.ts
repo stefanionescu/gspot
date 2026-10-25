@@ -91,6 +91,20 @@ name = "sample"
 version = "0.0.0"
 `;
 
+export const LICENSE_PACKAGE_JSON = '{"name":"example","private":true,"dependencies":{"choice":"1.0.0"}}';
+
+export const UNINSTALLED_DEPENDENCY_CASES = [
+    { scope: '', dependencyFile: 'package.json', text: LICENSE_PACKAGE_JSON, installedFolder: 'node_modules' },
+    { scope: '', dependencyFile: 'pyproject.toml', text: SAMPLE_PYPROJECT, installedFolder: '.venv' },
+    {
+        scope: 'apps/example',
+        dependencyFile: 'package.json',
+        text: LICENSE_PACKAGE_JSON,
+        installedFolder: 'node_modules',
+    },
+    { scope: 'apps/example', dependencyFile: 'pyproject.toml', text: SAMPLE_PYPROJECT, installedFolder: '.venv' },
+] as const;
+
 export const LICENSE_PROJECT_FILES = { 'pyproject.toml': SAMPLE_PYPROJECT, '.venv/installed': 'sample' };
 
 export const SCAN_ALLOWED_PACKAGES = `[[licenses.allowed_package]]

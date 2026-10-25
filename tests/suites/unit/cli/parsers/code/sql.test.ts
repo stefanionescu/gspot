@@ -72,7 +72,7 @@ test('an SQL error after Unicode points at the right token', async () => {
 });
 
 test.each(["'", "E'", '"'])('an unterminated SQL %s value gives the parser error at its start', async (opener) => {
-    const text = `SELECT ${opener}:value\n\\set literal\n-- :fixture`;
+    const text = `SELECT ${opener}:value\n\\set literal\n-- :sample`;
     const parsed = await parseSqlFile(text, createReadCache(process.cwd()));
     expect(parsed.source).toBe(text);
     expect(parsed.variables).toStrictEqual([]);

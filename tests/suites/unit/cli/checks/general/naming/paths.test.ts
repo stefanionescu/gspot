@@ -56,15 +56,15 @@ test.each([...FILE_NAME_CASES])('$name', async ({ configurations, files, invalid
 test.each(['', 'app'].flatMap((scope) => ['sql', 'postgres'].map((configuration) => ({ scope, configuration }))))(
     'migration timestamps pass with $configuration while other numeric folders are reported (scope "$scope")',
     async ({ scope, configuration }) => {
-        const MIGRATION_FILES = {
-            'migrations/20240101000000_create_teams/query.sql': 'SELECT 1;\n',
-            'other/20240101000000_create_teams/query.sql': 'SELECT 1;\n',
-        } as const;
-
         const prefix = scope === '' ? '' : `${scope}/`;
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['naming', configuration], { level: 'all', scopes: [{ path: 'app' }] }),
-            ...Object.fromEntries(Object.entries(MIGRATION_FILES).map(([path, text]) => [`${prefix}${path}`, text])),
+            ...Object.fromEntries(
+                Object.entries({
+                    'migrations/20240101000000_create_teams/query.sql': 'SELECT 1;\n',
+                    'other/20240101000000_create_teams/query.sql': 'SELECT 1;\n',
+                } as const).map(([path, text]) => [`${prefix}${path}`, text]),
+            ),
         });
 
         const findings = await runSandboxCheck(sandbox.path, 'naming/paths', { scope });
@@ -75,14 +75,13 @@ test.each(['', 'app'].flatMap((scope) => ['sql', 'postgres'].map((configuration)
 );
 
 test('a numbered file name needs an ignored_prefix override', async () => {
-    const NUMBERED_FILES = {
-        '.mise/tasks/01-build.sh': 'echo example\n',
-        'scripts/steps/01-build.sh': 'echo example\n',
-    } as const;
-
     await using sandbox = await testdir();
     const settings = buildSandboxSettings(['bash', 'naming'], { level: 'all' });
-    await createFileTree(sandbox.path, { 'gspot.toml': settings, ...NUMBERED_FILES });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': settings,
+        '.mise/tasks/01-build.sh': 'echo example\n',
+        'scripts/steps/01-build.sh': 'echo example\n',
+    });
 
     const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/paths'] }));
 

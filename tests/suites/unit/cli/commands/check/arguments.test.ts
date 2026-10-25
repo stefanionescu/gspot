@@ -10,8 +10,7 @@ import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/sett
 import { ALL_FILES_BASES, NAMING_SCOPE_SETTINGS } from '#tests/config/commands/check/arguments.ts';
 
 test('file and folder arguments narrow the files each check gets', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const checks = ['one', 'two', 'three'].map((name) =>
         buildReportingCheck({ id: `sandbox/${name}`, paths: ['src/**', 'docs/**'], stage: 'commit' }),
     );
@@ -21,7 +20,7 @@ test('file and folder arguments narrow the files each check gets', async () => {
         'src/other.ts': 'other',
         'docs/guide.md': '# Guide\n',
     });
-    const selected = parseCheckReport(
+    const checked = parseCheckReport(
         await runGspot(sandbox.path, [
             'check',
             'src/selected.ts',
@@ -31,17 +30,16 @@ test('file and folder arguments narrow the files each check gets', async () => {
             '--json',
         ]),
     );
-    expect(selected.code, selected.stdout + selected.stderr).toBe(1);
-    expect(selected.report.checks.map((check) => check.check)).toStrictEqual(['sandbox/one', 'sandbox/two']);
-    for (const check of selected.report.checks)
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    expect(checked.report.checks.map((check) => check.check)).toStrictEqual(['sandbox/one', 'sandbox/two']);
+    for (const check of checked.report.checks)
         expect(new Set(check.findings.map((finding) => finding.message))).toStrictEqual(
             new Set(['docs/guide.md', 'src/selected.ts']),
         );
 });
 
 test('--only repeats and leaves the paths after it as paths', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const checks = ['one', 'two', 'three'].map((name) =>
         buildReportingCheck({ id: `sandbox/${name}`, paths: ['src/**'], stage: 'commit' }),
     );
@@ -50,7 +48,7 @@ test('--only repeats and leaves the paths after it as paths', async () => {
         'src/selected.ts': 'selected',
         'src/other.ts': 'other',
     });
-    const selected = parseCheckReport(
+    const checked = parseCheckReport(
         await runGspot(sandbox.path, [
             'check',
             '--only',
@@ -61,9 +59,9 @@ test('--only repeats and leaves the paths after it as paths', async () => {
             '--json',
         ]),
     );
-    expect(selected.code, selected.stdout + selected.stderr).toBe(1);
-    expect(selected.report.checks.map((check) => check.check)).toStrictEqual(['sandbox/one', 'sandbox/two']);
-    for (const check of selected.report.checks)
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    expect(checked.report.checks.map((check) => check.check)).toStrictEqual(['sandbox/one', 'sandbox/two']);
+    for (const check of checked.report.checks)
         expect(check.findings.map((finding) => finding.message)).toStrictEqual(['src/selected.ts']);
 });
 
@@ -174,12 +172,11 @@ test('--staged keeps every stage while --hook pre-commit runs only commit checks
 });
 
 test('a manual check runs only when --only names it', async () => {
-    const settingsText = {
+    const files = {
         'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [buildPassingCheck('manual')] }) }),
         'source.txt': 'input',
     };
-    await using sandbox = await testdir(settingsText);
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox(files);
 
     const unscoped = parseCheckReport(await runGspot(sandbox.path, ['check', '--json']));
     expect(unscoped.report.checks.map((check) => check.check)).not.toContain('sandbox/manual');
@@ -197,11 +194,11 @@ test('a scope path narrows to its checks and its reproduce command finds the sam
         'web/port.js': 'export const helperCommand = 2;\n',
     });
 
-    const selected = parseCheckReport(
+    const checked = parseCheckReport(
         await runGspot(sandbox.path, ['check', 'api', '--only', 'naming/identifiers', '--json']),
     );
-    expect(selected.code, selected.stdout + selected.stderr).toBe(1);
-    const failed = selected.report.checks.filter((check) => check.status === 'failed');
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    const failed = checked.report.checks.filter((check) => check.status === 'failed');
     expect(failed.map(({ scope, reproduce }) => ({ scope, reproduce }))).toStrictEqual([
         { scope: 'api', reproduce: 'gspot check api --only naming/identifiers' },
     ]);
@@ -209,7 +206,7 @@ test('a scope path narrows to its checks and its reproduce command finds the sam
     const repeated = parseCheckReport(await runGspot(sandbox.path, [...reproduce, '--json']));
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
     expect(repeated.report.checks.flatMap((check) => check.findings)).toStrictEqual(
-        selected.report.checks.flatMap((check) => check.findings),
+        checked.report.checks.flatMap((check) => check.findings),
     );
 });
 
@@ -247,7 +244,7 @@ function buildPassingCheck(stage: 'commit' | 'push' | 'manual') {
 test.each([...ALL_FILES_BASES])(
     'an explicit full-run base reports its cause: $message',
     async ({ reference, message }) => {
-        const settingsText = {
+        const files = {
             'gspot.toml': buildSandboxSettings([], {
                 tables: stringify({
                     command_check: [buildReportingCheck({ id: 'sandbox/all', paths: ['*.txt'], stage: 'commit' })],
@@ -256,8 +253,7 @@ test.each([...ALL_FILES_BASES])(
             'one.txt': 'one',
             'two.txt': 'two',
         };
-        await using sandbox = await testdir(settingsText);
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox(files);
         const result = await runGspot(sandbox.path, ['check', '--changed', reference, '--only', 'sandbox/all']);
         expect(result.code, result.stdout + result.stderr).toBe(1);
         expect(result.stdout).toStartWith(message + '\n');

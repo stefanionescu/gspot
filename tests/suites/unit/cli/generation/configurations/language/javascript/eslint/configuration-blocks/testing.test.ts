@@ -7,13 +7,14 @@ import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { TESTING_LIBRARY_CASES } from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/testing.ts';
 
 test.each(['js', 'jsx'])('Jest rules apply only to their scope for .%s files', async (extension) => {
-    const JEST_IN_APP_TABLES = `[[scope]]
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            level: 'all',
+            tables: `[[scope]]
 path = "app"
 configurations = [ "jest" ]
-`;
-
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: JEST_IN_APP_TABLES }),
+`,
+        }),
         'package.json': '{"private":true,"type":"module"}\n',
         'root.test.js': '',
         'app/sample.test.js': '',
@@ -67,13 +68,9 @@ test.each([...TESTING_LIBRARY_CASES])(
 test.each([...LEVELS])(
     'Vitest reports a focused test without a fix, and strict equality only at level all (%s)',
     async (level) => {
-        const VITEST_FILES = {
+        await using sandbox = await testdir({
             'package.json': '{"private":true,"type":"module"}\n',
             'tests/unit/example.test.js': '',
-        } as const;
-
-        await using sandbox = await testdir({
-            ...VITEST_FILES,
             'gspot.toml': buildSandboxSettings(['vitest'], { level }),
         });
 

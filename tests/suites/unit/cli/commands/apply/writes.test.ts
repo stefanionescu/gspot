@@ -34,7 +34,6 @@ test('apply leaves generated files writable, keeps their bytes, and deletes a st
     });
 
     writeStrayFile(sandbox.path);
-    runGitStep(sandbox.path, ['init', '-q']);
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code).toBe(0);
     expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/obsolete/old.txt`))).toBe(false);
@@ -123,8 +122,7 @@ test('apply rewrites an edited generated file, deletes unknown files in .gspot, 
     expect(await readFile(settingsPath, 'utf8')).toBe(settings);
 });
 test('removing rules from a fresh clone removes the managed AGENTS.md block', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const source = join(sandbox.path, 'source');
     const checkout = join(sandbox.path, 'checkout');
     const authored = '# Your instructions\n';
@@ -142,8 +140,7 @@ test('removing rules from a fresh clone removes the managed AGENTS.md block', as
     expect(await readFile(join(checkout, 'AGENTS.md'), 'utf8')).toBe(authored);
 });
 test('an ignore of every path of a check drops the check, its tool, and its config files', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': FORMAT_SETTINGS, 'sample.json': '{"value":1}\n' });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': FORMAT_SETTINGS, 'sample.json': '{"value":1}\n' });
     const initial = await runGspot(sandbox.path, ['apply', '--json']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
     await writeFile(join(sandbox.path, 'gspot.toml'), FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
@@ -187,8 +184,7 @@ test('a failed version pin write in apply leaves the old version', async () => {
 });
 test('apply leaves a settings file without a schema directive unchanged', async () => {
     const settings = buildSandboxSettings([]).replace(SCHEMA_DIRECTIVE_LINE, '');
-    await using sandbox = await testdir({ [SETTINGS_FILE]: settings });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ [SETTINGS_FILE]: settings });
 
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
@@ -204,8 +200,10 @@ test('apply leaves a settings file without a schema directive unchanged', async 
 });
 
 test('repeated apply names a missing lockfile without reporting changed tools', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]), 'package.json': '{"private":true}' });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'package.json': '{"private":true}',
+    });
     const first = await runGspot(sandbox.path, ['apply', '--json']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
     expect((JSON.parse(first.stdout) as ApplyReport).notes).toContain(INSTALL_FIRST_NOTE);

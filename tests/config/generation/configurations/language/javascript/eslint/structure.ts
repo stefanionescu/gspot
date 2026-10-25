@@ -53,3 +53,16 @@ tools.knip.entry = ["api/src/main.js"]
 export const ENTRYPOINT_FOLDERS = ['src', 'api/src'] as const;
 
 export const TRIVIAL_RULES = ['gspot/no-trivial-files', 'gspot/no-trivial-functions'] as const;
+
+export const TRIVIAL_ENTRYPOINT_FILES = ['api/src/main.js', 'api/src/task.js', 'src/main.js', 'src/task.js'] as const;
+
+export const STARTER_SOURCE =
+    'export function start() { const target = document.querySelector("#app"); if (!target) throw new Error("Missing application target"); target.textContent = "Started"; }\n';
+
+export const ENTRYPOINT_SOURCE = "export { start } from './start.js';\n";
+
+export const REEXPORT_CASES = [
+    ['export * from "./owner.js";\n', 1],
+    ['export { value } from "./owner.js";\n', 1],
+    ['const value = 1; export { value };\n', 0],
+] as const;

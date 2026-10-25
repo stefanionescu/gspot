@@ -1,4 +1,5 @@
 import type { Check } from '#cli/types/configurations.ts';
+import { FAILED_RUN } from '#tests/config/runs/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
@@ -86,9 +87,29 @@ export const FILELESS_CHECKS = [
     { ...BASE_CHECK, id: 'sandbox/lines', output: { format: 'lines' } },
 ] as const;
 
-export const TIMESTAMP_OUTPUT = '2026-09-19T02: FATAL\n';
-
-export const LOCATED_OUTPUT = 'source.txt: located defect\n';
+export const REGEX_OUTPUT_CASES = [
+    {
+        title: 'regex output that names no real file on a failed run is a check error',
+        result: { ...FAILED_RUN, stdout: '2026-09-19T02: FATAL\n' },
+        expected: { note: 'tool failed with exit 1:\n2026-09-19T02: FATAL' },
+    },
+    {
+        title: 'a failed run that prints nothing is a check error',
+        result: FAILED_RUN,
+        expected: { note: 'tool failed with exit 1 and printed nothing.' },
+    },
+    {
+        title: 'regex output with one real file on a failed run keeps every finding',
+        result: { ...FAILED_RUN, stdout: '2026-09-19T02: FATAL\nsource.txt: located defect\n' },
+        expected: {
+            findings: [
+                { check: LOCATED_CHECK.id, file: '2026-09-19T02', message: 'FATAL', help: '', fixable: false },
+                { check: LOCATED_CHECK.id, file: 'source.txt', message: 'located defect', help: '', fixable: false },
+            ],
+        },
+    },
+    { title: 'a passing run that prints nothing has no findings', result: {}, expected: { findings: [] } },
+];
 
 export const BANNER_FAILURE_COMMAND = buildProgramCommand(
     'fakes/tool',

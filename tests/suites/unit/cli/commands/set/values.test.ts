@@ -59,10 +59,9 @@ test('set names -- when a value reads as an option, and takes the values after -
 test.each([...NO_CHANGE_COMMANDS])(
     '%s reports no change when gspot.toml already has the value',
     async (_name, commandArguments) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['bash'], commandArguments[0] === 'set' ? { level: 'recommended' } : {}),
         });
-        runGitStep(sandbox.path, ['init', '--quiet']);
         const result = await runGspot(sandbox.path, commandArguments);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(result.stdout.split('\n', 1)[0]).toBe('No change: gspot.toml stays the same.');
@@ -72,8 +71,7 @@ test.each([...NO_CHANGE_COMMANDS])(
 test.each([...KEPT_SETTING_CHANGES])(
     '%s keeps its change in gspot.toml and exits 2 when apply then stops',
     async (_, commandArguments, written, change) => {
-        await using sandbox = await testdir(STOPPED_APPLY_FILES);
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox(STOPPED_APPLY_FILES);
 
         const applied = await runGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -96,11 +94,10 @@ test.each([...KEPT_SETTING_CHANGES])(
 test.each([...BANNED_WORD_SCOPES])(
     'set writes naming.banned_words in the $name scope without installing tools, and unset removes them',
     async ({ scope, written }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': BANNED_WORD_SETTINGS,
             'app/source.ts': 'export const active = true;\n',
         });
-        runGitStep(sandbox.path, ['init', '--quiet']);
         const key = 'naming.banned_words';
         const scopeArguments = scope === '' ? [] : ['--scope', scope];
         const set = await runGspot(sandbox.path, ['set', key, ...SCOPE_BANNED_WORDS, ...scopeArguments]);
@@ -142,8 +139,7 @@ test('set writes a TOML list of tables as tables and refuses a value that is not
 });
 
 test('set level all works in a fresh clone', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const source = join(sandbox.path, 'source');
     const checkout = join(sandbox.path, 'checkout');
     await createFileTree(source, {
@@ -163,11 +159,10 @@ test('set level all works in a fresh clone', async () => {
 test.each([...LOOSENED_SETTINGS])(
     'set refuses $key without --reason, and set and unset keep its reason through list edits',
     async ({ key, value, second }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['typescript', 'site'], { level: 'all' }),
             'entry.ts': 'export const port = 8080;\n',
         });
-        runGitStep(sandbox.path, ['init', '--quiet']);
         const before = await readTree(sandbox.path);
         const refused = await runGspot(sandbox.path, ['set', key, value]);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
@@ -192,7 +187,7 @@ test.each([...LOOSENED_SETTINGS])(
 test.each([...LOOSENED_SETTINGS])(
     '$key set in one scope keeps the root value, and unset gives the scope the inherited value again',
     async ({ key, value, second }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['typescript', 'site'], {
                 level: 'all',
                 tables: `${key} = { value = ${JSON.stringify([second])}, reason = ${JSON.stringify(SETTING_REASON)} }\n[[scope]]\npath = "app"\n[[scope]]\npath = "sibling"\n`,
@@ -201,7 +196,6 @@ test.each([...LOOSENED_SETTINGS])(
             'app/entry.ts': 'export const port = 8081;\n',
             'sibling/entry.ts': 'export const port = 8082;\n',
         });
-        runGitStep(sandbox.path, ['init', '--quiet']);
         const changed = await runGspot(sandbox.path, ['set', key, value, '--scope', 'app', '--reason', SETTING_REASON]);
         expect(changed.code, changed.stdout + changed.stderr).toBe(0);
         const saved = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
@@ -243,8 +237,7 @@ test('spelling.allowed_words keeps one reason for each word through edits', asyn
 });
 
 test.each([...STRING_SETTING_VALUES])('set keeps words as strings for $key: $words', async ({ key, words, value }) => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const result = await runGspot(sandbox.path, ['set', key, ...words]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
@@ -252,8 +245,7 @@ test.each([...STRING_SETTING_VALUES])('set keeps words as strings for $key: $wor
 });
 
 test('--json after the value separator stays a setup command argument', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const result = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'echo', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toStartWith('Set ci.setup_command to ["echo","--json"].');
@@ -263,8 +255,7 @@ test('--json after the value separator stays a setup command argument', async ()
 });
 
 test('set preserves repeated command arguments and replaces the previous command', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const first = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'make', '-C', 'make']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
@@ -279,8 +270,7 @@ test('set preserves repeated command arguments and replaces the previous command
 });
 
 test('set replaces the written values of an ordinary list', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const first = await runGspot(sandbox.path, ['set', 'naming.banned_words', 'firstword']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
     const second = await runGspot(sandbox.path, ['set', 'naming.banned_words', 'secondword']);

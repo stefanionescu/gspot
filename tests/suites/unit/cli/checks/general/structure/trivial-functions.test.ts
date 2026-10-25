@@ -22,7 +22,7 @@ import {
 
 const bashSandbox = shareBashSandbox();
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 1 file share it.
 async function runTrivialFunctionsCheck(
     language: 'python' | 'bash' | 'swift',
     file: string,
@@ -96,13 +96,15 @@ test('an ignore with names keeps those functions out of the findings', async () 
 test.each([...STATEMENT_COUNT_CASES])(
     '%s reports a function of two statements, not counting comments and docstrings',
     async (language, source) => {
-        const TRIVIAL_EXAMPLE_MESSAGE =
-            'example has 2 statements. Functions with 2 or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.';
-
         const extension = ({ python: 'py', bash: 'sh', swift: 'swift' } as const)[language];
         const findings = await runTrivialFunctionsCheck(language, `example.${extension}`, source);
         expect(findings.map(({ line, rule, message }) => ({ line, rule, message }))).toStrictEqual([
-            { line: 1, rule: 'trivial-function', message: TRIVIAL_EXAMPLE_MESSAGE },
+            {
+                line: 1,
+                rule: 'trivial-function',
+                message:
+                    'example has 2 statements. Functions with 2 or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.',
+            },
         ]);
     },
 );

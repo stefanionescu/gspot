@@ -132,14 +132,7 @@ test('live output arrives before the process ends while capture keeps the output
         return result;
     })();
     try {
-        await Promise.race([
-            ready.promise,
-            // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-            (async () => {
-                await running;
-                throw new Error('No live output.');
-            })(),
-        ]);
+        await Promise.race([ready.promise, running]);
         expect(isFinished).toBe(false);
         expect(stdout.join('')).toBe('ready\n');
     } finally {

@@ -3,7 +3,6 @@ import { test, expect } from 'bun:test';
 import { findRoot } from '#cli/repository/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { isGitRepository } from '#cli/system/git.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
@@ -11,6 +10,7 @@ import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { rm, chmod, unlink, symlink, writeFile } from 'node:fs/promises';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { readIndexFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { isWindows, simulateOperatingSystem } from '#tests/setup/system/platform.ts';
 import { OUTSIDE_LINK_CASES, ROOT_DISCOVERY_CASES } from '#tests/config/repository/files/tracked.ts';
@@ -54,9 +54,8 @@ test.skipIf(isWindows)('a walk without Git leaves out named pipes', async () => 
     expect(files.map((file) => file.path)).toStrictEqual(['source.ts']);
 });
 test('deleted tracked files are left out of the file list', async () => {
-    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+    await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
 
-    runGitStep(sandbox.path, ['init']);
     runGitStep(sandbox.path, ['add', 'source.ts']);
     await rm(join(sandbox.path, 'source.ts'));
     expect(await listTrackedFiles(sandbox.path, await readIndexFiles(sandbox.path), { hasGit: true })).toStrictEqual(
@@ -83,8 +82,8 @@ test('a broken Git index is reported instead of a folder walk', async () => {
     const files = await listTrackedFiles(cwd, await readIndexFiles(cwd), { hasGit: true });
     expect(files.map((file) => file.path)).toStrictEqual(['source.ts']);
     await writeFile(join(cwd, '.git', 'index'), 'corrupt index');
-    const readIndexFilesError = await captureRejection(readIndexFiles(cwd));
-    expect(readIndexFilesError.message).toStartWith('Git ls-files failed');
+    const error = await captureRejection(readIndexFiles(cwd));
+    expect(error.message).toStartWith('Git ls-files failed');
 });
 test('a .git file that points at a missing folder is reported, not read as a folder without Git', async () => {
     await using sandbox = await testdir({
@@ -129,9 +128,8 @@ test('on Windows the executable bit comes from the Git index', async () => {
     ]);
 });
 test('an unmerged index keeps the working file readable but refuses a staged revision', async () => {
-    await using sandbox = await testdir({ 'source.txt': 'working content\n' });
+    await using sandbox = await createGitSandbox({ 'source.txt': 'working content\n' });
 
-    runGitStep(sandbox.path, ['init', '-q']);
     const hash = runGitStep(sandbox.path, ['hash-object', '-w', 'source.txt']);
     const update = runCommandBlocking(['git', 'update-index', '--index-info'], {
         cwd: sandbox.path,
@@ -147,16 +145,15 @@ test('an unmerged index keeps the working file readable but refuses a staged rev
     expect(await listTrackedFiles(sandbox.path, index, { hasGit: true })).toStrictEqual([
         { path: 'source.txt', size: Buffer.byteLength('working content\n'), executable: false, symlink: false },
     ]);
-    const listRevisionFilesError = await captureRejection(listRevisionFiles(sandbox.path, { kind: 'index' }));
-    expect(listRevisionFilesError.message).toBe(
+    const error = await captureRejection(listRevisionFiles(sandbox.path, { kind: 'index' }));
+    expect(error.message).toBe(
         'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.',
     );
 });
 test('the index keeps deleted tracked paths and encoded names and leaves out untracked files', async () => {
     const path = 'folder % café/file.env';
-    await using sandbox = await testdir({ [path]: 'TOKEN=example', 'untracked.ts': 'export {};\n' });
+    await using sandbox = await createGitSandbox({ [path]: 'TOKEN=example', 'untracked.ts': 'export {};\n' });
 
-    runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['add', '--', path]);
     await rm(join(sandbox.path, path));
     const files = await readIndexFiles(sandbox.path);

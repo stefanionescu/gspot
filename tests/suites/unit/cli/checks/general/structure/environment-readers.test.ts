@@ -17,14 +17,12 @@ import {
 } from '#tests/config/checks/general/structure/environment-readers.ts';
 
 test('Swift environment reads outside the env files are reported; comments and strings are not', async () => {
-    const SWIFT_ENVIRONMENT_SOURCE = `let live = ProcessInfo.processInfo.environment["KEY"]
+    await using sandbox = await testdir({
+        'Sources/Screen.swift': `let live = ProcessInfo.processInfo.environment["KEY"]
 // ProcessInfo.processInfo.environment
 let literal = "ProcessInfo.processInfo.environment"
 let spaced = ProcessInfo . processInfo . environment
-`;
-
-    await using sandbox = await testdir({
-        'Sources/Screen.swift': SWIFT_ENVIRONMENT_SOURCE,
+`,
         'gspot.toml': buildSandboxSettings(['swift'], { level: 'all' }),
     });
     const initial = await runChecks(

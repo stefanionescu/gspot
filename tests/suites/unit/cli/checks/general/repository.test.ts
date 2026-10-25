@@ -5,10 +5,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { symlink, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { LOCAL_FILE_PATHS, LARGE_FILE_TABLES } from '#tests/config/checks/general/repository.ts';
 import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
@@ -44,11 +44,6 @@ test(`local-files reports each tracked path that a scope's configurations leave 
 });
 
 test('large files are reported in every scope except LFS, generated and vendored files, and pass once shrunk', async () => {
-    const LARGE_FILE_ATTRIBUTES = `lfs.bin filter=lfs
-data/** linguist-generated
-vendor/** linguist-vendored
-`;
-
     await using sandbox = await testdir();
     const settings = buildSandboxSettings(['javascript'], {
         level: 'all',
@@ -56,7 +51,10 @@ vendor/** linguist-vendored
     });
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,
-        '.gitattributes': LARGE_FILE_ATTRIBUTES,
+        '.gitattributes': `lfs.bin filter=lfs
+data/** linguist-generated
+vendor/** linguist-vendored
+`,
         ...Object.fromEntries(
             ['big.bin', 'app/big.bin', 'lfs.bin', 'data/big.bin', 'vendor/big.bin'].map((path) => [
                 path,
@@ -102,12 +100,11 @@ test('a tracked outward symlink is a local-files finding', async () => {
 });
 
 test('oversized and invalid UTF-8 files get one repository finding and leave other checks', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown'], { tables: '[repository]\nmax_file_kilobytes = 1\n' }),
         'large.md': 'x'.repeat(1025),
         'latin1.md': Buffer.from([35, 32, 67, 97, 102, 233]),
     });
-    runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['add', '-A']);
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'all', only: ['format/prettier'] })[0]!;

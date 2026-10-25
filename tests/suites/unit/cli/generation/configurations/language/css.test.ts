@@ -10,10 +10,11 @@ import { findManifestTarget, findConfigFilePath } from '#tests/setup/cli/generat
 import { STYLELINT_SCOPE_FILES } from '#tests/config/generation/configurations/language/css.ts';
 
 test('Vue and Svelte stylesheet rules stay inside their scopes', async () => {
-    const STYLELINT_SCOPE_TABLES = `[[scope]]\npath = "vue"\nconfigurations = ["css", "vue"]\n[[scope]]\npath = "svelte"\n\nconfigurations = ["css", "svelte"]\n[[scope]]\npath = "mixed"\n\nconfigurations = ["css", "vue", "svelte"]\n`;
-
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['css'], { level: 'all', tables: STYLELINT_SCOPE_TABLES }),
+        'gspot.toml': buildSandboxSettings(['css'], {
+            level: 'all',
+            tables: `[[scope]]\npath = "vue"\nconfigurations = ["css", "vue"]\n[[scope]]\npath = "svelte"\n\nconfigurations = ["css", "svelte"]\n[[scope]]\npath = "mixed"\n\nconfigurations = ["css", "vue", "svelte"]\n`,
+        }),
         ...STYLELINT_SCOPE_FILES,
     });
 

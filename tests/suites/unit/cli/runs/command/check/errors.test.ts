@@ -1,22 +1,21 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { chmod } from 'node:fs/promises';
+import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/session.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 test.skipIf(isWindows)('a command check whose program lost its execute bit errors with exit code 2', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const executable = join(sandbox.path, 'checker');
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
@@ -50,7 +49,7 @@ test('per-file failures name the selected file', async () => {
                 command_check: [
                     {
                         id: 'project/file-result',
-                        command: [process.execPath, 'validate.cjs', '{file}', 'config', '--quiet'],
+                        command: buildProgramCommand('checks/search', '--text', 'invalid', '{file}'),
                         paths: ['inputs/**'],
                         stage: 'commit',
                     },
@@ -58,8 +57,6 @@ test('per-file failures name the selected file', async () => {
             }),
         }),
         'inputs/café source.txt': 'invalid',
-        'validate.cjs':
-            'const fs = require("node:fs"); process.exitCode = fs.readFileSync(process.argv[2], "utf8") === "valid" ? 0 : 1;',
     });
 
     const session = await openSession(sandbox.path);

@@ -10,9 +10,10 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { listWorkspaceDependencySources } from '#cli/repository/npm/workspaces.ts';
 import { createCopy, createCheckCopy, selectCopyPaths } from '#cli/runs/copy/files.ts';
-import { mkdir, lstat, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
+import { cp, mkdir, lstat, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 import { TEST_WORKSPACE_FILES, WORKSPACE_SOURCE_FILES } from '#tests/config/runs/copy/files.ts';
 
 test('a copy holds workspace dependencies and working bin links, and edits in it reach neither source', async () => {
@@ -24,9 +25,10 @@ test('a copy holds workspace dependencies and working bin links, and edits in it
         'packages/core/package.json': '{"name":"core"}',
         'packages/core/value.js': 'export default "original";',
         'node_modules/tool/package.json': '{"name":"tool"}',
-        'node_modules/tool/bin/tool.js': 'console.log(require("../lib/value.cjs"));',
-        'node_modules/tool/lib/value.cjs': 'module.exports = "tool works";',
+        'node_modules/tool/lib/value.txt': 'tool works',
     });
+    const [program = ''] = buildProgramArguments('fakes/package-bin');
+    await cp(program, join(sandbox.path, 'node_modules/tool/bin/tool.js'));
     await createFileTree(external.path, { 'value.js': 'external original' });
     await mkdir(join(sandbox.path, 'node_modules/.bin'));
     await symlink('../tool/bin/tool.js', join(sandbox.path, 'node_modules/.bin/tool'));

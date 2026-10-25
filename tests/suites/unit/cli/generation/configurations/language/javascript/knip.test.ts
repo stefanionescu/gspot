@@ -29,10 +29,11 @@ const check = readConfigurations()
     .checks.find(({ id: name }) => name === 'javascript/knip')!;
 
 test('Knip finds unused framework component files and uses the entry points of each scope', async () => {
-    const KNIP_ENTRYPOINT_TABLES = `\ntest_files = ["native-tests/**"]\n[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "child"\n\nconfigurations = ["javascript"]\ntest_files = ["child/verification/**"]\n[scope.tools.knip]\nentry = ["child/main.js"]\n`;
-
     await using sandbox = await testdir();
-    const settings = buildSandboxSettings(['javascript'], { level: 'all', tables: KNIP_ENTRYPOINT_TABLES });
+    const settings = buildSandboxSettings(['javascript'], {
+        level: 'all',
+        tables: `\ntest_files = ["native-tests/**"]\n[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "child"\n\nconfigurations = ["javascript"]\ntest_files = ["child/verification/**"]\n[scope.tools.knip]\nentry = ["child/main.js"]\n`,
+    });
     const configuration = await generateFile(
         settings,
         findManifestTarget('javascript', 'knip.json'),
@@ -65,11 +66,12 @@ test('Knip finds unused framework component files and uses the entry points of e
 });
 
 test("Knip ignores gspot's tool packages and reports your unused dependencies", async () => {
-    const KNIP_DEPENDENCY_PACKAGE =
-        '{"name":"native-project","private":true,"type":"module","dependencies":{"vale":"0.0.0","fixture-unused-package":"1.0.0","prettier":"3.8.4","eslint-config-prettier":"10.1.8","@gspothq/eslint-plugin":"0.0.0"}}';
-
     await using sandbox = await testdir();
-    const files = { 'package.json': KNIP_DEPENDENCY_PACKAGE, 'main.js': 'export const value = 1;\n' };
+    const files = {
+        'package.json':
+            '{"name":"native-project","private":true,"type":"module","dependencies":{"vale":"0.0.0","fixture-unused-package":"1.0.0","prettier":"3.8.4","eslint-config-prettier":"10.1.8","@gspothq/eslint-plugin":"0.0.0"}}',
+        'main.js': 'export const value = 1;\n',
+    };
     const configuration = await generateFile(
         buildSandboxSettings(['javascript'], { level: 'all' }),
         findManifestTarget('javascript', 'knip.json'),
@@ -110,11 +112,12 @@ test("Knip ignores gspot's tool packages and reports your unused dependencies", 
 });
 
 test('Knip treats script configuration files as entries and ignores pointer files', async () => {
-    const KNIP_POINTER_TABLES = `\n[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "child"\n\nconfigurations = ["javascript", "markdown"]\n[scope.tools.knip]\nentry = ["child/main.js"]\n`;
-
     await using sandbox = await testdir({
         ...KNIP_POINTER_FILES,
-        'gspot.toml': buildSandboxSettings(['javascript', 'markdown'], { level: 'all', tables: KNIP_POINTER_TABLES }),
+        'gspot.toml': buildSandboxSettings(['javascript', 'markdown'], {
+            level: 'all',
+            tables: `\n[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "child"\n\nconfigurations = ["javascript", "markdown"]\n[scope.tools.knip]\nentry = ["child/main.js"]\n`,
+        }),
     });
 
     const session = await openSession(sandbox.path);

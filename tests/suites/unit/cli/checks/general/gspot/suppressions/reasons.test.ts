@@ -11,16 +11,13 @@ import { COMPILER_SOURCE } from '#tests/config/checks/language/typescript.ts';
 import {
     SWIFT_REASON_CASES,
     SUPPRESSION_REASONS,
+    TYPESCRIPT_SUPPRESSIONS,
     SUPPRESSION_REASON_CASES,
 } from '#tests/config/checks/general/gspot/suppressions/reasons.ts';
 
 test.each(['javascript', 'typescript'])(
     '@ts-ignore, @ts-expect-error and @ts-nocheck in %s need a reason; the same text in a string is not a comment',
     async (language) => {
-        const COMPILER_REASON = 'A separate sandbox checks the external declaration.';
-
-        const TYPESCRIPT_SUPPRESSIONS = ['ignore', 'expect-error', 'nocheck'] as const;
-
         await using sandbox = await testdir();
         const ending = language === 'javascript' ? 'js' : 'ts';
         const paths = TYPESCRIPT_SUPPRESSIONS.map((directive) => `${directive}.${ending}`);
@@ -52,7 +49,7 @@ test.each(['javascript', 'typescript'])(
         for (const [index, directive] of TYPESCRIPT_SUPPRESSIONS.entries())
             await writeFile(
                 join(sandbox.path, paths[index]!),
-                `// @ts-${directive}: ${COMPILER_REASON}\n${COMPILER_SOURCE}`,
+                `// @ts-${directive}: A separate sandbox checks the external declaration.\n${COMPILER_SOURCE}`,
             );
         const reasoned = await runChecks(
             await openSession(sandbox.path),

@@ -3,13 +3,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { cp, symlink, readFile } from 'node:fs/promises';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
-
-import {
-    BASH_MANIFEST,
-    PACKAGE_FOLDER,
-    ASSET_READER_SCRIPT,
-    PACKAGE_FOLDER_FILES,
-} from '#tests/config/system/assets.ts';
+import { buildProgramArguments } from '#tests/setup/system/programs.ts';
+import { BASH_MANIFEST, PACKAGE_FOLDER, PACKAGE_FOLDER_FILES } from '#tests/config/system/assets.ts';
 
 async function writePackageFolder(folder: string): Promise<string> {
     const root = join(import.meta.dir, '../../../../..');
@@ -22,12 +17,13 @@ async function writePackageFolder(folder: string): Promise<string> {
             'utf8',
         ),
         [`${PACKAGE_FOLDER}/packages/cli/configurations/language/bash/manifest.toml`]: BASH_MANIFEST,
-        [`${PACKAGE_FOLDER}/assets-reader.ts`]: ASSET_READER_SCRIPT,
         ...Object.fromEntries(
             Object.entries(PACKAGE_FOLDER_FILES).map(([path, text]) => [`${PACKAGE_FOLDER}/${path}`, text]),
         ),
     });
     const cwd = join(folder, PACKAGE_FOLDER);
+    const [program = ''] = buildProgramArguments('processes/assets');
+    await cp(program, join(cwd, 'assets.ts'));
     await cp(join(root, 'packages/cli/src'), join(cwd, 'packages/cli/src'), { recursive: true });
     await symlink(join(root, 'packages/cli/node_modules'), join(cwd, 'packages/cli/node_modules'), 'junction');
     await symlink(join(root, 'node_modules'), join(cwd, 'node_modules'), 'junction');
@@ -37,7 +33,7 @@ async function writePackageFolder(folder: string): Promise<string> {
 test('a package folder with spaces, percent signs, and Unicode reads and lists its assets', async () => {
     await using sandbox = await testdir();
     const cwd = await writePackageFolder(sandbox.path);
-    const result = runCommandBlocking([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {
+    const result = runCommandBlocking([process.execPath, '--no-install', join(cwd, 'assets.ts')], {
         cwd,
     });
     expect(result.code, result.stderr).toBe(0);

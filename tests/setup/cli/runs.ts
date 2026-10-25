@@ -2,6 +2,7 @@ import { planChecks } from '#cli/planning/checks.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { RunOptions } from '#cli/types/runs/run.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 /**
 Options for an in-process run of every stage, with no fixes.
@@ -29,7 +30,7 @@ export function planFixer(session: Session, fix: readonly string[]): PlannedChec
 }
 
 /**
-Build fixer settings that run the executable of this test process.
+Build fixer settings whose check passes and whose fix exits 3, both through the fake tool program.
 
 @param paths files the fixer covers.
 @returns the gspot.toml text.
@@ -40,8 +41,8 @@ export function buildFixerSettings(paths: string[] = ['source.txt']): string {
     return `configurations = []
 [[command_check]]
 id = "sandbox/fixer"
-command = [${JSON.stringify(process.execPath)}, "-e", "process.exitCode = 0"]
-fix = [${JSON.stringify(process.execPath)}, "-e", "process.exitCode = 3"]
+command = ${JSON.stringify(buildProgramCommand('fakes/tool'))}
+fix = ${JSON.stringify(buildProgramCommand('fakes/tool', '--exit', '3'))}
 paths = ${JSON.stringify(paths)}
 stage = "commit"
 `;

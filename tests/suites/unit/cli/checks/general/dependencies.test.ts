@@ -119,14 +119,9 @@ test('an allowed registry host in a scope applies only to that scope', async () 
 });
 
 test('dependencies/lockfiles reads no hosts from the binary bun.lockb', async () => {
-    const BINARY_BUN_LOCKFILE = Buffer.concat([
-        Buffer.from([0xff, 0]),
-        Buffer.from('https://untrusted.invalid/package.tgz'),
-    ]);
-
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript']),
-        'bun.lockb': BINARY_BUN_LOCKFILE,
+        'bun.lockb': Buffer.concat([Buffer.from([0xff, 0]), Buffer.from('https://untrusted.invalid/package.tgz')]),
     });
     expect(await runSandboxCheck(sandbox.path, 'dependencies/lockfiles')).toStrictEqual([]);
 });

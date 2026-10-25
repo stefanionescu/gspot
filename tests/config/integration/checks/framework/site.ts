@@ -1,15 +1,6 @@
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { SITE_SETTINGS } from '#tests/config/checks/framework/site/pages.ts';
 
 const FILE_URL = isWindows ? 'file:///' : 'file://';
-
-export const SITE_CASES = [
-    {
-        check: 'site/build',
-        files: { 'build.js': "throw new Error('the build is broken');\n" },
-        expected: { file: '', rule: 'build', line: 1 },
-    },
-] as const;
 
 export const TWO_SITE_TABLES = `[[ignore]]
 check = "site/html-validate"
@@ -19,12 +10,10 @@ reason = "Application alternative text is supplied by the rendering environment.
 [[scope]]
 path = "app"
 configurations = ["site"]
-site.build_command = ["node", "build.mjs"]
 site.build_folder = "app/dist"
 [[scope]]
 path = "other"
 configurations = ["site"]
-site.build_command = ["node", "build.mjs"]
 site.build_folder = "other/dist"
 `;
 
@@ -45,11 +34,6 @@ export const BUILT_HTML_SITES = [
     { name: 'site-only child configurations', configurations: [], files: {} },
 ] as const;
 
-export const SITE_OUTPUT_BUILD = `import { cp, rm } from 'node:fs/promises';
-await rm('dist', { recursive: true, force: true });
-await cp('pages', 'dist', { recursive: true });
-`;
-
 const SELECTOR_FINDING = {
     file: 'dist/style.css',
     rule: 'unused-selector',
@@ -57,16 +41,12 @@ const SELECTOR_FINDING = {
     message: 'No built page uses the selector .unused.',
 } as const;
 
-const REVIEWED_SELECTOR_TABLES = `
-[tools.purgecss]
-safelist = { value = ["reviewed"], reason = "The script adds this reviewed class at runtime." }
-`;
-
 export const OUTPUT_CASES = [
     {
         name: 'links',
         check: 'site/lychee',
-        settings: SITE_SETTINGS,
+        level: 'all',
+        tables: '',
         files: {
             'pages/index.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><a href="/missing.html">Missing</a></body></html>',
@@ -89,7 +69,8 @@ export const OUTPUT_CASES = [
     {
         name: 'fragments',
         check: 'site/lychee',
-        settings: SITE_SETTINGS,
+        level: 'all',
+        tables: '',
         files: {
             'pages/index.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><h1 id="good">Good</h1><a href="#good">Good</a><a href="#missing">Missing</a><a name="encoded id"></a><a href="#encoded%20id">Encoded</a></body></html>',
@@ -112,7 +93,8 @@ export const OUTPUT_CASES = [
     {
         name: 'public origins and orphan pages',
         check: 'site/lychee',
-        settings: SITE_SETTINGS,
+        level: 'all',
+        tables: '',
         files: {
             'pages/index.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><p>Landing page</p></body></html>',
@@ -141,7 +123,8 @@ export const OUTPUT_CASES = [
     {
         name: 'markup',
         check: 'site/html-validate',
-        settings: SITE_SETTINGS,
+        level: 'all',
+        tables: '',
         files: {
             'pages/index.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><img src="image.png"></body></html>',
@@ -156,7 +139,11 @@ export const OUTPUT_CASES = [
     {
         name: 'selectors at level recommended',
         check: 'site/purgecss',
-        settings: SITE_SETTINGS.replace('all', 'recommended') + REVIEWED_SELECTOR_TABLES,
+        level: 'recommended',
+        tables: `
+[tools.purgecss]
+safelist = { value = ["reviewed"], reason = "The script adds this reviewed class at runtime." }
+`,
         files: {
             'pages/index.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><p class="print:hidden w-1/2 pagefind-ui__result">Example</p><script>element.classList.add("feedback", "show", "pagefind-ui__loading");</script></body></html>',

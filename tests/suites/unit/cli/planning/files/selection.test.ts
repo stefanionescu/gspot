@@ -61,8 +61,7 @@ test("a file named on the command line runs its scope's project check on every f
 test.each([...PROJECT_PATH_IGNORES])(
     '$name, and the TypeScript check plans only the files that the ignore leaves',
     async ({ changed, present, check, rule, files }) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({});
         const ignore = {
             check,
             ...(rule !== undefined && { rule }),
@@ -180,8 +179,7 @@ test('Xcode plutil and general xmllint checks select their Apple and XML files',
     ]);
 });
 test('Prettier receives all matching files and applies its own linked ignore file', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const ignored = 'ignored.md\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['markdown']),

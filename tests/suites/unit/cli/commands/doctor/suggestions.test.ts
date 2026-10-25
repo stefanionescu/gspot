@@ -77,8 +77,7 @@ test('doctor recognizes managed Stylelint fields in every selected scope', async
     }
 });
 test('doctor leaves the tool projects in .gspot out of detection, detects python from your pyproject.toml, and lists a submodule', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([]),
@@ -97,7 +96,6 @@ test('doctor leaves the tool projects in .gspot out of detection, detects python
         { configuration: 'python', evidence: 'pyproject.toml', command: 'gspot add python' },
     ]);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.pythonProject), 'utf8')).toBe(python);
-    runGitStep(sandbox.path, ['init']);
     runGitStep(sandbox.path, ['add', '.']);
     runGitStep(sandbox.path, ['commit', '-qm', 'Source']);
     const commit = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
@@ -107,8 +105,7 @@ test('doctor leaves the tool projects in .gspot out of detection, detects python
     expect(JSON.parse(result.stdout)).toMatchObject({ submodules: [path] });
 });
 test('doctor detects installed test frameworks and suggests no other runner', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['nestjs']);
     const dependencies = { '@nestjs/core': '11.2.3', jest: '30.2.0' };
     await createFileTree(sandbox.path, {
@@ -135,8 +132,7 @@ test('doctor detects installed test frameworks and suggests no other runner', as
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 test('doctor suggests a remove command per scope after detection evidence goes, and changes nothing', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash'], {
         level: 'all',
         scopes: [{ path: 'api app', configurations: ['python'] }, { path: 'api app/deep' }],
@@ -181,8 +177,7 @@ test('doctor suggests a remove command per scope after detection evidence goes, 
 test.each([...REMOVED_CONFIGURATION_SUGGESTIONS])(
     'doctor skips removed configurations and keeps detection evidence outside their scopes: $name',
     async ({ project, expected }) => {
-        await using sandbox = await testdir(project);
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox(project);
         const result = await runGspot(sandbox.path, ['doctor', '--json']);
         const { suggestions } = JSON.parse(result.stdout) as DoctorReport;
         expect(suggestions.detected.filter(({ configuration }) => configuration === 'bash')).toStrictEqual([

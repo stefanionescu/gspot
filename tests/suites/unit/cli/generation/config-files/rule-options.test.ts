@@ -18,8 +18,7 @@ test.each([...INACTIVE_RULE_OPTIONS])(
             'source.js': 'export const total = 1;\n',
             'web/README.md': '# Web\n',
         });
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-        const error = await captureRejection((async () => generate(await openSession(sandbox.path)))());
+        const error = await captureRejection(openSession(sandbox.path).then((session) => generate(session)));
         expect(error.message).toBe(message);
     },
 );

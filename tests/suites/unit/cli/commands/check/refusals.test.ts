@@ -3,16 +3,20 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
+import { PIN_MESSAGE } from '#tests/config/version-pin.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
+import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { limitCommand } from '#tests/setup/system/processes.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runGit, commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
     FIX_REFUSALS,
@@ -50,8 +54,7 @@ test('check refuses the commitlint check outside the commit-msg hook and names t
 });
 
 test('--only refuses a check disabled by the selected level', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const result = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
@@ -61,8 +64,7 @@ test('--only refuses a check disabled by the selected level', async () => {
 });
 
 test('--only names the configuration that an unselected check needs', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const result = await runGspot(sandbox.path, ['check', '--only', 'python/ruff', '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
@@ -172,8 +174,7 @@ test.each([...ARGUMENT_REFUSALS])(
 );
 
 test('check reports an unreadable message file as a filesystem error and writes nothing', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['commits']) });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['commits']) });
     const before = await readTree(sandbox.path);
     const message = `gspot cannot read the commit message file ${join(sandbox.path, 'missing-message.txt')}.`;
     const human = await runGspot(sandbox.path, ['check', '--hook', 'commit-msg', '--', 'missing-message.txt']);
@@ -223,4 +224,40 @@ test('a linked .gspot folder stops check, and nothing outside changes', async ()
     });
     expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored outside\n');
     expect(await readdir(outside)).toStrictEqual(['sentinel']);
+});
+
+test('a different saved version blocks checks and fixes until apply updates the pin', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'script.sh': CLEAN_BASH_SCRIPT,
+    });
+    const firstApply = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(firstApply.code, firstApply.stdout + firstApply.stderr).toBe(0);
+    await writeFile(join(sandbox.path, GSPOT_PATHS.versionPin), '9.9.9\n');
+    const check = await runGspot(sandbox.path, ['check', '--only', 'bash/safety', '--json']);
+    expect(check.code, check.stdout + check.stderr).toBe(2);
+    expect(check.stderr).toBe('');
+    const failure = JSON.parse(check.stdout) as CommandFailureJson;
+    expect(failure).toStrictEqual({ error: 'pin', message: PIN_MESSAGE });
+    const fixed = await runGspot(sandbox.path, ['check', '--fix', '--only', 'bash/safety', '--json']);
+    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(2);
+    expect(JSON.parse(fixed.stdout) as CommandFailureJson).toStrictEqual(failure);
+    const applied = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    expect(readVersionPin(sandbox.path)).toBe(cliPackage.version);
+});
+
+test('an empty version pin lets checks run', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'script.sh': CLEAN_BASH_SCRIPT,
+    });
+    const applied = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await writeFile(join(sandbox.path, GSPOT_PATHS.versionPin), '');
+    const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'bash/safety', '--json']));
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    expect(checked.report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
+        { check: 'bash/safety', status: 'passed' },
+    ]);
 });

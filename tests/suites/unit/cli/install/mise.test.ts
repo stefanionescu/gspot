@@ -31,7 +31,7 @@ test('mise lock freshness requires the exact tool, version, URL and checksum', (
     expect(isMiseLockfileFresh(project, undefined)).toBe(false);
 });
 
-test('mise prepares every platform before a locked install and retains its checksum lock', async () => {
+test('mise prepares every platform before a locked install and keeps its checksum lock', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['spelling']) });
     const session = await openSession(sandbox.path);
     using writer = openWriter(sandbox.path);

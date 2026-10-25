@@ -5,12 +5,13 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { type Level } from '#cli/types/configurations.ts';
 import { SCHEMA_DIRECTIVE } from '#cli/config/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { selectConfigurations } from '#cli/configurations/select.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { type Settings, type WrittenSettings } from '#cli/types/settings/file.ts';
+import type { ScopeSettings, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 
 /**
 Build the gspot.toml text of a sandbox, with rules off unless the options turn them on.
@@ -58,6 +59,37 @@ export function buildSandboxSettings(
     const tables = options.tables ?? '';
     const rules = options.rules === true || tables.includes('[rules]') ? '' : '\n[rules]\nenabled = false\n';
     return `${SCHEMA_DIRECTIVE}\n${levelLine}configurations = [${selected}]\n${scopes}${tables}${ignored}${rules}`;
+}
+
+/**
+Build the gspot.toml text of a site sandbox whose build runs this command.
+
+@param command the command that site.build_command runs: a test program and its arguments.
+@param options the level, `all` by default, and more TOML to append.
+@param options.level `recommended` or `all`.
+@param options.tables more TOML to append after the site table.
+@returns the gspot.toml text.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 11 calls in 3 files share it.
+export function buildSiteSettings(
+    command: readonly string[],
+    options: { level?: Level; tables?: string } = {},
+): string {
+    return buildSandboxSettings(['site'], {
+        level: options.level ?? 'all',
+        tables: `[site]\nbuild_command = ${JSON.stringify(command)}\n${options.tables ?? ''}`,
+    });
+}
+
+/**
+Build the recommended defaults of these shipped configurations.
+
+@param configurations the configuration names to select.
+@returns the settings and defaults they make available.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 17 calls in 6 files share it.
+export function buildSelectedAvailableSettings(configurations: string[]): AvailableSettings {
+    return buildAvailableSettings(selectConfigurations(configurations, readConfigurations()), 'recommended');
 }
 
 /**

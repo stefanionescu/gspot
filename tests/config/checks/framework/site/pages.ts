@@ -12,18 +12,8 @@ const STATIC_SITE_FILES = {
     },
     "devDependencies": {
         "@types/node": "22.18.6"
-    },
-    "scripts": {
-        "build": "bun build.js"
     }
 }
-`,
-    'build.js': `// Copies the pages, the style sheet, the sitemap, and the assets into dist.
-import { cp, rm, mkdir } from 'node:fs/promises';
-
-await rm('dist', { recursive: true, force: true });
-await mkdir('dist', { recursive: true });
-for (const name of ['index.html', 'about.html', 'site.css', 'sitemap.xml', 'logo.svg']) await cp(name, \`dist/\${name}\`);
 `,
     'index.html': `<!doctype html>
 <html lang="en">
@@ -77,6 +67,19 @@ for (const name of ['index.html', 'about.html', 'site.css', 'sitemap.xml', 'logo
     'logo.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><path d="M0 0h8v8H0z"/></svg>',
 } as const;
 
+export const SITE_BUILD_ARGUMENTS = [
+    '--copy',
+    'index.html=dist/index.html',
+    '--copy',
+    'about.html=dist/about.html',
+    '--copy',
+    'site.css=dist/site.css',
+    '--copy',
+    'sitemap.xml=dist/sitemap.xml',
+    '--copy',
+    'logo.svg=dist/logo.svg',
+] as const;
+
 export const SITE_SANDBOX = {
     configurations: ['site'],
 
@@ -114,11 +117,5 @@ kilobytes = 10
         expected: { file: 'dist/sitemap.xml', rule: 'missing-page', line: 1 },
     },
 ] as const;
-
-export const SITE_SETTINGS = `level = "all"
-configurations = ["site"]
-[site]
-build_command = ["bun", "build.js"]
-`;
 
 export const INVALID_SITEMAP_URLS = ['/', 'https://example.test/%E0%A4/'];

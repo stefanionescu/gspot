@@ -9,7 +9,6 @@ import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -18,6 +17,7 @@ import { SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { SLOW_COMMAND_CHECK } from '#tests/config/commands/check/cancellation.ts';
 import { CLI_BIN, runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { waitForExit, waitForFile, captureChild, startCommand, limitCommand } from '#tests/setup/system/processes.ts';
 
 async function prepareStagedCancellation(root: string, operation: 'diff' | 'init' | 'cat-file') {
@@ -79,12 +79,11 @@ async function assertStagedRetry(
 test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
     'check passes %s to a running tool and reports the run as canceled',
     async (signal) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [SLOW_COMMAND_CHECK] }) }),
             'source.txt': 'input\n',
         });
 
-        runGitStep(sandbox.path, ['init', '-q']);
         await using capture = startCommand([process.execPath, CLI_BIN, 'check', '--only', 'project/slow', '--json'], {
             cwd: sandbox.path,
             env: { ...buildSpawnEnvironment(), ...GSPOT_ENVIRONMENT },
@@ -149,7 +148,6 @@ test.skipIf(isWindows)(
         const binaryFolder = join(sandbox.path, 'bin');
         await mkdir(binaryFolder);
         const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(first.length)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(second.length)}\n`;
-        runGitStep(sandbox.path, ['init', '-q']);
         await using capture = startCommand(
             [process.execPath, CLI_BIN, 'check', '--hook', 'pre-push', '--only', 'project/bash-syntax', '--json'],
             {
@@ -267,3 +265,23 @@ async function fakePausingGit(
     const environment = buildSpawnEnvironment();
     return { ...environment, PATH: `${folder}${delimiter}${environment['PATH'] ?? ''}` };
 }
+
+test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
+    'a canceled text report prints the %s process exit code',
+    async (signal) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [SLOW_COMMAND_CHECK] }) }),
+            'source.txt': 'input\n',
+        });
+        commitAll(sandbox.path);
+        await using capture = startCommand([process.execPath, CLI_BIN, 'check', '--only', 'project/slow'], {
+            cwd: sandbox.path,
+            env: { ...buildSpawnEnvironment(), NO_COLOR: '1', CI: '1' },
+        });
+        expect(await waitForFile(join(sandbox.path, 'started.pid'))).toBe(true);
+        capture.child.kill(signal);
+        const code = signal === 'SIGINT' ? 130 : 143;
+        expect(await capture.child.exited).toBe(code);
+        expect(await capture.output).toContain(`Exit code ${String(code)}.`);
+    },
+);

@@ -42,7 +42,7 @@ test('an unmatched ignore path with an unescaped route group gets help to escape
 
 test('an unmatched ignore points at its written record', async () => {
     const text = buildSandboxSettings([], {
-        tables: '\n[[ignore]]\npaths = ["missing/**"]\nreason = "This fixture names an absent folder."\n',
+        tables: '\n[[ignore]]\npaths = ["missing/**"]\nreason = "This sample names an absent folder."\n',
     });
     await using sandbox = await testdir({ 'gspot.toml': text });
     commitAll(sandbox.path);

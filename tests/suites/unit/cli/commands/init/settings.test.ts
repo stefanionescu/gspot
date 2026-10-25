@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
 import { getValueAt } from '#cli/system/tables.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { parseSettings } from '#cli/settings/read.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
@@ -20,9 +20,8 @@ import {
 test.each([...CI_PREFERENCE_CASES])(
     'init proposes the CI provider from $name',
     async ({ tracked, untracked, remote, provider }) => {
-        await using sandbox = await testdir(Object.fromEntries(tracked.map((file) => [file, '{}\n'])));
+        await using sandbox = await createGitSandbox(Object.fromEntries(tracked.map((file) => [file, '{}\n'])));
 
-        runGitStep(sandbox.path, ['init', '-q']);
         if (tracked.length > 0) runGitStep(sandbox.path, ['add', '--', ...tracked]);
         if (untracked !== '') await createFileTree(sandbox.path, { [untracked]: '{}\n' });
         runGitStep(sandbox.path, ['config', 'remote.origin.url', remote]);
@@ -48,8 +47,7 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
 
 test('init finds the Xcode project of the scope and picks the destination from its SDKROOT', async () => {
     const source = BUILD_SETTINGS_PBXPROJ.replace('SDKROOT=macosx', 'SDKROOT=iphoneos');
-    await using sandbox = await testdir({ 'App.xcodeproj/project.pbxproj': source });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'App.xcodeproj/project.pbxproj': source });
     const result = await runGspot(sandbox.path, [
         ...buildInitArguments(['swift', 'xcode'], { json: true }),
         '--dry-run',
@@ -65,8 +63,7 @@ test('init finds the Xcode project of the scope and picks the destination from i
 test.each([...LINT_JOBS])(
     'a lint job in $name means init asks no CI question and proposes no CI',
     async ({ path, content }) => {
-        await using sandbox = await testdir({ [path]: content });
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({ [path]: content });
         const result = await runGspot(sandbox.path, [...buildInitArguments([], { json: true }), '--dry-run']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings'>>;
@@ -75,8 +72,7 @@ test.each([...LINT_JOBS])(
 );
 
 test.each([...IMPORT_STYLE_CASES])('init writes the import style of $name', async ({ files, expected }) => {
-    await using sandbox = await testdir(files);
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox(files);
     const result = await runGspot(sandbox.path, [...buildInitArguments([], { json: true }), '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings'>>;

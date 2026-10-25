@@ -26,8 +26,6 @@ import {
 } from '#tests/config/checks/language/python/pydoclint.ts';
 
 test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting, expected, typeFlags }) => {
-    const TYPE_FLAG_NAMES = ['--arg-type-hints-in-docstring', '--check-return-types', '--check-yield-types'] as const;
-
     await using sandbox = await testdir();
     using prepared = await preparePydoclintCheck(
         sandbox.path,
@@ -42,7 +40,9 @@ test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting,
     expect({
         style: commandArguments[commandArguments.indexOf('--style') + 1],
         typeFlags: commandArguments.flatMap((argument, index) =>
-            (TYPE_FLAG_NAMES as readonly string[]).includes(argument) ? [argument, commandArguments[index + 1]] : [],
+            ['--arg-type-hints-in-docstring', '--check-return-types', '--check-yield-types'].includes(argument)
+                ? [argument, commandArguments[index + 1]]
+                : [],
         ),
     }).toStrictEqual({ style: expected, typeFlags: [...typeFlags] });
 });

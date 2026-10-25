@@ -34,7 +34,6 @@ test.each(['absent', 'authored', 'managed'])(
             }),
         });
 
-        runGitStep(sandbox.path, ['init', '-q']);
         const generated = generate(await openSession(sandbox.path));
         const attributes = generated.blocks.find(({ path }) => path === '.gitattributes')!;
         expect(attributes.block.includes(' text eol=lf')).toBe(source !== 'authored');
@@ -52,12 +51,11 @@ test.each(['absent', 'authored', 'managed'])(
     },
 );
 test('generated attributes keep LF through an autocrlf checkout', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true }),
         '.gitattributes': '*.txt text\n',
     });
 
-    runGitStep(sandbox.path, ['init', '-q']);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const path = findRuleFilePath('engineering', 'WORKING.md');
@@ -114,12 +112,11 @@ test('generated scope settings stay identical across process collations', async 
 });
 
 test('adding the first Markdown and LFS files leaves generated output unchanged', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { tables: '[hooks]\nenabled = true\n' }),
         'package.json': '{"packageManager":"npm@11.0.0"}',
         'source.ts': 'export {};\n',
     });
-    runGitStep(sandbox.path, ['init', '-q']);
     const before = generate(await openSession(sandbox.path));
     await createFileTree(sandbox.path, {
         'README.md': '# Notes\n',

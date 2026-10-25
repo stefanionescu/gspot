@@ -13,7 +13,7 @@ import {
     INVALID_WORKSPACE_FILES,
 } from '#tests/config/repository/npm/workspaces.ts';
 
-test('workspace detection stays inside the given folder', async () => {
+test('workspace detection stays inside the folder', async () => {
     await using sandbox = await testdir(NESTED_WORKSPACE_FILES);
 
     for (const folder of ['child', 'empty']) {

@@ -46,3 +46,9 @@ export const SWIFT_REPLACEMENT_CASES = [
     { checkId: 'swift/swiftlint-analyze', rule: 'analyzer' },
     { checkId: 'swift/periphery', rule: 'unused' },
 ] as const;
+
+export const NESTED_SWIFTLINT_FILES = [
+    'app/.swiftlint.yml',
+    'app/Sources/.swiftlint.yml',
+    'app/Sources/Feature/.swiftlint.yml',
+] as const;

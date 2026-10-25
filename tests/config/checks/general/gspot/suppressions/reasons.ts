@@ -100,3 +100,5 @@ export const SWIFT_REASON_CASES = [
     { directive: 'swiftformat:disable blockComments', rule: 'swiftformat-no-reason' },
     { directive: 'periphery:ignore', rule: 'periphery-no-reason' },
 ] as const;
+
+export const TYPESCRIPT_SUPPRESSIONS = ['ignore', 'expect-error', 'nocheck'] as const;

@@ -5,8 +5,8 @@ import { pathToFileURL } from 'node:url';
 import { readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { PUSH_CONTENT } from '#tests/config/setup/sandboxes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { selectPush, readPushedCommits } from '#cli/repository/revisions/push.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { preparePushRepository, prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
 
 test('push comparison tells a missing upstream from an upstream whose commit is gone', async () => {
@@ -21,13 +21,12 @@ test('push comparison tells a missing upstream from an upstream whose commit is 
     runGitStep(sandbox.path, ['branch', '--set-upstream-to=upstream']);
     expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
     runGitStep(sandbox.path, ['update-ref', '-d', 'refs/heads/upstream']);
-    const readPushedCommitsError = await captureRejection(readPushedCommits(sandbox.path));
-    expect(readPushedCommitsError.message).toStartWith('Git merge-base failed');
+    const error = await captureRejection(readPushedCommits(sandbox.path));
+    expect(error.message).toStartWith('Git merge-base failed');
 });
 test('push comparison reports an unborn or broken HEAD instead of inventing a base', async () => {
-    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+    await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
 
-    runGitStep(sandbox.path, ['init']);
     expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, '.git/HEAD'), 'broken head');

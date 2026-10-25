@@ -18,12 +18,6 @@ import {
 } from '#tests/config/checks/language/bash/function-size.ts';
 
 test('Bash function-size counts C-style loops as branches and nesting, not their header assignments, in each scope', async () => {
-    const LOOP_COUNTS = [
-        { rule: 'function-branches', message: 'main has 4 branches, over the limit of 3.' },
-        { rule: 'block-nesting', message: 'main has 4 levels of nesting, over the limit of 3.' },
-        { rule: 'function-assignments', message: 'main has 2 assignments, over the limit of 1.' },
-    ] as const;
-
     const options = buildRunOptions({ only: ['bash/function-size'] });
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash'], {
@@ -43,7 +37,11 @@ test('Bash function-size counts C-style loops as branches and nesting, not their
         { scope: 'api', fileCount: 1 },
     ]);
     for (const check of checks) {
-        expect(check.findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual([...LOOP_COUNTS]);
+        expect(check.findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual([
+            { rule: 'function-branches', message: 'main has 4 branches, over the limit of 3.' },
+            { rule: 'block-nesting', message: 'main has 4 levels of nesting, over the limit of 3.' },
+            { rule: 'function-assignments', message: 'main has 2 assignments, over the limit of 1.' },
+        ]);
         expect(check.findings.map(({ file, line }) => ({ file, line }))).toStrictEqual(
             Array.from({ length: 3 }, () => ({
                 file: check.scope === '' ? 'source.sh' : 'api/source.sh',

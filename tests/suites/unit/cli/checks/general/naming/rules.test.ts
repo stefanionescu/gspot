@@ -95,11 +95,9 @@ test('a number word such as base64 counts as one word; repeated, extra, banned a
 });
 
 test('a name with a digit, too many characters and words, a repeated word, and a banned word gets all five findings, and the banned-word message names its group', () => {
-    const OVERLONG_NAME = 'helperValue2UserUserWithMoreWordsHere';
-
-    expect(listRuleMessages(buildIdentifier({ name: OVERLONG_NAME }), readNaming(''))).toStrictEqual([
-        ...OVERLONG_NAME_FINDINGS,
-    ]);
+    expect(
+        listRuleMessages(buildIdentifier({ name: 'helperValue2UserUserWithMoreWordsHere' }), readNaming('')),
+    ).toStrictEqual([...OVERLONG_NAME_FINDINGS]);
 });
 
 test('case follows the category, and a file name is checked part by part between dots', () => {
@@ -111,13 +109,11 @@ test('case follows the category, and a file name is checked part by part between
 });
 
 test('the naming check accepts _ as a variable, a digit in a tests/ path, and a Bash name with an ignored prefix', () => {
-    const ACCEPTANCE_DIGIT_TABLES = `[[naming.override]]
+    const naming = readNaming(`[[naming.override]]
 paths = ["tests/acceptance/**"]
 allow_digits = true
-reason = "Acceptance fixtures number their steps."
-`;
-
-    const naming = readNaming(ACCEPTANCE_DIGIT_TABLES);
+reason = "Acceptance tests number their steps."
+`);
     expect(listRuleMessages(buildIdentifier({ name: '_', category: 'variables' }), naming)).toStrictEqual([]);
     expect(
         listRuleMessages(
@@ -169,9 +165,7 @@ test('a word of the shipped tests group passes in a test file, and the same word
 });
 
 test('a banned word matches whole words and runs of words only', () => {
-    const BANNED_WORD_TABLES = '[naming]\nbanned_words = ["widget", "paper trail", "cross-cutting"]\n';
-
-    const naming = readNaming(BANNED_WORD_TABLES);
+    const naming = readNaming('[naming]\nbanned_words = ["widget", "paper trail", "cross-cutting"]\n');
     expect(listRuleMessages(buildIdentifier({ name: 'widgetPrice' }), naming)).toStrictEqual([
         {
             rule: 'banned-word',
@@ -197,17 +191,15 @@ test('a banned word matches whole words and runs of words only', () => {
 test.each([...LINTER_LIMIT_CASES])(
     '$language $category enforces its length, case and word limits',
     ({ language, category, expected, wordy }) => {
-        const UPPER_SNAKE_OVERRIDE = `[[naming.override]]
-paths = ["source"]
-cases = ["upper-snake"]
-reason = "The authored interface selects this case."
-`;
-
         const naming = buildScopeNamingSettings(
             buildSandboxSettings(['naming'], {
                 rules: true,
                 level: 'all',
-                tables: UPPER_SNAKE_OVERRIDE,
+                tables: `[[naming.override]]
+paths = ["source"]
+cases = ["upper-snake"]
+reason = "The authored interface selects this case."
+`,
             }),
         );
         const context = buildFileNaming(naming);
@@ -255,15 +247,15 @@ function readNaming(tables: string): FileNaming {
     );
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 36 calls in 1 file share it.
 function listRuleMessages(identifier: Identifier, naming: FileNaming): { rule: string | undefined; message: string }[] {
     return validateIdentifier(identifier, naming).map(({ rule, message }) => ({ rule, message }));
 }
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 1 file share it.
 function buildFileNaming(settings: NamingSettings): FileNaming {
     return { check: getShippedCheck('naming/identifiers'), settings, isTestFile: false };
 }
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 23 calls in 1 file share it.
 function buildIdentifier(fields: Pick<Identifier, 'name'> & Partial<Identifier>): Identifier {
     const { file = 'src/a.ts', language = 'typescript', category = 'functions', line = 1, column = 1 } = fields;
     return { file, language, category, line, column, label: `${language} ${category}`, ...fields };

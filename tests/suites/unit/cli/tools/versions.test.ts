@@ -1,13 +1,12 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
-import { chmod, readFile } from 'node:fs/promises';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { type Tool } from '#cli/types/configurations.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import { VERSION_OUTPUTS } from '#tests/config/tools/versions.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -35,11 +34,16 @@ test('a program of the tool project reports its version from the gspot folder, p
 });
 
 test('a shim that no configuration gives a version is missing, not broken', async () => {
-    await using sandbox = await testdir({
-        'node_modules/.bin/shimmed': "#!/bin/sh\necho 'mise ERROR No version is set for shim: shimmed' >&2\nexit 1\n",
-    });
-
-    await chmod(join(sandbox.path, 'node_modules/.bin/shimmed'), EXECUTABLE_FILE);
+    await using sandbox = await testdir();
+    await writeProgramCommand(
+        sandbox.path,
+        'node_modules/.bin/shimmed',
+        'fakes/tool',
+        '--stderr',
+        'mise ERROR No version is set for shim: shimmed\n',
+        '--exit',
+        '1',
+    );
     const inspection = inspectTool(buildToolSearch(sandbox.path), buildProgramPin('shimmed', '3.8.1'));
     expect(inspection.state).toBe('missing');
     expect(inspection.want).toBe('3.8.1');
@@ -90,21 +94,19 @@ test('a manifest can declare the exit code of its version command without accept
 });
 
 test('a command reads each version once and the next session reads it again', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([]),
-        'inspection.ts':
-            'const file = Bun.file("calls.txt"); const calls = await file.exists() ? Number(await file.text()) : 0; await Bun.write("calls.txt", String(calls + 1)); console.log("3.8.1");',
-    });
-
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
     using _which = fakeExecutableLookup(process.execPath);
-    const pin = { ...buildProgramPin('version-teller', '3.8.1'), version_command: ['inspection.ts'] };
+    const pin = {
+        ...buildProgramPin('version-teller', '3.8.1'),
+        version_command: buildProgramArguments('fakes/tool', '--append', 'calls.txt=.', '--line', '3.8.1'),
+    };
     const session = await openSession(sandbox.path);
     expect(inspectTool(session, pin).state).toBe('ok');
     expect(inspectTool(session, pin).state).toBe('ok');
-    expect(await readFile(join(sandbox.path, 'calls.txt'), 'utf8')).toBe('1');
+    expect(await readFile(join(sandbox.path, 'calls.txt'), 'utf8')).toBe('.');
     const next = await openSession(sandbox.path);
     expect(inspectTool(next, pin).state).toBe('ok');
-    expect(await readFile(join(sandbox.path, 'calls.txt'), 'utf8')).toBe('2');
+    expect(await readFile(join(sandbox.path, 'calls.txt'), 'utf8')).toBe('..');
 });
 
 test.each([

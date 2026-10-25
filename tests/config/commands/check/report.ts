@@ -89,6 +89,17 @@ export const COMPARISON_NOTICE_CASES = [
     { count: 2, notice: '2 files have unstaged changes that were not checked.' },
 ] as const;
 
+const FINDING_LINES = Array.from({ length: FINDINGS_SHOWN + 1 }, (_, index) => `finding ${String(index + 1)}.`);
+
+const FINDINGS_COMMAND = buildProgramCommand(
+    'fakes/tool',
+    ...FINDING_LINES.flatMap((line) => ['--line', line]),
+    '--exit',
+    '1',
+);
+
+const PASSING_COMMAND = buildProgramCommand('fakes/tool');
+
 export const VERBOSITY_FILES = {
     'gspot.toml': buildSandboxSettings([], {
         rules: true,
@@ -96,14 +107,14 @@ export const VERBOSITY_FILES = {
             command_check: [
                 {
                     id: 'example/findings',
-                    command: [process.execPath, 'findings.ts'],
+                    command: FINDINGS_COMMAND,
                     output: { format: 'lines' },
                     paths: ['source.txt'],
                     stage: 'commit',
                 },
                 {
                     id: 'example/passing',
-                    command: buildProgramCommand('fakes/tool'),
+                    command: PASSING_COMMAND,
                     paths: ['source.txt'],
                     stage: 'commit',
                 },
@@ -111,9 +122,35 @@ export const VERBOSITY_FILES = {
         }),
     }),
     'source.txt': 'before',
-    'findings.ts': 'process.stdout.write(await Bun.file("findings.txt").text()); process.exitCode=1;',
-    'findings.txt':
-        Array.from({ length: FINDINGS_SHOWN + 1 }, (_, index) => `finding ${String(index + 1)}.`).join('\n') + '\n',
 };
+
+export const FINDINGS_REPORT = [
+    'Checked the files changed since HEAD.',
+    `example/findings  failed  ${String(FINDINGS_SHOWN + 1)} findings`,
+    ...FINDING_LINES.slice(0, FINDINGS_SHOWN).map((line) => `  ${line}`),
+    '  help: Read the command output; this repository declares the check.',
+    '  and 1 more (--verbose prints every finding)',
+    '  run again: gspot check --only example/findings --changed HEAD',
+    '',
+    `Failed: 1 check with ${String(FINDINGS_SHOWN + 1)} findings. Passed: 1 check. Skipped: 0 checks.`,
+    'Time: 0.0s. Exit code 1.',
+    '',
+].join('\n');
+
+export const VERBOSE_FINDINGS_REPORT = [
+    'Checked the files changed since HEAD.',
+    `example/findings  failed  ${String(FINDINGS_SHOWN + 1)} findings`,
+    `  $ ${FINDINGS_COMMAND.join(' ')}`,
+    ...FINDING_LINES.map((line) => `  ${line}`),
+    '  help: Read the command output; this repository declares the check.',
+    '  run again: gspot check --only example/findings --changed HEAD',
+    '',
+    'example/passing  passed  1 file  0.0s',
+    `  $ ${PASSING_COMMAND.join(' ')}`,
+    '',
+    `Failed: 1 check with ${String(FINDINGS_SHOWN + 1)} findings. Passed: 1 check. Skipped: 0 checks.`,
+    'Time: 0.0s. Exit code 1.',
+    '',
+].join('\n');
 
 export const DURATION = /\b\d+\.\ds\b/gu;

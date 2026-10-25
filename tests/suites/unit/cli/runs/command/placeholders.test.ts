@@ -1,14 +1,15 @@
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/session.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { type CommandArgument } from '#cli/types/runs/command.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { prepareCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
 import { expandCommand, listCopyFiles, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
 
@@ -29,8 +30,7 @@ async function writeListSetting(root: string, command: readonly string[], genera
 }
 
 test('a whole list setting expands into separate command arguments, keeping empty and multiword ones', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     await writeListSetting(
         sandbox.path,
         [...ARGUMENT_RUNNER, '{setting:openapi.generate_command}'],
@@ -44,8 +44,7 @@ test('a whole list setting expands into separate command arguments, keeping empt
 });
 
 test('a list setting inside one command argument is refused', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     await writeListSetting(
         sandbox.path,
         [...ARGUMENT_RUNNER, 'prefix{setting:openapi.generate_command}'],
@@ -63,8 +62,7 @@ test('a list setting inside one command argument is refused', async () => {
 });
 
 test('an empty list setting is refused as a settings error', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     await writeListSetting(sandbox.path, [...ARGUMENT_RUNNER, '{setting:openapi.generate_command}'], []);
     const empty = await runGspot(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json']);
     expect(empty.code).toBe(2);
@@ -76,7 +74,7 @@ test('an empty list setting is refused as a settings error', async () => {
 });
 
 test.each([...WORKSPACE_SCOPE_CASES])(
-    'workspace expansion retains arguments only for a package scope: $scope',
+    'workspace expansion keeps arguments only for a package scope: $scope',
     async ({ scope, expected }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['swift']),
@@ -138,7 +136,15 @@ test('per-file commands keep the arguments after the file', async () => {
                 command_check: [
                     {
                         id: 'sandbox/arguments',
-                        command: [process.execPath, 'echo.cjs', '{file}', 'config', '--quiet'],
+                        command: buildProgramCommand(
+                            'processes/call',
+                            '--environment',
+                            'TOOL_RELEASE',
+                            '--',
+                            '{file}',
+                            'config',
+                            '--quiet',
+                        ),
                         paths: ['inputs/**'],
                         stage: 'commit',
                     },
@@ -146,7 +152,6 @@ test('per-file commands keep the arguments after the file', async () => {
             }),
         }),
         'inputs/café source.txt': '',
-        'echo.cjs': 'process.stdout.write(JSON.stringify([process.env.TOOL_RELEASE, ...process.argv.slice(2)]));',
     });
 
     const session = await openSession(sandbox.path);
@@ -164,7 +169,11 @@ test('per-file commands keep the arguments after the file', async () => {
         env: setup.env,
     });
     expect(result.code, result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toStrictEqual(['v3.4.0', 'inputs/café source.txt', 'config', '--quiet']);
+    const call = JSON.parse(result.stdout) as { arguments: string[]; environment: Record<string, string | null> };
+    expect({ arguments: call.arguments, environment: call.environment }).toStrictEqual({
+        arguments: ['inputs/café source.txt', 'config', '--quiet'],
+        environment: { TOOL_RELEASE: 'v3.4.0' },
+    });
 });
 
 test.each([...SHFMT_INDENT_CASES])(

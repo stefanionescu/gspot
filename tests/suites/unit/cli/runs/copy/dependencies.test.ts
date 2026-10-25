@@ -3,10 +3,10 @@ import * as promises from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { lstat, mkdir, unlink, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 import {
@@ -39,8 +39,8 @@ test('an index copy copies every workspace dependency tree before it checks the 
     );
     await unlink(join(sandbox.path, 'node_modules/owned'));
     await symlink(sandbox.path, join(sandbox.path, 'node_modules/owned'), 'dir');
-    const copyRevisionError = await captureRejection(copyRevision(sandbox.path, { kind: 'index' }));
-    expect(copyRevisionError.message).toBe(
+    const error = await captureRejection(copyRevision(sandbox.path, { kind: 'index' }));
+    expect(error.message).toBe(
         `Installed dependency link ${join('node_modules', 'owned')} points to this repository or a parent folder. Check this commit in its own clone after installing its project dependencies there.`,
     );
 });
@@ -176,9 +176,8 @@ test('cancellation waits for the dependency copies to finish before removing the
 });
 
 test('a package.json checked out with CRLF matches its LF blob in the index copy when Git converts line endings', async () => {
-    await using sandbox = await testdir(CRLF_PACKAGE_FILES);
+    await using sandbox = await createGitSandbox(CRLF_PACKAGE_FILES);
 
-    runGitStep(sandbox.path, ['init']);
     runGitStep(sandbox.path, ['config', 'core.autocrlf', 'true']);
     runGitStep(sandbox.path, ['add', '.']);
     await writeFile(join(sandbox.path, 'package.json'), '{\r\n    "name": "crlf"\r\n}\r\n');

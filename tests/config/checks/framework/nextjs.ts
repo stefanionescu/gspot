@@ -9,5 +9,3 @@ export const AUTHORED_NEXT_ENV = '// Authored type declaration\n';
 export const ROUTE_TYPES_COMMENT = '// Retained route types\n';
 
 export const UNRELATED_FILE = { path: 'unrelated/private.txt', text: 'Preserve unrelated scope\n' } as const;
-
-export const NEXT_LAUNCHER = '#!/usr/bin/env node\nconsole.log("Next.js v16.3.5");\n';

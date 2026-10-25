@@ -60,7 +60,7 @@ test.each([...GENERATED_WORKFLOW_CHECKS])(
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['github-actions'], { tables: CI_INJECTION_SETTINGS }),
             '.github/workflows/source.yml': CI_SOURCE_WORKFLOW,
-            [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'zizmor')]: 'fixture',
+            [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'zizmor')]: 'stub',
         });
         const previous = await openSession(sandbox.path);
         using writer = openWriter(sandbox.path);

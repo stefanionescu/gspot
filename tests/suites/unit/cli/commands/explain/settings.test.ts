@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { SETTING_REASON } from '#tests/config/commands/set.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
     REASON_VALUES,
@@ -55,8 +55,7 @@ test('a setting explanation lists settings set only in scopes and each inherited
 });
 
 test('explain reads an inherited limits.function_lines value and its reason, and writes nothing', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['structure'], {
         scopes: [{ path: 'app' }],
         tables: `[limits]\nfunction_lines = { value = 100, reason = ${JSON.stringify(SETTING_REASON)} }\n`,
@@ -75,8 +74,7 @@ test('explain reads an inherited limits.function_lines value and its reason, and
 test.each([...REASON_VALUES])(
     'explain $key shows the value of each scope and asks for a reason only where the value loosens the default',
     async (row) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({});
         const explanation = 'The sandbox preserves the project convention for this native setting.';
         const separator = row.key.lastIndexOf('.');
         const table = row.key.slice(0, separator);

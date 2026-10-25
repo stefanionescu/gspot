@@ -67,23 +67,21 @@ test('definer-search-path keeps an unsafe overload when another signature is rep
 });
 
 test.each(['', 'app'])('grants in scope %j skip frozen migrations and report the newer ones', async (scope) => {
-    const FROZEN_GRANTS = [
+    const prefix = scope === '' ? '' : `${scope}/`;
+    await using sandbox = await testdir(
+        Object.fromEntries(
+            Object.entries({
+                'migrations/V1_before.sql': 'GRANT ALL ON TABLE before_table TO authenticated;\n',
+                'migrations/V2_at.sql': 'GRANT ALL ON TABLE at_table TO authenticated;\n',
+                'migrations/V3_after.sql': 'GRANT ALL ON TABLE after_table TO authenticated;\n',
+            } as const).map(([path, text]) => [`${prefix}${path}`, text]),
+        ),
+    );
+    for (const { through, files } of [
         { through: 'none', files: ['migrations/V1_before.sql', 'migrations/V2_at.sql', 'migrations/V3_after.sql'] },
         { through: '2', files: ['migrations/V3_after.sql'] },
         { through: 'all', files: [] },
-    ] as const;
-
-    const GRANT_FILES = {
-        'migrations/V1_before.sql': 'GRANT ALL ON TABLE before_table TO authenticated;\n',
-        'migrations/V2_at.sql': 'GRANT ALL ON TABLE at_table TO authenticated;\n',
-        'migrations/V3_after.sql': 'GRANT ALL ON TABLE after_table TO authenticated;\n',
-    } as const;
-
-    const prefix = scope === '' ? '' : `${scope}/`;
-    await using sandbox = await testdir(
-        Object.fromEntries(Object.entries(GRANT_FILES).map(([path, text]) => [`${prefix}${path}`, text])),
-    );
-    for (const { through, files } of FROZEN_GRANTS) {
+    ] as const) {
         await writeFile(
             join(sandbox.path, 'gspot.toml'),
             buildSandboxSettings(['postgres'], {
@@ -103,16 +101,6 @@ test.each(['', 'app'])('grants in scope %j skip frozen migrations and report the
 test.each(['', 'app'])(
     'row security in scope %j reports a table without row level security and passes after the fix',
     async (scope) => {
-        const SECURED_ROW_SECURITY_SQL = `CREATE TABLE private_data (id int);
-CREATE TABLE client_data (id int);
-ALTER TABLE client_data ENABLE ROW LEVEL SECURITY;
-ALTER TABLE private_data ENABLE ROW LEVEL SECURITY;\n`;
-
-        const ROW_SECURITY_SQL = `CREATE TABLE private_data (id int);
-CREATE TABLE client_data (id int);
-ALTER TABLE client_data ENABLE ROW LEVEL SECURITY;
-`;
-
         const path = posix.join(scope, 'migrations/1_tables.sql');
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['postgres'], {
@@ -120,22 +108,28 @@ ALTER TABLE client_data ENABLE ROW LEVEL SECURITY;
                 tables: '[postgres]\nclient_schemas = ["public"]\n',
                 scopes: [{ path: 'app', configurations: ['postgres'] }],
             }),
-            [path]: ROW_SECURITY_SQL,
+            [path]: `CREATE TABLE private_data (id int);
+CREATE TABLE client_data (id int);
+ALTER TABLE client_data ENABLE ROW LEVEL SECURITY;
+`,
         });
 
         expect(await runSandboxCheck(sandbox.path, 'postgres/row-level-security', { scope })).toMatchObject([
             { check: 'postgres/row-level-security', file: path, line: 1, column: 1, rule: 'row-security' },
         ]);
-        await writeFile(join(sandbox.path, path), SECURED_ROW_SECURITY_SQL);
+        await writeFile(
+            join(sandbox.path, path),
+            `CREATE TABLE private_data (id int);
+CREATE TABLE client_data (id int);
+ALTER TABLE client_data ENABLE ROW LEVEL SECURITY;
+ALTER TABLE private_data ENABLE ROW LEVEL SECURITY;\n`,
+        );
 
         expect(await runSandboxCheck(sandbox.path, 'postgres/row-level-security', { scope })).toStrictEqual([]);
     },
 );
 
 test('definer-search-path reports a SECURITY DEFINER function without search_path and passes once it sets one', async () => {
-    const DEFINER_SEARCH_PATH_SQL =
-        "CREATE FUNCTION grant_access() RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path = '' AS $$ SELECT 1 $$;\n";
-
     const path = 'migrations/1_access.sql';
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
@@ -150,7 +144,10 @@ test('definer-search-path reports a SECURITY DEFINER function without search_pat
                 'This SECURITY DEFINER function sets no search_path. Set an explicit search_path so callers cannot choose the objects it accesses.',
         }),
     ]);
-    await writeFile(join(sandbox.path, path), DEFINER_SEARCH_PATH_SQL);
+    await writeFile(
+        join(sandbox.path, path),
+        "CREATE FUNCTION grant_access() RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path = '' AS $$ SELECT 1 $$;\n",
+    );
     expect(await runSandboxCheck(sandbox.path, 'postgres/definer-search-path')).toStrictEqual([]);
 });
 

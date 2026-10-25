@@ -14,6 +14,7 @@ import {
     LOCAL_PLUGIN,
     SCOPE_PLUGIN_FILES,
     SCOPE_PLUGIN_TABLES,
+    LOCAL_PLUGIN_TABLES,
     SCOPE_PLUGIN_FINDINGS,
     DUPLICATE_PLUGIN_ERROR,
     CONFLICTING_LOCAL_PLUGIN_FILES,
@@ -54,12 +55,6 @@ test('one plugin name with two modules is a settings error that names both paths
 });
 
 test('tools.eslint.plugins loads your plugin by its path and turns its rules on as errors', async () => {
-    const LOCAL_PLUGIN_TABLES = `[[tools.eslint.plugins]]
-name = "local"
-path = "tools/lint/plugin.mjs"
-rules = { "no-forbidden" = [] }
-`;
-
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], { tables: LOCAL_PLUGIN_TABLES }),
         '.gitignore': 'node_modules/\n',

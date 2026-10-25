@@ -1,19 +1,21 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { lstat, mkdir, writeFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { cp, lstat, mkdir, writeFile } from 'node:fs/promises';
 import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
+import { buildProgramArguments } from '#tests/setup/system/programs.ts';
+import { PLUGIN_TYPES_SOURCE } from '#tests/config/e2e/eslint-plugin.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
-import { PLUGIN_TYPES_SOURCE, PLUGIN_IMPORT_SCRIPT } from '#tests/config/e2e/eslint-plugin.ts';
 
 async function assertPluginExports(consumer: string): Promise<void> {
-    await writeFile(join(consumer, 'consumer.mjs'), PLUGIN_IMPORT_SCRIPT);
+    const [program = ''] = buildProgramArguments('processes/eslint-plugin');
+    await cp(program, join(consumer, 'consumer.ts'));
     await writeFile(join(consumer, 'consumer.mts'), PLUGIN_TYPES_SOURCE);
     const options = { cwd: consumer, env: isolatedEnvironment };
-    const checked = await runCommand(['node', 'consumer.mjs'], options);
+    const checked = await runCommand(['node', 'consumer.ts'], options);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const typed = await runCommand(
         [

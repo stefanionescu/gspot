@@ -1,8 +1,7 @@
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readTree } from '#tests/setup/system/files.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { runGspot, expectRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -50,8 +49,7 @@ test.each([...UNKNOWN_SETTING_KEYS])(
 );
 
 test('set leaves existing malformed settings classified as settings errors', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': 'configurations = [' });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': 'configurations = [' });
     const before = await readTree(sandbox.path);
     const failure = await runGspot(sandbox.path, ['set', 'level', 'all', '--json']);
     expect(failure.code).toBe(2);

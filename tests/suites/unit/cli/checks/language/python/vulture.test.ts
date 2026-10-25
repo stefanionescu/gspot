@@ -19,7 +19,7 @@ test('vulture reads every Python file of the scope and reports unused definition
         'app/nodes.py': 'def helper():\n    return 1\n',
         'app/main.py': 'import os\n',
         'child/other.py': 'VALUE = 1\n',
-        [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'vulture')]: 'fixture',
+        [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'vulture')]: 'stub',
     });
     const session = await openSession(sandbox.path);
     using resources = fakeToolExecutables([getTool(session.configurations.values(), 'vulture')]);

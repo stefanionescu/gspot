@@ -11,7 +11,7 @@ import { listToolInstallFiles } from '#tests/setup/cli/tools.ts';
 import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { readSandboxSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { API_BASH_FILES, API_SCOPE_FILES, TOOLS_CHANGED_NOTE } from '#tests/config/commands/samples.ts';
 
@@ -174,7 +174,7 @@ test('remove reports no change for a configuration the root does not list', asyn
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test('remove checks requirements against the effective scope selection', async () => {
+test('remove checks requirements against the scope selection', async () => {
     await using sandbox = await testdir({
         'gspot.toml': EXCLUDED_CONFIGURATION_SETTINGS,
         'api/entry.sh': 'echo api\n',
@@ -195,8 +195,7 @@ test('remove checks requirements against the effective scope selection', async (
 });
 
 test('remove names only removed configurations in a mixed request', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']) });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
     const result = await runGspot(sandbox.path, [
         'remove',
         'bash',

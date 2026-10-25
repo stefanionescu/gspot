@@ -198,7 +198,7 @@ test.each([...KEY_PATH_CASES])(
 test.each(['\n', '\r\n'])(
     'a TOML syntax error names its line and does not copy the source: %j line endings',
     (newline: string) => {
-        const invalid = ['# private fixture marker', 'configurations = ?', ''].join(newline);
+        const invalid = ['# private sample marker', 'configurations = ?', ''].join(newline);
         const found = validateSettingsText(invalid);
         expect(found).toStrictEqual(['gspot.toml:2:18 is not valid TOML: Unexpected char "?"']);
         expect(validateSettingsText(invalid.replace('configurations = ?', 'configurations = []'))).toStrictEqual([]);

@@ -30,6 +30,7 @@ import {
     FAILED_BUILD_FINDINGS,
     PRIVATE_OTHER_FINDING,
     SWIFT_LANGUAGE_PACKAGE,
+    NESTED_SWIFTLINT_FILES,
     SWIFT_REPLACEMENT_CASES,
 } from '#tests/config/checks/language/swift/build.ts';
 
@@ -218,9 +219,6 @@ test('compiler: a Swift build whose source file is missing removes its build.loc
 });
 
 test('compiler: Swift compiler diagnostics drop the macOS /private prefix from source paths', async () => {
-    const PRIVATE_PREFIX_STDERR =
-        '/private/var/folders/project/Main.swift:4:2: error: Missing value\n/var/folders/project/Other.swift:5:3: error: Unknown name';
-
     await using sandbox = await testdir();
     await using prepared = await prepareSwiftCheck(sandbox, 'swift/build', { 'Main.swift': 'let value = 1\n' });
 
@@ -228,7 +226,10 @@ test('compiler: Swift compiler diagnostics drop the macOS /private prefix from s
     using resources = new DisposableStack();
     resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(
-            buildProcessResult({ code: 1, stderr: PRIVATE_PREFIX_STDERR }),
+            buildProcessResult({
+                code: 1,
+                stderr: '/private/var/folders/project/Main.swift:4:2: error: Missing value\n/var/folders/project/Other.swift:5:3: error: Unknown name',
+            }),
         ),
     );
     expect(await findBuiltInCheck('swift/build')(prepared.session, input)).toStrictEqual([
@@ -238,12 +239,6 @@ test('compiler: Swift compiler diagnostics drop the macOS /private prefix from s
 });
 
 test('the SwiftLint config files of a nested scope stop at the scope folder and include a link inside the repository', async () => {
-    const NESTED_SWIFTLINT_FILES = [
-        'app/.swiftlint.yml',
-        'app/Sources/.swiftlint.yml',
-        'app/Sources/Feature/.swiftlint.yml',
-    ] as const;
-
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: 'app' }] }),
         '.swiftlint.yml': 'disabled_rules: []\n',

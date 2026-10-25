@@ -17,7 +17,7 @@ test('an edit writes the new ignore as a table and keeps the authored comment', 
     const proposed = buildEditedSettings(sandbox.path, edit);
     expect(proposed.text).toBe(
         `${SCHEMA_DIRECTIVE}\n` +
-            '# Authored selection.\nconfigurations = ["security"]\n\n[[ignore]]\ncheck = "security/semgrep"\nrule = "js/file-system-race"\npaths = ["fixture.js"]\nreason = "The sandbox owns its temporary files."\n',
+            '# Authored selection.\nconfigurations = ["security"]\n\n[[ignore]]\ncheck = "security/semgrep"\nrule = "js/file-system-race"\npaths = ["sample.js"]\nreason = "The sandbox owns its temporary files."\n',
     );
     expect(proposed.settings.ignore).toStrictEqual([SEMGREP_IGNORE]);
     await writeFile(path, proposed.text);

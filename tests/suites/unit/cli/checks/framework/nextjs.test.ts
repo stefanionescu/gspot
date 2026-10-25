@@ -19,7 +19,6 @@ import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 
 import {
-    NEXT_LAUNCHER,
     UNRELATED_FILE,
     NEXT_CACHE_BYTES,
     AUTHORED_NEXT_ENV,
@@ -42,7 +41,7 @@ async function prepareNextjsBuild(sandboxRoot: string, scope: string): Promise<S
         [join(scope, 'next-env.d.ts')]: AUTHORED_NEXT_ENV,
         [join(scope, '.next/types/routes.d.ts')]: ROUTE_TYPES_COMMENT,
         [join(scope, 'src/app/page.ts')]: 'bad input\n',
-        'node_modules/.bin/next': NEXT_LAUNCHER,
+        'node_modules/.bin/next': '',
         [UNRELATED_FILE.path]: UNRELATED_FILE.text,
     });
     await applyGeneratedFiles(sandboxRoot);
@@ -80,8 +79,6 @@ function fakeNextjsCommands(fakeRun: (command: readonly string[], options: Async
 test.each(['', 'app'])(
     'nextjs/tsc in scope %j reports its finding, passes after the fix, and leaves tsconfig.json, .next, and next-env.d.ts unchanged',
     async (scope) => {
-        const TSC_FAILURE_OUTPUT = 'src/app/page.ts(1,1): error TS2322: Type mismatch\n';
-
         await using sandbox = await testdir();
         const session = await prepareNextjsBuild(sandbox.path, scope);
 
@@ -105,7 +102,10 @@ test.each(['', 'app'])(
                 await writeFile(join(cwd, '.next/types/routes.d.ts'), '// Generated routes\n');
             } else routesSeen.push(await readFile(join(cwd, '.next/types/routes.d.ts'), 'utf8'));
             const isFailed = isBad && command[1] !== 'typegen';
-            return buildProcessResult({ code: isFailed ? 1 : 0, stdout: isFailed ? TSC_FAILURE_OUTPUT : '' });
+            return buildProcessResult({
+                code: isFailed ? 1 : 0,
+                stdout: isFailed ? 'src/app/page.ts(1,1): error TS2322: Type mismatch\n' : '',
+            });
         }
         using fakes = fakeNextjsCommands(fakeNextjsBuild);
         const { folders } = fakes;
@@ -145,7 +145,7 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
         'gspot.toml': buildSandboxSettings(['nextjs']),
         'package.json': '{"private":true}\n',
         'tsconfig.json': '{}\n',
-        'node_modules/.bin/next': NEXT_LAUNCHER,
+        'node_modules/.bin/next': '',
     });
 
     const session = await openSession(sandbox.path);
@@ -157,8 +157,8 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
         await writeFile(join(sandbox.path, 'tsconfig.json'), 'Concurrent developer edit\n');
         return buildProcessResult({ code: 1, stderr: `Error: ${message}` });
     });
-    const runCheckCodeError = await captureRejection(runCheckCode(session, planned, findCheckCode(planned.check)));
-    expect(runCheckCodeError.message).toBe(`The next typegen command failed: Error: ${message}`);
+    const error = await captureRejection(runCheckCode(session, planned, findCheckCode(planned.check)));
+    expect(error.message).toBe(`The next typegen command failed: Error: ${message}`);
     expect(scratch).not.toBe('');
     expect(await isOnDisk(scratch)).toBe(false);
     expect(await readFile(join(sandbox.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');

@@ -20,7 +20,6 @@ import { getTool, listDistinctTools, findToolProjectPackage } from '#cli/configu
 
 test('doctor reports no unowned gspot files in a fresh clone', async () => {
     await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
     const source = join(sandbox.path, 'source');
     const checkout = join(sandbox.path, 'checkout');
     await createFileTree(source, { 'gspot.toml': buildSandboxSettings([]) });
@@ -37,8 +36,7 @@ test('doctor reports no unowned gspot files in a fresh clone', async () => {
 test.each(['ok', 'newer', 'outdated'] as const)(
     'doctor exit code follows the library state %s: an outdated tool exits 1',
     async (state) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({});
         const pin = getTool(readConfigurations().values(), 'eslint-plugin-zod');
         const versions = { ok: pin.version!, newer: semver.inc(pin.version!, 'major')!, outdated: '0.0.0' };
         const version = versions[state];

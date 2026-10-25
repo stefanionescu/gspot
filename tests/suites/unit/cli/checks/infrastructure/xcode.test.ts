@@ -15,6 +15,7 @@ import {
     LOGO_IMAGE_SET,
     GROUPED_PBXPROJ,
     ASSET_SETTING_CASES,
+    SINGLE_FILE_PBXPROJ,
     UNREADABLE_RESOURCES,
     PARTLY_TRANSLATED_STRINGS,
     ENTITLEMENT_SCOPE_RESULTS,
@@ -44,11 +45,6 @@ test('Xcode sources follow group paths and target membership instead of duplicat
 });
 
 test('membership combines projects in a scope and checks nested scopes independently', async () => {
-    const SINGLE_FILE_PBXPROJ = GROUPED_PBXPROJ.replace('files = (B1, B2,);', 'files = (B2,);').replace(
-        'fileSystemSynchronizedGroups = (SYNC,);',
-        '',
-    );
-
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['xcode'], { scopes: [{ path: 'nested' }] }),
         'One.xcodeproj/project.pbxproj': SINGLE_FILE_PBXPROJ.replace('path = Root.swift;', 'path = One.swift;'),
@@ -215,13 +211,9 @@ test('xcode/xcstrings reports a string without a translation for a locale the ca
 });
 
 test('xcode/entitlements checks the deepest scope only', async () => {
-    const ENTITLEMENT_DOCUMENTS = {
-        path: 'App.entitlements',
-        unlisted: '<plist><dict><key>unlisted-capability</key><true/></dict></plist>',
-        allowed: '<plist><dict><key>nested-capability</key><true/></dict></plist>',
-    } as const;
-
-    const { path, unlisted: broken, allowed: corrected } = ENTITLEMENT_DOCUMENTS;
+    const path = 'App.entitlements';
+    const broken = '<plist><dict><key>unlisted-capability</key><true/></dict></plist>';
+    const corrected = '<plist><dict><key>nested-capability</key><true/></dict></plist>';
     const check = 'xcode/entitlements';
     await using sandbox = await testdir();
     const rootContent = corrected.replace('nested-capability', 'root-capability');

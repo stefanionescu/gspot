@@ -2,38 +2,50 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { COPY_PAGE_BUILD } from '#tests/config/integration/checks/samples.ts';
 import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
-import { SITE_SANDBOX, SITE_SETTINGS } from '#tests/config/checks/framework/site/pages.ts';
+import { buildSiteSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { SITE_SANDBOX, SITE_BUILD_ARGUMENTS } from '#tests/config/checks/framework/site/pages.ts';
 
 import {
-    SITE_CASES,
     OUTPUT_CASES,
     ALT_TEXT_PAGE,
     SITE_PAGE_HEAD,
     TWO_SITE_TABLES,
     BUILT_HTML_SITES,
     MISSING_ALT_PAGE,
-    SITE_OUTPUT_BUILD,
 } from '#tests/config/integration/checks/framework/site.ts';
 
 const installedSandbox = shareInstalledSandbox(SITE_SANDBOX);
 
-test.each([...SITE_CASES])('$check reports its finding and passes after the fix', async (sample) => {
+test('site/build reports a failed build and passes after the fix', async () => {
+    const sample = {
+        check: 'site/build',
+        files: { 'gspot.toml': buildSiteSettings(buildProgramCommand('fakes/tool', '--exit', '1')) },
+        expected: { file: '', rule: 'build', line: 1 },
+        corrected: {
+            files: {
+                'gspot.toml': buildSiteSettings(buildProgramCommand('fakes/site-build', ...SITE_BUILD_ARGUMENTS)),
+            },
+        },
+    };
     expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(expectedSummary(sample));
 });
 
 test.each([...OUTPUT_CASES])(
     '$check reports its finding in the built site and passes after the fix',
     async (scenario) => {
-        const { check, settings, files, findings, corrected } = scenario;
+        const { check, level, tables, files, findings, corrected } = scenario;
         const { root } = installedSandbox();
+        const settings = buildSiteSettings(buildProgramCommand('fakes/site-build', '--copy', 'pages=dist'), {
+            level,
+            tables,
+        });
         await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-            files: { 'gspot.toml': settings, 'build.js': SITE_OUTPUT_BUILD, ...files },
+            files: { 'gspot.toml': settings, ...files },
         });
 
         const failed = parseCheckReport(await spawnGspot(root, ['check', '--only', check, '--json']));
@@ -50,14 +62,16 @@ test.each([...BUILT_HTML_SITES])(
     'an html-validate ignore on app/** leaves the same finding in the other site, with $name',
     async (repository) => {
         const { root } = installedSandbox();
-        const settings = buildSandboxSettings(repository.configurations, { level: 'all', tables: TWO_SITE_TABLES });
+        const build = buildProgramCommand('fakes/site-build', '--copy', 'page.html=dist/index.html');
+        const settings = buildSandboxSettings(repository.configurations, {
+            level: 'all',
+            tables: `[site]\nbuild_command = ${JSON.stringify(build)}\n${TWO_SITE_TABLES}`,
+        });
         await using _sourceChange = await applySandboxChanges(installedSandbox(), {
             files: {
                 'gspot.toml': settings,
                 ...repository.files,
-                'app/build.mjs': COPY_PAGE_BUILD,
                 'app/page.html': MISSING_ALT_PAGE,
-                'other/build.mjs': COPY_PAGE_BUILD,
                 'other/page.html': MISSING_ALT_PAGE,
             },
         });
@@ -81,8 +95,7 @@ test.each([...BUILT_HTML_SITES])(
             { scope: 'other', status: 'passed', findings: [] },
         ]);
         expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(appliedSettings);
-        for (const scope of ['app', 'other'])
-            expect(await readFile(join(root, `${scope}/build.mjs`), 'utf8')).toBe(COPY_PAGE_BUILD);
+        expect(await readFile(join(root, 'app/page.html'), 'utf8')).toBe(MISSING_ALT_PAGE);
     },
 );
 
@@ -90,8 +103,7 @@ test('HTML Validate reports all 400 missing alt attributes in a built page', asy
     const { root } = installedSandbox();
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         files: {
-            'gspot.toml': SITE_SETTINGS,
-            'build.js': SITE_OUTPUT_BUILD,
+            'gspot.toml': buildSiteSettings(buildProgramCommand('fakes/site-build', '--copy', 'pages=dist')),
             'pages/index.html': `${SITE_PAGE_HEAD}${'<img src="image.png">'.repeat(400)}</body></html>`,
         },
     });

@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { DURATION } from '#tests/config/commands/check/report.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -13,8 +13,7 @@ import { FIX_SUMMARY_CASES } from '#tests/config/commands/check/fixes/feedback.t
 test.each([...FIX_SUMMARY_CASES])(
     'check --fix --dry-run shows the diff and writes nothing, and check --fix reports $name',
     async ({ paths, previewText, appliedText }) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({});
         const settings = buildSandboxSettings([], {
             tables: stringify({
                 command_check: [

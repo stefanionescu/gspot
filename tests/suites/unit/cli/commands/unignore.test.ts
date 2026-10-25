@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { parse, LocalDate, stringify } from '@decimalturn/toml-patch';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { SHELLCHECK_IGNORE, SHELLCHECK_RULE_IGNORE } from '#tests/config/commands/unignore.ts';
 
 test('unignore removes a matching ignore, and a second run reports no change', async () => {
@@ -34,8 +34,7 @@ test('unignore removes a matching ignore, and a second run reports no change', a
 
 test('unignore keeps an empty ignore list and reports no change', async () => {
     const settings = buildSandboxSettings(['bash'], { rules: true, tables: 'ignore = []\n' });
-    await using sandbox = await testdir({ 'gspot.toml': settings });
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({ 'gspot.toml': settings });
     const removed = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2086']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(removed.stdout).toBe('No change: rule SC2086 of bash/shellcheck has no matching ignore.\n');
@@ -43,8 +42,7 @@ test('unignore keeps an empty ignore list and reports no change', async () => {
 });
 
 test('unignore refuses a gspot.toml whose ignore has no reason and writes nothing', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash'], SHELLCHECK_RULE_IGNORE);
     await createFileTree(sandbox.path, { 'gspot.toml': settings, 'entry.sh': 'echo example\n' });
     const unmatched = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2034']);
@@ -56,8 +54,7 @@ test('unignore refuses a gspot.toml whose ignore has no reason and writes nothin
 });
 
 test('unignore counts the changed ignores and keeps other paths and other rules', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const selected = { check: 'bash/shellcheck', rule: 'SC2086' };
     const first = { ...selected, reason: 'Keep word splitting.', paths: ['a.sh', 'b.sh'] };
     const second = {
