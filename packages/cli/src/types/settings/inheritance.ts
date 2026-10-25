@@ -26,7 +26,8 @@ export type Setting = {
 };
 
 export type Scope = {
-    folder: ScopeFolder;
+    path: string;
+    origin: ScopeFolder['origin'];
     configurations: Configuration[];
     availableSettings: AvailableSettings;
     settings: ScopeSettings;

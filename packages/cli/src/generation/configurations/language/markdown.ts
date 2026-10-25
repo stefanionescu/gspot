@@ -44,9 +44,9 @@ Check whether a Markdown scope inherits the root config because both scopes gene
 */
 export function isMarkdownlintShared(selected: OwnedConfigFile, configFiles: OwnedConfigFile[]): boolean {
     const { configFile, owner } = selected;
-    if (configFile.pointer?.inherit !== true || owner.scope.folder.path === '') return false;
+    if (configFile.pointer?.inherit !== true || owner.scope.path === '') return false;
     const root = configFiles.find(
-        (each) => each.configFile.target === configFile.target && each.owner.scope.folder.path === '',
+        (each) => each.configFile.target === configFile.target && each.owner.scope.path === '',
     );
     if (root === undefined) return false;
     const level = owner.session.settingsFile.settings.level;

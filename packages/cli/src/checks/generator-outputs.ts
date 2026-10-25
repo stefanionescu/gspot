@@ -38,7 +38,7 @@ function listMissingOutputs(
 }
 
 function listUntrackedOutputs(session: Session, planned: PlannedCheck, named: string[], excluded: string[]): Finding[] {
-    const scope = planned.scope.folder.path;
+    const scope = planned.scope.path;
     const tracked = new Set(session.repository.index.map(({ path }) => path));
     return named.length === 0 || !session.repository.hasGit
         ? []
@@ -95,7 +95,7 @@ function listGeneratorOutputs(
         const { kind, path: pattern } = output;
         const isNamed = kind === 'pattern' && pattern.includes('{setting:');
         const replaced = replacePlaceholders(session, planned, pattern, values);
-        const path = isNamed ? stripScopePrefix(replaced, planned.scope.folder.path) : replaced;
+        const path = isNamed ? stripScopePrefix(replaced, planned.scope.path) : replaced;
         if (path === '') return [];
         if (isNamed) named.push(path);
         return [{ kind, path }];
@@ -104,7 +104,7 @@ function listGeneratorOutputs(
 }
 
 function planGeneratorRun(session: Session, planned: PlannedCheck): GeneratorRun | undefined {
-    const values = buildCommandSubstitutions(session.root, planned, join(session.root, planned.scope.folder.path));
+    const values = buildCommandSubstitutions(session.root, planned, join(session.root, planned.scope.path));
     const declaration = planned.check.command ?? [];
     const command = expandCommand(session, planned, declaration, values);
     if (command.length === 0) return undefined;
@@ -115,7 +115,7 @@ function planGeneratorRun(session: Session, planned: PlannedCheck): GeneratorRun
     const patterns = listed.filter((output) => output.kind === 'pattern').map((output) => output.path);
     const isMatched = buildPathMatcher(patterns);
     const selected = planned.files
-        .map((file) => posix.relative(planned.scope.folder.path, file.path))
+        .map((file) => posix.relative(planned.scope.path, file.path))
         .filter((path) => isMatched(path));
 
     const commandText = command.filter((argument) => typeof argument === 'string').join(' ');
@@ -144,8 +144,8 @@ export async function checkGeneratorOutputs(session: CheckSession, planned: Plan
         planned,
         targets.map((target) => target.path),
     );
-    const cwd = join(folder.path, planned.scope.folder.path);
-    const outputFiles = { root: folder.path, scope: planned.scope.folder.path, patterns, targets, excluded };
+    const cwd = join(folder.path, planned.scope.path);
+    const outputFiles = { root: folder.path, scope: planned.scope.path, patterns, targets, excluded };
     const stdoutPaths = new Set(targets.filter((target) => target.kind === 'stdout').map((target) => target.path));
     const before = new Map(
         readOutputContents(outputFiles)

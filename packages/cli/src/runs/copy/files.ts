@@ -70,7 +70,7 @@ export async function createCheckCopy(
             session.root,
             [
                 ...planned.files.map((file) => file.path),
-                ...listWorkspaceDependencySources(session.reads, planned.scope.folder.path, session.repository.files),
+                ...listWorkspaceDependencySources(session.reads, planned.scope.path, session.repository.files),
                 ...includedPaths,
             ],
             session.repository.scopeFolders.map((scope) => scope.path),

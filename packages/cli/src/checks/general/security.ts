@@ -10,12 +10,12 @@ import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 
 function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
-    const { configurations, folder, settings } = planned.scope;
+    const { configurations, path: scopePath, settings } = planned.scope;
     const ruleFiles = configurations.flatMap((configuration) =>
         configuration.configFiles
             .filter((file) => file.tool.includes(SEMGREP_TOOL) && file.target.endsWith('.yml'))
             .filter((file) => file.level !== 'all' || session.settingsFile.settings.level === 'all')
-            .map((file) => getConfigFileTarget(folder.path, file, buildConfigFiles(session))),
+            .map((file) => getConfigFileTarget(scopePath, file, buildConfigFiles(session))),
     );
     return [...new Set([...ruleFiles, ...getTable(settings, 'tools.semgrep').rule_files])];
 }

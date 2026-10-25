@@ -17,7 +17,7 @@ Reports a project whose react and react-dom resolve to different versions.
 @returns a finding when the versions differ.
 */
 export function checkReactDomReactVersions(session: Session, planned: PlannedCheck): Finding[] {
-    const folder = planned.scope.folder.path;
+    const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const specifiers = readDependencySpecifiers(session.reads, packageJsonPath);
     if (specifiers === undefined || !specifiers.has(REACT_PACKAGE) || !specifiers.has(REACT_DOM_PACKAGE)) return [];

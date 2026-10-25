@@ -52,16 +52,16 @@ export function explainSetting(session: Session | undefined, key: string): Expla
     const isScopeKey = isScopeSetting(key);
     const scopes = session.scopes.flatMap((scope) => {
         const match = findSetting(scope.availableSettings, key);
-        if (match === undefined || (!isScopeKey && scope.folder.path !== '')) return [];
+        if (match === undefined || (!isScopeKey && scope.path !== '')) return [];
         return [
             {
-                scope: scope.folder.path,
+                scope: scope.path,
                 setting: match.setting,
                 readBy: listSettingReaders(settings, scope, key).map((reader) =>
                     reader.note === undefined ? reader.check : `${reader.check} (${reader.note})`,
                 ),
-                inherited: getSettingValue(scope.availableSettings, settings, key, scope.folder.path),
-                shipped: findSettingDefault(scope.availableSettings, settings, match, scope.folder.path)?.value,
+                inherited: getSettingValue(scope.availableSettings, settings, key, scope.path),
+                shipped: findSettingDefault(scope.availableSettings, settings, match, scope.path)?.value,
             },
         ];
     });

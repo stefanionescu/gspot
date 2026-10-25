@@ -153,7 +153,7 @@ test.each([false, true])(
             });
             const dependencyPaths = listWorkspaceDependencySources(
                 session.reads,
-                input.scope.folder.path,
+                input.scope.path,
                 session.repository.files,
             );
             expect(dependencyPaths).toStrictEqual([

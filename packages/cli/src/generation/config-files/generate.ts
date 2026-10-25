@@ -45,7 +45,7 @@ function buildOwnedOutput(
     } catch (error) {
         if (!(error instanceof GspotError)) throw error;
         for (const { owner, configFile } of each.configFile.per_scope ? [each] : ownedFiles) {
-            const scope = owner.scope.folder.path;
+            const scope = owner.scope.path;
             const failures = generated.failures.get(scope) ?? new Map<string, Error>();
             failures.set(configFile.target, error);
             generated.failures.set(scope, failures);
@@ -62,18 +62,18 @@ function groupToolOutputs(ownedFiles: OwnedSourceFile[], generated: ConfigFileBu
         .toArray()
         .toSorted(
             (left, right) =>
-                Number(right.some(({ owner }) => owner.scope.folder.path === '')) -
-                    Number(left.some(({ owner }) => owner.scope.folder.path === '')) || right.length - left.length,
+                Number(right.some(({ owner }) => owner.scope.path === '')) -
+                    Number(left.some(({ owner }) => owner.scope.path === '')) || right.length - left.length,
         );
 }
 
 function addToolOutput(target: string, group: BuiltConfigFile[], index: number, generated: ConfigFileBuildState): void {
     const [first] = group as [BuiltConfigFile, ...BuiltConfigFile[]];
-    const written = index === 0 ? target : buildPerScopeTarget(first.configFile, first.owner.scope.folder.path);
+    const written = index === 0 ? target : buildPerScopeTarget(first.configFile, first.owner.scope.path);
     const { file, companions } = written === target ? first : buildConfigFile(first, written, generated.targets);
     for (const written of [file, ...companions]) generated.files.set(written.path, written);
     for (const { owner } of group) {
-        const scope = owner.scope.folder.path;
+        const scope = owner.scope.path;
         const paths = generated.targets.get(scope) ?? new Map<string, string>();
         paths.set(target, written);
         generated.targets.set(scope, paths);
@@ -94,7 +94,7 @@ function listPointerOnlyPaths(configFiles: OwnedConfigFile[], selected: OwnedCon
         configFiles
             .filter(
                 (each) =>
-                    each.owner.scope.folder.path === selected.owner.scope.folder.path &&
+                    each.owner.scope.path === selected.owner.scope.path &&
                     each.configFile.source === undefined &&
                     each.configFile.target === selected.configFile.target,
             )
@@ -109,7 +109,7 @@ function addPointerFiles(
 ): void {
     const { configFile, owner } = selected;
     if (isMarkdownlintShared(selected, configFiles)) return;
-    const target = getConfigFileTarget(owner.scope.folder.path, configFile, generated);
+    const target = getConfigFileTarget(owner.scope.path, configFile, generated);
     const pointerOnlyPaths = listPointerOnlyPaths(configFiles, selected);
     for (const pointer of buildPointerFiles(owner, configFile, target)) {
         if (
@@ -126,7 +126,7 @@ function buildScopeConfigFiles(session: Session): ConfigFileGeneration {
     const state: ConfigFileBuildState = { targets: new Map(), files: new Map(), failures: new Map() };
     buildSourceFiles(configFiles, state);
     for (const configFile of configFiles)
-        if (state.failures.get(configFile.owner.scope.folder.path)?.has(configFile.configFile.target) !== true)
+        if (state.failures.get(configFile.owner.scope.path)?.has(configFile.configFile.target) !== true)
             addPointerFiles(configFile, configFiles, state);
     return { files: state.files.values().toArray(), targets: state.targets, failures: state.failures };
 }

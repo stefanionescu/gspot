@@ -84,10 +84,8 @@ test.each([...SCOPE_WIDE_IGNORE_CASES])(
 
         const session = await openSession(sandbox.path);
         const planned = planChecks(session, { stage: 'all', only: ['nextjs/tsc', 'typescript/tsc'] });
-        const scopes = planned.filter((check) => ['api', 'web'].includes(check.scope.folder.path));
-        const results = new Map(
-            scopes.map((check) => [`${check.scope.folder.path}:${check.check.id}`, check.skip?.cause]),
-        );
+        const scopes = planned.filter((check) => ['api', 'web'].includes(check.scope.path));
+        const results = new Map(scopes.map((check) => [`${check.scope.path}:${check.check.id}`, check.skip?.cause]));
         expect(results).toStrictEqual(
             new Map([
                 ['api:nextjs/tsc', ignored ? 'ignore' : undefined],
@@ -164,7 +162,7 @@ test.each([...LEVELS])('%s plans history checks once at the root and only for pu
     expect(planned.filter((check) => check.check.runs === 'history').map((check) => check.check.id)).toStrictEqual(
         names,
     );
-    expect(planned.map((check) => check.scope.folder.path)).toStrictEqual([...names.map(() => ''), '']);
+    expect(planned.map((check) => check.scope.path)).toStrictEqual([...names.map(() => ''), '']);
     expect(planned.map((check) => isActive(check))).toStrictEqual([...names.map(() => true), false]);
     expect(
         planChecks(session, { stage: 'push', only: names, staged: [], commits: [] }).map((check) => isActive(check)),
@@ -222,7 +220,7 @@ test('a nested Next.js check replaces TypeScript only in its own scope', async (
     const session = await openSession(sandbox.path);
     const configured = session.configuredChecks
         .filter((configuredCheck) => ['typescript/tsc', 'nextjs/tsc'].includes(configuredCheck.check.id))
-        .map((configuredCheck) => [configuredCheck.scope.folder.path, configuredCheck.check.id]);
+        .map((configuredCheck) => [configuredCheck.scope.path, configuredCheck.check.id]);
     expect(configured).toStrictEqual([
         ['', 'typescript/tsc'],
         ['app', 'nextjs/tsc'],

@@ -1,8 +1,8 @@
 import { join, posix } from 'node:path';
 import { buildFinding } from '#cli/checks/finding.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import { findScopePath } from '#cli/repository/scopes.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
-import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { runCommandGroups } from '#cli/runs/command/check.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/placeholders.ts';
@@ -117,7 +117,7 @@ export async function checkDockerCompose(session: CheckSession, planned: Planned
                 argument === FILE_PLACEHOLDER
                     ? [
                           ...before.flatMap(({ path }) => [
-                              posix.relative(planned.scope.folder.path, path),
+                              posix.relative(planned.scope.path, path),
                               COMPOSE_FILE_FLAG,
                           ]),
                           argument,
@@ -155,8 +155,8 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Find
     return planned.files
         .filter((file) => file.tags.includes('dockerfile') && !file.path.endsWith(DOCKERIGNORE))
         .flatMap(({ path: dockerfile }): Finding[] => {
-            const folder = findScopeFolder(dockerfile, session.repository.scopeFolders);
-            const scope = session.scopes.find((each) => each.folder.path === folder.path) as Scope;
+            const scopePath = findScopePath(dockerfile, session.scopes);
+            const scope = session.scopes.find((each) => each.path === scopePath) as Scope;
             const required = [
                 ...DOCKERIGNORE_PATTERNS,
                 ...scope.configurations.flatMap((configuration) => configuration.ignored_paths),

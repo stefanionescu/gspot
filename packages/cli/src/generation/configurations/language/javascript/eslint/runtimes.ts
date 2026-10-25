@@ -23,8 +23,8 @@ function isRuntimeRoot(scope: string, scopes: Scope[]): boolean {
         scope === '' ||
         scopes.some(
             (ancestor) =>
-                ancestor.folder.path !== scope &&
-                isInScope(scope, ancestor.folder.path) &&
+                ancestor.path !== scope &&
+                isInScope(scope, ancestor.path) &&
                 (selectFrameworkRuntime(ancestor.settings.configurations) !== undefined ||
                     (ancestor.settings.values[ESLINT_SETTINGS_TABLE]?.override ?? []).some(
                         (override) => override.runtime !== undefined,
@@ -42,9 +42,9 @@ your later selectors win. Build scripts keep Node.js unless your own runtime nam
 */
 export function buildRuntimes(scopes: Scope[]): EslintRuntime[] {
     const blocks: EslintRuntime[] = [];
-    const orderedScopes = scopes.toSorted((left, right) => compareScopeDepth(left.folder.path, right.folder.path));
+    const orderedScopes = scopes.toSorted((left, right) => compareScopeDepth(left.path, right.path));
     for (const scope of orderedScopes) {
-        const scopePath = scope.folder.path;
+        const scopePath = scope.path;
         const escaped = escapeGlob(scopePath);
         if (isRuntimeRoot(scopePath, scopes))
             blocks.push(
@@ -69,7 +69,7 @@ function buildFrameworkRuntime(scope: Scope, escaped: string): EslintRuntime | u
     if (runtime === undefined) return undefined;
     const scripts = [...(scope.settings.values.javascript?.script_files ?? []), joinScope(escaped, MISE_SCRIPT_PATH)];
     return {
-        scope: scope.folder.path,
+        scope: scope.path,
         runtime,
         ...splitGlobs([
             joinScope(escaped, '**/*'),

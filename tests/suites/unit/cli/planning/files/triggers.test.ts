@@ -46,8 +46,7 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
     };
     const fileCheck = { ...check, id: 'data-files/v8r', runs: 'files' as const };
     for (const scope of session.scopes) {
-        if (scope.folder.path !== '')
-            scope.configurations = [{ ...configuration, tools: [], checks: [check, fileCheck] }];
+        if (scope.path !== '') scope.configurations = [{ ...configuration, tools: [], checks: [check, fileCheck] }];
     }
 }
 
@@ -73,7 +72,7 @@ test.each([
         selection === 'staged' ? await readStagedPaths(sandbox.path) : await readChangedPaths(sandbox.path, 'HEAD');
     const revision = 'staged' in selected ? { staged: selected.staged } : { changed: selected.paths };
     const planned = planChecks(session, { ...TSC_PUSH_OPTIONS, ...revision });
-    const api = planned.find((check) => check.scope.folder.path === 'api')!;
+    const api = planned.find((check) => check.scope.path === 'api')!;
     expect(api.files).toStrictEqual([]);
     expect(api.triggerPaths).toStrictEqual(['api/source.ts']);
     const fileChecks = planChecks(session, { ...TSC_PUSH_OPTIONS, only: ['data-files/v8r'], ...revision });
@@ -103,7 +102,7 @@ test('a fixer of a deleted trigger path restores it, and a dry run leaves it del
     await replaceChildScopeChecks(session);
     const { paths } = await readChangedPaths(sandbox.path, 'HEAD');
     const api = planChecks(session, { ...TSC_PUSH_OPTIONS, changed: paths }).find(
-        (check) => check.scope.folder.path === 'api',
+        (check) => check.scope.path === 'api',
     )!;
     const preview = await runFixers(buildCheckSession(session), [api], { isDryRun: true });
     expect(preview.changed).toStrictEqual(['api/source.ts']);
@@ -145,11 +144,9 @@ configurations = []
         changed: ['api/nested/removed.ts'],
     });
     expect(
-        planned
-            .filter((check) => check.triggerPaths.length > 0)
-            .map((check) => [check.scope.folder.path, check.triggerPaths]),
+        planned.filter((check) => check.triggerPaths.length > 0).map((check) => [check.scope.path, check.triggerPaths]),
     ).toStrictEqual([['api/nested', ['api/nested/removed.ts']]]);
-    expect(planned.find((check) => check.scope.folder.path === 'api')?.files).toStrictEqual([]);
+    expect(planned.find((check) => check.scope.path === 'api')?.files).toStrictEqual([]);
 });
 test.each(['gspot.toml', findManifestTarget('docs', 'lychee.toml')])(
     'a change to %s re-runs docs/lychee in every scope and keeps its path ignores',
@@ -165,7 +162,7 @@ test.each(['gspot.toml', findManifestTarget('docs', 'lychee.toml')])(
         const planned = planChecks(session, { stage: 'commit', staged: [path], only: ['docs/lychee'] });
         expect(
             planned.map((plannedCheck) => ({
-                scope: plannedCheck.scope.folder.path,
+                scope: plannedCheck.scope.path,
                 files: plannedCheck.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right)),
             })),
         ).toStrictEqual([

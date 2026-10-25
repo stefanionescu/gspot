@@ -132,7 +132,7 @@ test('generated scope settings stay identical across process collations', async 
         throw new Error('Generated text must not depend on process collation.');
     });
     const session = await openSession(sandbox.path);
-    expect(session.scopes.map(({ folder }) => folder.path)).toStrictEqual(['', 'jam', 'yam']);
+    expect(session.scopes.map(({ path }) => path)).toStrictEqual(['', 'jam', 'yam']);
     expect(generate(session)).toStrictEqual(expected);
 });
 

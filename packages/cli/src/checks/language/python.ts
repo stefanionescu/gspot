@@ -59,22 +59,22 @@ Runs deptry on the scope. Passes the project's extend_exclude list again with .g
 @returns the check result.
 */
 export async function checkPythonDeptry(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const pyproject = joinScope(planned.scope.folder.path, PYPROJECT_TOML);
+    const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const text = findCachedText(session.reads, pyproject);
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
     const { extend_exclude: exclusions, known_first_party: firstParty } = parseTomlFile(pyproject, text, deptrySchema)
         .tool.deptry;
     return await runCommandCheck(session, planned, {
-        command: buildUvRunCommand(planned.scope, join(session.root, planned.scope.folder.path), [
+        command: buildUvRunCommand(planned.scope, join(session.root, planned.scope.path), [
             ...DEPTRY_COMMAND,
             ...[
                 String.raw`(^|.*[/\\])${RegExp.escape(GSPOT_FOLDER)}([/\\]|$)`,
                 ...listNestedScopes(
-                    session.scopes.map((scope) => scope.folder.path),
-                    planned.scope.folder.path,
+                    session.scopes.map((scope) => scope.path),
+                    planned.scope.path,
                 ).map((path) => {
                     const child = posix
-                        .relative(planned.scope.folder.path, path)
+                        .relative(planned.scope.path, path)
                         .split('/')
                         .map((segment) => RegExp.escape(segment))
                         .join(String.raw`[/\\]`);
@@ -142,7 +142,7 @@ Reports hand-kept requirements files and unmanaged pip installs, so pyproject.to
 export function checkPythonPipInstalls(session: Session, planned: PlannedCheck): Finding[] {
     if (
         !(planned.check.files?.filenames ?? []).some((file) =>
-            planned.files.some(({ path }) => path === joinScope(planned.scope.folder.path, file)),
+            planned.files.some(({ path }) => path === joinScope(planned.scope.path, file)),
         )
     )
         throw new GspotError('skip', 'This check needs uv.lock, poetry.lock, or pdm.lock in this scope.');
@@ -255,7 +255,7 @@ Runs pydoclint with the declared docstring style, or with the style each file us
 @returns the check result, with earlier findings kept when a later batch fails.
 */
 export async function checkPythonPydoclint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const pyproject = joinScope(planned.scope.folder.path, PYPROJECT_TOML);
+    const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const configured = parsePydoclintOptions(
         pyproject,
         findCachedText(session.reads, pyproject) ?? '',
@@ -296,9 +296,9 @@ files of this run.
 @returns each unused definition and each line of unreachable code.
 */
 export async function checkPythonVulture(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
-    const scope = planned.scope.folder.path;
+    const scope = planned.scope.path;
     const children = listNestedScopes(
-        session.scopes.map(({ folder }) => folder.path),
+        session.scopes.map(({ path }) => path),
         scope,
     );
     const sources = session.repository.files

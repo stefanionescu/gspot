@@ -68,11 +68,11 @@ export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslin
         components: configurations,
         nodeFiles,
         scopes: scopes.map((each) => ({
-            scope: each.folder.path,
+            scope: each.path,
             tests: each.settings.test_files,
             scripts: [
                 ...(each.settings.values.javascript?.script_files ?? []),
-                buildScopeGlob(each.folder.path, MISE_SCRIPT_PATH),
+                buildScopeGlob(each.path, MISE_SCRIPT_PATH),
             ],
         })),
     });

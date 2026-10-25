@@ -3,7 +3,7 @@ import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { parseFileFields } from '#cli/system/errors.ts';
-import { findScopeFolder } from '#cli/repository/scopes.ts';
+import { findScopePath } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
@@ -185,14 +185,14 @@ export function readScopeFormat(
         scope,
         Object.fromEntries(
             repository.dependencyFiles
-                .filter((dependencyFile) => findScopeFolder(dependencyFile.path, draft.scopes).path === scope)
+                .filter((dependencyFile) => findScopePath(dependencyFile.path, draft.scopes) === scope)
                 .flatMap((dependencyFile) => Object.entries(dependencyFile.dependencies)),
         ),
         getTool([format], 'prettier').replace as string[],
     );
     const quotes = convertQuotes(options?.singleQuote);
     const hasPython = repository.files.some(
-        (file) => file.path.endsWith(PYTHON_EXTENSION) && findScopeFolder(file.path, draft.scopes).path === scope,
+        (file) => file.path.endsWith(PYTHON_EXTENSION) && findScopePath(file.path, draft.scopes) === scope,
     );
     const overrides = buildFormatOverrides(options, { root: posix.join(repository.root, scope), quotes, hasPython });
     if (options === null) return overrides.length === 0 ? {} : { format: { override: overrides } };

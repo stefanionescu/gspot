@@ -250,7 +250,7 @@ test('the SwiftLint config files of a nested scope stop at the scope folder and 
 
     const session = await openSession(sandbox.path);
     const plans = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
-    const planned = plans.find((plan) => plan.scope.folder.path === 'app')!;
+    const planned = plans.find((plan) => plan.scope.path === 'app')!;
     const shipped = findConfigFilePath(session, 'swiftlint');
     expect(listSwiftlintConfigFiles(session, planned)).toStrictEqual([shipped, ...NESTED_SWIFTLINT_FILES.slice(0, -1)]);
     await symlink('../.swiftlint.yml', join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));

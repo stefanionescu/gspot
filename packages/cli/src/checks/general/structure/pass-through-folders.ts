@@ -17,7 +17,7 @@ export function checkStructurePassThroughFolders(session: Session, planned: Plan
     const extensions = listSourceExtensions(planned);
     const code = listCodeFiles(planned).filter((file) => extensions.some((extension) => file.path.endsWith(extension)));
     const tree = buildFolderTree(session.repository.files);
-    const scope = planned.scope.folder.path;
+    const scope = planned.scope.path;
     const folders = new Set(code.flatMap((file) => listEnclosingFolders(extractParentFolder(file.path))));
     return [...folders]
         .filter((folder) => folder !== scope && (scope === '' || folder.startsWith(`${scope}/`)))

@@ -3,9 +3,9 @@ import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { join, posix, dirname, resolve } from 'node:path';
+import { findScopePaths } from '#cli/repository/scopes.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { findScopeFolders } from '#cli/repository/scopes.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
@@ -84,7 +84,7 @@ export async function readRepository(
         tracked.push(file);
     }
     const dependencyFiles = await readDependencyFiles(reads, tracked);
-    const discovered = findScopeFolders(tracked, dependencyFiles, configurations.values());
+    const discovered = findScopePaths(tracked, dependencyFiles, configurations.values());
     const written: ScopeFolder[] = [
         { ...ROOT_SCOPE, configurations: [] },
         ...scopes

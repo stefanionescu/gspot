@@ -68,9 +68,9 @@ test('init reads the format settings of each scope', async () => {
         settingsFile: { settings: parseSettings(text, sandbox.path), text },
     });
     expect(
-        session.scopes.map(({ folder, settings }) => {
+        session.scopes.map(({ path, settings }) => {
             const { indent_width, print_width, quotes } = getTable(settings, 'format');
-            return [folder.path, indent_width, print_width, quotes];
+            return [path, indent_width, print_width, quotes];
         }),
     ).toStrictEqual([
         ['', 2, 90, 'double'],

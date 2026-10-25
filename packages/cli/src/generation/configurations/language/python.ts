@@ -42,9 +42,9 @@ Build basedpyright.json: the Python environment and source paths used by Basedpy
 */
 export function buildBasedpyrightFile(planned: PlannedConfigFile): string {
     const root = posix.relative(posix.dirname(planned.targetPath), '.');
-    const pythonScopePath = posix.join(root, planned.scope.folder.path);
+    const pythonScopePath = posix.join(root, planned.scope.path);
     const pythonVenv = planned.session.repository.files.some(
-        (file) => file.path === joinScope(planned.scope.folder.path, PROJECT_UV_LOCKFILE),
+        (file) => file.path === joinScope(planned.scope.path, PROJECT_UV_LOCKFILE),
     )
         ? PYTHON_ENVIRONMENT_FOLDER
         : undefined;
@@ -82,12 +82,12 @@ Build ruff.toml: the Ruff lint rules, import settings, and source exclusions.
 export function buildRuffFile(planned: PlannedConfigFile): string {
     const format = selectPythonFormat(planned.scope.settings);
     const root = posix.relative(posix.dirname(planned.targetPath), '.');
-    const pythonScopePath = posix.join(root, planned.scope.folder.path);
+    const pythonScopePath = posix.join(root, planned.scope.path);
     const ruffRules = planned.scope.configurations.flatMap((configuration) => [
         ...configuration.ruff.recommended,
         ...(planned.level === 'all' ? configuration.ruff.all : []),
     ]);
-    const scope = planned.scope.folder.path;
+    const scope = planned.scope.path;
     const off = listIgnoredRules(planned.scope, 'python/ruff');
     const perFile = listIgnores(planned.scope.settings, 'python/ruff').filter(
         (each) => each.rule !== undefined && each.paths.length > 0,

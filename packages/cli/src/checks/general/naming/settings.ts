@@ -75,11 +75,7 @@ Reads the naming settings of a scope: the shipped lists plus the repository addi
 @returns the word lists, exemptions, and limits.
 */
 export function readNamingSettings(settings: Settings, scope: Scope): NamingSettings {
-    const {
-        settings: scopeSettings,
-        configurations,
-        folder: { path: scopePath },
-    } = scope;
+    const { settings: scopeSettings, configurations, path: scopePath } = scope;
     const shipped = readNamingDefaults();
     const tables = listApplicableTables(settings, scopePath).map(({ table }) => table.naming);
     const bannedWords = [...new Set(tables.flatMap((table) => table?.banned_words ?? []))];

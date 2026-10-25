@@ -80,7 +80,7 @@ async function measureCoverage(session: CheckSession, planned: PlannedCheck): Pr
     const plan = planSwiftBuild(session, planned, 'coverage');
     const setup = prepareBuild(session.root, planned.files, plan.folder);
     using files = setup.files;
-    const cwd = join(setup.source, planned.scope.folder.path);
+    const cwd = join(setup.source, planned.scope.path);
     files.deleteTree(COVERAGE_BUNDLE);
     return plan.kind === 'package'
         ? await measurePackageCoverage(session, planned, plan, files, cwd)
@@ -154,7 +154,7 @@ export async function checkSwiftCoverage(session: CheckSession, planned: Planned
             {
                 file:
                     getTable(planned.scope.settings, 'swift').xcode_project ??
-                    joinScope(planned.scope.folder.path, PACKAGE_SWIFT),
+                    joinScope(planned.scope.path, PACKAGE_SWIFT),
                 line: 1,
             },
             'coverage',

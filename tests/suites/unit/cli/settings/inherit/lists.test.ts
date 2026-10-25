@@ -30,7 +30,7 @@ test('an empty PurgeCSS safelist is inherited, and a scope value applies to its 
     });
     const inherited = await openSession(sandbox.path);
     for (const path of ['', 'app', 'app/deep']) {
-        const scope = inherited.scopes.find(({ folder }) => folder.path === path)!;
+        const scope = inherited.scopes.find((scope) => scope.path === path)!;
         expect(scope.configurations.map((configuration) => configuration.name)).toStrictEqual(
             PURGECSS_SCOPE_CONFIGURATIONS,
         );
@@ -38,7 +38,7 @@ test('an empty PurgeCSS safelist is inherited, and a scope value applies to its 
     }
     expect(
         inherited.scopes
-            .find(({ folder }) => folder.path === 'sibling')!
+            .find(({ path }) => path === 'sibling')!
             .configurations.map((configuration) => configuration.name),
     ).toStrictEqual(PURGECSS_SIBLING_CONFIGURATIONS);
     const overridden = PURGECSS_SAFELIST_TABLES.replace(
@@ -52,16 +52,16 @@ test('an empty PurgeCSS safelist is inherited, and a scope value applies to its 
     const session = await openSession(sandbox.path);
     expect(
         session.scopes
-            .filter(({ folder }) => folder.path !== 'sibling')
-            .map(({ folder, settings }) => [folder.path, getTable(settings, 'tools.purgecss').safelist]),
+            .filter(({ path }) => path !== 'sibling')
+            .map(({ path, settings }) => [path, getTable(settings, 'tools.purgecss').safelist]),
     ).toStrictEqual([
         ['', []],
         ['app', ['keep']],
         ['app/deep', ['keep']],
     ]);
-    expect(() =>
-        getTable(session.scopes.find(({ folder }) => folder.path === 'sibling')!.settings, 'tools.purgecss'),
-    ).toThrow('The selected scope has no tools.purgecss settings.');
+    expect(() => getTable(session.scopes.find(({ path }) => path === 'sibling')!.settings, 'tools.purgecss')).toThrow(
+        'The selected scope has no tools.purgecss settings.',
+    );
 });
 
 test('a root list replaces configuration defaults, and a scope list adds to the root list', () => {

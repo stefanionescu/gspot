@@ -56,7 +56,7 @@ Type-checks JavaScript with the type declarations the project uses.
 @returns the check result.
 */
 export async function checkJavascriptTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const scope = planned.scope.folder.path;
+    const scope = planned.scope.path;
     if (listCheckedFiles(session.scopes, planned).length === 0)
         return { ...buildBaseResult(planned, session), fileCount: 0 };
     const target = getConfigFilePath(session, planned, extractConfigFileName(JSCONFIG_FILE));

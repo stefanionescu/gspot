@@ -119,7 +119,7 @@ function listSuppressionSyntaxes(scope: Scope): SuppressionSyntax[] {
                     ({ files }) =>
                         listCoveredFiles(files, [file], {
                             configurations: scope.configurations,
-                            scopePath: scope.folder.path,
+                            scopePath: scope.path,
                             settings: scope.settings,
                         }).length > 0,
                 ),
@@ -209,12 +209,12 @@ reason, and ignores past their until date.
 export async function checkGspotSuppressions(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const filesByScope = groupFilesByScope(
         planned.files.filter((file) => file.kind === 'source' && file.tags.includes('text')),
-        session.scopes.map((scope) => scope.folder),
+        session.scopes,
     );
     const found: Finding[] = listExpiredIgnores(session, planned);
     for (const scope of session.scopes) {
         const syntaxes = listSuppressionSyntaxes(scope);
-        for (const file of filesByScope.get(scope.folder.path) ?? []) {
+        for (const file of filesByScope.get(scope.path) ?? []) {
             const forms = syntaxes.filter((form) => form.covers(file));
             const source = readCachedText(session.reads, file.path);
             const comments = await parseComments(file.path, source, file.tags);

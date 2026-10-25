@@ -72,11 +72,11 @@ export function listPointerPaths(owner: ConfigFileOwner, configFile: ConfigFile)
     const { scopes, repository } = owner.session;
     const { pointer } = configFile;
     if (pointer === undefined) return [];
-    const scopePath = scope.folder.path;
+    const scopePath = scope.path;
     if (pointer.folders === undefined)
         return [configFile.per_scope ? joinScope(scopePath, pointer.path) : pointer.path];
     const children = listNestedScopes(
-        scopes.map((each) => each.folder.path),
+        scopes.map((each) => each.path),
         scopePath,
     );
     const isMatch = buildPathMatcher(pointer.folders);
@@ -109,13 +109,13 @@ function listPointerFieldTargets({
         .filter((replacement) => replacement.pointer === true)
         .flatMap((replacement) =>
             configuration.configFiles
-                .map((file) => ({ file, target: getConfigFileTarget(scope.folder.path, file, configFiles) }))
+                .map((file) => ({ file, target: getConfigFileTarget(scope.path, file, configFiles) }))
                 .filter(
                     ({ file, target }) =>
                         file.tool.includes(tool.name) && (!file.per_scope || consumed || !paths.has(target)),
                 )
                 .map(({ file, target }) => {
-                    const scopePath = file.per_scope ? scope.folder.path : '';
+                    const scopePath = file.per_scope ? scope.path : '';
                     const children = file.per_scope ? listNestedScopes(scopePaths, scopePath) : [];
                     const pointerPath = file.pointer === undefined ? target : joinScope(scopePath, file.pointer.path);
                     return {
@@ -143,7 +143,7 @@ export function buildPointerFieldEdits(
 ): ManagedKeys[] {
     const { root, repository, scopes } = session;
     const paths = new Set(generated.map(({ path }) => path));
-    const scopePaths = scopes.map(({ folder }) => folder.path);
+    const scopePaths = scopes.map(({ path }) => path);
     const tools = scopes.flatMap((scope) => {
         const required = new Set(listConfiguredChecks(session, scope).flatMap((check) => listCheckTools(check)));
         return readConfigurations()

@@ -135,7 +135,7 @@ export function planSwiftBuild(
     planned: PlannedCheck,
     purpose: Exclude<SwiftBuildPurpose, 'periphery'> = 'compile',
 ): SwiftBuildPlan {
-    const folder = getScopeBuildFolder(session.toolsRoot, planned.scope.folder.path, purpose);
+    const folder = getScopeBuildFolder(session.toolsRoot, planned.scope.path, purpose);
     const log = join(folder, BUILD_LOG);
     const {
         xcode_project: project,
@@ -143,7 +143,7 @@ export function planSwiftBuild(
         xcode_destination: destination,
     } = getTable(planned.scope.settings, 'swift');
     if (project === undefined) {
-        if (!session.repository.files.some(({ path }) => path === joinScope(planned.scope.folder.path, PACKAGE_SWIFT)))
+        if (!session.repository.files.some(({ path }) => path === joinScope(planned.scope.path, PACKAGE_SWIFT)))
             throw new GspotError('skip', 'Set swift.xcode_project or add Package.swift in this scope.');
         const scratch = join(folder, PACKAGE_SCRATCH_FOLDER);
         return {
@@ -162,7 +162,7 @@ export function planSwiftBuild(
         XCODEBUILD_PROGRAM,
         ...SWIFT_BUILD_COMMANDS[purpose].xcode,
         container,
-        posix.relative(planned.scope.folder.path, project),
+        posix.relative(planned.scope.path, project),
         XCODE_SCHEME_FLAG,
         scheme,
         XCODE_DESTINATION_FLAG,

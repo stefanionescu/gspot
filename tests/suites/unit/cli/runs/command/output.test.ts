@@ -233,7 +233,7 @@ test('a finding in a folder outside the scope keeps its repository path when the
     });
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] }).find(
-        (check) => check.scope.folder.path === 'app',
+        (check) => check.scope.path === 'app',
     )!;
     planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
     planned.check.command = buildProgramCommand(

@@ -133,7 +133,7 @@ export function buildConfigFile(
     const { content, companions } = typeof built === 'string' ? { content: built, companions: [] } : built;
     const source = content.replaceAll(CONFIG_FILE_REFERENCE, (match: string, path: string) => {
         const referenced = join(dirname(configFile.target), path);
-        const mapped = targets.get(planned.scope.folder.path)?.get(referenced);
+        const mapped = targets.get(planned.scope.path)?.get(referenced);
         return mapped === undefined ? match : match.replace(path, () => relative(dirname(targetPath), mapped));
     });
     return {

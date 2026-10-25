@@ -139,7 +139,7 @@ export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' |
     const serverFiles = [
         ...new Set(trpcScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.values.trpc?.server_files ?? [])),
     ];
-    const trpcPaths = serverFiles.length === 0 ? [] : trpcScopes.map(({ folder }) => buildScopeGlob(folder.path));
+    const trpcPaths = serverFiles.length === 0 ? [] : trpcScopes.map(({ path }) => buildScopeGlob(path));
     if (!isEnforceTests && importRules.length === 0 && trpcPaths.length === 0) return [];
     const tests = listCodeTestFiles([
         ...new Set(javascriptScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.test_files)),

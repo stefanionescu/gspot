@@ -46,7 +46,7 @@ test('projects without tsconfig.json get required options and framework options 
     const session = await openSession(sandbox.path, { toolsRoot: toolsRoot });
     const projects = await Promise.all(
         session.scopes.map(async (scope) => {
-            const path = join(sandbox.path, GSPOT_PATHS.state, scope.folder.path, 'tsconfig.json');
+            const path = join(sandbox.path, GSPOT_PATHS.state, scope.path, 'tsconfig.json');
             writeScopeTsconfig(session, scope, path);
             const config = parseJsonFile(path, await readFile(path, 'utf8'));
             const compilerOptions = config['compilerOptions'] as Record<string, unknown>;
@@ -54,7 +54,7 @@ test('projects without tsconfig.json get required options and framework options 
                 const found = relative(toolsRoot, resolve(dirname(path), root));
                 return convertToPosixPath(found);
             });
-            return { scope: scope.folder.path, config };
+            return { scope: scope.path, config };
         }),
     );
     expect(projects).toStrictEqual([...DEFAULT_TSCONFIG_PROJECTS]);

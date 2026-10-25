@@ -44,10 +44,10 @@ export function buildBunScannerEdits(session: Session): ManagedKeys[] {
     return session.scopes.flatMap((scope) => {
         const scanner = getTable(scope.settings, 'dependencies').bun_scanner;
         const usesBun = LOCKFILES.filter((lockfile) => lockfile.packageManager === 'bun').some(({ file }) =>
-            session.repository.files.some(({ path }) => path === joinScope(scope.folder.path, file)),
+            session.repository.files.some(({ path }) => path === joinScope(scope.path, file)),
         );
         return scanner === undefined || !usesBun
             ? []
-            : { path: joinScope(scope.folder.path, BUNFIG_FILE), keys: [{ key: SCANNER_KEY, value: scanner }] };
+            : { path: joinScope(scope.path, BUNFIG_FILE), keys: [{ key: SCANNER_KEY, value: scanner }] };
     });
 }

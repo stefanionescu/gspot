@@ -56,7 +56,7 @@ test.each(
         ...Object.fromEntries(Object.entries(files).map(([path, text]) => [join(scope, path), text])),
     });
     const session = await openSession(sandbox.path);
-    const selected = session.scopes.find((each) => each.folder.path === scope)!;
+    const selected = session.scopes.find((each) => each.path === scope)!;
     expect(getTable(selected.settings, 'site').build_command).toStrictEqual([installer, 'run', 'build']);
 });
 
@@ -72,22 +72,20 @@ test('a scope keeps a written site build command including empty and spaced argu
     });
     const session = await openSession(sandbox.path);
     expect(
-        getTable(session.scopes.find((scope) => scope.folder.path === 'app')!.settings, 'site').build_command,
+        getTable(session.scopes.find((scope) => scope.path === 'app')!.settings, 'site').build_command,
     ).toStrictEqual(['custom-builder', '', 'two words']);
 });
 
 test('an ignore with a rule and paths turns the rule off in its scope and the scopes below only', async () => {
     const scopes = await readNestedScopes();
-    const off = Object.fromEntries(
-        scopes.map((scope) => [scope.folder.path, listIgnoredRules(scope, 'bash/shellcheck')]),
-    );
+    const off = Object.fromEntries(scopes.map((scope) => [scope.path, listIgnoredRules(scope, 'bash/shellcheck')]));
     expect(off).toStrictEqual({ '': [], api: ['SC2086'], 'api/v1': ['SC2086'], web: [] });
 });
 
 test('the deepest scope sets a limit and a scalar setting, and a scope list adds to the lists above it', async () => {
     const scopes = await readNestedScopes();
-    const values = scopes.map(({ folder, settings }) => [
-        folder.path,
+    const values = scopes.map(({ path, settings }) => [
+        path,
         [
             getLimit(settings, 'file_lines', 'bash'),
             getTable(settings, 'swift').xcode_scheme,
@@ -107,7 +105,7 @@ test('a per-scope limit overrides a root language limit in the scope view', asyn
     });
 
     const session = await openSession(sandbox.path);
-    const scope = session.scopes.find((scope) => scope.folder.path === 'api')!;
+    const scope = session.scopes.find((scope) => scope.path === 'api')!;
     expect(getLimit(scope.settings, 'file_lines', 'python')).toBe(100);
 });
 
@@ -123,7 +121,8 @@ test('ignore expiry does not change the scope view or gspot.toml', () => {
         const configurations = selectForScope(settings, '', readConfigurations());
         const availableSettings = buildAvailableSettings(configurations, settings.level);
         const scope: Scope = {
-            folder: { path: '', configurations: [], origin: 'root' },
+            path: '',
+            origin: 'root',
             configurations,
             availableSettings,
             settings: rootSettings,
@@ -189,7 +188,7 @@ test('Postgres client schemas come from Supabase or from gspot.toml', async () =
 
     const session = await openSession(sandbox.path);
     expect(
-        session.scopes.map(({ folder, settings }) => [folder.path, getTable(settings, 'postgres').client_schemas]),
+        session.scopes.map(({ path, settings }) => [path, getTable(settings, 'postgres').client_schemas]),
     ).toStrictEqual([
         ['', []],
         ['api', ['public']],

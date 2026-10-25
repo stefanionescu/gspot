@@ -39,7 +39,13 @@ function buildScopes(
             dependencyNames: listProjectDependencyNames(repository.dependencyFiles, scope.path),
         });
         const scopeSettings = buildScopeSettings(available, active, selected, scope.path);
-        return { folder: scope, configurations: selected, availableSettings: available, settings: scopeSettings };
+        return {
+            path: scope.path,
+            origin: scope.origin,
+            configurations: selected,
+            availableSettings: available,
+            settings: scopeSettings,
+        };
     });
 }
 

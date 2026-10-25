@@ -47,7 +47,7 @@ export function checkStructureSharedPrefixes(_session: Session, planned: Planned
     const files = listCodeFiles(planned).filter((file) => {
         const folder = extractParentFolder(file.path);
         return (
-            HOOK_FOLDERS.every((hook) => !isInScope(folder, joinScope(planned.scope.folder.path, hook))) &&
+            HOOK_FOLDERS.every((hook) => !isInScope(folder, joinScope(planned.scope.path, hook))) &&
             !isInInstalledFolder(folder)
         );
     });

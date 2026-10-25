@@ -31,7 +31,7 @@ function findTagSkip(tags: string[] | undefined, scopePath: string, files: Repos
 
 function findConditionSkip(check: PlannedCheck, repository: Repository): Skip | undefined {
     const { configuration, git, dependencies, tags } = { ...check.configuration?.when, ...check.check.when };
-    const scope = check.scope.folder.path;
+    const scope = check.scope.path;
     if (configuration !== undefined && !check.scope.settings.configurations.includes(configuration))
         return {
             cause: 'condition',
@@ -52,7 +52,7 @@ function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
         (ignore) =>
             ignore.rule === undefined &&
             ignore.names === undefined &&
-            (ignore.paths.length === 0 || isScopeCovered(ignore.paths, scope.folder.path)),
+            (ignore.paths.length === 0 || isScopeCovered(ignore.paths, scope.path)),
     );
     if (ignored === undefined) return undefined;
     return { cause: 'ignore', note: `turned off by an ignore in gspot.toml: ${ignored.reason}` };

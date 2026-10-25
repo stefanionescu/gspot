@@ -22,9 +22,7 @@ export function buildCommitlintFile(planned: PlannedConfigFile): string {
     const types = commitlint.types;
     const named = commitlint.scopes;
     const allowed =
-        named.length > 0
-            ? named
-            : scopes.filter(({ folder }) => folder.path !== '').map(({ folder }) => folder.path.split('/').at(-1));
+        named.length > 0 ? named : scopes.filter(({ path }) => path !== '').map(({ path }) => path.split('/').at(-1));
     const rules: Record<string, readonly unknown[]> = {
         'type-enum': [COMMITLINT_ERROR_SEVERITY, 'always', types],
         ...COMMITLINT_RULES,

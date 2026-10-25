@@ -66,7 +66,7 @@ Build the lint rule options and the path overrides in order, each for its own pr
 @returns one option block per scope and path override, in the order they apply.
 */
 export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRuleOptions[] {
-    const scopesByPath = new Map(scopes.map((scope) => [scope.folder.path, scope]));
+    const scopesByPath = new Map(scopes.map((scope) => [scope.path, scope]));
     const tables = listSettingsTables(settings).toSorted((first, second) =>
         compareScopeDepth(first.scope ?? '', second.scope ?? ''),
     );
@@ -80,7 +80,7 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
             ? []
             : [
                   {
-                      scope: scope.folder.path,
+                      scope: scope.path,
                       ...splitGlobs(['**/*']),
                       rules: mergeRestrictedImports(
                           settings.rules,
@@ -94,7 +94,7 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
             rules === undefined
                 ? []
                 : {
-                      scope: scope.folder.path,
+                      scope: scope.path,
                       ...splitGlobs(paths),
                       rules: mergeRestrictedImports(
                           rules,
@@ -108,9 +108,9 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
 
 function buildRulesOffBlocks(scopes: Scope[]): EslintRuleBlock[] {
     return scopes.flatMap((scope) => {
-        const scopePath = scope.folder.path;
+        const scopePath = scope.path;
         const excluded = listNestedScopeGlobs(
-            scopes.map((each) => each.folder.path),
+            scopes.map((each) => each.path),
             scopePath,
         ).map((path) => `!${path}`);
         return scope.configurations
@@ -136,17 +136,17 @@ export function buildRestrictedImportBlocks(
         settings.configurations.includes(JAVASCRIPT_CONFIGURATION),
     );
     const restrictedScopes = scopes.filter((scope) => {
-        const parent = findParentScope(scopes, scope.folder.path);
+        const parent = findParentScope(scopes, scope.path);
         return !isDeepStrictEqual(
             getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports,
             parent === undefined ? [] : getTable(parent.settings, ESLINT_SETTINGS_TABLE).restricted_imports,
         );
     });
     return restrictedScopes.map((scope) => ({
-        files: buildScopeFiles(planned.eslintFiles.code, scope.folder.path, ['**/*']),
+        files: buildScopeFiles(planned.eslintFiles.code, scope.path, ['**/*']),
         ignores: listNestedScopeGlobs(
-            restrictedScopes.map(({ folder }) => folder.path),
-            scope.folder.path,
+            restrictedScopes.map(({ path }) => path),
+            scope.path,
         ),
         rules: {
             'no-restricted-imports': [
@@ -162,7 +162,7 @@ function buildEnvironmentRuleBlocks(planned: Pick<PlannedEslintFile, 'session' |
     if (session.settingsFile.settings.level !== 'all') return [];
     const { scopes } = session;
     const environmentScopes = scopes.filter((scope) => {
-        const parent = findParentScope(scopes, scope.folder.path);
+        const parent = findParentScope(scopes, scope.path);
         return (
             parent === undefined ||
             !isDeepStrictEqual(
@@ -176,14 +176,14 @@ function buildEnvironmentRuleBlocks(planned: Pick<PlannedEslintFile, 'session' |
         return owners.length === 0
             ? []
             : {
-                  scope: scope.folder.path,
+                  scope: scope.path,
                   ...splitGlobs([
                       buildSourcePattern(...ENVIRONMENT_LANGUAGES),
-                      ...buildNodePatterns(nodeFiles, scope.folder.path),
+                      ...buildNodePatterns(nodeFiles, scope.path),
                       ...owners.map((path) => `!${path}`),
                       ...listNestedScopeGlobs(
-                          environmentScopes.map(({ folder }) => folder.path),
-                          scope.folder.path,
+                          environmentScopes.map(({ path }) => path),
+                          scope.path,
                       ).map((path) => `!${path}`),
                   ]),
                   rules: ENVIRONMENT_RULES,
@@ -197,9 +197,9 @@ function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'no
     const { scopes } = session;
     const blocks: EslintRuleBlock[] = [];
     const isAllowIndex = session.settingsFile.settings.structure.reexports === 'index-only';
-    const orderedScopes = scopes.toSorted((a, b) => compareScopeDepth(a.folder.path, b.folder.path));
+    const orderedScopes = scopes.toSorted((a, b) => compareScopeDepth(a.path, b.path));
     for (const scope of orderedScopes) {
-        const parent = findParentScope(scopes, scope.folder.path);
+        const parent = findParentScope(scopes, scope.path);
         const limits = CODE_LANGUAGES.map((language) => ({
             language,
             value: getLimit(scope.settings, TRIVIAL_FUNCTION_LIMIT, language),
@@ -212,11 +212,11 @@ function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'no
         for (const [trivialFunctionStatements, languages] of groups) {
             const patterns = languages.flatMap((language) =>
                 language === 'javascript'
-                    ? [buildSourcePattern('javascript'), ...buildNodePatterns(nodeFiles, scope.folder.path)]
+                    ? [buildSourcePattern('javascript'), ...buildNodePatterns(nodeFiles, scope.path)]
                     : buildSourcePattern(...TYPED_LANGUAGES),
             );
             blocks.push({
-                scope: scope.folder.path,
+                scope: scope.path,
                 ...splitGlobs(patterns),
                 rules: {
                     [TRIVIAL_FILES_RULE]: ['error', { allowIndex: isAllowIndex }],

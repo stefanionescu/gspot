@@ -15,7 +15,7 @@ Starts a passed check result with the check ID, scope, and file count.
 export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 'scopes'>): CheckResult {
     return {
         check: planned.check.id,
-        scope: planned.scope.folder.path,
+        scope: planned.scope.path,
         status: 'passed',
         fileCount: listCheckedFiles(session.scopes, planned).length,
         duration: 0,

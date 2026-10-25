@@ -22,15 +22,14 @@ import {
 
 function buildTsconfig(session: Session, scope: Scope, file: string): Record<string, unknown> {
     const { root, toolsRoot, reads } = session;
-    const ownFiles =
-        groupFilesByScope(session.repository.files, session.repository.scopeFolders).get(scope.folder.path) ?? [];
+    const ownFiles = groupFilesByScope(session.repository.files, session.repository.scopeFolders).get(scope.path) ?? [];
     const scopeFiles = ownFiles.filter(
         (ownFile) =>
             ownFile.tags.includes(TYPESCRIPT_TAG) || DECLARATION_EXTENSIONS.includes(extractExtension(ownFile.path)),
     );
     const authored = readTsconfigProject(
         root,
-        scope.folder.path,
+        scope.path,
         scopeFiles.map((scopeFile) => scopeFile.path),
         reads,
     );
@@ -39,10 +38,7 @@ function buildTsconfig(session: Session, scope: Scope, file: string): Record<str
             {},
             {
                 getCurrentDirectory: () =>
-                    join(
-                        toolsRoot,
-                        authored === undefined ? scope.folder.path : relative(root, dirname(authored.path)),
-                    ),
+                    join(toolsRoot, authored === undefined ? scope.path : relative(root, dirname(authored.path))),
             },
         ) ?? [];
     const folder = dirname(file);

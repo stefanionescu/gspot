@@ -215,18 +215,18 @@ Reports a scope without a README.md, and a root without a license file.
 export function checkDocsRequiredFiles(session: Session, planned: PlannedCheck): Finding[] {
     const findings: Finding[] = [];
     const repositoryPaths = new Set(session.repository.files.map(({ path }) => path));
-    const readme = joinScope(planned.scope.folder.path, README_FILE);
+    const readme = joinScope(planned.scope.path, README_FILE);
     if (!repositoryPaths.has(readme))
         findings.push(
             buildFinding(
                 planned,
                 { file: readme },
                 'missing-readme',
-                `The scope ${planned.scope.folder.path === '' ? ROOT_SCOPE_LABEL : planned.scope.folder.path} has no README.md.`,
+                `The scope ${planned.scope.path === '' ? ROOT_SCOPE_LABEL : planned.scope.path} has no README.md.`,
             ),
         );
     if (
-        planned.scope.folder.path === '' &&
+        planned.scope.path === '' &&
         ![...repositoryPaths].some((path) => !path.includes('/') && LICENSE_FILE.test(path))
     )
         findings.push(

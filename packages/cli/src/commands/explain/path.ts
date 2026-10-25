@@ -5,7 +5,7 @@ import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
-import { findScopeFolder, buildArgumentPath } from '#cli/repository/scopes.ts';
+import { findScopePath, buildArgumentPath } from '#cli/repository/scopes.ts';
 import { type Explanation, type PathExplanation } from '#cli/types/commands/explain.ts';
 
 function formatUncheckedKind(file: TrackedFile): string | undefined {
@@ -16,8 +16,8 @@ function formatUncheckedKind(file: TrackedFile): string | undefined {
 
 function buildPathExplanation(session: Session, file: TrackedFile): PathExplanation {
     const { path } = file;
-    const folder = findScopeFolder(path, session.repository.scopeFolders);
-    const scope = session.scopes.find((each) => each.folder.path === folder.path) as Scope;
+    const scopePath = findScopePath(path, session.scopes);
+    const scope = session.scopes.find((each) => each.path === scopePath) as Scope;
     const checks = session.configuredChecks.filter((check) =>
         listCheckedFiles(session.scopes, check).some((checkedFile) => checkedFile.path === file.path),
     );
@@ -26,7 +26,7 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
     );
     const report: PathExplanation = {
         path,
-        scope: folder.path === '' ? ROOT_SCOPE_LABEL : folder.path,
+        scope: scopePath === '' ? ROOT_SCOPE_LABEL : scopePath,
         fileKind: file.kind,
         tags: file.tags,
         configurations: scope.configurations.map(({ name }) => name).filter((name) => covering.has(name)),

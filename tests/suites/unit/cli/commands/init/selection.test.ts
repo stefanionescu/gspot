@@ -83,8 +83,8 @@ test('init leaves javascript out of a root package.json with only tool dependenc
     const session = await openSession(sandbox.path);
     expect(session.repository.scopeFolders.map(({ path }) => path)).toStrictEqual(['', 'app']);
     expect(
-        session.scopes.map(({ folder, settings }) => [
-            folder.path,
+        session.scopes.map(({ path, settings }) => [
+            path,
             settings.configurations.filter((configuration) => !listAlwaysSelected().includes(configuration)),
         ]),
     ).toStrictEqual([

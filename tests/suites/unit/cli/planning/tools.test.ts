@@ -47,7 +47,7 @@ test.each(ARCHITECTURE_REQUIREMENTS.flatMap((requirement) => LEVELS.map((level) 
             'app/src/source.js': 'export const value = 2;\n',
         });
         const session = await openSession(sandbox.path);
-        expect(session.scopes.map(({ folder }) => folder.path)).toStrictEqual(['', 'app']);
+        expect(session.scopes.map(({ path }) => path)).toStrictEqual(['', 'app']);
         const names = session.toolConfigurations.flatMap((configuration) =>
             configuration.tools.map((tool) => tool.name),
         );
@@ -83,7 +83,7 @@ describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...r
         test.each(['', 'app'])(
             'scope %p needs the coverage provider only above a zero limit and always lists it among the other tools',
             (scope) => {
-                const check = checks.find((planned) => planned.scope.folder.path === scope)!;
+                const check = checks.find((planned) => planned.scope.path === scope)!;
                 expect(listCheckTools(check)).toStrictEqual([configuration, ...(lines === 0 ? [] : [provider])]);
                 expect(listOtherTools(check.scope, check.check, check.check.command)).toStrictEqual([provider]);
             },

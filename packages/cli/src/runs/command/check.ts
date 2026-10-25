@@ -228,7 +228,7 @@ export function buildCommandSetup(
 ): CommandSetup {
     const { check, scope } = planned;
     const usesScopeFolder = check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root');
-    const cwd = usesScopeFolder ? join(root, scope.folder.path) : root;
+    const cwd = usesScopeFolder ? join(root, scope.path) : root;
     const substitutions = buildCommandSubstitutions(root, planned, cwd);
     const files = substitutions.files;
     if (options.listFileArguments !== undefined) substitutions.files = options.listFileArguments(session, planned);
@@ -243,7 +243,7 @@ export function buildCommandSetup(
               );
     const python =
         planned.configuration?.name === PYTHON_CONFIGURATION
-            ? buildCopyPythonEnvironment({ root, toolsRoot: session.toolsRoot }, scope.folder.path)
+            ? buildCopyPythonEnvironment({ root, toolsRoot: session.toolsRoot }, scope.path)
             : {};
     return { root, cwd, files, substitutions, env: { ...env, ...python } };
 }
@@ -261,7 +261,7 @@ export function buildCommandSubstitutions(root: string, planned: PlannedCheck, c
         files: planned.files
             .map((file) => convertToPosixPath(relative(cwd, join(root, file.path))))
             .map((path) => (path.startsWith('-') ? `./${path}` : path)),
-        scope: planned.scope.folder.path,
+        scope: planned.scope.path,
         root,
         indent:
             planned.scope.settings.values.format.indent_style === 'space'
@@ -305,7 +305,7 @@ export function prepareCommand(
 
 function findMissingProjectEnvironment(session: Session, planned: PlannedCheck): ProcessFailure | undefined {
     if (!PYTHON_ENVIRONMENT_CHECKS.has(planned.check.id)) return undefined;
-    const scope = planned.scope.folder.path;
+    const scope = planned.scope.path;
     const project = joinScope(scope, PYPROJECT_TOML);
     if (session.repository.files.every((file) => file.path !== project)) return undefined;
     using files = openFiles(session.toolsRoot);

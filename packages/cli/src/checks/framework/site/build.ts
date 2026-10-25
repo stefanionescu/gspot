@@ -20,7 +20,7 @@ const SITE_BUILDS = { create: () => new Map<string, Promise<SiteBuild>>() };
 async function runSiteBuild(session: CheckSession, planned: PlannedCheck, copyRoot: string): Promise<SiteBuild> {
     const site = getTable(planned.scope.settings, 'site');
     const folderPath = site['build_folder'];
-    const cwd = join(copyRoot, planned.scope.folder.path);
+    const cwd = join(copyRoot, planned.scope.path);
     const command = site['build_command'];
     const result = await runCheckTool(session, planned, command, { cwd });
     const folder = join(copyRoot, folderPath);
@@ -33,7 +33,7 @@ async function runSiteBuild(session: CheckSession, planned: PlannedCheck, copyRo
 }
 
 function readSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<SiteBuild> {
-    const key = join(session.root, planned.scope.folder.path);
+    const key = join(session.root, planned.scope.path);
     const scopeBuilds = getCachedValue(session.reads, SITE_BUILDS);
     const held = scopeBuilds.get(key);
     if (held !== undefined) return held;

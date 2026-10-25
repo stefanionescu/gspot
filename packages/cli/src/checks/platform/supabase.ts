@@ -74,7 +74,7 @@ function readSupabaseProjectFile(
     session: Session,
     planned: PlannedCheck,
 ): Parsed<SupabaseProjectFile, Finding> | undefined {
-    const local = joinScope(planned.scope.folder.path, SUPABASE_PROJECT_FILE);
+    const local = joinScope(planned.scope.path, SUPABASE_PROJECT_FILE);
     const text = findCachedText(session.reads, local);
     return text === undefined
         ? undefined
@@ -111,7 +111,7 @@ async function runDenoCommand(
         ...command.slice(-1),
     ];
     return await runCheckTool(session, planned, commandArguments, {
-        cwd: join(session.root, planned.scope.folder.path),
+        cwd: join(session.root, planned.scope.path),
     });
 }
 
@@ -126,7 +126,7 @@ export async function checkSupabaseStoragePolicies(session: Session, planned: Pl
     const parsed = readSupabaseProjectFile(session, planned);
     if (parsed === undefined) return [];
     if ('error' in parsed) return [parsed.error];
-    const at = { file: joinScope(planned.scope.folder.path, SUPABASE_PROJECT_FILE), line: 1 };
+    const at = { file: joinScope(planned.scope.path, SUPABASE_PROJECT_FILE), line: 1 };
     const migrations = await readParsedMigrations(session, planned);
     const policies = migrations
         .flatMap((migration) => migration.statements)

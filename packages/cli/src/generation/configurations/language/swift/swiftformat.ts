@@ -34,7 +34,7 @@ export function buildSwiftformatFile(planned: PlannedConfigFile): string {
     const { reads } = planned.session;
     const { format } = scope.settings.values;
     const isAll = planned.level === 'all';
-    const version = readSwiftVersion(reads, scope.folder.path, getTable(scope.settings, 'swift').xcode_project ?? '');
+    const version = readSwiftVersion(reads, scope.path, getTable(scope.settings, 'swift').xcode_project ?? '');
     const ignored = listIgnoredRules(scope, 'swift/swiftformat');
     const options = {
         ...SWIFTFORMAT_OPTIONS,

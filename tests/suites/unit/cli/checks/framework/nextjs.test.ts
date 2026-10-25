@@ -81,7 +81,7 @@ test.each(['', 'app'])(
         const session = buildCheckSession(await prepareNextjsBuild(sandbox.path, scope));
 
         const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
-            (check) => check.scope.folder.path === scope,
+            (check) => check.scope.path === scope,
         )!;
         const untracked = join(sandbox.path, join(scope, '.next/local-cache.bin'));
         const config = join(sandbox.path, join(scope, 'tsconfig.json'));
@@ -178,7 +178,7 @@ test.each(['', 'apps/web'])(
         );
         const session = await openSession(sandbox.path);
         const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
-            (check) => check.scope.folder.path === scope,
+            (check) => check.scope.path === scope,
         )!;
         using fakes = fakeNextjsCommands(async (command, options) => {
             if (command[1] === 'typegen')

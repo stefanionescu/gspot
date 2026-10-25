@@ -94,13 +94,13 @@ function inspectScopeTools(session: Session): ToolInspection[] {
         (tool) => findMissingBuild(tool, { platform, arch: process.arch }) === undefined,
     );
     const miseBinPaths = readToolBinPaths(session);
-    for (const { folder, configurations } of session.scopes) {
+    for (const { path: scopePath, configurations } of session.scopes) {
         const toolNames = new Set(
             configurations.flatMap((configuration) => configuration.tools).map((tool) => tool.name),
         );
         for (const tool of pins) {
             if (!toolNames.has(tool.name)) continue;
-            const inspection = inspectTool({ ...session, cwd: join(session.root, folder.path), miseBinPaths }, tool);
+            const inspection = inspectTool({ ...session, cwd: join(session.root, scopePath), miseBinPaths }, tool);
             inspections.set(JSON.stringify(inspection), inspection);
         }
     }

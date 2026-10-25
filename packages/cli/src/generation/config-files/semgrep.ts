@@ -19,7 +19,7 @@ export function buildSemgrepFile(planned: PlannedConfigFile): string {
     const document = parse(
         readFileSync(buildAssetPath(`${planned.configuration.folder}/${configFile.source}`), 'utf8'),
     ) as SemgrepDocument;
-    const scopeDependencies = new Set(listProjectDependencyNames(dependencyFiles, scope.folder.path));
+    const scopeDependencies = new Set(listProjectDependencyNames(dependencyFiles, scope.path));
     const conditions = configFile.rule_dependencies;
     const dropped =
         conditions === undefined
@@ -33,7 +33,7 @@ export function buildSemgrepFile(planned: PlannedConfigFile): string {
         const configuration = planned.configuration.name;
         const folders = scopes
             .filter(({ settings }) => settings.configurations.includes(configuration))
-            .toSorted((left, right) => compareScopeDepth(left.folder.path, right.folder.path))
+            .toSorted((left, right) => compareScopeDepth(left.path, right.path))
             .map(({ settings: { settings } }) => `/${String(settings[setting])}/**`);
         for (const rule of document.rules) if (rule.paths !== undefined) rule.paths.include = folders;
     }

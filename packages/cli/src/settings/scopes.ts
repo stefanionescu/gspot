@@ -28,8 +28,8 @@ Find the nearest scope that holds a path.
 */
 export function findParentScope(scopes: Scope[], path: string): Scope | undefined {
     return scopes
-        .filter(({ folder }) => folder.path !== path && isInScope(path, folder.path))
-        .toSorted((left, right) => compareScopeDepth(left.folder.path, right.folder.path))
+        .filter((scope) => scope.path !== path && isInScope(path, scope.path))
+        .toSorted((left, right) => compareScopeDepth(left.path, right.path))
         .at(-1);
 }
 
@@ -188,7 +188,7 @@ List the lint rules disabled throughout the selected scope.
 export function listIgnoredRules(scope: Scope, check: string): string[] {
     return scope.settings.ignores
         .filter((ignore) => ignore.check === check)
-        .filter((ignore) => ignore.paths.length === 0 || isScopeCovered(ignore.paths, scope.folder.path))
+        .filter((ignore) => ignore.paths.length === 0 || isScopeCovered(ignore.paths, scope.path))
         .map((ignore) => ignore.rule)
         .filter((rule) => rule !== undefined);
 }
@@ -226,7 +226,7 @@ Find the root scope, which every run has.
 @returns the scope with an empty path.
 */
 export function findRootScope(scopes: readonly Scope[]): Scope {
-    const root = scopes.find((scope) => scope.folder.path === '');
+    const root = scopes.find((scope) => scope.path === '');
     if (root === undefined) throw new Error('The scopes hold no repository root.');
     return root;
 }

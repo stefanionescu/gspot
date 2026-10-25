@@ -94,7 +94,7 @@ async function runSwiftBuild(
         const { source } = setup;
         if (plan.kind === 'package' && plan.purpose === 'analyze')
             files.deleteTree(convertToPosixPath(relative(plan.folder, plan.scratch)));
-        const cwd = join(source, planned.scope.folder.path);
+        const cwd = join(source, planned.scope.path);
         const result = await runCheckTool(session, planned, plan.commandArguments, { cwd });
         const output = `${result.stdout}\n${result.stderr}`
             .split('\n')
@@ -130,7 +130,7 @@ async function runCopiedTool(
     run: { source: string; commandArguments: string[]; defaultRule: string; tool: string },
 ): Promise<Finding[]> {
     const result = await runCheckTool(session, planned, run.commandArguments, {
-        cwd: join(run.source, planned.scope.folder.path),
+        cwd: join(run.source, planned.scope.path),
     });
     const output = removePrivatePrefix(`${result.stdout}\n${result.stderr}`).replaceAll(
         removePrivatePrefix(run.source),
@@ -178,7 +178,7 @@ Runs Periphery over the project and reports every declaration nothing uses.
 @returns the findings.
 */
 export async function checkSwiftPeriphery(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
-    const folder = getScopeBuildFolder(session.toolsRoot, planned.scope.folder.path, 'periphery');
+    const folder = getScopeBuildFolder(session.toolsRoot, planned.scope.path, 'periphery');
     const configFile = join(session.root, getConfigFilePath(session, planned, PERIPHERY_TOOL));
     const commandArguments = [...PERIPHERY_COMMAND, configFile];
     const setup = prepareBuild(session.root, planned.files, folder);
@@ -200,16 +200,16 @@ Lists the SwiftLint files a copy keeps: the scope pointer, the config file, and 
 */
 export function listSwiftlintConfigFiles(session: Session, planned: PlannedCheck): string[] {
     const paths = [
-        joinScope(planned.scope.folder.path, SWIFTLINT_CONFIG_FILE),
+        joinScope(planned.scope.path, SWIFTLINT_CONFIG_FILE),
         ...session.configurations
             .values()
             .flatMap((configuration) => configuration.configFiles)
             .filter((configFile) => configFile.pointer?.path === SWIFTLINT_CONFIG_FILE)
-            .map((configFile) => getConfigFileTarget(planned.scope.folder.path, configFile, buildConfigFiles(session))),
+            .map((configFile) => getConfigFileTarget(planned.scope.path, configFile, buildConfigFiles(session))),
     ];
     for (const file of planned.files) {
         const folders = listEnclosingFolders(posix.dirname(file.path));
-        const parents = folders.slice(0, folders.indexOf(planned.scope.folder.path));
+        const parents = folders.slice(0, folders.indexOf(planned.scope.path));
         for (const folder of parents) {
             const path = posix.join(folder, SWIFTLINT_CONFIG_FILE);
             if (findCachedText(session.reads, path) !== undefined) paths.push(path);

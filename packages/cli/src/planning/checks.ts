@@ -13,7 +13,7 @@ import { ROOT_RUNS, COVERAGE_DIMENSIONS } from '#cli/config/planning/checks.ts';
 import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/planning.ts';
 
 function listScopeChecks(session: Session, scope: Scope): ScopeCheck[] {
-    const isRoot = scope.folder.path === '';
+    const isRoot = scope.path === '';
     const configuredChecks = scope.configurations.flatMap((configuration) =>
         configuration.checks
             .map((check) => ({ check, configuration }))
@@ -99,7 +99,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const plannedRepositoryChecks = new Set<string>();
     const host = { platform: getOperatingSystem(), arch: process.arch };
     const narrowedPaths = buildNarrowedPaths(options);
-    const scopePaths = session.scopes.map(({ folder }) => folder.path);
+    const scopePaths = session.scopes.map(({ path }) => path);
     return session.scopes.map((scope) => {
         const context: PlannedScope = {
             session,
@@ -107,7 +107,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
             options,
             host,
             narrowedPaths,
-            children: listNestedScopes(scopePaths, scope.folder.path),
+            children: listNestedScopes(scopePaths, scope.path),
         };
         return planScope(context, plannedRepositoryChecks);
     });

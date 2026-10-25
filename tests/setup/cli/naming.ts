@@ -16,10 +16,7 @@ export function buildScopeNamingSettings(text: string, scope = ''): NamingSettin
         settings: scopeSettings,
         availableSettings,
         configurations,
-        folder: {
-            path: scope,
-            configurations: scopeSettings.configurations,
-            origin: scope === '' ? 'root' : SETTINGS_FILE,
-        },
+        path: scope,
+        origin: scope === '' ? 'root' : SETTINGS_FILE,
     });
 }

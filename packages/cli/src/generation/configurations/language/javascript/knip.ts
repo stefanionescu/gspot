@@ -29,8 +29,8 @@ function selectEntryFiles(settings: Settings, scopes: Scope[], scope: string): s
         ({ table }) => (table.tools?.knip as Partial<TableSettings<'tools.knip'>> | undefined)?.entry ?? [],
     );
     const nearest = scopes
-        .filter((each) => isInScope(scope, each.folder.path))
-        .toSorted((left, right) => compareScopeDepth(right.folder.path, left.folder.path))
+        .filter((each) => isInScope(scope, each.path))
+        .toSorted((left, right) => compareScopeDepth(right.path, left.path))
         .slice(0, 1)
         .flatMap(({ configurations, settings: scopeSettings }) => [
             ...(configurations.some((configuration) => configuration.name === JAVASCRIPT_CONFIGURATION)
@@ -59,7 +59,7 @@ function buildWorkspaces(root: string, settings: Settings, scopes: Scope[]) {
     const paths = [...new Set(['', ...listWorkspaceFolders(root)])];
     return Object.fromEntries(
         paths.map((path) => {
-            const workspace = selected.find((each) => each.folder.path === path);
+            const workspace = selected.find((each) => each.path === path);
             const ignored =
                 workspace === undefined ? undefined : getTable(workspace.settings, 'tools.knip').ignore_dependencies;
             return [

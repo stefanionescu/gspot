@@ -1,8 +1,8 @@
 import { basename } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
+import { findScopePath } from '#cli/repository/scopes.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
@@ -100,7 +100,7 @@ List the configured checks of one scope: its own checks and the checks that run 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function listConfiguredChecks(session: Session, scope: Scope): PlannedCheck[] {
     return session.configuredChecks.filter(
-        (planned) => planned.scope.folder.path === scope.folder.path || planned.check.runs === 'once',
+        (planned) => planned.scope.path === scope.path || planned.check.runs === 'once',
     );
 }
 
@@ -165,13 +165,10 @@ export function listLicenseProjects(
     settings: Settings,
     check: Check,
 ): LicenseProject[] {
-    const folders = scopes.map((scope) => scope.folder);
     return scopes.flatMap((scope) =>
         files
             .filter(
-                (file) =>
-                    !file.path.startsWith(`${GSPOT_FOLDER}/`) &&
-                    findScopeFolder(file.path, folders).path === scope.folder.path,
+                (file) => !file.path.startsWith(`${GSPOT_FOLDER}/`) && findScopePath(file.path, scopes) === scope.path,
             )
             .flatMap((file) => {
                 if (
@@ -180,7 +177,7 @@ export function listLicenseProjects(
                             configuration.name === LICENSES_CONFIGURATION &&
                             listCoveredFiles(check.files ?? configuration.files, [file], {
                                 configurations: scope.configurations,
-                                scopePath: scope.folder.path,
+                                scopePath: scope.path,
                                 settings: scope.settings,
                             }).length > 0,
                     )

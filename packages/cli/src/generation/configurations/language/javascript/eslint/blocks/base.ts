@@ -239,16 +239,16 @@ function buildConsoleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslint
         settings.configurations.includes(JAVASCRIPT_CONFIGURATION),
     );
     return scopes.map((scope) => ({
-        files: buildScopeFiles(planned.eslintFiles.code, scope.folder.path, ['**/*']),
+        files: buildScopeFiles(planned.eslintFiles.code, scope.path, ['**/*']),
         ignores: [
             ...listNestedScopeGlobs(
-                scopes.map(({ folder }) => folder.path),
-                scope.folder.path,
+                scopes.map(({ path }) => path),
+                scope.path,
             ),
             ...listCodeTestFiles(scope.settings.test_files),
 
             ...(scope.settings.values.javascript?.script_files ?? []),
-            buildScopeGlob(scope.folder.path, MISE_SCRIPT_PATH),
+            buildScopeGlob(scope.path, MISE_SCRIPT_PATH),
         ],
         rules: CONSOLE_RULES,
     }));

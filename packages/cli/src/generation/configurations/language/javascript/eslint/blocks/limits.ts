@@ -89,18 +89,15 @@ export function buildLimitRuleBlocks(
         ]),
     );
     return scopes
-        .toSorted((left, right) => compareScopeDepth(left.folder.path, right.folder.path))
+        .toSorted((left, right) => compareScopeDepth(left.path, right.path))
         .flatMap((scope) => {
             const limits = limitsByScope.get(scope.settings) as EslintLevelRules;
-            const parent = findParentScope(scopes, scope.folder.path) ?? planned.scope;
+            const parent = findParentScope(scopes, scope.path) ?? planned.scope;
             if (isDeepStrictEqual(limits, limitsByScope.get(parent.settings))) return [];
-            const javascriptFiles = [
-                buildSourcePattern('javascript'),
-                ...buildNodePatterns(nodeFiles, scope.folder.path),
-            ];
+            const javascriptFiles = [buildSourcePattern('javascript'), ...buildNodePatterns(nodeFiles, scope.path)];
             return [
-                { scope: scope.folder.path, ...splitGlobs(['**/*']), rules: limits.code },
-                { scope: scope.folder.path, ...splitGlobs(javascriptFiles), rules: limits.javascript },
+                { scope: scope.path, ...splitGlobs(['**/*']), rules: limits.code },
+                { scope: scope.path, ...splitGlobs(javascriptFiles), rules: limits.javascript },
             ];
         });
 }

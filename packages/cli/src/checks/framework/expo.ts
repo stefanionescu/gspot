@@ -44,14 +44,14 @@ Runs Expo Doctor in a scope that depends on expo.
 @returns one finding per failed Doctor check.
 */
 export async function checkExpoDoctor(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
-    const path = joinScope(planned.scope.folder.path, PACKAGE_JSON);
+    const path = joinScope(planned.scope.path, PACKAGE_JSON);
     if (findInstalledDependency(session.root, path, EXPO_PACKAGE) === undefined)
         throw new GspotError(
             'tool',
             'Install the project dependencies of this scope; Expo Doctor reads an installed Expo project.',
         );
     const result = await runCheckTool(session, planned, EXPO_DOCTOR_COMMAND, {
-        cwd: join(session.root, planned.scope.folder.path),
+        cwd: join(session.root, planned.scope.path),
     });
     const findings = parseExpoDoctor(result.stdout).map((message) =>
         buildFinding(planned, { file: path, line: 1 }, 'failed-check', message),

@@ -46,7 +46,7 @@ function listCheckStates(
             const path =
                 (ROOT_RUNS as readonly string[]).includes(check.runs) || isRootOnlyCheck(configuration, check)
                     ? ''
-                    : scope.folder.path;
+                    : scope.path;
             const key = `${path}\0${check.id}`;
             if (listed.has(key)) return [];
             listed.add(key);
@@ -59,7 +59,7 @@ function listCheckStates(
 function buildConfigurationsResult(session: Session): CommandResult {
     const configurations = listSelectedConfigurations(session.scopes);
     const names = new Set(configurations.map((configuration) => configuration.name));
-    const planned = Map.groupBy(planChecks(session, { stage: 'any' }), (check) => check.scope.folder.path);
+    const planned = Map.groupBy(planChecks(session, { stage: 'any' }), (check) => check.scope.path);
     const selected = configurations.map((configuration) => ({
         name: configuration.name,
         checks: listCheckStates(session, configuration, planned),
@@ -91,7 +91,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
 
 function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson['settings'] {
     return scopes.flatMap((scope) => {
-        const scopePath = scope.folder.path;
+        const scopePath = scope.path;
         return listInheritedSettings(scope.availableSettings, settings, scopePath)
             .filter((setting) => scopePath === '' || setting.origin !== 'configuration')
             .map((row) => ({

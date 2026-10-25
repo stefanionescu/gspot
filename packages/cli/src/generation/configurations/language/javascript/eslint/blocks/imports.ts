@@ -43,14 +43,14 @@ Build the n/file-extension-in-import blocks for each project and path style.
 */
 export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): EslintBlock[] {
     const changed = scopes.filter((scope) => {
-        const parent = findParentScope(scopes, scope.folder.path);
+        const parent = findParentScope(scopes, scope.path);
         return (
             scope.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension !==
             parent?.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension
         );
     });
     return changed.flatMap((scope) => {
-        const path = scope.folder.path;
+        const path = scope.path;
         const importExtension = scope.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension;
         return importExtension === undefined
             ? []
@@ -59,7 +59,7 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): Es
                       (pattern) => [buildScopeGlob(path), pattern],
                   ),
                   ignores: listNestedScopeGlobs(
-                      changed.map(({ folder }) => folder.path),
+                      changed.map(({ path }) => path),
                       path,
                   ),
                   settings: {
@@ -87,7 +87,7 @@ boundary folders and the aliases of their project.
 @returns the relative-import rule setting with its folders and aliases.
 */
 export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<string, string>): EslintImportBoundaryRule {
-    const scopePaths = scopes.map((scope) => escapeGlob(scope.folder.path)).filter((path) => path !== '');
+    const scopePaths = scopes.map((scope) => escapeGlob(scope.path)).filter((path) => path !== '');
     const boundaries = scopes.flatMap(({ settings }) => settings.values.javascript?.import_boundaries ?? []);
     const externals = [...new Set(scopes.flatMap(({ settings }) => settings.values.javascript?.externals ?? []))];
     return [
@@ -112,9 +112,9 @@ export function buildScopeImportBlocks(planned: Pick<PlannedEslintFile, 'session
         nodeFiles,
     } = planned;
     return scopes
-        .filter((scope) => scope.folder.path !== '')
+        .filter((scope) => scope.path !== '')
         .map((scope) => {
-            const path = scope.folder.path;
+            const path = scope.path;
             const aliases = readScopeAliases(root, path, reads);
             return {
                 files: [
@@ -140,9 +140,9 @@ export function buildNodeScriptBlocks(planned: Pick<PlannedEslintFile, 'session'
         session: { root, scopes },
         nodeFiles,
     } = planned;
-    const paths = scopes.map((scope) => scope.folder.path);
+    const paths = scopes.map((scope) => scope.path);
     return scopes.map((scope) => {
-        const path = scope.folder.path;
+        const path = scope.path;
         return {
             files: [
                 ...NODE_SCRIPT_PATTERNS.map((pattern) => buildScopeGlob(path, pattern)),

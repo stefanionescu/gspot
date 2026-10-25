@@ -94,7 +94,7 @@ export function getConfigFilePath(session: Session, planned: PlannedCheck, name:
     const configFile = listConfigFiles(session, planned).find(({ file }) => extractConfigFileName(file) === name);
     if (!configFile)
         throw new Error(`Check ${planned.check.id} names {config_file:${name}} and no configuration writes it.`);
-    return getConfigFileTarget(planned.scope.folder.path, configFile, buildConfigFiles(session));
+    return getConfigFileTarget(planned.scope.path, configFile, buildConfigFiles(session));
 }
 
 /**
@@ -107,7 +107,7 @@ Lists the config files that a check command or its environment names.
 */
 export function listCommandConfigFiles(session: Session, planned: PlannedCheck, command: readonly string[]): string[] {
     const words = [...command, ...(planned.check.env === undefined ? [] : Object.values(planned.check.env))];
-    const scope = planned.scope.folder.path;
+    const scope = planned.scope.path;
     return [
         ...new Set(
             words.flatMap((segment) => {
@@ -138,7 +138,7 @@ Lists the source and config files that a copy needs for a command.
 @returns repository-relative paths for the copy.
 */
 export function listCopyFiles(session: Session, planned: PlannedCheck, command: string[]): string[] {
-    const scope = planned.scope.folder.path;
+    const scope = planned.scope.path;
     const owned = (planned.configuration?.configFiles ?? []).map((configFile) =>
         getConfigFileTarget(scope, configFile, buildConfigFiles(session)),
     );

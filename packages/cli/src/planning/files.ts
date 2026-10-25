@@ -13,7 +13,7 @@ import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/configurations.ts';
-import { isInScope, joinScope, findScopeFolder, listNestedScopes } from '#cli/repository/scopes.ts';
+import { isInScope, joinScope, findScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
 
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
     const prefix = joinScope(scopePath, '');
@@ -131,8 +131,8 @@ export function listCheckedFiles(scopes: Scope[], check: PlannedCheck): TrackedF
     const children =
         check.check.runs === 'scope'
             ? listNestedScopes(
-                  scopes.map(({ folder }) => folder.path),
-                  check.scope.folder.path,
+                  scopes.map(({ path }) => path),
+                  check.scope.path,
               )
             : [];
     const files = check.files.filter((file) => children.every((child) => !isInScope(file.path, child)));
@@ -140,7 +140,7 @@ export function listCheckedFiles(scopes: Scope[], check: PlannedCheck): TrackedF
         ? []
         : listCoveredFiles(owners, files, {
               configurations: check.scope.configurations,
-              scopePath: check.scope.folder.path,
+              scopePath: check.scope.path,
               settings: check.scope.settings,
           });
 }
@@ -168,11 +168,8 @@ function filterReadableFiles(planned: PlannedScope, check: Check, files: Tracked
     if (check.id === 'repository/large-files') return files;
     const scopes = planned.session.scopes;
     return files.filter((file) => {
-        const owner = findScopeFolder(
-            file.path,
-            scopes.map((scope) => scope.folder),
-        );
-        const scope = scopes.find((scope) => scope.folder.path === owner.path) as Scope;
+        const owner = findScopePath(file.path, scopes);
+        const scope = scopes.find((scope) => scope.path === owner) as Scope;
         if (file.size > getTable(scope.settings, 'repository').max_file_kilobytes * BYTES_PER_KILOBYTE) return false;
         return (
             check.id === 'repository/encoding' ||
@@ -198,7 +195,7 @@ export function selectCheckFiles(
     const { scope, children } = planned;
     const { check, configuration } = scopeCheck;
     const isRootCheck = (ROOT_RUNS as readonly string[]).includes(check.runs);
-    const scopePath = isRootCheck ? '' : scope.folder.path;
+    const scopePath = isRootCheck ? '' : scope.path;
     const triggerPaths = listDeletedTriggers(planned, scopeCheck, scopePath);
     const keepsChildScopes = check.runs !== 'files' || isRootOnlyCheck(configuration, check);
     let files =

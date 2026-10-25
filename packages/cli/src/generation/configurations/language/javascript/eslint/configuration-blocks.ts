@@ -57,9 +57,9 @@ function buildConfigurationBlocks(
     planned: PlannedEslintFile,
 ): ConfigurationBlocks {
     const { session } = planned;
-    const scopePath = scope.folder.path;
+    const scopePath = scope.path;
     const children = listNestedScopes(
-        planned.session.scopes.map((each) => each.folder.path),
+        planned.session.scopes.map((each) => each.path),
         scopePath,
     );
     const testFiles = listCodeTestFiles(scope.settings.test_files).map((pattern) =>
@@ -94,9 +94,9 @@ function listMatchingScopes(
         scopeBlocks
             .filter(({ path, blocks }) => {
                 const parent = scopes
-                    .filter((scope) => scope.folder.path !== path && isInScope(path, scope.folder.path))
-                    .toSorted((a, b) => compareScopeDepth(b.folder.path, a.folder.path))[0];
-                const previous = scopeBlocks.find((each) => each.path === parent?.folder.path);
+                    .filter((scope) => scope.path !== path && isInScope(path, scope.path))
+                    .toSorted((a, b) => compareScopeDepth(b.path, a.path))[0];
+                const previous = scopeBlocks.find((each) => each.path === parent?.path);
                 return previous !== undefined && isDeepStrictEqual(blocks.blocks, previous.blocks.blocks);
             })
             .map(({ path }) => path),
@@ -112,14 +112,14 @@ function buildScopeConfigurationBlocks(
         const scopeBlocks = planned.session.scopes
             .filter((each) => each.configurations.includes(configuration))
             .map((scope) => ({
-                path: scope.folder.path,
+                path: scope.path,
                 blocks: buildConfigurationBlocks(configuration, builder, scope, planned),
             }));
         const matching = listMatchingScopes(scopeBlocks, planned.session.scopes);
         for (const { path, blocks } of scopeBlocks) {
             if (matching.has(path)) continue;
             const excluded = listNestedScopes(
-                planned.session.scopes.map((each) => each.folder.path),
+                planned.session.scopes.map((each) => each.path),
                 path,
             )
                 .filter((child) => !matching.has(child))

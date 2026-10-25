@@ -14,7 +14,7 @@ Find the generated config file for a tool and scope.
 */
 export function findConfigFilePath(session: Session, tool: string, scopePath = ''): string {
     const declaration = session.scopes
-        .find((scope) => scope.folder.path === scopePath)
+        .find((scope) => scope.path === scopePath)
         ?.configurations.flatMap((configuration) => configuration.configFiles)
         .find((file) => extractConfigFileName(file.file) === tool);
     if (declaration === undefined)

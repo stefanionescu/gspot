@@ -100,7 +100,7 @@ export async function checkSecretsEnvExamples(session: Session, planned: Planned
     if (examples.length === 0)
         throw new GspotError(
             'skip',
-            `No example environment file exists in ${planned.scope.folder.path === '' ? 'the repository root' : planned.scope.folder.path}. List the example environment files in secrets.env_examples.`,
+            `No example environment file exists in ${planned.scope.path === '' ? 'the repository root' : planned.scope.path}. List the example environment files in secrets.env_examples.`,
         );
     const exampleKeys = new Set(
         examples.flatMap((file) => {

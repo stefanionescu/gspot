@@ -281,9 +281,9 @@ List the tracked lockfiles of the root and of each scope, which CI installs from
 */
 export function listProjectLockfiles(session: Session): string[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
-    return session.scopes.flatMap(({ folder }) =>
+    return session.scopes.flatMap(({ path: scopePath }) =>
         (Object.keys(FROZEN_INSTALLS) as FrozenLockfile[])
-            .map((lockfile) => joinScope(folder.path, lockfile))
+            .map((lockfile) => joinScope(scopePath, lockfile))
             .filter((path) => tracked.has(path)),
     );
 }
@@ -297,12 +297,12 @@ Next.js project, which typed lint rules read.
 */
 export function listProjectInstallLines(session: Session): string[] {
     const lockfiles = new Set(listProjectLockfiles(session));
-    return session.scopes.flatMap(({ folder, configurations }) => {
+    return session.scopes.flatMap(({ path: scopePath, configurations }) => {
         const installs = (Object.keys(FROZEN_INSTALLS) as FrozenLockfile[])
-            .filter((lockfile) => lockfiles.has(joinScope(folder.path, lockfile)))
-            .map((lockfile) => quoteCommand(buildFrozenInstall(session, folder.path, lockfile)));
+            .filter((lockfile) => lockfiles.has(joinScope(scopePath, lockfile)))
+            .map((lockfile) => quoteCommand(buildFrozenInstall(session, scopePath, lockfile)));
         const isNext = configurations.some((configuration) => configuration.name === NEXTJS_CONFIGURATION);
         const lines = [...installs, ...(isNext && installs.length > 0 ? [NEXT_TYPEGEN_LINE] : [])];
-        return folder.path === '' ? lines : lines.map((line) => `(cd ${quoteArgument(folder.path)} && ${line})`);
+        return scopePath === '' ? lines : lines.map((line) => `(cd ${quoteArgument(scopePath)} && ${line})`);
     });
 }

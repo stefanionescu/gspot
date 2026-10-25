@@ -43,7 +43,7 @@ export async function checkNextjsTsc(session: CheckSession, planned: PlannedChec
     const root = scratchFolder.path;
     const scratchSession = { ...session, root, reads: createReadCache(root) };
     const generated = await runCheckTool(scratchSession, planned, NEXT_TYPEGEN_COMMAND, {
-        cwd: join(root, planned.scope.folder.path),
+        cwd: join(root, planned.scope.path),
         env: CI_ENVIRONMENT,
     });
     const output = `${generated.stdout}${generated.stderr}`;
@@ -59,7 +59,7 @@ export async function checkNextjsTsc(session: CheckSession, planned: PlannedChec
         root,
         readTsconfigProject(
             root,
-            planned.scope.folder.path,
+            planned.scope.path,
             planned.files.filter((file) => file.tags.includes(TYPESCRIPT_TAG)).map((file) => file.path),
             scratchSession.reads,
         ),

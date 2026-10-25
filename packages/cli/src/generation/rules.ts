@@ -135,7 +135,7 @@ export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes'
     if (!rules.enabled) return [];
     const configurations = listSelectedConfigurations(session.scopes);
     const scopeRules = session.scopes.map((scope) => ({
-        path: scope.folder.path,
+        path: scope.path,
         rules: listScopeRules(scope),
     }));
     const selected: RuleFile[] = [];

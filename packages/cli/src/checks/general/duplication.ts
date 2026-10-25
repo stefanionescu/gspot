@@ -37,7 +37,7 @@ export async function checkDuplicationJscpd(session: CheckSession, planned: Plan
         filterSourceConfigurations(planned.scope.configurations).flatMap((configuration) =>
             listCoveredFiles(configuration.files, planned.files, {
                 configurations: planned.scope.configurations,
-                scopePath: planned.scope.folder.path,
+                scopePath: planned.scope.path,
                 settings: planned.scope.settings,
             })
                 .filter((file) => file.kind === 'source')

@@ -8,7 +8,7 @@ import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
-import { joinScope, findScopeFolders, findProjectFolder } from '#cli/repository/scopes.ts';
+import { joinScope, findScopePaths, findProjectFolder } from '#cli/repository/scopes.ts';
 
 import {
     SCOPE_PATHS,
@@ -39,7 +39,7 @@ test.each([...WORKSPACE_FILE_CASES])(
             'packages/api',
             'packages/lint',
         ]);
-        const scopes = findScopeFolders(
+        const scopes = findScopePaths(
             repository.files,
             await readDependencyFiles(createReadCache(sandbox.path), repository.files),
             readConfigurations().values(),
@@ -54,7 +54,7 @@ test('broad workspace patterns skip .gspot/.venv and its outside interpreter lin
     await symlink('../../../../outside/python', join(root, `${GSPOT_PATHS.pythonEnvironment}/bin/python`));
     const repository = await readTestRepository(root);
     expect(listWorkspaceFolders(root)).toStrictEqual(['packages/app']);
-    const folders = findScopeFolders(
+    const folders = findScopePaths(
         repository.files,
         await readDependencyFiles(createReadCache(root), repository.files),
         readConfigurations().values(),
@@ -66,7 +66,7 @@ test('every folder that holds a project file is a scope, the root and lint-only 
 
     const repository = await readTestRepository(sandbox.path);
     const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
-    const found = findScopeFolders(repository.files, dependencyFiles, readConfigurations().values());
+    const found = findScopePaths(repository.files, dependencyFiles, readConfigurations().values());
     expect(found.map((scope) => [scope.path, scope.origin])).toStrictEqual([...PROJECT_SCOPES]);
 });
 
@@ -83,7 +83,7 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
         'packages/next',
         'packages/process',
     ]);
-    const folders = findScopeFolders(
+    const folders = findScopePaths(
         repository.files,
         await readDependencyFiles(createReadCache(sandbox.path), repository.files),
         readConfigurations().values(),
@@ -94,7 +94,7 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
         '{"dependencies":{"next":"16.0.0"},"devDependencies":{"@next/eslint-plugin-next":"16.0.0"}}',
     );
     const corrected = await readTestRepository(sandbox.path);
-    const correctedFolders = findScopeFolders(
+    const correctedFolders = findScopePaths(
         corrected.files,
         await readDependencyFiles(createReadCache(sandbox.path), corrected.files),
         readConfigurations().values(),
@@ -109,7 +109,7 @@ test('Python scopes use the dependency files read with the repository', async ()
     const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     await writeFile(join(sandbox.path, 'pyproject.toml'), '[invalid');
     expect(
-        findScopeFolders(repository.files, dependencyFiles, readConfigurations().values()).map((scope) => scope.path),
+        findScopePaths(repository.files, dependencyFiles, readConfigurations().values()).map((scope) => scope.path),
     ).toStrictEqual(['api']);
 });
 

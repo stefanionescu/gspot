@@ -144,9 +144,7 @@ test('a broken package.json stops the next session and a fixed one changes the s
     await writeFile(join(sandbox.path, 'package.json'), ROOT_PACKAGE_WITHOUT_DEPENDENCIES);
     const reopened = await openSession(sandbox.path);
     expect(
-        reopened.scopes.map((scope) =>
-            listProjectDependencyNames(reopened.repository.dependencyFiles, scope.folder.path),
-        ),
+        reopened.scopes.map((scope) => listProjectDependencyNames(reopened.repository.dependencyFiles, scope.path)),
     ).toStrictEqual([[], ['vue']]);
 });
 

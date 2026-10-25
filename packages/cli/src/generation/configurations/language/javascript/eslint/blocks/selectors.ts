@@ -84,9 +84,9 @@ export function buildSelectorGroups(
     level: Level,
     reexports: Settings['structure']['reexports'],
 ): SelectorGroup[] {
-    const scopePaths = scopes.map((each) => each.folder.path);
+    const scopePaths = scopes.map((each) => each.path);
     return scopes.flatMap((scope) => {
-        const prefix = escapeGlob(scope.folder.path);
+        const prefix = escapeGlob(scope.path);
         const declarations = scope.configurations.flatMap((configuration) =>
             configuration.eslint.selectors.filter((selector) => level === 'all' || selector.level === 'recommended'),
         );
@@ -110,8 +110,8 @@ export function buildSelectorGroups(
         applied.push(...listSettingSelectors(scope, level));
         return groupSelectors(applied).map((group) => ({
             ...group,
-            scope: scope.folder.path,
-            ignoredScopes: listNestedScopes(scopePaths, scope.folder.path),
+            scope: scope.path,
+            ignoredScopes: listNestedScopes(scopePaths, scope.path),
         }));
     });
 }

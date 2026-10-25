@@ -134,7 +134,7 @@ Reports a packageManager field that names another version than the mise pin of t
 @returns a finding when the two versions differ.
 */
 export function checkDependenciesPackageManagerPin(session: Session, planned: PlannedCheck): Finding[] {
-    const folder = planned.scope.folder.path;
+    const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const writtenPin = splitPackageManager(readCachedPackageJson(session.reads, packageJsonPath)?.packageManager);
     if (writtenPin === undefined) return [];
@@ -181,7 +181,7 @@ Reports a package.json whose dependencies differ from what its lockfile records,
 @returns one finding per dependency out of step with the lockfile.
 */
 export function checkDependenciesStaleLockfile(session: Session, planned: PlannedCheck): Finding[] {
-    const folder = planned.scope.folder.path;
+    const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const specifiers = readDependencySpecifiers(session.reads, packageJsonPath);
     const found = findNearestLockfile(session.reads, folder, IMPORTER_LOCKFILES);

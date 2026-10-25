@@ -4,7 +4,7 @@ import { PBXPROJ } from '#cli/config/files/names.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
-import { findScopeFolder } from '#cli/repository/scopes.ts';
+import { findScopePath } from '#cli/repository/scopes.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { stripDefaults } from '#cli/commands/init/defaults.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -37,7 +37,7 @@ function buildOpenApiTables(
             if (openapi === undefined) return [];
             const isDocument = buildFilenameMatcher(openapi.detect.filenames);
             const document = repository.files.find(
-                (file) => findScopeFolder(file.path, draft.scopes).path === scope && isDocument(file.path),
+                (file) => findScopePath(file.path, draft.scopes) === scope && isDocument(file.path),
             )?.path;
             return document === undefined ? [] : [[scope, { openapi: { document } }] as const];
         }),
@@ -54,7 +54,7 @@ function buildSwiftTables(
         scopes.flatMap(({ scope, selected }) => {
             if (selected.every((configuration) => configuration.name !== SWIFT_CONFIGURATION)) return [];
             const file = projectFiles.find(
-                (projectFile) => findScopeFolder(projectFile.path, draft.scopes).path === scope,
+                (projectFile) => findScopePath(projectFile.path, draft.scopes) === scope,
             )?.path;
             if (file === undefined) return [];
             const text = findText(repository.root, file);

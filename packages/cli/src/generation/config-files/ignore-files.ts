@@ -29,7 +29,7 @@ function listGeneratedPaths(session: Session): string[] {
         const sourceTargets =
             configFile.source === undefined || configFile.target.startsWith(`${GSPOT_FOLDER}/`)
                 ? []
-                : [configFile.per_scope ? joinScope(owner.scope.folder.path, configFile.target) : configFile.target];
+                : [configFile.per_scope ? joinScope(owner.scope.path, configFile.target) : configFile.target];
         return [
             ...sourceTargets,
             ...(isMarkdownlintShared(owned, configFiles) ? [] : listPointerPaths(owner, configFile)),
@@ -46,8 +46,8 @@ Group path ignores by source, before the ignores of a check.
 */
 export function buildIgnoreSections(session: Session): IgnoreSection[] {
     const { reads, repository, scopes } = session;
-    const generatorOutputs = scopes.flatMap(({ folder, configurations }) =>
-        configurations.flatMap((configuration) => configuration.generated.map((file) => join(folder.path, file))),
+    const generatorOutputs = scopes.flatMap(({ path: scopePath, configurations }) =>
+        configurations.flatMap((configuration) => configuration.generated.map((file) => join(scopePath, file))),
     );
     const trackedPaths = (repository.index.length === 0 ? repository.files : repository.index).map(({ path }) => path);
     const folders = [

@@ -23,13 +23,13 @@ Reports each required compiler option that a scope tsconfig leaves off.
 export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck): Finding[] {
     const project = readTsconfigProject(
         session.root,
-        planned.scope.folder.path,
+        planned.scope.path,
         planned.files.filter((file) => file.tags.includes(TYPESCRIPT_TAG)).map((file) => file.path),
         session.reads,
     );
     const scopeTsconfig =
         project === undefined
-            ? joinScope(planned.scope.folder.path, TSCONFIG_FILE)
+            ? joinScope(planned.scope.path, TSCONFIG_FILE)
             : convertToPosixPath(relative(session.root, project.path));
     if (project === undefined && planned.files.some((file) => file.tags.includes(TYPESCRIPT_TAG)))
         return [
@@ -56,7 +56,7 @@ export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck)
             !isProjectChecked(session.reads, {
                 check: planned.check.id,
                 path: join(session.root, path),
-                scope: planned.scope.folder.path,
+                scope: planned.scope.path,
                 required,
             }),
     );

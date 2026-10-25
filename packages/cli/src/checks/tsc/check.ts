@@ -1,9 +1,9 @@
 import { join, dirname, relative } from 'node:path';
 import { listCheckedFiles } from '#cli/planning/files.ts';
+import { findScopePath } from '#cli/repository/scopes.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
@@ -22,7 +22,7 @@ Runs tsc on a project, or on every project that a solution tsconfig names.
 export async function checkTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const project = readTsconfigProject(
         session.root,
-        planned.scope.folder.path,
+        planned.scope.path,
         listCheckedFiles(session.scopes, planned)
             .filter((file) => file.tags.includes(TYPESCRIPT_TAG))
             .map((file) => file.path),
@@ -63,13 +63,11 @@ export async function checkTsc(session: CheckSession, planned: PlannedCheck): Pr
 
 function removeChildScopeFindings(session: Session, planned: PlannedCheck, result: CheckResult): CheckResult {
     const checked = new Set(
-        session.configuredChecks
-            .filter(({ check }) => check.id === planned.check.id)
-            .map(({ scope }) => scope.folder.path),
+        session.configuredChecks.filter(({ check }) => check.id === planned.check.id).map(({ scope }) => scope.path),
     );
-    const own = planned.scope.folder.path;
+    const own = planned.scope.path;
     const findings = result.findings.filter(({ file }) => {
-        const owner = file === '' ? own : findScopeFolder(file, session.repository.scopeFolders).path;
+        const owner = file === '' ? own : findScopePath(file, session.repository.scopeFolders);
         return owner === own || !checked.has(owner);
     });
     if (findings.length === result.findings.length) return result;

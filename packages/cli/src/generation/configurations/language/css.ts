@@ -71,7 +71,7 @@ function buildCssModulesOverrides(
     picked: Record<string, unknown>,
     off: string[],
 ) {
-    const scope = planned.scope.folder.path;
+    const scope = planned.scope.path;
     const hasModules = planned.session.repository.files.some(
         (file) => isInScope(file.path, scope) && file.path.endsWith(CSS_MODULES_OVERRIDE.suffix),
     );
@@ -100,7 +100,7 @@ export function buildStylelintFile(planned: PlannedConfigFile): string {
     const { configurations } = scope.settings;
     const options = getTable(scope.settings, 'tools.stylelint');
     const isAll = planned.level === 'all';
-    const scopeDependencies = listProjectDependencyNames(dependencyFiles, scope.folder.path);
+    const scopeDependencies = listProjectDependencyNames(dependencyFiles, scope.path);
     const ruleNamesFile = buildAssetPath(STYLELINT_RULE_NAMES_FILE);
     const stylelintRuleNames = nameListSchema.parse(JSON.parse(readFileSync(ruleNamesFile, 'utf8'))).names;
 

@@ -46,13 +46,13 @@ function buildRuleLookup(rules: ImportRule[]): RuleLookup {
 }
 
 function buildExemption(planned: PlannedCheck): (file: TrackedFile) => boolean {
-    const { settings, folder } = planned.scope;
+    const { settings, path: scopePath } = planned.scope;
     const matches = buildPathMatcher([
         ...settings.test_files,
         ...CONFIG_FILE_PATTERNS,
         ...(settings.values['tools.eslint']?.plugins ?? []).map((plugin) => plugin.path),
         ...(settings.values.javascript?.script_files ?? []),
-        joinScope(escapeGlob(folder.path), MISE_SCRIPT_PATH),
+        joinScope(escapeGlob(scopePath), MISE_SCRIPT_PATH),
     ]);
     return (file) => matches(file.path) || file.tags.includes(NODE_SHEBANG_TAG);
 }
@@ -102,12 +102,12 @@ async function checkFileImports(
 }
 
 function buildPythonSearch(session: Session, planned: PlannedCheck): PythonSearch {
-    const { settings, folder } = planned.scope;
+    const { settings, path: scopePath } = planned.scope;
     const python = getTable(settings, 'python');
     return {
         files: new Set(session.repository.files.map((file) => file.path)),
         roots: [...PYTHON_SOURCE_ROOTS, ...python.import_folders]
-            .map((root) => posix.join(folder.path, root))
+            .map((root) => posix.join(scopePath, root))
             .map((root) => (root === '.' ? '' : root)),
         externals: new Set(python.externals),
     };

@@ -123,7 +123,7 @@ export function listCheckFiles(planned: PlannedCheck, checkId: string): TrackedF
             .flatMap((check) =>
                 listCoveredFiles(check.files ?? configuration.files, planned.files, {
                     configurations: planned.scope.configurations,
-                    scopePath: planned.scope.folder.path,
+                    scopePath: planned.scope.path,
                     settings: planned.scope.settings,
                 }),
             ),

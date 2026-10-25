@@ -39,7 +39,7 @@ function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): Findin
             buildFinding(
                 planned,
                 {
-                    file: joinScope(planned.scope.folder.path, convertToPosixPath(reported.filename)),
+                    file: joinScope(planned.scope.path, convertToPosixPath(reported.filename)),
                     line: reported.start.line + 1,
                     column: reported.start.character + 1,
                 },
@@ -59,11 +59,11 @@ Runs svelte-check on the scope for compiler warnings, accessibility warnings, an
 */
 export async function checkSvelteCheck(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
     using runtime = createTemporaryFolder();
-    const target = join(runtime.path, TSCONFIG_COPY_FOLDER, planned.scope.folder.path, TSCONFIG_FILE);
+    const target = join(runtime.path, TSCONFIG_COPY_FOLDER, planned.scope.path, TSCONFIG_FILE);
     writeScopeTsconfig(session, planned.scope, target);
     const command = [...SVELTE_CHECK_COMMAND, SVELTE_TSCONFIG_FLAG, target];
     const result = await runCheckTool(session, planned, command, {
-        cwd: join(session.root, planned.scope.folder.path),
+        cwd: join(session.root, planned.scope.path),
     });
     const findings = parseSvelteCheckFindings(planned, result.stdout);
     return assertToolFindings(result, findings, 'svelte-check');

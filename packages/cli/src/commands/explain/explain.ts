@@ -29,7 +29,7 @@ function formatUnknownSubject(session: Session | undefined, subject: string): st
         ...listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.commandChecks)),
         ...readConfigurations().keys(),
         ...(session?.scopes.flatMap((scope) =>
-            listInheritedSettings(scope.availableSettings, session.settingsFile.settings, scope.folder.path).map(
+            listInheritedSettings(scope.availableSettings, session.settingsFile.settings, scope.path).map(
                 (setting) => setting.key,
             ),
         ) ?? []),

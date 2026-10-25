@@ -16,7 +16,7 @@ async function readSourceNames(session: Session, planned: PlannedCheck): Promise
     const containers = readNamingDefaults().path_containers;
     const filesByScope = groupFilesByScope(planned.files, session.repository.scopeFolders);
     for (const scope of session.scopes) {
-        const named = listNamedFiles({ ...planned, scope, files: filesByScope.get(scope.folder.path) ?? [] });
+        const named = listNamedFiles({ ...planned, scope, files: filesByScope.get(scope.path) ?? [] });
         for (const { file, language } of named) {
             const stem = buildFileIdentifier(file.path, language, containers);
             const folders = buildFolderIdentifiers(file.path, language, containers);

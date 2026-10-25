@@ -2,8 +2,8 @@ import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { getValueAt } from '#cli/system/tables.ts';
 import { join, dirname, relative } from 'node:path';
+import { findScopePath } from '#cli/repository/scopes.ts';
 import { JSCONFIG_FILE } from '#cli/config/files/names.ts';
-import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
@@ -61,15 +61,14 @@ function listTrackedDeclarationFiles(planned: PlannedConfigFile, authored: TypeS
 
 function hasExtensionlessSources(planned: PlannedConfigFile, importStyle: string): boolean {
     const { files } = planned.session.repository;
-    const scope = planned.scope.folder.path;
-    const scopes = planned.session.scopes.map((each) => each.folder);
+    const scope = planned.scope.path;
     return (
         importStyle === 'extensionless' &&
         files.some(
             (file) =>
                 file.kind === 'source' &&
                 file.tags.includes('javascript') &&
-                findScopeFolder(file.path, scopes).path === scope,
+                findScopePath(file.path, planned.session.scopes) === scope,
         )
     );
 }
@@ -83,7 +82,7 @@ Build jsconfig.json: the JavaScript type-checking project and its scoped source 
 export function buildJsconfigFile(planned: PlannedConfigFile): string {
     const { root, reads } = planned.session;
     const { targetPath: target } = planned;
-    const scope = planned.scope.folder.path;
+    const scope = planned.scope.path;
     const importStyle = getTable(planned.scope.settings, 'tools.eslint').import_extension;
     const ignoredGlobs = convertToGlobs(
         buildIgnoreSections(planned.session).filter((section) => planned.level !== 'all' || section.key !== 'build'),

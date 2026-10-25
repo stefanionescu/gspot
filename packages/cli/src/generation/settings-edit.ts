@@ -134,15 +134,14 @@ export async function readSetting(
         throw new GspotError('arguments', 'Use gspot add or gspot remove to change configurations.');
     const { settings, reads } = context;
     const session = await openSession(context.root, { settingsFile: { settings, text: context.input.text }, reads });
-    const selected = session.scopes.find((each) => each.folder.path === (context.scope ?? '')) as Scope;
+    const selected = session.scopes.find((each) => each.path === (context.scope ?? '')) as Scope;
     const { availableSettings } = selected;
     const match = findSetting(availableSettings, key);
     if (match === undefined) {
         const selectedScope = session.scopes.find(
             (each) =>
-                Object.hasOwn(settings.scopes, each.folder.path) &&
-                findSetting(each.availableSettings, key) !== undefined,
-        )?.folder.path;
+                Object.hasOwn(settings.scopes, each.path) && findSetting(each.availableSettings, key) !== undefined,
+        )?.path;
         if (selectedScope !== undefined)
             throw new GspotError(
                 'arguments',

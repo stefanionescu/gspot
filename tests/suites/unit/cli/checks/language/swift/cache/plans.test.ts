@@ -97,7 +97,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
                 note: 'Set swift.xcode_project or add Package.swift in this scope.',
             },
         ]);
-        expect(await isOnDisk(getScopeBuildFolder(session.toolsRoot, input.scope.folder.path, purpose))).toBe(false);
+        expect(await isOnDisk(getScopeBuildFolder(session.toolsRoot, input.scope.path, purpose))).toBe(false);
         await createFileTree(sandbox.path, {
             'Package.swift': SWIFT_PACKAGE_HEADER,
         });

@@ -4,9 +4,9 @@ import { type Session } from '#cli/types/session.ts';
 import { SWIFT_PACKAGE } from '#tests/config/swift.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { findScopePath } from '#cli/repository/scopes.ts';
 import * as environment from '#cli/system/environment.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
-import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -42,7 +42,7 @@ export function planSandboxCheck(
     options: { scope?: string; paths?: string[] } = {},
 ): PlannedCheck {
     const path = options.scope ?? '';
-    const scope = session.scopes.find((each) => each.folder.path === path);
+    const scope = session.scopes.find((each) => each.path === path);
     if (scope === undefined) throw new Error(`The sandbox has no scope at ${path || 'the root'}.`);
     const selected = scope.configurations
         .flatMap((configuration) => configuration.checks.map((check) => ({ configuration, check })))
@@ -52,7 +52,7 @@ export function planSandboxCheck(
     const paths = options.paths;
     const files = session.repository.files.filter(
         (file) =>
-            (check.runs === 'once' || findScopeFolder(file.path, session.repository.scopeFolders).path === path) &&
+            (check.runs === 'once' || findScopePath(file.path, session.repository.scopeFolders) === path) &&
             (paths === undefined || paths.includes(file.path)),
     );
     const tool = getToolName(check);

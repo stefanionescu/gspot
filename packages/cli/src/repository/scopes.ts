@@ -5,9 +5,9 @@ import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { LINT_FOLDERS } from '#cli/config/repository/setup.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import { EVERY_FILE_GLOBS } from '#cli/config/repository/scopes.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import type { ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
-import { ROOT_SCOPE, EVERY_FILE_GLOBS } from '#cli/config/repository/scopes.ts';
 import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 import { GLOB_EXCLUDE, FOLDER_CONTENTS } from '#cli/config/files/path-patterns.ts';
 import { isInside, escapeGlob, convertToPosixPath, isInInstalledFolder } from '#cli/system/paths.ts';
@@ -101,7 +101,7 @@ Find the project scopes for init and for runs. Leave out the root and tool-only 
 @param configurations the configurations with project files and npm tools.
 @returns project scopes in path order.
 */
-export function findScopeFolders(
+export function findScopePaths(
     files: TrackedFile[],
     dependencyFiles: DependencyFile[],
     configurations: Iterable<Configuration>,
@@ -170,15 +170,14 @@ export function findProjectFolder(path: string, pattern: string): string | undef
 Find the scope of a file: the deepest scope that contains it, else the root.
 
 @param path the file to place.
-@param scopeFolders the scopes to search.
-@returns the deepest matching scope, or the root.
+@param scopes the scopes to search.
+@returns the path of the deepest matching scope, or the empty root path.
 */
-export function findScopeFolder(path: string, scopeFolders: ScopeFolder[]): ScopeFolder {
-    const root: ScopeFolder = scopeFolders.find((scope) => scope.path === '') ?? { ...ROOT_SCOPE, configurations: [] };
+export function findScopePath(path: string, scopes: readonly { path: string }[]): string {
     return (
-        scopeFolders
+        scopes
             .filter((scope) => scope.path !== '' && isInScope(path, scope.path))
-            .toSorted((left, right) => right.path.length - left.path.length)[0] ?? root
+            .toSorted((left, right) => right.path.length - left.path.length)[0]?.path ?? ''
     );
 }
 
@@ -186,13 +185,13 @@ export function findScopeFolder(path: string, scopeFolders: ScopeFolder[]): Scop
 Group files by their scope: the deepest scope that contains each file, else the root.
 
 @param files the files to place.
-@param scopeFolders the scopes to search.
+@param scopes the scopes to search.
 @returns the files of each scope path, in their order.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 5 files share it.
 export function groupFilesByScope<File extends Pick<TrackedFile, 'path'>>(
     files: readonly File[],
-    scopeFolders: ScopeFolder[],
+    scopes: readonly { path: string }[],
 ): Map<string, File[]> {
-    return Map.groupBy(files, (file) => findScopeFolder(file.path, scopeFolders).path);
+    return Map.groupBy(files, (file) => findScopePath(file.path, scopes));
 }

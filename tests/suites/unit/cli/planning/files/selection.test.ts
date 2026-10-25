@@ -48,7 +48,7 @@ test("a file named on the command line runs its scope's project check on every f
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { ...TSC_PUSH_OPTIONS, paths: ['api/source.ts'] });
     const affected = planned.filter((check) => check.files.length > 0);
-    expect(affected.map((check) => check.scope.folder.path)).toStrictEqual(['api']);
+    expect(affected.map((check) => check.scope.path)).toStrictEqual(['api']);
     expect(affected[0]?.files.map((file) => file.path)).toStrictEqual([
         'api/caller.ts',
         'api/source.ts',
@@ -141,7 +141,7 @@ test(`a scope's per-scope check plans every file of its scope and covers only it
 
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'all', only: ['jest/coverage'] });
-    const project = planned.find((each) => each.scope.folder.path === 'apps/web')!;
+    const project = planned.find((each) => each.scope.path === 'apps/web')!;
     expect(project.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'apps/web/image.bin',
         'apps/web/jest.config.json',

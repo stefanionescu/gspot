@@ -54,7 +54,7 @@ function isSpdxExpression(license: string): boolean {
 function assertInstalled(planned: PlannedCheck, name: string, start: string): void {
     if (statSync(join(start, name), { throwIfNoEntry: false })?.isDirectory() !== true)
         throw new Error(
-            `Install the project dependencies first: ${name} is missing in ${planned.scope.folder.path === '' ? 'the root' : planned.scope.folder.path}.`,
+            `Install the project dependencies first: ${name} is missing in ${planned.scope.path === '' ? 'the root' : planned.scope.path}.`,
         );
 }
 

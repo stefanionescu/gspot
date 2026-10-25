@@ -6,9 +6,9 @@ import { buildFinding } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { SYMLINK_MODE } from '#cli/config/files/modes.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
+import { findScopePath } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { lstatSync, realpathSync, readlinkSync } from 'node:fs';
 import { join, posix, dirname, resolve, relative } from 'node:path';
@@ -50,13 +50,13 @@ Reports indexed files that the scope configurations mark as untracked.
 @returns the findings.
 */
 export function checkRepositoryLocalFiles(session: Session, planned: PlannedCheck): Finding[] {
-    const scopes = session.scopes.map(({ folder }) => folder);
+    const scopes = session.repository.scopeFolders;
     const matchers = new Map(
-        session.scopes.map(({ folder, configurations, settings }): [string, (path: string) => boolean] => {
+        session.scopes.map(({ path: scopePath, configurations, settings }): [string, (path: string) => boolean] => {
             const matches = buildPathMatcher(configurations.flatMap((configuration) => configuration.ignored_paths));
             const examples = new Set(getTable(settings, 'secrets').env_examples);
             return [
-                folder.path,
+                scopePath,
                 (path) => {
                     const parent = extractParentFolder(path);
                     return (
@@ -69,7 +69,7 @@ export function checkRepositoryLocalFiles(session: Session, planned: PlannedChec
     );
     const tracked = [...new Set(session.repository.index.map(({ path }) => path))]
         .filter((path) => {
-            const scope = findScopeFolder(path, scopes).path;
+            const scope = findScopePath(path, scopes);
             return matchers.get(scope)?.(posix.relative(scope, path)) === true;
         })
         .map((path) =>

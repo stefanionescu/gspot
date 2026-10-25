@@ -48,7 +48,7 @@ export async function createEslint(sandboxRoot: string, options?: ESLint.Options
         each.configurations.some((configuration) =>
             configuration.configFiles.some((file) => extractConfigFileName(file.file) === 'eslint'),
         ),
-    )?.folder.path;
+    )?.path;
     if (scope === undefined) throw new Error('The sandbox selects no ESLint config file.');
     return new ESLint({
         ...options,
