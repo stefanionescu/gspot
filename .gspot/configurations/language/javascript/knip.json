@@ -113,7 +113,7 @@
             "entry": [
                 "tests/setup/runner/unit.ts",
                 "tests/setup/programs/**/*.ts",
-                "packages/eslint-plugin/repository/plugin.mjs",
+                "packages/eslint-plugin/local/plugin.mjs",
                 "tests/setup/runner/prepare.ts",
                 "tests/setup/runner/integration.ts",
                 "packages/cli/src/checks/framework/site/purgecss-process.ts",
@@ -191,7 +191,7 @@
         },
         "packages/eslint-plugin": {
             "entry": [
-                "repository/plugin.mjs",
+                "local/plugin.mjs",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/test/**",

@@ -22,7 +22,7 @@
             "#tests/*": ["./tests/*"],
             "#cli-package": ["./packages/cli/package.json"],
             "#eslint-plugin/*": ["./packages/eslint-plugin/src/*"],
-            "#eslint-plugin-repository/*": ["./packages/eslint-plugin/repository/*"],
+            "#eslint-plugin-local/*": ["./packages/eslint-plugin/local/*"],
             "#eslint-plugin-package": ["./packages/eslint-plugin/package.json"],
             "#root-package": ["./package.json"]
         }
