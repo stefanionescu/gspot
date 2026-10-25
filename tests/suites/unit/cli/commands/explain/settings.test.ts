@@ -190,3 +190,20 @@ test.each(['recommended', 'all'] as const)('set and explain report whether a lim
         ],
     });
 });
+
+test('explain shows a setting that no scope accepts, such as level, only at the root and with no --scope', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { level: 'all', rules: true, scopes: [{ path: 'docs' }] }),
+        'docs/guide.md': '# Guide\n',
+    });
+    const explained = await runGspot(sandbox.path, ['explain', 'level']);
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    expect(explained.stdout.split('\n').slice(4)).toStrictEqual([
+        'Scope: root',
+        'Shipped default: "recommended"',
+        'Current value: "all" (from gspot.toml)',
+        'Change it: gspot set level <value> [--reason "<why>"]',
+        'Back to the default: gspot unset level',
+        '',
+    ]);
+});

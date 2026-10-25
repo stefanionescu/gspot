@@ -46,6 +46,22 @@ export function unwrapSettingSchema(schema: z.ZodType): z.ZodType {
 }
 
 /**
+Check whether a [[scope]] record accepts a setting.
+
+@param key the dotted setting name.
+@returns whether the scope schema holds the key.
+*/
+export function isScopeSetting(key: string): boolean {
+    let schema: z.ZodType | undefined = scopeSchema;
+    for (const segment of key.split('.')) {
+        const table = schema === undefined ? undefined : unwrapSettingSchema(schema);
+        if (!(table instanceof z.ZodObject)) return false;
+        schema = table.shape[segment] as z.ZodType | undefined;
+    }
+    return schema !== undefined;
+}
+
+/**
 Locate one setting in the root, configuration, and tool schemas.
 
 @param key the dotted setting name.

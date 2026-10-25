@@ -1,10 +1,10 @@
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
-import { RECORD_FIELDS } from '#cli/settings/schemas.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
+import { RECORD_FIELDS, isScopeSetting } from '#cli/settings/schemas.ts';
 import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
 import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 
@@ -49,10 +49,10 @@ Describe a setting's defaults, effective values, and edit commands.
 export function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
     if (session === undefined) return undefined;
     const { settings } = session.settingsFile;
-    const isRecordList = Object.hasOwn(RECORD_FIELDS, key);
+    const isScopeKey = isScopeSetting(key);
     const scopes = session.scopes.flatMap((scope) => {
         const match = findSetting(scope.availableSettings, key);
-        if (match === undefined || (isRecordList && scope.folder.path !== '')) return [];
+        if (match === undefined || (!isScopeKey && scope.folder.path !== '')) return [];
         return [
             {
                 scope: scope.folder.path,
