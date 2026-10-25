@@ -7,9 +7,8 @@ import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
-import { parseSqlFile } from '#cli/parsers/code/sql/postgres.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
-import { readMigrationVersion } from '#cli/parsers/code/sql/migrations.ts';
+import { parseSqlFile, readMigrationVersion } from '#cli/parsers/code/sql.ts';
 import { type Migration, type MigrationRead } from '#cli/types/checks/postgres.ts';
 
 import {

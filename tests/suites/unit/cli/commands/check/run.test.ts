@@ -6,13 +6,14 @@ import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
-import { QUALITY_FIX, QUALITY_COMMAND } from '#tests/config/commands/check/run.ts';
+import { QUALITY_FIX, SCOPE_FINDINGS, QUALITY_COMMAND, SCOPE_CHECK_FILES } from '#tests/config/commands/check/run.ts';
 
 test('an aborted run stops its command and reports cancellation on every system', async () => {
     await using sandbox = await testdir();
@@ -247,4 +248,18 @@ test('an ignore with names keeps them in the run report and in the verbose ignor
         ignores: [{ check: 'structure/trivial-functions', names: ['useThing'], reason }],
         lines: [`ignore     structure/trivial-functions names useThing  ${reason}`],
     });
+});
+
+test.each([...SCOPE_FINDINGS])("each check in a scope reads only that scope's files: $check", async (row) => {
+    await using sandbox = await createGitSandbox(SCOPE_CHECK_FILES);
+
+    const result = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', row.check, '--json']));
+    expect(result.code, `${row.check}: ${result.stdout}${result.stderr}`).toBe(1);
+    expect(
+        result.report.checks.map(({ scope, findings }) => ({ scope, findings })),
+        row.check,
+    ).toStrictEqual([
+        { scope: '', findings: row.root.map((finding) => matchFields<Finding>(finding)) },
+        { scope: 'apps/backend', findings: row.nested.map((finding) => matchFields<Finding>(finding)) },
+    ]);
 });

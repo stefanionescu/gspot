@@ -11,8 +11,8 @@ import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 import { pythonSchema, javascriptSchema } from '#cli/schemas/settings/languages.ts';
 import { commandSchema, nonemptyString } from '#cli/schemas/configurations/fields.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
+import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION } from '#cli/config/parsers/code/sql.ts';
 import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
-import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION } from '#cli/config/parsers/code/sql/migrations.ts';
 
 import {
     type TableValues,

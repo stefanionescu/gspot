@@ -120,7 +120,7 @@ allowed_names = ["when"]
 reason = "The shipped configuration manifest format names its selection condition when."
 
 [[naming.override]]
-paths = ["packages/cli/src/generation/configurations/general/data-files/v8r.ts", "packages/cli/src/config/generation/configurations/general/data-files/v8r.ts"]
+paths = ["packages/cli/src/generation/configurations/general/data-files.ts", "packages/cli/src/config/generation/configurations/general/data-files.ts"]
 allow_digits = true
 allowed_names = ["buildV8rFile"]
 reason = "v8r is the name of the tool."
@@ -191,7 +191,7 @@ allowed_names = ["extra"]
 reason = "Semgrep reports keep the details of each result under extra."
 
 [[naming.override]]
-paths = ["packages/cli/src/generation/configurations/language/python/basedpyright.ts", "packages/cli/src/types/settings/tables.ts", "tests/suites/unit/cli/generation/configurations/language/python/basedpyright.test.ts"]
+paths = ["packages/cli/src/generation/configurations/language/python.ts", "packages/cli/src/types/settings/tables.ts", "tests/suites/unit/cli/generation/configurations/language/python.test.ts"]
 allowed_names = ["extraPaths"]
 reason = "basedpyright names its import search setting extraPaths."
 
@@ -227,7 +227,7 @@ allowed_names = ["max_list_item_words"]
 reason = "gspot.toml names this setting prose.max_list_item_words."
 
 [[naming.override]]
-paths = ["packages/cli/configurations/general/data-files/**", "packages/cli/src/config/generation/configurations/general/data-files/**", "packages/cli/src/generation/configurations/general/data-files/**", "tests/config/generation/configurations/general/data-files.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/suites/unit/cli/generation/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/checks/general/security/sensitive-data.test.ts"]
+paths = ["packages/cli/configurations/general/data-files/**", "packages/cli/src/config/generation/configurations/general/data-files.ts", "packages/cli/src/generation/configurations/general/data-files.ts", "tests/config/generation/configurations/general/data-files.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/suites/unit/cli/generation/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/checks/general/security/sensitive-data.test.ts"]
 allowed_names = ["data-files", "data-files.test", "sensitive-data", "sensitive-data.test"]
 reason = "These files and folders take the names of the data-files configuration and the security/sensitive-data check."
 

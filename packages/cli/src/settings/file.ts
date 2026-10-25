@@ -10,9 +10,9 @@ import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { ReasonedValue } from '#cli/types/settings/values.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import type { SettingsFileContents } from '#cli/types/settings/edits.ts';
+import { getTomlRange, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { type TomlTable, type SettingsFile } from '#cli/types/settings/file.ts';
 import { SETTINGS_FILE, PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts';
-import { getTomlRange, parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 
 /**
 Identify a written setting that carries both its value and its reason.

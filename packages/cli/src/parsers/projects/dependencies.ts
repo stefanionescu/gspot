@@ -2,7 +2,7 @@ import { posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { pipfileSchema, pyprojectSchema, packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies.ts';
 
 import type {

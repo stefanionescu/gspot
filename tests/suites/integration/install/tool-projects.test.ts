@@ -9,6 +9,7 @@ import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { writeGeneratedFiles } from '#cli/apply/generated.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { preparePythonLockfile } from '#cli/install/python.ts';
 import type { NpmToolInstall } from '#cli/types/install/npm.ts';
 import { prepareNpmLockfile } from '#cli/install/npm/project.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
@@ -16,7 +17,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readRuntimePins } from '#tests/setup/runner/run-folder.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { preparePythonLockfile } from '#cli/install/python/project.ts';
 import { toolAdvisoryReportSchema } from '#tests/schemas/tool-projects.ts';
 import { TOOL_ADVISORY_EXCEPTIONS } from '#tests/config/integration/install/tool-projects.ts';
 

@@ -1,9 +1,9 @@
 import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { getColors } from '#cli/system/terminal.ts';
+import { readLintJobs } from '#cli/repository/setup.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { readLintJobs } from '#cli/repository/setup/tools.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { Configuration } from '#cli/types/configurations.ts';

@@ -12,8 +12,8 @@ import { BANNER_BYTES } from '#cli/config/repository/files/classify.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { type Suggestions, type SuggestionRow } from '#cli/types/commands/doctor.ts';
 import { expandSuggestions, listSelectedConfigurations } from '#cli/configurations/select.ts';
+import { readLintJobs, isEditedInPlace, readRepositorySetup } from '#cli/repository/setup.ts';
 import { type RepositorySetup, type ConflictingConfigFile } from '#cli/types/repository/setup.ts';
-import { readLintJobs, isEditedInPlace, readRepositorySetup } from '#cli/repository/setup/tools.ts';
 
 function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
     const { root, repository, configurations, settingsFile } = session;

@@ -1,5 +1,5 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { FOREIGN_HOOK_FOLDERS } from '#cli/config/repository/setup/tools.ts';
+import { FOREIGN_HOOK_FOLDERS } from '#cli/config/repository/setup.ts';
 
 export const SPEC_SUFFIX = /\.spec$/u;
 

@@ -3,9 +3,9 @@ import { parseTomlText } from '#cli/settings/file.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/read.ts';
-import { parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/schema.ts';
 import { type Settings, type TomlTable, type ParsedSettings } from '#cli/types/settings/file.ts';
 

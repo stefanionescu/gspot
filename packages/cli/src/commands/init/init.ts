@@ -26,12 +26,12 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { RepositorySetup } from '#cli/types/repository/setup.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
+import { readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { readLintJobs, readRepositorySetup } from '#cli/repository/setup/tools.ts';
+import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup.ts';
 import { listForeignDisableComments } from '#cli/commands/init/eslint-disable-comments.ts';
 import { planInitFiles, formatInitPlan, formatDetection } from '#cli/commands/init/plan.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings-text.ts';
-import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup/tools.ts';
 import { listCommittedPaths, readConflictingConfigFiles } from '#cli/commands/init/conflicting-config-files.ts';
 
 import {

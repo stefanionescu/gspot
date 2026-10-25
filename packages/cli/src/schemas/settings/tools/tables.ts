@@ -11,7 +11,7 @@ import type { ParsedTools, WrittenTools } from '#cli/types/settings/tools.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { eslintRules, eslintPluginsSchema } from '#cli/schemas/settings/tools/eslint.ts';
 import { COMMITLINT_RULES } from '#cli/config/generation/configurations/general/commits.ts';
-import { YAMLLINT_RULES } from '#cli/config/generation/configurations/general/data-files/yamllint.ts';
+import { YAMLLINT_RULES } from '#cli/config/generation/configurations/general/data-files.ts';
 import { relativePath, nonemptyPaths, nonemptyStrings, allowReasonedValue } from '#cli/schemas/settings/fields.ts';
 
 import {

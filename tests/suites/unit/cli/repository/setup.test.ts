@@ -7,9 +7,9 @@ import { runGitStep } from '#tests/setup/system/git.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { listConflictingConfigFiles } from '#cli/repository/config-files.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
-import { listConflictingConfigFiles } from '#cli/repository/setup/config-files.ts';
-import { readHooks, readLintJobs, readRepositorySetup } from '#cli/repository/setup/tools.ts';
+import { readHooks, readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
 
 import {
     HUSKY_STUBS,

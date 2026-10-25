@@ -22,9 +22,9 @@ import type { SourceComment } from '#cli/types/parsers/code/comments.ts';
 import { type Finding, type FindingPlace } from '#cli/types/runs/check.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { SuppressionSyntax } from '#cli/types/checks/general/gspot.ts';
+import { listConflictingConfigFiles } from '#cli/repository/config-files.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
 import { type Scope, type PathVisitor } from '#cli/types/settings/inheritance.ts';
-import { listConflictingConfigFiles } from '#cli/repository/setup/config-files.ts';
 
 import {
     GROUP_HELP,

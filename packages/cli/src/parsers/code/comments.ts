@@ -4,16 +4,15 @@ import { visit } from 'unist-util-visit';
 import { getPosition } from '#cli/system/text.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
+import { listSqlTokens } from '#cli/parsers/code/sql.ts';
 import type { SourcePosition } from '#cli/types/text.ts';
-import { listSqlTokens } from '#cli/parsers/code/sql/tokens.ts';
 import { NOT_LINE_BREAK } from '#cli/config/parsers/code/bash.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/files/classify.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
 import type { GrammarName } from '#cli/types/parsers/code/grammars.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
-import { getTomlRange, parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 import type { CommentParser, SourceComment } from '#cli/types/parsers/code/comments.ts';
+import { getTomlRange, parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 
 import {
     COMMENT_NODES,

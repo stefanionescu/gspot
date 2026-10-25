@@ -1,11 +1,8 @@
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
-import { JSON_INDENT } from '#cli/config/text.ts';
-import { stringify as stringifyYaml } from 'yaml';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { join, dirname, relative } from 'node:path/posix';
-import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import { buildSemgrepFile } from '#cli/generation/config-files/semgrep.ts';
 import { buildSquawkFile } from '#cli/generation/configurations/postgres.ts';
 import { buildLycheeFile } from '#cli/generation/configurations/general/docs.ts';
@@ -15,46 +12,36 @@ import { buildTyposFile } from '#cli/generation/configurations/general/spelling.
 import { buildStylelintFile } from '#cli/generation/configurations/language/css.ts';
 import { buildPurgecssFile } from '#cli/generation/configurations/framework/site.ts';
 import { buildShellcheckFile } from '#cli/generation/configurations/language/bash.ts';
+import { buildPrettierignoreFile } from '#cli/generation/config-files/ignore-files.ts';
+import { buildJscpdFile } from '#cli/generation/configurations/general/duplication.ts';
 import { buildGixyFile } from '#cli/generation/configurations/infrastructure/nginx.ts';
-import { buildRuffFile } from '#cli/generation/configurations/language/python/ruff.ts';
 import { buildCommitlintFile } from '#cli/generation/configurations/general/commits.ts';
-import { buildV8rFile } from '#cli/generation/configurations/general/data-files/v8r.ts';
 import { buildKnipFile } from '#cli/generation/configurations/language/javascript/knip.ts';
-import { buildTaploFile } from '#cli/generation/configurations/general/data-files/taplo.ts';
-import { buildHadolintFile } from '#cli/generation/configurations/infrastructure/docker.ts';
 import { buildMarkdownlintFile } from '#cli/generation/configurations/language/markdown.ts';
 import { buildOsvScannerFile } from '#cli/generation/configurations/general/dependencies.ts';
 import { buildSpectralFile } from '#cli/generation/configurations/infrastructure/openapi.ts';
-import { buildPrettierFile } from '#cli/generation/configurations/general/format/prettier.ts';
+import { buildAnsibleLintFile } from '#cli/generation/configurations/infrastructure/ansible.ts';
 import { buildPeripheryFile } from '#cli/generation/configurations/language/swift/periphery.ts';
 import { buildSwiftlintFile } from '#cli/generation/configurations/language/swift/swiftlint.ts';
-import { buildYamllintFile } from '#cli/generation/configurations/general/data-files/yamllint.ts';
 import { buildJsconfigFile } from '#cli/generation/configurations/language/javascript/jsconfig.ts';
 import { buildSwiftformatFile } from '#cli/generation/configurations/language/swift/swiftformat.ts';
-import { buildEditorconfigFile } from '#cli/generation/configurations/general/format/editorconfig.ts';
-import { buildBasedpyrightFile } from '#cli/generation/configurations/language/python/basedpyright.ts';
+import { buildRuffFile, buildBasedpyrightFile } from '#cli/generation/configurations/language/python.ts';
 import { buildEslintFile } from '#cli/generation/configurations/language/javascript/eslint/config-file.ts';
+import { buildPrettierFile, buildEditorconfigFile } from '#cli/generation/configurations/general/format.ts';
+import { buildTrivyFile, buildHadolintFile } from '#cli/generation/configurations/infrastructure/docker.ts';
+import { buildV8rFile, buildTaploFile, buildYamllintFile } from '#cli/generation/configurations/general/data-files.ts';
 
 import {
-    convertToGlobs,
-    listIgnoreSections,
-    buildPrettierignoreFile,
-} from '#cli/generation/config-files/ignore-files.ts';
+    TRANSPILE_OPTIONS,
+    CONFIG_FILE_REFERENCE,
+    SEMGREP_RULE_PACK_FILE,
+} from '#cli/config/generation/config-files/build.ts';
 import {
     type BuiltConfigFile,
     type PlannedConfigFile,
     type ConfigFileBuilder,
     type ConfigFileGeneration,
 } from '#cli/types/generation/files.ts';
-import {
-    JSCPD_IGNORED,
-    TRANSPILE_OPTIONS,
-    TRIVY_SKIPPED_FOLDERS,
-    JSCPD_IMPORT_PATTERNS,
-    CONFIG_FILE_REFERENCE,
-    SEMGREP_RULE_PACK_FILE,
-    ANSIBLE_LINT_ALWAYS_OFF,
-} from '#cli/config/generation/config-files/build.ts';
 import {
     buildValeIniFile,
     buildLengthStyle,
@@ -66,38 +53,15 @@ import {
 } from '#cli/generation/configurations/general/prose.ts';
 
 const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefined>> = {
-    'ansible/ansible-lint.yml': (planned) =>
-        stringifyYaml({
-            skip_list: [
-                ...new Set([...ANSIBLE_LINT_ALWAYS_OFF, ...listIgnoredRules(planned.scope, 'ansible/ansible-lint')]),
-            ],
-        }),
+    'ansible/ansible-lint.yml': buildAnsibleLintFile,
     'prose/styles/gspot/acronyms.yml': buildAcronymsStyle,
     'nginx/gixy.cfg': buildGixyFile,
     'postgres/squawk.toml': buildSquawkFile,
-    'docker/trivy.yml': (planned) =>
-        stringifyYaml({
-            timeout: `${String(planned.session.settingsFile.settings.tool_timeout_seconds)}s`,
-            severity: getTable(planned.scope.settings, 'tools.trivy').severity,
-            scan: { 'skip-dirs': TRIVY_SKIPPED_FOLDERS },
-        }),
+    'docker/trivy.yml': buildTrivyFile,
     'bash/shellcheckrc': buildShellcheckFile,
     'commits/commitlint.json': buildCommitlintFile,
     'markdown/markdownlint.jsonc': buildMarkdownlintFile,
-    'duplication/jscpd.json': (planned) =>
-        JSON.stringify(
-            {
-                mode: 'strict',
-                minLines: getTable(planned.scope.settings, 'duplication').min_lines,
-                minTokens: getTable(planned.scope.settings, 'duplication').min_tokens,
-                absolute: true,
-                gitignore: true,
-                ignorePattern: JSCPD_IMPORT_PATTERNS,
-                ignore: [...JSCPD_IGNORED, ...convertToGlobs(listIgnoreSections(planned, 'duplication/jscpd'))],
-            },
-            null,
-            JSON_INDENT,
-        ),
+    'duplication/jscpd.json': buildJscpdFile,
     'data-files/taplo.toml': buildTaploFile,
     'docs/lychee.toml': buildLycheeFile,
     'docker/hadolint.yml': buildHadolintFile,

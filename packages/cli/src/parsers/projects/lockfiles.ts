@@ -5,10 +5,10 @@ import { findCachedText } from '#cli/system/files/reads.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
 import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
 import type { LockfileName } from '#cli/types/parsers/projects/lockfiles.ts';
 import { PACKAGE_JSON, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
 

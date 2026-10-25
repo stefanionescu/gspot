@@ -2,8 +2,7 @@ import { test, expect } from 'bun:test';
 import { getPosition } from '#cli/system/text.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { TYPO } from '#tests/config/checks/general/spelling.ts';
-import { parseSqlFile } from '#cli/parsers/code/sql/postgres.ts';
-import { selectFrozenMigrations } from '#cli/parsers/code/sql/migrations.ts';
+import { parseSqlFile, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
 
 import {
     NESTED_COMMENT_SQL,

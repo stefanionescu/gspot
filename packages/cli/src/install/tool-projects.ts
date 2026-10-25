@@ -13,15 +13,20 @@ import { isLockfileFresh } from '#cli/install/npm/lockfiles.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import { readPythonSettings } from '#cli/install/python/settings.ts';
+import { toolPyprojectSchema } from '#cli/schemas/install/python.ts';
 import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import type { StaleLockfile } from '#cli/types/install/tool-projects.ts';
-import { toolPyprojectSchema } from '#cli/schemas/install/python/project.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/install/npm/project.ts';
 import { selectToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
-import { installPythonTools, preparePythonLockfile, isPythonLockfileFresh } from '#cli/install/python/project.ts';
+
+import {
+    readPythonSettings,
+    installPythonTools,
+    preparePythonLockfile,
+    isPythonLockfileFresh,
+} from '#cli/install/python.ts';
 
 function setLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
     const index = files.findIndex((file) => file.path === lockfile.path);

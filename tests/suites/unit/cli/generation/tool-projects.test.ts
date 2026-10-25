@@ -9,8 +9,8 @@ import { generate } from '#cli/generation/generate.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildNpmProject } from '#cli/generation/tool-projects.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { toolPyprojectSchema } from '#cli/schemas/install/python.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
-import { toolPyprojectSchema } from '#cli/schemas/install/python/project.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
 

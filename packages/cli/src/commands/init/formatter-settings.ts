@@ -5,18 +5,18 @@ import { getTool } from '#cli/configurations/tools.ts';
 import { parseFileFields } from '#cli/system/errors.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
 import { FORMAT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { ruffFormatSchema, prettierSettingsSchema } from '#cli/schemas/commands.ts';
+import { PYTHON_FILES } from '#cli/config/generation/configurations/language/python.ts';
+import { DEFAULT_QUOTES } from '#cli/config/generation/configurations/general/format.ts';
 import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
-import { PYTHON_FILES } from '#cli/config/generation/configurations/language/python/ruff.ts';
-import { DEFAULT_QUOTES } from '#cli/config/generation/configurations/general/format/prettier.ts';
 import type { SettingsDraft, PrettierOptions, EditorconfigSection } from '#cli/types/commands/init.ts';
 
 import {

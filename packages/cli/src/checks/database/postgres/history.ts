@@ -3,10 +3,10 @@ import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { FROZEN_NONE } from '#cli/config/parsers/code/sql.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
+import { selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
-import { FROZEN_NONE } from '#cli/config/parsers/code/sql/migrations.ts';
-import { selectFrozenMigrations } from '#cli/parsers/code/sql/migrations.ts';
 import { readHead, readBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { readMigrations, readForwardText, readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 

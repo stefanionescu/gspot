@@ -1,11 +1,10 @@
 import type { ColumnDef } from '@pgsql/types';
 import { getPosition } from '#cli/system/text.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { listSqlTokens } from '#cli/parsers/code/sql/tokens.ts';
 import { createIdentifier } from '#cli/checks/general/naming/languages/identifier.ts';
 import type { SqlNamed, Identifier, IdentifierRead } from '#cli/types/checks/general/naming.ts';
-import { parseSqlFile, visitStatement, listNodeFields } from '#cli/parsers/code/sql/postgres.ts';
 import type { SqlFile, SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
+import { parseSqlFile, listSqlTokens, visitStatement, listNodeFields } from '#cli/parsers/code/sql.ts';
 
 import {
     SQL_NAME_TOKEN,

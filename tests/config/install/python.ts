@@ -1,4 +1,4 @@
-import { PYTHON_VERSION } from '#cli/config/install/python/project.ts';
+import { PYTHON_VERSION } from '#cli/config/install/python.ts';
 import type { PythonIndexSettings } from '#cli/types/install/python.ts';
 
 export const UV_TOML = `index-url = "https://alex:test%2Bpassword@example.com/simple"

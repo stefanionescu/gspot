@@ -6,7 +6,6 @@ import { findTool } from '#cli/runs/command/tool.ts';
 import type { Session } from '#cli/types/session.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
-import { runBuiltInCheck } from '#cli/runs/built-in.ts';
 import { readSessionRepository } from '#cli/session.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -23,7 +22,15 @@ import { RAN_STATUSES, FAILED_STATUSES } from '#cli/config/runs/check.ts';
 import { DOCKER_MISSING_MESSAGE } from '#cli/config/commands/check/run.ts';
 import type { Run, RunResult, RunOptions, PlanAfterFixes } from '#cli/types/runs/run.ts';
 import { buildRunReport, buildBaseResult, formatReproduceCommand } from '#cli/runs/report.ts';
-import type { Finding, CheckCode, CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
+
+import type {
+    Finding,
+    CheckCode,
+    CheckResult,
+    BuiltInCheck,
+    CheckRunOptions,
+    BuiltInCheckResult,
+} from '#cli/types/runs/check.ts';
 
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     if ((['check', 'rule'] as const).some((key) => record[key] !== undefined && record[key] !== finding[key]))
@@ -202,4 +209,37 @@ export async function runCheckCode(
         listFileArguments: code?.listFileArguments,
         listConfigFiles: code?.listConfigFiles,
     });
+}
+
+function buildBuiltInResult(
+    planned: PlannedCheck,
+    session: Pick<Session, 'scopes'>,
+    completion: { result: Finding[] | BuiltInCheckResult; started: number },
+): CheckResult {
+    const { result, started } = completion;
+    let findings: Finding[];
+    let files: string[] | undefined;
+    if (Array.isArray(result)) findings = result;
+    else {
+        findings = result.findings;
+        files = [...new Set(result.files)];
+    }
+    for (const finding of findings) finding.help ??= planned.check.help;
+    return {
+        ...buildBaseResult(planned, session),
+        findings,
+        ...(files !== undefined && { files, fileCount: files.length }),
+        status: findings.length > 0 ? 'failed' : 'passed',
+        duration: Math.round(performance.now() - started),
+    };
+}
+
+async function runBuiltInCheck(
+    builtInCheck: BuiltInCheck,
+    session: Session,
+    planned: PlannedCheck,
+): Promise<CheckResult> {
+    const started = performance.now();
+    const result = await builtInCheck(session, planned);
+    return buildBuiltInResult(planned, session, { result, started });
 }

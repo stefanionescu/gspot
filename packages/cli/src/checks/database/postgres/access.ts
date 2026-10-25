@@ -7,11 +7,10 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Node, TypeName, GrantStmt } from '@pgsql/types';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import type { SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
-import { selectFrozenMigrations } from '#cli/parsers/code/sql/migrations.ts';
 import { PUBLIC_SCHEMA } from '#cli/config/checks/database/postgres/schema.ts';
 import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import type { Migration, MigrationStatement } from '#cli/types/checks/postgres.ts';
-import { getNodeFields, listNodeFields, visitStatement } from '#cli/parsers/code/sql/postgres.ts';
+import { getNodeFields, listNodeFields, visitStatement, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
 
 function buildFunctionKey(names: Node[] | undefined, parameters: (TypeName | undefined)[]): string {
     const path = listNodeFields(names, 'String').map(({ sval = '' }) => sval);

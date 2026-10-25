@@ -1,15 +1,15 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { join, resolve, relative } from 'node:path';
+import { readHooks } from '#cli/repository/setup.ts';
 import type { Session } from '#cli/types/session.ts';
 import { listHookNames } from '#cli/generation/hooks.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { readHooks } from '#cli/repository/setup/tools.ts';
 import { statSync, readdirSync, readFileSync } from 'node:fs';
 import { type Repository } from '#cli/types/repository/files.ts';
+import { HOOKS_PATH_SETTING } from '#cli/config/repository/setup.ts';
 import { type RepositorySetup } from '#cli/types/repository/setup.ts';
 import type { HookPlan, HookStatus } from '#cli/types/install/hooks.ts';
-import { HOOKS_PATH_SETTING } from '#cli/config/repository/setup/tools.ts';
 import { readGitSetting, runGitBlocking, readHooksFolder } from '#cli/system/git.ts';
 import { LFS_HOOKS, HOOK_CHECKS, HOOK_SHEBANG, LFS_GUARD_PREFIX } from '#cli/config/generation/hooks.ts';
 import { LFS_PUSH_CALLS, SET_HOOKS_PATH, UNSET_HOOKS_PATH, SAMPLE_HOOK_SUFFIX } from '#cli/config/install/hooks.ts';

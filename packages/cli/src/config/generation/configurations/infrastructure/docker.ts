@@ -1,3 +1,7 @@
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { NODE_MODULES } from '#cli/config/files/names.ts';
+import { GIT_FOLDER } from '#cli/config/repository/files/tracked.ts';
+
 export const HADOLINT_FAILURE_THRESHOLD = 'style';
 
 export const HADOLINT_RECOMMENDED_OFF = [
@@ -10,3 +14,5 @@ export const HADOLINT_RECOMMENDED_OFF = [
     'DL3048',
     'DL4001',
 ] as const;
+
+export const TRIVY_SKIPPED_FOLDERS = [NODE_MODULES, DOT_GSPOT, GIT_FOLDER] as const;

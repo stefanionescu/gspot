@@ -1,4 +1,4 @@
-import { PYTHON_VERSION } from '#cli/config/install/python/project.ts';
+import { PYTHON_VERSION } from '#cli/config/install/python.ts';
 
 export const NPM_TOOL_PROJECT = { name: 'tools', private: true } as const;
 

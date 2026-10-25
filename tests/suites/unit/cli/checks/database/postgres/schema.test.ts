@@ -1,9 +1,9 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { parseSqlFile } from '#cli/parsers/code/sql.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { type Migration } from '#cli/types/checks/postgres.ts';
-import { parseSqlFile } from '#cli/parsers/code/sql/postgres.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 

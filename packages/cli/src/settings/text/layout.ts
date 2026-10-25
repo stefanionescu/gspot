@@ -19,7 +19,7 @@ import {
     addTomlComment,
     insertTomlComments,
     listAnchoredComments,
-} from '#cli/parsers/formats/toml/syntax.ts';
+} from '#cli/parsers/formats/toml.ts';
 import {
     type TomlBlock,
     type TomlSyntax,

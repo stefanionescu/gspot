@@ -8,7 +8,7 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { readCachedText, findCachedText } from '#cli/system/files/reads.ts';
 import { miseToolsSchema } from '#cli/schemas/checks/general/dependencies.ts';
