@@ -3,7 +3,7 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { NamedCategory } from '#cli/types/settings/naming.ts';
 import { regexSchema } from '#cli/schemas/configurations/fields.ts';
 import { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/configurations/naming.ts';
-import type { PathContainer, NamingDefaults, NamingOverride } from '#cli/types/checks/general/naming.ts';
+import type { PathContainer, NamingDefaults, NamingOverride } from '#cli/types/configurations.ts';
 
 const pathContainerSchema = z.strictObject({
     open: z.string().min(1),

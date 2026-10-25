@@ -1,9 +1,9 @@
-import type { CheckOutput } from '#cli/types/runs/output.ts';
 import type { FileKind } from '#cli/types/repository/files.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
+import type { CheckOutput } from '#cli/types/runs/output/formats.ts';
 import { type Optional, type JsonValue } from '#cli/types/shapes.ts';
-import type { NamingOverride } from '#cli/types/checks/general/naming.ts';
 import type { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
+import type { NamingCase, NamedCategory } from '#cli/types/settings/naming.ts';
 import type { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
 
 import {
@@ -225,3 +225,27 @@ export type ConditionFields = Pick<
 > & { configuration: string; level: Level; setting: string; git: true };
 
 export type NameList = { package: string; version: string; names: string[] };
+
+export type PathContainer = { open: string; close: string; category: NamedCategory };
+
+export type NamingDefaults = {
+    path_containers: PathContainer[];
+    groups: Record<string, { terms: string[] }>;
+    allowed_names: string[];
+    allowed_phrases: string[];
+    languages: Record<string, { categories: Record<string, { cases: NamingCase[] }> }>;
+    override: NamingOverride[];
+};
+
+export type NamingOverride = {
+    paths?: string[] | undefined;
+    languages?: string[] | undefined;
+    categories?: string[] | undefined;
+    ignored_prefix?: string | undefined;
+    ignored_names_pattern?: string | undefined;
+    allow_digits?: boolean | undefined;
+    allow_repeated_words?: boolean | undefined;
+    allowed_names?: string[] | undefined;
+    cases?: NamingCase[] | undefined;
+    reason?: string | undefined;
+};

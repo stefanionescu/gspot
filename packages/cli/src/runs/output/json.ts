@@ -1,8 +1,8 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { getValueAt } from '#cli/system/tables.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import type { ToolOutput } from '#cli/types/runs/output.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
+import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
 import { JSON_START, JSON_PREVIEW_LENGTH } from '#cli/config/runs/output/json.ts';
 
 function buildJsonSyntaxError(stdout: string): GspotError {

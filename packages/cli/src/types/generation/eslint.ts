@@ -164,3 +164,11 @@ export type EslintScope = {
     sourceFiles: string[];
     projects: string[];
 };
+
+export type PluginRuleBlock = {
+    imports: EslintPlugins;
+    properties: string;
+    files: 'code' | 'tests' | readonly string[];
+    ignoresTests?: true;
+    rules: Readonly<Record<string, unknown>>;
+};

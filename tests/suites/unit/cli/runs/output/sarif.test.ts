@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
-import { type SarifLog } from '#cli/types/runs/tool-reports.ts';
+import { type SarifLog } from '#cli/types/runs/output/reports.ts';
 import { outputSchema } from '#cli/schemas/configurations/output.ts';
 
 import {

@@ -19,7 +19,6 @@ export const UV_INSTALL_ARGUMENTS = ['sync', '--locked', '--no-install-project',
 
 export const REQUIREMENT_PACKAGE_NAME = /^[^=]+/u;
 
-export const PROJECT_UV_LOCKFILE = 'uv.lock';
 export const PYTHON_DEFAULT_INDEX_ORIGIN = 'https://pypi.org';
 
 export const PYTHON_PACKAGE_ORIGINS = ['https://files.pythonhosted.org'] as const;

@@ -1,7 +1,7 @@
 import type { Finding } from '#cli/types/runs/check.ts';
-import type { ToolOutput } from '#cli/types/runs/output.ts';
 import { parseRegexFindings } from '#cli/runs/output/text.ts';
 import { TAPLO_OUTPUTS } from '#cli/config/runs/output/taplo.ts';
+import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
 
 /**
 Read Taplo syntax errors and formatting differences with their separate messages.

@@ -1,4 +1,5 @@
-import type { LOCKFILES, DEPENDENCY_SECTIONS, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
+import type { LOCKFILES } from '#cli/config/files/lockfiles.ts';
+import type { DEPENDENCY_SECTIONS, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 
 export type Lockfile = (typeof LOCKFILES)[number];
 

@@ -12,6 +12,7 @@ import type { Repository } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
+import { FORMAT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { ruffFormatSchema, prettierSettingsSchema } from '#cli/schemas/commands.ts';
 import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
 import { PYTHON_FILES } from '#cli/config/generation/configurations/language/python/ruff.ts';
@@ -23,7 +24,6 @@ import {
     EDITORCONFIG_FILE,
     RUFF_SETTINGS_FILES,
     PRETTIER_SCRIPT_FILE,
-    FORMAT_CONFIGURATION,
     EDITORCONFIG_SECTION,
     EDITORCONFIG_COMMENT,
     PRETTIER_FILE_FORMATS,

@@ -1,4 +1,4 @@
-import type { SqlRange, SqlToken, BlankedSql } from '#cli/types/parsers/code/sql.ts';
+import type { SqlRange, SqlToken, BlankedSql, MatchedToken } from '#cli/types/parsers/code/sql.ts';
 import { WORD_CHARACTER, IDENTIFIER_START, DOLLAR_TAG_BLOCKER } from '#cli/config/parsers/code/sql/tokens.ts';
 
 function findLineEnd(text: string, from: number, stops: string): number {
@@ -40,8 +40,6 @@ function findVariableEnd(text: string, at: number): number {
     if (!isQuoted) return end;
     return text[end] === quote ? end + 1 : -1;
 }
-
-type MatchedToken = Omit<SqlToken, 'start'>;
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function matchEscapedString(text: string, at: number): MatchedToken | undefined {

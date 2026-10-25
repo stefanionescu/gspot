@@ -1,5 +1,4 @@
-import { PYTHON_LOCKFILES } from '#cli/config/checks/general/licenses.ts';
-import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
+import { PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 
 export const LOCKED_VERSIONS_MANIFEST = '{"dependencies":{"react":"^18.3.0","react-dom":"18.3.1"}}';
 

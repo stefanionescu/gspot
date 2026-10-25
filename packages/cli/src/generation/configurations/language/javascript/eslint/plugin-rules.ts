@@ -18,7 +18,7 @@ export function buildPluginRuleBlocks(scope: EslintScope, configuration: string)
             {
                 fields: {
                     files,
-                    ...(declaration.ignores !== undefined && {
+                    ...(declaration.ignoresTests === true && {
                         ignores: [
                             ...new Set(
                                 scope.eslintFiles.tests.map(([test]) => test).filter((test) => test !== undefined),

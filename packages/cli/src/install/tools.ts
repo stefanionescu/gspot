@@ -1,4 +1,5 @@
 import which from 'which';
+import { VALE_TOOL } from '#cli/config/prose.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { installHooks } from '#cli/install/hooks.ts';
 import type { Session } from '#cli/types/session.ts';
@@ -6,7 +7,6 @@ import { MISE_TOOL } from '#cli/config/tools/locate.ts';
 import { installMiseTools } from '#cli/install/mise.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { installValePackages } from '#cli/install/vale.ts';
-import { VALE_TOOL } from '#cli/config/checks/general/prose.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { installToolProjects } from '#cli/install/tool-projects.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';

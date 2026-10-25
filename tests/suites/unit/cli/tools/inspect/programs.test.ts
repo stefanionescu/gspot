@@ -16,8 +16,8 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies/package-json.ts';
 import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 test('tool inspection finds the project compiler, and the original repository compiler from a copy', async () => {

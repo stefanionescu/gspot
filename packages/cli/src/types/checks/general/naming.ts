@@ -31,8 +31,6 @@ export type NamingSettings = {
     limitsFor: (language: string, category: string) => CategoryLimits;
 };
 
-export type PathContainer = { open: string; close: string; category: NamedCategory };
-
 export type NamedFile = { file: TrackedFile; language: string };
 
 export type FileNames = {
@@ -41,28 +39,6 @@ export type FileNames = {
     names: string[];
     declarations: string[] | undefined;
     folders: Identifier[];
-};
-
-export type NamingDefaults = {
-    path_containers: PathContainer[];
-    groups: Record<string, { terms: string[] }>;
-    allowed_names: string[];
-    allowed_phrases: string[];
-    languages: Record<string, { categories: Record<string, { cases: NamingCase[] }> }>;
-    override: NamingOverride[];
-};
-
-export type NamingOverride = {
-    paths?: string[] | undefined;
-    languages?: string[] | undefined;
-    categories?: string[] | undefined;
-    ignored_prefix?: string | undefined;
-    ignored_names_pattern?: string | undefined;
-    allow_digits?: boolean | undefined;
-    allow_repeated_words?: boolean | undefined;
-    allowed_names?: string[] | undefined;
-    cases?: NamingCase[] | undefined;
-    reason?: string | undefined;
 };
 
 export type Identifier = {

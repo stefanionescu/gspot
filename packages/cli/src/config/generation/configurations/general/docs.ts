@@ -9,5 +9,3 @@ export const LYCHEE_NOTES = [
     '# Allow a URL with the docs.allowed_urls setting.',
     '# A link that starts with / starts at the repository root, as on GitHub; in a site, it names a route.',
 ];
-
-export const SITE_CONFIGURATION = 'site';

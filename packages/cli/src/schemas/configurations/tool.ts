@@ -4,7 +4,8 @@ import { stripUndefined } from '#cli/system/tables.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
-import { TOOL_KINDS, TOOL_BUILDS, MAX_EXIT_CODE } from '#cli/config/configurations/names.ts';
+import { MAX_EXIT_CODE } from '#cli/config/configurations/fields.ts';
+import { TOOL_KINDS, TOOL_BUILDS } from '#cli/config/configurations/names.ts';
 import { EXTENSION_PATTERN, MINIMUM_VERSION_PATTERN } from '#cli/config/configurations/tool.ts';
 import { regexSchema, commandSchema, conditionSchema } from '#cli/schemas/configurations/fields.ts';
 

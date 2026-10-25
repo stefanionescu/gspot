@@ -5,8 +5,8 @@ import type { REEXPORT_MODES } from '#cli/config/settings/tables.ts';
 import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 import type { ConfigurationTables } from '#cli/types/settings/tables.ts';
 import type { Defined, Optional, SchemaShape } from '#cli/types/shapes.ts';
-import type { CheckOutput, WrittenOutput } from '#cli/types/runs/output.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tools.ts';
+import type { CheckOutput, WrittenOutput } from '#cli/types/runs/output/formats.ts';
 
 import type {
     NamingCase,

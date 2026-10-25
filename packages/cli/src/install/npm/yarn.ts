@@ -7,6 +7,7 @@ import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
+import { YARN_SETTINGS_FILE } from '#cli/config/files/names.ts';
 import { addEnvironmentReference } from '#cli/install/npm/registry.ts';
 import { NPM_SETTING_PREFIX } from '#cli/config/install/npm/project.ts';
 import { buildPackageManagerCommand } from '#cli/repository/npm/package-manager.ts';
@@ -16,7 +17,6 @@ import { yarnSettingsSchema, yarnConfigSettingSchema } from '#cli/schemas/instal
 import {
     YARN_SECRET_KEYS,
     YARN_SETTING_KEYS,
-    YARN_SETTINGS_FILE,
     YARN_CONNECTION_KEYS,
     YARN_CONFIG_GET_FLAGS,
     YARN_CONFIG_GET_ARGUMENTS,

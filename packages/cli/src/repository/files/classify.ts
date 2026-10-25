@@ -1,11 +1,11 @@
 import { posix } from 'node:path';
 import { readText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
+import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import { MARKERS } from '#cli/config/parsers/formats/managed-blocks.ts';
 import type { ConfigFile, Configuration } from '#cli/types/configurations.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';

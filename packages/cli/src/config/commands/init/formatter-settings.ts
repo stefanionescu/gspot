@@ -18,5 +18,3 @@ export const PRETTIER_FILE_FORMATS: Readonly<Record<string, 'yaml' | 'json' | 't
 export const PRETTIER_SCRIPT_FILE = /\.[cm]?[jt]s$/u;
 
 export const PRETTIER_DEFAULTS = { tabWidth: 2, printWidth: 80, singleQuote: false } as const;
-
-export const FORMAT_CONFIGURATION = 'format';

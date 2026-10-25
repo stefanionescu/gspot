@@ -10,13 +10,13 @@ import { TYPESCRIPT_TAG } from '#cli/config/checks/tsc/compiler.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
+import { NESTJS_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 
 import {
     COMPILER_OPTIONS,
     RECOMMENDED_OPTIONS,
     TYPESCRIPT_DEFAULTS,
-    NESTJS_CONFIGURATION,
     NESTJS_COMPILER_OPTIONS,
     TYPESCRIPT_TSCONFIG_CHECK,
 } from '#cli/config/checks/tsc/scope-tsconfig.ts';

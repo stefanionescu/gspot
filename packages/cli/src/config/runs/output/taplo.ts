@@ -1,4 +1,4 @@
-import type { CheckOutput } from '#cli/types/runs/output.ts';
+import type { CheckOutput } from '#cli/types/runs/output/formats.ts';
 
 export const TAPLO_OUTPUTS = [
     {

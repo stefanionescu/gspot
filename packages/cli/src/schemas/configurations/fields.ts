@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
+import { LEVELS, STAGES } from '#cli/config/configurations/names.ts';
 import { outputSchema } from '#cli/schemas/configurations/output.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
-import { DEFAULT_OUTPUT_FORMAT } from '#cli/config/configurations/fields.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
-import { LEVELS, STAGES, MAX_EXIT_CODE } from '#cli/config/configurations/names.ts';
+import { MAX_EXIT_CODE, DEFAULT_OUTPUT_FORMAT } from '#cli/config/configurations/fields.ts';
 import type { Level, Stage, ParsedCheck, ConditionFields } from '#cli/types/configurations.ts';
 
 const findingExitCodesSchema = z.number().int().min(1).max(MAX_EXIT_CODE).array();

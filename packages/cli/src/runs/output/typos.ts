@@ -4,10 +4,10 @@ import { GspotError } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { ToolOutput } from '#cli/types/runs/output.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { reportedTypoSchema } from '#cli/schemas/runs/typos.ts';
-import type { ReportedTypo } from '#cli/types/runs/tool-reports.ts';
+import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
+import type { ReportedTypo } from '#cli/types/runs/output/reports.ts';
 
 function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {
     const held = cache.get(path);

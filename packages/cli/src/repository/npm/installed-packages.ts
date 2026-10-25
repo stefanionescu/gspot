@@ -7,8 +7,8 @@ import type { Files } from '#cli/types/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies.ts';
 import type { InstalledDependency } from '#cli/types/repository/npm/installed-packages.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies/package-json.ts';
 
 /**
 Read and validate a package.json outside the tool project, without its boundary.

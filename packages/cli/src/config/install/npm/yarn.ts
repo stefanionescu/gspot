@@ -43,5 +43,3 @@ export const YARN_CONFIG_GET_ARGUMENTS = ['yarn', 'config', 'get'] as const;
 export const YARN_CONFIG_GET_FLAGS = ['--json', '--no-redacted'] as const;
 
 export const YARN_INSTALL_SETTINGS_FILE = '.yarnrc-install.yml';
-
-export const YARN_SETTINGS_FILE = '.yarnrc.yml';

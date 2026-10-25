@@ -13,11 +13,11 @@ import { buildSettingsText } from '#cli/settings/text/build.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
-import { SWIFT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { readFormatTables } from '#cli/commands/init/formatter-settings.ts';
 import { buildImportExtensionTables } from '#cli/commands/init/import-extension.ts';
+import { PREFACE_BODY, XCODE_DESTINATIONS } from '#cli/config/commands/init/settings-text.ts';
+import { SWIFT_CONFIGURATION, OPENAPI_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import type { InitAnswers, InitOptions, SettingsDraft, InitConfigurations } from '#cli/types/commands/init.ts';
-import { PREFACE_BODY, XCODE_DESTINATIONS, OPENAPI_CONFIGURATION } from '#cli/config/commands/init/settings-text.ts';
 
 function buildOpenApiTables(
     scopes: { scope: string; selected: Configuration[] }[],

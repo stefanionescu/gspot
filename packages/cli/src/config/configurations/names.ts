@@ -27,8 +27,6 @@ export const GROUP_LABELS = {
     general: 'General',
 } as const satisfies Record<Group, string>;
 
-export const MAX_EXIT_CODE = 255;
-
 export const LEVELS = ['recommended', 'all'] as const;
 
 export const STAGES = ['commit', 'push', 'manual', 'message'] as const;
@@ -55,6 +53,24 @@ export const JAVASCRIPT_CONFIGURATION = 'javascript';
 
 export const TOOL_FOLDER_KINDS = ['npm', 'python', 'vale'] as const;
 
-export const DEFAULT_PATTERN = String.raw`^(?<file>[^:\s][^:]*):(?<line>\d+):(?:(?<column>\d+):)?\s*(?<message>.*)$`;
-
 export const NEXTJS_CONFIGURATION = 'nextjs';
+
+export const NESTJS_CONFIGURATION = 'nestjs';
+
+export const FORMAT_CONFIGURATION = 'format';
+
+export const OPENAPI_CONFIGURATION = 'openapi';
+
+export const SITE_CONFIGURATION = 'site';
+
+export const TRPC_CONFIGURATION = 'trpc';
+
+export const REACT_NATIVE_CONFIGURATION = 'react-native';
+
+export const TYPESCRIPT_CONFIGURATION = 'typescript';
+
+export const LICENSES_CONFIGURATION = 'licenses';
+
+export const VUE_CONFIGURATION = 'vue';
+
+export const SVELTE_CONFIGURATION = 'svelte';

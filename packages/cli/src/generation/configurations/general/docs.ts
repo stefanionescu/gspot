@@ -1,12 +1,12 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/config-files/build.ts';
+import { SITE_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 
 import {
     LYCHEE_NOTES,
     LYCHEE_ROOT_LINKS,
-    SITE_CONFIGURATION,
     LYCHEE_MDX_EXPRESSION,
     LYCHEE_REPOSITORY_LINKS,
 } from '#cli/config/generation/configurations/general/docs.ts';

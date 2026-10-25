@@ -3,9 +3,9 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import { LOCKFILE_DOWNLOADS, DOWNLOAD_PROTOCOLS } from '#cli/config/checks/general/dependencies/lockfiles.ts';
 
 function validateUrl(url: URL, hosts: Set<string>): string | undefined {

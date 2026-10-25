@@ -19,8 +19,6 @@ export const COMPILER_OPTIONS = {
     noPropertyAccessFromIndexSignature: true,
 } as const;
 
-export const NESTJS_CONFIGURATION = 'nestjs';
-
 export const NESTJS_COMPILER_OPTIONS = { experimentalDecorators: true, emitDecoratorMetadata: true } as const;
 
 export const TYPESCRIPT_TSCONFIG_CHECK = 'typescript/tsconfig';

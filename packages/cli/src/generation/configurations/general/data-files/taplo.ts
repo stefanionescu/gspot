@@ -1,6 +1,6 @@
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/config-files/build.ts';
+import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { TAPLO_FORMATTING } from '#cli/config/generation/configurations/general/data-files/taplo.ts';
 
 /**

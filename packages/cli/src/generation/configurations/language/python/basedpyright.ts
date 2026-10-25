@@ -1,10 +1,9 @@
 import { posix } from 'node:path';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { PROJECT_UV_LOCKFILE } from '#cli/config/install/python/project.ts';
 import { listPythonIgnoredGlobs } from '#cli/generation/config-files/ignore-files.ts';
+import { PROJECT_UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 
 import {
     BASEDPYRIGHT_OPTIONS,

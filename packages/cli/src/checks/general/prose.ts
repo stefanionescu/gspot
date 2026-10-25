@@ -9,6 +9,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { join, dirname, relative, isAbsolute } from 'node:path';
+import { VALE_TOOL, PROSE_GRAMMARS } from '#cli/config/prose.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
@@ -16,14 +17,7 @@ import { SCRIPT_TAG } from '#cli/config/repository/files/classify.ts';
 import { valeReportSchema } from '#cli/schemas/checks/general/prose.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import type { ValeAlert, ProseRoute, ProseRouteGroup } from '#cli/types/checks/general/prose.ts';
-
-import {
-    VALE_TOOL,
-    PROSE_GRAMMARS,
-    SCRIPT_GRAMMAR,
-    VALE_ARGUMENTS,
-    VALE_ERROR_LINE,
-} from '#cli/config/checks/general/prose.ts';
+import { SCRIPT_GRAMMAR, VALE_ARGUMENTS, VALE_ERROR_LINE } from '#cli/config/checks/general/prose.ts';
 
 function parseValeAlerts(stdout: string): ValeAlert[] {
     return Object.entries(parseToolReport('Vale', stdout, valeReportSchema)).flatMap(([file, alerts]) =>

@@ -20,9 +20,10 @@ import { PYTHON_EXECUTABLE } from '#cli/config/tools/python.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 import type { PlannedCheck, LicenseProject } from '#cli/types/planning.ts';
-import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { splitIdentity, readLockedPackages } from '#cli/parsers/projects/lockfiles.ts';
+import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/licenses.ts';
+import { PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import { PACKAGE_JSON, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
 import { pythonReportSchema, javascriptReportSchema } from '#cli/schemas/checks/general/licenses.ts';
 
@@ -37,10 +38,7 @@ import {
     LICENSE_CHOICE,
     TROVE_LICENSES,
     UNKNOWN_LICENSE,
-    PYTHON_LOCKFILES,
-    PIP_LICENSES_COMMAND,
     CLASSIFIER_SEPARATOR,
-    LICENSE_CHECKER_COMMAND,
 } from '#cli/config/checks/general/licenses.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.

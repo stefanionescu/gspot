@@ -1,7 +1,3 @@
-export const HASH_SOURCE = '(?:[a-f0-9]{40}|[a-f0-9]{64})';
-
-export const HASH_PATTERN = new RegExp(`^${HASH_SOURCE}$`, 'u');
-
 export const ABSENT_HASH = /^0+$/u;
 
 export const GIT_PEEL_ARGUMENTS = ['cat-file', '--batch-check=%(objectname) %(objecttype)'] as const;

@@ -1,6 +1,6 @@
 import type { Finding } from '#cli/types/runs/check.ts';
-import { type ToolOutput } from '#cli/types/runs/output.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/runs/output/text.ts';
+import { type ToolOutput } from '#cli/types/runs/output/formats.ts';
 
 function setMatchedFields(finding: Finding, groups: Record<string, string | undefined>): Finding {
     const line = groups['line'];

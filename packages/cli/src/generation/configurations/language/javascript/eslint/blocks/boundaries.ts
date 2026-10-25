@@ -1,3 +1,4 @@
+import { TRPC_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
 import { CODE_LANGUAGES } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
@@ -15,7 +16,6 @@ import {
 } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import {
     TEMPLATE_OPEN,
-    TRPC_CONFIGURATION,
     TEST_IMPORT_POLICY,
     OTHER_BOUNDARY_FILE,
     IMPORT_RULE_CATEGORY,

@@ -1,5 +1,5 @@
+import { REACT_NATIVE_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { REACT_NATIVE_CONFIGURATION } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
 import {
     REACT_FILES,

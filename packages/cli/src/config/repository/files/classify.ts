@@ -244,4 +244,3 @@ export const VENDORED_ATTRIBUTE = 'linguist-vendored';
 export const MARKDOWN_EXTENSION = '.md';
 
 export const TEXT_ATTRIBUTE = 'text';
-export const FILE_KINDS = ['source', 'generated', 'vendored', 'binary'] as const;

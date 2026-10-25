@@ -1,4 +1,4 @@
-import { HASH_SOURCE } from '#cli/config/repository/revisions/push.ts';
+import { HASH_SOURCE } from '#cli/config/git.ts';
 import { GITLINK_MODE, GIT_FILE_MODES } from '#cli/config/files/modes.ts';
 
 export const UNSUPPORTED_INDEX_LINE =

@@ -3,8 +3,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies/package-json.ts';
-import { pipfileSchema, pyprojectSchema } from '#cli/schemas/parsers/projects/dependencies/python.ts';
+import { pipfileSchema, pyprojectSchema, packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies.ts';
 
 import type {
     Pyproject,

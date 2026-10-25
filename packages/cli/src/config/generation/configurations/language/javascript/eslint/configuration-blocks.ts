@@ -1,4 +1,4 @@
-import type { EslintPlugins } from '#cli/types/generation/eslint.ts';
+import type { EslintPlugins, PluginRuleBlock } from '#cli/types/generation/eslint.ts';
 
 const EXPO_RULES = {
     'expo/no-env-var-destructuring': 'error',
@@ -90,18 +90,7 @@ export const TEST_RULE_NAMES = [
     'prefer-strict-equal',
 ] as const;
 
-export const PLUGIN_RULE_BLOCKS: Readonly<
-    Record<
-        string,
-        {
-            imports: EslintPlugins;
-            properties: string;
-            files: 'code' | 'tests' | readonly string[];
-            ignores?: 'tests';
-            rules: Readonly<Record<string, unknown>>;
-        }
-    >
-> = {
+export const PLUGIN_RULE_BLOCKS: Readonly<Record<string, PluginRuleBlock>> = {
     jest: {
         imports: CONFIGURATION_PLUGINS.jest,
         properties: `plugins: { jest }, languageOptions: { globals: jest.environments.globals.globals }, settings: { jest: { globalPackage: ${JSON.stringify(JEST_GLOBAL_PACKAGE)} } }`,
@@ -134,9 +123,7 @@ export const PLUGIN_RULE_BLOCKS: Readonly<
         imports: CONFIGURATION_PLUGINS.translations,
         properties: 'plugins: { i18next }',
         files: JSX_FILES,
-        ignores: 'tests',
+        ignoresTests: true,
         rules: TRANSLATIONS_RULES,
     },
 };
-
-export const TYPESCRIPT_CONFIGURATION = 'typescript';

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { VALE_TOOL } from '#cli/config/prose.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, resolve } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -10,7 +11,6 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { downloadArchive } from '#cli/install/downloads.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
-import { VALE_TOOL } from '#cli/config/checks/general/prose.ts';
 import { redactInstallOutput } from '#cli/install/credentials.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';

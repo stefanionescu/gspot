@@ -1,15 +1,13 @@
+import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
 import { VUE_RULES, VUE_FILES } from '#cli/config/generation/configurations/framework/vue.ts';
+import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 import {
     getPreset,
     convertPresetWarnings,
     buildArrayPresetBlocks,
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
-import {
-    CONFIGURATION_PLUGINS,
-    TYPESCRIPT_CONFIGURATION,
-} from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 /**
 Apply the Vue presets, accessibility lint rules, and component parsing.

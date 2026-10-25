@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { type SemgrepReport } from '#cli/types/runs/tool-reports.ts';
+import { type SemgrepReport } from '#cli/types/runs/output/reports.ts';
 
 const positionSchema = z.object({
     line: z.number().int().positive(),

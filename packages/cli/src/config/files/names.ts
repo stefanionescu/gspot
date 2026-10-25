@@ -32,3 +32,9 @@ export const SQL_EXTENSION = '.sql';
 export const PBXPROJ = `.xcodeproj/${PBXPROJ_NAME}`;
 
 export const NPM_PACKAGE_FOLDER = `${NODE_MODULES}/`;
+
+export const SCHEMA_FILE = 'gspot.schema.json';
+
+export const YARN_SETTINGS_FILE = '.yarnrc.yml';
+
+export const PROJECT_UV_LOCKFILE = 'uv.lock';

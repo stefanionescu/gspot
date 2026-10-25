@@ -35,7 +35,7 @@ allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/**", "packages/cli/src/types/commands/list.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/runs/output.ts", "packages/cli/src/types/runs/tool-reports.ts", "packages/cli/src/types/repository/detect.ts", "packages/cli/src/types/settings/**"]
+paths = ["packages/cli/src/types/checks/**", "packages/cli/src/types/commands/list.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/runs/output/formats.ts", "packages/cli/src/types/runs/output/reports.ts", "packages/cli/src/types/repository/detect.ts", "packages/cli/src/types/settings/**"]
 categories = ["properties"]
 cases = ["camel", "upper-snake", "snake"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
@@ -99,7 +99,7 @@ allowed_names = ["checkSupabaseDenoCheck"]
 reason = "Check functions start with check and spell the supabase/deno-check check ID."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/runs/tool-reports.ts"]
+paths = ["packages/cli/src/types/runs/output/reports.ts"]
 allowed_names = ["fixInfo"]
 reason = "markdownlint names its fix field fixInfo."
 
@@ -161,7 +161,7 @@ allowed_names = ["markdownlint-cli2"]
 reason = "The manifest loader reads this source by the external markdownlint-cli2 target filename."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/runs/tool-reports.ts", "packages/cli/src/schemas/runs/sarif.ts", "packages/cli/src/runs/output/sarif.ts", "tests/suites/unit/cli/runs/output/sarif.test.ts", "tests/suites/unit/cli/runs/output/formats.test.ts"]
+paths = ["packages/cli/src/types/runs/output/reports.ts", "packages/cli/src/schemas/runs/sarif.ts", "packages/cli/src/runs/output/sarif.ts", "tests/suites/unit/cli/runs/output/sarif.test.ts", "tests/suites/unit/cli/runs/output/formats.test.ts"]
 allowed_names = ["invocations"]
 reason = "SARIF names the field of a run that records each tool run invocations."
 
@@ -186,7 +186,7 @@ allowed_names = ["data"]
 reason = "llvm-cov export reports keep their coverage under data."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/runs/tool-reports.ts"]
+paths = ["packages/cli/src/types/runs/output/reports.ts"]
 allowed_names = ["extra"]
 reason = "Semgrep reports keep the details of each result under extra."
 

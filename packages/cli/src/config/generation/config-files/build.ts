@@ -16,5 +16,3 @@ export const TRIVY_SKIPPED_FOLDERS = [NODE_MODULES, DOT_GSPOT, GIT_FOLDER] as co
 export const JSCPD_IMPORT_PATTERNS = [String.raw`import\s[^;]*?from\s*['"][^'"]+['"]\s*;`] as const;
 
 export const JSCPD_IGNORED = ['**/*.md', '**/*.mdx'] as const;
-
-export const CONFIG_FILE_TOML_FORMAT = { inlineTableStart: Number.MAX_SAFE_INTEGER, bracketSpacing: false } as const;

@@ -26,3 +26,5 @@ export type SqlFile = {
     statements: SqlStatement[];
     error: { text: string; line: number; column: number } | undefined;
 };
+
+export type MatchedToken = Omit<SqlToken, 'start'>;

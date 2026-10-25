@@ -1,4 +1,5 @@
 import type { StylelintComponent } from '#cli/types/generation/files.ts';
+import { VUE_CONFIGURATION, SVELTE_CONFIGURATION } from '#cli/config/configurations/names.ts';
 
 const VUE_STYLELINT_OVERRIDE = {
     files: ['**/*.vue'],
@@ -61,10 +62,6 @@ export const STYLELINT_RECOMMENDED_OFF: ReadonlySet<string> = new Set([
     'selector-id-pattern',
     'selector-not-notation',
 ]);
-
-const VUE_CONFIGURATION = 'vue';
-
-const SVELTE_CONFIGURATION = 'svelte';
 
 export const STYLELINT_COMPONENTS: Readonly<Record<string, StylelintComponent>> = {
     [VUE_CONFIGURATION]: VUE_STYLELINT_OVERRIDE,

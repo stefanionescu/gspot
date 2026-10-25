@@ -1,8 +1,8 @@
 import { GspotError } from '#cli/system/errors.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import type { ToolOutput } from '#cli/types/runs/output.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { semgrepReportSchema } from '#cli/schemas/runs/semgrep.ts';
+import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
 import { SEMGREP_PARSE_RULE, SEMGREP_PARSE_EXIT, SEMGREP_PARSE_ERRORS } from '#cli/config/runs/output/semgrep.ts';
 
 /**

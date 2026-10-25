@@ -1,6 +1,6 @@
+import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import type { NpmToolProject } from '#cli/types/install/tool-projects.ts';
 import { toolPackageJsonSchema } from '#cli/schemas/install/npm/package-json.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';

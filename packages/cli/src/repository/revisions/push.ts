@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
+import { HASH_PATTERN } from '#cli/config/git.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
@@ -19,7 +20,6 @@ import {
     TREE_SUFFIX,
     PEEL_SUFFIX,
     ABSENT_HASH,
-    HASH_PATTERN,
     REMOTES_OPTION,
     GIT_LOG_ARGUMENTS,
     GIT_TREE_ARGUMENTS,

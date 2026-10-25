@@ -4,9 +4,9 @@ import { rm } from 'node:fs/promises';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import { LOCKED_SCOPE_SETTINGS } from '#tests/config/checks/language/python/pip-installs.ts';
 
 test.each(LOCKFILES.filter(({ packageManager }) => ['uv', 'poetry', 'pdm'].includes(packageManager)))(

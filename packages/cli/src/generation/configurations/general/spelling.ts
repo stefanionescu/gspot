@@ -1,6 +1,6 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/config-files/build.ts';
+import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import type { IgnoreSection, PlannedConfigFile } from '#cli/types/generation/files.ts';
 
 import {

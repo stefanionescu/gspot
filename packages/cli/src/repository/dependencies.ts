@@ -10,9 +10,9 @@ import { HOOK_PACKAGES } from '#cli/config/repository/dependencies.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { DEPENDENCY_SECTIONS } from '#cli/config/parsers/projects/lockfiles.ts';
 import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies.ts';
 import { PARSERS, parseRequirements } from '#cli/parsers/projects/dependencies.ts';
 import { findText, findCachedText, readCachedText } from '#cli/system/files/reads.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies/package-json.ts';
 import { type PackageJson, type DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 
 async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<DependencyFile | undefined> {

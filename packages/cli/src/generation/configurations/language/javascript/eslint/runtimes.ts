@@ -2,18 +2,15 @@ import { escapeGlob } from '#cli/system/paths.ts';
 import { MISE_SCRIPT_PATH } from '#cli/config/files/names.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { EslintRuntime } from '#cli/types/generation/eslint.ts';
-import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { joinScope, isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { splitGlobs } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
+import { NEXTJS_CONFIGURATION, REACT_NATIVE_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
 import {
     COMMONJS_FILES,
     ESLINT_BROWSER_CONFIGURATIONS,
 } from '#cli/config/generation/configurations/language/javascript/eslint/runtimes.ts';
-import {
-    ESLINT_SETTINGS_TABLE,
-    REACT_NATIVE_CONFIGURATION,
-} from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
 function selectFrameworkRuntime(configurations: string[]): string | undefined {
     if (configurations.includes(REACT_NATIVE_CONFIGURATION)) return 'react-native';

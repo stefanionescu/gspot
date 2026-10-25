@@ -1,5 +1,5 @@
+import { PROSE_GRAMMARS } from '#cli/config/prose.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { PROSE_GRAMMARS } from '#cli/config/checks/general/prose.ts';
 
 export const VALE_PACKAGES = ['Google', 'write-good', 'proselint', 'alex', 'Harper'] as const;
 

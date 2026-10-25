@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
+import { FILE_KINDS } from '#cli/config/files/kinds.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { FileKind } from '#cli/types/repository/files.ts';
-import { FILE_KINDS } from '#cli/config/repository/files/classify.ts';
 import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
 import { writtenNamingOverrideSchema } from '#cli/schemas/configurations/naming.ts';

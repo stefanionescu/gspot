@@ -1,12 +1,3 @@
-export const PIP_LICENSES_COMMAND = ['pip-licenses', '--format=json', '--from=all', '--python'] as const;
-
-export const LICENSE_CHECKER_COMMAND = [
-    'license-checker-rseidelsohn',
-    '--json',
-    '--excludePrivatePackages',
-    '--start',
-] as const;
-
 export const UNKNOWN_LICENSE = 'UNKNOWN';
 
 export const LICENSE_CHOICE = ' OR ';
@@ -29,5 +20,3 @@ export const TROVE_LICENSES: Readonly<Record<string, string>> = {
 };
 
 export const ANY_VERSION = '*';
-
-export const PYTHON_LOCKFILES = ['uv.lock'] as const;

@@ -3,11 +3,11 @@ import { isInside } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { sarifLogSchema } from '#cli/schemas/runs/sarif.ts';
-import type { ToolOutput } from '#cli/types/runs/output.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
+import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
 import { SARIF_SOURCE_ROOT } from '#cli/config/runs/output/sarif.ts';
 import type { Finding, FindingPlace } from '#cli/types/runs/check.ts';
-import type { SarifRun, SarifPhysicalLocation, SarifArtifactLocation } from '#cli/types/runs/tool-reports.ts';
+import type { SarifRun, SarifPhysicalLocation, SarifArtifactLocation } from '#cli/types/runs/output/reports.ts';
 
 function getArtifactLocation(artifact: SarifArtifactLocation, run: SarifRun): SarifArtifactLocation {
     if (artifact.uri !== undefined || artifact.index === undefined) return artifact;

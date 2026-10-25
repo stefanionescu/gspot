@@ -1,5 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
-import { SCHEMA_FILE } from '#cli/config/settings/json-schema.ts';
+import { SCHEMA_FILE } from '#cli/config/files/names.ts';
 import type { CliReference, ReferencePage, SettingsSchema } from '../types/reference.ts';
 import { formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
 

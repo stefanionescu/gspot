@@ -25,8 +25,6 @@ export const PRESETS_BEFORE_CONFIGURATIONS = [
     ['unicorn', 'unicorn'],
 ] as const;
 
-export const REACT_NATIVE_CONFIGURATION = 'react-native';
-
 export const ESLINT_SETTINGS_TABLE = 'tools.eslint';
 
 export const ESLINT_CHECK = 'javascript/eslint';

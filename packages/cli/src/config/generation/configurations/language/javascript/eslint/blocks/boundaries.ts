@@ -58,6 +58,4 @@ export const BOUNDARY_DEPENDENCY_SELECTORS = [
 
 export const BOUNDARY_DEPENDENCY_NODES = ['require', 'dynamic-import'] as const;
 
-export const TRPC_CONFIGURATION = 'trpc';
-
 export const IMPORT_RULE_CATEGORY = 'import-rule:';

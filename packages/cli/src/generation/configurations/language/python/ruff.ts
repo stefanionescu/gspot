@@ -4,8 +4,8 @@ import { stringify } from '@decimalturn/toml-patch';
 import { stripUndefined } from '#cli/system/tables.ts';
 import type { FormatSettings } from '#cli/types/settings/file.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
+import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { listPythonIgnoredGlobs } from '#cli/generation/config-files/ignore-files.ts';
-import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/config-files/build.ts';
 import { getTable, getLimit, listIgnores, listIgnoredRules } from '#cli/settings/scopes.ts';
 import { DEFAULT_QUOTES } from '#cli/config/generation/configurations/general/format/prettier.ts';
 

@@ -1,7 +1,7 @@
 import type { Finding } from '#cli/types/runs/check.ts';
-import type { ToolOutput } from '#cli/types/runs/output.ts';
 import { knipReportSchema } from '#cli/schemas/runs/knip.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
+import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
 import { KNIP_ISSUE_MESSAGES } from '#cli/config/runs/output/knip.ts';
 
 /**

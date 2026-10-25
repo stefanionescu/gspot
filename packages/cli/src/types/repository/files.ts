@@ -1,8 +1,8 @@
 import type { Ignore } from 'ignore';
 import type { Dirent } from 'node:fs';
+import type { FILE_KINDS } from '#cli/config/files/kinds.ts';
 import type { GitIndexFile } from '#cli/types/parsers/git.ts';
 import type { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import type { FILE_KINDS } from '#cli/config/repository/files/classify.ts';
 import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 
 export type PathIgnore = { base: string; matcher: Ignore };

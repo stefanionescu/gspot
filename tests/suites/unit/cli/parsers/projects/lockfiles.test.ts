@@ -2,9 +2,8 @@ import { posix } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { PYTHON_LOCKFILES } from '#cli/config/checks/general/licenses.ts';
-import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import { readLockedPackages, readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
+import { PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 
 import {
     LOCKED_PACKAGE_CASES,

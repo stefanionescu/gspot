@@ -1,8 +1,12 @@
-import { SCHEMA_FILE } from '#cli/config/settings/json-schema.ts';
-import { YARN_SETTINGS_FILE } from '#cli/config/install/npm/yarn.ts';
-import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
-import { PROJECT_UV_LOCKFILE } from '#cli/config/install/python/project.ts';
-import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
+import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
+
+import {
+    SCHEMA_FILE,
+    NODE_MODULES,
+    YARN_SETTINGS_FILE,
+    PROJECT_UV_LOCKFILE,
+    PYTHON_ENVIRONMENT_FOLDER,
+} from '#cli/config/files/names.ts';
 
 export const DOT_GSPOT = '.gspot';
 

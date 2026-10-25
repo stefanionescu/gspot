@@ -3,8 +3,8 @@ import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
+import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
-import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/config-files/build.ts';
 import { type GeneratedFile, type PlannedNpmProject } from '#cli/types/generation/files.ts';
 
 import {

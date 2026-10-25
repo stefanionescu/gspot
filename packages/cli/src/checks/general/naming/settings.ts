@@ -6,11 +6,12 @@ import { type Settings } from '#cli/types/settings/file.ts';
 import { findParentCategory } from '#cli/settings/naming.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
+import type { NamingOverride } from '#cli/types/configurations.ts';
 import { type Scope, type ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/naming.ts';
 import type { NamingCase, ParsedNamingLanguageFields } from '#cli/types/settings/naming.ts';
+import type { BannedWord, NamingSettings, CompiledOverride } from '#cli/types/checks/general/naming.ts';
 import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY } from '#cli/config/checks/general/naming/settings.ts';
-import type { BannedWord, NamingOverride, NamingSettings, CompiledOverride } from '#cli/types/checks/general/naming.ts';
 
 function compileOverride(rule: NamingOverride): CompiledOverride {
     const [languages, categories, allowedNames] = [rule.languages, rule.categories, rule.allowed_names].map((names) =>

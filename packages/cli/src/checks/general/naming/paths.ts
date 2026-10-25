@@ -4,12 +4,13 @@ import { extractBaseName } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { PathContainer } from '#cli/types/configurations.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
+import type { Identifier } from '#cli/types/checks/general/naming.ts';
 import { validateIdentifiers } from '#cli/checks/general/naming/rules.ts';
 import { REST_SEGMENT } from '#cli/config/checks/general/naming/paths.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
 import { listNamedFiles } from '#cli/checks/general/naming/source-names.ts';
-import type { Identifier, PathContainer } from '#cli/types/checks/general/naming.ts';
 import { createIdentifier } from '#cli/checks/general/naming/languages/identifier.ts';
 
 function parseSegmentName(

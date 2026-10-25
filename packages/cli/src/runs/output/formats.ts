@@ -13,8 +13,8 @@ import { DRIVE_LETTER } from '#cli/config/files/path-patterns.ts';
 import { parseSemgrepFindings } from '#cli/runs/output/semgrep.ts';
 import { parseMarkdownlintFindings } from '#cli/runs/output/markdownlint.ts';
 import { FILE_GROUP, MISSING_PATH_CODES } from '#cli/config/runs/output/formats.ts';
-import type { CheckOutput, OutputPaths, ParsingCheck, OutputParser } from '#cli/types/runs/output.ts';
 import { parseLineFindings, parseRegexFindings, parseGroupedFindings } from '#cli/runs/output/text.ts';
+import type { CheckOutput, OutputPaths, ParsingCheck, OutputParser } from '#cli/types/runs/output/formats.ts';
 
 function readCanonicalPath(path: string): string | undefined {
     try {

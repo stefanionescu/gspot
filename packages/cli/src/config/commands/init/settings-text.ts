@@ -1,7 +1,5 @@
 import { SETTINGS_COMMANDS } from '#cli/config/generation/rules.ts';
 
-export const OPENAPI_CONFIGURATION = 'openapi';
-
 export const XCODE_DESTINATIONS = new Map<string | undefined, string>([
     ['iphoneos', 'generic/platform=iOS Simulator'],
     ['iphonesimulator', 'generic/platform=iOS Simulator'],

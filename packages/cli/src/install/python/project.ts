@@ -15,7 +15,6 @@ import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import type { ToolPyproject } from '#cli/types/install/tool-projects.ts';
 import { UV_SETTINGS_FILE } from '#cli/config/install/python/settings.ts';
 import { uvLockSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
@@ -23,13 +22,13 @@ import type { UvLockfile } from '#cli/types/parsers/projects/lockfiles.ts';
 import { toolPyprojectSchema } from '#cli/schemas/install/python/project.ts';
 import { type UvCommand, type PythonIndexSettings } from '#cli/types/install/python.ts';
 import { readPythonSettings, writePythonSettings } from '#cli/install/python/settings.ts';
+import { PROJECT_UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { UV_TOOL, UV_PROJECT_FLAGS, UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/python.ts';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
 import { PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
 
 import {
     UV_VENV_ARGUMENTS,
-    PROJECT_UV_LOCKFILE,
     UV_INSTALL_ARGUMENTS,
     UV_LOCKFILE_ARGUMENTS,
     PYTHON_PACKAGE_ORIGINS,

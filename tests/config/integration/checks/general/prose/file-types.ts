@@ -1,4 +1,4 @@
-import { PROSE_GRAMMARS } from '#cli/config/checks/general/prose.ts';
+import { PROSE_GRAMMARS } from '#cli/config/prose.ts';
 import { TOKEN_IGNORES } from '#cli/config/generation/configurations/general/prose.ts';
 
 export const PROSE_COMMENT_CASES = [

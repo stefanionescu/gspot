@@ -1,4 +1,4 @@
-import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
+import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 
 export const TYPOS_EXCLUDED_ARRAY = /^extend-exclude = .+$/mu;
 
