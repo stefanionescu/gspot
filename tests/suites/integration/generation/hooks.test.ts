@@ -8,11 +8,12 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { readRuntimePins } from '#tests/setup/runner/run-folder.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { MISE_TRUST, TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
+import { UNQUOTED_FINDING_LINE } from '#tests/config/integration/generation/hooks.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { INDEX_COMMAND, SAMPLE_COMMAND, UNQUOTED_FINDING_LINE } from '#tests/config/integration/generation/hooks.ts';
 
 import {
     runGspot,
@@ -88,7 +89,15 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
                 command_check: [
                     {
                         ...buildReportingCheck({ id: 'sandbox/defect', paths: ['src/**'], stage: 'commit' }),
-                        command: [process.execPath, '-e', SAMPLE_COMMAND, '{files}'],
+                        command: buildProgramCommand(
+                            'checks/search',
+                            '--text',
+                            'DEFECT',
+                            '--report',
+                            'path',
+                            '--',
+                            '{files}',
+                        ),
                     },
                 ],
             }),
@@ -132,7 +141,16 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
                         id: 'project/content',
                         stage: 'commit',
                         paths: ['source.txt'],
-                        command: [process.execPath, '-e', INDEX_COMMAND],
+                        command: buildProgramCommand(
+                            'checks/search',
+                            '--text',
+                            'invalid',
+                            '--report',
+                            'message',
+                            '--message',
+                            'Indexed defect',
+                            'source.txt',
+                        ),
                     },
                 ],
             }),

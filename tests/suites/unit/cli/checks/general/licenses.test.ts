@@ -14,7 +14,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import { fakeNpmTool, writeScriptCommand } from '#tests/setup/system/fakes.ts';
+import { fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildVenvBinPath, buildVenvExecutablePath } from '#cli/system/paths.ts';
 
 import {
@@ -297,5 +297,5 @@ async function writeLicenseSandbox(
     if (version === undefined) throw new Error('The pip-licenses test requires a pinned version.');
     const scannerPath = join(buildVenvBinPath(join(root, GSPOT_PATHS.pythonEnvironment)), 'pip-licenses');
     const observed = relative(root, scannerPath);
-    await writeScriptCommand(root, observed, `console.log(${JSON.stringify('pip-licenses ' + version)});`);
+    await writeProgramCommand(root, observed, 'fakes/tool', '--line', `pip-licenses ${version}`);
 }

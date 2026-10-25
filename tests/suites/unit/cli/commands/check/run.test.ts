@@ -8,6 +8,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
@@ -17,7 +18,6 @@ test('an aborted run stops its command and reports cancellation on every system'
     await using sandbox = await testdir();
     runGitStep(sandbox.path, ['init', '--quiet']);
     const marker = join(sandbox.path, 'command-ready');
-    const program = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); setInterval(() => {}, 1000);`;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
@@ -26,7 +26,7 @@ test('an aborted run stops its command and reports cancellation on every system'
                         id: 'project/cancel',
                         stage: 'commit',
                         paths: ['source.txt'],
-                        command: [process.execPath, '-e', program],
+                        command: buildProgramCommand('fakes/tool', '--mark', marker, '--wait'),
                     },
                 ],
             }),
@@ -141,7 +141,7 @@ test('a path ignore covers its own paths, not the scopes below or beside it', as
 });
 
 test('a check with malformed JSON reports an error, and the other checks keep their results', async () => {
-    const reporter = [process.execPath, '-e', 'console.log("source.txt"); process.exitCode = 1;'];
+    const reporter = buildProgramCommand('fakes/tool', '--stdout', 'source.txt\n', '--exit', '1');
     const checks = ['broken', 'kept'].map((name) => ({
         id: `sandbox/${name}`,
         command: reporter,
@@ -180,22 +180,20 @@ test('progress is reported as soon as each check ends, with ignores applied to t
                         id: 'project/fast',
                         paths: ['source.sh'],
                         stage: 'commit',
-                        command: [
-                            process.execPath,
-                            '-e',
-                            'console.log("source.sh:demo:Ignored finding"); process.exitCode = 1;',
-                        ],
+                        command: buildProgramCommand(
+                            'fakes/tool',
+                            '--stdout',
+                            'source.sh:demo:Ignored finding\n',
+                            '--exit',
+                            '1',
+                        ),
                         output: { format: 'regex', pattern: '^(?<file>[^:]+):(?<rule>[^:]+):(?<message>.*)$' },
                     },
                     {
                         id: 'project/waiting',
                         paths: ['source.sh'],
                         stage: 'commit',
-                        command: [
-                            process.execPath,
-                            '-e',
-                            'while (!await Bun.file("completed").exists()) await Bun.sleep(10);',
-                        ],
+                        command: buildProgramCommand('fakes/tool', '--until', 'completed'),
                     },
                 ],
             }),

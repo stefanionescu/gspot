@@ -11,7 +11,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/python.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { runCheckCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
-import { writeScriptCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 test('a Python check that runs in a copy uses the environment that the working tree installed', async () => {
     await using working = await testdir();
@@ -59,13 +59,9 @@ test('a command run in a copy finds the other tools beside its program before a 
         'copy/.keep': '',
     };
     await createFileTree(sandbox.path, settingsText);
-    await writeScriptCommand(
-        sandbox.path,
-        'native/checker',
-        "const result = Bun.spawnSync(['shellcheck', '--version']); process.stdout.write(result.stdout); process.exitCode = result.exitCode;",
-    );
-    await writeScriptCommand(sandbox.path, 'native/shellcheck', "console.log('ShellCheck version: 0.11.0');");
-    await writeScriptCommand(sandbox.path, 'inactive/shellcheck', 'process.exit(7);');
+    await writeProgramCommand(sandbox.path, 'native/checker', 'processes/command', 'shellcheck', '--version');
+    await writeProgramCommand(sandbox.path, 'native/shellcheck', 'fakes/tool', '--line', 'ShellCheck version: 0.11.0');
+    await writeProgramCommand(sandbox.path, 'inactive/shellcheck', 'fakes/tool', '--exit', '7');
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'commit', only: ['project/companion'] })[0]!;
     using _environment = overrideEnvironment({ PATH: join(sandbox.path, 'inactive') });

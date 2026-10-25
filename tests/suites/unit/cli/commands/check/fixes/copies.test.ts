@@ -6,6 +6,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
 import { planFixer, buildFixerSettings } from '#tests/setup/cli/runs.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
@@ -22,7 +23,15 @@ test("a fixer's {root} environment paths point into the copy during a dry run", 
     const session = await openSession(sandbox.path);
     const planned = planFixer(
         session,
-        `await Bun.write('café settings.txt', 'scratch corrected'); await Bun.write('source.txt', await Bun.file(process.env['SANDBOX_SETTINGS']).text()); await Bun.write(${JSON.stringify(trace)}, process.cwd())`,
+        buildProgramCommand(
+            'fakes/tool',
+            '--write',
+            'café settings.txt=scratch corrected',
+            '--copy-environment-file',
+            'source.txt=SANDBOX_SETTINGS',
+            '--record-cwd',
+            trace,
+        ),
     );
     planned.check.env = { SANDBOX_SETTINGS: '{root}/café settings.txt' };
     const result = await runFixers(session, [planned], { isDryRun: true });
@@ -48,12 +57,17 @@ test.each([false, true])(
         const trace = join(sandbox.path, 'workspace-path');
         const planned = planFixer(
             session,
-            `
-            if (require('node:fs').existsSync('unowned.json')) throw new Error('Unowned configuration was copied.');
-            await Bun.write(${JSON.stringify(trace)}, process.cwd());
-            await Bun.write('source.txt', 'corrected');
-            process.exitCode = 3;
-        `,
+            buildProgramCommand(
+                'fakes/tool',
+                '--refuse-file',
+                'unowned.json',
+                '--record-cwd',
+                trace,
+                '--write',
+                'source.txt=corrected',
+                '--exit',
+                '3',
+            ),
         );
         planned.check.run_in_copy = true;
         planned.check.exit_codes = [3];
@@ -77,12 +91,17 @@ test('a fix in a copy refuses to overwrite a file changed while it ran, and remo
     const trace = join(sandbox.path, 'workspace-path');
     const planned = planFixer(
         session,
-        `
-            await Bun.write(${JSON.stringify(trace)}, process.cwd());
-            await Bun.write(${JSON.stringify(join(sandbox.path, 'z-last.txt'))}, 'new working content');
-            await Bun.write('source.txt', 'isolated correction');
-            await Bun.write('z-last.txt', 'last correction');
-        `,
+        buildProgramCommand(
+            'fakes/tool',
+            '--record-cwd',
+            trace,
+            '--write',
+            `${join(sandbox.path, 'z-last.txt')}=new working content`,
+            '--write',
+            'source.txt=isolated correction',
+            '--write',
+            'z-last.txt=last correction',
+        ),
     );
     planned.check.run_in_copy = true;
     const rejection = await captureRejection(runFixers(session, [planned], { isDryRun: false }));
@@ -90,7 +109,7 @@ test('a fix in a copy refuses to overwrite a file changed while it ran, and remo
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('isolated correction');
     expect(await readFile(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
     expect(await isOnDisk(await readFile(trace, 'utf8'))).toBe(false);
-    const corrected = planFixer(session, "await Bun.write('source.txt', 'corrected')");
+    const corrected = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'));
     corrected.check.run_in_copy = true;
     const correctedRun = await runFixers(session, [corrected], { isDryRun: false });
     expect(correctedRun.results[0]).toMatchObject({
@@ -105,7 +124,7 @@ test('a failed dry-run fix removes its copy and keeps the source bytes', async (
     const session = await openSession(sandbox.path);
     const planned = planFixer(
         session,
-        "await Bun.write('source.txt', 'partial'); process.stdout.write(process.cwd()); process.exitCode = 3",
+        buildProgramCommand('fakes/tool', '--write', 'source.txt=partial', '--print-cwd', '--exit', '3'),
     );
     const temporary = join(sandbox.path, 'scratch');
     await mkdir(temporary);
@@ -122,10 +141,7 @@ test.each([...COPY_FAILURES])('a failed $operation removes the copy', async ({ o
     await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
     const session = await openSession(sandbox.path);
-    const planned = planFixer(
-        session,
-        "const fs = require('node:fs'); fs.unlinkSync('source.txt'); fs.mkdirSync('source.txt');",
-    );
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--replace-with-folder', 'source.txt'));
     if (operation === 'copy') {
         await rm(join(sandbox.path, 'source.txt'));
         await mkdir(join(sandbox.path, 'source.txt'));
@@ -155,7 +171,7 @@ test.each([false, true])(
         const ready = join(sandbox.path, 'ready.pid');
         const planned = planFixer(
             session,
-            `await Bun.write('source.txt', 'partial'); await Bun.write(${JSON.stringify(ready + '.prepared')}, String(process.pid)); (await import('node:fs')).renameSync(${JSON.stringify(ready + '.prepared')}, ${JSON.stringify(ready)}); await Bun.sleep(10000);`,
+            buildProgramCommand('fakes/tool', '--write', 'source.txt=partial', '--mark', ready, '--wait'),
         );
         planned.check.run_in_copy = isolated;
         session.cancelSignal = controller.signal;
@@ -180,7 +196,7 @@ test.each([false, true])(
         delete session.cancelSignal;
         const correctedRun = await runFixers(
             session,
-            [planFixer(session, "await Bun.write('source.txt', 'corrected')")],
+            [planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'))],
             {
                 isDryRun: false,
             },

@@ -19,13 +19,13 @@ export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
 The planned fixer of the sandbox, with a script in place of its fix command.
 
 @param session the open sandbox.
-@param script JavaScript for the fixer to run.
+@param fix the fixer command.
 @returns the planned check.
 */
-export function planFixer(session: Session, script: string): PlannedCheck {
+export function planFixer(session: Session, fix: readonly string[]): PlannedCheck {
     const [planned] = planChecks(session, { stage: 'all', only: ['sandbox/fixer'] });
     if (planned === undefined) throw new Error('The sandbox has no planned fixer.');
-    return { ...planned, check: { ...planned.check, fix: [process.execPath, '-e', script] } };
+    return { ...planned, check: { ...planned.check, fix: [...fix] } };
 }
 
 /**

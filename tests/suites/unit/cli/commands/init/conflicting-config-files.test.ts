@@ -10,6 +10,7 @@ import { type ToolPackageJson } from '#cli/types/install/npm.ts';
 import { readSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { SQL_COMMAND_CHECK_TABLES } from '#tests/config/commands/samples.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
@@ -28,7 +29,6 @@ import {
     SHARED_SETUP_CONFIG,
     LINKED_SETUP_CONFIG,
     INACTIVE_PLAN_CHANGES,
-    STYLELINT_LOOKUP_SCRIPT,
     INACTIVE_CONFIGURATIONS,
     REPLACED_CONFIG_DELETIONS,
     REPLACED_PYPROJECT_TABLES,
@@ -226,7 +226,7 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
         });
         commitAll(sandbox.path);
         await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
-        const command = [process.execPath, '-e', STYLELINT_LOOKUP_SCRIPT, stylesheet];
+        const command = buildProgramCommand('checks/stylelint', stylesheet);
         const before = await runCommand(command, { cwd: sandbox.path });
         expect(before.code, before.stdout + before.stderr).toBe(0);
         expect(before.stdout).toBe('[]');

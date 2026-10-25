@@ -7,7 +7,7 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { BASH_SYNTAX_CHECK, PENDING_NOTES_SCRIPT, PENDING_NOTE_RESULTS } from '#tests/config/runs/command.ts';
+import { BASH_SYNTAX_CHECK, PENDING_NOTES_CHECK, PENDING_NOTE_RESULTS } from '#tests/config/runs/command.ts';
 
 test('a command check runs its command and reports file and line through its output format', async () => {
     await using sandbox = await createGitSandbox({
@@ -15,7 +15,7 @@ test('a command check runs its command and reports file and line through its out
             rules: true,
             tables: String.raw`[[command_check]]
 id = "notes/no-pending"
-command = ${JSON.stringify([process.execPath, '-e', PENDING_NOTES_SCRIPT, '{files}'])}
+command = ${JSON.stringify(PENDING_NOTES_CHECK)}
 paths = ["notes/**"]
 stage = "commit"
 summary = "Finds pending notes left in the notes folder."

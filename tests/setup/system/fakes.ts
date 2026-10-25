@@ -8,10 +8,12 @@ import { type Tool } from '#cli/types/configurations.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
+import type { ProgramName } from '#tests/types/programs.ts';
 import { type spawnProcess } from '#cli/system/processes.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { EXECUTABLE_MODE } from '#tests/config/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 /**
 Replace one child command and run the others normally.
@@ -71,23 +73,28 @@ export function fakeToolExecutables(tools: Tool[]): DisposableStack {
 }
 
 /**
-Write a child script and its launchers.
+Write a Unix and a Windows command that runs one of the test programs with fixed arguments.
 
-@param sandboxRoot folder that gets the script and launchers.
-@param name the executable path without a Windows suffix.
-@param script the Bun program, written unchanged.
-@returns the folder to put on `PATH`.
+@param folder folder that gets the command.
+@param name the command path inside the folder, without a Windows suffix.
+@param program the test program.
+@param programArguments the fixed arguments, before the arguments the command receives.
+@returns the folder of the command, to put on `PATH`.
 */
-export async function writeScriptCommand(sandboxRoot: string, name: string, script: string): Promise<string> {
-    const target = join(sandboxRoot, name);
-    const folder = dirname(target);
-    const filename = basename(target);
-    await mkdir(folder, { recursive: true });
-    await writeFile(`${target}.js`, script);
-    await writeFile(target, `#!/bin/sh\nexec ${quoteArgument(process.execPath)} "\${0%/*}/${filename}.js" "$@"\n`);
-    await writeFile(`${target}.cmd`, `@echo off\r\n"${process.execPath}" "%~dp0${filename}.js" %*\r\n`);
+export async function writeProgramCommand(
+    folder: string,
+    name: string,
+    program: ProgramName,
+    ...programArguments: string[]
+): Promise<string> {
+    const target = join(folder, name);
+    const command = buildProgramCommand(program, ...programArguments);
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, `#!/bin/sh\nexec ${command.map((word) => quoteArgument(word)).join(' ')} "$@"\n`);
+    const windowsCommand = command.map((word) => '"' + word.replaceAll('"', '""').replaceAll('%', '%%') + '"');
+    await writeFile(`${target}.cmd`, `@echo off\r\n${windowsCommand.join(' ')} %*\r\n`);
     await chmod(target, EXECUTABLE_MODE);
-    return folder;
+    return dirname(target);
 }
 
 /**
@@ -102,7 +109,7 @@ export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
         name: installer.name,
         version: declaration.version,
         bin: tool,
-        script: `console.log(${JSON.stringify(declaration.version)}); process.exitCode = ${String(declaration.version_exit_code ?? 0)};`,
+        toolArguments: ['--line', declaration.version, '--exit', String(declaration.version_exit_code ?? 0)],
     });
     return declaration;
 }
@@ -112,13 +119,13 @@ Write an installed npm package and the program that the tool package exposes.
 */
 export async function fakeNpmPackage(
     root: string,
-    npmPackage: { name: string; version: string; script: string; bin?: string },
+    npmPackage: { name: string; version: string; toolArguments: string[]; bin?: string },
 ): Promise<void> {
-    const { name, version, script, bin = name } = npmPackage;
+    const { name, version, toolArguments, bin = name } = npmPackage;
     const path = join(root, GSPOT_PATHS.nodeModules, name);
     await mkdir(path, { recursive: true });
     await writeFile(join(path, 'package.json'), JSON.stringify({ name, version }));
-    await writeScriptCommand(root, `${GSPOT_PATHS.nodeModules}/.bin/${bin}`, script);
+    await writeProgramCommand(root, `${GSPOT_PATHS.nodeModules}/.bin/${bin}`, 'fakes/tool', ...toolArguments);
 }
 
 /**

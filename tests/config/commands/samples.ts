@@ -1,4 +1,4 @@
-import { SQL_CHECK_SCRIPT } from '#tests/config/runs/command.ts';
+import { SQL_CHECK_COMMAND } from '#tests/config/runs/command.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 const ALWAYS_SELECTED_REFUSAL =
@@ -36,7 +36,7 @@ export const SQL_COMMAND_CHECK_TABLES = `[[command_check]]
 id = "project/read-sql"
 paths = ["**/*.sql"]
 stage = "commit"
-command = ${JSON.stringify([process.execPath, '-e', SQL_CHECK_SCRIPT, '{files}'])}
+command = ${JSON.stringify(SQL_CHECK_COMMAND)}
 `;
 
 export const TEST_VERSION = '0.0.0-test';

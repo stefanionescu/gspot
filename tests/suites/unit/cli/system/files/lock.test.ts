@@ -9,6 +9,7 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { WRITER_LOCK_FILE } from '#cli/config/apply/write/writer.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { stat, link, mkdir, rmdir, readFile } from 'node:fs/promises';
 
 test('a lock released while its create fails is taken on the retry', async () => {
@@ -75,7 +76,7 @@ test('a live lock written during the dead-holder check survives', async () => {
 });
 
 function readExitedProcessId(): string {
-    const child = runCommandBlocking([process.execPath, '-e', 'console.log(process.pid)'], { cwd: process.cwd() });
+    const child = runCommandBlocking(buildProgramCommand('fakes/tool', '--print-pid'), { cwd: process.cwd() });
     if (child.code !== 0) throw new Error(child.stderr);
     return child.stdout.trim();
 }

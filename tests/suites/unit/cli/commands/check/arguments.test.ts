@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -76,11 +77,13 @@ test.each([false, true])('path arguments narrow project-wide findings (staged: %
                         id: 'sandbox/project',
                         paths: ['src/**'],
                         stage: 'commit',
-                        command: [
-                            process.execPath,
-                            '-e',
-                            String.raw`console.log("src/selected.ts:demo:here\nsrc/other.ts:demo:elsewhere\n:demo:fileless"); process.exitCode = 1;`,
-                        ],
+                        command: buildProgramCommand(
+                            'fakes/tool',
+                            '--stdout',
+                            'src/selected.ts:demo:here\nsrc/other.ts:demo:elsewhere\n:demo:fileless\n',
+                            '--exit',
+                            '1',
+                        ),
                         output: { format: 'regex', pattern: '^(?<file>[^:]*):(?<rule>[^:]+):(?<message>.*)$' },
                     },
                 ],
@@ -235,7 +238,7 @@ test('a staged change to gspot.toml alone rechecks every file a configuration ch
 function buildPassingCheck(stage: 'commit' | 'push' | 'manual') {
     return {
         id: `sandbox/${stage}`,
-        command: [process.execPath, '-e', 'process.exitCode = 0'],
+        command: buildProgramCommand('fakes/tool'),
         paths: ['source.txt'],
         stage,
     };

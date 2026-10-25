@@ -2,6 +2,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { TEST_VERSION } from '#tests/config/commands/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { FINDINGS_SHOWN } from '#cli/config/commands/check/report.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 export const FAILED_CHECK_REPORT = {
     version: TEST_VERSION,
@@ -102,7 +103,7 @@ export const VERBOSITY_FILES = {
                 },
                 {
                     id: 'example/passing',
-                    command: [process.execPath, '-e', 'process.exitCode=0;'],
+                    command: buildProgramCommand('fakes/tool'),
                     paths: ['source.txt'],
                     stage: 'commit',
                 },
@@ -138,7 +139,7 @@ export function buildVerbosityReport(isVerbose: boolean): string {
         '  run again: gspot check --only example/findings --changed HEAD',
         '',
         ...(isVerbose
-            ? ['example/passing  passed  1 file  0.0s', `  $ ${process.execPath} -e process.exitCode=0;`, '']
+            ? ['example/passing  passed  1 file  0.0s', `  $ ${buildProgramCommand('fakes/tool').join(' ')}`, '']
             : []),
         `Failed: 1 check with ${total} findings. Passed: 1 check. Skipped: 0 checks.`,
         'Time: 0.0s. Exit code 1.',

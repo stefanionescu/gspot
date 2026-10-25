@@ -3,6 +3,7 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { buildConfiguration } from '#tests/setup/cli/configurations.ts';
 import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
 
@@ -13,7 +14,6 @@ import {
     CONFIGURATION_TABLE,
     EXAMPLE_MANIFEST_PATH,
     MINIMUM_VERSION_CASES,
-    MANIFEST_READER_SCRIPT,
     MANIFEST_INVARIANT_CASES,
     SEMGREP_CONFIG_FILE_PATHS,
     SEMGREP_CONFIG_FILE_TABLES,
@@ -23,10 +23,9 @@ async function readTestManifests(
     files: Record<string, string>,
     assets: readonly string[] = [],
 ): Promise<Map<string, Configuration>> {
-    const result = await runCommand(
-        [process.execPath, '--eval', MANIFEST_READER_SCRIPT, JSON.stringify({ files, assets })],
-        { cwd: process.cwd() },
-    );
+    const result = await runCommand(buildProgramCommand('processes/manifests', JSON.stringify({ files, assets })), {
+        cwd: process.cwd(),
+    });
     if (result.code !== 0) throw new Error(result.stderr.trim());
     return new Map(JSON.parse(result.stdout) as [string, Configuration][]);
 }

@@ -5,7 +5,8 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DASHED_FILE_SCRIPT, DASHED_FILE_PLACEHOLDERS } from '#tests/config/runs/command.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { DASHED_FILE_PLACEHOLDERS } from '#tests/config/runs/command.ts';
 
 test.each(DASHED_FILE_PLACEHOLDERS)(
     '%s keeps filenames beginning with a dash out of tool options',
@@ -16,7 +17,17 @@ test.each(DASHED_FILE_PLACEHOLDERS)(
                     command_check: [
                         {
                             id: 'project/dashed-files',
-                            command: [process.execPath, '-e', DASHED_FILE_SCRIPT, '--', placeholder],
+                            command: buildProgramCommand(
+                                'checks/search',
+                                '--text',
+                                'invalid',
+                                '--report',
+                                'message',
+                                '--message',
+                                'Check this file.',
+                                '--',
+                                placeholder,
+                            ),
                             paths: ['*.sh', '*.mjs'],
                             stage: 'commit',
                             output: {

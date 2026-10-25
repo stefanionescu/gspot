@@ -10,13 +10,13 @@ import { buildHookFiles } from '#cli/generation/hooks.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/cli.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { selectStartRunner } from '#cli/repository/npm/package-manager.ts';
 import { createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { chmod, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
-import { HOOK_CASES, HOOK_SCRIPT, START_COMMANDS, HOOK_LEVEL_CASES } from '#tests/config/generation/hooks.ts';
+import { HOOK_CASES, START_COMMANDS, HOOK_LEVEL_CASES } from '#tests/config/generation/hooks.ts';
 
 test.each([...HOOK_LEVEL_CASES])(
     'at level $level, gspot writes check hooks and guarded Git LFS hooks',
@@ -64,7 +64,14 @@ test.each(
         expect(files.map((file) => file.path)).toStrictEqual(
             HOOK_CASES.map(([name]) => `${GSPOT_PATHS.hooks}/${name}`),
         );
-        await writeScriptCommand(sandbox.path, `bin/${program}`, HOOK_SCRIPT);
+        await writeProgramCommand(
+            sandbox.path,
+            `bin/${program}`,
+            'processes/call',
+            '--environment',
+            'GSPOT_HOOK',
+            '--',
+        );
         const cwd = await realpath(sandbox.path);
         for (const [index, [name, commandArguments]] of HOOK_CASES.entries()) {
             const file = files[index]!;
@@ -85,9 +92,9 @@ test.each(
             const suffix =
                 name === 'commit-msg' ? [join(await realpath(sandbox.path), 'message')] : [...commandArguments];
             expect(JSON.parse(result.stderr)).toStrictEqual({
-                argv: [...prefix, 'check', '--hook', name, ...(name === 'pre-commit' ? [] : ['--']), ...suffix],
+                arguments: [...prefix, 'check', '--hook', name, ...(name === 'pre-commit' ? [] : ['--']), ...suffix],
+                environment: { GSPOT_HOOK: null },
                 cwd,
-                hook: null,
             });
         }
     },
@@ -117,15 +124,6 @@ test('a hook says how to install mise when mise is missing', async () => {
 });
 
 test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, and the other LFS hooks run git lfs', async () => {
-    const CAT_SCRIPT = `process.stdout.write(require('node:fs').readFileSync(0));
-`;
-
-    const LOGGING_SCRIPT = String.raw`const fs = require('node:fs');
-const name = require('node:path').basename(process.argv[1], '.js');
-const input = fs.readFileSync(0, 'utf8');
-fs.appendFileSync(process.env.CALLS_LOG, JSON.stringify({ name, argv: process.argv.slice(2), input }) + '\n');
-`;
-
     await using sandbox = await createLfsRepository();
     const hooks = generate(await openSession(sandbox.path)).files.filter((file) =>
         file.path.startsWith(`${GSPOT_PATHS.hooks}/`),
@@ -135,10 +133,10 @@ fs.appendFileSync(process.env.CALLS_LOG, JSON.stringify({ name, argv: process.ar
             (name) => `${GSPOT_PATHS.hooks}/${name}`,
         ),
     );
-    const bin = await writeScriptCommand(sandbox.path, 'bin/git', LOGGING_SCRIPT);
-    await writeScriptCommand(sandbox.path, 'bin/git-lfs', LOGGING_SCRIPT);
-    await writeScriptCommand(sandbox.path, 'bin/mise', LOGGING_SCRIPT);
-    await writeScriptCommand(sandbox.path, 'bin/cat', CAT_SCRIPT);
+    const bin = await writeProgramCommand(sandbox.path, 'bin/git', 'fakes/logger', 'git');
+    await writeProgramCommand(sandbox.path, 'bin/git-lfs', 'fakes/logger', 'git-lfs');
+    await writeProgramCommand(sandbox.path, 'bin/mise', 'fakes/logger', 'mise');
+    await writeProgramCommand(sandbox.path, 'bin/cat', 'fakes/tool', '--copy-stdin');
     const log = join(sandbox.path, 'calls.jsonl');
     const environment = { PATH: bin, CALLS_LOG: log };
     for (const hook of hooks) {

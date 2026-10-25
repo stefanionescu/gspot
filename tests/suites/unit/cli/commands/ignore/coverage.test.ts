@@ -8,6 +8,7 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
 import { rm, unlink, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
@@ -16,8 +17,8 @@ import { LITERAL_ROUTE_CASES, FUNCTION_NAME_IGNORES } from '#tests/config/comman
 test('an ignore without paths stops a command check and its fixer until unignore', async () => {
     await using sandbox = await testdir();
     runGitStep(sandbox.path, ['init', '--quiet']);
-    const command = [process.execPath, '-e', "await Bun.write('read.txt', 'executed'); process.exitCode = 1;"];
-    const fix = [process.execPath, '-e', "await Bun.write('corrected.txt', 'corrected');"];
+    const command = buildProgramCommand('fakes/tool', '--text', 'executed', '--exit', '1', 'read.txt');
+    const fix = buildProgramCommand('fakes/tool', '--text', 'corrected', 'corrected.txt');
     const settings = buildSandboxSettings([], {
         tables: stringify({
             command_check: [

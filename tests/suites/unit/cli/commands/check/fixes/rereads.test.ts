@@ -7,8 +7,8 @@ import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { CLEAR_DEPENDENCIES_SCRIPT } from '#tests/config/commands/check/fixes/rereads.ts';
 import { REACT_VUE_PACKAGES, ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/config/repository/dependencies.ts';
 
 test('a fix run rereads the repository and keeps the package scopes it found', async () => {
@@ -43,13 +43,8 @@ test('checks refresh the file inventory after a fixer creates a source', async (
                         id: 'project/inventory',
                         stage: 'commit',
                         paths: ['*.txt'],
-                        command: [
-                            process.execPath,
-                            '-e',
-                            'process.exitCode = process.argv.includes("added.txt") ? 0 : 1',
-                            '{files}',
-                        ],
-                        fix: [process.execPath, '-e', 'await Bun.write("added.txt", "created")'],
+                        command: buildProgramCommand('checks/arguments', '--includes', 'added.txt', '--', '{files}'),
+                        fix: buildProgramCommand('fakes/tool', '--text', 'created', 'added.txt'),
                     },
                 ],
             }),
@@ -74,8 +69,12 @@ test('a fix run rereads the package.json it changed and keeps the dependencies o
                 command_check: [
                     {
                         id: 'project/update-package',
-                        command: [process.execPath, '-e', 'process.exitCode = 0'],
-                        fix: [process.execPath, '-e', CLEAR_DEPENDENCIES_SCRIPT],
+                        command: buildProgramCommand('fakes/tool'),
+                        fix: buildProgramCommand(
+                            'fakes/tool',
+                            '--write',
+                            `package.json=${ROOT_PACKAGE_WITHOUT_DEPENDENCIES}`,
+                        ),
                         paths: ['package.json'],
                         stage: 'commit',
                         output: { format: 'none' },

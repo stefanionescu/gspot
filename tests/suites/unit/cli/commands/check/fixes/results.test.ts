@@ -10,6 +10,7 @@ import { runFixers } from '#cli/commands/check/fixes.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { planFixer, buildRunOptions, buildFixerSettings } from '#tests/setup/cli/runs.ts';
 import { FIXER_RESULTS, FAILING_VERSION_TOOL } from '#tests/config/commands/check/fixes/results.ts';
 
@@ -17,7 +18,10 @@ test.each([0, 3])('a declared crash pattern fails a fix that exits %p', async (c
     await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
     const session = await openSession(sandbox.path);
-    const planned = planFixer(session, `console.error('Fatal: cannot write'); process.exitCode = ${String(code)}`);
+    const planned = planFixer(
+        session,
+        buildProgramCommand('fakes/tool', '--stderr', 'Fatal: cannot write\n', '--exit', String(code)),
+    );
     planned.check.exit_codes = [3];
     planned.tool!.crash_pattern = '^Fatal:';
     const failedRun = await runFixers(session, [planned], { isDryRun: false });
@@ -27,7 +31,7 @@ test.each([0, 3])('a declared crash pattern fails a fix that exits %p', async (c
         changed: [],
         note: 'Fatal: cannot write',
     });
-    const corrected = planFixer(session, "await Bun.write('source.txt', 'corrected')");
+    const corrected = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'));
     corrected.tool!.crash_pattern = planned.tool!.crash_pattern;
     const correctedResultRun = await runFixers(session, [corrected], { isDryRun: false });
     const correctedResult = correctedResultRun.results[0];
@@ -39,11 +43,11 @@ test.each([0, 3])('a declared crash pattern fails a fix that exits %p', async (c
 
 test.each([...FIXER_RESULTS])(
     '$name classifies $status from the exit code and the resulting bytes',
-    async ({ script, exit_codes: exitCodes, status, after, note }) => {
+    async ({ fix, exit_codes: exitCodes, status, after, note }) => {
         await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
         const session = await openSession(sandbox.path);
-        const planned = planFixer(session, script);
+        const planned = planFixer(session, fix);
         if (exitCodes !== undefined) planned.check.exit_codes = [...exitCodes];
         const resultRun = await runFixers(session, [planned], { isDryRun: false });
         const result = resultRun.results[0];
@@ -60,7 +64,7 @@ test('a fixer that swaps one invalid UTF-8 byte for another reports the file as 
     await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
     const session = await openSession(sandbox.path);
-    const planned = planFixer(session, "await Bun.write('source.txt', new Uint8Array([0xfe]))");
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write-hex', 'source.txt=fe'));
     await writeFile(join(sandbox.path, 'source.txt'), Buffer.from([0xff]));
     const resultRun = await runFixers(session, [planned], { isDryRun: false });
     const result = resultRun.results[0];
@@ -72,7 +76,7 @@ test('a fixer that deletes an empty file reports it as changed', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': '' });
 
     const session = await openSession(sandbox.path);
-    const planned = planFixer(session, "require('node:fs').unlinkSync('source.txt')");
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--delete', 'source.txt'));
     const resultRun = await runFixers(session, [planned], { isDryRun: false });
     const result = resultRun.results[0];
     expect(result).toMatchObject({ status: 'changed', changed: ['source.txt'] });
@@ -83,7 +87,7 @@ test('a skipped fixer reports skipped, and a fixer whose program is missing fail
     await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
     const session = await openSession(sandbox.path);
-    const planned = planFixer(session, "await Bun.write('source.txt', 'wrong')");
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=wrong'));
     const skippedRun = await runFixers(session, [{ ...planned, skip: { cause: 'level', note: 'Not selected.' } }], {
         isDryRun: false,
     });
@@ -106,7 +110,7 @@ test('a fixer runs its own program when the check program is missing', async () 
     await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
     const session = await openSession(sandbox.path);
-    const planned = planFixer(session, "await Bun.write('source.txt', 'corrected')");
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'));
     const resultRun = await runFixers(
         session,
         [{ ...planned, tool: { name: join(sandbox.path, 'absent-check-tool'), installers: {}, kind: 'program' } }],
@@ -132,7 +136,7 @@ test('a failed version check blocks a check and its fix without changing source 
     await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
     const session = await openSession(sandbox.path);
-    const planned = planFixer(session, "await Bun.write('source.txt', 'changed')");
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=changed'));
     planned.tool = FAILING_VERSION_TOOL;
     planned.check.fix![0] = 'version-teller';
     using _which = fakeExecutableLookup(process.execPath);
@@ -158,7 +162,7 @@ test('a fixer that leaves a code file that fails to parse is named in the fix re
                         id: 'project/merge-imports',
                         stage: 'commit',
                         paths: ['*.ts'],
-                        command: [process.execPath, '-e', 'process.exitCode = 0'],
+                        command: buildProgramCommand('fakes/tool'),
                         fix: [process.execPath, 'breaker.cjs', '{files}'],
                         output: { format: 'none' },
                     },

@@ -10,15 +10,15 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
-import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareProseSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { hasValePackages, installValePackages } from '#cli/install/vale.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { VALE_PACKAGES_INI, VALE_INSTALL_FAILURES, CORRECTED_VALE_INSTALL_SCRIPT } from '#tests/config/install/vale.ts';
+import { VALE_PACKAGES_INI, VALE_INSTALL_FAILURES } from '#tests/config/install/vale.ts';
 import { GOOGLE_TERMS_PATH, AUTHORED_STYLE_PATH, AUTHORED_VALE_FILES } from '#tests/config/integration/install/vale.ts';
 
 const installedSandbox = shareProseSandbox();
@@ -67,7 +67,7 @@ test('Vale package install replaces an edited package and keeps your files', asy
 
 test.each([...VALE_INSTALL_FAILURES])(
     'a failed Vale package install reports $name, and the next install succeeds after the fix',
-    async ({ script, message, settings }) => {
+    async ({ fakeArguments, message, settings }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['prose'], { level: 'all', tables: settings }),
             [GSPOT_PATHS.valeConfigFile]: VALE_PACKAGES_INI,
@@ -84,8 +84,15 @@ test.each([...VALE_INSTALL_FAILURES])(
                 ? buildProcessResult({ stdout: String(tool.version) })
                 : runBlocking(command, options),
         );
-        const launcher = `if(process.argv.includes('--version')) console.log(${JSON.stringify(tool.version)}); else {${script}\n}\n`;
-        await writeScriptCommand(sandbox.path, 'node_modules/.bin/vale', launcher);
+        const version = String(tool.version);
+        await writeProgramCommand(
+            sandbox.path,
+            'node_modules/.bin/vale',
+            'fakes/tool',
+            '--version-line',
+            version,
+            ...fakeArguments,
+        );
         using writer = openWriter(sandbox.path);
         const request = buildToolInstall(session, writer);
         const failure = await captureRejection(installValePackages(request));
@@ -96,10 +103,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         expect(request.steps).toStrictEqual([
             [executable, '--config', expect.stringContaining('vale-') as string, 'sync'],
         ]);
-        await writeFile(
-            join(sandbox.path, 'node_modules/.bin/vale.js'),
-            launcher.replace(script, () => CORRECTED_VALE_INSTALL_SCRIPT),
-        );
+        await writeProgramCommand(sandbox.path, 'node_modules/.bin/vale', 'fakes/vale', '../../../vale', version);
         await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['prose'], { level: 'all' }));
         const fixed = buildToolInstall(await openSession(sandbox.path), writer);
         expect(await installValePackages(fixed)).toBe(`installed Vale packages in ${GSPOT_PATHS.valePackages}`);

@@ -1,15 +1,23 @@
-export const QUALITY_COMMAND = [
-    process.execPath,
-    '-e',
-    String.raw`const fs = require("node:fs"); const paths = process.argv.slice(1); fs.appendFileSync("checked.txt", JSON.stringify(paths) + "\n"); process.exit(paths.some(path => fs.readFileSync(path, "utf8") !== "corrected\n") ? 1 : 0);`,
-    '--',
-    '{files}',
-] as const;
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
-export const QUALITY_FIX = [
-    process.execPath,
-    '-e',
-    String.raw`const fs = require("node:fs"); const paths = process.argv.slice(1); fs.appendFileSync("fixed.txt", JSON.stringify(paths) + "\n"); for (const path of paths) fs.writeFileSync(path, "corrected\n");`,
+export const QUALITY_COMMAND = buildProgramCommand(
+    'checks/search',
+    '--text',
+    'corrected\n',
+    '--match',
+    'differs',
+    '--log',
+    'checked.txt',
     '--',
     '{files}',
-] as const;
+);
+
+export const QUALITY_FIX = buildProgramCommand(
+    'fakes/tool',
+    '--log-arguments',
+    'fixed.txt',
+    '--text',
+    'corrected\n',
+    '--',
+    '{files}',
+);

@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
+import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { simulateOperatingSystem } from '#tests/setup/system/platform.ts';
 import { readCacheFolder, readEnvironmentVariable } from '#cli/system/environment.ts';
@@ -14,9 +15,12 @@ test.each(['linux', 'win32'] as const)('a relative cache folder setting is refus
 test.if(process.platform === 'win32')('environment reads ignore name case in Bun and Node', () => {
     using _environment = overrideEnvironment({ GSPOT_TEST_NAME: 'native-case-folding' });
     expect(readEnvironmentVariable('gspot_test_name')).toBe('native-case-folding');
-    const result = spawnProcessBlocking(['node', '--eval', 'process.stdout.write(process.env.gspot_test_name)'], {
-        cwd: process.cwd(),
-    });
+    const result = spawnProcessBlocking(
+        ['node', ...buildProgramArguments('processes/environment', 'gspot_test_name')],
+        {
+            cwd: process.cwd(),
+        },
+    );
     expect(result.code).toBe(0);
     expect(result.stdout).toBe('native-case-folding');
 });

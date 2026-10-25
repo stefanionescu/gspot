@@ -114,6 +114,7 @@
         ".": {
             "entry": [
                 "tests/setup/runner/unit.ts",
+                "tests/setup/programs/**/*.ts",
                 "packages/eslint-plugin/repository/plugin.mjs",
                 "tests/setup/runner/prepare.ts",
                 "tests/setup/runner/integration.ts",
@@ -209,6 +210,7 @@
         "tests": {
             "entry": [
                 "setup/runner/unit.ts",
+                "setup/programs/**/*.ts",
                 "setup/runner/prepare.ts",
                 "setup/runner/integration.ts",
                 "src/main.{ts,js}",

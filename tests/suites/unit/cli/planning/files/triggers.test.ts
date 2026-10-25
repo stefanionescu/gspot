@@ -11,9 +11,10 @@ import { type Check } from '#cli/types/configurations.ts';
 import { BASE_CHECK } from '#tests/config/runs/command.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
-import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { mkdir, unlink, readFile, appendFile } from 'node:fs/promises';
 import { TWO_SCOPES_SETTINGS } from '#tests/config/planning/samples.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -29,10 +30,14 @@ import {
 async function replaceChildScopeChecks(session: Session): Promise<void> {
     if (await isOnDisk(join(session.root, '.git/info/exclude')))
         await appendFile(join(session.root, '.git/info/exclude'), '\n.gspot/mock-tsc*\n');
-    await writeScriptCommand(
+    await writeProgramCommand(
         session.root,
         `${DOT_GSPOT}/mock-tsc`,
-        "console.log('Project finding'); process.exitCode = 1",
+        'fakes/tool',
+        '--line',
+        'Project finding',
+        '--exit',
+        '1',
     );
     const configuration = session.configurations.get('typescript')!;
     const check: Check = {
@@ -44,7 +49,7 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
         command: [join(session.root, `${DOT_GSPOT}/mock-tsc`)],
         output: { format: 'lines' },
         files: configuration.files,
-        fix: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
+        fix: buildProgramCommand('fakes/tool', '--text', 'restored', '{scope}/source.ts'),
     };
     const fileCheck = { ...check, id: 'data-files/v8r', runs: 'files' as const };
     for (const scope of session.scopes) {

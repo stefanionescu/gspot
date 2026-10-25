@@ -8,14 +8,15 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
-import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/environment.ts';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { SLOW_COMMAND_CHECK } from '#tests/config/commands/check/cancellation.ts';
-import { CLI_BIN, CLI_MAIN, runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { CLI_BIN, runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { waitForExit, waitForFile, captureChild, startCommand, limitCommand } from '#tests/setup/system/processes.ts';
 
 async function prepareStagedCancellation(root: string, operation: 'diff' | 'init' | 'cat-file') {
@@ -195,13 +196,8 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
         const ref = runGitStep(root, ['symbolic-ref', 'HEAD']);
         const indexed = runGitStep(root, ['ls-files', '--stage', '-z']);
         const started = join(root, 'listening');
-        const program = `
-process.on('newListener',(name)=>{ if(name==='SIGTERM') setImmediate(()=>require('node:fs').writeFileSync(${JSON.stringify(started)},'ready')); });
-process.argv=[process.execPath,${JSON.stringify(CLI_MAIN)},'check','--hook', 'pre-push','--json'];
-const {runProgram} = await import(${JSON.stringify(CLI_MAIN)});
-process.exitCode = await runProgram(process.argv.slice(2));
-`;
-        const command = [process.execPath, '-e', program];
+        const hook = ['check', '--hook', 'pre-push', '--json'];
+        const command = buildProgramCommand('processes/cli', '--signal-marker', started, '--', ...hook);
         const limited = limitCommand(command, { cwd: root });
         const child = Bun.spawn(command, {
             cwd: root,
@@ -251,25 +247,22 @@ async function fakePausingGit(
 ): Promise<Record<string, string>> {
     const executable = Bun.which('git');
     if (executable === null) throw new Error('The pausing Git fake requires Git on PATH.');
-    const script = `
-const args = process.argv.slice(2);
-if (args[0] === ${JSON.stringify(options.operation)}) {
-    const counter = Bun.file(${JSON.stringify(join(folder, 'calls.txt'))});
-    const count = (await counter.exists() ? Number(await counter.text()) : 0) + 1;
-    await Bun.write(counter, String(count));
-    if (count === ${String(options.pauseOnCall)}) {
-        const checkout = args[0] === 'init' ? args.at(-1) : args[0] === 'cat-file' ? process.cwd() : undefined;
-        const marker = ${JSON.stringify(options.marker)};
-        await Bun.write(marker + ".tmp", JSON.stringify({pid: process.pid, checkout}));
-        await (await import("node:fs/promises")).rename(marker + ".tmp", marker);
-        await Bun.sleep(60_000);
-    }
-}
-
-const child = Bun.spawn([${JSON.stringify(executable)}, ...args], {stdin:'inherit', stdout:'inherit', stderr:'inherit'});
-process.exit(await child.exited);
-`;
-    await writeScriptCommand(folder, 'git', script);
+    await writeProgramCommand(
+        folder,
+        'git',
+        'fakes/git',
+        '--git',
+        executable,
+        '--operation',
+        options.operation,
+        '--pause-on-call',
+        String(options.pauseOnCall),
+        '--counter',
+        join(folder, 'calls.txt'),
+        '--marker',
+        options.marker,
+        '--',
+    );
     const environment = buildSpawnEnvironment();
     return { ...environment, PATH: `${folder}${delimiter}${environment['PATH'] ?? ''}` };
 }

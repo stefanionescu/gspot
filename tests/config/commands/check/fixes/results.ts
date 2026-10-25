@@ -1,9 +1,10 @@
 import type { Tool } from '#cli/types/configurations.ts';
+import { buildProgramCommand, buildProgramArguments } from '#tests/setup/system/programs.ts';
 
 export const FIXER_RESULTS = [
     {
         name: 'finding exit with original bytes',
-        script: 'await Bun.write(\'source.txt\', "original"); process.exitCode = 3',
+        fix: buildProgramCommand('fakes/tool', '--write', 'source.txt=original', '--exit', '3'),
         exit_codes: [3],
         status: 'unchanged',
         after: 'original',
@@ -11,7 +12,7 @@ export const FIXER_RESULTS = [
     },
     {
         name: 'finding exit with corrected bytes',
-        script: 'await Bun.write(\'source.txt\', "corrected"); process.exitCode = 3',
+        fix: buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected', '--exit', '3'),
         exit_codes: [3],
         status: 'changed',
         after: 'corrected',
@@ -19,7 +20,7 @@ export const FIXER_RESULTS = [
     },
     {
         name: 'undeclared exit with partial bytes',
-        script: 'await Bun.write(\'source.txt\', "partial"); process.exitCode = 4',
+        fix: buildProgramCommand('fakes/tool', '--write', 'source.txt=partial', '--exit', '4'),
         exit_codes: [3],
         status: 'failed',
         after: 'partial',
@@ -27,7 +28,7 @@ export const FIXER_RESULTS = [
     },
     {
         name: 'default exit with original bytes',
-        script: 'process.exitCode = 0',
+        fix: buildProgramCommand('fakes/tool'),
         exit_codes: undefined,
         status: 'unchanged',
         after: 'original',
@@ -35,7 +36,7 @@ export const FIXER_RESULTS = [
     },
     {
         name: 'default failure with original bytes',
-        script: 'process.exitCode = 3',
+        fix: buildProgramCommand('fakes/tool', '--exit', '3'),
         exit_codes: undefined,
         status: 'failed',
         after: 'original',
@@ -48,5 +49,5 @@ export const FAILING_VERSION_TOOL: Tool = {
     version: '3.8.1',
     installers: {},
     kind: 'program',
-    version_command: ['-e', 'console.log("3.8.1"); process.exitCode = 7;'],
+    version_command: buildProgramArguments('fakes/tool', '--line', '3.8.1', '--exit', '7'),
 };

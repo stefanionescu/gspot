@@ -6,7 +6,8 @@ import { listExecutableNames } from '#cli/system/paths.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { limitCommand } from '#tests/setup/system/processes.ts';
 import type { ProcessBackend } from '#tests/types/processes.ts';
-import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 
@@ -14,13 +15,9 @@ test.each(buildProcessBackends())(
     '$name: a chosen program runs its sibling commands before unrelated PATH tools',
     async (backend) => {
         await using sandbox = await testdir();
-        await writeScriptCommand(
-            sandbox.path,
-            'selected/parent',
-            "const child = Bun.spawnSync(['sibling'], { stdout: 'inherit', stderr: 'inherit' }); process.exitCode = child.exitCode;",
-        );
-        await writeScriptCommand(sandbox.path, 'selected/sibling', "console.log('selected');");
-        await writeScriptCommand(sandbox.path, 'unrelated/sibling', "console.log('unrelated');");
+        await writeProgramCommand(sandbox.path, 'selected/parent', 'processes/command', 'sibling');
+        await writeProgramCommand(sandbox.path, 'selected/sibling', 'fakes/tool', '--line', 'selected');
+        await writeProgramCommand(sandbox.path, 'unrelated/sibling', 'fakes/tool', '--line', 'unrelated');
         const result = await backend.execute(
             [join(sandbox.path, 'selected', listExecutableNames('parent')[0] as string)],
             {
@@ -37,11 +34,16 @@ test.each(buildProcessBackends().flatMap((backend) => [0, 1].map((status) => ({ 
     '$backend.name: reads both large output streams to the end and keeps exit code $status',
     async ({ backend, status }) => {
         await using sandbox = await testdir();
-        const script = `const text = 'é'.repeat(1024 * 1024);
-process.stdout.write(text);
-process.stderr.write(text);
-process.exitCode = ${String(status)};`;
-        const result = await backend.execute([process.execPath, '-e', script], {
+        const command = buildProgramCommand(
+            'processes/output',
+            '--text',
+            'é',
+            '--count',
+            String(1024 * 1024),
+            '--exit',
+            String(status),
+        );
+        const result = await backend.execute(command, {
             cwd: sandbox.path,
         });
         expect(result.code).toBe(status);
@@ -80,7 +82,7 @@ test.skipIf(isWindows).each(buildProcessBackends())(
 
 test.each(buildProcessBackends())('$name: a timeout stops the process and reports it', async (backend) => {
     await using sandbox = await testdir();
-    const result = await backend.execute([process.execPath, '-e', 'setInterval(() => {}, 1000)'], {
+    const result = await backend.execute(buildProgramCommand('fakes/tool', '--wait'), {
         cwd: sandbox.path,
         timeoutSeconds: 0.15,
     });
@@ -92,7 +94,7 @@ test.skipIf(isWindows).each(buildProcessBackends())(
     '$name: a signal before the timeout is not a timeout',
     async (backend) => {
         await using sandbox = await testdir();
-        const result = await backend.execute([process.execPath, '-e', "process.kill(process.pid, 'SIGTERM')"], {
+        const result = await backend.execute(buildProgramCommand('fakes/tool', '--signal', 'SIGTERM'), {
             cwd: sandbox.path,
         });
         expect(result.timedOut).toBe(false);
@@ -106,7 +108,7 @@ test('a process canceled before it starts reports the cancellation', async () =>
     await using sandbox = await testdir();
     const controller = new AbortController();
     controller.abort(new Error('Native cancellation'));
-    const result = await spawnProcess([process.execPath, '-e', 'process.exit(0)'], {
+    const result = await spawnProcess(buildProgramCommand('fakes/tool'), {
         cwd: sandbox.path,
         cancelSignal: controller.signal,
     });
@@ -123,16 +125,15 @@ test.each(buildProcessBackends())(
         const input = 'line one\nline two\n';
 
         const result = await backend.execute(
-            [
-                process.execPath,
-                '-e',
-                String.raw`
-            const text = await new Response(Bun.stdin.stream()).text();
-            process.stdout.write(JSON.stringify({ text, args: process.argv.slice(1), value: process.env.GSPOT_PROCESS_CASE, cwd: process.cwd() }) + '\n');
-        `,
+            buildProgramCommand(
+                'processes/call',
+                '--environment',
+                'GSPOT_PROCESS_CASE',
+                '--stdin',
+                '--',
                 'space separated',
                 '$(echo must-stay-literal)',
-            ],
+            ),
             {
                 cwd: sandbox.path,
                 env: { GSPOT_PROCESS_CASE: 'selected' },
@@ -141,10 +142,10 @@ test.each(buildProcessBackends())(
         );
         expect(result.code).toBe(0);
         expect(JSON.parse(result.stdout)).toStrictEqual({
-            text: input,
-            args: ['space separated', '$(echo must-stay-literal)'],
-            value: 'selected',
+            arguments: ['space separated', '$(echo must-stay-literal)'],
+            environment: { GSPOT_PROCESS_CASE: 'selected' },
             cwd: sandbox.path,
+            stdin: input,
         });
         expect(result.stdout).toEndWith('\n');
     },
@@ -155,15 +156,12 @@ test.skipIf(isWindows).each(buildProcessBackends())(
     async (backend) => {
         await using sandbox = await testdir();
 
-        const result = await backend.execute(
-            [process.execPath, '-e', 'process.stdout.write(String(process.env.PATH === undefined))'],
-            {
-                cwd: sandbox.path,
-                env: { PATH: undefined },
-            },
-        );
+        const result = await backend.execute(buildProgramCommand('processes/call', '--environment', 'PATH'), {
+            cwd: sandbox.path,
+            env: { PATH: undefined },
+        });
         expect(result.code).toBe(0);
-        expect(result.stdout).toBe('true');
+        expect(JSON.parse(result.stdout)).toMatchObject({ environment: { PATH: null } });
     },
 );
 
@@ -184,7 +182,7 @@ function buildProcessBackends(): ProcessBackend[] {
 
 test.each(buildProcessBackends())('$name: sets PWD to the child working folder', async (backend) => {
     await using sandbox = await testdir();
-    const result = await backend.execute([process.execPath, '-e', 'process.stdout.write(process.env.PWD)'], {
+    const result = await backend.execute(buildProgramCommand('fakes/tool', '--print-environment', 'PWD'), {
         cwd: sandbox.path,
         env: { PWD: '/different/symlink/path' },
     });

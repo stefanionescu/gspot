@@ -10,6 +10,7 @@ import { startCommand } from '#tests/setup/system/processes.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { WRITER_LOCK_FILE } from '#cli/config/apply/write/writer.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { LINKED_FILE_CASES } from '#tests/config/commands/apply/refusals.ts';
@@ -53,7 +54,7 @@ test.each([['a live process', undefined], ...(isWindows ? [] : [['process 1', '1
     async (_, holder) => {
         await using sandbox = await testdir();
         runGitStep(sandbox.path, ['init', '--quiet']);
-        const command = [process.execPath, '-e', 'await Bun.sleep(60_000)'];
+        const command = buildProgramCommand('fakes/tool', '--wait');
         await using sleeper = holder === undefined ? startCommand(command, { cwd: sandbox.path }) : undefined;
         const lock = holder ?? `${String(sleeper!.child.pid)}:held`;
         await createFileTree(sandbox.path, {

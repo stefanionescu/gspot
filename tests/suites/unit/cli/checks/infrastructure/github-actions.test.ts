@@ -19,7 +19,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runChecks, runCheckCode } from '#cli/commands/check/run.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { writeScriptCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 
 import {
     ACTIONLINT_EXITS,
@@ -125,8 +125,18 @@ test.each([...ACTIONLINT_EXITS])(
             'gspot.toml': buildSandboxSettings(['github-actions']),
             '.github/workflows/caller.yml': workflow,
         });
-        const observed = `if (process.argv.includes('--version')) console.log(${JSON.stringify(getTool(readConfigurations().values(), 'actionlint').version)}); else { await Bun.write(${JSON.stringify(record)}, process.cwd()); if (${String(code)} !== 0) console.log('.github/workflows/caller.yml:4:11: located defect [workflow-call]'); process.exitCode = ${String(code)}; }\n`;
-        await writeScriptCommand(sandbox.path, 'actionlint', observed);
+        await writeProgramCommand(
+            sandbox.path,
+            'actionlint',
+            'fakes/tool',
+            '--version-line',
+            String(getTool(readConfigurations().values(), 'actionlint').version),
+            '--record-cwd',
+            record,
+            ...(code === 0 ? [] : ['--line', '.github/workflows/caller.yml:4:11: located defect [workflow-call]']),
+            '--exit',
+            String(code),
+        );
         await chmod(join(sandbox.path, '.github/workflows/caller.yml'), 0o444);
         const session = await openSession(sandbox.path);
         using _pins = fakeToolExecutables([getTool(session.configurations.values(), 'shellcheck')]);

@@ -1,12 +1,10 @@
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { CLI_MAIN } from '#tests/setup/cli/commands.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { runNpmPack } from '#tests/setup/runner/npm-registry.ts';
-import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildMiseProject } from '#cli/generation/tool-projects.ts';
 import { MISE_INSTALL_ARGUMENTS } from '#cli/config/install/mise.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -22,11 +20,7 @@ await runNpmPack(TEST_RUN_FOLDER, [
     { ...eslintPluginPackage, source: join(REPOSITORY_ROOT, 'packages/eslint-plugin') },
     { ...cliPackage, source: join(REPOSITORY_ROOT, 'packages/cli') },
 ]);
-await writeScriptCommand(
-    TEST_RUN_FOLDER,
-    GSPOT_LAUNCHER_PATH,
-    `const { runProgram } = await import(${JSON.stringify(pathToFileURL(CLI_MAIN).href)}); process.exitCode = await runProgram(process.argv.slice(2));\n`,
-);
+await writeProgramCommand(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH, 'processes/cli', '--');
 const paths = await installTools();
 await writeFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), paths.join('\n') + '\n');
 

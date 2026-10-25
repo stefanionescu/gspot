@@ -7,10 +7,11 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
-import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { CLI_BIN, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { type CiDocument, type GithubWorkflow } from '#tests/types/ci.ts';
 import { CI_CHECKS, GITHUB_PIPELINE, GITLAB_PIPELINE } from '#tests/config/integration/generation/ci.ts';
 
@@ -25,14 +26,9 @@ async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
         command_check: [
             {
                 ...CI_CHECKS.syntax,
-                command: [
-                    process.execPath,
-                    '-e',
-                    'for (const path of process.argv.slice(1)) { const result = Bun.spawnSync(["bash", "-n", path]); if (result.exitCode !== 0) { console.log(path + ": syntax error"); process.exitCode = 1; } }',
-                    '{files}',
-                ],
+                command: buildProgramCommand('checks/bash', '{files}'),
             },
-            { ...CI_CHECKS.audit, command: [process.execPath, '-e', 'process.exitCode = 0'] },
+            { ...CI_CHECKS.audit, command: buildProgramCommand('fakes/tool') },
         ],
         ignore: CI_CHECKS.ignore,
     });
@@ -58,27 +54,17 @@ async function commitCiChanges(root: string, provider: 'gitlab' | 'github') {
 async function fakeCiMise(folder: string) {
     const nativeMise = Bun.which('mise')!;
     const failure = join(folder, 'mise-fails');
-    await writeScriptCommand(
+    await writeProgramCommand(
         folder,
         'mise',
-        `
-import { existsSync } from 'node:fs';
-const args = process.argv.slice(2);
-if (args[0] === 'exec' && args.some((arg) => arg.startsWith('npm:@gspothq/cli[allow_low_downloads=true]@'))) {
-    if (existsSync(${JSON.stringify(failure)})) {
-        console.error('npm error 404 Not Found - GET https://registry.npmjs.org/@gspothq/cli');
-        process.exit(1);
-    }
-    const separator = args.indexOf('--');
-    const child = Bun.spawnSync([process.execPath, ${JSON.stringify(CLI_BIN)}, ...args.slice(separator + 2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
-    process.exit(child.exitCode);
-}
-const env = { ...process.env };
-const path = Object.keys(env).find((name) => (process.platform === 'win32' ? name.toUpperCase() : name) === 'PATH');
-env[path] = ${JSON.stringify(dirname(nativeMise) + delimiter)} + env[path];
-const child = Bun.spawnSync([${JSON.stringify(nativeMise)}, ...args], { env, stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
-process.exit(child.exitCode);
-`,
+        'fakes/mise',
+        '--native-mise',
+        nativeMise,
+        '--cli-bin',
+        CLI_BIN,
+        '--failure-marker',
+        failure,
+        '--',
     );
     return failure;
 }

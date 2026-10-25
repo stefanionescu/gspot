@@ -36,38 +36,6 @@ check = "example/scan"
 
 export const EXAMPLE_MANIFEST_PATH = 'configurations/language/example/manifest.toml';
 
-export const MANIFEST_READER_SCRIPT = `
-import { spyOn } from 'bun:test';
-import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
-import * as assets from '#cli/system/assets.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { rmSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
-const fixture = JSON.parse(process.argv[1]);
-const paths = Object.keys(fixture.files);
-const folder = mkdtempSync(join(tmpdir(), 'gspot-manifests-'));
-for (const [path, text] of Object.entries(fixture.files)) {
-    mkdirSync(dirname(join(folder, path)), { recursive: true });
-    writeFileSync(join(folder, path), text);
-}
-
-const buildAssetPath = assets.buildAssetPath;
-using listing = spyOn(assets, 'listAssets').mockImplementation((prefix) =>
-    prefix === 'configurations/' ? paths : fixture.assets.filter((path) => path.startsWith(prefix)),
-);
-using locating = spyOn(assets, 'buildAssetPath').mockImplementation((path) =>
-    path in fixture.files ? join(folder, path) : buildAssetPath(path),
-);
-try {
-    process.stdout.write(JSON.stringify([...readConfigurations()]));
-} catch (error) {
-    process.stderr.write(error.message);
-    process.exitCode = 1;
-} finally {
-    rmSync(folder, { recursive: true, force: true });
-}
-`;
-
 export const SEMGREP_CONFIG_FILE_PATHS: string[][] = [
     ['config-files/other.yml', `${GSPOT_PATHS.configurations}/language/example/other.yml`],
     ['config-files/semgrep/first.yml', `${GSPOT_PATHS.configurations}/language/example/semgrep/first.yml`],

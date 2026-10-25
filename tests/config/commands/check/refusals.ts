@@ -1,3 +1,5 @@
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+
 const INVALID_UTF8_BYTE = 0xff;
 
 const UTF16_MARKER_BYTE = 0xfe;
@@ -45,7 +47,7 @@ export const ARGUMENT_REFUSALS = [
 export const OUTSIDE_GIT_SETTINGS = `configurations = []
 [[command_check]]
 id = "sandbox/paths"
-command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode=0'])}
+command = ${JSON.stringify(buildProgramCommand('fakes/tool'))}
 paths = ["api/**"]
 stage = "commit"
 `;

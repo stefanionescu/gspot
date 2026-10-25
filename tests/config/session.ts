@@ -8,10 +8,6 @@ export const SESSION_FILES = {
     [`${DOT_GSPOT}/.keep`]: '',
 };
 
-export const MISE_LOOKUP_SCRIPT = String.raw`import { appendFileSync } from 'node:fs';
-appendFileSync('../mise-calls.log', process.argv.slice(2).join(' ') + '\n');
-`;
-
 export const MISE_SESSION_FILES = {
     ...SESSION_FILES,
     'gspot.toml': buildSandboxSettings(['bash', 'naming'], { rules: true }),

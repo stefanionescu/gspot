@@ -4,12 +4,12 @@ import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { rmSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
@@ -22,12 +22,7 @@ async function createCaseClashingSandbox(): Promise<TestdirResult> {
     runGitStep(sandbox.path, ['init', '--quiet']);
     try {
         const check = {
-            command: [
-                process.execPath,
-                '-e',
-                'console.log(JSON.stringify(process.argv.slice(1).map(file => ({file,message:require("node:fs").readFileSync(file,"utf8")})))); process.exitCode = 1;',
-                '{files}',
-            ],
+            command: buildProgramCommand('checks/contents', '{files}'),
             output: { format: 'json', fields: { file: 'file', message: 'message' } },
             paths: ['docs/**'],
             stage: 'commit',
@@ -59,17 +54,17 @@ async function createCaseClashingSandbox(): Promise<TestdirResult> {
 test('a staged check reads index bytes and file modes, converts no line endings, and writes nothing into the working tree', async () => {
     await using sandbox = await testdir();
     runGitStep(sandbox.path, ['init', '--quiet']);
-    const command = [
-        process.execPath,
-        '-e',
-        `
-        import { statSync } from 'node:fs';
-        const bytes = Buffer.from(await Bun.file('payload.dat').arrayBuffer());
-        await Bun.write('created.txt', 'snapshot output');
-                const isExecutable = ${String(isWindows)} || (statSync('task.sh').mode & 0o111) !== 0;
-        process.exit(bytes.equals(Buffer.from([255, 10, 0])) && isExecutable ? 0 : 1);
-    `,
-    ];
+    const command = buildProgramCommand(
+        'checks/staged',
+        '--payload',
+        'payload.dat',
+        '--bytes',
+        'ff0a00',
+        '--executable',
+        'task.sh',
+        '--write',
+        'created.txt=snapshot output',
+    );
     await createFileTree(sandbox.path, {
         '.gitattributes': 'payload.dat text eol=crlf\n',
         'payload.dat': Buffer.from([255, 10, 0]),
@@ -107,22 +102,20 @@ test('a staged check copies the locked dependencies and leaves the working tree 
         lockfileVersion: 3,
         packages: { '': STAGED_PACKAGE_JSON, 'node_modules/dependency': { version: '1.0.0' } },
     });
-    const command = [
-        process.execPath,
-        '-e',
-        `
-        import { verdict } from 'dependency';
-        await Bun.write('node_modules/dependency/stamp.txt', 'snapshot output');
-        process.exit(verdict ? 0 : 1);
-    `,
-    ];
+    const command = buildProgramCommand(
+        'checks/dependency',
+        '--name',
+        'dependency',
+        '--write',
+        'node_modules/dependency/stamp.txt=snapshot output',
+    );
     await createFileTree(sandbox.path, {
         '.gitignore': `${DOT_GSPOT}/\nnode_modules/\n`,
         'package.json': JSON.stringify(STAGED_PACKAGE_JSON),
         'package-lock.json': lockfile,
         'node_modules/dependency/package.json':
             '{"name":"dependency","version":"1.0.0","type":"module","exports":"./index.js"}',
-        'node_modules/dependency/index.js': 'export const verdict = true;\n',
+        'node_modules/dependency/index.js': 'export const isPassing = true;\n',
         'node_modules/dependency/stamp.txt': 'authored dependency data',
         'source.txt': 'authored input',
         'gspot.toml': buildSandboxSettings([], {

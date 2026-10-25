@@ -9,8 +9,9 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
-import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 test.skipIf(isWindows)('a command check whose program lost its execute bit errors with exit code 2', async () => {
@@ -33,7 +34,7 @@ test.skipIf(isWindows)('a command check whose program lost its execute bit error
         }),
         'source.txt': 'input\n',
     });
-    await writeScriptCommand(sandbox.path, 'checker', 'process.exitCode = 0;\n');
+    await writeProgramCommand(sandbox.path, 'checker', 'fakes/tool');
     await chmod(executable, 0o644);
     const options = buildRunOptions({ stage: 'commit', only: ['project/checker'] });
     const unexecutable = await runChecks(await openSession(sandbox.path), options);
@@ -77,7 +78,7 @@ test.skipIf(isWindows)('a per-file process killed by a signal is an error, not a
                 command_check: [
                     {
                         id: 'project/termination',
-                        command: [process.execPath, '-e', 'process.kill(process.pid, "SIGTERM")', '{file}'],
+                        command: buildProgramCommand('fakes/tool', '--signal', 'SIGTERM', '{file}'),
                         paths: ['source.txt'],
                         stage: 'commit',
                     },

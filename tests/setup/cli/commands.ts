@@ -15,11 +15,7 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import type { FindingRow, ScopeFindingRow } from '#tests/types/reports.ts';
 import type { StdinOptions, ProcessOutput } from '#tests/types/processes.ts';
 
-export const CLI_SOURCE_PATH = join(REPOSITORY_ROOT, 'packages/cli/src');
-
-export const CLI_MAIN = join(CLI_SOURCE_PATH, 'main.ts');
-
-export const CLI_BIN = join(CLI_SOURCE_PATH, 'bin.ts');
+export const CLI_BIN = join(REPOSITORY_ROOT, 'packages/cli/src/bin.ts');
 
 /**
 List the file, line, and rule of every finding in the report.

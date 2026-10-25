@@ -12,7 +12,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { fakeNpmTool, writeScriptCommand } from '#tests/setup/system/fakes.ts';
+import { fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
@@ -34,10 +34,16 @@ test("a file named on the command line runs its scope's project check on every f
     });
 
     const declaration = await fakeNpmTool(sandbox.path, 'tsc');
-    await writeScriptCommand(
+    await writeProgramCommand(
         sandbox.path,
         `${GSPOT_PATHS.nodeModules}/.bin/tsc`,
-        `if (process.argv.includes('--version')) console.log(${JSON.stringify(declaration.version)}); else { console.log('source.ts(1,1): error TS2304: Project finding'); process.exitCode = 1; }`,
+        'fakes/tool',
+        '--version-line',
+        String(declaration.version),
+        '--line',
+        'source.ts(1,1): error TS2304: Project finding',
+        '--exit',
+        '1',
     );
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { ...TSC_PUSH_OPTIONS, paths: ['api/source.ts'] });
@@ -104,10 +110,12 @@ test('a project-wide TypeScript check counts its source file and tsconfig.json, 
     });
     commitAll(sandbox.path);
     const declaration = await fakeNpmTool(sandbox.path, 'tsc');
-    await writeScriptCommand(
+    await writeProgramCommand(
         sandbox.path,
         `${GSPOT_PATHS.nodeModules}/.bin/tsc`,
-        `if (process.argv.includes('--version')) console.log(${JSON.stringify(declaration.version)});`,
+        'fakes/tool',
+        '--version-line',
+        String(declaration.version),
     );
     const all = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
     expect(all.code, all.stdout + all.stderr).toBe(0);

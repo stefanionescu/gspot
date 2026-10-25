@@ -7,6 +7,7 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { DURATION } from '#tests/config/commands/check/report.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { FIX_SUMMARY_CASES } from '#tests/config/commands/check/fixes/feedback.ts';
 
 test.each([...FIX_SUMMARY_CASES])(
@@ -19,12 +20,8 @@ test.each([...FIX_SUMMARY_CASES])(
                 command_check: [
                     {
                         id: 'sandbox/feedback',
-                        command: [process.execPath, '-e', 'process.exitCode = 0'],
-                        fix: [
-                            process.execPath,
-                            '-e',
-                            String.raw`for (const path of ${JSON.stringify(paths)}) await Bun.write(path, 'corrected\n');`,
-                        ],
+                        command: buildProgramCommand('fakes/tool'),
+                        fix: buildProgramCommand('fakes/tool', '--text', 'corrected\n', ...paths),
                         paths: ['*.txt'],
                         stage: 'commit',
                     },

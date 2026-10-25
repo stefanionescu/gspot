@@ -11,6 +11,7 @@ import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { TAIL_LINES } from '#cli/config/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { isReportedCrash, formatOutputTail, parseCommandFindings } from '#cli/runs/command/output.ts';
 
 import {
@@ -23,7 +24,7 @@ import {
     TIMESTAMP_OUTPUT,
     MISSING_LOCATED_FILE,
     ESLINT_MANIFEST_TOOL,
-    BANNER_FAILURE_SCRIPT,
+    BANNER_FAILURE_COMMAND,
 } from '#tests/config/runs/command.ts';
 
 test('a shortened failure output keeps the last line of stdout and of stderr', () => {
@@ -178,7 +179,7 @@ test('per-file failures drop only the header lines the tool declares', async () 
                         id: 'project/native',
                         stage: 'commit',
                         paths: ['source.txt'],
-                        command: [process.execPath, '-e', BANNER_FAILURE_SCRIPT, '{file}'],
+                        command: BANNER_FAILURE_COMMAND,
                     },
                 ],
             }),
@@ -206,7 +207,7 @@ test('a regex finding in a file that does not exist is a note until the file exi
         'gspot.toml': buildSandboxSettings([], {
             tables: String.raw`[[command_check]]
 id = "notes/regex"
-command = ${JSON.stringify([process.execPath, '-e', ''])}
+command = ${JSON.stringify(buildProgramCommand('fakes/tool'))}
 paths = ["notes/**"]
 stage = "commit"
 [command_check.output]
@@ -243,7 +244,7 @@ test('a finding in a folder outside the scope keeps its repository path when the
         (check) => check.scope.folder.path === 'app',
     )!;
     planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
-    planned.check.command = [process.execPath, '-e', SCOPE_PATH_CHECK.program];
+    planned.check.command = [...SCOPE_PATH_CHECK.command];
     planned.check.output = SCOPE_PATH_CHECK.output;
 
     const checked = await runCheckCommand(session, planned);

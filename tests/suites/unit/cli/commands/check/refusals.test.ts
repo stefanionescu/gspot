@@ -10,6 +10,7 @@ import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { limitCommand } from '#tests/setup/system/processes.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
@@ -21,10 +22,10 @@ import {
 } from '#tests/config/commands/check/refusals.ts';
 
 async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
-    const fix = [process.execPath, '-e', String.raw`require('node:fs').writeFileSync('source.txt', 'fixed\n')`];
+    const fix = buildProgramCommand('fakes/tool', '--text', 'fixed\n', 'source.txt');
     const check = {
         id: 'sandbox/fixable',
-        command: [process.execPath, '-e', 'process.exitCode = 0'],
+        command: buildProgramCommand('fakes/tool'),
         fix,
         paths: ['source.txt'],
         stage: 'commit',
@@ -202,7 +203,7 @@ test('a linked .gspot folder stops check, and nothing outside changes', async ()
                         id: 'project/storage',
                         paths: ['source.txt'],
                         stage: 'commit',
-                        command: [process.execPath, '-e', 'console.log("Exact finding"); process.exitCode=1'],
+                        command: buildProgramCommand('fakes/tool', '--stdout', 'Exact finding\n', '--exit', '1'),
                         output: { format: 'lines' },
                     },
                 ],

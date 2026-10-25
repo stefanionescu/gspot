@@ -9,10 +9,11 @@ import { type RunOptions } from '#cli/types/runs/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { SQL_COMMAND_CHECK_TABLES } from '#tests/config/commands/samples.ts';
+import { FIX_LINTER_CASES } from '#tests/config/commands/check/fixes/passes.ts';
 import { runGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { TEXT_FIX_SCRIPT, FIX_LINTER_CASES, TEXT_CHECK_SCRIPT } from '#tests/config/commands/check/fixes/passes.ts';
 
 test.each([...FIX_LINTER_CASES])(
     'after --fix, the $configuration check status matches what the linter still reports',
@@ -76,7 +77,7 @@ test('after --fix, the checks read the fixed file and other files stay as they w
             command_check: [
                 {
                     id: 'project/correct-sql',
-                    command: [process.execPath, '-e', 'process.exitCode = 0'],
+                    command: buildProgramCommand('fakes/tool'),
                     paths: ['query.sql'],
                     stage: 'commit',
                     fix: [process.execPath, 'correct.cjs', '{files}'],
@@ -118,15 +119,15 @@ test('a later pass formats what a fix after the formatter wrote', async () => {
                         id: 'project/format',
                         stage: 'commit',
                         paths: ['*.txt'],
-                        command: [process.execPath, '-e', TEXT_CHECK_SCRIPT, '  ', '{files}'],
-                        fix: [process.execPath, '-e', TEXT_FIX_SCRIPT, '  ', ' ', '{files}'],
+                        command: buildProgramCommand('checks/search', '--text', '  ', '--', '{files}'),
+                        fix: buildProgramCommand('checks/replacement', '  ', ' ', '{files}'),
                     },
                     {
                         id: 'project/codemod',
                         stage: 'commit',
                         paths: ['*.txt'],
-                        command: [process.execPath, '-e', TEXT_CHECK_SCRIPT, 'var', '{files}'],
-                        fix: [process.execPath, '-e', TEXT_FIX_SCRIPT, 'var', 'let ', '{files}'],
+                        command: buildProgramCommand('checks/search', '--text', 'var', '--', '{files}'),
+                        fix: buildProgramCommand('checks/replacement', 'var', 'let ', '{files}'),
                     },
                 ],
             }),
@@ -145,11 +146,18 @@ test('a later pass formats what a fix after the formatter wrote', async () => {
 
 test('a fixer that fails midway leaves the later fixers to run in order and keep their edits', async () => {
     const checks = ['first', 'second', 'third'].map((name, index) => {
-        const script = String.raw`const fs = require('node:fs'); fs.appendFileSync('order.log', '${name}\n'); fs.writeFileSync('${name}.txt', 'fixed\n'); process.exitCode = ${index === 0 ? '3' : '0'};`;
         return {
             id: `sandbox/${name}`,
-            command: [process.execPath, '-e', 'process.exitCode = 0'],
-            fix: [process.execPath, '-e', script],
+            command: buildProgramCommand('fakes/tool'),
+            fix: buildProgramCommand(
+                'fakes/tool',
+                '--append',
+                `order.log=${name}\n`,
+                '--write',
+                `${name}.txt=fixed\n`,
+                '--exit',
+                index === 0 ? '3' : '0',
+            ),
             paths: [`${name}.txt`],
             stage: 'commit',
         };

@@ -8,6 +8,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildPointerFiles } from '#cli/generation/config-files/pointers.ts';
@@ -78,15 +79,9 @@ test('JavaScript pointers import modules from folders with URI characters and Un
         });
         paths.push(pathToFileURL(join(sandbox.path, output!.path)).href);
     }
-    const toolResult = await runCommand(
-        [
-            'node',
-            '-e',
-            'process.stdout.write(JSON.stringify(await Promise.all(process.argv.slice(1).map(async (path) => (await import(path)).default))));',
-            ...paths,
-        ],
-        { cwd: sandbox.path },
-    );
+    const toolResult = await runCommand(['node', ...buildProgramArguments('processes/modules', ...paths)], {
+        cwd: sandbox.path,
+    });
     expect(toolResult.code, toolResult.stderr).toBe(0);
     expect(JSON.parse(toolResult.stdout)).toStrictEqual(components.map(() => MODULE_VALUE));
 });

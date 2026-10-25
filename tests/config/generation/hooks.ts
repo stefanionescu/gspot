@@ -16,10 +16,3 @@ export const HOOK_CASES = [
     ['pre-push', ['origin', 'https://example.com/repository.git']],
     ['commit-msg', ['message']],
 ] as const;
-
-export const HOOK_SCRIPT = `console.log(JSON.stringify({
-    argv: process.argv.slice(2),
-    cwd: process.cwd(),
-    hook: process.env.GSPOT_HOOK ?? null,
-}));
-`;

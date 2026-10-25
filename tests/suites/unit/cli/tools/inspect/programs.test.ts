@@ -18,7 +18,7 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies/package-json.ts';
-import { fakeNpmPackage, writeScriptCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 test('tool inspection finds the project compiler, and the original repository compiler from a copy', async () => {
     await using sandbox = await testdir({
@@ -47,11 +47,9 @@ test('tool inspection finds the project compiler, and the original repository co
 
 test('version reads and runs use the other tools of the chosen tool folder', async () => {
     await using sandbox = await testdir();
-    const program =
-        "const child = Bun.spawnSync(['companion'], {stdout:'pipe', stderr:'pipe'}); process.stdout.write(child.stdout); process.exitCode = child.exitCode;\n";
-    await writeScriptCommand(sandbox.path, 'node_modules/.bin/teller', program);
-    await writeScriptCommand(sandbox.path, 'node_modules/.bin/companion', "console.log('3.8.1');\n");
-    await writeScriptCommand(sandbox.path, 'unrelated/companion', "console.log('9.0.0');\n");
+    await writeProgramCommand(sandbox.path, 'node_modules/.bin/teller', 'processes/command', 'companion');
+    await writeProgramCommand(sandbox.path, 'node_modules/.bin/companion', 'fakes/tool', '--line', '3.8.1');
+    await writeProgramCommand(sandbox.path, 'unrelated/companion', 'fakes/tool', '--line', '9.0.0');
     const env = { PATH: join(sandbox.path, 'unrelated') };
     const tool = buildProgramPin('teller', '3.8.1');
     const read = inspectTool(buildToolSearch(sandbox.path), tool);
@@ -67,8 +65,8 @@ test('version reads and runs use the other tools of the chosen tool folder', asy
 
 test('a program on PATH wins over an unrelated mise shim', async () => {
     await using sandbox = await testdir();
-    await writeScriptCommand(sandbox.path, 'active/tsc', "console.log('5.9.3');\n");
-    await writeScriptCommand(sandbox.path, 'mise/shims/tsc', "console.log('1.0.0');\n");
+    await writeProgramCommand(sandbox.path, 'active/tsc', 'fakes/tool', '--line', '5.9.3');
+    await writeProgramCommand(sandbox.path, 'mise/shims/tsc', 'fakes/tool', '--line', '1.0.0');
     const active = join(sandbox.path, 'active', isWindows ? 'tsc.cmd' : 'tsc');
     using _environment = overrideEnvironment({ MISE_DATA_DIR: join(sandbox.path, 'mise') });
     using _which = fakeExecutableLookup(active);
@@ -79,12 +77,26 @@ test('a program on PATH wins over an unrelated mise shim', async () => {
 
 async function installMiseTsc(root: string, status: number) {
     const executable = join(root, 'mise/installs/tsc/5.9.3', isWindows ? 'tsc.cmd' : 'tsc');
-    await writeScriptCommand(root, 'mise/shims/tsc', "throw new Error('The shim must not run in a source copy.');\n");
-    await writeScriptCommand(root, 'mise/installs/tsc/5.9.3/tsc', "console.log('5.9.3');\n");
-    await writeScriptCommand(
+    await writeProgramCommand(
+        root,
+        'mise/shims/tsc',
+        'fakes/tool',
+        '--stderr',
+        'The shim must not run in a source copy.\n',
+        '--exit',
+        '1',
+    );
+    await writeProgramCommand(root, 'mise/installs/tsc/5.9.3/tsc', 'fakes/tool', '--line', '5.9.3');
+    await writeProgramCommand(
         root,
         'bin/mise',
-        `if (process.cwd() !== ${JSON.stringify(join(root, 'work'))}) process.exit(9); console.log(${JSON.stringify(executable)}); process.exitCode = ${String(status)};\n`,
+        'fakes/tool',
+        '--require-cwd',
+        join(root, 'work'),
+        '--line',
+        executable,
+        '--exit',
+        String(status),
     );
     const fakes = new DisposableStack();
     fakes.use(overrideEnvironment({ MISE_DATA_DIR: join(root, 'mise') }));
@@ -147,17 +159,21 @@ test('a missing npm tool does not fall back to the program in the repository nod
     await createFileTree(sandbox.path, {
         'node_modules/teller/package.json': JSON.stringify({ name: 'teller', version: '5.0.1' }),
     });
-    await writeScriptCommand(
+    await writeProgramCommand(
         sandbox.path,
         'node_modules/.bin/teller',
-        "await Bun.write('fallback-ran', ''); console.log('5.0.1');\n",
+        'fakes/tool',
+        '--write',
+        'fallback-ran=',
+        '--line',
+        '5.0.1',
     );
     const tool = buildProgramPin('teller', '5.0.1', 'teller');
     const missing = inspectTool(buildToolSearch(sandbox.path), tool);
     expect(missing.state).toBe('missing');
     expect(missing.path).toBeUndefined();
     expect(await isOnDisk(join(sandbox.path, 'fallback-ran'))).toBe(false);
-    await fakeNpmPackage(sandbox.path, { name: 'teller', version: '5.0.1', script: "console.log('5.0.1');\n" });
+    await fakeNpmPackage(sandbox.path, { name: 'teller', version: '5.0.1', toolArguments: ['--line', '5.0.1'] });
     expect(inspectTool(buildToolSearch(sandbox.path), tool)).toMatchObject({
         state: 'ok',
         found: '5.0.1',

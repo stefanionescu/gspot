@@ -1,17 +1,8 @@
 import type { Check } from '#cli/types/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 export const DASHED_FILE_PLACEHOLDERS = ['{file}', '{files}'];
-
-export const DASHED_FILE_SCRIPT = `
-const { parseArgs } = require('node:util');
-const fs = require('node:fs');
-const { positionals } = parseArgs({ args: process.argv.slice(1), strict: false, allowPositionals: true });
-for (const file of positionals) {
-    console.log(file + ':1: Check this file.');
-    process.exitCode = fs.readFileSync(file, 'utf8') === 'invalid' ? 1 : 0;
-}
-`;
 
 export const BASE_CHECK = {
     id: 'sandbox/diagnostic',
@@ -38,7 +29,17 @@ stage = "commit"
 output = { format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$" }
 `;
 
-export const SQL_CHECK_SCRIPT = `const fs = require('node:fs'); for (const path of process.argv.slice(1)) { if (fs.readFileSync(path, 'utf8').includes('CREATE FUNCTION')) { console.log(path + ':1: Replace the sample function.'); process.exitCode = 1; } }`;
+export const SQL_CHECK_COMMAND = buildProgramCommand(
+    'checks/search',
+    '--text',
+    'CREATE FUNCTION',
+    '--report',
+    'message',
+    '--message',
+    'Replace the sample function.',
+    '--',
+    '{files}',
+);
 
 export const CHILD_SCOPE_SETTINGS = {
     rules: true,
@@ -57,12 +58,15 @@ export const PENDING_NOTE_RESULTS = [
     },
 ] as const;
 
-export const PENDING_NOTES_SCRIPT = String.raw`let found = false;
-for (const file of process.argv.slice(1)) {
-    for (const [index, line] of (await Bun.file(file).text()).split('\n').entries())
-        if (line.includes('PENDING')) { console.log(file + ':' + String(index + 1) + ':' + line); found = true; }
-}
-process.exit(found ? 1 : 0);`;
+export const PENDING_NOTES_CHECK = buildProgramCommand(
+    'checks/search',
+    '--text',
+    'PENDING',
+    '--report',
+    'line',
+    '--',
+    '{files}',
+);
 
 export const MISSING_LOCATED_FILE = {
     code: 1,
@@ -94,8 +98,14 @@ export const TIMESTAMP_OUTPUT = '2026-09-19T02: FATAL\n';
 
 export const LOCATED_OUTPUT = 'source.txt: located defect\n';
 
-export const BANNER_FAILURE_SCRIPT =
-    "console.error('Banner: scanner 1'); console.error('Native input failed.'); process.exitCode = 1;";
+export const BANNER_FAILURE_COMMAND = buildProgramCommand(
+    'fakes/tool',
+    '--stderr',
+    'Banner: scanner 1\nNative input failed.\n',
+    '--exit',
+    '1',
+    '{file}',
+);
 
 export const SCOPE_PATH_CHECK = {
     files: {
@@ -106,7 +116,7 @@ export const SCOPE_PATH_CHECK = {
         'app/src/a.swift': 'let value = 1\n',
         'lib/x.ts': 'export const value = 1;\n',
     },
-    program: String.raw`console.log("../lib/x.ts:1: outside\nsrc/a.swift:2: inside");`,
+    command: buildProgramCommand('fakes/tool', '--line', '../lib/x.ts:1: outside', '--line', 'src/a.swift:2: inside'),
     output: {
         ...LOCATED_CHECK.output,
         pattern: String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$`,
@@ -120,12 +130,12 @@ export const SHFMT_INDENT_CASES = [
 
 export const GENERATE_ARGUMENTS = [process.execPath, 'generate.ts', '', 'two words'];
 
-export const ARGUMENT_RUNNER = [
-    process.execPath,
-    '-e',
-    `process.exitCode = JSON.stringify(process.argv.slice(-4)) === ${JSON.stringify(JSON.stringify(GENERATE_ARGUMENTS))} ? 0 : 1`,
+export const ARGUMENT_RUNNER = buildProgramCommand(
+    'checks/arguments',
+    '--equals',
+    JSON.stringify(GENERATE_ARGUMENTS),
     '--',
-];
+);
 
 export const WORKSPACE_SCOPE_CASES = [
     { scope: '', expected: [] },

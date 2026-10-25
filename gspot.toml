@@ -299,7 +299,7 @@ no-promise-matchers = []
 schema-location = [{ folders = ["packages/cli/src/schemas", "tests/schemas"] }]
 
 [tools.knip]
-entry = ["tests/setup/runner/unit.ts", "packages/eslint-plugin/repository/plugin.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/configurations/linter-exports.ts"]
+entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/repository/plugin.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/configurations/linter-exports.ts"]
 
 [[scope]]
 path = "docs"

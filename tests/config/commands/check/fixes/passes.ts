@@ -1,9 +1,3 @@
-export const TEXT_CHECK_SCRIPT =
-    'const [, text, ...paths] = process.argv; const bodies = await Promise.all(paths.map((path) => Bun.file(path).text())); process.exitCode = bodies.some((body) => body.includes(text)) ? 1 : 0;';
-
-export const TEXT_FIX_SCRIPT =
-    'const [, text, replacement, ...paths] = process.argv; for (const path of paths) await Bun.write(path, (await Bun.file(path).text()).replaceAll(text, replacement));';
-
 export const FIX_LINTER_CASES = [
     {
         configuration: 'javascript',

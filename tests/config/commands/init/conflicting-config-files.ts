@@ -39,17 +39,6 @@ export const INACTIVE_CONFIGURATIONS = {
     'package.json': COMMITLINT_PACKAGE,
 } as const;
 
-export const STYLELINT_LOOKUP_SCRIPT = `
-import stylelint from './.gspot/node_modules/stylelint/lib/index.mjs';
-const result = await stylelint.lint({ files: [process.argv[1]], cwd: process.cwd() });
-const findings = result.results.flatMap(({ warnings, parseErrors, invalidOptionWarnings }) => [
-    ...warnings.map(({ rule, line, column, severity }) => ({ rule, line, column, severity })),
-    ...parseErrors,
-    ...invalidOptionWarnings,
-]);
-process.stdout.write(JSON.stringify(findings));
-`;
-
 const REPLACED_CONFIG_FILES = {
     'typos.toml': `[default.extend-words]
 # The device identifier API name.

@@ -1,11 +1,10 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { pathToFileURL } from 'node:url';
 import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { CLI_SOURCE_PATH } from '#tests/setup/cli/commands.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { spawnProcess, streamProcess } from '#cli/system/processes.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { isWindows, simulateOperatingSystem } from '#tests/setup/system/platform.ts';
@@ -19,7 +18,7 @@ function isStopped(child: childProcess.ChildProcess | undefined): boolean {
 
 function startFailedCapture(capture: 'text' | 'bytes', root: string) {
     using children = spyOn(childProcess, 'spawn');
-    const running = captureProcess(capture, [process.execPath, '-e', 'setInterval(() => {}, 1000)'], { cwd: root });
+    const running = captureProcess(capture, buildProgramCommand('fakes/tool', '--wait'), { cwd: root });
     const launched = children.mock.results[0];
     if (launched?.type !== 'return') throw new Error('The capture started no child.');
     launched.value.stdout?.emit('error', new Error('Test stream failure.'));
@@ -64,10 +63,9 @@ test.each([
     async (capture, termination) => {
         await using sandbox = await testdir();
         const marker = join(sandbox.path, 'descendant-survived');
-        const descendant = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); console.log("descendant-ready"); setInterval(() => {}, 1000);`;
-        const parent = `Bun.spawn([process.execPath, "-e", ${JSON.stringify(descendant)}], {stdout:"inherit", stderr:"inherit"}); await Bun.sleep(60000);`;
+        const parent = buildProgramCommand('processes/descendant', '--marker', marker, '--line', 'descendant-ready');
         const controller = new AbortController();
-        const running = captureProcess(capture, [process.execPath, '-e', parent], {
+        const running = captureProcess(capture, parent, {
             cwd: sandbox.path,
             ...(termination === 'timeout' && { timeoutSeconds: CHILD_TIMEOUT_SECONDS }),
             ...(termination === 'canceled' && { cancelSignal: controller.signal }),
@@ -93,10 +91,7 @@ test.each([
 
 test('an exiting CLI stops its running process group', async () => {
     await using sandbox = await testdir();
-    const descendant = 'console.log(process.pid); setInterval(() => {}, 1000);';
-    const sourceUrl = pathToFileURL(join(CLI_SOURCE_PATH, 'system/processes.ts')).href;
-    const script = `import {spawnProcess} from ${JSON.stringify(sourceUrl)}; void spawnProcess([process.execPath,"-e",${JSON.stringify(descendant)}],{cwd:process.cwd(),onStdout(chunk){process.stdout.write(chunk);process.exit(19);}});`;
-    const command = [process.execPath, '-e', script];
+    const command = buildProgramCommand('processes/process-group', '19');
     await using started = startCommand(command, { cwd: sandbox.path });
     expect(await started.child.exited, await started.errors).toBe(19);
     const output = await started.output;
@@ -110,10 +105,20 @@ test('live output arrives before the process ends while capture keeps the output
     const stderr: string[] = [];
     const ready = Promise.withResolvers<undefined>();
     const release = join(sandbox.path, 'release');
-    const child = `console.log('ready'); console.error('diagnostic'); while (!(await Bun.file(${JSON.stringify(release)}).exists())) await Bun.sleep(10); process.exitCode = 7;`;
+    const child = buildProgramCommand(
+        'fakes/tool',
+        '--line',
+        'ready',
+        '--stderr',
+        'diagnostic\n',
+        '--until',
+        release,
+        '--exit',
+        '7',
+    );
     let isFinished = false;
     const running = (async () => {
-        const result = await captureProcess('text', [process.execPath, '-e', child], {
+        const result = await captureProcess('text', child, {
             cwd: sandbox.path,
             onStdout: (chunk) => {
                 stdout.push(chunk);
@@ -152,9 +157,16 @@ test.each(['text', 'bytes'] as const)(
     async (capture) => {
         await using sandbox = await testdir();
         const marker = join(sandbox.path, 'orphan-survived');
-        const descendant = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); console.log('ready'); setInterval(() => {}, 1000);`;
-        const parent = `const child = Bun.spawn([process.execPath, '-e', ${JSON.stringify(descendant)}], {stdout:'pipe', stderr:'inherit'}); for await (const chunk of child.stdout) { process.stdout.write(chunk); process.exit(7); }`;
-        const result = await captureProcess(capture, [process.execPath, '-e', parent], {
+        const parent = buildProgramCommand(
+            'processes/descendant',
+            '--marker',
+            marker,
+            '--line',
+            'ready',
+            '--forward',
+            '7',
+        );
+        const result = await captureProcess(capture, parent, {
             cwd: sandbox.path,
         });
         expect(result.code).toBe(7);
@@ -179,7 +191,7 @@ test('the stop after a normal exit accepts the macOS refusal to signal an exited
     );
     using _operatingSystem = simulateOperatingSystem('darwin');
 
-    const result = await captureProcess('text', [process.execPath, '-e', 'process.exit(0)'], {
+    const result = await captureProcess('text', buildProgramCommand('fakes/tool'), {
         cwd: sandbox.path,
     });
     expect(result.code, result.stderr).toBe(0);
@@ -188,11 +200,7 @@ test('the stop after a normal exit accepts the macOS refusal to signal an exited
 
 test('stream reading keeps raw bytes and the error output', async () => {
     await using sandbox = await testdir();
-    const command = [
-        process.execPath,
-        '-e',
-        String.raw`process.stdout.write(Buffer.from([0,255,0,10])); process.stderr.write("diagnostic\n");`,
-    ];
+    const command = buildProgramCommand('fakes/tool', '--stdout-hex', '00ff000a', '--stderr', 'diagnostic\n');
     const bytes: Buffer[] = [];
     const result = await streamProcess(
         command,
@@ -209,7 +217,7 @@ test('a stream reader that throws stops its child process', async () => {
     await using sandbox = await testdir();
     using children = spyOn(childProcess, 'spawn');
     const failure = new Error('Consumer refused the bytes.');
-    const command = [process.execPath, '-e', 'process.stdout.write("ready"); setInterval(() => {}, 1000);'];
+    const command = buildProgramCommand('fakes/tool', '--stdout', 'ready', '--wait');
     const error = await captureRejection(
         streamProcess(command, { ...limitCommand(command, { cwd: sandbox.path }).options }, async (chunks) => {
             for await (const chunk of chunks) {
@@ -229,11 +237,7 @@ test('stream cancellation stops the child and keeps the cancellation reason', as
     const controller = new AbortController();
     const reason = new Error('Canceled native output');
     let pid = 0;
-    const command = [
-        process.execPath,
-        '-e',
-        'process.stdout.write(String(process.pid)); setInterval(() => process.stdout.write("pending"), 1000);',
-    ];
+    const command = buildProgramCommand('fakes/tool', '--print-pid', '--wait', '--repeat', 'pending');
     const error = await captureRejection(
         streamProcess(
             command,
@@ -257,7 +261,7 @@ test('stream cancellation stops the child and keeps the cancellation reason', as
 test('a finished stream keeps the reader error after cleanup', async () => {
     await using sandbox = await testdir();
     const refusal = new Error('Invalid native stream');
-    const command = [process.execPath, '-e', 'process.stdout.write("invalid");'];
+    const command = buildProgramCommand('fakes/tool', '--stdout', 'invalid');
     const error = await captureRejection(
         streamProcess(command, { ...limitCommand(command, { cwd: sandbox.path }).options }, async (chunks) => {
             for await (const chunk of chunks) expect(chunk.toString()).toBe('invalid');

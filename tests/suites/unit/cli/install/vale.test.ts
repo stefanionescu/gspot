@@ -11,8 +11,8 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/install/vale.ts';
-import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/install/vale.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { hasValePackages, installValePackages } from '#cli/install/vale.ts';
 
@@ -61,7 +61,7 @@ test('a changed Vale archive is refused before sync and preserves installed pack
     });
     const session = await openSession(sandbox.path);
     const tool = getTool(session.configurations.values(), 'vale');
-    await writeScriptCommand(sandbox.path, 'node_modules/.bin/vale', `console.log(${JSON.stringify(tool.version)});`);
+    await writeProgramCommand(sandbox.path, 'node_modules/.bin/vale', 'fakes/tool', '--line', String(tool.version));
     using _request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('replaced archive'));
     using writer = openWriter(sandbox.path);
     const install = buildToolInstall(session, writer);

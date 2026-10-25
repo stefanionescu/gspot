@@ -3,11 +3,11 @@ import { readFileSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { type Level } from '#cli/types/configurations.ts';
-import { REPORT_SCRIPT } from '#tests/config/setup/cli.ts';
 import { SCHEMA_DIRECTIVE } from '#cli/config/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { type Settings, type WrittenSettings } from '#cli/types/settings/file.ts';
@@ -92,7 +92,7 @@ export function buildReportingCheck(
 ): NonNullable<WrittenSettings['command_check']>[number] {
     return {
         id: options.id ?? 'sandbox/report',
-        command: [process.execPath, '-e', REPORT_SCRIPT, '{files}'],
+        command: buildProgramCommand('fakes/tool', '--print-arguments', '--exit', '1', '--', '{files}'),
         ...options,
         output: { format: 'lines' },
     };

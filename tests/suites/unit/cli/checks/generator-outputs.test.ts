@@ -17,8 +17,9 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runChecks, runCheckCode } from '#cli/commands/check/run.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { chmod, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { writeScriptCommand, fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand, fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 import {
     GENERATOR_CASES,
@@ -86,8 +87,8 @@ async function prepareSupabaseCheck(
         const result = await runChecks(await openSession(root), buildRunOptions({ only: ['supabase/stale-types'] }));
         return result.report.checks.find((check) => check.scope === scope)!;
     };
-    const bin = await writeScriptCommand(root, 'bin/supabase', '');
-    await writeScriptCommand(root, 'bin/docker', '');
+    const bin = await writeProgramCommand(root, 'bin/supabase', 'fakes/tool');
+    await writeProgramCommand(root, 'bin/docker', 'fakes/tool');
     const supabase = executables.sync('supabase', { path: bin });
     const docker = executables.sync('docker', { path: bin });
     const requests: { commandArguments: string[]; cwd: string }[] = [];
@@ -269,11 +270,9 @@ test('Supabase types need Docker before the local stack starts', async () => {
 
 test('a [[command_check]] with outputs reports an output that differs from what its command writes', async () => {
     await using sandbox = await testdir();
-    const generator = JSON.stringify([
-        process.execPath,
-        '-e',
-        String.raw`require("node:fs").writeFileSync("generated/api.ts", "export const version = 2;\n");`,
-    ]);
+    const generator = JSON.stringify(
+        buildProgramCommand('fakes/tool', '--text', 'export const version = 2;\n', 'generated/api.ts'),
+    );
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
             tables: `[[command_check]]\nid = "project/codegen"\ncommand = ${generator}\npaths = ["schema/**"]\noutputs = ["generated/api.ts"]\nstage = "commit"\n`,
@@ -306,7 +305,7 @@ test('generator output patterns omit directory links', async () => {
         ...input,
         check: {
             ...input.check,
-            command: [process.execPath, '-e', ''],
+            command: buildProgramCommand('fakes/tool'),
             generator_outputs: [{ kind: 'pattern' as const, path: 'generated/**' }],
         },
     };

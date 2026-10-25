@@ -9,7 +9,7 @@ import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
-import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
@@ -46,7 +46,7 @@ test.each([...PYTHON_PROJECTS])(
         const { projectFile, lockfilePath, lockfile } = prepared.projectFiles;
         const { rootProject, rootConfiguration } = prepared;
         expect(lockfile.toString('utf8')).not.toContain(PYTHON_INDEX_CREDENTIALS.password);
-        const brokenUv = await writeScriptCommand(artifacts.path, 'bin/uv', 'process.exitCode = 87;');
+        const brokenUv = await writeProgramCommand(artifacts.path, 'bin/uv', 'fakes/tool', '--exit', '87');
         const command = await spawnGspot(sandbox.path, ['install', '--json'], {
             PATH: [brokenUv, readEnvironmentVariable('PATH') ?? ''].join(delimiter),
             MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
