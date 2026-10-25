@@ -5,11 +5,10 @@ import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { expectSampleFix } from '#tests/setup/cli/samples.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
-import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     BASH_ENV_READ_CASES,
@@ -110,9 +109,6 @@ test('each scope uses its own environment readers', async () => {
 test.each([...BASH_ENV_READ_CASES])(
     '$check reports $expected.rule in $expected.file and passes after the fix',
     async (sample) => {
-        await using sandbox = await createSandbox(BASH_SANDBOX);
-        expect(await runCheckSample(sandbox, sample, BASH_SANDBOX.cleanSource)).toStrictEqual(
-            buildExpectedSummary(sample),
-        );
+        await expectSampleFix(BASH_SANDBOX, sample);
     },
 );

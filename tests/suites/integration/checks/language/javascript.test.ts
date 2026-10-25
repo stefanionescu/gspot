@@ -14,8 +14,8 @@ import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
+import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
@@ -100,8 +100,7 @@ test('javascript/tsc at level all also checks the build and dist folders', async
         ...Object.fromEntries([...paths, 'emitted/value.js'].map((path) => [path, 'export const value = missing;\n'])),
     });
     commitAll(sandbox.path);
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     const command = ['check', '--only', 'javascript/tsc', '--json'];
     const broken = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
@@ -131,8 +130,7 @@ export const total = accepted;
             'authored/cache.tsbuildinfo': 'Preserve this authored metadata.\n',
             ...authoredFiles,
         });
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
         const generated = {
             path: findManifestTarget('javascript', 'jsconfig.json'),
             content: await readFile(join(sandbox.path, findManifestTarget('javascript', 'jsconfig.json')), 'utf8'),
@@ -162,8 +160,7 @@ export const total = accepted;
 test("javascript/tsc reads each scope's own jsconfig options, and a broken one fails only its scope", async () => {
     await using sandbox = await createGitSandbox({});
     const { config, corrected } = await prepareJsconfigScopes(sandbox.path);
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     const outputs = await Promise.all(
         [
             ...new Bun.Glob(`${GSPOT_PATHS.configurations}/**/jsconfig.json`).scanSync({
@@ -242,8 +239,7 @@ test('javascript/tsc copies imported ambient types and keeps other scopes apart'
         ...IMPORTED_AMBIENT_FILES,
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', scopes: [{ path: 'apps/web' }] }),
     });
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     const command = ['check', '--only', 'javascript/tsc', '--json', '--', 'apps/web/src/main.js'];
     const passed = await spawnGspot(sandbox.path, command);
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);

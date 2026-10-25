@@ -10,7 +10,7 @@ import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { STRICT_TSCONFIG_TEXT, STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
-import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     KEPT_DECLARATION_FILES,
@@ -83,8 +83,7 @@ test('typescript/tsc runs a covering parent tsconfig once for nested scopes', as
         }),
     });
     await linkTypescript(join(sandbox.path, 'node_modules'));
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     const command = ['check', '--only', 'typescript/tsconfig,typescript/tsc', '--json'];
     const clean = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
@@ -124,8 +123,7 @@ test('typescript/tsc checks a scope through the parent tsconfig, alone when name
     await linkTypescript(join(sandbox.path, 'node_modules'));
     const selection = ['--only', 'typescript/tsc', '--json'];
     const { mode } = await stat(join(sandbox.path, 'tsconfig.json'));
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', ...selection]));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(checked.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([

@@ -7,10 +7,9 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { expectSampleFix } from '#tests/setup/cli/samples.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
-import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     HOST_LOCKFILE,
@@ -90,8 +89,7 @@ test.each([...LOCKFILE_HOST_CASES])(
     'dependencies/lockfiles reports $expected.rule in $expected.file and passes after the fix',
     async (row) => {
         const sample = { check: 'dependencies/lockfiles', ...row };
-        await using sandbox = await createSandbox(DEPENDENCIES_SANDBOX);
-        expect(await runCheckSample(sandbox, sample)).toStrictEqual(buildExpectedSummary(sample));
+        await expectSampleFix(DEPENDENCIES_SANDBOX, sample);
     },
 );
 

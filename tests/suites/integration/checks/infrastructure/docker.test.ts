@@ -12,7 +12,7 @@ import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
-import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     DOCKER_CASES,
@@ -41,8 +41,7 @@ test('Trivy checks each Dockerfile in its deepest scope and honors an ignore lim
     });
     commitAll(sandbox.path);
     await createFileTree(sandbox.path, { 'untracked/Dockerfile': ROOT_USER_DOCKERFILE });
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     const command = ['check', '--only', 'docker/trivy-config', '--json'];
     const failed = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
     expect(failed.exitCode, JSON.stringify(failed)).toBe(1);
@@ -73,8 +72,7 @@ test.each([...LEVELS])(
             'app/Dockerfile.alpine': ALPINE_DOCKERFILE,
         });
 
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
         const pins =
             level === 'all'
                 ? ([
@@ -128,8 +126,7 @@ test.skipIf(!isLinux || Bun.which('docker') === null)(
             'compose.yaml': `services: {app: {image: "${tags[0]}"}}\n`,
             'payload.pem': privateKey,
         });
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
         const configPath = join(sandbox.path, findManifestTarget('docker', 'trivy.yml'));
         const configuration = await readFile(configPath, 'utf8');
         const command = ['check', '--only', 'docker/trivy-image', '--json'];

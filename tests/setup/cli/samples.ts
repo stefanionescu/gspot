@@ -1,10 +1,12 @@
 import { join } from 'node:path';
+import { expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { type Sandbox } from '#tests/types/sandbox.ts';
 import type { RunReport } from '#cli/types/runs/run.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import type { Sandbox, SandboxPlan } from '#tests/types/sandbox.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
 import { changeSandbox, applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import type { SampleFix, CheckSample, SampleResult, SampleSummary, SandboxChanges } from '#tests/types/samples.ts';
@@ -109,4 +111,16 @@ export function buildExpectedSummary(sample: CheckSample): SampleSummary {
         },
         passed: { code: 0, reported: [] },
     };
+}
+
+/**
+Create a sandbox from its plan, run the sample in it, and expect the failed run and the clean rerun of the sample.
+
+@param plan the sandbox, with the clean source that fixes each sample file.
+@param sample the check, the files that break it, and its expected finding.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 4 files share it.
+export async function expectSampleFix(plan: SandboxPlan, sample: CheckSample): Promise<void> {
+    await using sandbox = await createSandbox(plan);
+    expect(await runCheckSample(sandbox, sample, plan.cleanSource)).toStrictEqual(buildExpectedSummary(sample));
 }

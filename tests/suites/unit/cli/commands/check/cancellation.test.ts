@@ -76,19 +76,21 @@ async function assertStagedRetry(
     expect(retry.report.checks[0]!.status).toBe('passed');
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
+async function createSlowCheckSandbox() {
+    const command = buildProgramCommand('fakes/tool', ...SLOW_TOOL_ARGUMENTS);
+    return createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            tables: stringify({ command_check: [{ ...SLOW_COMMAND_CHECK, command }] }),
+        }),
+        'source.txt': 'input\n',
+    });
+}
+
 test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
     'check passes %s to a running tool and reports the run as canceled',
     async (signal) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([], {
-                tables: stringify({
-                    command_check: [
-                        { ...SLOW_COMMAND_CHECK, command: buildProgramCommand('fakes/tool', ...SLOW_TOOL_ARGUMENTS) },
-                    ],
-                }),
-            }),
-            'source.txt': 'input\n',
-        });
+        await using sandbox = await createSlowCheckSandbox();
 
         await using capture = startCommand([process.execPath, CLI_BIN, 'check', '--only', 'project/slow', '--json'], {
             cwd: sandbox.path,
@@ -275,17 +277,7 @@ async function fakePausingGit(
 test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
     'a canceled text report prints the %s process exit code',
     async (signal) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings([], {
-                tables: stringify({
-                    command_check: [
-                        { ...SLOW_COMMAND_CHECK, command: buildProgramCommand('fakes/tool', ...SLOW_TOOL_ARGUMENTS) },
-                    ],
-                }),
-            }),
-            'source.txt': 'input\n',
-        });
-        commitAll(sandbox.path);
+        await using sandbox = await createSlowCheckSandbox();
         await using capture = startCommand([process.execPath, CLI_BIN, 'check', '--only', 'project/slow'], {
             cwd: sandbox.path,
             env: { ...buildSpawnEnvironment(), NO_COLOR: '1', CI: '1' },

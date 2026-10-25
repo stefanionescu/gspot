@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
+import type { RunReport } from '#cli/types/runs/run.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import jestPackage from 'jest/package.json' with { type: 'json' };
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -14,6 +15,12 @@ import {
     JEST_COVERAGE_TABLES,
     CORRECTED_MATH_TEST_SOURCE,
 } from '#tests/config/integration/checks/testing/jest.ts';
+
+async function runJestCoverage(root: string, code: number): Promise<RunReport['checks']> {
+    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'jest/coverage', '--json']));
+    expect(result.code, result.stdout + result.stderr).toBe(code);
+    return result.report.checks;
+}
 
 test("jest/coverage at level all uses the scope's coverage limits and runs only that scope's tests", async () => {
     await using sandbox = await createGitSandbox({
@@ -32,10 +39,8 @@ test("jest/coverage at level all uses the scope's coverage limits and runs only 
         'app/authored.txt': 'preserved nested source\n',
     });
 
-    const command = ['check', '--only', 'jest/coverage', '--json'];
-    const uncovered = parseCheckReport(await spawnGspot(sandbox.path, command));
-    expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
-    expect(uncovered.report.checks).toMatchObject([
+    const uncovered = await runJestCoverage(sandbox.path, 1);
+    expect(uncovered).toMatchObject([
         {
             check: 'jest/coverage',
             scope: 'app',
@@ -47,11 +52,8 @@ test("jest/coverage at level all uses the scope's coverage limits and runs only 
         },
     ]);
     await writeFile(join(sandbox.path, 'app/math.test.cjs'), CORRECTED_MATH_TEST_SOURCE);
-    const passing = parseCheckReport(await spawnGspot(sandbox.path, command));
-    expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-    expect(passing.report.checks).toMatchObject([
-        { check: 'jest/coverage', scope: 'app', status: 'passed', findings: [] },
-    ]);
+    const passing = await runJestCoverage(sandbox.path, 0);
+    expect(passing).toMatchObject([{ check: 'jest/coverage', scope: 'app', status: 'passed', findings: [] }]);
 });
 
 test('jest/coverage at level all reports uncovered functions and failed tests and keeps the authored files', async () => {
@@ -60,10 +62,8 @@ test('jest/coverage at level all reports uncovered functions and failed tests an
         'gspot.toml': buildSandboxSettings(['jest'], { tables: JEST_COVERAGE_TABLES, level: 'all' }),
         'math.test.cjs': MATH_TEST_SOURCE,
     });
-    const command = ['check', '--only', 'jest/coverage', '--json'];
-    const uncovered = parseCheckReport(await spawnGspot(sandbox.path, command));
-    expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
-    expect(uncovered.report.checks).toMatchObject([
+    const uncovered = await runJestCoverage(sandbox.path, 1);
+    expect(uncovered).toMatchObject([
         {
             findings: [
                 { file: '', message: 'coverage threshold for lines (80%) not met: 66.66%' },
@@ -72,15 +72,13 @@ test('jest/coverage at level all reports uncovered functions and failed tests an
         },
     ]);
     await writeFile(join(sandbox.path, 'math.test.cjs'), CORRECTED_MATH_TEST_SOURCE);
-    const passing = parseCheckReport(await spawnGspot(sandbox.path, command));
-    expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-    expect(passing.report.checks).toMatchObject([{ check: 'jest/coverage', status: 'passed', findings: [] }]);
+    const passing = await runJestCoverage(sandbox.path, 0);
+    expect(passing).toMatchObject([{ check: 'jest/coverage', status: 'passed', findings: [] }]);
     await writeFile(join(sandbox.path, 'math.test.cjs'), CORRECTED_MATH_TEST_SOURCE.replace('toBe(6)', 'toBe(7)'));
-    const failed = parseCheckReport(await spawnGspot(sandbox.path, command));
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(
-        failed.report.checks[0]!.findings.map(({ check, file, message }) => ({ check, file, message })),
-    ).toStrictEqual([{ check: 'jest/coverage', file: '', message: '● triples an integer' }]);
+    const failed = await runJestCoverage(sandbox.path, 1);
+    expect(failed[0]!.findings.map(({ check, file, message }) => ({ check, file, message }))).toStrictEqual([
+        { check: 'jest/coverage', file: '', message: '● triples an integer' },
+    ]);
     await assertJestFilesKept(sandbox.path);
 });
 
@@ -90,15 +88,12 @@ test('jest/coverage reports a test file with a missing import as an error and pa
         'gspot.toml': buildSandboxSettings(['jest'], { tables: JEST_COVERAGE_TABLES, level: 'all' }),
         'math.test.cjs': 'require("./missing-test-dependency.cjs");\n',
     });
-    const command = ['check', '--only', 'jest/coverage', '--json'];
-    const unavailable = parseCheckReport(await spawnGspot(sandbox.path, command));
-    expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
-    expect(unavailable.report.checks).toMatchObject([{ check: 'jest/coverage', status: 'error', findings: [] }]);
-    expect(unavailable.report.checks[0]!.note).toStartWith(JEST_MISSING_IMPORT);
+    const unavailable = await runJestCoverage(sandbox.path, 2);
+    expect(unavailable).toMatchObject([{ check: 'jest/coverage', status: 'error', findings: [] }]);
+    expect(unavailable[0]!.note).toStartWith(JEST_MISSING_IMPORT);
     await writeFile(join(sandbox.path, 'math.test.cjs'), CORRECTED_MATH_TEST_SOURCE);
-    const recovered = parseCheckReport(await spawnGspot(sandbox.path, command));
-    expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
-    expect(recovered.report.checks).toMatchObject([{ check: 'jest/coverage', status: 'passed', findings: [] }]);
+    const recovered = await runJestCoverage(sandbox.path, 0);
+    expect(recovered).toMatchObject([{ check: 'jest/coverage', status: 'passed', findings: [] }]);
     await assertJestFilesKept(sandbox.path);
 });
 

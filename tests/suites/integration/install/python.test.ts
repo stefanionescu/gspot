@@ -16,9 +16,9 @@ import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { IndexedPythonProject } from '#tests/types/packages.ts';
-import { spawnGspot, applyThenInstall } from '#tests/setup/cli/commands.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { spawnGspot, runGspotStep, applyThenInstall } from '#tests/setup/cli/commands.ts';
 
 import {
     PYTHON_PROJECTS,
@@ -120,8 +120,7 @@ test('apply keeps a conflicted Python lockfile and install repairs it', async ()
     const conflict = '<<<<<<< interrupted lockfile\n';
     await chmod(lockfilePath, 0o644);
     await writeFile(lockfilePath, conflict);
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
     const installed = await spawnGspot(sandbox.path, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);

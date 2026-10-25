@@ -6,7 +6,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import type { LinkFailure } from '#tests/types/reports.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     LINK_PAGE,
@@ -59,8 +59,7 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
         'page.html': LINK_PAGE,
     });
     commitAll(sandbox.path);
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     await assertLinkFailures(sandbox.path, 'docs/lychee', []);
     expect(requests).toStrictEqual([]);
     await assertLinkFailures(sandbox.path, 'docs/lychee-external', [{ scope: '', file: 'root.md', rule: '404' }]);
@@ -89,8 +88,7 @@ test('docs/lychee reads a root-relative link from the repository root, and leave
     });
 
     commitAll(sandbox.path);
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     const command = ['check', '--only', 'docs/lychee', '--json'];
     const passed = await spawnGspot(sandbox.path, command);
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);

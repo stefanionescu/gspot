@@ -190,8 +190,7 @@ test('typescript/tsc builds a referenced project with its imported declarations 
     });
     await linkTypescript(join(sandbox.path, 'node_modules'));
     commitAll(sandbox.path);
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     const failed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(

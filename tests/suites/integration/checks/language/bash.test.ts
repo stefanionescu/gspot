@@ -38,8 +38,7 @@ test('ShellCheck reports dialect findings by shebang and an unchecked cd, bash/s
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', scopes: [{ path: 'app' }] }),
         ...DIALECT_SOURCES,
     });
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     const command = ['check', '--only', 'bash/shellcheck,bash/safety', '--json'];
     const checked = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
@@ -111,8 +110,7 @@ test.skipIf(isWindows).each([...SYNTAX_CASES])(
             ...SYNTAX_FILES,
         });
 
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
         const clean = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', row.check, '--json']));
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         expect(clean.report.checks).toMatchObject([{ status: 'passed', fileCount: row.files.length, findings: [] }]);
