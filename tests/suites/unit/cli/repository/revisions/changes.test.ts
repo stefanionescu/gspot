@@ -68,9 +68,7 @@ test('a new branch compares with the remote default without losing unpushed comm
     runGitStep(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
     runGitStep(sandbox.path, ['checkout', '-qb', 'topic']);
     runGitStep(sandbox.path, ['commit', '--allow-empty', '-qm', 'Unpublished']);
-    expect(await readPushedCommits(sandbox.path, undefined)).toStrictEqual([
-        runGitStep(sandbox.path, ['rev-parse', 'HEAD']),
-    ]);
+    expect(await readPushedCommits(sandbox.path)).toStrictEqual([runGitStep(sandbox.path, ['rev-parse', 'HEAD'])]);
     const { reference, commits } = await readChangedPaths(sandbox.path, '');
     expect(reference).toBe('refs/remotes/origin/main');
     expect(commits).toStrictEqual([runGitStep(sandbox.path, ['rev-parse', 'HEAD'])]);

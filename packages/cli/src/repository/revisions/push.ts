@@ -36,12 +36,20 @@ function isHashPair(localHash: string, remoteHash: string): boolean {
     return HASH_PATTERN.test(localHash) && HASH_PATTERN.test(remoteHash) && localHash.length === remoteHash.length;
 }
 
-function parseLine(line: string): PushLine {
+function parsePushLine(line: string): PushLine {
     const [localRef, localHash, remoteRef, remoteHash, ...verbatim] = line.trim().split(/\s+/u);
     const hasRefs = verbatim.length === 0 && localRef !== undefined && remoteRef !== undefined;
     if (!hasRefs || localHash === undefined || remoteHash === undefined || !isHashPair(localHash, remoteHash))
         throw new GspotError('git', 'Invalid Git pre-push input. Supply every local and remote ref/object pair.');
     return { localRef, localHash, remoteRef, remoteHash };
+}
+
+function assertCommitPresent(commits: PushSearch['commits'], hash: string): void {
+    if (!commits.has(hash))
+        throw new GspotError(
+            'git',
+            MISSING_PUSH_REVISION_MESSAGE.replace('{hash}', () => hash),
+        );
 }
 
 async function readPeeledCommits(
@@ -79,11 +87,7 @@ async function readShallowBoundaries(root: string, cancelSignal?: AbortSignal): 
 async function readComparison(search: PushSearch, hash: string, remoteHash: string): Promise<Comparison> {
     const { root, cancelSignal } = search;
     if (!ABSENT_HASH.test(remoteHash)) {
-        if (!search.commits.has(remoteHash))
-            throw new GspotError(
-                'git',
-                MISSING_PUSH_REVISION_MESSAGE.replace('{hash}', () => remoteHash),
-            );
+        assertCommitPresent(search.commits, remoteHash);
         const previous = search.commits.get(remoteHash);
         if (previous === undefined)
             return { base: await readPushBase(root, cancelSignal), changed: undefined, range: [hash] };
@@ -131,11 +135,7 @@ async function selectLine(search: PushSearch, pushed: PushedRevisions, line: Pus
         pushed.skipped.push({ ref: line.remoteRef, hash: line.localHash, reason: 'deleted ref' });
         return;
     }
-    if (!search.commits.has(line.localHash))
-        throw new GspotError(
-            'git',
-            MISSING_PUSH_REVISION_MESSAGE.replace('{hash}', () => line.localHash),
-        );
+    assertCommitPresent(search.commits, line.localHash);
     const commit = search.commits.get(line.localHash);
     if (commit === undefined) {
         pushed.skipped.push({ ref: line.localRef, hash: line.localHash, reason: 'non-commit object' });
@@ -169,7 +169,7 @@ export async function selectPush(
     const lines = input
         .split('\n')
         .filter((row) => row.trim() !== '')
-        .map((line) => parseLine(line));
+        .map((line) => parsePushLine(line));
     const shallowAnswer = await readGitText(repositoryRoot, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
     const isShallow = shallowAnswer.trim() === 'true';
     const remotes =
@@ -187,19 +187,16 @@ export async function selectPush(
 }
 
 /**
-Read the commits after the push base, unless the caller names the pushed commits.
+Read the commits after the push base.
 
 @param repositoryRoot the folder where Git runs.
-@param commits the pushed revisions, if known.
 @param cancelSignal stops the Git commands.
 @returns the commits, or the Git error.
 */
 export async function readPushedCommits(
     repositoryRoot: string,
-    commits: string[] | undefined,
     cancelSignal?: AbortSignal,
 ): Promise<string[] | { error: string }> {
-    if (commits !== undefined) return commits;
     if ((await readHead(repositoryRoot, cancelSignal)) === undefined) return [];
     const base = await readPushBase(repositoryRoot, cancelSignal);
     const listed = await runGit(repositoryRoot, [...GIT_REV_LIST_ARGUMENTS, `${base}..HEAD`, '--'], {

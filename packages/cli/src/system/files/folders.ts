@@ -44,14 +44,15 @@ export function createTemporaryFolder(): TemporaryFolder {
 Find the files under the fixed folder of each pattern. Include dot files, and do not open folder links.
 
 @param folder the folder to scan.
-@param patterns one glob or several; a leading ! excludes matches.
-@returns matching paths relative to cwd, each once in scan order.
+@param patterns the globs; a leading ! excludes matches.
+@returns matching paths relative to the folder, each once in scan order.
 */
-export function listMatchingPaths(folder: string, patterns: string | string[]): string[] {
-    const list = [patterns].flat();
-    for (const pattern of list) assertInsideFolder(pattern);
-    const positive = list.filter((pattern) => !pattern.startsWith(GLOB_EXCLUDE) && !hasSymlinkPrefix(folder, pattern));
-    const excluded = list.filter((pattern) => pattern.startsWith(GLOB_EXCLUDE)).map((pattern) => pattern.slice(1));
+export function listMatchingPaths(folder: string, patterns: string[]): string[] {
+    for (const pattern of patterns) assertInsideFolder(pattern);
+    const positive = patterns.filter(
+        (pattern) => !pattern.startsWith(GLOB_EXCLUDE) && !hasSymlinkPrefix(folder, pattern),
+    );
+    const excluded = patterns.filter((pattern) => pattern.startsWith(GLOB_EXCLUDE)).map((pattern) => pattern.slice(1));
     return globSync(positive, {
         cwd: folder,
         dot: true,

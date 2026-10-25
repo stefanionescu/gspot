@@ -13,25 +13,25 @@ test('push comparison tells a missing upstream from an upstream whose commit is 
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
 
     commitAll(sandbox.path);
-    expect(await readPushedCommits(sandbox.path, undefined)).toStrictEqual([]);
+    expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
     await writeFile(join(sandbox.path, 'source.ts'), 'export const changed = true;\n');
     runGitStep(sandbox.path, ['add', '.']);
     runGitStep(sandbox.path, ['commit', '-qm', 'Second']);
     runGitStep(sandbox.path, ['branch', 'upstream']);
     runGitStep(sandbox.path, ['branch', '--set-upstream-to=upstream']);
-    expect(await readPushedCommits(sandbox.path, undefined)).toStrictEqual([]);
+    expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
     runGitStep(sandbox.path, ['update-ref', '-d', 'refs/heads/upstream']);
-    const readPushedCommitsError = await captureRejection(readPushedCommits(sandbox.path, undefined));
+    const readPushedCommitsError = await captureRejection(readPushedCommits(sandbox.path));
     expect(readPushedCommitsError.message).toStartWith('Git merge-base failed');
 });
 test('push comparison reports an unborn or broken HEAD instead of inventing a base', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
 
     runGitStep(sandbox.path, ['init']);
-    expect(await readPushedCommits(sandbox.path, undefined)).toStrictEqual([]);
+    expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, '.git/HEAD'), 'broken head');
-    const historyError = await captureRejection(readPushedCommits(sandbox.path, undefined));
+    const historyError = await captureRejection(readPushedCommits(sandbox.path));
     expect(historyError.message).toContain('Cannot read committed Git history');
 });
 test.each(['origin', undefined, 'file:///unused', '/unused'] as const)(

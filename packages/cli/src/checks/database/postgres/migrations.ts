@@ -8,7 +8,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
-import { parseSqlFile, readMigrationVersion } from '#cli/parsers/code/sql.ts';
+import { parseSqlFile, extractMigrationVersion } from '#cli/parsers/code/sql.ts';
 import { type Migration, type MigrationRead } from '#cli/types/checks/postgres.ts';
 
 import {
@@ -56,7 +56,7 @@ export async function readMigrations(session: Session, planned: PlannedCheck): P
             paths
                 .map((path) => ({
                     path,
-                    version: readMigrationVersion(path) ?? '',
+                    version: extractMigrationVersion(path) ?? '',
                 }))
                 .toSorted((left, right) => {
                     const first = BigInt(left.version || '0');

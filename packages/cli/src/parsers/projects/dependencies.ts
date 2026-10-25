@@ -32,7 +32,7 @@ function parseRequirementName(requirement: string): string | undefined {
     const trimmed = requirement.trim();
     const end = trimmed.search(REQUIREMENT_NAME_END);
     const name = end === -1 ? trimmed : trimmed.slice(0, end);
-    return REQUIREMENT_NAME.test(name) ? name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-') : undefined;
+    return REQUIREMENT_NAME.test(name) ? normalizePythonName(name) : undefined;
 }
 
 function convertPythonDependencies(maps: Record<string, PythonDependency>[]): DependencyMap {
@@ -41,10 +41,7 @@ function convertPythonDependencies(maps: Record<string, PythonDependency>[]): De
             .flatMap((map) => Object.entries(map))
             .map(
                 ([name, value]) =>
-                    [
-                        name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-'),
-                        typeof value === 'string' ? value : JSON.stringify(value),
-                    ] as const,
+                    [normalizePythonName(name), typeof value === 'string' ? value : JSON.stringify(value)] as const,
             )
             .filter(([name]) => name !== 'python'),
     );
@@ -170,6 +167,17 @@ async function parseSwiftPackage(path: string, text: string): Promise<Dependency
 }
 
 /**
+Normalize a Python distribution name the way package indexes compare names.
+
+@param name the distribution name as written.
+@returns the lowercase name with each run of separators replaced by one hyphen.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 2 files share it.
+export function normalizePythonName(name: string): string {
+    return name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-');
+}
+
+/**
 Parse package requirements after removing line continuations and comments.
 
 @param path the repository-relative requirements file.
@@ -192,9 +200,11 @@ export function parseRequirements(path: string, text: string): DependencyFile {
     };
 }
 
-export const PARSERS: ReadonlyMap<string, DependencyFileParser> = new Map<string, DependencyFileParser>([
-    [PACKAGE_JSON, parsePackageJson],
-    [PYPROJECT_TOML, parsePyproject],
-    [PACKAGE_SWIFT, parseSwiftPackage],
-    [PIPFILE, parsePipfile],
-]);
+export const DEPENDENCY_FILE_PARSERS: ReadonlyMap<string, DependencyFileParser> = new Map<string, DependencyFileParser>(
+    [
+        [PACKAGE_JSON, parsePackageJson],
+        [PYPROJECT_TOML, parsePyproject],
+        [PACKAGE_SWIFT, parseSwiftPackage],
+        [PIPFILE, parsePipfile],
+    ],
+);

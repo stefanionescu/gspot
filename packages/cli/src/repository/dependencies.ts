@@ -11,12 +11,14 @@ import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { DEPENDENCY_SECTIONS } from '#cli/config/parsers/projects/lockfiles.ts';
 import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies.ts';
-import { PARSERS, parseRequirements } from '#cli/parsers/projects/dependencies.ts';
 import { findText, findCachedText, readCachedText } from '#cli/system/files/reads.ts';
+import { parseRequirements, DEPENDENCY_FILE_PARSERS } from '#cli/parsers/projects/dependencies.ts';
 import { type PackageJson, type DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 
 async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<DependencyFile | undefined> {
-    const parse = REQUIREMENTS_FILE.test(file.path) ? parseRequirements : PARSERS.get(posix.basename(file.path));
+    const parse = REQUIREMENTS_FILE.test(file.path)
+        ? parseRequirements
+        : DEPENDENCY_FILE_PARSERS.get(posix.basename(file.path));
     if (parse === undefined) return undefined;
     const text = readCachedText(reads, file.path);
     return await parse(file.path, text);

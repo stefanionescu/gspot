@@ -28,7 +28,7 @@ List the asset paths under a prefix, relative to the package, sorted.
 export function listAssets(prefix: string): string[] {
     const folder = join(packageFolder, prefix);
     if (statSync(folder, { throwIfNoEntry: false }) === undefined) return [];
-    return listMatchingPaths(folder, ALL_FILES_GLOB)
+    return listMatchingPaths(folder, [ALL_FILES_GLOB])
         .map((path) => convertToPosixPath(join(prefix, path)))
         .toSorted((a, b) => compareText(a, b));
 }

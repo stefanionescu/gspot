@@ -3,14 +3,13 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
 import { TEST_FILES_PLACEHOLDER } from '#cli/config/repository/files/selection.ts';
-import type { FileMatch, CoveredFilesOptions } from '#cli/types/repository/detect.ts';
+import type { TrackedFile, CoveredFilesOptions } from '#cli/types/repository/files.ts';
 
-function addPluginExtensions(owners: FileMatch, configurations: Configuration[]): FileMatch {
+function addPluginExtensions(owners: Configuration['files'], configurations: Configuration[]): Configuration['files'] {
     if (!owners.prettier_plugins && !owners.eslint_plugins) return owners;
     const extensions = configurations
         .flatMap((configuration) => configuration.tools)
@@ -26,7 +25,7 @@ Build one matcher for the extensions, filenames, tags, and paths of a files tabl
 @param table the file patterns.
 @returns a test of whether a tracked file matches.
 */
-export function buildFileMatcher(table: FileMatch): (file: TrackedFile) => boolean {
+export function buildFileMatcher(table: Configuration['files']): (file: TrackedFile) => boolean {
     const filenames = buildFilenameMatcher(table.filenames);
     const paths = buildPathMatcher(table.paths);
     return (file) =>
@@ -47,13 +46,13 @@ List the files that the patterns match in one scope, within its `kinds` and `lan
 @returns the matching files.
 */
 export function listCoveredFiles(
-    table: FileMatch,
+    table: Configuration['files'],
     files: TrackedFile[],
     { configurations, scopePath: scope, settings }: CoveredFilesOptions,
 ): TrackedFile[] {
     const ownsTests = table.paths.includes(TEST_FILES_PLACEHOLDER);
     const tests = buildPathMatcher(settings.test_files);
-    const defaults: FileMatch[] = [];
+    const defaults: Configuration['files'][] = [];
     const settingPatterns = table.paths.flatMap((path) => {
         if (path === TEST_FILES_PLACEHOLDER) return [];
         const name = path.matchAll(SETTING_PLACEHOLDER).toArray()[0]?.groups?.['name'];
@@ -94,7 +93,7 @@ export function listCoveredFiles(
 Select source paths by extension or whole file name.
 
 @param files the classified inventory.
-@param endings the extensions or file names to select; every source file when absent.
+@param endings the extensions or file names to select.
 @returns the matching source paths.
 */
 export function listSourcePaths(files: TrackedFile[], endings: readonly string[]): string[] {

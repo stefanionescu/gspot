@@ -23,7 +23,7 @@ Check whether both streams go to terminals and NO_COLOR leaves color on.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function isColorAllowed(): boolean {
     const noColor = readEnvironmentVariable('NO_COLOR');
-    return noColor === undefined || noColor === '' ? process.stderr.isTTY && process.stdout.isTTY : false;
+    return (noColor === undefined || noColor === '') && process.stderr.isTTY && process.stdout.isTTY;
 }
 
 /**

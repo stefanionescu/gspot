@@ -12,7 +12,7 @@ import { DRY_RUN_NOTE } from '#cli/config/commands/apply.ts';
 import type { RunReport, RunOptions } from '#cli/types/runs/run.ts';
 import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
-import { isInScope, buildRepositoryPath } from '#cli/repository/scopes.ts';
+import { isInScope, buildArgumentPath } from '#cli/repository/scopes.ts';
 import { listChecksById, assertCheckExists } from '#cli/configurations/manifests.ts';
 import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
@@ -65,7 +65,7 @@ function buildComparison(
 }
 
 function listMatchingFiles(session: Session, cwd: string, path: string, files: string[]): string[] {
-    const selector = buildRepositoryPath(session.root, cwd, path);
+    const selector = buildArgumentPath(session.root, cwd, path);
     const matches = files.filter((file) => isInScope(file, selector));
     if (matches.length === 0) throw new GspotError('arguments', `Path ${path} matches no repository files.`);
     return matches;

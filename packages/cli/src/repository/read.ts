@@ -9,25 +9,18 @@ import { findScopeFolders } from '#cli/repository/scopes.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { runGitBlocking, isGitRepository } from '#cli/system/git.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { detectSwiftTags } from '#cli/repository/files/swift-tags.ts';
 import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { readCachedText, readCachedPrefix } from '#cli/system/files/reads.ts';
 import { SWIFT_EXTENSION, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { readIndexFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
+import { runGitBlocking, isGitRepository, isNotRepository } from '#cli/system/git.ts';
 import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
+import { GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 import { FILE_PREFIX_BYTES, GIT_CHECK_ATTRIBUTES_ARGUMENTS } from '#cli/config/repository/read.ts';
 import { mergeAttributes, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
 import { SET_VALUES, VENDORED_ATTRIBUTE, GENERATED_ATTRIBUTE } from '#cli/config/repository/files/classify.ts';
-
-import {
-    GIT_LOCALE,
-    TRAILING_NEWLINE,
-    NOT_REPOSITORY_CODE,
-    NOT_REPOSITORY_MESSAGE,
-    GIT_TOP_LEVEL_ARGUMENTS,
-} from '#cli/config/system/git.ts';
 
 function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Record<string, string>> {
     if (paths.length === 0) return new Map();
@@ -143,8 +136,7 @@ export function findRoot(start: string): string {
     const folder = realpathSync(start);
     const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS, { env: GIT_LOCALE });
     if (top.code === 0) return resolve(top.stdout.replace(TRAILING_NEWLINE, ''));
-    if (top.code !== NOT_REPOSITORY_CODE || !top.stderr.startsWith(NOT_REPOSITORY_MESSAGE))
-        throw new GspotError('git', `Git could not open ${folder}: ${top.stderr.trim()}`);
+    if (!isNotRepository(top)) throw new GspotError('git', `Git could not open ${folder}: ${top.stderr.trim()}`);
     let walked = folder;
     while (statSync(join(walked, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {
         const parent = dirname(walked);

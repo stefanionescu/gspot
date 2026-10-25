@@ -1,5 +1,6 @@
 import type { Result } from 'execa';
 import type { Readable } from 'node:stream';
+import type { ChildProcess } from 'node:child_process';
 
 export type SpawnResult = {
     code: number;
@@ -45,3 +46,5 @@ export type ProcessTreeControl = {
 };
 
 export type RunningProcess = PromiseLike<SpawnCompletion> & { stdout: Readable };
+
+export type WatchedProcess = Omit<ChildProcess, 'stdout' | 'stderr'> & { stdout: Readable; stderr: Readable };

@@ -20,7 +20,7 @@ Build a command path from its calling folder within the repository.
 @param subject the path as typed.
 @returns the repository-relative path with forward slashes.
 */
-export function buildRepositoryPath(root: string, cwd: string, subject: string): string {
+export function buildArgumentPath(root: string, cwd: string, subject: string): string {
     const path = convertToPosixPath(relative(root, resolve(cwd, subject)));
     if (!isInside(path)) throw new GspotError('arguments', `Path ${subject} is outside this repository.`);
     return path;
@@ -107,9 +107,7 @@ export function findScopeFolders(
     configurations: Iterable<Configuration>,
 ): ScopeFolder[] {
     const selected = [...configurations];
-    const patterns = selected.flatMap((configuration) => configuration.detect.project_files);
     const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, selected);
-    const folders = new Set<string>();
     const sources = files.filter(
         (file) =>
             file.kind === 'source' &&
@@ -117,15 +115,32 @@ export function findScopeFolders(
             !(file.path.startsWith(`${DOT_GSPOT}/`) || isInInstalledFolder(file.path)) &&
             LINT_FOLDERS.every((folder) => !file.path.startsWith(`${folder}/`)),
     );
-    for (const file of sources) {
-        for (const pattern of patterns) {
-            const folder = findProjectFolder(file.path, pattern);
-            if (folder !== undefined && folder !== '') folders.add(folder);
-        }
-    }
+    const folders = listProjectFolders(
+        sources.map((file) => file.path),
+        selected,
+    );
     return [...folders]
+        .filter((path) => path !== '')
         .toSorted((left, right) => compareText(left, right))
         .map((path): ScopeFolder => ({ path, configurations: [], origin: 'project' }));
+}
+
+/**
+List the folders that the project files of the configurations mark.
+
+@param paths the repository-relative files.
+@param configurations the configurations with project files.
+@returns the project folders, with '' for the root.
+*/
+export function listProjectFolders(paths: Iterable<string>, configurations: Configuration[]): Set<string> {
+    const patterns = configurations.flatMap((configuration) => configuration.detect.project_files);
+    const folders = new Set<string>();
+    for (const path of paths)
+        for (const pattern of patterns) {
+            const folder = findProjectFolder(path, pattern);
+            if (folder !== undefined) folders.add(folder);
+        }
+    return folders;
 }
 
 /**

@@ -9,8 +9,9 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
 import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
+import { normalizePythonName } from '#cli/parsers/projects/dependencies.ts';
 import type { LockfileName } from '#cli/types/parsers/projects/lockfiles.ts';
-import { PACKAGE_JSON, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
 
 import {
     PNPM_PEER_START,
@@ -69,7 +70,7 @@ const PACKAGE_PARSERS: Readonly<
     'yarn.lock': parseYarnPackages,
     'uv.lock': (path, text) =>
         parseTomlFile(path, text, uvLockSchema).package.flatMap(({ name, version }) =>
-            version === undefined ? [] : `${name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${version}`,
+            version === undefined ? [] : `${normalizePythonName(name)}@${version}`,
         ),
 };
 
@@ -236,13 +237,10 @@ export function readLockedVersions(
             return parseYarnVersions(text, specifiers);
         },
     };
-    for (const base of listEnclosingFolders(folder))
-        for (const lockfile of lockfiles) {
-            const path = posix.join(base, lockfile);
-            const text = findCachedText(reads, path);
-            if (text !== undefined) return parsers[lockfile](path, text, posix.relative(base, folder));
-        }
-    return undefined;
+    const found = findNearestLockfile(reads, folder, lockfiles);
+    return found === undefined
+        ? undefined
+        : parsers[found.lockfile](found.path, found.text, posix.relative(found.base, folder));
 }
 
 /**

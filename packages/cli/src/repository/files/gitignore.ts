@@ -6,14 +6,6 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import type { PathIgnore } from '#cli/types/repository/files.ts';
 import { isInside, extractParentFolder } from '#cli/system/paths.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
-import { GITIGNORE_COMMENT } from '#cli/config/repository/files/gitignore.ts';
-
-function readPatternLines(reads: ReadCache, file: string): string[] {
-    return readCachedText(reads, file)
-        .split(/\r?\n/u)
-        .map((line) => line.trim())
-        .filter((line) => line !== '' && !line.startsWith(GITIGNORE_COMMENT));
-}
 
 /**
 Test a path against ignore files in order, keeping later negations.
@@ -47,7 +39,7 @@ export function buildGitignoreTest(reads: ReadCache, trackedPaths: string[]): (p
             const folder = extractParentFolder(file);
             return {
                 base: joinScope(folder, ''),
-                matcher: ignore().add(readPatternLines(reads, file).join('\n')),
+                matcher: ignore().add(readCachedText(reads, file)),
             };
         });
     return (path) => {

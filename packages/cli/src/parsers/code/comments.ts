@@ -1,12 +1,12 @@
 import ts from 'typescript';
 import { CST, Lexer } from 'yaml';
 import { visit } from 'unist-util-visit';
-import { getPosition } from '#cli/system/text.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { listSqlTokens } from '#cli/parsers/code/sql.ts';
-import type { SourcePosition } from '#cli/types/text.ts';
+import { getPosition, spliceRanges } from '#cli/system/text.ts';
 import { NOT_LINE_BREAK } from '#cli/config/parsers/code/bash.ts';
+import type { TextRange, SourcePosition } from '#cli/types/text.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/files/classify.ts';
 import type { GrammarName } from '#cli/types/parsers/code/grammars.ts';
@@ -96,15 +96,12 @@ function parseSqlComments(text: string): SourceComment[] {
 
 function extractMarkdownHtml(text: string): string {
     const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
-    const pieces: string[] = [];
-    let offset = 0;
+    const ranges: TextRange[] = [];
     visit(fromMarkdown(text), 'html', (node) => {
         const { start, end } = node.position as SourcePosition;
-        pieces.push(masked.slice(offset, start.offset), text.slice(start.offset, end.offset));
-        offset = end.offset;
+        ranges.push({ start: start.offset, end: end.offset });
     });
-    pieces.push(masked.slice(offset));
-    return pieces.join('');
+    return spliceRanges(masked, text, ranges);
 }
 
 function parseTomlComments(text: string, path: string): SourceComment[] {
@@ -129,14 +126,7 @@ async function parseComponentComments(text: string, path: string): Promise<Sourc
             const start = text.indexOf('\n') + 1;
             regions.unshift({ start, end: start + (front[1] as string).length });
         }
-        const pieces: string[] = [];
-        let offset = 0;
-        for (const { start, end } of regions) {
-            pieces.push(masked.slice(offset, start), text.slice(start, end));
-            offset = end;
-        }
-        pieces.push(masked.slice(offset));
-        script = pieces.join('');
+        script = spliceRanges(masked, text, regions);
     } finally {
         tree.delete();
     }

@@ -1,6 +1,5 @@
-import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
-import type { Group, Configuration } from '#cli/types/configurations.ts';
-import type { FileKind, TrackedFile } from '#cli/types/repository/files.ts';
+import type { Group } from '#cli/types/configurations.ts';
+import type { TrackedFile } from '#cli/types/repository/files.ts';
 
 export type ScopeContents = {
     files: TrackedFile[];
@@ -18,21 +17,4 @@ export type ConfigurationEvidence = {
     count?: number;
 };
 
-export type FileMatch = {
-    extensions: string[];
-    filenames: string[];
-    tags: string[];
-    paths: string[];
-    languages: boolean;
-    prettier_plugins: boolean;
-    eslint_plugins: boolean;
-    kinds: FileKind[];
-};
-
 export type DetectionEvidence = { evidence: string; count?: number };
-
-export type CoveredFilesOptions = {
-    configurations: Configuration[];
-    scopePath: string;
-    settings: Pick<ScopeSettings, 'test_files' | 'settings'>;
-};

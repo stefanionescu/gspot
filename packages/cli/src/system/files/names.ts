@@ -1,20 +1,28 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
-import { DEVICE_NAME, UNSAFE_PATH_END, UNSAFE_CHARACTERS, RESERVED_SEGMENTS } from '#cli/config/system/files/names.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function isUnsafeSegment(segment: string): boolean {
-    return RESERVED_SEGMENTS.has(segment) || UNSAFE_CHARACTERS.test(segment) || UNSAFE_PATH_END.test(segment)
-        ? true
-        : DEVICE_NAME.test(segment);
-}
+import {
+    DEVICE_NAME,
+    UNSAFE_PATH_END,
+    UNSAFE_CHARACTERS,
+    RESERVED_SEGMENTS,
+    UNSAFE_PATH_MESSAGE,
+} from '#cli/config/system/files/names.ts';
 
 function splitPortablePath(path: string): string[] {
     const segments = path.split('/');
-    if (segments.some((segment) => isUnsafeSegment(segment)))
+    if (
+        segments.some(
+            (segment) =>
+                RESERVED_SEGMENTS.has(segment) ||
+                UNSAFE_CHARACTERS.test(segment) ||
+                UNSAFE_PATH_END.test(segment) ||
+                DEVICE_NAME.test(segment),
+        )
+    )
         throw new GspotError(
             'filesystem',
-            `${JSON.stringify(path)} is not a safe repository-relative path. Choose a path inside the repository.`,
+            UNSAFE_PATH_MESSAGE.replace('{path}', () => JSON.stringify(path)),
         );
     return segments;
 }
@@ -31,7 +39,7 @@ export function splitSystemPath(path: string): string[] {
     if (segments.some((segment) => RESERVED_SEGMENTS.has(segment) || segment.includes('\0')))
         throw new GspotError(
             'filesystem',
-            `${JSON.stringify(path)} is not a safe repository-relative path. Choose a path inside the repository.`,
+            UNSAFE_PATH_MESSAGE.replace('{path}', () => JSON.stringify(path)),
         );
     return segments;
 }

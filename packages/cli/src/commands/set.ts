@@ -3,8 +3,8 @@ import { parseTomlText } from '#cli/settings/file.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { SettingsEditContext } from '#cli/types/apply.ts';
-import { buildRepositoryPath } from '#cli/repository/scopes.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { listSettingReaders } from '#cli/commands/explain/setting.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
@@ -165,7 +165,7 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
                 : `Write [[${options.key}]] by hand in gspot.toml. Record lists have their own fields.`,
         );
     const edit = prepareSettingsEdit(options.cwd);
-    if (options.scope !== undefined) options.scope = buildRepositoryPath(edit.root, options.cwd, options.scope);
+    if (options.scope !== undefined) options.scope = buildArgumentPath(edit.root, options.cwd, options.scope);
     const { root, input } = edit;
     const { setting, change, summary } = await readSettingChange(edit, options);
     try {

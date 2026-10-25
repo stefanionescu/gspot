@@ -40,18 +40,18 @@ function listWorkspacePackages(root: string): Package[] {
 const WORKSPACE_SOURCES = { create: () => new Map<string, string[]>() };
 
 function listWorkspaceImportFolders(reads: ReadCache, folder: string, ordered: string[]): string[] {
-    const source = reads.root;
-    const typescriptProject = readTsconfigProject(source, folder, [], reads);
+    const root = reads.root;
+    const typescriptProject = readTsconfigProject(root, folder, [], reads);
     return typescriptProject === undefined
         ? []
-        : listSourceFiles(source, folder, reads, {
+        : listSourceFiles(root, folder, reads, {
               ...typescriptProject.config,
               fileNames: typescriptProject.config.fileNames.filter((file) =>
-                  isInScope(convertToPosixPath(relative(source, file)), folder),
+                  isInScope(convertToPosixPath(relative(root, file)), folder),
               ),
           }).flatMap(
               (file) =>
-                  ordered.find((path) => isInScope(convertToPosixPath(relative(source, file.fileName)), path)) ?? [],
+                  ordered.find((path) => isInScope(convertToPosixPath(relative(root, file.fileName)), path)) ?? [],
           );
 }
 
@@ -65,21 +65,21 @@ publish.
 @returns the repository-relative paths.
 */
 export function listWorkspaceDependencySources(reads: ReadCache, scope: string, files: TrackedFile[]): string[] {
-    const source = reads.root;
+    const root = reads.root;
     const cache = getCachedValue(reads, WORKSPACE_SOURCES);
     const tracked = new Set(files.map((file) => file.path));
     const packageJsonPath = listEnclosingFolders(scope)
         .map((folder) => joinScope(folder, PACKAGE_JSON))
         .find((path) => tracked.has(path));
     if (packageJsonPath === undefined) return [];
-    const key = JSON.stringify([source, packageJsonPath]);
+    const key = JSON.stringify([root, packageJsonPath]);
     const held = cache.get(key);
     if (held !== undefined) return held;
     const projectRoot = extractParentFolder(packageJsonPath);
-    const ordered = [...new Set([projectRoot, ...listWorkspaceFolders(source)])].toSorted(
+    const ordered = [...new Set([projectRoot, ...listWorkspaceFolders(root)])].toSorted(
         (left, right) => right.length - left.length,
     );
-    const packages = new Map(ordered.map((path) => [path, readPackageJson(source, posix.join(path, PACKAGE_JSON))]));
+    const packages = new Map(ordered.map((path) => [path, readPackageJson(root, posix.join(path, PACKAGE_JSON))]));
     const pending = [projectRoot];
     let index = 0;
     while (index < pending.length) {
@@ -109,7 +109,7 @@ export function listWorkspaceDependencySources(reads: ReadCache, scope: string, 
         })
         .map((file) => file.path);
     const packageJsonPaths = [...visited].map((path) => posix.join(path, PACKAGE_JSON));
-    selected.push(...listPackageFiles(source, packageJsonPaths));
+    selected.push(...listPackageFiles(root, packageJsonPaths));
     cache.set(key, selected);
     return selected;
 }

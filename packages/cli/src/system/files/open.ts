@@ -22,22 +22,22 @@ Open a reader and writer confined to one root, with paths checked for this syste
 @returns the disposable file handle.
 */
 export function openFiles(root: string): Files {
-    const state: FileBounds = { root: realpathSync(root), locks: new Map() };
+    const bounds: FileBounds = { root: realpathSync(root), locks: new Map() };
     const files: Files = {
         // eslint-disable-next-line gspot/no-trivial-functions -- reason: The Files type declares it.
         deleteFolder(path) {
-            rmdirSync(buildContainedPath(state, path));
+            rmdirSync(buildContainedPath(bounds, path));
         },
         deleteTree(path) {
             const stat = files.readStats(path);
             if (stat?.isDirectory() === false)
                 throw new GspotError('filesystem', `${path} is not a folder. Choose a folder.`);
-            if (stat !== undefined) rmSync(buildContainedPath(state, path), { recursive: true, force: true });
+            if (stat !== undefined) rmSync(buildContainedPath(bounds, path), { recursive: true, force: true });
         },
-        readCanonicalPath: (path) => readContainedPath(state.root, path),
+        readCanonicalPath: (path) => readContainedPath(bounds.root, path),
         list(path) {
             try {
-                const target = path === '' ? state.root : buildContainedPath(state, path);
+                const target = path === '' ? bounds.root : buildContainedPath(bounds, path);
                 if (!lstatSync(target).isDirectory())
                     throw new GspotError('filesystem', `${path || '.'} is not a folder. Choose a folder.`);
                 return readdirSync(target).toSorted((left, right) => compareText(left, right));
@@ -48,7 +48,7 @@ export function openFiles(root: string): Files {
         },
         readStats(path) {
             try {
-                const stat = lstatSync(buildContainedPath(state, path));
+                const stat = lstatSync(buildContainedPath(bounds, path));
                 if (stat.isSymbolicLink()) throw new Error(`${path} is a link. gspot does not write through links.`);
                 return stat;
             } catch (error) {
@@ -56,16 +56,16 @@ export function openFiles(root: string): Files {
                 throw error;
             }
         },
-        read: (path) => readBounded(state, path),
-        readKeepingLinks: (path) => readBoundedKeepingLinks(state, path),
-        write: replaceBounded.bind(undefined, state),
+        read: (path) => readBounded(bounds, path),
+        readKeepingLinks: (path) => readBoundedKeepingLinks(bounds, path),
+        write: replaceBounded.bind(undefined, bounds),
         deleteFile(path, expected) {
-            if (!isSameContents(readBoundedKeepingLinks(state, path), expected))
+            if (!isSameContents(readBoundedKeepingLinks(bounds, path), expected))
                 throw new GspotError('filesystem', `${path} changed before removal. Run the command again.`);
-            unlinkSync(buildContainedPath(state, path));
+            unlinkSync(buildContainedPath(bounds, path));
         },
         createFolder(path, mode) {
-            const target = preparePath(state, path);
+            const target = preparePath(bounds, path);
             try {
                 mkdirSync(target, { mode });
             } catch (error) {
@@ -75,9 +75,9 @@ export function openFiles(root: string): Files {
                 throw new GspotError('filesystem', `${path} is not a folder. Choose a folder.`);
             chmodSync(target, mode);
         },
-        createLock: createLock.bind(undefined, state),
+        createLock: createLock.bind(undefined, bounds),
         [Symbol.dispose]() {
-            for (const path of releaseLocks(state)) removeEmptyFolders(files, path);
+            for (const path of releaseLocks(bounds)) removeEmptyFolders(files, path);
         },
     };
     return files;

@@ -3,6 +3,8 @@ import type { Dirent } from 'node:fs';
 import type { FILE_KINDS } from '#cli/config/files/kinds.ts';
 import type { GitIndexFile } from '#cli/types/parsers/git.ts';
 import type { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import type { Configuration } from '#cli/types/configurations.ts';
+import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 
 export type PathIgnore = { base: string; matcher: Ignore };
@@ -47,3 +49,9 @@ export type FolderListing = { children: Dirent[]; ignores: PathIgnore[] };
 export type PendingFolder = { folder: string; ignores: PathIgnore[] };
 
 export type FileKindRules = { generatedPaths: GeneratedPaths[]; attributes: Repository['attributes'] };
+
+export type CoveredFilesOptions = {
+    configurations: Configuration[];
+    scopePath: string;
+    settings: Pick<ScopeSettings, 'test_files' | 'settings'>;
+};

@@ -21,6 +21,16 @@ import {
     type TomlCommentPlacement,
 } from '#cli/types/parsers/formats/toml.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
+function setTableValue(table: Record<string, unknown>, key: PropertyKey, value: unknown): void {
+    Object.defineProperty(table, key, {
+        value: normalizeTables(value),
+        enumerable: true,
+        writable: true,
+        configurable: true,
+    });
+}
+
 function findTomlTable(
     document: Record<string, unknown>,
     options: TomlTableOptions,
@@ -29,12 +39,7 @@ function findTomlTable(
     for (const key of options.keys) {
         if (!Object.hasOwn(table, key)) {
             if (!options.create) return undefined;
-            Object.defineProperty(table, key, {
-                value: normalizeTables({}),
-                enumerable: true,
-                writable: true,
-                configurable: true,
-            });
+            setTableValue(table, key, {});
         }
         const child = table[key];
         if (!isTable(child))
@@ -83,10 +88,10 @@ function buildPatchedToml(previous: TomlSyntax, values: Record<string, unknown>)
         const [start, end] = getTomlRange(found.comment);
         return [{ start, end: end + Number(patched[end] === '\n'), text: '' }];
     });
-    for (const entry of reparsed.pathNodes) {
-        const text = insertTomlComments(comments, entry.kind, entry.path, '');
+    for (const pathNode of reparsed.pathNodes) {
+        const text = insertTomlComments(comments, pathNode.kind, pathNode.path, '');
         if (text === '') continue;
-        const start = getTomlRange(entry.node)[0];
+        const start = getTomlRange(pathNode.node)[0];
         chunks.push({ start, end: start, text: text + '\n' });
     }
     let position = 0;
@@ -151,13 +156,7 @@ export function openTomlFile(path: string, text: string): EditableFile {
             });
             if (table === undefined) return;
             if (value === undefined) Reflect.deleteProperty(table, key);
-            else
-                Object.defineProperty(table, key, {
-                    value: normalizeTables(value),
-                    enumerable: true,
-                    writable: true,
-                    configurable: true,
-                });
+            else setTableValue(table, key, value);
         },
 
         // eslint-disable-next-line gspot/no-trivial-functions -- reason: The TOML document type declares it.

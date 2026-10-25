@@ -1,10 +1,10 @@
 import { statSync } from 'node:fs';
 import { onExit } from 'signal-exit';
 import { execa, execaSync } from 'execa';
-import { GspotError } from '#cli/system/errors.ts';
 import type { ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
 import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
@@ -13,6 +13,7 @@ import type {
     SpawnOptions,
     StdoutReader,
     RunningProcess,
+    WatchedProcess,
     SpawnCompletion,
     AsyncSpawnOptions,
     ProcessTermination,
@@ -93,13 +94,11 @@ function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult
     };
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function isGroupGone(error: Error, child: ChildProcess): boolean {
     const hasExited = child.exitCode !== null || child.signalCode !== null;
-    return error instanceof GspotError
-        ? process.platform === 'win32' && hasExited
-        : 'code' in error &&
-              (error.code === 'ESRCH' || (error.code === 'EPERM' && process.platform === 'darwin' && hasExited));
+    if (error instanceof GspotError) return process.platform === 'win32' && hasExited;
+    if (hasErrorCode(error, 'ESRCH')) return true;
+    return hasErrorCode(error, 'EPERM') && process.platform === 'darwin' && hasExited;
 }
 
 function stopProcessTree(child: ChildProcess, termination: ProcessTermination): void {
@@ -218,32 +217,25 @@ async function readProcessOutput(
     return child;
 }
 
-function splitCommand(command: readonly string[], cwd: string, started: number): [string, string[]] | SpawnResult {
-    const [executable, ...commandArguments] = command;
+function findMissingExecutable(command: readonly string[], cwd: string, started: number): SpawnResult | undefined {
+    const executable = command[0];
     if (executable === undefined) throw new Error('An empty command cannot run.');
-    return isExecutableAbsent(executable, cwd)
-        ? buildSpawnResult(
-              {
-                  code: 'ENOENT',
-                  failed: true,
-                  shortMessage: `Executable not found: ${executable}`,
-                  stdout: '',
-                  stderr: '',
-                  timedOut: false,
-                  isCanceled: false,
-              } satisfies SpawnCompletion,
-              started,
-          )
-        : [executable, commandArguments];
+    if (!isExecutableAbsent(executable, cwd)) return undefined;
+    return buildSpawnResult(
+        {
+            code: 'ENOENT',
+            failed: true,
+            shortMessage: `Executable not found: ${executable}`,
+            stdout: '',
+            stderr: '',
+            timedOut: false,
+            isCanceled: false,
+        } satisfies SpawnCompletion,
+        started,
+    );
 }
 
-function watchProcess(
-    child: Omit<ChildProcess, 'stdout' | 'stderr'> & {
-        stdout: RunningProcess['stdout'];
-        stderr: RunningProcess['stdout'];
-    },
-    options: AsyncSpawnOptions,
-): ProcessTreeControl {
+function watchProcess(child: WatchedProcess, options: AsyncSpawnOptions): ProcessTreeControl {
     const supervision = trackProcessTree(child, options);
     if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
     if (options.onStderr !== undefined) child.stderr.on('data', options.onStderr);
@@ -259,9 +251,9 @@ Run a supervised process tree and capture its text.
 */
 export async function spawnProcess(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
     const started = performance.now();
-    const split = splitCommand(command, options.cwd, started);
-    if (!Array.isArray(split)) return split;
-    const [executable, commandArguments] = split;
+    const missing = findMissingExecutable(command, options.cwd, started);
+    if (missing !== undefined) return missing;
+    const [executable, ...commandArguments] = command as readonly [string, ...string[]];
     const child = execa(executable, commandArguments, buildAsyncExecaOptions(options, executable));
     const supervision = watchProcess(child, options);
     return finishProcess(child, supervision, started, child);
@@ -281,9 +273,9 @@ export async function streamProcess(
     readStdout: StdoutReader,
 ): Promise<SpawnResult> {
     const started = performance.now();
-    const split = splitCommand(command, options.cwd, started);
-    if (!Array.isArray(split)) return split;
-    const [executable, commandArguments] = split;
+    const missing = findMissingExecutable(command, options.cwd, started);
+    if (missing !== undefined) return missing;
+    const [executable, ...commandArguments] = command as readonly [string, ...string[]];
     const child = execa(executable, commandArguments, {
         ...buildAsyncExecaOptions(options, executable),
         buffer: { stdout: false },
@@ -301,9 +293,9 @@ Run a process and wait. Git commands and version checks use it.
 */
 export function spawnProcessBlocking(command: readonly string[], options: SpawnOptions): SpawnResult {
     const started = performance.now();
-    const split = splitCommand(command, options.cwd, started);
-    if (!Array.isArray(split)) return split;
-    const [executable, commandArguments] = split;
+    const missing = findMissingExecutable(command, options.cwd, started);
+    if (missing !== undefined) return missing;
+    const [executable, ...commandArguments] = command as readonly [string, ...string[]];
     const deadline =
         options.timeoutSeconds === undefined ? {} : { timeout: options.timeoutSeconds * MILLISECONDS_PER_SECOND };
     const result = execaSync(executable, commandArguments, { ...buildExecaOptions(options, executable), ...deadline });

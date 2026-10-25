@@ -48,7 +48,7 @@ function hasEmptyDefault(declaration: SettingDefinition | undefined, value: unkn
 
 function validateCheckSettings(check: Check, defaults: Record<string, unknown>): string[] {
     const declarations: Readonly<Record<string, SettingDefinition>> = SETTING_DEFINITIONS;
-    const awaited = check.when?.setting;
+    const requiredSetting = check.when?.setting;
     const names = [...(check.command ?? []), ...(check.fix ?? [])].flatMap((argument) => {
         const repeated = EACH_PLACEHOLDER.exec(argument)?.groups?.['setting'];
         return repeated === undefined
@@ -59,11 +59,11 @@ function validateCheckSettings(check: Check, defaults: Record<string, unknown>):
             : repeated;
     });
     return [
-        ...(awaited !== undefined && declarations[awaited] === undefined
-            ? [`${check.id} waits for undeclared setting ${awaited}.`]
+        ...(requiredSetting !== undefined && declarations[requiredSetting] === undefined
+            ? [`${check.id} waits for undeclared setting ${requiredSetting}.`]
             : []),
         ...names
-            .filter((name) => name !== awaited && hasEmptyDefault(declarations[name], defaults[name]))
+            .filter((name) => name !== requiredSetting && hasEmptyDefault(declarations[name], defaults[name]))
             .map((name) => `${check.id} uses empty-default setting ${name} without when.setting.`),
     ];
 }
@@ -72,14 +72,16 @@ function validateToolPin(tool: Tool): string[] {
     const version = semver.coerce(tool.version);
     const minimum = semver.coerce(tool.min_version);
     const isOutdated = version !== null && minimum !== null && semver.lt(version, minimum);
-    const isUnpinned = tool.system !== true && tool.version === undefined && tool.min_version === undefined;
+    const isUnpinned =
+        tool.system !== true &&
+        tool.version === undefined &&
+        tool.min_version === undefined &&
+        Object.values(tool.installers).some((pin) => pin.version === undefined);
     return [
         ...(isOutdated
             ? [`tool ${tool.name} pins ${String(tool.version)} below its minimum ${String(tool.min_version)}.`]
             : []),
-        ...Object.values(tool.installers)
-            .filter((pin) => isUnpinned && pin.version === undefined)
-            .map(() => `tool ${tool.name} has no version pin or minimum.`),
+        ...(isUnpinned ? [`tool ${tool.name} has no version pin or minimum.`] : []),
     ];
 }
 

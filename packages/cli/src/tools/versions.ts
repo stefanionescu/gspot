@@ -5,6 +5,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { openFiles } from '#cli/system/files/open.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import type { Files } from '#cli/types/system/files.ts';
+import { isToolProjectPath } from '#cli/tools/locate.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/locate.ts';
@@ -19,8 +20,7 @@ import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/type
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
         const packageJsonPath = join(folder, PACKAGE_JSON);
-        if (files !== undefined && !convertToPosixPath(relative(root, packageJsonPath)).startsWith(`${DOT_GSPOT}/`))
-            return undefined;
+        if (files !== undefined && !isToolProjectPath(root, packageJsonPath)) return undefined;
         const parsed =
             files === undefined
                 ? readHostPackage(packageJsonPath)
@@ -32,9 +32,12 @@ function findVersionAbove(files: Files | undefined, root: string, start: string,
 
 function readPackageVersion(repositoryRoot: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
-    const local = convertToPosixPath(relative(repositoryRoot, path));
-    using files = local.startsWith(`${DOT_GSPOT}/`) ? openFiles(repositoryRoot) : undefined;
-    const folder = dirname(files === undefined ? realpathSync(path) : files.readCanonicalPath(local));
+    using files = isToolProjectPath(repositoryRoot, path) ? openFiles(repositoryRoot) : undefined;
+    const folder = dirname(
+        files === undefined
+            ? realpathSync(path)
+            : files.readCanonicalPath(convertToPosixPath(relative(repositoryRoot, path))),
+    );
     const start = basename(folder) === basename(NPM_BIN_FOLDER) ? join(dirname(folder), name) : folder;
     return findVersionAbove(files, repositoryRoot, start, name);
 }
@@ -99,9 +102,8 @@ export function readToolVersion(inspected: InspectedTool, path: string): ParsedT
     const { root, cwd, tool, timeoutSeconds } = inspected;
     const npm = tool.installers['npm'];
     const installedVersion = readPackageVersion(root, path, npm?.name);
-    const isToolProjectProgram = convertToPosixPath(relative(root, path)).startsWith(`${DOT_GSPOT}/`);
     const result = spawnProcessBlocking([path, ...(tool.version_command ?? [VERSION_FLAG])], {
-        cwd: isToolProjectProgram ? join(root, DOT_GSPOT) : cwd,
+        cwd: isToolProjectPath(root, path) ? join(root, DOT_GSPOT) : cwd,
         timeoutSeconds,
         env: TOOL_ENV,
     });

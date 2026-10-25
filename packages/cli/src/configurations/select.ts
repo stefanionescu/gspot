@@ -4,7 +4,7 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { SOURCE_FILE_GROUPS } from '#cli/config/configurations/select.ts';
 import { type Configuration, type RequirementWalk, type WrittenConfiguration } from '#cli/types/configurations.ts';
 
-function visit(walk: RequirementWalk, configurationName: string): void {
+function addRequiredConfigurations(walk: RequirementWalk, configurationName: string): void {
     if (walk.seen.has(configurationName)) return;
     walk.seen.add(configurationName);
     const configuration = walk.configurations.get(configurationName);
@@ -13,7 +13,7 @@ function visit(walk: RequirementWalk, configurationName: string): void {
         walk.errors.push(formatUnknownConfiguration(configurationName, names));
         return;
     }
-    for (const required of configuration.requires) visit(walk, required);
+    for (const required of configuration.requires) addRequiredConfigurations(walk, required);
     walk.order.push(configuration);
 }
 
@@ -29,7 +29,7 @@ export function selectConfigurations(
     configurations: Map<string, Configuration>,
 ): Configuration[] {
     const walk: RequirementWalk = { configurations, errors: [], order: [], seen: new Set() };
-    for (const configurationName of configurationNames) visit(walk, configurationName);
+    for (const configurationName of configurationNames) addRequiredConfigurations(walk, configurationName);
     if (walk.errors.length > 0) throw new GspotError('arguments', walk.errors.join('\n'));
     return walk.order;
 }

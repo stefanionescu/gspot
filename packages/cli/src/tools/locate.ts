@@ -34,10 +34,9 @@ function listSearchFolders(root: string, options: ExecutableSearch): string[] {
 }
 
 function isExecutablePresent(files: Files, root: string, path: string): boolean {
-    const local = convertToPosixPath(relative(root, path));
-    if (!local.startsWith(`${DOT_GSPOT}/`)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
+    if (!isToolProjectPath(root, path)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
-        files.readCanonicalPath(local);
+        files.readCanonicalPath(convertToPosixPath(relative(root, path)));
         return true;
     } catch (error) {
         if (!hasErrorCode(error, 'ENOENT')) throw error;
@@ -165,4 +164,16 @@ export function getUvPath(session: Session): string {
             timeoutSeconds: session.timeoutSeconds,
         })[0] ?? UV_TOOL;
     return session.uvPath;
+}
+
+/**
+Check whether a path sits inside the gspot folder, where the npm and Python tool projects live.
+
+@param root the repository root.
+@param path the absolute path.
+@returns whether the path sits inside the gspot folder.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
+export function isToolProjectPath(root: string, path: string): boolean {
+    return convertToPosixPath(relative(root, path)).startsWith(`${DOT_GSPOT}/`);
 }

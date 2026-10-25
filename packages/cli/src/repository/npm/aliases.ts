@@ -6,6 +6,7 @@ import { join, dirname, resolve, relative } from 'node:path';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { PATHS_BASE_OPTION, LOCAL_PATH_PREFIX } from '#cli/config/repository/npm.ts';
 
 function findImportTarget(target: unknown): string | undefined {
@@ -22,7 +23,7 @@ Read the package.json imports of one project, which Node resolves without a comp
 */
 export function readPackageAliases(root: string, prefix: string): Record<string, string> {
     const aliases: Record<string, string> = {};
-    const path = `${prefix}package.json`;
+    const path = `${prefix}${PACKAGE_JSON}`;
     const packageJson = readPackageJson(root, path);
     const imports = packageJson?.imports === undefined ? [] : Object.entries(packageJson.imports);
     for (const [pattern, target] of imports) {

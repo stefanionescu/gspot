@@ -103,7 +103,7 @@ function isLintJob(name: string, job: CiJob): boolean {
     );
 }
 
-function listLintCommands(path: string, document: unknown): string[] {
+function listLintJobs(path: string, document: unknown): string[] {
     const parsed = ciDocumentSchema.safeParse(document);
     if (!parsed.success) return [];
     const source = path.startsWith(GITHUB_WORKFLOWS_FOLDER) ? ciDocumentSchema.safeParse(parsed.data['jobs']) : parsed;
@@ -115,7 +115,7 @@ function listLintCommands(path: string, document: unknown): string[] {
             const job = ciJobSchema.safeParse(value);
             return job.success && isLintJob(name, job.data) ? `${path}: ${name}` : undefined;
         })
-        .filter((command) => command !== undefined)
+        .filter((job) => job !== undefined)
         .toArray();
 }
 
@@ -180,7 +180,7 @@ export function readLintJobs(repositoryRoot: string, paths: string[]): string[] 
             const source = findText(repositoryRoot, path);
             if (source === undefined) return [];
             const document = parseYamlFile(path, source);
-            return listLintCommands(path, document);
+            return listLintJobs(path, document);
         });
 }
 

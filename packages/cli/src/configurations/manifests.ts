@@ -21,7 +21,7 @@ function findOnlyToolName(tools: unknown): string | undefined {
     return isTable(tool) && typeof tool['name'] === 'string' ? tool['name'] : undefined;
 }
 
-function readConfigFiles(configFiles: unknown, tools: unknown): unknown {
+function fillConfigFileTools(configFiles: unknown, tools: unknown): unknown {
     if (configFiles !== undefined && !Array.isArray(configFiles)) return configFiles;
     const records: unknown[] = configFiles === undefined ? [] : configFiles;
     const tool = findOnlyToolName(tools);
@@ -54,11 +54,9 @@ function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configura
 
 function parseManifest(text: string, configurationFolder: string): ParsedManifest {
     const parsed = parseToml(text) as Record<string, unknown>;
-    const configFiles = parsed['config_file'];
-    const discoveredConfigFiles = readConfigFiles(configFiles, parsed['tool']);
     const result = manifestSchema.safeParse({
         ...parsed,
-        config_file: discoveredConfigFiles,
+        config_file: fillConfigFileTools(parsed['config_file'], parsed['tool']),
         folder: configurationFolder,
         configuration: {
             ...(isTable(parsed['configuration']) && parsed['configuration']),

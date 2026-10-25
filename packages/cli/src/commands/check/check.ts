@@ -12,8 +12,8 @@ import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { CheckProgress } from '#cli/types/runs/run.ts';
 import { printProgress } from '#cli/commands/check/report.ts';
 import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
+import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
-import { buildRepositoryPath } from '#cli/repository/scopes.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
@@ -177,7 +177,7 @@ async function checkStaged(
 ): Promise<CommandResult<CheckCommandJson>> {
     const staged = await readStagedPaths(root, cancelSignal);
     using copy = await copyRevision(root, { kind: 'index' }, cancelSignal);
-    const paths = options.paths.map((path) => buildRepositoryPath(root, options.cwd, path));
+    const paths = options.paths.map((path) => buildArgumentPath(root, options.cwd, path));
     return await checkTree(copy.root, { ...options, cwd: copy.root, paths }, cancelSignal, {
         ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
         content: 'index',

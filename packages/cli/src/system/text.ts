@@ -1,26 +1,28 @@
 import { distance } from 'fastest-levenshtein';
-import type { TextPosition } from '#cli/types/text.ts';
+import type { TextRange, TextPosition } from '#cli/types/text.ts';
 import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, UNQUOTED_ARGUMENT, SIMILAR_NAME_LIMIT } from '#cli/config/system/text.ts';
 
 /**
-Select up to SUGGESTION_LIMIT names close enough to look like a typo, closest first.
+Select up to SIMILAR_NAME_LIMIT names close enough to look like a typo, closest first.
 
 @param name the text as typed.
-@param options the names that exist.
+@param names the names that exist.
 @returns the closest names.
 */
-export function selectSimilarNames(name: string, options: string[]): string[] {
+export function selectSimilarNames(name: string, names: string[]): string[] {
     const lower = name.toLowerCase();
     const limit = Math.max(TYPO_MIN, Math.floor(name.length / TYPO_FRACTION));
-    return options
-        .map((option) => ({ knownName: option, score: distance(lower, option.toLowerCase()) }))
+    return names
+        .map((other) => ({ name: other, score: distance(lower, other.toLowerCase()) }))
         .filter(
-            ({ knownName, score }) =>
-                score <= limit || knownName.toLowerCase().includes(lower) || lower.includes(knownName.toLowerCase()),
+            (similar) =>
+                similar.score <= limit ||
+                similar.name.toLowerCase().includes(lower) ||
+                lower.includes(similar.name.toLowerCase()),
         )
         .toSorted((a, b) => a.score - b.score)
         .slice(0, SIMILAR_NAME_LIMIT)
-        .map(({ knownName }) => knownName);
+        .map((similar) => similar.name);
 }
 
 /**
@@ -40,12 +42,12 @@ export function formatCodeList(names: readonly string[]): string {
 Format the close names of an unknown name, or an empty string when none match.
 
 @param name the unknown name.
-@param options the declared names.
+@param names the declared names.
 @returns the Did-you-mean clause.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 6 files share it.
-export function formatSimilarNames(name: string, options: string[]): string {
-    const near = selectSimilarNames(name, options);
+export function formatSimilarNames(name: string, names: string[]): string {
+    const near = selectSimilarNames(name, names);
     return near.length === 0 ? '' : ` Did you mean ${formatCodeList(near)}?`;
 }
 
@@ -96,4 +98,23 @@ Compare text by code units so paths and generated names keep the same order in e
 export function compareText(left: string, right: string): number {
     if (left < right) return -1;
     return left > right ? 1 : 0;
+}
+
+/**
+Replace ranges of one text with the same ranges of another text of the same length.
+
+@param base the text outside the ranges.
+@param overlay the text inside the ranges.
+@param ranges the start and end offsets, in order.
+@returns the joined text.
+*/
+export function spliceRanges(base: string, overlay: string, ranges: readonly TextRange[]): string {
+    const pieces: string[] = [];
+    let offset = 0;
+    for (const { start, end } of ranges) {
+        pieces.push(base.slice(offset, start), overlay.slice(start, end));
+        offset = end;
+    }
+    pieces.push(base.slice(offset));
+    return pieces.join('');
 }

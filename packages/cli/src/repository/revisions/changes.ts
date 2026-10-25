@@ -2,6 +2,7 @@ import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
+import { GIT_UNTRACKED_FILES_ARGUMENTS } from '#cli/config/repository/files/tracked.ts';
 
 import {
     ORIGIN_HEAD,
@@ -106,9 +107,7 @@ export async function readChangedPaths(
     const merged = await readMergeBase(repositoryRoot, compared, cancelSignal);
     const committed = await readGitPaths(repositoryRoot, [...GIT_DIFF_NAMES_ARGUMENTS, merged, '--'], { cancelSignal });
     const working = await readGitPaths(repositoryRoot, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal });
-    const untracked = await readGitPaths(repositoryRoot, ['ls-files', '--others', '--exclude-standard', '-z'], {
-        cancelSignal,
-    });
+    const untracked = await readGitPaths(repositoryRoot, GIT_UNTRACKED_FILES_ARGUMENTS, { cancelSignal });
     const commits = await readGitLines(repositoryRoot, [...GIT_CHANGED_COMMITS_ARGUMENTS, `${merged}..HEAD`, '--'], {
         cancelSignal,
     });

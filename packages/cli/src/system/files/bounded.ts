@@ -78,16 +78,6 @@ function writeStagedFile(temporary: string, contents: FileContents): void {
     closeSync(file);
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function isRenameBlocked(expected: FileContents | undefined): boolean {
-    return (
-        process.platform === 'win32' &&
-        expected !== undefined &&
-        expected.isLink !== true &&
-        (expected.mode & OWNER_WRITE_BIT) === 0
-    );
-}
-
 /**
 Keep only the permissions that the system file API shows. Windows shows a read-only flag.
 
@@ -139,7 +129,7 @@ export function preparePath(bounds: FileBounds, path: string): string {
 }
 
 /**
-Read a regular file with no other hard link, or return undefined when absent.
+Read a regular file, or return undefined when absent.
 
 @param bounds the root.
 @param path the root-relative file.
@@ -197,7 +187,13 @@ export function replaceBounded(
         isStaged = true;
         if (!isSameContents(readBounded(bounds, path), expected))
             throw new GspotError('filesystem', `${path} changed while gspot wrote it. Run the command again.`);
-        if (isRenameBlocked(expected)) unlinkSync(target);
+        if (
+            process.platform === 'win32' &&
+            expected !== undefined &&
+            expected.isLink !== true &&
+            (expected.mode & OWNER_WRITE_BIT) === 0
+        )
+            unlinkSync(target);
         renameSync(temporary, target);
         isStaged = false;
     } finally {

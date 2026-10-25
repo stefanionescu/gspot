@@ -95,13 +95,6 @@ function findDeclarationScope(node: Node): Node {
     return scope;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function getImportAlias(node: Node) {
-    return node.type === 'aliased_import'
-        ? { name: node.childForFieldName('alias')?.text, target: node.childForFieldName('name')?.text }
-        : { name: node.text, target: node.text };
-}
-
 function listBoundNames(node: Node): string[] {
     if (node.type === 'parameters')
         return node.namedChildren.flatMap((parameter) => {
@@ -124,10 +117,15 @@ function listEnvironmentImports(node: Node): EnvironmentScope {
     let members: Record<string, EnvironmentKind> = {};
     if (node.type === 'import_statement') members = { [OS_MODULE]: OS_MODULE };
     else if (node.childForFieldName('module_name')?.text === OS_MODULE) members = OS_ENVIRONMENT_MEMBERS;
-    for (const nameNode of node.childrenForFieldName('name')) {
-        const { name, target } = getImportAlias(nameNode);
+    const aliases = node
+        .childrenForFieldName('name')
+        .map((nameNode) =>
+            nameNode.type === 'aliased_import'
+                ? { name: nameNode.childForFieldName('alias')?.text, target: nameNode.childForFieldName('name')?.text }
+                : { name: nameNode.text, target: nameNode.text },
+        );
+    for (const { name, target } of aliases)
         if (name !== undefined && target !== undefined) imported.set(name, members[target]);
-    }
     return imported;
 }
 
@@ -156,15 +154,13 @@ function listPythonNames(root: Node): EnvironmentNames {
 }
 
 function findEnvironmentKind(node: Node, name: string, scopeNames: EnvironmentNames): EnvironmentKind {
-    for (
-        let scope: Node | null = findDeclarationScope(node);
-        scope !== null;
-        scope = scope.parent === null ? null : findDeclarationScope(scope)
-    ) {
-        const names = scopeNames.get(scope.id);
-        if (names?.has(name) === true) return names.get(name);
+    let scope = findDeclarationScope(node);
+    let names = scopeNames.get(scope.id);
+    while (names?.has(name) !== true && scope.parent !== null) {
+        scope = findDeclarationScope(scope);
+        names = scopeNames.get(scope.id);
     }
-    return undefined;
+    return names?.get(name);
 }
 
 function findReceiver(node: Node): Node | null {
@@ -182,20 +178,6 @@ function isPythonEnvironmentRead(node: Node, names: EnvironmentNames, environmen
     const kind = findEnvironmentKind(node, receiver.text, names);
     if (kind === OS_MODULE) return environment.has(node.id);
     return kind === 'getenv' ? node.type === 'call' : kind === 'environ';
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function isEnvironmentRead(
-    node: Node,
-    environmentFunctions: readonly string[],
-    names: EnvironmentNames,
-    environment: Set<number>,
-): boolean {
-    return (
-        (node.type === 'call' && environmentFunctions.includes(node.childForFieldName('function')?.text ?? '')) ||
-        ((node.type !== 'identifier' || node.parent?.type === 'subscript') &&
-            isPythonEnvironmentRead(node, names, environment))
-    );
 }
 
 function expandEnvironmentExpression(node: Node): Node {
@@ -235,13 +217,20 @@ export function listPythonEnvironmentReads(
             )
             .map((node) => node.id),
     );
-    return nodes.flatMap((node) => {
-        if (!isEnvironmentRead(node, environmentFunctions, pythonNames, environment)) return [];
-        const literal = findEnvironmentKeyNode(node);
-        const key =
-            literal?.type === 'string'
-                ? literal.namedChildren.find((child) => child.type === 'string_content')?.text
-                : undefined;
-        return [{ key, line: node.startPosition.row + 1, column: node.startPosition.column + 1 }];
-    });
+    return nodes
+        .filter(
+            (node) =>
+                (node.type === 'call' &&
+                    environmentFunctions.includes(node.childForFieldName('function')?.text ?? '')) ||
+                ((node.type !== 'identifier' || node.parent?.type === 'subscript') &&
+                    isPythonEnvironmentRead(node, pythonNames, environment)),
+        )
+        .map((node) => {
+            const literal = findEnvironmentKeyNode(node);
+            const key =
+                literal?.type === 'string'
+                    ? literal.namedChildren.find((child) => child.type === 'string_content')?.text
+                    : undefined;
+            return { key, line: node.startPosition.row + 1, column: node.startPosition.column + 1 };
+        });
 }

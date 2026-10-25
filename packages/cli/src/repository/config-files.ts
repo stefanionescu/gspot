@@ -7,23 +7,12 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { findProjectFolder } from '#cli/repository/scopes.ts';
+import { listProjectFolders } from '#cli/repository/scopes.ts';
 import { YAML_EXTENSIONS } from '#cli/config/repository/setup.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { INI_EXTENSIONS } from '#cli/config/repository/config-files.ts';
 import type { ConflictingConfigFile } from '#cli/types/repository/setup.ts';
-
-function listProjectFolders(inventory: Set<string>, configurations: Configuration[]): Set<string> {
-    const patterns = configurations.flatMap((configuration) => configuration.detect.project_files);
-    const folders = new Set(['']);
-    for (const path of inventory)
-        for (const pattern of patterns) {
-            const folder = findProjectFolder(path, pattern);
-            if (folder !== undefined) folders.add(folder);
-        }
-    return folders;
-}
 
 function findConflictingConfigFiles(
     root: string,
@@ -107,7 +96,7 @@ export function listConflictingConfigFiles(
             .map((file) => file.path),
     );
     const selected = [...configurations];
-    const located = { inventory, projectFolders: listProjectFolders(inventory, selected) };
+    const located = { inventory, projectFolders: new Set(['', ...listProjectFolders(inventory, selected)]) };
     return selected.flatMap((configuration) =>
         configuration.tools.flatMap((tool) =>
             [

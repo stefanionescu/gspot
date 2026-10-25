@@ -71,8 +71,7 @@ Get the mise pin that the shipped Python configuration declares for uv.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function getUvPin(): MisePin {
-    const pin = getTool(readConfigurations().values(), UV_TOOL).installers['mise'] as VersionedInstaller;
-    return { name: pin.name, version: pin.version, ...stripUndefined({ options: pin.options }) };
+    return findMisePin(getTool(readConfigurations().values(), UV_TOOL)) as MisePin;
 }
 
 /**
@@ -129,16 +128,16 @@ export function listDistinctTools(configurations: Configuration[]): Tool[] {
 }
 
 /**
-Find a tool in the owning configuration first, then in any configuration.
+Get the first declaration of a tool, in the order of the configurations.
 
-@param configurations the configurations that may declare the tool.
+@param configurations the configurations that may declare the tool, the owning configuration first.
 @param name the executable to find.
 @returns the tool, or a system program when no configuration declares the tool.
 */
 export function getTool(configurations: Iterable<Configuration>, name: string): Tool {
     for (const configuration of configurations) {
-        const pin = configuration.tools.find((tool) => tool.name === name);
-        if (pin !== undefined) return pin;
+        const tool = configuration.tools.find((declaration) => declaration.name === name);
+        if (tool !== undefined) return tool;
     }
     return { name, kind: 'program', system: true, installers: {} };
 }

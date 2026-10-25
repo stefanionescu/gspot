@@ -1,14 +1,14 @@
 import ignore from 'ignore';
 import { compareText } from '#cli/system/text.ts';
 import { join, posix, relative } from 'node:path';
-import { runGitForBytes } from '#cli/system/git.ts';
-import { parseIndexFiles } from '#cli/parsers/git.ts';
+import { hasErrorCode } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import type { GitIndexFile } from '#cli/types/parsers/git.ts';
 import { isIgnored } from '#cli/repository/files/gitignore.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { readText, decodeUtf8 } from '#cli/system/files/reads.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
+import { buildGitError, runGitForBytes } from '#cli/system/git.ts';
+import { decodeGitPaths, parseIndexFiles } from '#cli/parsers/git.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { isInside, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 import { GITLINK_MODE, GIT_FILE_MODES, EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
@@ -94,15 +94,8 @@ async function listGitFiles(
     cancelSignal?: AbortSignal,
 ): Promise<string> {
     const listed = await runGitForBytes(root, gitArguments, { cancelSignal });
-    if (listed.code === 0) {
-        const text = decodeUtf8(listed.stdout);
-        if (text === undefined) throw new GspotError('git', 'Git listed a path that is not valid UTF-8.');
-        return text;
-    }
-    throw new GspotError(
-        'git',
-        `Git ls-files failed in ${root} (exit ${String(listed.code)}): ${listed.stderr.trim()}`,
-    );
+    if (listed.code !== 0) throw buildGitError(root, gitArguments, listed);
+    return decodeGitPaths(listed.stdout);
 }
 
 /**

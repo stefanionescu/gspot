@@ -5,7 +5,7 @@ import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
-import { findScopeFolder, buildRepositoryPath } from '#cli/repository/scopes.ts';
+import { findScopeFolder, buildArgumentPath } from '#cli/repository/scopes.ts';
 import { type Explanation, type PathExplanation } from '#cli/types/commands/explain.ts';
 
 function formatUncheckedKind(file: TrackedFile): string | undefined {
@@ -90,7 +90,7 @@ Explain a repository file or a path that the subject names.
 */
 export function explainPath(session: Session | undefined, subject: string, cwd: string): Explanation | undefined {
     if (session === undefined) return undefined;
-    const path = buildRepositoryPath(session.root, cwd, subject);
+    const path = buildArgumentPath(session.root, cwd, subject);
     const file = session.repository.files.find((each) => each.path === path);
     if (file === undefined) {
         if (subject.startsWith('./') || subject.startsWith('../'))

@@ -71,8 +71,7 @@ function readFolderGitEnvironment(root: string, source: GitRepository, environme
         cwd: root,
         env: { ...isolated, ...overrides, ...GIT_LOCALE },
     });
-    if (target.code === NOT_REPOSITORY_CODE && target.stderr.startsWith(NOT_REPOSITORY_MESSAGE))
-        return { env: { ...isolated, ...explicit } };
+    if (isNotRepository(target)) return { env: { ...isolated, ...explicit } };
     if (target.code !== 0) return { failure: target };
     const isSameRepository = realpathSync(source.folder) === realpathSync(target.stdout.replace(TRAILING_NEWLINE, ''));
     return { env: { ...(isSameRepository ? source.env : isolated), ...explicit } };
@@ -83,13 +82,13 @@ Build the environment for one Git command. Git lists the repository-local variab
 caller overrides apply last.
 
 @param workingFolder the repository folder.
-@param commandArguments everything after `git`, literally.
+@param command the executable and its arguments, literally.
 @param explicit the environment overrides for this command.
 @returns the environment for the requested Git command.
 */
 export function readGitEnvironment(
     workingFolder: string,
-    commandArguments: readonly string[],
+    command: readonly string[],
     explicit: Record<string, string | undefined>,
 ): GitEnvironment {
     if (
@@ -115,7 +114,7 @@ export function readGitEnvironment(
     const { localVariables } = inheritedGit;
     if (localVariables.every((name) => readEnvironmentVariable(name) === undefined)) return { env: explicit };
     const isolated = Object.fromEntries(localVariables.map((name) => [name, undefined]));
-    if ([GIT_EXECUTABLE, GIT_CLONE_COMMAND].every((word, index) => commandArguments[index] === word))
+    if ([GIT_EXECUTABLE, GIT_CLONE_COMMAND].every((word, index) => command[index] === word))
         return { env: { ...isolated, ...explicit } };
     const overrides = Object.fromEntries(
         Object.entries(explicit).filter(([name]) => !localVariables.includes(foldVariableName(name))),
@@ -139,13 +138,10 @@ export function runGitBlocking(
     commandArguments: readonly string[],
     options: Omit<SpawnOptions, 'cwd' | 'timeoutSeconds'> = {},
 ): SpawnResult {
-    const selected = readGitEnvironment(workingFolder, [GIT_EXECUTABLE, ...commandArguments], { ...options.env });
+    const command = [GIT_EXECUTABLE, ...commandArguments];
+    const selected = readGitEnvironment(workingFolder, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
-    return spawnProcessBlocking([GIT_EXECUTABLE, ...commandArguments], {
-        ...options,
-        env: selected.env,
-        cwd: workingFolder,
-    });
+    return spawnProcessBlocking(command, { ...options, env: selected.env, cwd: workingFolder });
 }
 
 /**
@@ -161,11 +157,10 @@ export async function runGit(
     commandArguments: readonly string[],
     options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<SpawnResult> {
-    const selected = readGitEnvironment(workingFolder, [GIT_EXECUTABLE, ...commandArguments], { ...options.env });
-    if ('failure' in selected) return selected.failure;
     const command = [GIT_EXECUTABLE, ...commandArguments];
-    const spawnOptions = { ...options, env: selected.env, cwd: workingFolder };
-    return spawnProcess(command, spawnOptions);
+    const selected = readGitEnvironment(workingFolder, command, { ...options.env });
+    if ('failure' in selected) return selected.failure;
+    return spawnProcess(command, { ...options, env: selected.env, cwd: workingFolder });
 }
 
 /**
@@ -183,13 +178,10 @@ export async function runGitStream(
     options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
     read: StdoutReader,
 ): Promise<SpawnResult> {
-    const selected = readGitEnvironment(workingFolder, [GIT_EXECUTABLE, ...commandArguments], { ...options.env });
+    const command = [GIT_EXECUTABLE, ...commandArguments];
+    const selected = readGitEnvironment(workingFolder, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
-    return streamProcess(
-        [GIT_EXECUTABLE, ...commandArguments],
-        { ...options, env: selected.env, cwd: workingFolder },
-        read,
-    );
+    return streamProcess(command, { ...options, env: selected.env, cwd: workingFolder }, read);
 }
 
 /**
@@ -223,10 +215,7 @@ export function readGitSetting(workingFolder: string, key: string): string | und
     const result = runGitBlocking(workingFolder, [...GIT_SETTING_ARGUMENTS, key]);
     if (result.code === 0) return result.stdout.slice(0, -1);
     if (result.code === 1 && result.stdout === '' && result.stderr === '') return undefined;
-    throw new GspotError(
-        'git',
-        `Git ${GIT_SETTING_ARGUMENTS[0]} failed in ${workingFolder} (exit ${String(result.code)}): ${result.stderr.trim()}`,
-    );
+    throw buildGitError(workingFolder, GIT_SETTING_ARGUMENTS, result);
 }
 
 /**
@@ -237,11 +226,7 @@ Find the folder that Git runs hooks from: core.hooksPath when set, else the hook
 */
 export function readHooksFolder(workingFolder: string): string {
     const result = runGitBlocking(workingFolder, GIT_HOOKS_ARGUMENTS);
-    if (result.code !== 0)
-        throw new GspotError(
-            'git',
-            `Git ${GIT_HOOKS_ARGUMENTS[0]} failed in ${workingFolder} (exit ${String(result.code)}): ${result.stderr.trim()}`,
-        );
+    if (result.code !== 0) throw buildGitError(workingFolder, GIT_HOOKS_ARGUMENTS, result);
     return resolve(workingFolder, result.stdout.replace(TRAILING_NEWLINE, ''));
 }
 
@@ -259,11 +244,7 @@ export async function readGitText(
     options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<string> {
     const result = await runGit(workingFolder, commandArguments, options);
-    if (result.code !== 0)
-        throw new GspotError(
-            'git',
-            `Git ${commandArguments[0] ?? ''} failed in ${workingFolder} (exit ${String(result.code)}): ${result.stderr.trim()}`,
-        );
+    if (result.code !== 0) throw buildGitError(workingFolder, commandArguments, result);
     return result.stdout;
 }
 
@@ -311,9 +292,40 @@ Check whether a Git work tree contains the folder.
 export function isGitRepository(workingFolder: string): boolean {
     const inspection = runGitBlocking(workingFolder, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
     if (inspection.code === 0 && inspection.stdout.trim() === 'true') return true;
-    if (inspection.code === NOT_REPOSITORY_CODE && inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE)) return false;
+    if (isNotRepository(inspection)) return false;
     throw new GspotError(
         'git',
         `Git could not tell whether ${workingFolder} is a work tree (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
     );
+}
+
+/**
+Build the error for a Git command that exited with a failure.
+
+@param workingFolder where Git ran.
+@param commandArguments the arguments after git.
+@param result how Git exited.
+@returns the error to throw.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
+export function buildGitError(
+    workingFolder: string,
+    commandArguments: readonly string[],
+    result: Pick<SpawnResult, 'code' | 'stderr'>,
+): GspotError {
+    return new GspotError(
+        'git',
+        `Git ${commandArguments[0] ?? ''} failed in ${workingFolder} (exit ${String(result.code)}): ${result.stderr.trim()}`,
+    );
+}
+
+/**
+Check whether Git refused to run because the folder holds no repository.
+
+@param result how Git exited.
+@returns whether Git reported that the folder holds no repository.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 2 files share it.
+export function isNotRepository(result: Pick<SpawnResult, 'code' | 'stderr'>): boolean {
+    return result.code === NOT_REPOSITORY_CODE && result.stderr.startsWith(NOT_REPOSITORY_MESSAGE);
 }

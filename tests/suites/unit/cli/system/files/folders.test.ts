@@ -27,10 +27,10 @@ test.skipIf(isWindows).each([...LINKED_CONFIG_FOLDERS])(
         await createFileTree(sandbox.path, LINKED_CONFIG_FILES);
         await mkdir(dirname(join(root, link)), { recursive: true });
         await symlink(target, join(root, link), 'dir');
-        expect(listMatchingPaths(root, pattern)).toStrictEqual([]);
+        expect(listMatchingPaths(root, [pattern])).toStrictEqual([]);
         await unlink(join(root, link));
         await createFileTree(root, { [selected]: 'setting = "local"\n' });
-        expect(listMatchingPaths(root, pattern)).toStrictEqual([selected]);
+        expect(listMatchingPaths(root, [pattern])).toStrictEqual([selected]);
     },
 );
 
@@ -38,7 +38,7 @@ test('a glob includes dot files and honors exclusions and brace patterns', async
     await using sandbox = await testdir(GLOB_FILES);
 
     expect(
-        listMatchingPaths(sandbox.path, 'src/**/*.ts').toSorted((left, right) => left.localeCompare(right)),
+        listMatchingPaths(sandbox.path, ['src/**/*.ts']).toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['src/.leaf.ts', 'src/a.ts', 'src/nested/.inner/b.ts']);
     expect(
         listMatchingPaths(sandbox.path, ['**/*.ts', '!node_modules/**']).toSorted((left, right) =>
@@ -60,7 +60,7 @@ test.skipIf(isWindows)('a glob excludes file, folder, broken, and cyclic links',
     await symlink('src/a.ts', join(sandbox.path, 'link.ts'));
     await symlink('..', join(sandbox.path, 'src/.loop'), 'dir');
     expect(
-        listMatchingPaths(sandbox.path, '*/*.ts').toSorted((left, right) => left.localeCompare(right)),
+        listMatchingPaths(sandbox.path, ['*/*.ts']).toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['src/a.ts']);
-    expect(listMatchingPaths(sandbox.path, '*')).toStrictEqual([]);
+    expect(listMatchingPaths(sandbox.path, ['*'])).toStrictEqual([]);
 });

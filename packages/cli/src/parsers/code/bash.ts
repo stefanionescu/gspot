@@ -1,4 +1,5 @@
 import type { Node } from 'web-tree-sitter';
+import { spliceRanges } from '#cli/system/text.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { ParseCache } from '#cli/types/parsers/code/grammars.ts';
@@ -97,22 +98,6 @@ function parseBashFunctions(syntaxRoot: Node, codeText: string): ScriptSyntax['f
             },
         ];
     });
-}
-
-function stripComments(text: string, comments: Node[]): string {
-    const pieces: string[] = [];
-    let offset = 0;
-    for (const comment of comments) {
-        pieces.push(
-            text.slice(offset, comment.startIndex),
-            text
-                .slice(comment.startIndex, comment.endIndex)
-                .replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length)),
-        );
-        offset = comment.endIndex;
-    }
-    pieces.push(text.slice(offset));
-    return pieces.join('');
 }
 
 function isTemporaryValue(assignment: Node): boolean {
@@ -256,20 +241,24 @@ Parse a Bash script once: its code with comments blanked out, its functions, its
 export async function parseBashScript(text: string, cache?: ParseCache): Promise<ScriptSyntax> {
     const tree = await parseSource('bash', text, cache);
     try {
-        const codeText = stripComments(text, tree.rootNode.descendantsOfType('comment'));
+        const comments = tree.rootNode
+            .descendantsOfType('comment')
+            .map((comment) => ({ start: comment.startIndex, end: comment.endIndex }));
+        const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
+        const codeText = spliceRanges(text, masked, comments);
 
         const commands = tree.rootNode.descendantsOfType('command');
         using resources = new DisposableStack();
         const traps = await readTrapScripts(commands, cache, resources);
         const scripts = new Map(traps.map((script) => [script.trap.id, script]));
         const calls = commands.flatMap((node) => {
-            const calls = buildCommandCalls([node], 0);
+            const nodeCalls = buildCommandCalls([node], 0);
             const script = scripts.get(node.id);
             if (script !== undefined)
-                calls.push(
+                nodeCalls.push(
                     ...buildCommandCalls(script.root.descendantsOfType('command'), script.body.startPosition.row),
                 );
-            return calls;
+            return nodeCalls;
         });
         return {
             code: codeText.split('\n'),

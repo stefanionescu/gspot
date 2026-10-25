@@ -10,13 +10,6 @@ import {
     NGINX_PUNCTUATION,
 } from '#cli/config/parsers/formats/nginx.ts';
 
-/**
-Skip a quoted span before looking for comment openers outside it.
-
-@param line the source to scan.
-@param start the first source offset.
-@returns the offset after the quoted value.
-*/
 function findQuotedEnd(line: string, start: number): number {
     const quote = line.charAt(start);
     for (let at = start + 1; at < line.length; at += 1) {

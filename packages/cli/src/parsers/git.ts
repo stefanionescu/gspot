@@ -169,15 +169,26 @@ export function parseIndexFiles(text: string): GitIndexFile[] {
 }
 
 /**
+Decode a Git path listing, and refuse a listing that fails UTF-8 decoding.
+
+@param output the bytes that Git printed.
+@returns the listing text.
+*/
+export function decodeGitPaths(output: Uint8Array): string {
+    const text = decodeUtf8(output);
+    if (text === undefined) throw new GspotError('git', 'Git listed a path that is not valid UTF-8.');
+    return text;
+}
+
+/**
 Validate unquoted, null-delimited committed-tree entries.
 
 @param output the complete Git listing.
 @returns supported modes, full object IDs, and UTF-8 paths.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function parseTreeFiles(output: Uint8Array): GitFile[] {
-    const text = decodeUtf8(output);
-    if (text === undefined) throw new GspotError('git', 'Git listed a path that is not valid UTF-8.');
-    return text
+    return decodeGitPaths(output)
         .split('\0')
         .filter(Boolean)
         .map((line) => parseIndexLine(TREE_LINE.exec(line), gitFileSchema));

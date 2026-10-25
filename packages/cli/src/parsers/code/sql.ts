@@ -36,7 +36,7 @@ export function selectFrozenMigrations(paths: string[], through: string): Set<st
     const cutoff = MIGRATION_VERSION.exec(through)?.groups?.['version'];
     return new Set(
         paths.filter((path) => {
-            const version = readMigrationVersion(path);
+            const version = extractMigrationVersion(path);
             return (
                 through === FROZEN_ALL ||
                 (version !== undefined && cutoff !== undefined && BigInt(version) <= BigInt(cutoff))
@@ -46,12 +46,12 @@ export function selectFrozenMigrations(paths: string[], through: string): Set<st
 }
 
 /**
-Read a migration version from its file name or its Prisma folder.
+Extract a migration version from its file name or its Prisma folder.
 
 @param path the repository-relative SQL file to inspect.
 @returns the numeric version when the name starts with one.
 */
-export function readMigrationVersion(path: string): string | undefined {
+export function extractMigrationVersion(path: string): string | undefined {
     const name = basename(path);
     const versioned = name === 'migration.sql' ? basename(dirname(path)) : name;
     return MIGRATION_VERSION.exec(versioned)?.groups?.['version'];
