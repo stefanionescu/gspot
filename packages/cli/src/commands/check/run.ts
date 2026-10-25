@@ -27,8 +27,8 @@ import type { Session, CheckSession } from '#cli/types/session.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import { SHORT_HASH_LENGTH } from '#cli/config/commands/check/check.ts';
 import { RAN_STATUSES, FAILED_STATUSES } from '#cli/config/runs/check.ts';
-import { DOCKER_MISSING_MESSAGE } from '#cli/config/commands/check/run.ts';
 import type { FinishedRun, ReproduceOptions } from '#cli/types/commands/check.ts';
+import { CANCELED_CHECK_NOTE, DOCKER_MISSING_MESSAGE } from '#cli/config/commands/check/run.ts';
 import type { Run, RunResult, RunReport, RunOptions, PlanAfterFixes } from '#cli/types/runs/run.ts';
 import type { Finding, CheckCode, CheckResult, BuiltInCheck, CheckRunOptions } from '#cli/types/runs/check.ts';
 
@@ -57,7 +57,7 @@ function findUnrunnableResult(
     planned: PlannedCheck,
     base: CheckResult,
 ): CheckResult | undefined {
-    if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: 'The check was canceled.' };
+    if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: CANCELED_CHECK_NOTE };
     if (planned.check.needs?.includes('docker') !== true) return undefined;
     return 'status' in
         readToolAvailability(session, session.root, getTool(session.configurations.values(), DOCKER_TOOL))
@@ -87,7 +87,9 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
         return {
             ...base,
             duration: Math.round(performance.now() - started),
-            ...classifyCheckError(planned.check.id, error),
+            ...(session.cancelSignal?.aborted === true
+                ? { status: 'error', note: CANCELED_CHECK_NOTE }
+                : classifyCheckError(planned.check.id, error)),
         };
     }
 }

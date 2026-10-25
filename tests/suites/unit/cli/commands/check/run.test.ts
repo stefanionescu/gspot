@@ -9,10 +9,10 @@ import { readFile, writeFile } from 'node:fs/promises';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
+import { buildSiteSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
     SCOPE_FINDINGS,
@@ -50,6 +50,25 @@ test('an aborted run stops its command and reports cancellation on every system'
     expect(result.report.exitCode).toBe(143);
     expect(result.report.checks).toMatchObject([
         { check: 'project/cancel', status: 'error', note: `${process.execPath} was canceled.` },
+    ]);
+    await waitForExit(Number(await readFile(marker, 'utf8')));
+});
+
+test('a check whose code fails because the run was canceled reports the cancellation', async () => {
+    await using sandbox = await createGitSandbox({});
+    const marker = join(sandbox.path, 'build-ready');
+    const command = buildProgramCommand('fakes/tool', '--mark', marker, '--wait');
+    await createFileTree(sandbox.path, { 'gspot.toml': buildSiteSettings(command), 'index.html': '<p>Ready.</p>\n' });
+    const controller = new AbortController();
+    const session = await openSession(sandbox.path);
+    using _resources = session.resources;
+    session.cancelSignal = controller.signal;
+    const running = runChecks(session, buildRunOptions({ only: ['site/build'] }));
+    expect(await waitForFile(marker)).toBe(true);
+    controller.abort(130);
+    const result = await running;
+    expect(result.report.checks).toMatchObject([
+        { check: 'site/build', status: 'error', note: 'The check was canceled.' },
     ]);
     await waitForExit(Number(await readFile(marker, 'utf8')));
 });
