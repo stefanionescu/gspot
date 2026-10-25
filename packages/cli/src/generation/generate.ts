@@ -40,10 +40,7 @@ import {
 } from '#cli/config/generation/generate.ts';
 
 function buildWorkflow(session: Session, generated: GenerationResult): void {
-    const {
-        settingsFile: { settings },
-        scopes,
-    } = session;
+    const { settings, scopes } = session;
     if (settings.ci?.enabled !== true) return;
     const manual = session.configuredChecks.filter((planned) => planned.check.stage === 'manual');
     generated.files.push(
@@ -101,11 +98,7 @@ function buildGitignoreBlock(): string {
 }
 
 function addManagedBlocks(session: Session, rules: RuleFile[], generated: GenerationResult): void {
-    const {
-        settingsFile: { settings },
-        repository,
-        reads,
-    } = session;
+    const { settings, repository, reads } = session;
     const outsidePaths = generated.files.map(({ path }) => path).filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
     const text = findCachedText(reads, GITATTRIBUTES_FILE) ?? '';
     const authored = stripBlock(text, { path: GITATTRIBUTES_FILE, style: 'hash' });
@@ -144,10 +137,7 @@ Generate every file in memory, and write nothing.
 @returns everything that apply writes.
 */
 export function generate(session: Session): GenerationResult {
-    const {
-        settingsFile: { settings },
-        scopes,
-    } = session;
+    const { settings, scopes } = session;
     const { toolsRoot, timeoutSeconds, reads, packageManager, toolConfigurations } = session;
     const generated: GenerationResult = {
         files: [

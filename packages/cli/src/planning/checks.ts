@@ -20,7 +20,7 @@ function listScopeChecks(session: Session, scope: Scope): ScopeCheck[] {
             .filter((configured) => isRoot || !isRootOnlyCheck(configuration, configured.check)),
     );
     if (!isRoot) return configuredChecks;
-    const own = Object.values(session.settingsFile.settings.commandChecks).map((commandCheck) => ({
+    const own = Object.values(session.settings.commandChecks).map((commandCheck) => ({
         check: commandCheck,
     }));
     return [...configuredChecks, ...own];

@@ -41,7 +41,7 @@ Build .editorconfig: the EditorConfig sections of this repository.
 */
 export function buildEditorconfigFile(planned: PlannedConfigFile): string {
     const { format } = planned.scope.settings.values;
-    const settings = planned.session.settingsFile.settings;
+    const settings = planned.session.settings;
 
     const sections = [
         {
@@ -146,7 +146,7 @@ Build prettier.json, which the root pointer loads: the formatter options, plugin
 @returns the formatter options, plugins, and scope overrides.
 */
 export function buildPrettierFile(planned: PlannedConfigFile): string {
-    const settings = planned.session.settingsFile.settings;
+    const settings = planned.session.settings;
     const format = planned.scope.settings.values.format;
     const plugins = listPrettierPlugins(planned.session.scopes.flatMap(({ configurations }) => configurations))
         .values()

@@ -49,7 +49,7 @@ export function isMarkdownlintShared(selected: OwnedConfigFile, configFiles: Own
         (each) => each.configFile.target === configFile.target && each.owner.scope.path === '',
     );
     if (root === undefined) return false;
-    const level = owner.session.settingsFile.settings.level;
+    const level = owner.session.settings.level;
     const texts = [selected, root].map((owned) => buildMarkdownlintFile({ scope: owned.owner.scope, level }));
     return texts[0] === texts[1];
 }

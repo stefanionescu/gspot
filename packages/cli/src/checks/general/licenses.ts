@@ -169,7 +169,7 @@ async function scanProject(
 }
 
 async function scanLicenses(session: CheckSession, planned: PlannedCheck) {
-    const projects = listLicenseProjects(planned.files, session.scopes, session.settingsFile.settings, planned.check);
+    const projects = listLicenseProjects(planned.files, session.scopes, session.settings, planned.check);
     if (projects.length === 0) throw new GspotError('skip', 'Set licenses.allowed to check licenses.');
     const inventories: ProjectLicenses[] = [];
     for (const project of projects) {

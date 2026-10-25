@@ -185,7 +185,7 @@ export function replacePlaceholders(
 ): string {
     return replaceSettingPlaceholders(planned.scope.settings, argument)
         .replaceAll(LEVEL_PLACEHOLDER, (_match, recommended: string, all: string) =>
-            session.settingsFile.settings.level === 'all' ? all : recommended,
+            session.settings.level === 'all' ? all : recommended,
         )
         .replaceAll(CONFIG_FILE_PLACEHOLDER, (_match, name: string) =>
             convertToSystemPath(join(substitutions.root, getConfigFilePath(session, planned, name))),

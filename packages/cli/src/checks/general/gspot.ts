@@ -183,13 +183,16 @@ function checkSuppressionComment(
 
 function listExpiredIgnores(session: Session, planned: PlannedCheck): Finding[] {
     const today = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
-    return session.settingsFile.settings.ignore.flatMap((ignore, index) => {
+    return session.settings.ignore.flatMap((ignore, index) => {
         const date = ignore.until?.toISOString();
         if (date === undefined || today < date) return [];
         return [
             buildFinding(
                 planned,
-                { file: SETTINGS_FILE, line: findSettingLine(session.settingsFile, ['ignore', index]) },
+                {
+                    file: SETTINGS_FILE,
+                    line: findSettingLine(session.settingsText, session.settings.written, ['ignore', index]),
+                },
                 'expired-ignore',
                 `This ignore of ${ignore.check ?? 'every check'} ended on ${date}.`,
                 { help: EXPIRED_IGNORE_HELP },
@@ -241,7 +244,7 @@ Reports setting paths that match no tracked file or folder.
 export function checkGspotUnmatchedPaths(session: Session, planned: PlannedCheck): Finding[] {
     const files = session.repository.files;
     const repositoryPaths = [...includeParentFolders(files.map((file) => file.path))];
-    return listSettingsTables(session.settingsFile.settings).flatMap(({ table, scope = '', path }) => {
+    return listSettingsTables(session.settings).flatMap(({ table, scope = '', path }) => {
         const findings: Finding[] = [];
         const schema = scope === '' ? settingsSchema : scopeSchema;
         const visit: PathVisitor = (pattern, keys, role) => {
@@ -259,7 +262,7 @@ export function checkGspotUnmatchedPaths(session: Session, planned: PlannedCheck
                         planned,
                         {
                             file: SETTINGS_FILE,
-                            line: findSettingLine(session.settingsFile, [...path, ...keys]),
+                            line: findSettingLine(session.settingsText, session.settings.written, [...path, ...keys]),
                         },
                         'unmatched-path',
                         `${pattern} under ${where} matches no tracked file or folder.${UNESCAPED_GROUP.test(pattern) ? GROUP_HELP : ''}`,

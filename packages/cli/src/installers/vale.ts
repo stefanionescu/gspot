@@ -80,7 +80,7 @@ Needs the network.
 export async function installValePackages(install: ToolInstall, miseBinPaths: string[]): Promise<string> {
     const { session } = install;
     const { root } = session;
-    const level = session.settingsFile.settings.level;
+    const level = session.settings.level;
     const usesVale = session.toolConfigurations.some(({ tools }) => tools.some((tool) => tool.name === VALE_TOOL));
     if (level === 'recommended' || !usesVale) return '';
     const tool = getTool(session.toolConfigurations, VALE_TOOL);

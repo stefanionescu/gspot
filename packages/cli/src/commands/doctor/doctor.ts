@@ -112,7 +112,7 @@ function inspectScopeTools(session: Session): ToolInspection[] {
 
 function buildDoctorReport(session: Session, versionPin: string | undefined): DoctorReport {
     const tools = inspectScopeTools(session);
-    const { settings } = session.settingsFile;
+    const { settings } = session;
     const hooks = readHookStatus(session, session.repository);
     const version = buildDoctorVersion(session, versionPin);
     const isBroken =

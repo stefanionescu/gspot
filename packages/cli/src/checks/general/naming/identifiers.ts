@@ -14,7 +14,7 @@ Checks the names that source files declare.
 @returns the findings.
 */
 export async function checkNamingIdentifiers(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const settings = readNamingSettings(session.settingsFile.settings, planned.scope);
+    const settings = readNamingSettings(session.settings, planned.scope);
     const findings: Finding[] = [];
     for (const { file, language } of listNamedFiles(planned)) {
         const text = readCachedText(session.reads, file.path);

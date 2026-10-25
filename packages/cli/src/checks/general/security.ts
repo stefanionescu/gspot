@@ -14,7 +14,7 @@ function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[]
     const ruleFiles = configurations.flatMap((configuration) =>
         configuration.configFiles
             .filter((file) => file.tool.includes(SEMGREP_TOOL) && file.target.endsWith('.yml'))
-            .filter((file) => file.level !== 'all' || session.settingsFile.settings.level === 'all')
+            .filter((file) => file.level !== 'all' || session.settings.level === 'all')
             .map((file) => getConfigFileTarget(scopePath, file, buildConfigFiles(session))),
     );
     return [...new Set([...ruleFiles, ...getTable(settings, 'tools.semgrep').rule_files])];

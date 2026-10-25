@@ -48,7 +48,7 @@ Describe a setting's defaults, effective values, and edit commands.
 */
 export function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
     if (session === undefined) return undefined;
-    const { settings } = session.settingsFile;
+    const { settings } = session;
     const isScopeKey = isScopeSetting(key);
     const scopes = session.scopes.flatMap((scope) => {
         const match = findSetting(scope.availableSettings, key);

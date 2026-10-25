@@ -112,7 +112,7 @@ Release on 03/04/2026.
         });
         commitAll(sandbox.path);
         const session = await openSession(sandbox.path);
-        expect(session.settingsFile.settings.configurations).toStrictEqual([]);
+        expect(session.settings.configurations).toStrictEqual([]);
         const selected = new Set(
             session.scopes.flatMap((scope) => scope.configurations.map((configuration) => configuration.name)),
         );

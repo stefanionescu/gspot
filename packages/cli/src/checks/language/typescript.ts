@@ -44,7 +44,7 @@ export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck)
         scopeTsconfig,
         ...planned.files.map((file) => file.path).filter((path) => TSCONFIG_NAME.test(posix.basename(path))),
     ]);
-    const required = selectRequiredTsconfigOptions(session.settingsFile.settings.level, planned.scope.configurations);
+    const required = selectRequiredTsconfigOptions(session.settings.level, planned.scope.configurations);
     const projects = [...tsconfigPaths].flatMap((path) => {
         const parsed = readTsconfig(session.root, join(session.root, path), session.reads);
         return parsed === undefined || (parsed.fileNames.length === 0 && (parsed.projectReferences?.length ?? 0) > 0)

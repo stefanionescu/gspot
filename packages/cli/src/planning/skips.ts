@@ -126,7 +126,7 @@ Find the first reason that a planned check cannot run.
 */
 export function findFirstSkip(check: PlannedCheck, planned: PlannedScope): Skip | undefined {
     const { session, options, host } = planned;
-    const settings = session.settingsFile.settings;
+    const settings = session.settings;
     const selected = findSettingsSkip(settings, check.scope, check.check);
     if (selected !== undefined) return selected;
     if (options.forConfiguration === true) return undefined;

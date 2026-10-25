@@ -22,7 +22,7 @@ export function getConfigFileTarget(scope: string, configFile: ConfigFile, confi
 }
 
 function isConfigFileWritten(session: Session, file: ConfigFile, used: UsedNames): boolean {
-    if (file.level === 'all' && session.settingsFile.settings.level !== 'all') return false;
+    if (file.level === 'all' && session.settings.level !== 'all') return false;
     const constraints = [
         [file.tool, used.tools],
         [file.check, used.checks],

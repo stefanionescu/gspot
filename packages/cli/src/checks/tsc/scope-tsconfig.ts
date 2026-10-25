@@ -56,7 +56,7 @@ function buildTsconfig(session: Session, scope: Scope, file: string): Record<str
     return {
         compilerOptions: {
             ...TYPESCRIPT_DEFAULTS,
-            ...selectCheckedTsconfigOptions(session.settingsFile.settings.level, scope),
+            ...selectCheckedTsconfigOptions(session.settings.level, scope),
             typeRoots,
         },
         files: sources.map((source) => convertToPosixPath(relative(folder, join(root, source.path)))),

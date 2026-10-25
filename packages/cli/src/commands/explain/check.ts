@@ -117,7 +117,7 @@ Explain a shipped check or a command check.
 */
 export function explainCheck(session: Session | undefined, checkId: string): Explanation | undefined {
     const configurations = readConfigurations();
-    const commandCheck = session?.settingsFile.settings.commandChecks[checkId];
+    const commandCheck = session?.settings.commandChecks[checkId];
     const found: ScopeCheck | undefined =
         listChecksById(configurations.values()).get(checkId) ??
         (commandCheck === undefined ? undefined : { check: commandCheck, configuration: undefined });

@@ -153,7 +153,7 @@ export async function runTsc(
     tsbuildinfoFolder: string,
     project: TypeScriptProject | undefined,
 ): Promise<CheckResult> {
-    const required = selectCheckedTsconfigOptions(session.settingsFile.settings.level, planned.scope);
+    const required = selectCheckedTsconfigOptions(session.settings.level, planned.scope);
     const target = project === undefined ? join(session.root, planned.scope.path, TSCONFIG_FILE) : project.path;
     if (
         isProjectChecked(session.reads, {

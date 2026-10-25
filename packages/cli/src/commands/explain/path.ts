@@ -35,7 +35,7 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
             stage: check.check.stage,
             ...(check.configuration !== undefined && { configuration: check.configuration.name }),
         })),
-        ignores: session.settingsFile.settings.ignore
+        ignores: session.settings.ignore
             .filter(
                 (ignore) =>
                     ignore.paths === undefined || ignore.paths.length === 0 || buildPathMatcher(ignore.paths)(path),

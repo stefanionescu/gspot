@@ -44,7 +44,7 @@ function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
 async function readSessionAfterFixes(session: CheckSession): Promise<CheckSession> {
     const reads = createReadCache(session.root);
     const repository = await readSessionRepository({
-        settings: session.settingsFile.settings,
+        settings: session.settings,
         configurations: session.configurations,
         reads,
         listing: await listRepositoryFiles(reads),
@@ -135,7 +135,7 @@ function formatReproduceCommand(checkId: string, scopeArgument: string | undefin
 function finishResult(run: Run, result: CheckResult): void {
     if (RAN_STATUSES.has(result.status)) {
         removeOutsideFindings(result, run);
-        removeIgnoredFindings(result, run.session.settingsFile.settings.ignore);
+        removeIgnoredFindings(result, run.session.settings.ignore);
     }
     if (!FAILED_STATUSES.has(result.status)) return;
     const scopeArgument =
@@ -217,7 +217,7 @@ function buildRunReport(run: FinishedRun): RunReport {
         started: started.toISOString(),
         duration: Date.now() - started.getTime(),
         checks,
-        ignores: session.settingsFile.settings.ignore.map(({ until, ...record }) =>
+        ignores: session.settings.ignore.map(({ until, ...record }) =>
             stripUndefined({ ...record, until: until?.toISOString() }),
         ),
         unstagedChanges: options.unstagedChanges ?? 0,

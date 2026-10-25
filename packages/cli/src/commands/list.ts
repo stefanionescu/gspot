@@ -19,7 +19,7 @@ import { KEY_GAP, LIST_KINDS, VALUE_WIDTH, REASON_HEADER } from '#cli/config/com
 import { type ListKind, type SettingsListJson, type ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 function buildSettingsResult(session: Session): CommandResult {
-    const settings = buildSettingRows(session.settingsFile.settings, session.scopes);
+    const settings = buildSettingRows(session.settings, session.scopes);
     const displayed = settings.filter(
         (row) => row.scope === '' || (row.origin === 'scope' && row.originScope === row.scope),
     );

@@ -57,7 +57,7 @@ export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslin
     const { session, scope, configFile } = planned;
     const { settings } = scope;
     const { scopes } = session;
-    const repositorySettings = session.settingsFile.settings;
+    const repositorySettings = session.settings;
     const { level } = repositorySettings;
     const isRecognized = buildPathMatcher([buildSourcePattern(...CODE_LANGUAGES)]);
     const nodeFiles = session.repository.files

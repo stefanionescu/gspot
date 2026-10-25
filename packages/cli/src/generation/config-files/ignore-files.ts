@@ -91,7 +91,7 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
             ).map(({ file }) => file),
         },
         { key: 'environment', title: IGNORE_SECTION_TITLES.environment, patterns: [...LOCAL_ENVIRONMENT_PATTERNS] },
-        ...session.settingsFile.settings.ignore
+        ...session.settings.ignore
             .filter((ignore) => ignore.check === undefined)
             .map((ignore): IgnoreSection => ({ key: 'settings', title: ignore.reason, patterns: ignore.paths ?? [] })),
     ];

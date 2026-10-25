@@ -111,7 +111,7 @@ Build knip.json: the workspace entry points, project selectors, and dependency e
 export function buildKnipFile(planned: PlannedConfigFile): string {
     const { scope } = planned;
     const { scopes, toolConfigurations: configurations } = planned.session;
-    const { settingsFile, root, startRunner } = planned.session;
+    const { settings, root, startRunner } = planned.session;
     const options = getTable(scope.settings, 'tools.knip');
     const scanner = getTable(scope.settings, 'dependencies').bun_scanner;
     const ignoredGlobs = convertToGlobs(listIgnoreSections(planned, 'javascript/knip'));
@@ -121,7 +121,7 @@ export function buildKnipFile(planned: PlannedConfigFile): string {
         startRunner.name,
     ];
     const toolPackages = tools.flatMap((tool) => tool.installers['npm']?.name ?? []);
-    const workspaces = buildWorkspaces(root, settingsFile.settings, scopes);
+    const workspaces = buildWorkspaces(root, settings, scopes);
     const externals = [...new Set(scopes.flatMap(({ settings }) => settings.values.javascript?.externals ?? []))];
     return JSON.stringify(
         {

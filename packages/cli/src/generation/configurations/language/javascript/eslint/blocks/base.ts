@@ -133,7 +133,7 @@ export function buildOpeningBlocks(
                         readScopeAliases(session.root, '', session.reads),
                     ),
                     ...IMPORT_LAYOUT_RULES,
-                    ...buildBarrelRule(session.settingsFile.settings, planned.scope.settings, 'typescript'),
+                    ...buildBarrelRule(session.settings, planned.scope.settings, 'typescript'),
                 },
             },
             properties: `plugins: { ${pluginMap} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }, 'import-x/ignore': ${JSON.stringify(buildImportIgnores(ignoredGlobs))}${boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`,
@@ -190,11 +190,7 @@ export function buildClosingBlocks(
     const { level } = planned.blockWriter;
     const rules = planned.levelRules;
     const presets = planned.eslintPresets.get(JAVASCRIPT_CONFIGURATION);
-    const selectorGroups = buildSelectorGroups(
-        session.scopes,
-        level,
-        session.settingsFile.settings.structure.reexports,
-    );
+    const selectorGroups = buildSelectorGroups(session.scopes, level, session.settings.structure.reexports);
     return [
         ...buildRuntimeBlocks(eslintFiles, runtimeBlocks),
         ...selectorGroups.map((group): ConfigurationBlocks['blocks'][number] => ({
@@ -227,7 +223,7 @@ export function buildClosingBlocks(
                 files: eslintFiles.javascript,
                 rules: {
                     ...rules.javascript,
-                    ...buildBarrelRule(session.settingsFile.settings, planned.scope.settings, 'javascript'),
+                    ...buildBarrelRule(session.settings, planned.scope.settings, 'javascript'),
                 },
             },
         },
@@ -263,7 +259,7 @@ Choose the plugin imports and names for the module header and the lint blocks.
 */
 export function selectPlugins(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): EslintPlugins {
     const isAll = planned.blockWriter.level === 'all';
-    const repositorySettings = planned.session.settingsFile.settings;
+    const repositorySettings = planned.session.settings;
     return {
         ...ESLINT_PLUGIN_IMPORTS,
         ...(isAll && { perfectionist: LEVEL_ALL_PLUGIN_IMPORTS.perfectionist }),

@@ -116,7 +116,7 @@ export function buildConfigFile(
         ...owner,
         configFile,
         targetPath,
-        level: owner.session.settingsFile.settings.level,
+        level: owner.session.settings.level,
     };
     const builder =
         configFile.file === SEMGREP_RULE_PACK_FILE

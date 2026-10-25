@@ -115,9 +115,7 @@ output does not depend on this machine.
 export function selectToolConfigurations(session: Session, checks: PlannedCheck[]): Configuration[] {
     const licenses = checks
         .filter((each) => each.configuration?.name === LICENSES_CONFIGURATION)
-        .flatMap((check) =>
-            listLicenseProjects(check.files, session.scopes, session.settingsFile.settings, check.check),
-        )
+        .flatMap((check) => listLicenseProjects(check.files, session.scopes, session.settings, check.check))
         .filter((project) => project.skip === undefined)
         .map((project) =>
             basename(project.dependencyFile) === PACKAGE_JSON ? LICENSE_CHECKER_COMMAND[0] : PIP_LICENSES_COMMAND[0],

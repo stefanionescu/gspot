@@ -69,7 +69,7 @@ export function buildLimitRuleBlocks(
     planned: Pick<PlannedEslintFile, 'session' | 'scope' | 'nodeFiles'>,
 ): EslintRuleBlock[] {
     const { session, nodeFiles } = planned;
-    const repositorySettings = session.settingsFile.settings;
+    const repositorySettings = session.settings;
     if (repositorySettings.level !== 'all') return [];
     const { scopes } = session;
     const limitsByScope = new Map(

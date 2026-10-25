@@ -123,10 +123,7 @@ Build one boundary block from the root modules and the project tests.
 */
 export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintBlock[] {
     const { session, nodeFiles } = planned;
-    const {
-        settingsFile: { settings },
-        scopes,
-    } = session;
+    const { settings, scopes } = session;
     const importRules = settings.import_rule;
     const codeLanguages: readonly string[] = CODE_LANGUAGES;
     const javascriptScopes = scopes.filter(({ configurations }) =>

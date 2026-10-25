@@ -13,10 +13,7 @@ Reports each unsafe process kill or removal, and at level `all`, each discarded 
 @returns the findings.
 */
 export async function checkBashSafety(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const rules = [
-        ...(session.settingsFile.settings.level === 'all' ? ALL_LEVEL_SAFETY_PATTERNS : []),
-        ...SAFETY_PATTERNS,
-    ];
+    const rules = [...(session.settings.level === 'all' ? ALL_LEVEL_SAFETY_PATTERNS : []), ...SAFETY_PATTERNS];
     const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) =>
         file.code.flatMap((code, position) => {

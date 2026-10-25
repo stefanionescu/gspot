@@ -26,12 +26,10 @@ const eslintRuleNames = new Set(nameListSchema.parse(JSON.parse(eslintRuleText))
 
 function formatUnknownSubject(session: Session | undefined, subject: string): string {
     const subjects = [
-        ...listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.commandChecks)),
+        ...listCheckIds(session === undefined ? [] : Object.values(session.settings.commandChecks)),
         ...readConfigurations().keys(),
         ...(session?.scopes.flatMap((scope) =>
-            listInheritedSettings(scope.availableSettings, session.settingsFile.settings, scope.path).map(
-                (setting) => setting.key,
-            ),
+            listInheritedSettings(scope.availableSettings, session.settings, scope.path).map((setting) => setting.key),
         ) ?? []),
     ];
     const similar = formatSimilarNames(subject, [...new Set(subjects)]);

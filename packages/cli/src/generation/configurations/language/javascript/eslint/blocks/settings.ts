@@ -159,7 +159,7 @@ export function buildRestrictedImportBlocks(
 
 function buildEnvironmentRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session, nodeFiles } = planned;
-    if (session.settingsFile.settings.level !== 'all') return [];
+    if (session.settings.level !== 'all') return [];
     const { scopes } = session;
     const environmentScopes = scopes.filter((scope) => {
         const parent = findParentScope(scopes, scope.path);
@@ -193,10 +193,10 @@ function buildEnvironmentRuleBlocks(planned: Pick<PlannedEslintFile, 'session' |
 
 function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session, nodeFiles } = planned;
-    if (session.settingsFile.settings.level !== 'all') return [];
+    if (session.settings.level !== 'all') return [];
     const { scopes } = session;
     const blocks: EslintRuleBlock[] = [];
-    const isAllowIndex = session.settingsFile.settings.structure.reexports === 'index-only';
+    const isAllowIndex = session.settings.structure.reexports === 'index-only';
     const orderedScopes = scopes.toSorted((a, b) => compareScopeDepth(a.path, b.path));
     for (const scope of orderedScopes) {
         const parent = findParentScope(scopes, scope.path);
@@ -230,7 +230,7 @@ function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'no
 
 function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'scope' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session } = planned;
-    const ignored = session.settingsFile.settings.ignore.flatMap((ignore): EslintRuleBlock[] =>
+    const ignored = session.settings.ignore.flatMap((ignore): EslintRuleBlock[] =>
         ignore.rule === undefined || ignore.check !== ESLINT_CHECK
             ? []
             : [

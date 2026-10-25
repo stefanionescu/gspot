@@ -66,7 +66,7 @@ function listRepositoryPaths(session: Session, planned: PlannedCheck): Set<strin
     for (const path of listGeneratorPaths(planned)) repositoryPaths.add(path);
     const checks = session.configurations.values().flatMap((configuration) => configuration.checks);
     for (const check of checks) repositoryPaths.add(check.id);
-    for (const check of Object.values(session.settingsFile.settings.commandChecks)) repositoryPaths.add(check.id);
+    for (const check of Object.values(session.settings.commandChecks)) repositoryPaths.add(check.id);
     return repositoryPaths;
 }
 

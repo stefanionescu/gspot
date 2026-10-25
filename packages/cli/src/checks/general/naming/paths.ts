@@ -89,6 +89,6 @@ Checks file and folder names against the naming settings.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The check registry calls it by its check name.
 export function checkNamingPaths(session: Session, planned: PlannedCheck): Finding[] {
-    const settings = readNamingSettings(session.settingsFile.settings, planned.scope);
+    const settings = readNamingSettings(session.settings, planned.scope);
     return validateIdentifiers(planned, settings, listPathIdentifiers(planned));
 }

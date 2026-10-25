@@ -129,9 +129,9 @@ and the ones that the level leaves empty.
 @param session the repository and its settings.
 @returns each rule with its content and path.
 */
-export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes' | 'repository'>): RuleFile[] {
+export function selectRuleFiles(session: Pick<Session, 'settings' | 'scopes' | 'repository'>): RuleFile[] {
     const { repository } = session;
-    const { rules, level } = session.settingsFile.settings;
+    const { rules, level } = session.settings;
     if (!rules.enabled) return [];
     const configurations = listSelectedConfigurations(session.scopes);
     const scopeRules = session.scopes.map((scope) => ({

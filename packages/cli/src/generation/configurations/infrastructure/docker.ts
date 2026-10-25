@@ -35,7 +35,7 @@ Build trivy.yml: the tool timeout, the reported severities, and the folders Triv
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildTrivyFile(planned: PlannedConfigFile): string {
     return stringify({
-        timeout: `${String(planned.session.settingsFile.settings.tool_timeout_seconds)}s`,
+        timeout: `${String(planned.session.settings.tool_timeout_seconds)}s`,
         severity: getTable(planned.scope.settings, 'tools.trivy').severity,
         scan: { 'skip-dirs': TRIVY_SKIPPED_FOLDERS },
     });

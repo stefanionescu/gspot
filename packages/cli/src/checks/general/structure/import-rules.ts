@@ -165,7 +165,7 @@ ESLint applies the rules to JavaScript and TypeScript imports.
 @returns a finding for each refused import and each uncovered file.
 */
 export async function checkStructureImportRules(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const rules = session.settingsFile.settings.import_rule;
+    const rules = session.settings.import_rule;
     if (rules.length === 0) throw new GspotError('skip', IMPORT_RULES_SKIP);
     const lookup = buildRuleLookup(rules);
     return [

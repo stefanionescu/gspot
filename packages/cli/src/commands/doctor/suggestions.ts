@@ -16,9 +16,8 @@ import { readLintJobs, isEditedInPlace, readRepositorySetup } from '#cli/reposit
 import { type RepositorySetup, type ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 
 function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
-    const { root, repository, configurations, settingsFile } = session;
+    const { root, repository, configurations, settings } = session;
     const { dependencyFiles } = repository;
-    const settings = settingsFile.settings;
     return detectConfigurations(repository, configurations).flatMap((detection) => {
         if (settings.removed_configurations.includes(detection.configuration)) return [];
         const removedScopes = Object.entries(settings.scopes)
@@ -35,10 +34,9 @@ function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
 }
 
 function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'detected' | 'suggested' | 'undetected'> {
-    const { repository, configurations, settingsFile } = session;
+    const { repository, configurations, settings } = session;
     const selectedConfigurations = listSelectedConfigurations(session.scopes);
     const selected = new Set(selectedConfigurations.map((configuration) => configuration.name));
-    const settings = settingsFile.settings;
     const detected = listDetectedConfigurations(session);
     const choices = [
         { path: '', configurations: settings.configurations },
@@ -100,12 +98,8 @@ function buildInactiveFileRow(
             (typeof check.tool === 'object' ? Object.values(check.tool) : [check.tool]).includes(configFile.tool) ||
             check.command?.[0] === configFile.tool,
     );
-    const note = `no applicable ${configFile.tool} check at level ${session.settingsFile.settings.level}`;
-    if (
-        session.settingsFile.settings.level === 'recommended' &&
-        checks.length > 0 &&
-        checks.every((check) => check.level === 'all')
-    )
+    const note = `no applicable ${configFile.tool} check at level ${session.settings.level}`;
+    if (session.settings.level === 'recommended' && checks.length > 0 && checks.every((check) => check.level === 'all'))
         return { path: configFile.path, note, command: 'gspot set level all' };
     return { path: configFile.path, note: `${note}; add the source files that this check reads` };
 }

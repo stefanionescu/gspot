@@ -55,7 +55,7 @@ function formatForeignHooks(hooks: RepositorySetup['hooks'], session: Session): 
 
 function planHooks(session: Session): HookPlan {
     const { repository } = session;
-    const { settings } = session.settingsFile;
+    const { settings } = session;
     if (settings.hooks?.enabled !== true)
         return readHooksPath(repository.root) === GSPOT_PATHS.hooks
             ? { command: UNSET_HOOKS_PATH, note: 'disabled hooks: unset core.hooksPath' }
@@ -96,7 +96,7 @@ Check whether the hooks in the settings run in this clone.
 @returns whether the hooks run, and the status line.
 */
 export function readHookStatus(session: Session, clone: Pick<Repository, 'root' | 'hasGit'>): HookStatus {
-    const { settings } = session.settingsFile;
+    const { settings } = session;
     if (settings.hooks?.enabled !== true) return { ready: true, text: 'none' };
     if (!clone.hasGit) return { ready: false, text: 'not installed: no Git repository' };
     if (readHooksPath(clone.root) === GSPOT_PATHS.hooks) return { ready: true, text: 'installed' };

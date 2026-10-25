@@ -11,7 +11,7 @@ import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { ReasonedValue } from '#cli/types/settings/values.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import type { SettingsFileContents } from '#cli/types/settings/edits.ts';
-import { type TomlTable, type SettingsFile } from '#cli/types/settings/file.ts';
+import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
 import { SETTINGS_FILE, PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts';
 
 /**
@@ -82,12 +82,13 @@ export function writeSettings(writer: Files, text: string, previous: FileContent
 /**
 Find the source line of a written setting or record.
 
-@param file the parsed settings and their source text.
+@param text the gspot.toml text.
+@param written the table that the text holds.
 @param path the setting key or record path.
 @returns the written source line.
 */
-export function findSettingLine(file: SettingsFile, path: KeyPath): number {
-    const syntax = parseTomlSyntax(file.text, file.settings.written);
+export function findSettingLine(text: string, written: Settings['written'], path: KeyPath): number {
+    const syntax = parseTomlSyntax(text, written);
     const record = syntax.pathNodes
         .filter(
             (node) =>
