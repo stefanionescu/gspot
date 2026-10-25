@@ -9,6 +9,7 @@ import { findCheckCode } from '#cli/checks/registry.ts';
 import { runBuiltInCheck } from '#cli/runs/built-in.ts';
 import { readSessionRepository } from '#cli/session.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { DOCKER_TOOL } from '#cli/config/tools/inspect.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
@@ -114,7 +115,7 @@ function finishResult(run: Run, result: CheckResult): void {
     const scopeArgument =
         result.scope === ''
             ? undefined
-            : relative(run.options.cwd, join(run.session.installedRoot, result.scope)) || '.';
+            : convertToPosixPath(relative(run.options.cwd, join(run.session.installedRoot, result.scope))) || '.';
     result.reproduce = formatReproduceCommand(result.check, scopeArgument, buildReproduceOptions(run.options));
 }
 
