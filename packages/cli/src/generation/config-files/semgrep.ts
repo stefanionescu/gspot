@@ -34,7 +34,7 @@ export function buildSemgrepFile(planned: PlannedConfigFile): string {
         const folders = scopes
             .filter(({ settings }) => settings.configurations.includes(configuration))
             .toSorted((left, right) => compareScopeDepth(left.path, right.path))
-            .map(({ settings: { settings } }) => `/${String(settings[setting])}/**`);
+            .map(({ settings: { valuesByKey: settings } }) => `/${String(settings[setting])}/**`);
         for (const rule of document.rules) if (rule.paths !== undefined) rule.paths.include = folders;
     }
     return stringify(document);

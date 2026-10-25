@@ -124,8 +124,8 @@ export function buildScopeSettings(
     fillTableValues(namespaces, listLimitVariants(availableSettings, settings, scope));
     return {
         configurations: configurations.map((configuration) => configuration.name),
-        settings: valuesByKey,
-        values: tableValuesSchema.parse(namespaces),
+        valuesByKey: valuesByKey,
+        tables: tableValuesSchema.parse(namespaces),
         test_files: rootSettingSchemas.test_files.unwrap().parse(valuesByKey['test_files']),
         ignores: settings.ignore.map((ignore) => ({ ...ignore, paths: ignore.paths ?? [] })),
     };
@@ -142,7 +142,7 @@ export function getTable<Name extends keyof TableValues>(
     scopeSettings: ScopeSettings,
     name: Name,
 ): TableSettings<Name> {
-    const value = scopeSettings.values[name];
+    const value = scopeSettings.tables[name];
     if (value === undefined) throw new Error(`The selected scope has no ${name} settings.`);
     return value;
 }
@@ -157,8 +157,8 @@ Read a language's limit, falling back to the scope's general limit.
 */
 export function getLimit(scopeSettings: ScopeSettings, key: string, language?: string): number {
     const value =
-        getValueAt(scopeSettings.values.limits, [language ?? '', key]) ??
-        getValueAt(scopeSettings.values.limits, [key]);
+        getValueAt(scopeSettings.tables.limits, [language ?? '', key]) ??
+        getValueAt(scopeSettings.tables.limits, [key]);
     if (typeof value !== 'number')
         throw new TypeError(
             `The selected scope has no ${[language, key].filter((name) => name !== undefined).join('.')} limit.`,

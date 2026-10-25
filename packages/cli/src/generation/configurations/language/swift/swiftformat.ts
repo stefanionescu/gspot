@@ -32,7 +32,7 @@ Build swiftformat: the SwiftFormat settings of the repository.
 export function buildSwiftformatFile(planned: PlannedConfigFile): string {
     const { scope } = planned;
     const { reads } = planned.session;
-    const { format } = scope.settings.values;
+    const { format } = scope.settings.tables;
     const isAll = planned.level === 'all';
     const version = readSwiftVersion(reads, scope.path, getTable(scope.settings, 'swift').xcode_project ?? '');
     const ignored = listIgnoredRules(scope, 'swift/swiftformat');

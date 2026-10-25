@@ -53,5 +53,5 @@ export type FileKindRules = { generatedPaths: GeneratedPaths[]; attributes: Repo
 export type CoveredFilesOptions = {
     configurations: Configuration[];
     scopePath: string;
-    settings: Pick<ScopeSettings, 'test_files' | 'settings'>;
+    settings: Pick<ScopeSettings, 'test_files' | 'valuesByKey'>;
 };

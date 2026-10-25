@@ -60,9 +60,9 @@ function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
 
 function listSettingSelectors(scope: Scope, level: Level): SelectorPaths[] {
     const selectors: SelectorPaths[] = [];
-    const owners = scope.settings.values.structure?.environment_readers ?? [];
+    const owners = scope.settings.tables.structure?.environment_readers ?? [];
     if (level === 'all' && owners.length > 0) selectors.push({ ...ENVIRONMENT_SELECTOR, except: owners });
-    const importExtension = scope.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension;
+    const importExtension = scope.settings.tables[ESLINT_SETTINGS_TABLE]?.import_extension;
     if (importExtension !== undefined)
         selectors.push({
             ...ALIAS_IMPORT_SELECTORS[importExtension === 'extensionless' ? 'never' : 'always'],
@@ -97,7 +97,7 @@ export function buildSelectorGroups(
                     selector: declaration.selector,
                     message: declaration.message,
                     ...(declaration.paths_setting !== undefined && {
-                        files: (scope.settings.settings[declaration.paths_setting] as string[] | undefined) ?? [],
+                        files: (scope.settings.valuesByKey[declaration.paths_setting] as string[] | undefined) ?? [],
                     }),
                     except: [],
                 }),

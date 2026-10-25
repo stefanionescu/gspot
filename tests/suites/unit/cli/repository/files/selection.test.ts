@@ -36,7 +36,7 @@ test('with bash selected, structure covers the Bash script and not README.md', (
     const owned = listCoveredFiles(structure.files, [buildTrackedFile('a.sh'), buildTrackedFile('README.md')], {
         configurations: selected,
         scopePath: '',
-        settings: { test_files: [], settings: {} },
+        settings: { test_files: [], valuesByKey: {} },
     });
     expect(owned.map((file) => file.path)).toStrictEqual(['a.sh']);
 });
@@ -55,7 +55,7 @@ test.each([...PRETTIER_PLUGIN_CASES])(
             listCoveredFiles(configurations.get('format')!.files, files, {
                 configurations: selectConfigurations([...configurationNames], configurations),
                 scopePath: '',
-                settings: { test_files: [], settings: {} },
+                settings: { test_files: [], valuesByKey: {} },
             }).map((coveredFile) => coveredFile.path),
         ).toStrictEqual([...expected]);
     },
@@ -73,7 +73,7 @@ test.each(MIGRATION_CASES)(
         const options = {
             configurations: selectConfigurations(['postgres'], configurations),
             scopePath: scope,
-            settings: { test_files: [], settings: {} },
+            settings: { test_files: [], valuesByKey: {} },
         };
         const owned = listCoveredFiles(table, files, options);
         expect(owned.map((file) => file.path)).toStrictEqual([...expected]);
@@ -90,7 +90,7 @@ test.each([...JEST_CASES])('Jest covers the test paths of scope "$scope" with $t
     const owned = listCoveredFiles(configurations.get('jest')!.files, files, {
         configurations: selected,
         scopePath: scope,
-        settings: { test_files: [...tests], settings: {} },
+        settings: { test_files: [...tests], valuesByKey: {} },
     });
     expect(owned.map(({ path }) => path)).toStrictEqual([...expected]);
 });

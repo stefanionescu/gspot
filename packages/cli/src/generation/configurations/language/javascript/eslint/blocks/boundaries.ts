@@ -134,7 +134,7 @@ export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' |
         configurations.some((configuration) => configuration.name === TRPC_CONFIGURATION),
     );
     const serverFiles = [
-        ...new Set(trpcScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.values.trpc?.server_files ?? [])),
+        ...new Set(trpcScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.tables.trpc?.server_files ?? [])),
     ];
     const trpcPaths = serverFiles.length === 0 ? [] : trpcScopes.map(({ path }) => buildScopeGlob(path));
     if (!isEnforceTests && importRules.length === 0 && trpcPaths.length === 0) return [];

@@ -129,7 +129,7 @@ Checks the layout of each Bash script, and skips scripts with a shebang for anot
 @returns the findings.
 */
 export async function checkBashScriptLayout(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const isEnvironmentReader = buildPathMatcher(planned.scope.settings.values.structure?.environment_readers ?? []);
+    const isEnvironmentReader = buildPathMatcher(planned.scope.settings.tables.structure?.environment_readers ?? []);
     const scripts = await readScripts(session, planned);
     return scripts
         .filter((file) => !OTHER_SHEBANG.test(file.lines[0] ?? ''))

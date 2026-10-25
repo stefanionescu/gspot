@@ -166,13 +166,13 @@ function buildEnvironmentRuleBlocks(planned: Pick<PlannedEslintFile, 'session' |
         return (
             parent === undefined ||
             !isDeepStrictEqual(
-                scope.settings.values.structure?.environment_readers,
-                parent.settings.values.structure?.environment_readers,
+                scope.settings.tables.structure?.environment_readers,
+                parent.settings.tables.structure?.environment_readers,
             )
         );
     });
     return environmentScopes.flatMap((scope) => {
-        const owners = scope.settings.values.structure?.environment_readers ?? [];
+        const owners = scope.settings.tables.structure?.environment_readers ?? [];
         return owners.length === 0
             ? []
             : {

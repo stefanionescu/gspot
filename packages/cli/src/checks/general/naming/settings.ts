@@ -50,7 +50,7 @@ function buildLimitsFor(scopeSettings: ScopeSettings): NamingSettings['limitsFor
         const limits = getNamingLimits(scopeSettings, language, parent);
         return {
             caseNames:
-                (scopeSettings.settings[`naming.${language}.${category}.cases`] as NamingCase[] | undefined) ??
+                (scopeSettings.valuesByKey[`naming.${language}.${category}.cases`] as NamingCase[] | undefined) ??
                 limits.cases,
             maxChars: limits.max_characters,
             maxWords: limits.max_words,

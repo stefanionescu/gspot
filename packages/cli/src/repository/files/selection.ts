@@ -57,7 +57,7 @@ export function listCoveredFiles(
         if (path === TEST_FILES_PLACEHOLDER) return [];
         const name = path.matchAll(SETTING_PLACEHOLDER).toArray()[0]?.groups?.['name'];
         if (name === undefined) return [];
-        const value = settings.settings[name];
+        const value = settings.valuesByKey[name];
         if (typeof value === 'string') return [path.replace(SETTING_PLACEHOLDER, () => escapeGlob(value))];
         defaults.push(
             ...configurations

@@ -259,7 +259,7 @@ export async function checkPythonPydoclint(session: CheckSession, planned: Plann
     const configured = parsePydoclintOptions(
         pyproject,
         findCachedText(session.reads, pyproject) ?? '',
-        planned.scope.settings.values['tools.ruff']?.docstring_convention,
+        planned.scope.settings.tables['tools.ruff']?.docstring_convention,
     );
     const groups = await groupByDocstringStyle(session, planned.files, configured.style);
     return runCommandGroups(

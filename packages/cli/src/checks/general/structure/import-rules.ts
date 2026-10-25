@@ -50,8 +50,8 @@ function buildExemption(planned: PlannedCheck): (file: TrackedFile) => boolean {
     const matches = buildPathMatcher([
         ...settings.test_files,
         ...CONFIG_FILE_PATTERNS,
-        ...(settings.values['tools.eslint']?.plugins ?? []).map((plugin) => plugin.path),
-        ...(settings.values.javascript?.script_files ?? []),
+        ...(settings.tables['tools.eslint']?.plugins ?? []).map((plugin) => plugin.path),
+        ...(settings.tables.javascript?.script_files ?? []),
         joinScope(escapeGlob(scopePath), MISE_SCRIPT_PATH),
     ]);
     return (file) => matches(file.path) || file.tags.includes(NODE_SHEBANG_TAG);

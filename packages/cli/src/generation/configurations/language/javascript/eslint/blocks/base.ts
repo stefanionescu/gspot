@@ -243,7 +243,7 @@ function buildConsoleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslint
             ),
             ...listCodeTestFiles(scope.settings.test_files),
 
-            ...(scope.settings.values.javascript?.script_files ?? []),
+            ...(scope.settings.tables.javascript?.script_files ?? []),
             buildScopeGlob(scope.path, MISE_SCRIPT_PATH),
         ],
         rules: CONSOLE_RULES,

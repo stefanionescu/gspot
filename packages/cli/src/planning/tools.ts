@@ -24,9 +24,9 @@ function isToolConditionMet(scope: Scope, conditions: Tool['when']): boolean {
     return (
         conditions === undefined ||
         conditions.some((condition) => {
-            if (condition.level !== undefined && condition.level !== scope.settings.settings['level']) return false;
+            if (condition.level !== undefined && condition.level !== scope.settings.valuesByKey['level']) return false;
             if (condition.setting === undefined) return true;
-            return !isSettingEmpty(scope.settings.settings[condition.setting]);
+            return !isSettingEmpty(scope.settings.valuesByKey[condition.setting]);
         })
     );
 }

@@ -37,7 +37,7 @@ function expandEachPlaceholder(planned: PlannedCheck, argument: string): string[
     const groups = EACH_PLACEHOLDER.exec(argument)?.groups;
     if (groups === undefined) return undefined;
     const name = groups['setting'] as string;
-    return assertArgumentList(planned.scope.settings.settings[name] ?? [], name).flatMap((value) => [
+    return assertArgumentList(planned.scope.settings.valuesByKey[name] ?? [], name).flatMap((value) => [
         groups['flag'] as string,
         convertToSystemPath(value),
     ]);
@@ -160,7 +160,7 @@ Replace scalar setting placeholders with their scope values.
 */
 export function replaceSettingPlaceholders(settings: ScopeSettings, text: string): string {
     return text.replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
-        const found = settings.settings[name];
+        const found = settings.valuesByKey[name];
         if (Array.isArray(found)) throw new TypeError(`List setting ${name} must occupy a whole command argument.`);
         return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean'
             ? String(found)
@@ -217,7 +217,7 @@ export function expandCommand(
     return command.flatMap((argument) => {
         const name = SETTING_ONLY_PLACEHOLDER.exec(argument)?.groups?.['name'];
         if (name !== undefined) {
-            const value = planned.scope.settings.settings[name];
+            const value = planned.scope.settings.valuesByKey[name];
             if (Array.isArray(value)) return assertArgumentList(value, name);
         }
 

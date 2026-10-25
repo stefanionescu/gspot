@@ -26,7 +26,7 @@ function isRuntimeRoot(scope: string, scopes: Scope[]): boolean {
                 ancestor.path !== scope &&
                 isInScope(scope, ancestor.path) &&
                 (selectFrameworkRuntime(ancestor.settings.configurations) !== undefined ||
-                    (ancestor.settings.values[ESLINT_SETTINGS_TABLE]?.override ?? []).some(
+                    (ancestor.settings.tables[ESLINT_SETTINGS_TABLE]?.override ?? []).some(
                         (override) => override.runtime !== undefined,
                     )),
         )
@@ -54,7 +54,7 @@ export function buildRuntimes(scopes: Scope[]): EslintRuntime[] {
         const framework = buildFrameworkRuntime(scope, escaped);
         if (framework !== undefined) blocks.push(framework);
         blocks.push(
-            ...(scope.settings.values[ESLINT_SETTINGS_TABLE]?.override ?? []).flatMap((override) =>
+            ...(scope.settings.tables[ESLINT_SETTINGS_TABLE]?.override ?? []).flatMap((override) =>
                 override.runtime === undefined
                     ? []
                     : { scope: scopePath, runtime: override.runtime, ...splitGlobs(override.paths) },
@@ -67,7 +67,7 @@ export function buildRuntimes(scopes: Scope[]): EslintRuntime[] {
 function buildFrameworkRuntime(scope: Scope, escaped: string): EslintRuntime | undefined {
     const runtime = selectFrameworkRuntime(scope.settings.configurations);
     if (runtime === undefined) return undefined;
-    const scripts = [...(scope.settings.values.javascript?.script_files ?? []), joinScope(escaped, MISE_SCRIPT_PATH)];
+    const scripts = [...(scope.settings.tables.javascript?.script_files ?? []), joinScope(escaped, MISE_SCRIPT_PATH)];
     return {
         scope: scope.path,
         runtime,

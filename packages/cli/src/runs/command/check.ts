@@ -264,8 +264,8 @@ export function buildCommandSubstitutions(root: string, planned: PlannedCheck, c
         scope: planned.scope.path,
         root,
         indent:
-            planned.scope.settings.values.format.indent_style === 'space'
-                ? planned.scope.settings.values.format.indent_width
+            planned.scope.settings.tables.format.indent_style === 'space'
+                ? planned.scope.settings.tables.format.indent_width
                 : 0,
     };
     if (planned.messageFile !== undefined) substitutions.messageFile = planned.messageFile;

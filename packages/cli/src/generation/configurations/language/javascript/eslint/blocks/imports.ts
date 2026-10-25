@@ -45,13 +45,13 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): Es
     const changed = scopes.filter((scope) => {
         const parent = findParentScope(scopes, scope.path);
         return (
-            scope.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension !==
-            parent?.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension
+            scope.settings.tables[ESLINT_SETTINGS_TABLE]?.import_extension !==
+            parent?.settings.tables[ESLINT_SETTINGS_TABLE]?.import_extension
         );
     });
     return changed.flatMap((scope) => {
         const path = scope.path;
-        const importExtension = scope.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension;
+        const importExtension = scope.settings.tables[ESLINT_SETTINGS_TABLE]?.import_extension;
         return importExtension === undefined
             ? []
             : {
@@ -88,8 +88,8 @@ boundary folders and the aliases of their project.
 */
 export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<string, string>): EslintImportBoundaryRule {
     const scopePaths = scopes.map((scope) => escapeGlob(scope.path)).filter((path) => path !== '');
-    const boundaries = scopes.flatMap(({ settings }) => settings.values.javascript?.import_boundaries ?? []);
-    const externals = [...new Set(scopes.flatMap(({ settings }) => settings.values.javascript?.externals ?? []))];
+    const boundaries = scopes.flatMap(({ settings }) => settings.tables.javascript?.import_boundaries ?? []);
+    const externals = [...new Set(scopes.flatMap(({ settings }) => settings.tables.javascript?.externals ?? []))];
     return [
         'error',
         {

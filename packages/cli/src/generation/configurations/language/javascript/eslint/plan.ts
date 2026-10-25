@@ -71,7 +71,7 @@ export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslin
             scope: each.path,
             tests: each.settings.test_files,
             scripts: [
-                ...(each.settings.values.javascript?.script_files ?? []),
+                ...(each.settings.tables.javascript?.script_files ?? []),
                 buildScopeGlob(each.path, MISE_SCRIPT_PATH),
             ],
         })),

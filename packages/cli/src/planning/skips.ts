@@ -61,7 +61,7 @@ function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
 function findEmptySetting(scope: Scope, check: Check): string | undefined {
     const setting = check.when?.setting;
     if (setting === undefined) return undefined;
-    return isSettingEmpty(scope.settings.settings[setting]) ? setting : undefined;
+    return isSettingEmpty(scope.settings.valuesByKey[setting]) ? setting : undefined;
 }
 
 /**

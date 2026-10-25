@@ -38,7 +38,7 @@ function selectEntryFiles(settings: Settings, scopes: Scope[], scope: string): s
                 : []
             ).map((pattern) => joinScopeSelector(pattern, scope)),
             ...scopeSettings.test_files,
-            ...(scopeSettings.values.javascript?.script_files ?? []),
+            ...(scopeSettings.tables.javascript?.script_files ?? []),
             ...(scope === '' ? [KNIP_ESLINT_CONFIG] : []),
         ]);
     const entries: string[] = [];
@@ -122,7 +122,7 @@ export function buildKnipFile(planned: PlannedConfigFile): string {
     ];
     const toolPackages = tools.flatMap((tool) => tool.installers['npm']?.name ?? []);
     const workspaces = buildWorkspaces(root, settings, scopes);
-    const externals = [...new Set(scopes.flatMap(({ settings }) => settings.values.javascript?.externals ?? []))];
+    const externals = [...new Set(scopes.flatMap(({ settings }) => settings.tables.javascript?.externals ?? []))];
     return JSON.stringify(
         {
             ignore: ignoredGlobs.filter((pattern) => pattern !== KNIP_ESLINT_CONFIG),

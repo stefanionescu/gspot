@@ -22,7 +22,7 @@ Build taplo.toml: the Taplo formatting settings with automatic schema lookup dis
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildTaploFile(planned: PlannedConfigFile): string {
-    const { format } = planned.scope.settings.values;
+    const { format } = planned.scope.settings.tables;
 
     return stringifyToml(
         {

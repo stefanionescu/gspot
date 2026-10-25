@@ -13,7 +13,7 @@ function listPluginRecords(scopes: Scope[]) {
         .filter(({ settings }) => settings.configurations.includes(JAVASCRIPT_CONFIGURATION))
         .flatMap((scope) => {
             const parent = findParentScope(scopes, scope.path);
-            const inherited = parent?.settings.values[ESLINT_SETTINGS_TABLE]?.plugins ?? [];
+            const inherited = parent?.settings.tables[ESLINT_SETTINGS_TABLE]?.plugins ?? [];
             return getTable(scope.settings, ESLINT_SETTINGS_TABLE)
                 .plugins.filter((plugin) => inherited.every((record) => !isDeepStrictEqual(record, plugin)))
                 .map((plugin) => ({ ...plugin, scope: scope.path }));

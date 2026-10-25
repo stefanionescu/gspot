@@ -23,7 +23,7 @@ Build swiftlint.yml: the SwiftLint rules with the source limits of the repositor
 @returns the SwiftLint rules with the source limits of the repository.
 */
 export function buildSwiftlintFile(planned: PlannedConfigFile): string {
-    const { format } = planned.scope.settings.values;
+    const { format } = planned.scope.settings.tables;
     const isAll = planned.level === 'all';
     const off = [...listIgnoredRules(planned.scope, 'swift/swiftlint'), ...(isAll ? [] : SWIFTLINT_RECOMMENDED_OFF)];
     const offSet = new Set(off);

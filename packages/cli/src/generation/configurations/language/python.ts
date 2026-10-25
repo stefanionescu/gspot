@@ -48,7 +48,7 @@ export function buildBasedpyrightFile(planned: PlannedConfigFile): string {
     )
         ? PYTHON_ENVIRONMENT_FOLDER
         : undefined;
-    const extraPaths = planned.scope.settings.values.python?.import_folders ?? [];
+    const extraPaths = planned.scope.settings.tables.python?.import_folders ?? [];
     return JSON.stringify(
         {
             ...BASEDPYRIGHT_OPTIONS,
@@ -65,12 +65,12 @@ export function buildBasedpyrightFile(planned: PlannedConfigFile): string {
 }
 
 function selectPythonFormat(scopeSettings: PlannedConfigFile['scope']['settings']): FormatSettings {
-    const override = scopeSettings.values.format.override.find(({ paths }) =>
+    const override = scopeSettings.tables.format.override.find(({ paths }) =>
         paths.every((path) => (PYTHON_FILES as readonly string[]).includes(path)),
     );
-    if (override === undefined) return scopeSettings.values.format;
+    if (override === undefined) return scopeSettings.tables.format;
     const { paths: _paths, ...fields } = override;
-    return { ...scopeSettings.values.format, ...stripUndefined(fields) };
+    return { ...scopeSettings.tables.format, ...stripUndefined(fields) };
 }
 
 /**

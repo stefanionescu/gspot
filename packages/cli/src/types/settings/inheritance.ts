@@ -36,8 +36,8 @@ export type Scope = {
 export type ScopeSettings = {
     configurations: string[];
     test_files: Settings['test_files'];
-    settings: Record<string, unknown>;
-    values: TableValues;
+    valuesByKey: Record<string, unknown>;
+    tables: TableValues;
     ignores: (IgnoreRecord & { paths: string[] })[];
 };
 
