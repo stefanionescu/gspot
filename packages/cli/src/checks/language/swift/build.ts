@@ -59,11 +59,11 @@ function parseOutputFindings(
             const suffix = RULE_SUFFIX.exec(text)?.groups;
             const { rule = defaultRule, text: message = text } = suffix === undefined ? {} : suffix;
             const file = groups['file'] ?? '';
-            const normalized = convertToPosixPath(file);
+            const posixFile = convertToPosixPath(file);
             return buildFinding(
                 planned,
                 {
-                    file: normalized.startsWith(`${root}/`) ? normalized.slice(root.length + 1) : normalized,
+                    file: posixFile.startsWith(`${root}/`) ? posixFile.slice(root.length + 1) : posixFile,
                     line: Number(groups['line']),
                     column: Number(groups['column']),
                 },
@@ -112,12 +112,12 @@ Builds the scope and reports the compiler errors.
 export async function checkSwiftBuild(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const plan = buildPlan(session, planned);
     const { output, code, source } = await runSwiftBuild(session, planned, plan);
-    const originalPaths = output.replaceAll(removePrivatePrefix(source), () => removePrivatePrefix(session.root));
-    const found = parseOutputFindings(session, planned, originalPaths, {
+    const restored = output.replaceAll(removePrivatePrefix(source), () => removePrivatePrefix(session.root));
+    const found = parseOutputFindings(session, planned, restored, {
         levels: BUILD_LEVELS,
         defaultRule: 'compiler',
     });
-    return assertToolFindings({ code, stdout: originalPaths, stderr: '' }, found, 'Swift build');
+    return assertToolFindings({ code, stdout: restored, stderr: '' }, found, 'Swift build');
 }
 
 async function runCopiedTool(

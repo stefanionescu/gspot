@@ -13,8 +13,8 @@ import { openWriter, writePlans, hasManagedKeys, planSettingsWrite } from '#cli/
 test('managed JSON keys survive reopening and updates and keep other bytes and the mode', async () => {
     await using sandbox = await testdir();
     const path = 'package.json';
-    const original = STYLELINT_PACKAGE_JSON.replaceAll('\n', '\r\n');
-    await createFileTree(sandbox.path, { [path]: original });
+    const previous = STYLELINT_PACKAGE_JSON.replaceAll('\n', '\r\n');
+    await createFileTree(sandbox.path, { [path]: previous });
     await chmod(join(sandbox.path, path), 0o640);
     const changes = [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }];
     const firstWriter = openWriter(sandbox.path);
@@ -22,7 +22,7 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
     expect(hasManagedKeys({ path, keys: changes }, firstWriter.read(path)!)).toBe(true);
     const installed = firstWriter.read(path)!.bytes.toString('utf8');
     expect(installed).toBe(
-        original.replace('{"rules":{"property-no-unknown":null}}', '{"extends":"./.stylelintrc.yml"}'),
+        previous.replace('{"rules":{"property-no-unknown":null}}', '{"extends":"./.stylelintrc.yml"}'),
     );
     await writeFile(join(sandbox.path, path), installed.replace('native-project', 'edited-project'));
     firstWriter[Symbol.dispose]();
@@ -30,7 +30,7 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
     writePlans(writer, [planSettingsWrite(writer, path, [{ key: ['stylelint'], value: { extends: './next.json' } }])]);
     expect(hasManagedKeys({ path, keys: changes }, writer.read(path)!)).toBe(false);
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(
-        original
+        previous
             .replace('native-project', 'edited-project')
             .replace('{"rules":{"property-no-unknown":null}}', '{"extends":"./next.json"}'),
     );
@@ -40,8 +40,8 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
 
 test.each(['tool.jsonc', 'package.json'])('%s key edits keep comments, containers and array order', async (path) => {
     await using sandbox = await testdir();
-    const original = '// Keep this comment.\n{ "kept": {}, "entries": [0, false, ""], }\n';
-    await createFileTree(sandbox.path, { [path]: original });
+    const previous = '// Keep this comment.\n{ "kept": {}, "entries": [0, false, ""], }\n';
+    await createFileTree(sandbox.path, { [path]: previous });
     using writer = openWriter(sandbox.path);
     const fields = [
         { key: ['created', 'nested', 'owned'], value: 0 },
@@ -112,8 +112,8 @@ test('managed TOML keys refuse a malformed file, create missing tables, and writ
 });
 test('a managed TOML key update keeps the edits next to it', async () => {
     await using sandbox = await testdir();
-    const original = '# Keep this comment.\nextends = "./authored.json"\n[compilerOptions]\nstrict = false\n';
-    await createFileTree(sandbox.path, { 'compiler.toml': original });
+    const previous = '# Keep this comment.\nextends = "./authored.json"\n[compilerOptions]\nstrict = false\n';
+    await createFileTree(sandbox.path, { 'compiler.toml': previous });
     const firstWriter = openWriter(sandbox.path);
     writePlans(firstWriter, [
         planSettingsWrite(firstWriter, 'compiler.toml', [{ key: ['extends'], value: './.gspot/first.json' }]),

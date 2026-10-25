@@ -137,7 +137,7 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function assertRulesRun(writer: BlockWriter): void {
     assertRuleOptionsRun({
-        chosen: listUnappliedRules(writer),
+        configured: listUnappliedRules(writer),
         running: writer.applied,
         higher: writer.allLevelRules,
         level: writer.level,

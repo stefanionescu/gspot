@@ -12,7 +12,7 @@ setup_command = ["mise", "run", "setup"]
 enabled = true
 
 [naming]
-banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling", "implementation", "candidate", "fragment", "invocation", "lexeme", "substantial", "substance", "floor", "hint", "sink", "inputs", "memo", "collect", "summarize", "verdict", "your", "odd", "qa", "cfg", "obsolete", "release hold", "entry", "entries", "item", "items", "part", "parts", "data", "known", "declared", "needed", "prepared", "pinned", "existing", "current", "extra", "complete", "whole", "plain", "raw", "full", "real", "additional", "given"]
+banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling", "implementation", "candidate", "fragment", "invocation", "lexeme", "substantial", "substance", "floor", "hint", "sink", "inputs", "memo", "collect", "summarize", "verdict", "your", "odd", "qa", "cfg", "obsolete", "release hold", "entry", "entries", "item", "items", "part", "parts", "data", "known", "declared", "needed", "prepared", "pinned", "existing", "current", "extra", "complete", "whole", "plain", "raw", "full", "real", "additional", "given", "retained", "observed", "computed", "actual", "effective", "original", "specific", "captured", "recorded", "chosen", "internal", "helper", "helpers", "util", "utils", "payload", "fallback", "attempt", "normalized", "expanded", "composed", "thing", "things", "misc", "info", "details", "meta", "stuff", "perform", "execute", "ensure", "wrapper", "temp", "tmp", "various", "several", "certain", "resulting", "handled", "wrapped", "underlying", "corresponding", "relevant", "appropriate", "proper", "basic", "generic", "overall"]
 
 [[naming.override]]
 paths = ["packages/cli/src/types/settings/**"]
@@ -39,6 +39,21 @@ paths = ["packages/cli/src/types/checks/**", "packages/cli/src/types/commands/li
 categories = ["properties"]
 cases = ["camel", "upper-snake", "snake"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/commands/explain.ts", "packages/cli/src/types/commands/init.ts"]
+allowed_names = ["effective", "retained"]
+reason = "gspot explain --json and gspot init --json print these field names."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/parsers/formats/markdown.ts", "packages/eslint-plugin/src/rules/no-magic-numbers.ts", "packages/eslint-plugin/src/types/rules.ts"]
+allowed_names = ["meta"]
+reason = "remark names the text after a code fence language meta, and ESLint names the rule description meta."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/runs/output/reports.ts"]
+allowed_names = ["originalUriBaseIds"]
+reason = "SARIF names this run field originalUriBaseIds."
 
 [[naming.override]]
 paths = ["packages/cli/src/checks/framework/site/purgecss-process.ts"]

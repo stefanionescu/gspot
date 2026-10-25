@@ -174,20 +174,20 @@ async function copyLinterExports(): Promise<void> {
     try {
         process.chdir(folder.path);
         const installed = await preparePackages(folder.path, names);
-        const capturedNames = await captureNames(installed, folder.path);
+        const nameLists = await captureNames(installed, folder.path);
         for (const { path, presets } of recipes) {
-            const captured = [];
+            const copied = [];
             for (const [name, preset] of Object.entries(presets)) {
                 const owner = installed.get(preset.package) as InstalledPackage;
                 const module = (await import(pathToFileURL(owner.modulePath).href)) as { default: unknown };
-                captured.push([name, capturePreset(owner, preset.source, module.default)]);
+                copied.push([name, capturePreset(owner, preset.source, module.default)]);
             }
-            capturedNames.set(path, Object.fromEntries(captured));
+            nameLists.set(path, Object.fromEntries(copied));
         }
         const prettier = installed.get(LINTER_PACKAGES.prettier.module) as InstalledPackage;
         const formatter = (await import(pathToFileURL(prettier.modulePath).href)) as PrettierModule;
         const formatted = await Promise.all(
-            [...capturedNames].map(
+            [...nameLists].map(
                 async ([path, value]) =>
                     [
                         path,
@@ -200,7 +200,7 @@ async function copyLinterExports(): Promise<void> {
             ),
         );
         for (const [path, text] of formatted) writeFileSync(buildAssetPath(path), text);
-        process.stdout.write(`Wrote ${String(capturedNames.size)} linter export files.\n`);
+        process.stdout.write(`Wrote ${String(nameLists.size)} linter export files.\n`);
     } finally {
         process.chdir(previousFolder);
     }

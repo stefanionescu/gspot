@@ -33,8 +33,8 @@ Unclosed instructions.
         'AGENTS.md has incomplete or repeated gspot block markers. Fix the markers, then run gspot apply.\n',
     );
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(authored);
-    const isObserved = await isOnDisk(join(sandbox.path, findManifestTarget('bash', 'shellcheckrc')));
-    expect(isObserved).toBe(false);
+    const exists = await isOnDisk(join(sandbox.path, findManifestTarget('bash', 'shellcheckrc')));
+    expect(exists).toBe(false);
 });
 test('apply refuses an empty writer lock left after a crash and names the lock to delete', async () => {
     await using sandbox = await createGitSandbox({

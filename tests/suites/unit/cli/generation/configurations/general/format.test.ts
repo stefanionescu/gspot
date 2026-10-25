@@ -105,12 +105,12 @@ test('Prettier overrides agree in the root pointer and editor lookup', async () 
     });
     await applyGeneratedFiles(root);
     for (const { file, ...expected } of PRETTIER_OPTIONS_BY_FILE) {
-        const computed = await prettier.resolveConfig(join(root, file), {
+        const config = await prettier.resolveConfig(join(root, file), {
             config: join(root, 'prettier.config.mjs'),
             editorconfig: true,
             useCache: false,
         });
-        expect(computed, file).toMatchObject(expected);
+        expect(config, file).toMatchObject(expected);
         expect(await prettier.resolveConfig(join(root, file), { editorconfig: true, useCache: false })).toMatchObject(
             expected,
         );

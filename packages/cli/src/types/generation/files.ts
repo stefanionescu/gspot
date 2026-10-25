@@ -59,7 +59,7 @@ export type PlannedConfigFile = ConfigFileOwner & {
 };
 
 export type RuleOptionsRun = {
-    chosen: string[];
+    configured: string[];
     running: ReadonlySet<string>;
     higher: ReadonlySet<string>;
     level: Level;

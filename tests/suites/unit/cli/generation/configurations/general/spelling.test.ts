@@ -11,7 +11,7 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
     const words = ['café', "apostrophe'word", 'long-term'];
     const paths = ['docs/"draft"/**', 'generated/draft/**', 'café/**'];
     const reason = 'An upstream name.\n[files]\nextend-exclude = ["**"]';
-    const observed = {
+    const settings = {
         rules: true,
         tables: stringify({
             spelling: { allowed_words: Object.fromEntries(words.map((word) => [word, reason])) },
@@ -19,7 +19,7 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
         }),
     };
     const settingsText = {
-        'gspot.toml': buildSandboxSettings(['spelling'], observed),
+        'gspot.toml': buildSandboxSettings(['spelling'], settings),
     };
     await using sandbox = await testdir(settingsText);
 

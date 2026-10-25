@@ -18,13 +18,10 @@ test.each(buildProcessBackends())(
         await writeProgramCommand(sandbox.path, 'selected/parent', 'processes/command', 'sibling');
         await writeProgramCommand(sandbox.path, 'selected/sibling', 'fakes/tool', '--line', 'selected');
         await writeProgramCommand(sandbox.path, 'unrelated/sibling', 'fakes/tool', '--line', 'unrelated');
-        const result = await backend.execute(
-            [join(sandbox.path, 'selected', listExecutableNames('parent')[0] as string)],
-            {
-                cwd: sandbox.path,
-                env: { PATH: join(sandbox.path, 'unrelated') },
-            },
-        );
+        const result = await backend.run([join(sandbox.path, 'selected', listExecutableNames('parent')[0] as string)], {
+            cwd: sandbox.path,
+            env: { PATH: join(sandbox.path, 'unrelated') },
+        });
         expect(result.code, result.stderr).toBe(0);
         expect(result.stdout.trim()).toBe('selected');
     },
@@ -43,7 +40,7 @@ test.each(buildProcessBackends().flatMap((backend) => [0, 1].map((status) => ({ 
             '--exit',
             String(status),
         );
-        const result = await backend.execute(command, {
+        const result = await backend.run(command, {
             cwd: sandbox.path,
         });
         expect(result.code).toBe(status);
@@ -58,7 +55,7 @@ test.each(buildProcessBackends())(
     '$name: a missing program is a launch failure with its error output',
     async (backend) => {
         await using sandbox = await testdir();
-        const result = await backend.execute([join(sandbox.path, 'missing-executable')], { cwd: sandbox.path });
+        const result = await backend.run([join(sandbox.path, 'missing-executable')], { cwd: sandbox.path });
         expect(result.code).toBe(127);
         expect(result.missing).toBe(true);
         expect(result.stderr).toBe(`Executable not found: ${join(sandbox.path, 'missing-executable')}`);
@@ -72,7 +69,7 @@ test.skipIf(isWindows).each(buildProcessBackends())(
 
         const executable = join(sandbox.path, 'denied.sh');
         await chmod(executable, 0o600);
-        const result = await backend.execute([executable], { cwd: sandbox.path });
+        const result = await backend.run([executable], { cwd: sandbox.path });
         expect(result.code).not.toBe(0);
         expect(result.code).not.toBe(127);
         expect(result.missing).toBe(false);
@@ -82,7 +79,7 @@ test.skipIf(isWindows).each(buildProcessBackends())(
 
 test.each(buildProcessBackends())('$name: a timeout stops the process and reports it', async (backend) => {
     await using sandbox = await testdir();
-    const result = await backend.execute(buildProgramCommand('fakes/tool', '--wait'), {
+    const result = await backend.run(buildProgramCommand('fakes/tool', '--wait'), {
         cwd: sandbox.path,
         timeoutSeconds: 0.15,
     });
@@ -94,7 +91,7 @@ test.skipIf(isWindows).each(buildProcessBackends())(
     '$name: a signal before the timeout is not a timeout',
     async (backend) => {
         await using sandbox = await testdir();
-        const result = await backend.execute(buildProgramCommand('fakes/tool', '--signal', 'SIGTERM'), {
+        const result = await backend.run(buildProgramCommand('fakes/tool', '--signal', 'SIGTERM'), {
             cwd: sandbox.path,
         });
         expect(result.timedOut).toBe(false);
@@ -124,7 +121,7 @@ test.each(buildProcessBackends())(
         await using sandbox = await testdir();
         const input = 'line one\nline two\n';
 
-        const result = await backend.execute(
+        const result = await backend.run(
             buildProgramCommand(
                 'processes/call',
                 '--environment',
@@ -156,7 +153,7 @@ test.skipIf(isWindows).each(buildProcessBackends())(
     async (backend) => {
         await using sandbox = await testdir();
 
-        const result = await backend.execute(buildProgramCommand('processes/call', '--environment', 'PATH'), {
+        const result = await backend.run(buildProgramCommand('processes/call', '--environment', 'PATH'), {
             cwd: sandbox.path,
             env: { PATH: undefined },
         });
@@ -169,12 +166,12 @@ function buildProcessBackends(): ProcessBackend[] {
     return [
         {
             name: 'asynchronous',
-            execute: async (command: string[], options: AsyncSpawnOptions) =>
+            run: async (command: string[], options: AsyncSpawnOptions) =>
                 await spawnProcess(command, limitCommand(command, options).options),
         },
         {
             name: 'synchronous',
-            execute: (command: string[], options: AsyncSpawnOptions) =>
+            run: (command: string[], options: AsyncSpawnOptions) =>
                 spawnProcessBlocking(command, limitCommand(command, options).options),
         },
     ];
@@ -182,7 +179,7 @@ function buildProcessBackends(): ProcessBackend[] {
 
 test.each(buildProcessBackends())('$name: sets PWD to the child working folder', async (backend) => {
     await using sandbox = await testdir();
-    const result = await backend.execute(buildProgramCommand('fakes/tool', '--print-environment', 'PWD'), {
+    const result = await backend.run(buildProgramCommand('fakes/tool', '--print-environment', 'PWD'), {
         cwd: sandbox.path,
         env: { PWD: '/different/symlink/path' },
     });

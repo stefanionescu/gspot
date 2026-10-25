@@ -112,8 +112,8 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
         expect(
             ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'].filter((name) => dependencies.includes(name)),
         ).toStrictEqual([]);
-        const isObserved = await isOnDisk(join(sandbox.path, findManifestTarget('javascript', 'eslint/eslint.mjs')));
-        expect(isObserved).toBe(false);
+        const exists = await isOnDisk(join(sandbox.path, findManifestTarget('javascript', 'eslint/eslint.mjs')));
+        expect(exists).toBe(false);
     }
     await writeFile(join(sandbox.path, 'run'), '#!/usr/bin/env node\nconsole.log(1);\n');
     const discovered = await runGspot(sandbox.path, ['add', 'javascript']);
@@ -128,8 +128,8 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
         expect(
             ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'].filter((name) => dependencies.includes(name)),
         ).toStrictEqual(['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin']);
-        const isObserved = await isOnDisk(join(sandbox.path, findManifestTarget('javascript', 'eslint/eslint.mjs')));
-        expect(isObserved).toBe(true);
+        const exists = await isOnDisk(join(sandbox.path, findManifestTarget('javascript', 'eslint/eslint.mjs')));
+        expect(exists).toBe(true);
     }
 });
 

@@ -43,7 +43,7 @@ const toolPaths = await readFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), 'utf8')
 const toolFolders = toolPaths.split(/\r?\n/u).filter((folder) => folder !== '');
 const work = resources.use(await testdir());
 const registry = resources.use(await createNpmRegistry(work.path));
-const observed = overrideEnvironment({
+const overrides = overrideEnvironment({
     ...MISE_LOCK_ENVIRONMENT,
     MISE_STATE_DIR: join(TEST_RUN_FOLDER, 'mise-state'),
     GSPOT_TEST_NPM_REGISTRY: registry.url,
@@ -56,4 +56,4 @@ const observed = overrideEnvironment({
         readEnvironmentVariable('PATH') ?? '',
     ].join(delimiter),
 });
-resources.use(observed);
+resources.use(overrides);

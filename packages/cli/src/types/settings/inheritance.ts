@@ -46,7 +46,7 @@ export type ScopeSettings = {
     ignores: (IgnoreRecord & { paths: string[] })[];
 };
 
-export type EffectiveSetting = {
+export type InheritedSetting = {
     key: string;
     setting: Setting;
     value: unknown;
@@ -57,7 +57,7 @@ export type EffectiveSetting = {
     scope?: string;
 };
 
-export type EffectiveValue = Pick<EffectiveSetting, 'value' | 'source' | 'origin' | 'originScope'> & {
+export type InheritedValue = Pick<InheritedSetting, 'value' | 'source' | 'origin' | 'originScope'> & {
     reason: string | undefined;
 };
 
@@ -69,7 +69,7 @@ export type AvailableSettings = {
 
 export type SettingMatch = { setting: Setting; language?: string; category?: string };
 
-export type WrittenSetting = Pick<EffectiveSetting, 'value' | 'reason'>;
+export type WrittenSetting = Pick<InheritedSetting, 'value' | 'reason'>;
 
 export type WrittenScopeTable = { table: SettingsTable; scope?: string; path: KeyPath };
 

@@ -27,25 +27,25 @@ test.each([...NON_UTF8_BLOCK_CASES])(
 
 test('managed block updates and removal keep your text around the block', async () => {
     await using sandbox = await testdir();
-    const original = '# Authored\r\n\r\nKeep these trailing lines.\r\n\r\n';
-    await createFileTree(sandbox.path, { 'AGENTS.md': original });
+    const previous = '# Authored\r\n\r\nKeep these trailing lines.\r\n\r\n';
+    await createFileTree(sandbox.path, { 'AGENTS.md': previous });
     const prefix = 'Additional instructions.\n';
     const suffix = '\nLater authored instructions.\n';
     const firstWriter = openWriter(sandbox.path);
     writePlans(firstWriter, [planBlock(firstWriter, 'AGENTS.md', 'first instructions', 'markdown')]);
     const installed = firstWriter.read('AGENTS.md')!.bytes.toString('utf8');
     expect(installed).toBe(
-        `${original}\n<!-- >>> gspot managed >>> -->\n\nfirst instructions\n\n<!-- <<< gspot managed <<< -->\n`,
+        `${previous}\n<!-- >>> gspot managed >>> -->\n\nfirst instructions\n\n<!-- <<< gspot managed <<< -->\n`,
     );
     await writeFile(join(sandbox.path, 'AGENTS.md'), prefix + installed + suffix);
     writePlans(firstWriter, [planBlock(firstWriter, 'AGENTS.md', 'updated instructions', 'markdown')]);
     expect(firstWriter.read('AGENTS.md')!.bytes.toString('utf8')).toBe(
-        `${prefix}${original}\n<!-- >>> gspot managed >>> -->\n\nupdated instructions\n\n<!-- <<< gspot managed <<< -->\n${suffix}`,
+        `${prefix}${previous}\n<!-- >>> gspot managed >>> -->\n\nupdated instructions\n\n<!-- <<< gspot managed <<< -->\n${suffix}`,
     );
     firstWriter[Symbol.dispose]();
     using writer = openWriter(sandbox.path);
     writePlans(writer, [planRemoval(writer, 'AGENTS.md')]);
-    expect(writer.read('AGENTS.md')!.bytes.toString('utf8')).toBe(prefix + original + suffix);
+    expect(writer.read('AGENTS.md')!.bytes.toString('utf8')).toBe(prefix + previous + suffix);
 });
 
 test('removing the only block deletes the file', async () => {

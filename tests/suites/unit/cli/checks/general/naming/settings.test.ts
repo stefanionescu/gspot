@@ -16,12 +16,12 @@ test('category limits inherit root and scope language settings while explicit ca
         tables: SWIFT_NAMING_LIMITS,
     });
     for (const { scope, characters, functions, words } of SCOPE_LIMITS) {
-        const effective = buildScopeNamingSettings(text, scope);
-        expect(effective.limitsFor('swift', 'functions')).toMatchObject({
+        const naming = buildScopeNamingSettings(text, scope);
+        expect(naming.limitsFor('swift', 'functions')).toMatchObject({
             maxChars: functions,
             maxWords: words,
         });
-        expect(effective.limitsFor('swift', 'variables')).toMatchObject({
+        expect(naming.limitsFor('swift', 'variables')).toMatchObject({
             maxChars: characters,
             maxWords: words,
         });

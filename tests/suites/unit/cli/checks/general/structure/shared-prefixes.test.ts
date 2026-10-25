@@ -33,8 +33,8 @@ test('shared-prefixes groups files and folders once, and honors an ignore and a 
         settings +
         '[[ignore]]\ncheck = "structure/shared-prefixes"\npaths = ["cards/**"]\nreason = "Required public names."\n';
     await writeFile(join(sandbox.path, 'gspot.toml'), allowed);
-    const retained = await runChecks(await openSession(sandbox.path), options);
-    expect(retained.report.checks[0]?.findings).toMatchObject([{ file: 'mixed/turn.ts' }]);
+    const kept = await runChecks(await openSession(sandbox.path), options);
+    expect(kept.report.checks[0]?.findings).toMatchObject([{ file: 'mixed/turn.ts' }]);
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
         allowed + '[limits]\nshared_prefix_files = { value = 3, reason = "Required grouping limit." }\n',

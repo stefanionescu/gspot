@@ -74,15 +74,15 @@ function groupToolOutputs(ownedFiles: OwnedSourceFile[], generated: GeneratedCon
 
 function addToolOutput(target: string, group: BuiltConfigFile[], index: number, generated: GeneratedConfigFiles): void {
     const [first] = group as [BuiltConfigFile, ...BuiltConfigFile[]];
-    const chosen = index === 0 ? target : buildPerScopeTarget(first.configFile, first.owner.scope.folder.path);
+    const written = index === 0 ? target : buildPerScopeTarget(first.configFile, first.owner.scope.folder.path);
     const { file, companions } =
-        chosen === target
+        written === target
             ? first
             : buildConfigFile(
                   {
                       ...first.owner,
                       configFile: first.configFile,
-                      targetPath: chosen,
+                      targetPath: written,
                       level: first.owner.session.settingsFile.settings.level,
                   },
                   generated.targets,
@@ -91,7 +91,7 @@ function addToolOutput(target: string, group: BuiltConfigFile[], index: number, 
     for (const { owner } of group) {
         const scope = owner.scope.folder.path;
         const paths = generated.targets.get(scope) ?? new Map<string, string>();
-        paths.set(target, chosen);
+        paths.set(target, written);
         generated.targets.set(scope, paths);
     }
 }

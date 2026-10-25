@@ -29,11 +29,11 @@ test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($ru
     });
 
     const eslint = await createEslint(sandbox.path);
-    const computed = (await eslint.calculateConfigForFile('application/source.js')) as EslintConfiguration;
-    const globals = Object.keys(computed.languageOptions.globals);
+    const config = (await eslint.calculateConfigForFile('application/source.js')) as EslintConfiguration;
+    const globals = Object.keys(config.languageOptions.globals);
     expect(row.globals.filter((name) => !globals.includes(name))).toStrictEqual([]);
     expect(row.absent.filter((name) => globals.includes(name))).toStrictEqual([]);
-    expect(Object.keys(computed.rules).filter((name) => name.startsWith('n/'))).toStrictEqual([
+    expect(Object.keys(config.rules).filter((name) => name.startsWith('n/'))).toStrictEqual([
         'n/file-extension-in-import',
     ]);
     const [result] = await eslint.lintFiles(['application/source.js']);

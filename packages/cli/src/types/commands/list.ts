@@ -1,11 +1,11 @@
 import type { LIST_KINDS } from '#cli/config/commands/list.ts';
-import { type Setting, type EffectiveSetting } from '#cli/types/settings/inheritance.ts';
+import { type Setting, type InheritedSetting } from '#cli/types/settings/inheritance.ts';
 
 type SettingRow = {
     key: string;
     value: unknown;
     source: string;
-    origin: EffectiveSetting['origin'];
+    origin: InheritedSetting['origin'];
     originScope?: string;
     reason_when: Setting['reason_when'];
     scope: string;

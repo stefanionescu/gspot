@@ -157,12 +157,12 @@ function compareSpecifiers(
     lockfilePath: string,
 ): string[] {
     const changed = [...specifiers].flatMap(([name, specifier]) => {
-        const recorded = locked.get(name);
-        if (recorded === specifier) return [];
+        const version = locked.get(name);
+        if (version === specifier) return [];
         return [
-            recorded === undefined
+            version === undefined
                 ? `package.json declares ${name} ${specifier}, which ${lockfilePath} does not record.`
-                : `package.json asks for ${name} ${specifier}, but ${lockfilePath} records ${recorded}.`,
+                : `package.json asks for ${name} ${specifier}, but ${lockfilePath} records ${version}.`,
         ];
     });
     const removed = locked

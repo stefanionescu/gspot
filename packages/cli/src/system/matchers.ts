@@ -14,11 +14,11 @@ export function buildPathMatcher(patterns: string[]): (path: string) => boolean 
     const key = JSON.stringify(patterns);
     const cached = matcherCache.get(key);
     if (cached) return cached;
-    const expanded = includeFolderContents(patterns);
-    const includes = expanded
+    const included = includeFolderContents(patterns);
+    const includes = included
         .filter((pattern) => !pattern.startsWith(GLOB_EXCLUDE))
         .map((pattern) => new RegExp(picomatch.makeRe(pattern, { dot: true }).source, 's'));
-    const excludes = expanded
+    const excludes = included
         .filter((pattern) => pattern.startsWith(GLOB_EXCLUDE))
         .map((pattern) => new RegExp(picomatch.makeRe(pattern.slice(1), { dot: true }).source, 's'));
     const isMatch = (path: string): boolean =>

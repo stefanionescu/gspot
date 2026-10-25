@@ -73,20 +73,20 @@ test.each([true, false])(
     'apply refuses a folder outside Git and writes its ignore block after Git init (%p)',
     async (authored) => {
         await using sandbox = await testdir();
-        const original = '# Authored entries\nprivate.tmp\n';
+        const previous = '# Authored entries\nprivate.tmp\n';
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings([]),
-            ...(authored && { '.gitignore': original }),
+            ...(authored && { '.gitignore': previous }),
         });
         const refused = await runGspot(sandbox.path, ['apply']);
         expect(refused.code).toBe(2);
         const path = join(sandbox.path, '.gitignore');
-        expect((await isOnDisk(path)) ? await readFile(path, 'utf8') : undefined).toBe(authored ? original : undefined);
+        expect((await isOnDisk(path)) ? await readFile(path, 'utf8') : undefined).toBe(authored ? previous : undefined);
         const initialized = runGit(sandbox.path, ['init', '--quiet']);
         expect(initialized.code, initialized.stderr).toBe(0);
         await applyGeneratedFiles(sandbox.path);
         const installed = await readFile(path, 'utf8');
-        expect(installed.startsWith(original)).toBe(authored);
+        expect(installed.startsWith(previous)).toBe(authored);
         expect(installed).toContain(`${GSPOT_PATHS.state}/`);
         await applyGeneratedFiles(sandbox.path);
         expect(await readFile(path, 'utf8')).toBe(installed);
@@ -154,8 +154,8 @@ test('format.indent_width reaches EditorConfig, Prettier and each config file', 
     expect(editor?.tabWidth).toBe(width);
     const configuration = JSON.parse(generated.get(findManifestTarget('format', 'prettier.json'))!) as Options;
     expect(configuration.tabWidth).toBe(width);
-    const observed: unknown = parseJsonc(generated.get(findManifestTarget('markdown', 'markdownlint.jsonc'))!);
-    expect(observed).not.toHaveProperty('MD007');
+    const markdownlint: unknown = parseJsonc(generated.get(findManifestTarget('markdown', 'markdownlint.jsonc'))!);
+    expect(markdownlint).not.toHaveProperty('MD007');
     const parsed: unknown = parseYaml(generated.get(findManifestTarget('data-files', 'yamllint.yml'))!);
     expect(parsed).toMatchObject({
         rules: { anchors: {}, 'key-duplicates': {}, truthy: { 'check-keys': false } },

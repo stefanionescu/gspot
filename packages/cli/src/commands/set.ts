@@ -15,7 +15,7 @@ import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
 import { RECORD_FIELDS, findSettingSchema } from '#cli/schemas/settings/file.ts';
 import { NUMBER, STRUCTURED, DASH_VALUE_HELP } from '#cli/config/commands/set.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { type Setting, type EffectiveSetting } from '#cli/types/settings/inheritance.ts';
+import { type Setting, type InheritedSetting } from '#cli/types/settings/inheritance.ts';
 import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
 import { type SetOptions, type ParsedSettingValue, type SettingReasonContext } from '#cli/types/commands/set.ts';
 
@@ -52,16 +52,16 @@ function parseSettingValue(values: string[], setting: Setting): ParsedSettingVal
     );
     const parsedValues = [converted, buildSettingValue(values, setting)];
     const schema = findSettingSchema(setting.name);
-    const chosen =
+    const picked =
         parsedValues.find((parsedValue) => schema?.safeParse(parsedValue.value).success !== false) ?? converted;
-    const validation = schema?.safeParse(chosen.value);
+    const validation = schema?.safeParse(picked.value);
     if (validation?.success === false) {
         throw new GspotError(
             'arguments',
             formatSettingValueError(values.join(' '), setting, { schema, error: validation.error }),
         );
     }
-    return chosen;
+    return picked;
 }
 
 function parseReasonTable(options: SetOptions): ParsedSettingValue {
@@ -108,7 +108,7 @@ function assertReasonPresent({
 
 function formatSettingChange(
     change: ParsedSettingValue,
-    context: { setting: Setting; options: SetOptions; previous: EffectiveSetting | undefined },
+    context: { setting: Setting; options: SetOptions; previous: InheritedSetting | undefined },
 ): string {
     const { setting, options, previous } = context;
     const displayKey = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;

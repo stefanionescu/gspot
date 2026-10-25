@@ -113,12 +113,12 @@ export async function preparePythonLockfile(
     const { root } = install.session;
     const owner = install.writer;
     const project = toolPyprojectSchema.parse(parse(toolProjectFile.content));
-    const original = owner.read(GSPOT_PATHS.uvLockfile);
-    const recorded = original?.bytes.toString('utf8');
-    const { settings: indexes, credentials: recordedCredentials } = readPythonSettings(root);
-    if (isPythonLockfileFresh(project, recorded, indexes)) {
-        assertCredentialFreeLockfile(recorded, recordedCredentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
-        return { path: GSPOT_PATHS.uvLockfile, content: recorded, kind: 'lock', read: original };
+    const previous = owner.read(GSPOT_PATHS.uvLockfile);
+    const saved = previous?.bytes.toString('utf8');
+    const { settings: indexes, credentials: savedCredentials } = readPythonSettings(root);
+    if (isPythonLockfileFresh(project, saved, indexes)) {
+        assertCredentialFreeLockfile(saved, savedCredentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
+        return { path: GSPOT_PATHS.uvLockfile, content: saved, kind: 'lock', read: previous };
     }
     using scratch = createTemporaryFolder();
     const runFolder = scratch.path;
@@ -141,7 +141,7 @@ export async function preparePythonLockfile(
         path: GSPOT_PATHS.uvLockfile,
         content: lockfile,
         kind: 'lock',
-        read: original,
+        read: previous,
     };
 }
 
@@ -194,13 +194,13 @@ export function isPythonLockfileFresh(
 ): lockfile is string {
     if (lockfile === undefined) return false;
     const projectTable = project.project;
-    const recorded = parsePythonToolLockfile(lockfile);
-    if (recorded === undefined) return false;
-    if (!hasAllowedPythonOrigins(recorded, indexes)) return false;
-    const projectPackage = recorded.package.find(
+    const saved = parsePythonToolLockfile(lockfile);
+    if (saved === undefined) return false;
+    if (!hasAllowedPythonOrigins(saved, indexes)) return false;
+    const projectPackage = saved.package.find(
         (lockedPackage) => lockedPackage.name === projectTable.name && lockedPackage.source?.virtual === '.',
     );
-    if (projectPackage === undefined || recorded['requires-python'] !== projectTable['requires-python']) return false;
+    if (projectPackage === undefined || saved['requires-python'] !== projectTable['requires-python']) return false;
     const pins = parseExactRequirements(projectPackage);
     if (pins === undefined) return false;
     const expected = projectTable.dependencies

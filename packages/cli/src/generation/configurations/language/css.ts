@@ -18,20 +18,20 @@ import {
 } from '#cli/config/generation/configurations/language/css.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function dropChosenRules(
+function dropPickedRules(
     rules: Record<string, unknown>,
-    chosen: Record<string, unknown>,
+    picked: Record<string, unknown>,
     off: string[],
 ): Record<string, unknown> {
     return Object.fromEntries(
-        Object.entries(rules).filter(([rule]) => !off.includes(rule) && chosen[rule] === undefined),
+        Object.entries(rules).filter(([rule]) => !off.includes(rule) && picked[rule] === undefined),
     );
 }
 
 function buildComponentOverrides(
     configurations: string[],
     tailwindFunctions: string[],
-    chosen: Record<string, unknown>,
+    picked: Record<string, unknown>,
     off: string[],
 ) {
     return configurations
@@ -53,7 +53,7 @@ function buildComponentOverrides(
             return {
                 files,
                 customSyntax: override.customSyntax,
-                rules: dropChosenRules(rules, chosen, off),
+                rules: dropPickedRules(rules, picked, off),
             };
         });
 }
@@ -61,7 +61,7 @@ function buildComponentOverrides(
 function buildCssModulesOverrides(
     planned: PlannedConfigFile,
     tailwindAtRules: readonly string[],
-    chosen: Record<string, unknown>,
+    picked: Record<string, unknown>,
     off: string[],
 ) {
     const scope = planned.scope.folder.path;
@@ -76,7 +76,7 @@ function buildCssModulesOverrides(
     return [
         {
             files: [...CSS_MODULES_OVERRIDE.files],
-            rules: dropChosenRules(rules, chosen, off),
+            rules: dropPickedRules(rules, picked, off),
         },
     ];
 }
@@ -104,18 +104,18 @@ export function buildStylelintFile(planned: PlannedConfigFile): string {
         [...stylelintRuleNames, 'function-no-unknown'].filter((rule) => isAll || !STYLELINT_RECOMMENDED_OFF.has(rule)),
     );
     assertRuleOptionsRun({
-        chosen: Object.keys(options.rules),
+        configured: Object.keys(options.rules),
         running: activeRules,
         higher: STYLELINT_RECOMMENDED_OFF,
         level,
     });
-    const chosen = options.rules;
+    const picked = options.rules;
     const isTailwind = scopeDependencies.includes('tailwindcss');
     const tailwindAtRules = isTailwind ? TAILWIND_AT_RULES : [];
     const tailwindFunctions = isTailwind ? ['theme'] : [];
     const overrides = [
-        ...buildComponentOverrides(configurations, tailwindFunctions, chosen, off),
-        ...buildCssModulesOverrides(planned, tailwindAtRules, chosen, off),
+        ...buildComponentOverrides(configurations, tailwindFunctions, picked, off),
+        ...buildCssModulesOverrides(planned, tailwindAtRules, picked, off),
     ];
     const syntaxRules: Record<string, unknown> = {};
     if (isTailwind) {
@@ -131,7 +131,7 @@ export function buildStylelintFile(planned: PlannedConfigFile): string {
         rules: Object.assign(
             { ...STYLELINT_BASE_RULES, ...syntaxRules },
             Object.fromEntries((isAll ? [] : [...STYLELINT_RECOMMENDED_OFF]).map((rule) => [rule, null])),
-            chosen,
+            picked,
             Object.fromEntries(off.map((rule) => [rule, null])),
         ),
         ...(overrides.length > 0 && { overrides }),

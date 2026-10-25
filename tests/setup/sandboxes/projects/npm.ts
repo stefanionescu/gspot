@@ -81,8 +81,8 @@ export async function createNpmProject(
 
         token: NPM_REGISTRY_TOKEN,
     };
-    const observed = await createNpmRegistry(artifacts, installPlan);
-    const registry = resources.use(observed);
+    const served = await createNpmRegistry(artifacts, installPlan);
+    const registry = resources.use(served);
     const authored = await writeNpmProject({ root, artifacts, registry, packageManager, projectPath });
     await runGspotStep({ root, run: spawnGspot }, ['apply']);
     const owned = resources.move();

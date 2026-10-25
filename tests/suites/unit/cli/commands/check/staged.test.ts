@@ -155,7 +155,7 @@ test('a staged check keeps each Python scope config and reports the installed de
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     runGitStep(sandbox.path, ['add', '-A']);
-    const original = await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')));
+    const previous = await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')));
     const commandArguments = ['check', '--staged', '--only', 'gspot/generated-files', '--json'];
     const checked = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
@@ -167,7 +167,7 @@ test('a staged check keeps each Python scope config and reports the installed de
         { file: GSPOT_PATHS.uvLockfile, rule: 'missing' },
     ]);
     const contents = await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')));
-    expect(contents).toStrictEqual(original);
+    expect(contents).toStrictEqual(previous);
     await writeFile(join(sandbox.path, 'child/pyproject.toml'), project + '# Unstaged project change.\n');
     const rerun = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(rerun.code, rerun.stdout + rerun.stderr).toBe(1);
@@ -178,7 +178,7 @@ test('a staged check keeps each Python scope config and reports the installed de
         checked.report.checks.flatMap((check) => check.findings),
     );
     const compilerSettings = await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')));
-    expect(compilerSettings).toStrictEqual(original);
+    expect(compilerSettings).toStrictEqual(previous);
 });
 
 test.skipIf(isCaseFolding())('staged paths that differ only by letter case keep both spellings and bytes', async () => {

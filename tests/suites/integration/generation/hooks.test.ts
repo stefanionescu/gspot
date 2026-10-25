@@ -36,7 +36,7 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
         checks: [{ check: 'bash/shellcheck', scope: '', status: 'passed', fileCount: 2, findings: [] }],
         exitCode: 0,
     });
-    for (let attempt = 0; attempt < 2; attempt++) {
+    for (let round = 0; round < 2; round++) {
         const installation = await spawnGspot(clone, ['install']);
         expect(installation.code, installation.stdout + installation.stderr).toBe(0);
         expect(runGitStep(clone, ['status', '--porcelain'])).toBe('');

@@ -55,12 +55,12 @@ test('broad workspace patterns skip .gspot/.venv and its outside interpreter lin
     await symlink('../../../../outside/python', join(root, `${GSPOT_PATHS.pythonEnvironment}/bin/python`));
     const repository = await readTestRepository(root);
     expect(listWorkspaceFolders(root)).toStrictEqual(['packages/app']);
-    const observed = findScopeFolders(
+    const folders = findScopeFolders(
         repository.files,
         await readDependencyFiles(createReadCache(root), repository.files),
         readConfigurations().values(),
     ).map((scope) => scope.path);
-    expect(observed).toStrictEqual(['packages/app']);
+    expect(folders).toStrictEqual(['packages/app']);
 });
 test('every folder that holds a project file is a scope, the root and lint-only packages aside', async () => {
     await using sandbox = await testdir(PROJECT_SCOPE_FILES);
@@ -81,12 +81,12 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
     expect(listWorkspaceFolders(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         ...TOOL_ONLY_FOLDERS,
     ]);
-    const observed = findScopeFolders(
+    const folders = findScopeFolders(
         repository.files,
         await readDependencyFiles(createReadCache(sandbox.path), repository.files),
         readConfigurations().values(),
     ).map((scope) => scope.path);
-    expect(observed).toStrictEqual(['packages/custom', 'packages/process']);
+    expect(folders).toStrictEqual(['packages/custom', 'packages/process']);
     await writeFile(
         join(sandbox.path, 'packages/next/package.json'),
         '{"dependencies":{"next":"16.0.0"},"devDependencies":{"@next/eslint-plugin-next":"16.0.0"}}',

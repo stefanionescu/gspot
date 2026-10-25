@@ -94,10 +94,10 @@ test('hook discovery keeps spaces in core.hooksPath and refuses a broken Git con
     runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
     expect(readHooks(sandbox.path)).toStrictEqual([{ kind: 'hooksPath', path: hooksPath, files: ['pre-commit'] }]);
-    const original = await readFile(join(sandbox.path, '.git/config'));
+    const previous = await readFile(join(sandbox.path, '.git/config'));
     await writeFile(join(sandbox.path, '.git/config'), '[core\n');
     expect(() => readHooks(sandbox.path)).toThrow('Git config failed in ');
-    await writeFile(join(sandbox.path, '.git/config'), original);
+    await writeFile(join(sandbox.path, '.git/config'), previous);
     expect(readHooks(sandbox.path)).toStrictEqual([{ kind: 'hooksPath', path: hooksPath, files: ['pre-commit'] }]);
 });
 test('a hooks folder outside the repository that core.hooksPath names is listed', async () => {

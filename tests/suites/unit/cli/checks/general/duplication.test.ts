@@ -52,17 +52,17 @@ test.each(['relative', 'absolute', 'namespaced'])(
         const root = await prepareDuplicationSandbox(resources);
         const absolute = mode === 'namespaced' ? toNamespacedPath(root) : root;
         const prefix = mode === 'relative' ? '' : absolute;
-        const original = { name: join(prefix, 'scripts', 'original.sh'), start: 7, end: 36 };
+        const previous = { name: join(prefix, 'scripts', 'original.sh'), start: 7, end: 36 };
         const report = {
             duplicates: [
                 {
                     lines: 30,
-                    firstFile: original,
+                    firstFile: previous,
                     secondFile: { name: join(prefix, 'scripts', 'café.sh'), start: 3, end: 32 },
                 },
                 {
                     lines: 30,
-                    firstFile: original,
+                    firstFile: previous,
                     secondFile: { name: join(prefix, 'vendor', 'copy.sh'), start: 1, end: 30 },
                 },
             ],

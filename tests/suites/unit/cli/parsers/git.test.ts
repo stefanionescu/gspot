@@ -71,8 +71,8 @@ test('a batch keeps binary content and an empty blob in response order', async (
         Buffer.from(`\n${SHA256} blob 0\n\n`),
     ]);
     const blobs = await Array.fromAsync(parseGitBlobs(Readable.from([output]), [SHA1, SHA256]));
-    const observed = new Map(blobs);
-    expect(observed).toStrictEqual(
+    const parsed = new Map(blobs);
+    expect(parsed).toStrictEqual(
         new Map([
             [SHA1, Buffer.from(BINARY_BLOB)],
             [SHA256, Buffer.alloc(0)],
@@ -86,8 +86,8 @@ test('a batch keeps binary content and an empty blob in response order', async (
 
 test.each([...INVALID_BLOBS])(`a batch is refused: $name`, async ({ output }) => {
     const stream = parseGitBlobs(Readable.from([Buffer.from(output)]), [SHA1]);
-    const observed = Array.fromAsync(stream);
-    const streamError = await captureRejection(observed);
+    const parsed = Array.fromAsync(stream);
+    const streamError = await captureRejection(parsed);
     expect(streamError.message).toBe(BLOB_FAILURE);
 });
 
@@ -106,8 +106,8 @@ test('a batch parses the same for every split between header, body and delimiter
     for (let split = 0; split <= output.length; split += 1) {
         const chunks = [output.subarray(0, split), output.subarray(split)];
         const blobs = await Array.fromAsync(parseGitBlobs(Readable.from(chunks), [SHA1, SHA256]));
-        const observed = new Map(blobs);
-        expect(observed).toStrictEqual(
+        const parsed = new Map(blobs);
+        expect(parsed).toStrictEqual(
             new Map([
                 [SHA1, Buffer.from([0, 255, 0, 10])],
                 [SHA256, Buffer.alloc(0)],
@@ -118,15 +118,15 @@ test('a batch parses the same for every split between header, body and delimiter
 
 test.each([...TRAILING_BLOB_CHUNKS])('a Git blob stream refuses trailing bytes in the $name', async ({ chunks }) => {
     const stream = parseGitBlobs(Readable.from(chunks.map((chunk) => Buffer.from(chunk))), [SHA1]);
-    const observed = Array.fromAsync(stream);
-    const error = await captureRejection(observed);
+    const parsed = Array.fromAsync(stream);
+    const error = await captureRejection(parsed);
     expect(error.message).toBe(BLOB_FAILURE);
 });
 
 test('a Git blob stream accepts empty chunks after the final object', async () => {
     const chunks = [Buffer.from(`${SHA1} blob 0\n\n`), Buffer.alloc(0), Buffer.alloc(0)];
-    const observed = await Array.fromAsync(parseGitBlobs(Readable.from(chunks), [SHA1]));
-    expect(observed).toStrictEqual([[SHA1, Buffer.alloc(0)]]);
+    const parsed = await Array.fromAsync(parseGitBlobs(Readable.from(chunks), [SHA1]));
+    expect(parsed).toStrictEqual([[SHA1, Buffer.alloc(0)]]);
 });
 
 test('an unmerged index stage is refused before copying its tree', () => {

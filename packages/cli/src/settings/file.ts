@@ -52,12 +52,12 @@ Read gspot.toml without following a link out of the repository.
 */
 export function readSettingsFile(repositoryRoot: string): SettingsFileContents {
     using files = openFiles(repositoryRoot);
-    const original = files.read(SETTINGS_FILE);
-    if (original === undefined)
+    const previous = files.read(SETTINGS_FILE);
+    if (previous === undefined)
         throw new GspotError('settings', 'There is no gspot.toml here. Run `gspot init` to create one.');
-    const text = decodeUtf8(original.bytes);
+    const text = decodeUtf8(previous.bytes);
     if (text === undefined) throw new GspotError('settings', 'gspot.toml must contain valid UTF-8 text.');
-    return { text, original };
+    return { text, previous: previous };
 }
 
 /**
@@ -65,19 +65,19 @@ Write gspot.toml only while the file on disk still matches the one that the edit
 
 @param writer the file writer for settings.
 @param text the new gspot.toml contents.
-@param original the captured file bytes and mode.
+@param previous the captured file bytes and mode.
 */
-export function writeSettings(writer: Files, text: string, original: FileContents | undefined): void {
-    const next = { bytes: Buffer.from(text), mode: original?.mode ?? OWNER_WRITABLE_FILE };
-    if (isDeepStrictEqual(next, original)) return;
+export function writeSettings(writer: Files, text: string, previous: FileContents | undefined): void {
+    const next = { bytes: Buffer.from(text), mode: previous?.mode ?? OWNER_WRITABLE_FILE };
+    if (isDeepStrictEqual(next, previous)) return;
     writePlans(writer, [
         {
             ...planReplacement(writer, {
                 path: SETTINGS_FILE,
                 next,
-                expected: original,
+                expected: previous,
             }),
-            before: original,
+            before: previous,
         },
     ]);
 }

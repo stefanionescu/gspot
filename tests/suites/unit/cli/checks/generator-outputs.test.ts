@@ -92,7 +92,7 @@ async function prepareSupabaseCheck(
     const supabase = executables.sync('supabase', { path: bin });
     const docker = executables.sync('docker', { path: bin });
     const requests: { commandArguments: string[]; cwd: string }[] = [];
-    const { spawnProcessBlocking: blocking, spawnProcess: executeProcess } = processes;
+    const { spawnProcessBlocking: blocking, spawnProcess: spawn } = processes;
     resources.use(
         spyOn(processes, 'spawnProcessBlocking').mockImplementation((commandArguments, options) => {
             if (![supabase, docker].includes(commandArguments[0] ?? '')) return blocking(commandArguments, options);
@@ -110,7 +110,7 @@ async function prepareSupabaseCheck(
     );
     resources.use(
         spyOn(processes, 'spawnProcess').mockImplementation(async (commandArguments, options) => {
-            if (commandArguments[0] !== supabase) return executeProcess(commandArguments, options);
+            if (commandArguments[0] !== supabase) return spawn(commandArguments, options);
             requests.push({ commandArguments: commandArguments.slice(1), cwd: options.cwd });
             return result;
         }),

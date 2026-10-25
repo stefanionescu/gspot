@@ -36,9 +36,9 @@ export function formatSettingValueError(
 ): string {
     const { schema, error } = validation;
     const advice = formatValueAdvice(schema, setting, error);
-    const specific = error.issues.find((issue) => issue.code === 'custom' || issue.code === 'invalid_format');
+    const refinement = error.issues.find((issue) => issue.code === 'custom' || issue.code === 'invalid_format');
     const guidance =
-        specific === undefined || specific.message.startsWith('Invalid ') ? `Use ${advice}.` : specific.message;
+        refinement === undefined || refinement.message.startsWith('Invalid ') ? `Use ${advice}.` : refinement.message;
     return `The value ${value} is not valid for ${setting.name}. ${guidance}`;
 }
 

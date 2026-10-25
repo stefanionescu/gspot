@@ -42,9 +42,9 @@ function readNpmLockfileState(
 ): StaleLockfile {
     const project = parseToolPackageJson(toolProjectFile.content, name);
     const path = project.lockfilePath;
-    const recorded = files.read(path);
-    if (recorded === undefined) return { path, kind: 'missing' };
-    const matches = isLockfileFresh(name, recorded.bytes.toString('utf8'), project.dependencies, env);
+    const saved = files.read(path);
+    if (saved === undefined) return { path, kind: 'missing' };
+    const matches = isLockfileFresh(name, saved.bytes.toString('utf8'), project.dependencies, env);
     return matches ? { path } : { path, kind: 'changed' };
 }
 
@@ -94,9 +94,9 @@ export async function listStaleLockfiles(
                 }
                 const project = toolPyprojectSchema.parse(parseToml(toolProjectFile.content));
                 const path = GSPOT_PATHS.uvLockfile;
-                const recorded = files.read(path);
-                if (recorded === undefined) return [{ path, kind: 'missing' as const }];
-                const matches = isPythonLockfileFresh(project, recorded.bytes.toString('utf8'), indexes);
+                const saved = files.read(path);
+                if (saved === undefined) return [{ path, kind: 'missing' as const }];
+                const matches = isPythonLockfileFresh(project, saved.bytes.toString('utf8'), indexes);
                 return matches ? [{ path }] : [{ path, kind: 'changed' as const }];
             }),
     ];

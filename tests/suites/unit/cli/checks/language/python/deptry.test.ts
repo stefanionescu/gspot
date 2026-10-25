@@ -69,12 +69,12 @@ async function runFakeDeptry(root: string) {
     using resources = fakeToolExecutables(
         ['uv', 'deptry'].map((name) => getTool(session.configurations.values(), name)),
     );
-    const executed = resources.use(
+    const spawn = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: '[]' })),
     );
     const checked = await runChecks(session, buildRunOptions({ only: ['python/deptry'] }));
     expect(checked.report.failed).toStrictEqual([]);
-    return { checked, commands: executed.mock.calls.map(([command]) => command) };
+    return { checked, commands: spawn.mock.calls.map(([command]) => command) };
 }
 test('deptry counts python.externals as first party beside the known_first_party of the project', async () => {
     await using sandbox = await testdir({

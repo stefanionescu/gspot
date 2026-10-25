@@ -64,8 +64,8 @@ test('removing one equivalent index preserves the other until it is removed, and
     const DROP_SECOND_INDEX_SQL = 'DROP INDEX second;\nALTER TABLE posts DISABLE ROW LEVEL SECURITY;\n';
 
     const initial = await parseMigration('1_create.sql', EQUIVALENT_INDEXES_SQL);
-    const retained = buildSchema([initial]);
-    expect(retained.indexed.get('public.posts')).toStrictEqual([['author_id']]);
+    const kept = buildSchema([initial]);
+    expect(kept.indexed.get('public.posts')).toStrictEqual([['author_id']]);
     const removed = buildSchema([initial, await parseMigration('2_drop.sql', DROP_SECOND_INDEX_SQL)]);
     expect([...removed.secured]).toStrictEqual([]);
     expect([...removed.indexed]).toStrictEqual([]);
@@ -73,9 +73,9 @@ test('removing one equivalent index preserves the other until it is removed, and
 
 test('dropped foreign and unique constraints remove only the fields they own', async () => {
     const initial = await parseMigration('1_keys.sql', DROPPED_CONSTRAINTS_SQL);
-    const retained = buildSchema([initial]);
-    expect(retained.foreignKeys.map((key) => key.columns)).toStrictEqual([['team_id']]);
-    expect(retained.indexed.get('public.posts')).toStrictEqual([['author_id']]);
+    const kept = buildSchema([initial]);
+    expect(kept.foreignKeys.map((key) => key.columns)).toStrictEqual([['team_id']]);
+    expect(kept.indexed.get('public.posts')).toStrictEqual([['author_id']]);
     const removed = buildSchema([initial, await parseMigration('2_drop.sql', 'DROP INDEX author_index;')]);
     expect([...removed.indexed]).toStrictEqual([]);
 });

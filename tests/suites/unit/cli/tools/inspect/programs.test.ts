@@ -54,13 +54,13 @@ test('version reads and runs use the other tools of the chosen tool folder', asy
     const tool = buildProgramPin('teller', '3.8.1');
     const read = inspectTool(buildToolSearch(sandbox.path), tool);
     expect(read).toMatchObject({ state: 'ok', found: '3.8.1' });
-    const executed = await runTool([read.path!], {
+    const result = await runTool([read.path!], {
         timeoutSeconds: SETTING_DEFINITIONS['tool_timeout_seconds'].default,
         cwd: sandbox.path,
         env,
     });
-    expect(executed.code).toBe(0);
-    expect(executed.stdout.trim()).toBe('3.8.1');
+    expect(result.code).toBe(0);
+    expect(result.stdout.trim()).toBe('3.8.1');
 });
 
 test('a program on PATH wins over an unrelated mise shim', async () => {

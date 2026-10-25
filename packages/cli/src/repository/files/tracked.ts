@@ -73,13 +73,13 @@ function walkPaths(root: string): string[] {
     for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
         const { folder } = next;
         const { children, ignores } = readFolderListing(root, folder, next.ignores);
-        const retained = children.filter((child) => {
+        const kept = children.filter((child) => {
             if (child.name === GIT_FOLDER) return false;
             const path = `${folder}${child.name}`;
             const listedPath = child.isDirectory() ? `${path}/` : path;
             return !isIgnored(listedPath, ignores) && !STATE_FOLDER_PATTERN.test(path.normalize('NFC'));
         });
-        for (const child of retained) {
+        for (const child of kept) {
             const path = `${folder}${child.name}`;
             if (child.isDirectory()) pending.push({ folder: `${path}/`, ignores });
             else if (child.isFile() || child.isSymbolicLink()) paths.push(path);

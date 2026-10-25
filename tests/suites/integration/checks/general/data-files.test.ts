@@ -54,7 +54,7 @@ test('v8r validates a staged JSON file with a non-ASCII path against its schema'
             return new Response(await readFile(join(root, 'schema.json')));
         },
     });
-    const observed = await applySandboxChanges(installedSandbox(), {
+    const change = await applySandboxChanges(installedSandbox(), {
         files: { 'settings/café.json': '', '.v8rrc.yml': '' },
         settings: stringify({
             tools: {
@@ -62,7 +62,7 @@ test('v8r validates a staged JSON file with a non-ASCII path against its schema'
             },
         }),
     });
-    state.use(observed);
+    state.use(change);
     await writeFile(join(root, '.v8rrc.yml'), 'invalid: [\n');
     const path = join(root, 'settings/café.json');
     await writeFile(path, JSON.stringify({ count: 'invalid' }));

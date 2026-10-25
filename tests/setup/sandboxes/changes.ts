@@ -8,10 +8,10 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGspotStep } from '#tests/setup/cli/commands.ts';
 import { writeGeneratedFiles } from '#cli/apply/generated.ts';
 import { runGit, runGitStep, markExecutable } from '#tests/setup/system/git.ts';
-import type { OriginalFile, SandboxWrite, SandboxChanges } from '#tests/types/samples.ts';
+import type { PreviousFile, SandboxWrite, SandboxChanges } from '#tests/types/samples.ts';
 import { rm, chmod, lstat, mkdir, rmdir, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 
-async function readOriginalFile(path: string): Promise<OriginalFile | undefined> {
+async function readPreviousFile(path: string): Promise<PreviousFile | undefined> {
     try {
         const attributes = await lstat(path);
         return attributes.isSymbolicLink()
@@ -33,8 +33,8 @@ async function listAbsentParents(cwd: string, paths: readonly string[]): Promise
     }
     return [...parents].toSorted((a, b) => b.length - a.length);
 }
-async function restoreFiles(cwd: string, originals: Map<string, OriginalFile | undefined>): Promise<void> {
-    for (const [path, original] of originals) {
+async function restoreFiles(cwd: string, previousFiles: Map<string, PreviousFile | undefined>): Promise<void> {
+    for (const [path, original] of previousFiles) {
         const absolute = join(cwd, path);
         await rm(absolute, { force: true });
         if (original?.kind === 'symlink') await symlink(original.target, absolute);
@@ -59,7 +59,7 @@ async function writeChanges(cwd: string, changes: SandboxWrite): Promise<void> {
     for (const [path, text] of Object.entries(changes.files)) {
         const absolute = join(cwd, path);
         await mkdir(dirname(absolute), { recursive: true });
-        if (changes.originals.get(path)?.kind === 'symlink') await unlink(absolute);
+        if (changes.previousFiles.get(path)?.kind === 'symlink') await unlink(absolute);
         await writeFile(absolute, text);
     }
     for (const path of changes.executable) await markExecutable(cwd, path);
@@ -82,13 +82,13 @@ export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): 
         runGit(cwd, ['ls-files', '--others', '--exclude-standard', '-z']).stdout.split('\0').filter(Boolean),
     );
     const settingsPath = join(cwd, 'gspot.toml');
-    const original = await readFile(settingsPath, 'utf8');
-    const base = changes.files['gspot.toml'] ?? original;
+    const previous = await readFile(settingsPath, 'utf8');
+    const base = changes.files['gspot.toml'] ?? previous;
     const settings = [base, changes.settings].filter((text) => text !== undefined).join('\n');
     const { removed: gone = [], executable: executables = [] } = changes;
     const paths = [...new Set(['gspot.toml', ...gone, ...executables, ...Object.keys(changes.files)])];
-    const originals = new Map<string, OriginalFile | undefined>();
-    for (const path of paths) originals.set(path, await readOriginalFile(join(cwd, path)));
+    const previousFiles = new Map<string, PreviousFile | undefined>();
+    for (const path of paths) previousFiles.set(path, await readPreviousFile(join(cwd, path)));
     const parents = await listAbsentParents(cwd, paths);
     const restore = async (): Promise<void> => {
         if (head.code === 0) {
@@ -97,11 +97,17 @@ export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): 
         }
         for (const path of runGit(cwd, ['ls-files', '--others', '--exclude-standard', '-z']).stdout.split('\0'))
             if (path !== '' && !untracked.has(path)) await rm(join(cwd, path), { force: true });
-        await restoreFiles(cwd, originals);
+        await restoreFiles(cwd, previousFiles);
         await removeParents(parents);
     };
     try {
-        await writeChanges(cwd, { files: changes.files, settings, originals, removed: gone, executable: executables });
+        await writeChanges(cwd, {
+            files: changes.files,
+            settings,
+            previousFiles: previousFiles,
+            removed: gone,
+            executable: executables,
+        });
     } catch (error) {
         await restore();
         throw error;
@@ -148,11 +154,11 @@ Build the changes that replace the files of a sandbox plan with these files and 
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 22 calls in 11 files share it.
 export function buildSandboxChanges(
-    originalFiles: Readonly<Record<string, string>>,
+    previousFiles: Readonly<Record<string, string>>,
     files: Record<string, string>,
 ): SandboxChanges {
     return {
         files,
-        removed: Object.keys(originalFiles).filter((path) => path !== '.gitignore' && !Object.hasOwn(files, path)),
+        removed: Object.keys(previousFiles).filter((path) => path !== '.gitignore' && !Object.hasOwn(files, path)),
     };
 }

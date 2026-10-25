@@ -16,9 +16,9 @@ test.skipIf(isWindows)(
         await using sandbox = await testdir();
         using root = openFiles(sandbox.path);
         const path = 'folder/a\n"é:?.txt';
-        const original = { bytes: Buffer.from('inside'), mode: 0o640 };
-        root.write(path, original, undefined);
-        expect(root.read(path)).toStrictEqual(original);
+        const previous = { bytes: Buffer.from('inside'), mode: 0o640 };
+        root.write(path, previous, undefined);
+        expect(root.read(path)).toStrictEqual(previous);
         expect(() => {
             assertWritablePath(path);
         }).toThrow(
@@ -78,28 +78,28 @@ test('opening a missing folder throws its ENOENT error', async () => {
 });
 test.each(MODE_REPLACEMENTS.filter(({ posix }) => !posix || !isWindows))(
     'write and remove keep the file modes $original/$replacement and refuse a file that changed since it was read',
-    async ({ original: originalMode, replacement: replacementMode, content }) => {
+    async ({ original: previousMode, replacement: replacementMode, content }) => {
         await using sandbox = await testdir();
         using root = openFiles(sandbox.path);
-        const original = { bytes: Buffer.from([0, 255, 10]), mode: normalizeFileMode({ mode: originalMode }) };
+        const previous = { bytes: Buffer.from([0, 255, 10]), mode: normalizeFileMode({ mode: previousMode }) };
         const replacement = { bytes: Buffer.from(content), mode: normalizeFileMode({ mode: replacementMode }) };
-        root.write('config/input', original, undefined);
-        expect(root.read('config/input')).toStrictEqual(original);
-        root.write('config/input', replacement, original);
+        root.write('config/input', previous, undefined);
+        expect(root.read('config/input')).toStrictEqual(previous);
+        root.write('config/input', replacement, previous);
         expect(root.read('config/input')).toStrictEqual(replacement);
         expect(() => {
-            root.write('config/input', original, original);
+            root.write('config/input', previous, previous);
         }).toThrow(matchFields({ message: 'config/input changed while gspot wrote it. Run the command again.' }));
         expect(() => {
-            root.deleteFile('config/input', original);
+            root.deleteFile('config/input', previous);
         }).toThrow(matchFields({ message: 'config/input changed before removal. Run the command again.' }));
         expect(root.read('config/input')).toStrictEqual(replacement);
-        root.write('config/input', original, replacement);
+        root.write('config/input', previous, replacement);
         expect(() => {
             root.deleteFile('config/input', replacement);
         }).toThrow(matchFields({ message: 'config/input changed before removal. Run the command again.' }));
-        expect(root.read('config/input')).toStrictEqual(original);
-        root.deleteFile('config/input', original);
+        expect(root.read('config/input')).toStrictEqual(previous);
+        root.deleteFile('config/input', previous);
         expect(root.read('config/input')).toBeUndefined();
         root.write('config/input', replacement, undefined);
         root.deleteFile('config/input', replacement);
@@ -138,8 +138,8 @@ test('writing one hard link replaces its path and keeps the peer bytes', async (
     await using sandbox = await testdir({ 'peer.txt': 'authored\n' });
     await link(join(sandbox.path, 'peer.txt'), join(sandbox.path, 'chosen.txt'));
     using files = openFiles(sandbox.path);
-    const original = files.read('chosen.txt')!;
-    files.write('chosen.txt', { bytes: Buffer.from('replacement\n'), mode: 0o644 }, original);
+    const previous = files.read('chosen.txt')!;
+    files.write('chosen.txt', { bytes: Buffer.from('replacement\n'), mode: 0o644 }, previous);
     expect(await readFile(join(sandbox.path, 'chosen.txt'), 'utf8')).toBe('replacement\n');
     expect(await readFile(join(sandbox.path, 'peer.txt'), 'utf8')).toBe('authored\n');
 });

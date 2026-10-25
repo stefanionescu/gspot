@@ -52,8 +52,8 @@ test('projects without tsconfig.json get required options and framework options 
             const config = parseJsonFile(path, await readFile(path, 'utf8'));
             const compilerOptions = config['compilerOptions'] as Record<string, unknown>;
             compilerOptions['typeRoots'] = (compilerOptions['typeRoots'] as string[]).map((root) => {
-                const observed = relative(installedRoot, resolve(dirname(path), root));
-                return convertToPosixPath(observed);
+                const found = relative(installedRoot, resolve(dirname(path), root));
+                return convertToPosixPath(found);
             });
             return { scope: scope.folder.path, config };
         }),

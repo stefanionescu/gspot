@@ -52,11 +52,11 @@ test.each(['stdout', 'stderr'])(
         const session = await openSession(sandbox.path);
 
         using resources = new DisposableStack();
-        const observed = fakeToolExecutables([
+        const fakes = fakeToolExecutables([
             getTool(session.configurations.values(), 'openssl'),
             getTool(session.configurations.values(), 'docker'),
         ]);
-        resources.use(observed);
+        resources.use(fakes);
         const folders: string[] = [];
         const message = 'The temporary key could not be written.';
         using spawn = spyOn(processes, 'spawnProcess').mockImplementation((_command, options) => {

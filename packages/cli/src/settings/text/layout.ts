@@ -178,17 +178,17 @@ function isMatchingRecord(source: TomlTable, value: unknown, path: KeyPath): boo
 }
 
 function listMatchingPositions(
-    original: readonly unknown[],
+    previous: readonly unknown[],
     values: readonly unknown[],
     position: number,
     path: KeyPath,
 ): number[] {
-    const source = original[position];
+    const source = previous[position];
     if (!isTable(source)) {
         const matches = values.flatMap((value, index) =>
             isDeepStrictEqual(normalizeTables(value), normalizeTables(source)) ? [index] : [],
         );
-        const occurrence = original
+        const occurrence = previous
             .slice(0, position)
             .filter((value) => isDeepStrictEqual(normalizeTables(value), normalizeTables(source))).length;
         const index = matches[occurrence] ?? matches[0];
@@ -213,12 +213,12 @@ function listDestinationPaths(syntax: TomlSyntax, destination: TomlTable, path: 
         }
         const prior: unknown = getValueAt(syntax.value, path.slice(0, index));
         if (!Array.isArray(prior)) return [];
-        const original: readonly unknown[] = prior;
+        const previous: readonly unknown[] = prior;
         mapped = mapped.flatMap((keyPath) => {
             const next: unknown = getValueAt(destination, keyPath);
             if (!Array.isArray(next)) return [];
             const values: readonly unknown[] = next;
-            return listMatchingPositions(original, values, key, path).map((position) => [...keyPath, position]);
+            return listMatchingPositions(previous, values, key, path).map((position) => [...keyPath, position]);
         });
     }
     return mapped.filter((keyPath) => getValueAt(destination, keyPath) !== undefined);
@@ -271,7 +271,7 @@ function findKeptCommentPlacement(
 Keep each comment on the key that still owns it before records merge or move.
 An unclear split gives its general comments to the first row; path comments follow their own values.
 
-@param syntax the original keys, headers, and parsed values.
+@param syntax the keys, headers, and parsed values as written.
 @param destination the ordered written values.
 @returns the comment blocks in source order, and the free comments apart.
 */

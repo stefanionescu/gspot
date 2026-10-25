@@ -220,7 +220,7 @@ async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<str
     using writer = openWriter(root);
     const { session, generated } = initPlan;
     writeSettings(writer, initPlan.settingsText, initPlan.read.get(SETTINGS_FILE));
-    const applied = await writeGeneratedFiles(session, generated, writer, { reviewedOriginals: initPlan.read });
+    const applied = await writeGeneratedFiles(session, generated, writer, { reviewed: initPlan.read });
     const kept = deleteConflictingConfigFiles(writer, initPlan.deleted, initPlan.read);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
     return ['Wrote the plan above.', ...applied.notes.filter((note) => !INIT_INSTALL_NOTES.has(note)), ''];

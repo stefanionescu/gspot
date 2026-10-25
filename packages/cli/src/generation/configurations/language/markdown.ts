@@ -5,10 +5,10 @@ import { assertRuleOptionsRun } from '#cli/generation/config-files/rule-options.
 import { MARKDOWNLINT_RULES, MARKDOWNLINT_ALL_RULES } from '#cli/config/generation/configurations/language/markdown.ts';
 
 /**
-Build markdownlint.jsonc: the Markdown lint rules with the chosen level, indentation, and your own rule options.
+Build markdownlint.jsonc: the Markdown lint rules for the level, indentation, and your own rule options.
 
 @param planned the config file with its scope, level, and target path.
-@returns the Markdown lint rules with the chosen level, indentation, and your own rule options.
+@returns the Markdown lint rules for the level, indentation, and your own rule options.
 */
 export function buildMarkdownlintFile(planned: Pick<PlannedConfigFile, 'scope' | 'level'>): string {
     const level = planned.level;
@@ -22,7 +22,7 @@ export function buildMarkdownlintFile(planned: Pick<PlannedConfigFile, 'scope' |
     };
     const options = getTable(planned.scope.settings, 'tools.markdownlint').rules;
     const running = new Set(Object.keys(options).filter((rule) => document[rule] !== false));
-    assertRuleOptionsRun({ chosen: Object.keys(options), running, higher: new Set(MARKDOWNLINT_ALL_RULES), level });
+    assertRuleOptionsRun({ configured: Object.keys(options), running, higher: new Set(MARKDOWNLINT_ALL_RULES), level });
     for (const [rule, chosen] of Object.entries(options))
         document[rule] = { ...(typeof document[rule] === 'object' && document[rule]), ...chosen };
     Object.assign(

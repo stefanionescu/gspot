@@ -24,7 +24,7 @@ import {
     NEXT_CACHE_BYTES,
     AUTHORED_NEXT_ENV,
     NEXT_VERSION_OUTPUT,
-    RETAINED_ROUTE_TYPES,
+    ROUTE_TYPES_COMMENT,
     TYPESCRIPT_VERSION_OUTPUT,
 } from '#tests/config/checks/framework/nextjs.ts';
 
@@ -40,7 +40,7 @@ async function prepareNextjsBuild(sandboxRoot: string, scope: string): Promise<S
         }),
         [join(scope, 'tsconfig.json')]: '{"compilerOptions":{"strict":true}}\n',
         [join(scope, 'next-env.d.ts')]: AUTHORED_NEXT_ENV,
-        [join(scope, '.next/types/routes.d.ts')]: RETAINED_ROUTE_TYPES,
+        [join(scope, '.next/types/routes.d.ts')]: ROUTE_TYPES_COMMENT,
         [join(scope, 'src/app/page.ts')]: 'bad input\n',
         'node_modules/.bin/next': NEXT_LAUNCHER,
         [UNRELATED_FILE.path]: UNRELATED_FILE.text,
@@ -91,7 +91,7 @@ test.each(['', 'app'])(
         const untracked = join(sandbox.path, join(scope, '.next/local-cache.bin'));
         const config = join(sandbox.path, join(scope, 'tsconfig.json'));
         await using originalFile = await open(config, 'r');
-        const original = await originalFile.readFile();
+        const previous = await originalFile.readFile();
         const { mode } = await originalFile.stat();
         const routesSeen: string[] = [];
         async function fakeNextjsBuild(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
@@ -127,14 +127,14 @@ test.each(['', 'app'])(
         expect(folders).not.toContain(join(sandbox.path, scope));
         expect(await Promise.all(folders.map((cwd) => isOnDisk(cwd)))).toStrictEqual(folders.map(() => false));
         await using currentFile = await open(config, 'r');
-        expect(await currentFile.readFile()).toStrictEqual(original);
+        expect(await currentFile.readFile()).toStrictEqual(previous);
         const afterStats = await currentFile.stat();
         expect(afterStats.mode).toBe(mode);
         expect(await readFile(untracked)).toStrictEqual(Buffer.from(NEXT_CACHE_BYTES));
         const contents = await readFile(join(sandbox.path, join(scope, 'next-env.d.ts')), 'utf8');
         expect(contents).toBe(AUTHORED_NEXT_ENV);
         const routeTypes = await readFile(join(sandbox.path, join(scope, '.next/types/routes.d.ts')), 'utf8');
-        expect(routeTypes).toBe(RETAINED_ROUTE_TYPES);
+        expect(routeTypes).toBe(ROUTE_TYPES_COMMENT);
         expect(await readFile(join(sandbox.path, UNRELATED_FILE.path), 'utf8')).toBe(UNRELATED_FILE.text);
     },
 );

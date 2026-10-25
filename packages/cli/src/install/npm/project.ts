@@ -39,7 +39,7 @@ async function createNpmLockfile(
     install: NpmToolInstall,
     toolProjectFile: GeneratedFile,
     project: NpmToolProject,
-    recorded: string | undefined,
+    saved: string | undefined,
     yarn: string | undefined,
 ): Promise<string> {
     const packageManager = install.packageManager;
@@ -51,8 +51,8 @@ async function createNpmLockfile(
     const env = await readRegistryEnvironment(install.session.root);
 
     if (yarn !== undefined) writeFileSync(join(runFolder, YARN_SETTINGS_FILE), yarn);
-    if (recorded !== undefined && isLockfileFresh(packageManager.name, recorded, project.dependencies, env))
-        writeFileSync(join(runFolder, project.lockfile), recorded);
+    if (saved !== undefined && isLockfileFresh(packageManager.name, saved, project.dependencies, env))
+        writeFileSync(join(runFolder, project.lockfile), saved);
     const lockfileArguments = PACKAGE_MANAGER_ARGUMENTS[packageManager.name].lockfile;
     const days = getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days;
     const run = await runPackageManager(install, {
@@ -169,24 +169,24 @@ export async function prepareNpmLockfile(
     const owner = install.writer;
     const packageManager = install.packageManager;
     const project = parseToolPackageJson(toolProjectFile.content, packageManager.name);
-    const original = owner.read(project.lockfilePath);
-    const recorded = original?.bytes.toString('utf8');
+    const previous = owner.read(project.lockfilePath);
+    const saved = previous?.bytes.toString('utf8');
     const env = await readRegistryEnvironment(root);
-    if (recorded !== undefined)
+    if (saved !== undefined)
         assertCredentialFreeLockfile(
-            recorded,
+            saved,
             extractRegistryCredentials(env),
             'The npm lockfile holds the registry credentials of the repository. gspot kept the existing files. Remove the credentials from the registry URL.',
         );
     if (
         owner.read(GSPOT_PATHS.npmProject)?.bytes.equals(Buffer.from(toolProjectFile.content)) === true &&
-        recorded !== undefined &&
-        isLockfileFresh(packageManager.name, recorded, project.dependencies, env)
+        saved !== undefined &&
+        isLockfileFresh(packageManager.name, saved, project.dependencies, env)
     ) {
-        return { path: project.lockfilePath, content: recorded, kind: 'lock', read: original };
+        return { path: project.lockfilePath, content: saved, kind: 'lock', read: previous };
     }
-    const lockfile = await createNpmLockfile(install, toolProjectFile, project, recorded, yarn);
-    return { path: project.lockfilePath, content: lockfile, kind: 'lock', read: original };
+    const lockfile = await createNpmLockfile(install, toolProjectFile, project, saved, yarn);
+    return { path: project.lockfilePath, content: lockfile, kind: 'lock', read: previous };
 }
 
 /**

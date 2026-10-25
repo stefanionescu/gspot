@@ -4,8 +4,8 @@ import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { SIGNAL_EXIT_CODES } from '#cli/config/system/terminal.ts';
 import { POLL_MILLISECONDS } from '#tests/config/setup/system/processes.ts';
 import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
+import type { ChildCapture, ProcessCapture } from '#tests/types/processes.ts';
 import { TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/environment.ts';
-import type { CapturedChild, CapturedProcess } from '#tests/types/processes.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 
 /**
@@ -116,7 +116,7 @@ Start and capture one test child within the command timeout.
 export function startCommand(
     command: readonly string[],
     options: AsyncSpawnOptions,
-): CapturedChild & { child: CapturedProcess & Pick<Bun.Subprocess, 'pid'> } {
+): ChildCapture & { child: ProcessCapture & Pick<Bun.Subprocess, 'pid'> } {
     const limited = limitCommand(command, options);
     const child = Bun.spawn([...command], {
         cwd: limited.options.cwd,
@@ -174,7 +174,7 @@ export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnR
 /**
 Drain the output of a child process, and end it when a test leaves its scope.
 */
-export function captureChild(child: CapturedProcess): CapturedChild {
+export function captureChild(child: ProcessCapture): ChildCapture {
     const output = new Response(child.stdout).text();
     const errors = new Response(child.stderr).text();
     return {

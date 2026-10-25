@@ -15,12 +15,12 @@ import { SESSION_FILES, MISE_SESSION_FILES } from '#tests/config/session.ts';
 test('a copied session generates settings from its replacement inventory and read cache', async () => {
     await using sandbox = await testdir(SESSION_FILES);
     const opened = await openSession(sandbox.path);
-    const original = getConfigFiles(opened);
+    const previous = getConfigFiles(opened);
     await writeFile(join(sandbox.path, 'run'), '#!/usr/bin/env node\nconsole.log(1);\n');
     const fresh = await openSession(sandbox.path);
     const copied = { ...opened, reads: fresh.reads, repository: fresh.repository, scopes: fresh.scopes };
     const generated = getConfigFiles(copied);
-    expect(generated.files).not.toStrictEqual(original.files);
+    expect(generated.files).not.toStrictEqual(previous.files);
     expect(generated.files).toStrictEqual(getConfigFiles(fresh).files);
 });
 

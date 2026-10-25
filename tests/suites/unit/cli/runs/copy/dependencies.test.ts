@@ -152,14 +152,14 @@ test('cancellation waits for the dependency copies to finish before removing the
 
     stageRevision(sandbox.path);
     const controller = new AbortController();
-    const original = promises.cp;
+    const previous = promises.cp;
     let pending = 0;
     let destination: string | undefined;
     using _copy = spyOn(promises, 'cp').mockImplementation(async (...copyArguments) => {
         pending += 1;
         if (typeof copyArguments[1] === 'string') destination = dirname(copyArguments[1]);
         try {
-            await original(...copyArguments);
+            await previous(...copyArguments);
             controller.abort(new Error('Canceled dependency copy'));
         } finally {
             pending -= 1;

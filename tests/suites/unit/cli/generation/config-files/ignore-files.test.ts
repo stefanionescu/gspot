@@ -113,10 +113,10 @@ test.each([...LANGUAGE_IGNORES])(
         });
         const session = await openSession(sandbox.path);
         const files = new Map(generate(session).files.map(({ path, content }) => [path, content]));
-        const internal = files.get('.prettierignore')!;
-        await writeFile(join(sandbox.path, '.prettierignore'), internal);
+        const prettierignore = files.get('.prettierignore')!;
+        await writeFile(join(sandbox.path, '.prettierignore'), prettierignore);
         for (const { path, pattern } of ignored) {
-            expect(internal.split('\n')).toContain(pattern);
+            expect(prettierignore.split('\n')).toContain(pattern);
             const source = join(sandbox.path, 'web', path, path.endsWith('/') ? 'source.js' : '');
             const information = await prettier.getFileInfo(source, {
                 ignorePath: join(sandbox.path, '.prettierignore'),
@@ -125,7 +125,7 @@ test.each([...LANGUAGE_IGNORES])(
             });
             expect(information.ignored).toBe(true);
         }
-        for (const path of absent) expect(internal.split('\n')).not.toContain(path);
+        for (const path of absent) expect(prettierignore.split('\n')).not.toContain(path);
     },
 );
 

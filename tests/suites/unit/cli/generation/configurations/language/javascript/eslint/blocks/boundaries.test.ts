@@ -162,7 +162,7 @@ configurations = ["typescript"]
 test.each([...LEVELS])(
     'environment reads are allowed only in environment_readers files of each scope at %s',
     async (level) => {
-        const ENVIRONMENT_COMPOSED = "export * from './other.js';\nconst port = import.meta.env.PORT;\n";
+        const ENVIRONMENT_REEXPORT = "export * from './other.js';\nconst port = import.meta.env.PORT;\n";
 
         await using sandbox = await testdir();
         const settings = buildSandboxSettings(['typescript'], { level, tables: ENVIRONMENT_TABLES });
@@ -198,7 +198,7 @@ test.each([...LEVELS])(
                 ),
             ).toStrictEqual([]);
         }
-        await createFileTree(sandbox.path, { 'app/src/source.js': ENVIRONMENT_COMPOSED });
+        await createFileTree(sandbox.path, { 'app/src/source.js': ENVIRONMENT_REEXPORT });
         expect(
             await listLintFindings(eslint, sandbox.path, ['app/src/source.js'], ['no-restricted-syntax']),
         ).toStrictEqual(

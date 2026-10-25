@@ -233,8 +233,8 @@ export async function checkLicensesAllowed(session: Session, planned: PlannedChe
     const { inventories, skipped } = await scanLicenses(session, planned);
     const findings = inventories.flatMap(({ dependencyFile, packages, ecosystem, settings }) => {
         return packages.flatMap(({ name, license }) => {
-            const isRecorded = settings.allowed_package.some((record) => isPackageAllowed(record, name, ecosystem));
-            if (isRecorded || isAllowed(license, settings.allowed)) return [];
+            const isListed = settings.allowed_package.some((record) => isPackageAllowed(record, name, ecosystem));
+            if (isListed || isAllowed(license, settings.allowed)) return [];
             return [
                 buildFinding(
                     planned,

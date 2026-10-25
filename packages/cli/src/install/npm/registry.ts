@@ -50,9 +50,9 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
         throw error;
     }
     if (!valid) throw new GspotError('install', 'The .npmrc settings are not valid.');
-    const effective: Record<string, unknown> = {};
-    for (const layer of config.list.toReversed()) Object.assign(effective, layer);
-    return effective;
+    const merged: Record<string, unknown> = {};
+    for (const layer of config.list.toReversed()) Object.assign(merged, layer);
+    return merged;
 }
 
 /**
@@ -120,9 +120,9 @@ Read npm-compatible connection settings through the npm settings file, and keep 
 @returns the environment variables that carry the registry settings.
 */
 export async function readRegistryEnvironment(repositoryRoot: string): Promise<Record<string, string>> {
-    const effective = await readRegistrySettings(repositoryRoot);
+    const merged = await readRegistrySettings(repositoryRoot);
     const env: Record<string, string> = Object.fromEntries(
-        Object.entries(effective)
+        Object.entries(merged)
             .filter(
                 ([key]) => CONNECTION_KEYS.has(key) || NPM_SCOPE_REGISTRY_KEY.test(key) || REGISTRY_AUTH_KEY.test(key),
             )

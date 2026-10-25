@@ -53,8 +53,8 @@ test.each([...SVELTE_PROJECTS])(
 
             // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
             const fromSandbox = (path: string): string => {
-                const observed = relative(sandbox.path, resolve(dirname(runtimePath), path));
-                return convertToPosixPath(observed);
+                const found = relative(sandbox.path, resolve(dirname(runtimePath), path));
+                return convertToPosixPath(found);
             };
             seen.push({
                 cwd: convertToPosixPath(relative(sandbox.path, options.cwd)),

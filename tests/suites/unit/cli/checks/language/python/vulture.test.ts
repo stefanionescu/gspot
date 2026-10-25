@@ -24,7 +24,7 @@ test('vulture reads every Python file of the scope and reports unused definition
     const session = await openSession(sandbox.path);
     using resources = fakeToolExecutables([getTool(session.configurations.values(), 'vulture')]);
     const output = [...VULTURE_OUTPUT].join('\n');
-    const executed = resources.use(
+    const spawn = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: output, code: 3 })),
     );
     const checked = await runChecks(session, buildRunOptions({ only: ['python/vulture'] }));
@@ -33,7 +33,7 @@ test('vulture reads every Python file of the scope and reports unused definition
         { file: 'app/nodes.py', line: 1, rule: 'unused-function', name: 'helper' },
         { file: 'app/nodes.py', line: 3, rule: 'unreachable-code', name: undefined },
     ]);
-    const command = executed.mock.calls
+    const command = spawn.mock.calls
         .map(([commandArguments]) => commandArguments)
         .find((commandArguments) => commandArguments.some((argument) => argument.endsWith('vulture')))!;
     expect(command.slice(1).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([

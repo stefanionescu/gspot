@@ -23,8 +23,8 @@ const MIGRATIONS = { create: () => new Map<string, Promise<Migration[]>>() };
 async function parseMigrations(session: Session, paths: Pick<Migration, 'path' | 'version'>[]): Promise<Migration[]> {
     const migrations: Migration[] = [];
     for (const { path, version } of paths) {
-        const original = readCachedText(session.reads, path);
-        const text = readForwardText(original);
+        const cached = readCachedText(session.reads, path);
+        const text = readForwardText(cached);
         const name = posix.basename(path);
         const parsed = await parseSqlFile(text, session.reads);
         migrations.push({

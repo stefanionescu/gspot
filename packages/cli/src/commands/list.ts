@@ -9,7 +9,7 @@ import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type Settings } from '#cli/types/settings/file.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
-import { listEffectiveSettings } from '#cli/settings/inherit.ts';
+import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
@@ -97,8 +97,8 @@ function buildConfigurationsResult(session: Session): CommandResult {
 function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson['settings'] {
     return scopes.flatMap((scope) => {
         const scopePath = scope.folder.path;
-        return listEffectiveSettings(scope.availableSettings, settings, scopePath)
-            .filter((effectiveSetting) => scopePath === '' || effectiveSetting.origin !== 'configuration')
+        return listInheritedSettings(scope.availableSettings, settings, scopePath)
+            .filter((setting) => scopePath === '' || setting.origin !== 'configuration')
             .map((row) => ({
                 key: row.key,
                 value: row.value,

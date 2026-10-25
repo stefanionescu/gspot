@@ -99,8 +99,8 @@ test('commitlint accepts exact folder-name scopes or no scope, reports bad messa
     for (const level of ['recommended', 'all', 'recommended'] as const) {
         const switched = await spawnGspot(sandbox.path, ['set', 'level', level]);
         expect(switched.code, switched.stdout + switched.stderr).toBe(0);
-        const isObserved = await isOnDisk(join(sandbox.path, findManifestTarget('commits', 'commitlint.json')));
-        expect(isObserved).toBe(level === 'all');
+        const exists = await isOnDisk(join(sandbox.path, findManifestTarget('commits', 'commitlint.json')));
+        expect(exists).toBe(level === 'all');
         const checked = await spawnGspot(sandbox.path, command);
         const expected = COMMITLINT_LEVEL_RESULTS[level];
         expect(checked.code, checked.stdout + checked.stderr).toBe(expected.code);

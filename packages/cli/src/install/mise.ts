@@ -127,11 +127,11 @@ async function addMissingChecksums(install: ToolInstall, lockfile: string): Prom
 
 async function prepareMiseLockfile(install: ToolInstall): Promise<void> {
     const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
-    const recorded = install.writer.read(GSPOT_PATHS.miseLockfile);
-    if (isMiseLockfileFresh(project.content, recorded?.bytes.toString('utf8'))) return;
+    const saved = install.writer.read(GSPOT_PATHS.miseLockfile);
+    if (isMiseLockfileFresh(project.content, saved?.bytes.toString('utf8'))) return;
     using scratch = createTemporaryFolder();
     writeFileSync(join(scratch.path, MISE_CONFIG_FILE), project.content);
-    if (recorded !== undefined) writeFileSync(join(scratch.path, MISE_LOCK_FILE), recorded.bytes);
+    if (saved !== undefined) writeFileSync(join(scratch.path, MISE_LOCK_FILE), saved.bytes);
     let output = '';
     for (const command of [['mise', 'trust', join(scratch.path, MISE_CONFIG_FILE)], MISE_LOCK_ARGUMENTS]) {
         const result = await runInstallStep(install, command, { cwd: scratch.path });
@@ -148,13 +148,13 @@ async function prepareMiseLockfile(install: ToolInstall): Promise<void> {
             'install',
             `mise lock left a tool without a download URL or checksum, so gspot kept the existing files. Its output:\n${output}`,
         );
-    const lockfile: GeneratedFile = { path: GSPOT_PATHS.miseLockfile, content, kind: 'lock', read: recorded };
+    const lockfile: GeneratedFile = { path: GSPOT_PATHS.miseLockfile, content, kind: 'lock', read: saved };
     install.generated.files.push(lockfile);
     writePlans(install.writer, [
         planReplacement(install.writer, {
             path: lockfile.path,
             next: { bytes: Buffer.from(content), mode: OWNER_WRITABLE_FILE },
-            expected: recorded,
+            expected: saved,
         }),
     ]);
 }

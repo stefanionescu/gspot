@@ -1,4 +1,4 @@
-import type { Setting, EffectiveSetting } from '#cli/types/settings/inheritance.ts';
+import type { Setting, InheritedSetting } from '#cli/types/settings/inheritance.ts';
 
 export type SetOptions = {
     cwd: string;
@@ -14,6 +14,6 @@ export type SettingReasonContext = {
     options: SetOptions;
     setting: Setting;
     change: ParsedSettingValue;
-    previous: EffectiveSetting | undefined;
+    previous: InheritedSetting | undefined;
     shippedDefault: unknown;
 };

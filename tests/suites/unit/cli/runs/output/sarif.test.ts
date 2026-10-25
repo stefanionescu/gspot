@@ -93,7 +93,7 @@ test.each([...SARIF_LOCATION_CASES])(
 );
 
 const outsideLocation = { uri: pathToFileURL(resolve(resolve('selected-source'), '../outside.ts')).href };
-const observed = [
+const findings = [
     {
         name: 'a path outside the root',
         message: 'SARIF reported a source location outside the copy of the source.',
@@ -121,7 +121,7 @@ const observed = [
     },
     { name: 'a cyclic URI base', message: 'SARIF reported a cyclic source location.', report: CYCLIC_REPORT },
 ];
-test.each(observed)('a report location that gspot cannot resolve is refused: $name', ({ report, message }) => {
+test.each(findings)('a report location that gspot cannot resolve is refused: $name', ({ report, message }) => {
     expect(() => parseSarifReport(report, resolve('selected-source'))).toThrow(new Error(message));
 });
 

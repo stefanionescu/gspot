@@ -16,7 +16,7 @@ import { SQL_COMMAND_CHECK_TABLES } from '#tests/config/commands/samples.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { GOOGLE_PYPROJECT } from '#tests/config/checks/language/python/project.ts';
 import { stat, chmod, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
-import { INVALID_CSS, SQLFLUFF_RETAINED_NOTE } from '#tests/config/commands/init/samples.ts';
+import { INVALID_CSS, SQLFLUFF_KEPT_NOTE } from '#tests/config/commands/init/samples.ts';
 import { runGspot, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -101,11 +101,11 @@ test.each(['setup.cfg', 'tox.ini'])('init leaves a shared %p in place and names 
     const settings = readSandboxSettings(sandbox.path).ignore;
     expect(settings).toStrictEqual([]);
     const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
-    expect(plan.retained).toStrictEqual([{ path, note: SQLFLUFF_RETAINED_NOTE }]);
-    await assertRetainedFile(sandbox.path, path, SHARED_SETUP_CONFIG);
+    expect(plan.retained).toStrictEqual([{ path, note: SQLFLUFF_KEPT_NOTE }]);
+    await assertFileKept(sandbox.path, path, SHARED_SETUP_CONFIG);
 });
-async function assertRetainedFile(root: string, path: string, original: string): Promise<void> {
-    expect(await readFile(join(root, path), 'utf8')).toBe(original);
+async function assertFileKept(root: string, path: string, previous: string): Promise<void> {
+    expect(await readFile(join(root, path), 'utf8')).toBe(previous);
     const attributes = await stat(join(root, path));
     expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
 }
@@ -147,15 +147,15 @@ test.each([true, false])(
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
-        expect(plan.retained).toStrictEqual([{ path: 'setup.cfg', note: SQLFLUFF_RETAINED_NOTE }]);
+        expect(plan.retained).toStrictEqual([{ path: 'setup.cfg', note: SQLFLUFF_KEPT_NOTE }]);
         expect(plan.delete.map(({ path }) => path)).not.toContain('setup.cfg');
         expect(await readlink(join(sandbox.path, 'setup.cfg'))).toBe(join('settings', 'shared.cfg'));
         expect(await readFile(target, 'utf8')).toBe(LINKED_SETUP_CONFIG);
         const attributes = await stat(target);
         expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
         expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(!isDryRun);
-        const isObserved = await isOnDisk(join(sandbox.path, findManifestTarget('sql', 'sqlfluff.cfg')));
-        expect(isObserved).toBe(!isDryRun);
+        const exists = await isOnDisk(join(sandbox.path, findManifestTarget('sql', 'sqlfluff.cfg')));
+        expect(exists).toBe(!isDryRun);
     },
 );
 test.each([...REPLACED_PYPROJECT_TABLES])(
@@ -164,9 +164,9 @@ test.each([...REPLACED_PYPROJECT_TABLES])(
         await using sandbox = await testdir();
         runGitStep(sandbox.path, ['init', '--quiet']);
         const path = 'pyproject.toml';
-        const original = `${GOOGLE_PYPROJECT}[tool.unrelated]\nkeep = true\n\n${text}`;
+        const previous = `${GOOGLE_PYPROJECT}[tool.unrelated]\nkeep = true\n\n${text}`;
         await createFileTree(sandbox.path, {
-            [path]: original,
+            [path]: previous,
             [source.file]: source.text,
         });
         await chmod(join(sandbox.path, path), 0o640);
@@ -174,11 +174,11 @@ test.each([...REPLACED_PYPROJECT_TABLES])(
         const preview = await runGspot(sandbox.path, [...commandArguments, '--dry-run', '--json']);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
         expect((JSON.parse(preview.stdout) as InitJson).plan.retained).toStrictEqual([{ path, note: note }]);
-        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(previous);
         const initialized = await runGspot(sandbox.path, [...commandArguments, '--json']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect((JSON.parse(initialized.stdout) as InitJson).plan.retained).toStrictEqual([{ path, note: note }]);
-        await assertRetainedFile(sandbox.path, path, original);
+        await assertFileKept(sandbox.path, path, previous);
         expect(await isOnDisk(join(sandbox.path, generated))).toBe(true);
     },
 );

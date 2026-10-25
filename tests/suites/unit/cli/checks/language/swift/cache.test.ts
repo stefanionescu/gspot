@@ -99,9 +99,9 @@ test.each([...SWIFT_BUILD_PURPOSES])(
                 .flatMap((configuration) => configuration.tools)
                 .toArray(),
         );
-        const executed = await runChecks(session, buildRunOptions({ only: [check] }));
+        const run = await runChecks(session, buildRunOptions({ only: [check] }));
 
-        expect(executed.report.checks).toMatchObject([
+        expect(run.report.checks).toMatchObject([
             {
                 check,
                 status: 'skipped',
@@ -192,10 +192,10 @@ test('Swift build side effects stay in the source copy and do not reach later ru
         'Sources/Value.swift': 'let value = 1\n',
     });
 
-    const original = join(sandbox.path, 'Sources/Value.swift');
+    const previous = join(sandbox.path, 'Sources/Value.swift');
     const initial = prepared.planned;
 
-    const { mode } = await stat(original);
+    const { mode } = await stat(previous);
     const sources: string[] = [];
     const artifacts: boolean[][] = [];
     const run = resources.use(
@@ -219,7 +219,7 @@ test('Swift build side effects stay in the source copy and do not reach later ru
         [false, false],
     ]);
     for (const [, options] of run.mock.calls) expect(options.cwd).not.toBe(sandbox.path);
-    await using originalFile = await open(original, 'r');
+    await using originalFile = await open(previous, 'r');
     expect(await originalFile.readFile('utf8')).toBe('let value = 1\n');
     const afterStats = await originalFile.stat();
     expect(afterStats.mode).toBe(mode);

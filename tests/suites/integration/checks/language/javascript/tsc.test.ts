@@ -84,8 +84,8 @@ test.each([...JSCONFIG_CASES])('javascript/tsc checks $name and keeps your files
         ...(row.scope === '' ? [] : [matchFields<CheckResult>({ scope: '', status: 'skipped', findings: [] })]),
         matchFields<CheckResult>({ scope: row.scope, status: 'passed', findings: [] }),
     ]);
-    const originalFiles = { ...JAVASCRIPT_PROJECT_FILES, ...row.files };
-    for (const [path, original] of Object.entries(originalFiles))
+    const previousFiles = { ...JAVASCRIPT_PROJECT_FILES, ...row.files };
+    for (const [path, original] of Object.entries(previousFiles))
         if (path !== row.sourceFile) expect(await readFile(join(root, path), 'utf8')).toBe(original);
 });
 

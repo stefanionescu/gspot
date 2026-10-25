@@ -70,7 +70,7 @@ async function prepareExpoApps(
     result: Partial<SpawnResult>,
 ): Promise<AsyncDisposable & { path: string; folders: string[] }> {
     await using resources = new AsyncDisposableStack();
-    const observed = await testdir({
+    const outside = await testdir({
         'gspot.toml': EXPO_SCOPE_SETTINGS,
         ...EXPO_DOCTOR_INSTALL,
         ...Object.fromEntries(
@@ -80,7 +80,7 @@ async function prepareExpoApps(
             ]),
         ),
     });
-    const sandbox = resources.use(observed);
+    const sandbox = resources.use(outside);
     const version = getTool(readConfigurations().values(), 'expo-doctor').version;
     await createFileTree(sandbox.path, {
         [`${GSPOT_PATHS.nodeModules}/expo-doctor/package.json`]: JSON.stringify({ name: 'expo-doctor', version }),

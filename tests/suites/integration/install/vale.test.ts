@@ -54,12 +54,12 @@ test('Vale package install deletes a package gspot no longer ships', async () =>
 test('Vale package install replaces an edited package and keeps your files', async () => {
     const sandbox = installedSandbox();
     await using _change = await changeAppliedSandbox(sandbox, AUTHORED_VALE_FILES);
-    const original = await readFile(join(sandbox.root, GOOGLE_RULE_PATH));
+    const previous = await readFile(join(sandbox.root, GOOGLE_RULE_PATH));
     await chmod(join(sandbox.root, GOOGLE_RULE_PATH), 0o644);
     await writeFile(join(sandbox.root, GOOGLE_RULE_PATH), 'edited\n');
     const installed = await spawnGspot(sandbox.root, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    expect(await readFile(join(sandbox.root, GOOGLE_RULE_PATH))).toStrictEqual(original);
+    expect(await readFile(join(sandbox.root, GOOGLE_RULE_PATH))).toStrictEqual(previous);
     expect({
         authored: await readFile(join(sandbox.root, 'authored.txt'), 'utf8'),
         style: await readFile(join(sandbox.root, AUTHORED_STYLE_PATH), 'utf8'),

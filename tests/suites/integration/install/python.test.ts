@@ -102,7 +102,7 @@ test.each([...PYTHON_PROJECTS])(
         commitAll(sandbox.path);
         runGitStep(sandbox.path, ['clone', '--quiet', '--no-local', sandbox.path, clone]);
         expect(await isOnDisk(join(clone, GSPOT_PATHS.pythonEnvironment))).toBe(false);
-        for (let attempt = 0; attempt < 2; attempt++) {
+        for (let round = 0; round < 2; round++) {
             const installed = await spawnGspot(clone, ['install']);
             expect(installed.code, installed.stdout + installed.stderr).toBe(0);
             expect(installed.stdout.split('\n')).toContain(

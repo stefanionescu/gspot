@@ -113,8 +113,8 @@ test('compiler: a failed Swift build without source errors exits 2, and the next
         },
     ]);
     run.mockResolvedValue(buildProcessResult());
-    const executed = await runChecks(corrected, options);
-    expect(executed.report.failed).toStrictEqual([]);
+    const checked = await runChecks(corrected, options);
+    expect(checked.report.failed).toStrictEqual([]);
 });
 
 test('compiler: a later Swift session reads a failed build after an earlier successful build', async () => {
@@ -174,10 +174,10 @@ test('compiler: swift/build refuses a response file outside the compiler cache a
     const input = prepared.planned;
     const plan = buildPlan(prepared.session, input);
 
-    const observed = spyOn(processes, 'spawnProcess').mockResolvedValue(
+    const spawn = spyOn(processes, 'spawnProcess').mockResolvedValue(
         buildProcessResult({ stdout: `swiftc @${join(sandbox.path, 'external-response')}` }),
     );
-    const run = resources.use(observed);
+    const run = resources.use(spawn);
 
     const buildError = await captureRejection(findBuiltInCheck('swift/build')(prepared.session, input));
     expect(buildError.message).toBe(

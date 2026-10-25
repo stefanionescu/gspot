@@ -33,14 +33,19 @@ export function buildCommitlintFile(planned: PlannedConfigFile): string {
         rules['scope-enum'] = [COMMITLINT_ERROR_SEVERITY, 'always', allowed];
         rules['scope-case'] = [0];
     }
-    const chosen = commitlint.rules;
+    const options = commitlint.rules;
     const running = new Set(
         Object.entries(rules)
             .filter(([, value]) => value[0] !== 0)
             .map(([name]) => name),
     );
-    assertRuleOptionsRun({ chosen: Object.keys(chosen), running, higher: new Set<string>(), level: planned.level });
-    for (const [name, value] of Object.entries(chosen)) rules[name] = [COMMITLINT_ERROR_SEVERITY, ...value];
+    assertRuleOptionsRun({
+        configured: Object.keys(options),
+        running,
+        higher: new Set<string>(),
+        level: planned.level,
+    });
+    for (const [name, value] of Object.entries(options)) rules[name] = [COMMITLINT_ERROR_SEVERITY, ...value];
     for (const name of listIgnoredRules(planned.scope, 'commits/commitlint')) rules[name] = [0];
     return JSON.stringify({ parserPreset: COMMITLINT_PARSER_PRESET, rules }, null, JSON_INDENT);
 }

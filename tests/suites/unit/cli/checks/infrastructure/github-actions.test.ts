@@ -62,9 +62,9 @@ test.each([...GENERATED_WORKFLOW_CHECKS])(
             '.github/workflows/source.yml': CI_SOURCE_WORKFLOW,
             [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'zizmor')]: 'fixture',
         });
-        const original = await openSession(sandbox.path);
+        const previous = await openSession(sandbox.path);
         using writer = openWriter(sandbox.path);
-        await writeGeneratedFiles(original, generate(original), writer);
+        await writeGeneratedFiles(previous, generate(previous), writer);
         const session = await openSession(sandbox.path);
         using _pins = fakeToolExecutables(
             ['actionlint', 'shellcheck', 'zizmor'].map((name) => getTool(session.configurations.values(), name)),

@@ -31,7 +31,7 @@ export async function createPythonProject(
         ...PYTHON_PROJECT_FILES,
     });
     await using resources = new AsyncDisposableStack();
-    const observed = overrideEnvironment(
+    const overrides = overrideEnvironment(
         Object.fromEntries<string | undefined>([
             ['UV_DEFAULT_INDEX', undefined],
             ...UV_PROJECT_VARIABLES.map(
@@ -39,7 +39,7 @@ export async function createPythonProject(
             ),
         ]),
     );
-    resources.use(observed);
+    resources.use(overrides);
     const indexPrefix = indexFile === 'pyproject.toml' ? 'tool.uv.' : '';
     const index =
         indexUrl === undefined

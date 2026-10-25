@@ -45,8 +45,8 @@ test('the init plan keeps existing CI jobs apart from tool settings that the gen
     const preview = await runGspot(sandbox.path, [...buildInitArguments(['sql']), '--dry-run']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(preview.stderr).toBe('');
-    const retained = preview.stdout.split('left in place\n', 2)[1]?.split('\n\n', 1)[0];
-    expect(retained).toBe(
+    const kept = preview.stdout.split('left in place\n', 2)[1]?.split('\n\n', 1)[0];
+    expect(kept).toBe(
         '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
     );
     expect(await readTree(sandbox.path)).toStrictEqual(before);

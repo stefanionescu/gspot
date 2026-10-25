@@ -1,6 +1,6 @@
 import type { FileKind } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import type { EffectiveSetting } from '#cli/types/settings/inheritance.ts';
+import type { InheritedSetting } from '#cli/types/settings/inheritance.ts';
 
 export type Explanation = {
     kind: 'check' | 'lint-rule' | 'configuration' | 'setting' | 'path';
@@ -25,7 +25,7 @@ export type PathExplanation = {
 export type SettingScope = {
     scope: string;
     shipped: unknown;
-    effective: EffectiveSetting | undefined;
+    effective: InheritedSetting | undefined;
     readBy: string[];
 };
 

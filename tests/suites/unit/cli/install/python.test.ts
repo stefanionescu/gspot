@@ -64,8 +64,8 @@ test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hid
         );
     });
     using writer = openWriter(sandbox.path);
-    const observed = installPythonTools(buildToolInstall(await openSession(sandbox.path), writer), 'unavailable-uv');
-    const installationError = await captureRejection(observed);
+    const install = installPythonTools(buildToolInstall(await openSession(sandbox.path), writer), 'unavailable-uv');
+    const installationError = await captureRejection(install);
     expect(installationError).toMatchObject({
         name: 'GspotError',
         code: 'install',
@@ -125,8 +125,8 @@ test('the uv lockfile check ignores name spelling and requirement order and refu
     expect(isPythonLockfileFresh(pythonProject, lockfileText, {})).toBe(true);
     expect(isPythonLockfileFresh(pythonProject, 'not valid =', {})).toBe(false);
     const rangedProject = toolPyprojectSchema.parse(parse(projectText.replace('==1.2.3', '>=1.2.3')));
-    const isObserved = isPythonLockfileFresh(rangedProject, lockfileText, {});
-    expect(isObserved).toBe(false);
+    const exists = isPythonLockfileFresh(rangedProject, lockfileText, {});
+    expect(exists).toBe(false);
 });
 test.each([...UV_LOCKFILE_MISMATCHES])('a changed %s makes the uv lockfile stale', (_name, before, after) => {
     expect(

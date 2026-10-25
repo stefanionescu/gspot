@@ -70,14 +70,14 @@ async function runFixInCopy(
     const setup = prepareCommandIn(scratch.path, planned, { session, command, toolPath, options });
     using files = openFiles(root);
     const paths = listFixPaths(planned);
-    const originals = new Map(paths.map((path) => [path, files.read(path)]));
+    const previousFiles = new Map(paths.map((path) => [path, files.read(path)]));
     const result = await runFixCommands(planned, setup, session.cancelSignal);
     using corrected = openFiles(scratch.path);
     for (const path of result.changed) {
-        const original = originals.get(path);
+        const previous = previousFiles.get(path);
         const value = corrected.read(path);
-        if (value !== undefined) files.write(path, value, original);
-        else if (original !== undefined) files.deleteFile(path, original);
+        if (value !== undefined) files.write(path, value, previous);
+        else if (previous !== undefined) files.deleteFile(path, previous);
     }
     return result;
 }

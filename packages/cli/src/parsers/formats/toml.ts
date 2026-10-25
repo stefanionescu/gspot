@@ -47,13 +47,13 @@ function findTomlTable(
     return table;
 }
 
-function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>): string {
-    const patched = patch(original.document.toTomlString, values, PATCH_FORMAT);
+function buildPatchedToml(previous: TomlSyntax, values: Record<string, unknown>): string {
+    const patched = patch(previous.document.toTomlString, values, PATCH_FORMAT);
     const reparsed = parseTomlSyntax(patched, values);
     const unmatched = new Set(listAnchoredComments(reparsed));
-    const retained = new Set(reparsed.pathNodes.map(({ kind, path }) => JSON.stringify([kind, ...path])));
+    const kept = new Set(reparsed.pathNodes.map(({ kind, path }) => JSON.stringify([kind, ...path])));
     const comments: TomlComments = new Map();
-    const changed = listAnchoredComments(original)
+    const changed = listAnchoredComments(previous)
         .map((source) => {
             const found = [...unmatched].find(
                 (unmatchedComment) => unmatchedComment.comment.raw === source.comment.raw,
@@ -65,14 +65,14 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
     const chunks = changed.flatMap(({ source: { comment, anchor: authored }, found }): TomlTextChunk[] => {
         const owner =
             authored ??
-            original.pathNodes.find(
+            previous.pathNodes.find(
                 (pathNode) =>
                     getTomlRange(pathNode.node)[0] > getTomlRange(comment)[1] &&
-                    retained.has(JSON.stringify([pathNode.kind, ...pathNode.path])),
+                    kept.has(JSON.stringify([pathNode.kind, ...pathNode.path])),
             );
         if (owner === undefined) return [];
         const key = JSON.stringify([owner.kind, ...owner.path]);
-        if (!retained.has(key)) return [];
+        if (!kept.has(key)) return [];
         addTomlComment(comments, {
             kind: owner.kind,
             path: owner.path,
@@ -94,9 +94,9 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
         chunks
             .toSorted((left, right) => left.start - right.start)
             .map((chunk) => {
-                const retained = patched.slice(position, chunk.start) + chunk.text;
+                const kept = patched.slice(position, chunk.start) + chunk.text;
                 position = chunk.end;
-                return retained;
+                return kept;
             })
             .join('') + patched.slice(position)
     );
@@ -137,7 +137,7 @@ Open a TOML file for key edits, and keep its comments and layout.
 */
 export function openTomlFile(path: string, text: string): EditableFile {
     const document: Record<string, unknown> = parseTomlFile(path, text);
-    const original = parseTomlSyntax(text, document);
+    const previous = parseTomlSyntax(text, document);
     return {
         getValue: (keys) => getValueAt(document, keys),
         set(keys, value) {
@@ -162,7 +162,7 @@ export function openTomlFile(path: string, text: string): EditableFile {
 
         // eslint-disable-next-line gspot/no-trivial-functions -- reason: The TOML document type declares it.
         getText() {
-            return buildPatchedToml(original, document);
+            return buildPatchedToml(previous, document);
         },
     };
 }
@@ -282,7 +282,7 @@ export function parseTomlSyntax(source: string, parsed: Record<string, unknown>)
 /**
 Place comments directly before their own key, header, or array item, without column alignment.
 
-@param comments the original syntax entries.
+@param comments the syntax entries as written.
 @param kind the type of the entry.
 @param path the keys and array indexes of the entry.
 @param text the entry contents.
@@ -334,7 +334,7 @@ export function getTomlRange(node: SourceRange): readonly [number, number] {
 }
 
 /**
-Add a source comment to its retained TOML entry.
+Add a source comment to its TOML entry.
 
 @param comments the collected comment blocks.
 @param commentPlacement what to add, and where.

@@ -58,11 +58,11 @@ test('unset warns when the Bun scanner remains after its setting goes', async ()
     });
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const original = await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8');
+    const previous = await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8');
     const unset = await runGspot(sandbox.path, ['unset', 'dependencies.bun_scanner', '--json']);
     expect(unset.code, unset.stdout + unset.stderr).toBe(0);
     expect((JSON.parse(unset.stdout) as ApplyReport).notes).toContain(MANAGED_KEYS_NOTE);
-    expect(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8')).toBe(original);
+    expect(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8')).toBe(previous);
     const repeated = await runGspot(sandbox.path, ['apply', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     expect((JSON.parse(repeated.stdout) as ApplyReport).notes).not.toContain(MANAGED_KEYS_NOTE);

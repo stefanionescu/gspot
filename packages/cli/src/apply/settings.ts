@@ -42,7 +42,7 @@ export async function applySettingsEdit(
         settingsFile: { settings: result.settings, text: result.text },
     });
     const generated = generate(session);
-    writeSettings(writer, result.text, input.original);
+    writeSettings(writer, result.text, input.previous);
     let report: ApplyReport;
     try {
         report = await writeGeneratedFiles(session, generated, writer);

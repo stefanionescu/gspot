@@ -3,7 +3,7 @@ import { createRule } from '../create-rule.ts';
 import type { ImportSource } from '../types/syntax.ts';
 import { INDEX_BASENAMES, IMPORT_SELECTOR } from '../config/rules/imports.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { INTERNAL_PREFIXES, MODULE_MOCK_METHODS } from '../config/rules/no-index-imports.ts';
+import { LOCAL_PREFIXES, MODULE_MOCK_METHODS } from '../config/rules/no-index-imports.ts';
 
 export const noIndexImports = createRule<[], 'index'>({
     name: 'no-index-imports',
@@ -28,7 +28,7 @@ export const noIndexImports = createRule<[], 'index'>({
             const source = ASTUtils.getStringIfConstant(node);
             if (
                 source === null ||
-                INTERNAL_PREFIXES.every((prefix) => !source.startsWith(prefix)) ||
+                LOCAL_PREFIXES.every((prefix) => !source.startsWith(prefix)) ||
                 !INDEX_BASENAMES.has(posix.basename(source))
             )
                 return;

@@ -19,8 +19,8 @@ import {
 test.each([...NAMING_LIMIT_CASES])(
     '$language accepts its exact limits and reports the next character or word',
     ({ language, category, characters, words }) => {
-        const effective = buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
-        const context = buildFileNaming(effective);
+        const naming = buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
+        const context = buildFileNaming(naming);
         const declaration = buildIdentifier({
             file: 'source',
             language,
@@ -73,8 +73,8 @@ test('the JavaScript handle override and a repository use override strip their p
 });
 
 test('a number word such as base64 counts as one word; repeated, extra, banned and digit words are still reported', () => {
-    const effective = buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
-    const context = buildFileNaming({ ...effective, limitsFor: () => ({ caseNames: [], maxChars: 35, maxWords: 4 }) });
+    const naming = buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
+    const context = buildFileNaming({ ...naming, limitsFor: () => ({ caseNames: [], maxChars: 35, maxWords: 4 }) });
     const declaration = buildIdentifier({ name: 'base64User', category: 'variables', file: 'source.ts' });
     expect(listRuleMessages(declaration, context)).toStrictEqual([]);
     expect(listRuleMessages({ ...declaration, name: 'base64UserUser' }, context)).toStrictEqual([
@@ -203,14 +203,14 @@ cases = ["upper-snake"]
 reason = "The authored interface selects this case."
 `;
 
-        const effective = buildScopeNamingSettings(
+        const naming = buildScopeNamingSettings(
             buildSandboxSettings(['naming'], {
                 rules: true,
                 level: 'all',
                 tables: UPPER_SNAKE_OVERRIDE,
             }),
         );
-        const context = buildFileNaming(effective);
+        const context = buildFileNaming(naming);
         const identifier = buildIdentifier({
             file: 'source',
             language,

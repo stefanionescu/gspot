@@ -36,10 +36,10 @@ test.each([...COMPOSE_PAIRING_CASES])(
         });
         const session = await openSession(sandbox.path);
         using resources = new DisposableStack();
-        const observed = fakeToolExecutables([
+        const fakes = fakeToolExecutables([
             { ...getTool(session.configurations.values(), 'docker'), version: DOCKER_VERSION },
         ]);
-        resources.use(observed);
+        resources.use(fakes);
         const toolRun = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult()));
         const planned = planChecks(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
         const result = await runCheckCode(session, planned, findCheckCode(planned.check));

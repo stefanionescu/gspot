@@ -27,8 +27,8 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
     using resources = new DisposableStack();
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
     const valeResult = buildProcessResult({ stdout: JSON.stringify({ [join(sandbox.path, path)]: [VALE_ALERT] }) });
-    const observed = spyOn(processes, 'spawnProcess').mockResolvedValue(valeResult);
-    const run = resources.use(observed);
+    const spawn = spyOn(processes, 'spawnProcess').mockResolvedValue(valeResult);
+    const run = resources.use(spawn);
     const result = await runChecks(session, buildRunOptions({ only: ['prose/vale'] }));
     expect(run.mock.calls).toHaveLength(1);
     const [command, options] = run.mock.calls[0]!;
@@ -62,12 +62,12 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
 
     const session = await openSession(sandbox.path);
     const paths = ['first.mts', 'second.cts'];
-    const original = paths.map((path) => readCachedBytes(session.reads, path).toString('utf8'));
+    const previous = paths.map((path) => readCachedBytes(session.reads, path).toString('utf8'));
     for (const path of paths) await writeFile(join(session.root, path), '// Changed after the run read it.\n');
 
     using resources = new DisposableStack();
-    const observed = fakeToolExecutables([getTool(session.configurations.values(), 'vale')]);
-    resources.use(observed);
+    const fakes = fakeToolExecutables([getTool(session.configurations.values(), 'vale')]);
+    resources.use(fakes);
     const scanned: string[] = [];
     const nativePaths: string[] = [];
     const run = resources.use(
@@ -79,7 +79,7 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
     );
     const findings = await findBuiltInCheck('prose/vale')(session, planSandboxCheck(session, 'prose/vale', { paths }));
     expect(run.mock.calls.map(([command]) => command.includes('--ext=.ts'))).toStrictEqual(paths.map(() => true));
-    expect(scanned).toStrictEqual(original);
+    expect(scanned).toStrictEqual(previous);
     expect(nativePaths).toStrictEqual(paths.map((path) => `--path=${join(sandbox.path, path)}.ts`));
     expect(findings.map(({ file, line, column, rule }) => ({ file, line, column, rule }))).toStrictEqual(
         paths.map((file) => ({ file, line: 1, column: 3, rule: 'gspot.Example' })),

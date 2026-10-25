@@ -128,10 +128,10 @@ Split globs into readable includes and excludes for blocks and runtime tests.
 @returns the expanded include and exclude globs.
 */
 export function splitGlobs(patterns: string[]): PathExpressions {
-    const expanded = includeFolderContents(patterns);
+    const included = includeFolderContents(patterns);
     return {
-        includes: expanded.filter((pattern) => !pattern.startsWith('!')),
-        excludes: expanded.filter((pattern) => pattern.startsWith('!')).map((pattern) => pattern.slice(1)),
+        includes: included.filter((pattern) => !pattern.startsWith('!')),
+        excludes: included.filter((pattern) => pattern.startsWith('!')).map((pattern) => pattern.slice(1)),
     };
 }
 

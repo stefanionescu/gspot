@@ -66,9 +66,9 @@ async function addInstallationNote(session: Session, generated: GenerationResult
 function buildReplacementPlans(
     generated: GenerationResult,
     writer: Files,
-    reviewedOriginals: ReadonlyMap<string, FileContents | undefined> | undefined,
+    reviewed: ReadonlyMap<string, FileContents | undefined> | undefined,
 ): WritePlan[] {
-    const authorized = new Map(reviewedOriginals);
+    const authorized = new Map(reviewed);
     return generated.files.map((file) => {
         const read = file.kind === 'lock' ? file.read : authorized.get(file.path);
         const replacement = {
@@ -91,16 +91,16 @@ Plan, write, and report generated file changes under the repository writer lock.
 @param generated the files to write, with resolved lockfiles.
 @param writer writes and removes files.
 @param options what the write may replace.
-@param options.reviewedOriginals the file contents that you reviewed and approved for replacement.
+@param options.reviewed the file contents that you reviewed and approved for replacement.
 @returns the file changes.
 */
 export async function writeGeneratedFiles(
     session: Session,
     generated: GenerationResult,
     writer: Files,
-    options?: { reviewedOriginals?: ReadonlyMap<string, FileContents | undefined> | undefined },
+    options?: { reviewed?: ReadonlyMap<string, FileContents | undefined> | undefined },
 ): Promise<ApplyReport> {
-    const reviewedOriginals = options?.reviewedOriginals;
+    const reviewed = options?.reviewed;
     const report: ApplyReport = {
         written: [],
         unchanged: [],
@@ -111,11 +111,9 @@ export async function writeGeneratedFiles(
     const paths = listExpectedPaths(session, generated);
     const managedKeyPlans = generated.managedKeys.map((output) => {
         const plan = planSettingsWrite(writer, output.path, output.keys);
-        return reviewedOriginals?.has(output.path) === true
-            ? { ...plan, before: reviewedOriginals.get(output.path) }
-            : plan;
+        return reviewed?.has(output.path) === true ? { ...plan, before: reviewed.get(output.path) } : plan;
     });
-    const replacements = buildReplacementPlans(generated, writer, reviewedOriginals);
+    const replacements = buildReplacementPlans(generated, writer, reviewed);
     const blocks = generated.blocks.map((block) => planBlock(writer, block.path, block.block, block.style));
     const generatedPlans = [...replacements, ...blocks, ...managedKeyPlans];
     const pruning = listStrayPaths(session, paths).map((path) => planRemoval(writer, path));
@@ -137,11 +135,11 @@ export async function writeGeneratedFiles(
 }
 
 function formatGeneratedChanges(action: string, paths: string[]): string[] {
-    const internal = paths.filter((path) => path.startsWith(`${DOT_GSPOT}/`)).length;
+    const gspotCount = paths.filter((path) => path.startsWith(`${DOT_GSPOT}/`)).length;
     const outside = paths.filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
     const label = action.padEnd('updated  '.length);
     return [
-        ...(internal === 0 ? [] : [`${label}${formatCount(internal, 'generated file')}`]),
+        ...(gspotCount === 0 ? [] : [`${label}${formatCount(gspotCount, 'generated file')}`]),
         ...outside.map((path) => `${label}${path}`),
     ];
 }

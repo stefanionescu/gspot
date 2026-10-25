@@ -16,10 +16,10 @@ import { SETTING_TABLE_FIELDS, CATEGORY_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES } fr
 import {
     type Setting,
     type SettingMatch,
-    type EffectiveValue,
+    type InheritedValue,
     type SettingDefault,
     type WrittenSetting,
-    type EffectiveSetting,
+    type InheritedSetting,
     type AvailableSettings,
     type WrittenScopeTable,
 } from '#cli/types/settings/inheritance.ts';
@@ -68,11 +68,11 @@ function findCategorySetting(
 function mergeTable(
     setting: Setting,
     key: string,
-    effective: EffectiveValue,
+    inherited: InheritedValue,
     table: WrittenScopeTable,
     possibleKeys: string[],
-): EffectiveValue {
-    let result = effective;
+): InheritedValue {
+    let result = inherited;
     const written = possibleKeys
         .map((writtenKey) => ({ writtenKey, found: getWrittenSetting(table.table, writtenKey) }))
         .filter((row): row is typeof row & { found: NonNullable<typeof row.found> } => row.found !== undefined);
@@ -247,7 +247,7 @@ export function getSettingValue(
     settings: Settings,
     key: string,
     scope?: string,
-): EffectiveSetting | undefined {
+): InheritedSetting | undefined {
     const match = findSetting(availableSettings, key);
     if (!match) return undefined;
     const { setting } = match;
@@ -257,7 +257,7 @@ export function getSettingValue(
     if (shipped !== undefined)
         initialSource =
             shipped.configuration === 'gspot default' ? 'gspot default' : `configuration ${shipped.configuration}`;
-    const start: EffectiveValue = {
+    const start: InheritedValue = {
         value: shipped?.value,
         source: initialSource,
         origin: shipped ? 'configuration' : 'unset',
@@ -326,11 +326,11 @@ List the settings that apply, with language defaults and written variants, in ke
 @param scope the folder whose table applies last, if any.
 @returns the resolved settings in key order.
 */
-export function listEffectiveSettings(
+export function listInheritedSettings(
     availableSettings: AvailableSettings,
     settings: Settings,
     scope?: string,
-): EffectiveSetting[] {
+): InheritedSetting[] {
     const keys = [
         ...new Set([
             ...availableSettings.settings.keys(),

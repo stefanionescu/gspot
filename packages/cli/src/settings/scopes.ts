@@ -8,13 +8,13 @@ import { findSettingSchema, rootSettingSchemas } from '#cli/schemas/settings/fil
 import type { Settings, TableValues, TableSettings } from '#cli/types/settings/file.ts';
 import { isInScope, isScopeCovered, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { SETTING_LANGUAGES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
-import { getSettingTable, getSettingValue, listEffectiveSettings } from '#cli/settings/inherit.ts';
+import { getSettingTable, getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
 
 import type {
     Scope,
     ScopeValues,
     ScopeSettings,
-    EffectiveSetting,
+    InheritedSetting,
     AvailableSettings,
     SelectedConfigurations,
 } from '#cli/types/settings/inheritance.ts';
@@ -69,7 +69,7 @@ function listNamingVariants(
     availableSettings: AvailableSettings,
     settings: Settings,
     scope: string,
-): EffectiveSetting[] {
+): InheritedSetting[] {
     return SETTING_LANGUAGES.flatMap((language) =>
         Object.keys(namingCategorySchema.shape).flatMap((field) => [
             `naming.${language}.${field}`,
@@ -85,7 +85,7 @@ function listLimitVariants(
     availableSettings: AvailableSettings,
     settings: Settings,
     scope: string,
-): EffectiveSetting[] {
+): InheritedSetting[] {
     return availableSettings.settings
         .values()
         .filter((setting) => setting.name.startsWith('limits.') && setting.type === 'number')
@@ -194,7 +194,7 @@ export function listIgnoredRules(scope: Scope, check: string): string[] {
 }
 
 function buildScopeValues(availableSettings: AvailableSettings, settings: Settings, scope: string): ScopeValues {
-    const listed = listEffectiveSettings(availableSettings, settings, scope);
+    const listed = listInheritedSettings(availableSettings, settings, scope);
     const valuesByKey = Object.fromEntries(listed.map((row) => [row.key, row.value]));
     const namespaces: Record<string, unknown> = {};
     fillTableValues(namespaces, listed);
@@ -208,7 +208,7 @@ function buildScopeValues(availableSettings: AvailableSettings, settings: Settin
     };
 }
 
-function fillTableValues(tables: Record<string, unknown>, rows: EffectiveSetting[]): void {
+function fillTableValues(tables: Record<string, unknown>, rows: InheritedSetting[]): void {
     const valueRows = rows
         .filter(
             (row) =>

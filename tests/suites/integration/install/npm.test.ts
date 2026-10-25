@@ -57,7 +57,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         await applyThenInstall(root);
         const { lockfilePath, lockfile } = await readToolProjectFiles(root, toolPackageManager);
         expect(Buffer.from(lockfile).toString('utf8')).not.toContain(NPM_REGISTRY_TOKEN);
-        for (let attempt = 0; attempt < 2; attempt++) {
+        for (let round = 0; round < 2; round++) {
             const applied = await spawnGspot(root, ['apply', '--json']);
             expect(applied.code, applied.stdout + applied.stderr).toBe(0);
             expect(await readFile(lockfilePath)).toStrictEqual(Buffer.from(lockfile));
@@ -198,7 +198,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         commitAll(root);
         runGitStep(root, ['clone', '--quiet', '--no-local', root, clone]);
         expect(await isOnDisk(join(clone, GSPOT_PATHS.nodeModules))).toBe(false);
-        for (let attempt = 0; attempt < 2; attempt++) {
+        for (let round = 0; round < 2; round++) {
             const cloneInstall = await spawnGspot(clone, ['install']);
             expect(cloneInstall.code, cloneInstall.stdout + cloneInstall.stderr).toBe(0);
             const version = await runCommand([toolPackageManager, '--version'], { cwd: clone });

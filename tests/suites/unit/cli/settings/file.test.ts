@@ -37,13 +37,13 @@ test('an edit planned from old bytes is refused, and a new plan is written', asy
     await writeFile(path, `${COMMENTED_SETTINGS}# Concurrent edit.\n`);
     using writer = openWriter(sandbox.path);
     expect(() => {
-        writeSettings(writer, result.text, input.original);
+        writeSettings(writer, result.text, input.previous);
     }).toThrow(new GspotError('filesystem', 'gspot.toml changed while gspot wrote it. Run the command again.'));
     expect(await readFile(path, 'utf8')).toBe(`${COMMENTED_SETTINGS}# Concurrent edit.\n`);
     const fresh = readSettingsEdit(sandbox.path);
     setKey(fresh.table, 'level', 'all');
     const next = buildEditedSettings(sandbox.path, fresh);
-    writeSettings(writer, next.text, fresh.original);
+    writeSettings(writer, next.text, fresh.previous);
     const settings = readSandboxSettings(sandbox.path).level;
     expect(settings).toBe('all');
 });
@@ -63,7 +63,7 @@ test('writing an unchanged file does not touch it', async () => {
     const input = readSettingsEdit(sandbox.path);
     const before = await stat(path);
     using writer = openWriter(sandbox.path);
-    writeSettings(writer, input.text, input.original);
+    writeSettings(writer, input.text, input.previous);
     expect(await stat(path)).toMatchObject({ ino: before.ino, mtimeMs: before.mtimeMs, mode: before.mode });
 });
 
@@ -93,9 +93,9 @@ test('editing settings through a hard link replaces only the selected path', asy
     setKey(input.table, 'level', 'all');
     const result = buildEditedSettings(sandbox.path, input);
     using writer = openWriter(sandbox.path);
-    writeSettings(writer, result.text, input.original);
+    writeSettings(writer, result.text, input.previous);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(result.text);
     expect(await readFile(peer, 'utf8')).toBe(COMMENTED_SETTINGS);
-    const [written, retained] = await Promise.all([stat(join(sandbox.path, 'gspot.toml')), stat(peer)]);
-    expect(written.ino).not.toBe(retained.ino);
+    const [written, kept] = await Promise.all([stat(join(sandbox.path, 'gspot.toml')), stat(peer)]);
+    expect(written.ino).not.toBe(kept.ino);
 });

@@ -112,9 +112,9 @@ function listScopeFormats(settings: Settings): ScopeFormat[] {
 
 function listFormatOverrides(settings: Settings): FormatOverride[] {
     return listScopeFormats(settings).map(({ scope, paths, format }) => {
-        const expanded = includeFolderContents(paths);
-        const files = expanded.filter((path) => !path.startsWith('!'));
-        const excludeFiles = expanded.filter((path) => path.startsWith('!')).map((path) => path.slice(1));
+        const included = includeFolderContents(paths);
+        const files = included.filter((path) => !path.startsWith('!'));
+        const excludeFiles = included.filter((path) => path.startsWith('!')).map((path) => path.slice(1));
         if (scope !== '') excludeFiles.push(`!${escapeGlob(scope)}/**`);
         return { files, excludeFiles, options: convertFormatSettings(format) };
     });

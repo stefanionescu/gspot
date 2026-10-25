@@ -43,8 +43,8 @@ export async function linkInstalledModules(modulesFolder: string): Promise<void>
         const destination = join(modulesFolder, name);
         if (await isOnDisk(destination)) continue;
         await mkdir(dirname(destination), { recursive: true });
-        const original = await realpath(join(store, name));
-        await symlink(original, destination, FOLDER_LINK_TYPE);
+        const previous = await realpath(join(store, name));
+        await symlink(previous, destination, FOLDER_LINK_TYPE);
     }
     await writeFile(join(modulesFolder, '.gitignore'), '*\n');
 }

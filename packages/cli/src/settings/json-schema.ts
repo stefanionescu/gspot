@@ -5,8 +5,8 @@ import { localDateSchema } from '#cli/schemas/settings/fields.ts';
 
 import {
     SCHEMA_URL,
+    HIDDEN_FACT_KEYS,
     TABLE_DESCRIPTIONS,
-    INTERNAL_FACT_KEYS,
     JSON_SCHEMA_DIALECT,
 } from '#cli/config/settings/json-schema.ts';
 
@@ -42,7 +42,7 @@ function convertToJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
                 : 'throw',
         override: ({ zodSchema, jsonSchema }) => {
             if (zodSchema instanceof z.ZodArray && jsonSchema.$ref !== undefined) jsonSchema.type = 'array';
-            for (const key of INTERNAL_FACT_KEYS) Reflect.deleteProperty(jsonSchema, key);
+            for (const key of HIDDEN_FACT_KEYS) Reflect.deleteProperty(jsonSchema, key);
             if (zodSchema instanceof z.ZodDefault && zodSchema.def.innerType instanceof z.ZodUnion) {
                 Reflect.deleteProperty(jsonSchema, 'minimum');
                 jsonSchema.default = zodSchema.def.defaultValue;

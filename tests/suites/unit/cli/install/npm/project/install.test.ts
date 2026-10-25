@@ -39,7 +39,7 @@ test.each([...FAILED_INSTALL_CASES])(
         const registry = `https://alex:${encodeURIComponent(password)}@registry.example.com/`;
         const source = `registry=${registry}\n//registry.example.com/:_authToken=${token}\n`;
         const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
-        const original = frozen
+        const previous = frozen
             ? packageJson
             : JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.0' } });
         const lockfile = JSON.stringify({
@@ -48,7 +48,7 @@ test.each([...FAILED_INSTALL_CASES])(
         await createFileTree(sandbox.path, {
             '.npmrc': source,
             'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
-            [GSPOT_PATHS.npmProject]: original,
+            [GSPOT_PATHS.npmProject]: previous,
             [`${DOT_GSPOT}/bun.lock`]: lockfile,
         });
         await createFileTree(sandbox.path, { 'gspot.toml': buildSandboxSettings([]) });
@@ -76,7 +76,7 @@ test.each([...FAILED_INSTALL_CASES])(
             message: `bun ${operation} failed (exit 1).\nDownloading https://[redacted]@registry.example.com/private-check-tool\n[redacted]\n[redacted]\n${refusal} from https://[redacted]@registry.example.com/private-check-tool`,
         });
         expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);
-        expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(original);
+        expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(previous);
         expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/bun.lock`), 'utf8')).toBe(lockfile);
     },
 );
@@ -114,7 +114,7 @@ test.each([false, true])('credentials in a lockfile are refused (frozen install:
         workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
         packages: { prettier: ['prettier@3.8.1', `https://registry.example.com/${token}`, {}, 'integrity'] },
     });
-    const original = frozen
+    const previous = frozen
         ? packageJson
         : JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.0' } });
     const lockfile = frozen
@@ -123,7 +123,7 @@ test.each([false, true])('credentials in a lockfile are refused (frozen install:
     await createFileTree(sandbox.path, {
         '.npmrc': source,
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
-        [GSPOT_PATHS.npmProject]: original,
+        [GSPOT_PATHS.npmProject]: previous,
         [`${DOT_GSPOT}/bun.lock`]: lockfile,
         [`${GSPOT_PATHS.nodeModules}/authored.txt`]: 'keep installed files',
     });
@@ -149,7 +149,7 @@ test.each([false, true])('credentials in a lockfile are refused (frozen install:
             : 'The package manager wrote registry credentials into its lockfile. gspot kept the existing files.',
     );
     expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(original);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(previous);
     expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/bun.lock`), 'utf8')).toBe(lockfile);
     expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.nodeModules}/authored.txt`), 'utf8')).toBe(
         'keep installed files',

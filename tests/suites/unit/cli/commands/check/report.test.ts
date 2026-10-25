@@ -175,10 +175,10 @@ test('NO_COLOR prints findings without color on terminal streams', async () => {
 
     using resources = new DisposableStack();
     for (const stream of [process.stdout, process.stderr]) {
-        const original = Object.getOwnPropertyDescriptor(stream, 'isTTY');
+        const previous = Object.getOwnPropertyDescriptor(stream, 'isTTY');
         resources.defer(() => {
-            if (original === undefined) Reflect.deleteProperty(stream, 'isTTY');
-            else Object.defineProperty(stream, 'isTTY', original);
+            if (previous === undefined) Reflect.deleteProperty(stream, 'isTTY');
+            else Object.defineProperty(stream, 'isTTY', previous);
         });
         Object.defineProperty(stream, 'isTTY', { value: true, configurable: true });
     }

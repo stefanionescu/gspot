@@ -90,8 +90,8 @@ export function addToList(table: TomlTable, key: string, values: unknown[]): voi
     const writtenList: unknown[] = Array.isArray(value) ? value : [];
     const list = [...writtenList];
     for (const added of values) {
-        const normalized = normalizeTables(added);
-        if (list.every((listed) => !isDeepStrictEqual(listed, normalized))) list.push(normalized);
+        const tables = normalizeTables(added);
+        if (list.every((listed) => !isDeepStrictEqual(listed, tables))) list.push(tables);
     }
     parent[name] = replaceWrittenValue(written, list);
 }
@@ -162,12 +162,12 @@ export function getScopeTable(table: TomlTable, scope: string | undefined): Toml
 Read the bytes and mode of gspot.toml before an edit.
 
 @param repositoryRoot the folder that holds gspot.toml.
-@returns the settings before the edit, with the original file contents.
+@returns the settings before the edit, with the file contents.
 */
 export function readSettingsEdit(repositoryRoot: string): SettingsEdit {
-    const { text, original } = readSettingsFile(repositoryRoot);
+    const { text, previous } = readSettingsFile(repositoryRoot);
     const table = parseTomlText(text, SETTINGS_FILE);
-    return { text, table, original };
+    return { text, table, previous };
 }
 
 /**

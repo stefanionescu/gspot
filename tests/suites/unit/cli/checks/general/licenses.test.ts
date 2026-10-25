@@ -78,12 +78,12 @@ test.each([...ALLOWED_PACKAGE_CASES])(
         );
 
         using resources = new DisposableStack();
-        const observed = spyOn(processes, 'spawnProcess').mockResolvedValue(
+        const spawn = spyOn(processes, 'spawnProcess').mockResolvedValue(
             buildProcessResult({
                 stdout: JSON.stringify([{ Name: installed, Version: '1.0.0', 'License-Expression': license }]),
             }),
         );
-        resources.use(observed);
+        resources.use(spawn);
         const found = await runSandboxCheck(sandbox.path, 'licenses/allowed');
         expect(found.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([...findings]);
     },
@@ -193,14 +193,14 @@ test('scan: one scan reads package.json and pyproject.toml, accepts a license ch
     using output = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
         if (command[0] === 'git') return nativeRun(command, options);
         folders.push(options.cwd);
-        const observed = buildProcessResult({
+        const result = buildProcessResult({
             stdout: JSON.stringify(
                 command.some((argument) => argument.includes('license-checker-rseidelsohn'))
                     ? NPM_LICENSE_REPORT
                     : PYTHON_LICENSE_REPORT,
             ),
         });
-        return Promise.resolve(observed);
+        return Promise.resolve(result);
     });
     const findings = await runSandboxCheck(sandbox.path, 'licenses/allowed');
     expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual(
@@ -296,6 +296,6 @@ async function writeLicenseSandbox(
     const version = getTool(readConfigurations().values(), 'pip-licenses').version;
     if (version === undefined) throw new Error('The pip-licenses test requires a pinned version.');
     const scannerPath = join(buildVenvBinPath(join(root, GSPOT_PATHS.pythonEnvironment)), 'pip-licenses');
-    const observed = relative(root, scannerPath);
-    await writeProgramCommand(root, observed, 'fakes/tool', '--line', `pip-licenses ${version}`);
+    const found = relative(root, scannerPath);
+    await writeProgramCommand(root, found, 'fakes/tool', '--line', `pip-licenses ${version}`);
 }

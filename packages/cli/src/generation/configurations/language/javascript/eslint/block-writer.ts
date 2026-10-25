@@ -14,19 +14,21 @@ function buildOptionBlocks(
     writer: BlockWriter,
 ): EslintBlockFields[] {
     return writer.ruleOptions.flatMap((options): EslintBlockFields[] => {
-        const chosenRules = Object.entries(block.rules).flatMap(([name, value]): [string, unknown][] => {
-            const chosen = options.rules[name];
+        const pickedRules = Object.entries(block.rules).flatMap(([name, value]): [string, unknown][] => {
+            const override = options.rules[name];
             const severity: unknown = Array.isArray(value) ? value[0] : value;
-            return chosen === undefined || severity === 'off' || severity === 0 ? [] : [[name, [severity, ...chosen]]];
+            return override === undefined || severity === 'off' || severity === 0
+                ? []
+                : [[name, [severity, ...override]]];
         });
-        for (const [name] of chosenRules) writer.applied.add(name);
-        if (chosenRules.length === 0) return [];
+        for (const [name] of pickedRules) writer.applied.add(name);
+        if (pickedRules.length === 0) return [];
         return [
             {
                 ...block,
                 files: buildScopeFiles(block.files ?? writer.codeFiles, options.scope, options.includes),
                 ignores: [...(block.ignores ?? []), ...options.excludes],
-                rules: Object.fromEntries<unknown>(chosenRules),
+                rules: Object.fromEntries<unknown>(pickedRules),
             },
         ];
     });
@@ -70,25 +72,25 @@ Print a block and record the rule options it applies.
 */
 export function writeEslintBlock(writer: BlockWriter, block: PlannedEslintBlock): string {
     const { allLevelRules, level, codeFiles } = writer;
-    const { fields: payload, scope } = block;
+    const { fields: blockFields, scope } = block;
     const rules: Record<string, unknown> = Object.fromEntries(
-        (payload.rules === undefined ? [] : Object.entries(payload.rules)).map(([name, value]) => [
+        (blockFields.rules === undefined ? [] : Object.entries(blockFields.rules)).map(([name, value]) => [
             name,
             level !== 'all' && allLevelRules.has(name) ? 'off' : value,
         ]),
     );
-    const ignores = [...(payload.ignores ?? []), ...(scope?.excluded ?? [])];
+    const ignores = [...(blockFields.ignores ?? []), ...(scope?.excluded ?? [])];
     const nested =
         scope === undefined
             ? {}
             : {
-                  files: (payload.files ?? codeFiles).map((pattern) => [
+                  files: (blockFields.files ?? codeFiles).map((pattern) => [
                       ...(Array.isArray(pattern) ? pattern : [pattern]),
                       buildScopeGlob(scope.path),
                   ]),
                   ...(ignores.length > 0 && { ignores }),
               };
-    const fields = { ...payload, ...nested, rules };
+    const fields = { ...blockFields, ...nested, rules };
     return formatBlocks([fields, ...buildOptionBlocks(fields, writer)], block, level);
 }
 

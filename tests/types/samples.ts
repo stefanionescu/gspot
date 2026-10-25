@@ -31,12 +31,12 @@ export type SandboxChanges = {
     executable?: readonly string[] | undefined;
 };
 
-export type OriginalFile = { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string };
+export type PreviousFile = { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string };
 
 export type SandboxWrite = {
     files: Record<string, string>;
     settings: string;
-    originals: Map<string, OriginalFile | undefined>;
+    previousFiles: Map<string, PreviousFile | undefined>;
     removed: readonly string[];
     executable: readonly string[];
 };

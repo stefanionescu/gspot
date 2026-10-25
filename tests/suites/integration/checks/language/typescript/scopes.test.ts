@@ -72,11 +72,11 @@ test('typescript/tsc runs a covering parent tsconfig once for nested scopes', as
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const command = ['check', '--only', 'typescript/tsconfig,typescript/tsc', '--json'];
-    const original = parseCheckReport(await spawnGspot(sandbox.path, command));
-    expect(original.code, original.stdout + original.stderr).toBe(0);
+    const previous = parseCheckReport(await spawnGspot(sandbox.path, command));
+    expect(previous.code, previous.stdout + previous.stderr).toBe(0);
     for (const check of ['typescript/tsconfig', 'typescript/tsc'])
         expect(
-            original.report.checks
+            previous.report.checks
                 .filter((each) => each.check === check)
                 .map(({ scope, status }) => ({ scope, status })),
         ).toStrictEqual([

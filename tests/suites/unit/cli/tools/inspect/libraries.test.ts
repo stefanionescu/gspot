@@ -138,8 +138,8 @@ test.each([...PACKAGE_METADATA_FAILURES])(
     async ({ field, packageJson }) => {
         await using sandbox = await testdir();
         const path = join(sandbox.path, `${GSPOT_PATHS.nodeModules}/teller/package.json`);
-        const original = JSON.stringify(packageJson);
-        await createFileTree(sandbox.path, { [`${GSPOT_PATHS.nodeModules}/teller/package.json`]: original });
+        const previous = JSON.stringify(packageJson);
+        await createFileTree(sandbox.path, { [`${GSPOT_PATHS.nodeModules}/teller/package.json`]: previous });
         const context = buildToolSearch(sandbox.path);
         const tool = buildLibraryPin('teller', '5.0.1');
         expect(() => inspectTool(context, tool)).toThrow(

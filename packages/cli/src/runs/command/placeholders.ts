@@ -228,8 +228,8 @@ export function expandCommand(
             if (Array.isArray(value)) return assertArgumentList(value, name);
         }
 
-        const expanded = expandEachPlaceholder(planned, argument);
-        return expanded ?? expandArgument(session, planned, argument, substitutions);
+        const replaced = expandEachPlaceholder(planned, argument);
+        return replaced ?? expandArgument(session, planned, argument, substitutions);
     });
 }
 

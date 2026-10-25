@@ -10,7 +10,7 @@ import type { Command } from '@commander-js/extra-typings';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { listEffectiveSettings } from '#cli/settings/inherit.ts';
+import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import { explainSetting } from '#cli/commands/explain/setting.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
 import { ESLINT_RULE_NAMES_FILE } from '#cli/config/commands/explain.ts';
@@ -29,7 +29,7 @@ function formatUnknownSubject(session: Session | undefined, subject: string): st
         ...listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.commandChecks)),
         ...readConfigurations().keys(),
         ...(session?.scopes.flatMap((scope) =>
-            listEffectiveSettings(scope.availableSettings, session.settingsFile.settings, scope.folder.path).map(
+            listInheritedSettings(scope.availableSettings, session.settingsFile.settings, scope.folder.path).map(
                 (setting) => setting.key,
             ),
         ) ?? []),

@@ -92,9 +92,9 @@ function listGeneratorOutputs(
 ): { listed: GeneratorOutput[]; named: string[] } {
     const named: string[] = [];
     const generatorOutputs = (planned.check.generator_outputs ?? []).flatMap((output): GeneratorOutput[] => {
-        const { kind, path: original } = output;
-        const isNamed = kind === 'pattern' && original.includes('{setting:');
-        const replaced = replacePlaceholders(session, planned, original, values);
+        const { kind, path: pattern } = output;
+        const isNamed = kind === 'pattern' && pattern.includes('{setting:');
+        const replaced = replacePlaceholders(session, planned, pattern, values);
         const path = isNamed ? stripScopePrefix(replaced, planned.scope.folder.path) : replaced;
         if (path === '') return [];
         if (isNamed) named.push(path);

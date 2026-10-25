@@ -79,7 +79,7 @@ test('a refused pinned package manager keeps project files and gives no install 
         'gspot.toml': buildSandboxSettings([]),
     });
     await runGspot(sandbox.path, ['apply']);
-    const original = await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8');
+    const previous = await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8');
     const run = processes.spawnProcess;
     using boundary = spyOn(processes, 'spawnProcess').mockImplementation((command, options) =>
         command[0] === 'mise'
@@ -103,7 +103,7 @@ test('a refused pinned package manager keeps project files and gives no install 
     for (const [path, content] of Object.entries(files))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
     expect(await readFile(join(sandbox.path, 'source'), 'utf8')).toBe('kept\n');
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(original);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(previous);
     expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/bun.lock`))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
 });

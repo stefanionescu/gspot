@@ -84,12 +84,12 @@ Collect each path and every folder above it.
 @returns the paths and parent folders, each once.
 */
 export function includeParentFolders(paths: readonly string[]): Set<string> {
-    const expanded = new Set(paths);
+    const covered = new Set(paths);
     for (const path of paths) {
         const segments = path.split('/');
-        for (let depth = 1; depth < segments.length; depth += 1) expanded.add(segments.slice(0, depth).join('/'));
+        for (let depth = 1; depth < segments.length; depth += 1) covered.add(segments.slice(0, depth).join('/'));
     }
-    return expanded;
+    return covered;
 }
 
 /**

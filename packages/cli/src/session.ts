@@ -29,16 +29,16 @@ function buildScopes(
 ): Scope[] {
     const { scopeFolders: scopes } = repository;
     const automatic = listAutomaticConfigurations(configurations, repository);
-    const effective = { ...settings, configurations: [...new Set([...settings.configurations, ...automatic])] };
+    const active = { ...settings, configurations: [...new Set([...settings.configurations, ...automatic])] };
     return scopes.map((scope) => {
-        const selected = selectForScope(effective, scope.path, configurations);
+        const selected = selectForScope(active, scope.path, configurations);
         const available = buildAvailableSettings(selected, settings.level);
         const packageManager = available.defaults.has('site.build_command') ? readPackageManager() : undefined;
         applyDetectedDefaults(available, {
             packageManagerName: packageManager?.name,
             dependencyNames: listProjectDependencyNames(repository.dependencyFiles, scope.path),
         });
-        const view = buildScopeSettings(available, effective, selected, scope.path);
+        const view = buildScopeSettings(available, active, selected, scope.path);
         return { folder: scope, configurations: selected, availableSettings: available, settings: view };
     });
 }
@@ -48,7 +48,7 @@ Read and classify the repository from the authored settings and scopes.
 
 @param input the inputs of the initial repository read.
 @param input.settings the authored settings and scope configuration.
-@param input.text the original gspot.toml text.
+@param input.text the gspot.toml text as written.
 @param input.configurations the shipped configuration declarations.
 @param input.reads the current repository cache and root folder.
 @returns the inventory used both before and after fixes.

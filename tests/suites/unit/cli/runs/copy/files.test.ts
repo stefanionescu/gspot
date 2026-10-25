@@ -78,8 +78,8 @@ test('a link into another linked tree points at the copy of that tree, whatever 
     using copy = await createCopy(selectCopyPaths(sandbox.path, ['package.json'], ['']));
     const scratch = copy.path;
     const copied = await realpath(join(scratch, 'node_modules/a-next'));
-    const isObserved = copied.startsWith(await realpath(join(scratch, 'node_modules/z-store')));
-    expect(isObserved).toBe(true);
+    const exists = copied.startsWith(await realpath(join(scratch, 'node_modules/z-store')));
+    expect(exists).toBe(true);
     expect(await isOnDisk(join(copied, '../helpers/package.json'))).toBe(true);
 });
 

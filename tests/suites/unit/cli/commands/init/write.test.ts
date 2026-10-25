@@ -16,7 +16,7 @@ import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
 import { CSS_MANAGED_PLAN_CHANGES } from '#tests/config/commands/init/write.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { INVALID_CSS, SQLFLUFF_RETAINED_NOTE } from '#tests/config/commands/init/samples.ts';
+import { INVALID_CSS, SQLFLUFF_KEPT_NOTE } from '#tests/config/commands/init/samples.ts';
 
 test.each([
     [
@@ -91,8 +91,8 @@ test('init keeps the old config file when the generated one cannot be written', 
         'gspot stopped because of an internal error: Generated write denied. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n',
     );
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
-    const isObserved = await isOnDisk(join(sandbox.path, findManifestTarget('spelling', 'typos.toml')));
-    expect(isObserved).toBe(false);
+    const exists = await isOnDisk(join(sandbox.path, findManifestTarget('spelling', 'typos.toml')));
+    expect(exists).toBe(false);
 });
 
 test('init refuses to write package.json when one of its managed fields changed after the plan, and keeps its bytes and mode', async () => {
@@ -135,7 +135,7 @@ test('init keeps a shared file that was edited after the plan', async () => {
 
     const preview = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'sql', '--json']);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
-    expect(plan.retained).toStrictEqual([{ path: 'setup.cfg', note: SQLFLUFF_RETAINED_NOTE }]);
+    expect(plan.retained).toStrictEqual([{ path: 'setup.cfg', note: SQLFLUFF_KEPT_NOTE }]);
     const edited = `[sqlfluff]
 exclude_rules = LT01, RF01
 [flake8]
@@ -151,8 +151,8 @@ ignore = E501
     const written = await runGspot(sandbox.path, ['init', '--configurations', 'sql']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
-    const isObserved = await isOnDisk(join(sandbox.path, findManifestTarget('sql', 'sqlfluff.cfg')));
-    expect(isObserved).toBe(true);
+    const exists = await isOnDisk(join(sandbox.path, findManifestTarget('sql', 'sqlfluff.cfg')));
+    expect(exists).toBe(true);
 });
 test.each([true, false])('init writes gspot.toml only when you confirm the plan (answer %p)', async (answer) => {
     await using sandbox = await testdir({ 'README.md': '# Example\n' });

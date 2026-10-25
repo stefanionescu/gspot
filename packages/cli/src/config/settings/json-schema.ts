@@ -1,5 +1,5 @@
 export const SCHEMA_URL = 'https://generativespotting.com/gspot.schema.json';
-export const INTERNAL_FACT_KEYS = [
+export const HIDDEN_FACT_KEYS = [
     'configurations',
     'languages',
     'reason_when',

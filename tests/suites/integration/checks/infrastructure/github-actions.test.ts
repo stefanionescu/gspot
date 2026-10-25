@@ -60,8 +60,8 @@ test('the generated GitHub workflow passes actionlint', async () => {
     const generated = await readFile(workflow);
     const headerEnd = generated.indexOf('\n');
     expect(generated.subarray(0, headerEnd).toString('utf8')).toBe(`# ${GENERATED_HEADER_TEXT}`);
-    const payload = generated.subarray(headerEnd + 1);
-    await createFileTree(sandbox.path, { '.github/workflows/accepted.yml': payload.toString('utf8') });
+    const body = generated.subarray(headerEnd + 1);
+    await createFileTree(sandbox.path, { '.github/workflows/accepted.yml': body.toString('utf8') });
     const explained = await spawnGspot(sandbox.path, ['explain', './.github/workflows/accepted.yml', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     expect(JSON.parse(explained.stdout) as Explanation['facts']).toMatchObject({
