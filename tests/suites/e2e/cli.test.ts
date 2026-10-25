@@ -1,7 +1,6 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { join, delimiter } from 'node:path';
-import { CI_PINS } from '#cli/config/generation/ci.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
@@ -10,7 +9,6 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
 import { generateFile, findRuleFilePath } from '#tests/setup/cli/generated-files.ts';
@@ -92,9 +90,7 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
 
 async function prepareFormatterSandbox(installation: GspotProject) {
     const toolConsumer = join(installation.workspace, 'tool-consumer');
-    const systemTools = join(installation.workspace, 'system-tools');
     await mkdir(toolConsumer);
-    await writeScriptCommand(systemTools, 'mise', `console.log(${JSON.stringify(CI_PINS.mise.version)});\n`);
     const bun = await runCommand(['bun', '--version'], { cwd: toolConsumer, env: installation.environment });
     if (bun.code !== 0) throw new Error(`Bun version failed: ${bun.stdout}${bun.stderr}`);
     const authoredPackage = JSON.stringify({
@@ -105,10 +101,7 @@ async function prepareFormatterSandbox(installation: GspotProject) {
     await writeFile(join(toolConsumer, 'package.json'), authoredPackage);
     await writeFile(join(toolConsumer, 'source.js'), 'export const greeting="hello";');
     commitAll(toolConsumer);
-    const consumerSandbox = {
-        ...installation.buildSandbox({ PATH: `${systemTools}${delimiter}${installation.environment['PATH'] ?? ''}` }),
-        root: toolConsumer,
-    };
+    const consumerSandbox = { ...installation.online, root: toolConsumer };
     await initSandbox(consumerSandbox, { configurations: ['format'], level: 'all' });
     return { consumerSandbox, authoredPackage };
 }

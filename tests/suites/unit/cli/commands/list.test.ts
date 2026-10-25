@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
@@ -73,7 +74,11 @@ test('the text configuration list shows the selected names of the JSON list', as
     const human = await runGspot(sandbox.path, ['list', 'configurations']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
-    expect(human.stdout).toBe(CONFIGURATION_LIST_TEXT);
+    expect(human.stdout).toBe(
+        isWindows
+            ? CONFIGURATION_LIST_TEXT.replaceAll(/(semgrep\S* {2}root: )on/gu, '$1off (system)')
+            : CONFIGURATION_LIST_TEXT,
+    );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
@@ -102,9 +107,11 @@ test('the text check list puts the states of all scopes in one row', async () =>
     const human = await runGspot(sandbox.path, ['list']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
-    expect(human.stdout.split('\n').filter((line) => line.startsWith(' '.repeat(4)))).toStrictEqual([
-        ...SCOPE_CHECK_LIST_ROWS,
-    ]);
+    expect(human.stdout.split('\n').filter((line) => line.startsWith(' '.repeat(4)))).toStrictEqual(
+        SCOPE_CHECK_LIST_ROWS.map((row) =>
+            isWindows && row.includes('semgrep') ? row.replaceAll(': on', ': off (system)') : row,
+        ),
+    );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

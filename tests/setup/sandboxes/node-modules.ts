@@ -3,7 +3,7 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { FOLDER_LINK_TYPE } from '#tests/setup/system/platform.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
-import { mkdir, readdir, symlink, readFile, realpath } from 'node:fs/promises';
+import { mkdir, readdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 export const workspaceModules = join(REPOSITORY_ROOT, 'node_modules');
 
@@ -44,6 +44,7 @@ export async function linkInstalledModules(modulesFolder: string): Promise<void>
         const original = await realpath(join(store, name));
         await symlink(original, destination, FOLDER_LINK_TYPE);
     }
+    await writeFile(join(modulesFolder, '.gitignore'), '*\n');
 }
 
 /**
@@ -89,4 +90,5 @@ export async function linkTypescript(modulesFolder: string): Promise<void> {
     await mkdir(modulesFolder, { recursive: true });
     await linkPackages(modulesFolder, ['typescript']);
     await symlink(await realpath(join(testModules, '.bin')), join(modulesFolder, '.bin'), FOLDER_LINK_TYPE);
+    await writeFile(join(modulesFolder, '.gitignore'), '*\n');
 }

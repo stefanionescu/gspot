@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { readScopeAliases } from '#cli/repository/npm/aliases.ts';
@@ -55,7 +56,7 @@ test('alias reads name a missing extended file', async () => {
     await using sandbox = await testdir({ 'tsconfig.json': '{"extends":"./missing-base.json"}' });
     expect(() => readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toThrow(
         new Error(
-            `Cannot read the compiler settings in tsconfig.json: Cannot read file '${join(sandbox.path, 'missing-base.json')}'.`,
+            `Cannot read the compiler settings in tsconfig.json: Cannot read file '${convertToPosixPath(join(sandbox.path, 'missing-base.json'))}'.`,
         ),
     );
 });

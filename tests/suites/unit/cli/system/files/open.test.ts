@@ -126,7 +126,7 @@ test.skipIf(isWindows).each([...OUTSIDE_LINKS])(
     },
 );
 
-test('createFolder sets the folder mode', async () => {
+test.skipIf(isWindows)('createFolder sets the folder mode', async () => {
     await using sandbox = await testdir();
     using files = openFiles(sandbox.path);
     files.createFolder(`${GSPOT_PATHS.state}/private`, 0o700);

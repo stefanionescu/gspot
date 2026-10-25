@@ -6,6 +6,7 @@ import { planChecks } from '#cli/planning/checks.ts';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -180,7 +181,7 @@ test('compiler: swift/build refuses a response file outside the compiler cache a
 
     const buildError = await captureRejection(findBuiltInCheck('swift/build')(prepared.session, input));
     expect(buildError.message).toBe(
-        `"${relative(plan.folder, join(sandbox.path, 'external-response'))}" is not a safe repository-relative path. Choose a path inside the repository.`,
+        `"${convertToPosixPath(relative(plan.folder, join(sandbox.path, 'external-response')))}" is not a safe repository-relative path. Choose a path inside the repository.`,
     );
     expect(await isOnDisk(plan.log)).toBe(false);
     const response = join(plan.folder, 'sources');

@@ -14,7 +14,7 @@ path = "apps/api"
 
 export const TEST_PATH_FILES = {
     'qa/entry.js': 'export const testcaseCount = 1;\n',
-    'tests/default.js': 'export const testcaseCount = 1;\n',
+    '__tests__/default.js': 'export const testcaseCount = 1;\n',
     'src/entry.js': 'export const testcaseCount = 1;\n',
     'Tests/Service.swift': 'let testcaseCount = 1\n',
     'Sources/ServiceTests.swift': 'let testcaseCount = 1\n',
@@ -57,9 +57,9 @@ export const PYTHON_TYPE_SOURCE = [
 export const TEST_FILE_FINDINGS = [
     { file: 'Sources/Service.swift', rule: 'banned-word' },
     { file: 'Sources/ServiceTests.swift', rule: 'banned-word' },
+    { file: 'Tests/Service.swift', rule: 'banned-word' },
+    { file: '__tests__/default.js', rule: 'banned-word' },
     { file: 'src/entry.js', rule: 'banned-word' },
-    { file: 'tests/Service.swift', rule: 'banned-word' },
-    { file: 'tests/default.js', rule: 'banned-word' },
     { file: 'apps/api/verification/entry.js', rule: 'banned-word' },
     { file: 'apps/web/qa/entry.js', rule: 'banned-word' },
     { file: 'apps/web/src/entry.js', rule: 'banned-word' },

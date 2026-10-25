@@ -3,6 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -26,7 +27,7 @@ test.each([...TSCONFIG_READ_ERRORS])(
         });
 
         const failure = await captureRejection(runSandboxCheck(sandbox.path, 'typescript/tsconfig'));
-        expect(failure.message).toBe(error.replaceAll('{root}', () => sandbox.path));
+        expect(failure.message).toBe(error.replaceAll('{root}', () => convertToPosixPath(sandbox.path)));
         await writeFile(join(sandbox.path, fixed), STRICT_TSCONFIG_TEXT);
         expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
     },
