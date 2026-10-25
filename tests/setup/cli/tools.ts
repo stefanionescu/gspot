@@ -9,19 +9,19 @@ import type { Tool } from '#cli/types/configurations.ts';
 import type { RuntimePins } from '#tests/types/runner.ts';
 import { runtimePinsSchema } from '#tests/schemas/runner.ts';
 import { TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
-import type { NpmToolInstall } from '#cli/types/install/npm.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
-import { readInstallPackageManager } from '#cli/install/tools.ts';
 import { getTable, findRootScope } from '#cli/settings/scopes.ts';
-import { selectLockfileName } from '#cli/install/npm/lockfiles.ts';
+import type { NpmToolInstall } from '#cli/types/installers/npm.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
-import type { ToolInstall, ToolPackageManager } from '#cli/types/install/tools.ts';
+import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
+import { readInstallPackageManager } from '#cli/installers/install.ts';
+import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
+import type { ToolInstall, ToolPackageManager } from '#cli/types/installers/install.ts';
 
 /**
 Read a tool project file, its lockfile, and the lockfile mode.

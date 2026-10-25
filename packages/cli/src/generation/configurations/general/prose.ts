@@ -3,26 +3,18 @@ import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/session.ts';
-import { PROSE_GRAMMARS } from '#cli/config/prose.ts';
+import { buildValeIni } from '#cli/installers/vale.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import type { Level } from '#cli/types/configurations.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 
 import {
     ACRONYMS,
-    BLOCK_IGNORES,
     LENGTH_STYLES,
-    TOKEN_IGNORES,
     VALE_PACKAGES,
-    VALE_OFF_RULES,
     ALT_TEXT_TOKENS,
     BANNED_HEADINGS,
     VALE_STYLES_PATH,
-    VALE_MARKUP_FILES,
-    VALE_MARKUP_RULES,
-    VALE_COMMENT_RULES,
     VALE_REGEX_SYMBOLS,
-    VALE_SKIPPED_SCOPES,
     CAPITALIZATION_STYLES,
     VALE_PACKAGE_RELEASES,
     VALE_PACKAGE_REPOSITORY,
@@ -88,58 +80,6 @@ export function buildValeIniFile(planned: PlannedConfigFile): string {
                 `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${VALE_PACKAGE_RELEASES[name].version}/${name}.zip`,
         ),
     });
-}
-
-/**
-Build the text of a vale.ini from its style folders and package sources.
-
-@param ini the level, the style folders in the order Vale reads them, and the package sources.
-@param ini.level recommended or all; level all adds the packages and their rules.
-@param ini.stylesPaths the style folders; Vale installs packages in the last one.
-@param ini.packages the package archives: each a URL or a local path.
-@returns the vale.ini text.
-*/
-export function buildValeIni({
-    level,
-    stylesPaths,
-    packages,
-}: {
-    level: Level;
-    stylesPaths: string[];
-    packages: string[];
-}): string {
-    const isAll = level === 'all';
-    const formats = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
-        'format' in grammar ? [[extension.slice(1), grammar.format] as const] : [],
-    );
-    const lines = [
-        ...(isAll ? ['# Vale reads both StylesPath lines in order and installs packages in the last folder.'] : []),
-        ...stylesPaths.map((path) => `StylesPath = ${path}`),
-        'MinAlertLevel = suggestion',
-        `SkippedScopes = ${VALE_SKIPPED_SCOPES}`,
-        ...(isAll ? [`Packages = ${packages.join(', ')}`, 'Vocab = words'] : []),
-        '',
-        '[formats]',
-        ...formats.map(([extension, format]) => `${extension} = ${format}`),
-        '',
-        '[*]',
-        `BasedOnStyles = ${(isAll ? ['gspot', 'Vale', ...VALE_PACKAGES] : ['gspot']).join(', ')}`,
-        `BlockIgnores = ${BLOCK_IGNORES.join(', ')}`,
-        `TokenIgnores = ${TOKEN_IGNORES.join(', ')}`,
-        ...(isAll ? Object.entries(VALE_OFF_RULES).flatMap(([rule, reason]) => [`# ${reason}`, `${rule} = NO`]) : []),
-        '# Markup checks read markup only.',
-        'gspot.alt-text = NO',
-        ...(isAll ? VALE_MARKUP_RULES.map((rule) => `${rule} = NO`) : []),
-        '',
-        `[*.{${formats.map(([extension]) => extension).join(',')}}]`,
-        'BasedOnStyles =',
-        ...VALE_COMMENT_RULES.map((rule) => `${rule} = YES`),
-        '',
-        `[${VALE_MARKUP_FILES}]`,
-        'gspot.alt-text = YES',
-        ...(isAll ? VALE_MARKUP_RULES.map((rule) => `${rule} = YES`) : []),
-    ];
-    return lines.join('\n');
 }
 
 /**

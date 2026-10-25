@@ -1,6 +1,8 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
+import { listHookNames } from '#cli/installers/hooks.ts';
+import { buildHookFiles } from '#cli/generation/hooks.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
@@ -11,17 +13,16 @@ import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
-import { listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
-import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm/yarn.ts';
+import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/installers/npm/yarn.ts';
 import { buildPointerFieldEdits } from '#cli/generation/config-files/pointers.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { buildBunScannerEdits } from '#cli/generation/configurations/general/dependencies.ts';
 import { isConfigurationSelected, listSelectedConfigurations } from '#cli/configurations/select.ts';
-import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/tool-projects.ts';
+import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/installers/projects.ts';
 import { selectToolPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 
 import {

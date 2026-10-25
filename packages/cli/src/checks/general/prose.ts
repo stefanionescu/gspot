@@ -1,9 +1,9 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
-import { hasValePackages } from '#cli/install/vale.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { hasValePackages } from '#cli/installers/vale.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';

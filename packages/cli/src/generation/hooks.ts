@@ -1,12 +1,10 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { HookName, GeneratedFile } from '#cli/types/generation/files.ts';
 import type { StartRunner } from '#cli/types/repository/npm/package-manager.ts';
 
 import {
     LFS_HOOKS,
-    CHECK_HOOKS,
     HOOK_CHECKS,
     HOOK_SHEBANG,
     PUSH_INPUT_SAVE,
@@ -35,18 +33,6 @@ function buildHookScript(name: HookName, runner: StartRunner): string {
         '',
     ].join('\n');
     return `${HOOK_SHEBANG}\n${body}`;
-}
-
-/**
-List the hooks that run at least one configured check.
-
-@param checks the configured checks.
-
-@returns the hook names, in the order Git runs them.
-*/
-export function listHookNames(checks: PlannedCheck[]): HookName[] {
-    const stages = new Set<string>(checks.map((planned) => planned.check.stage));
-    return CHECK_HOOKS.filter((name) => HOOK_CHECKS[name].stages.some((stage) => stages.has(stage)));
 }
 
 /**

@@ -146,7 +146,7 @@ allowed_names = ["resolved"]
 reason = "npm and Yarn lockfiles name each package download URL resolved."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/install/npm.ts"]
+paths = ["packages/cli/src/types/installers/npm.ts"]
 allowed_names = ["resolved", "resolution"]
 reason = "npm and pnpm lockfiles call their download fields resolved and resolution."
 
@@ -378,16 +378,16 @@ name = "session"
 paths = ["packages/cli/src/session.ts"]
 
 [[import_rule]]
-name = "generation"
-paths = ["packages/cli/src/generation/**"]
-
-[[import_rule]]
 name = "tools"
 paths = ["packages/cli/src/tools/**"]
 
 [[import_rule]]
-name = "install"
-paths = ["packages/cli/src/install/**", "packages/cli/src/schemas/install/**"]
+name = "installers"
+paths = ["packages/cli/src/installers/**", "packages/cli/src/schemas/installers/**"]
+
+[[import_rule]]
+name = "generation"
+paths = ["packages/cli/src/generation/**"]
 
 [[import_rule]]
 name = "apply"

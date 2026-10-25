@@ -161,7 +161,7 @@ repository.
 - When the tests of one source file or folder pass 300 lines, they become a folder of that name with one file per
   scenario.
 - An integration test mirrors what it runs: `tests/suites/integration/checks/<group>/<configuration>.test.ts`,
-  `commands/<command>.test.ts`, or `install/<module>.test.ts`. Past 300 lines, the tests of one configuration become a
+  `commands/<command>.test.ts`, or `installers/<module>.test.ts`. Past 300 lines, the tests of one configuration become a
   folder with one file per tool.
 - `tests/config/` mirrors the tests. `tests/config/<path>.ts` holds the values of `tests/suites/<suite>/<path>.test.ts`, and the
   test files of one folder may share `tests/config/<folder>.ts`.

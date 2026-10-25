@@ -1,9 +1,9 @@
 import { join, posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import { buildUvRunCommand } from '#cli/tools/uv.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
-import { buildUvRunCommand } from '#cli/tools/python.ts';
 import { countCodeLines } from '#cli/checks/code-lines.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';

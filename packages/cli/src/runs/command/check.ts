@@ -22,7 +22,7 @@ import { FILES_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
 import type { CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
 import { PYTHON_ENVIRONMENT_CHECKS } from '#cli/config/runs/command/check.ts';
-import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/python.ts';
+import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/runs/command/output.ts';
 import { runToolProcess, readToolAvailability, buildOtherToolEnvironment } from '#cli/runs/command/tool.ts';
 

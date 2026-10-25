@@ -1,9 +1,9 @@
 import { openWriter } from '#cli/write.ts';
 import { openSession } from '#cli/session.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { installTools } from '#cli/install/tools.ts';
 import { generate } from '#cli/generation/generate.ts';
 import type { Files } from '#cli/types/system/files.ts';
+import { installTools } from '#cli/installers/install.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';

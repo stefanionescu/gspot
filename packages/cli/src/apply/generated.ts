@@ -2,7 +2,7 @@ import { formatCount } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { type ApplyReport } from '#cli/types/apply.ts';
 import { listExpectedPaths } from '#cli/apply/outdated.ts';
-import { listStaleLockfiles } from '#cli/install/tool-projects.ts';
+import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';

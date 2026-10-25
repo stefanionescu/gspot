@@ -1,0 +1,15 @@
+import { testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
+import { NPMRC_REFUSALS } from '#tests/config/installers/npm/registry.ts';
+
+test.each([...NPMRC_REFUSALS])(
+    'an invalid .npmrc setting stops the registry read with $message',
+    async ({ source, message }) => {
+        await using sandbox = await testdir({ '.npmrc': source, 'package.json': '{"private":true}\n' });
+
+        const error = await captureRejection(readRegistryEnvironment(sandbox.path));
+        expect(error).toMatchObject({ name: 'GspotError', code: 'install', message });
+    },
+);

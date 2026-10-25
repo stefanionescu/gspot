@@ -4,8 +4,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
-import type { ToolPackageJson } from '#cli/types/install/npm.ts';
 import { type EslintConfiguration } from '#tests/types/tools.ts';
+import type { ToolPackageJson } from '#cli/types/installers/npm.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
