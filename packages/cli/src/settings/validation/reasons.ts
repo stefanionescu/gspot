@@ -7,7 +7,7 @@ import type { ReasonRequirement } from '#cli/types/settings/definitions.ts';
 import { REASON_WORDS_MIN } from '#cli/config/settings/validation/reasons.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in this file share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
 function buildErrorsAt(path: KeyPath, text: string | undefined): SettingsError[] {
     return text === undefined ? [] : [{ path, message: text }];
 }
@@ -38,12 +38,12 @@ export function validateReason(
 
 function validateRemovedConfigurations(value: unknown, path: KeyPath): SettingsError[] {
     if (!Array.isArray(value) || value.length === 0) return [];
-    const missingReason = validateReason(
-        path.map(String).join('.'),
-        undefined,
-        'Run gspot remove <configuration> --reason "<why>".',
-    );
-    return buildErrorsAt([...path, 'reason'], missingReason);
+    return [
+        {
+            path: [...path, 'reason'],
+            message: `${path.map(String).join('.')} needs a reason. Run gspot remove <configuration> --reason "<why>".`,
+        },
+    ];
 }
 
 /**

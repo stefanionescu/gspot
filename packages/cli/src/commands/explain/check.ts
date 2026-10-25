@@ -1,10 +1,10 @@
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
-import { listSettings } from '#cli/settings/available.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { CommandCheck } from '#cli/types/settings/file.ts';
+import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations/names.ts';
 import type { CheckFacts, Explanation } from '#cli/types/commands/explain.ts';
@@ -36,7 +36,7 @@ function buildCheckFacts(
     installedRules: ReadonlySet<string>,
 ): CheckFacts {
     const toolName = getToolName(check);
-    const settings = (configuration === undefined ? [] : listSettings(configuration.name))
+    const settings = (configuration === undefined ? [] : (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []))
         .filter((setting) => toolName !== undefined && setting.name.startsWith(`tools.${toolName}.`))
         .map((setting) => setting.name);
     const rules =
@@ -168,8 +168,7 @@ export function explainLintRule(tool: string, rule: string): Explanation | undef
     const configurations = readConfigurations();
     const qualified = `${tool}/${rule}`;
     const plugin = findRulePlugin(extractRulePrefix(qualified) ?? tool, configurations);
-    const ruleTool = plugin === undefined ? tool : ESLINT_MANIFEST_TOOL;
-    const identifier = plugin === undefined ? rule : qualified;
+    const [ruleTool, identifier] = plugin === undefined ? [tool, rule] : [ESLINT_MANIFEST_TOOL, qualified];
     const found = listChecksById(configurations.values())
         .values()
         .find(
@@ -181,7 +180,9 @@ export function explainLintRule(tool: string, rule: string): Explanation | undef
     const page = findRulePage(ruleTool, identifier, configurations);
     const key = quoteArgument(`tools.${ruleTool}.rules`);
     const ruleExample = quoteArgument(`{ ${JSON.stringify(identifier)} = [<options>] }`);
-    const optionLines = listSettings(configuration.name).some((setting) => setting.name === `tools.${ruleTool}.rules`)
+    const optionLines = (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []).some(
+        (setting) => setting.name === `tools.${ruleTool}.rules`,
+    )
         ? [`Change its options: gspot set ${key} ${ruleExample}`]
         : [];
     const description =

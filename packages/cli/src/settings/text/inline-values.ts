@@ -20,11 +20,12 @@ export function encodeValue(
     indent: string,
 ): string {
     if (isTomlKind(node, 'InlineArray')) {
-        const texts = node.items.map(({ item }, index) => {
-            const keys = [...path, index];
+        const isRuleList = path.toReversed()[1] === 'rules';
+        const texts = node.items.map(({ item }, position) => {
+            const keys = [...path, position];
             const notes = comments
                 .values()
-                .filter(({ path: note }) => path.toReversed()[1] === 'rules' && keys.every((key, i) => note[i] === key))
+                .filter(({ path: note }) => isRuleList && keys.every((key, index) => note[index] === key))
                 .map(({ path: field }) => insertTomlComments(comments, 'key', field, ''))
                 .filter(Boolean)
                 .toArray();
@@ -51,7 +52,13 @@ export function encodeValue(
                   .join('\n')}\n]`
             : `[${texts.join(', ')}]`;
     }
-    return isTomlKind(node, 'InlineTable')
-        ? `{ ${node.items.map(({ item }) => text.slice(getTomlRange(item.key)[0], getTomlRange(item.value)[0]) + encodeValue(item.value, text, [...path, ...item.key.value], comments, indent)).join(', ')} }`
-        : text.slice(...getTomlRange(node));
+    if (isTomlKind(node, 'InlineTable')) {
+        const fields = node.items.map(({ item }) => {
+            const keyText = text.slice(getTomlRange(item.key)[0], getTomlRange(item.value)[0]);
+            const valueText = encodeValue(item.value, text, [...path, ...item.key.value], comments, indent);
+            return keyText + valueText;
+        });
+        return `{ ${fields.join(', ')} }`;
+    }
+    return text.slice(...getTomlRange(node));
 }

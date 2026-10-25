@@ -14,7 +14,6 @@ import { formatUnavailableNote } from '#cli/tools/inspect.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { HTTP_URL } from '#cli/config/install/npm/lockfiles.ts';
-import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -111,9 +110,8 @@ export async function preparePythonLockfile(
     toolProjectFile: GeneratedFile,
 ): Promise<GeneratedFile> {
     const { root } = install.session;
-    const owner = install.writer;
     const project = toolPyprojectSchema.parse(parse(toolProjectFile.content));
-    const previous = owner.read(GSPOT_PATHS.uvLockfile);
+    const previous = install.writer.read(GSPOT_PATHS.uvLockfile);
     const saved = previous?.bytes.toString('utf8');
     const { settings: indexes, credentials: savedCredentials } = readPythonSettings(root);
     if (isPythonLockfileFresh(project, saved, indexes)) {
@@ -124,11 +122,7 @@ export async function preparePythonLockfile(
     const runFolder = scratch.path;
     writeFileSync(join(runFolder, PYPROJECT_TOML), toolProjectFile.content);
 
-    const credentials = writePythonSettings(
-        root,
-        runFolder,
-        getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days,
-    );
+    const credentials = writePythonSettings(root, runFolder, install.releaseAgeDays);
     await runUv(install, {
         runFolder,
         commandArguments: UV_LOCKFILE_ARGUMENTS,
@@ -155,17 +149,12 @@ Install the frozen Python tool project in .gspot.
 */
 export async function installPythonTools(install: ToolInstall, executable: string): Promise<string> {
     const { root } = install.session;
-    const owner = install.writer;
-    const toolProjectFile = owner.read(GSPOT_PATHS.pythonProject);
+    const toolProjectFile = install.writer.read(GSPOT_PATHS.pythonProject);
     if (toolProjectFile === undefined) return '';
     const runFolder = join(root, DOT_GSPOT);
 
     using settings = createTemporaryFolder();
-    const credentials = writePythonSettings(
-        root,
-        settings.path,
-        getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days,
-    );
+    const credentials = writePythonSettings(root, settings.path, install.releaseAgeDays);
     for (const commandArguments of [UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS]) {
         await runUv(install, {
             runFolder,

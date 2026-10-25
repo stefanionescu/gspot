@@ -1,14 +1,13 @@
-import type { ToolInstall } from '#cli/types/install/tools.ts';
-import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
+import type { ToolInstall, ToolPackageManager } from '#cli/types/install/tools.ts';
 
-export type NpmToolInstall = ToolInstall & { packageManager: PackageManager };
+export type NpmToolInstall = ToolInstall & { packageManager: ToolPackageManager };
 
 export type PackageManagerCommand = {
     runFolder: string;
-    packageManager: PackageManager;
+    packageManager: ToolPackageManager;
     commandArguments: string[];
     failure: string;
-    days: number;
+    env: Record<string, string>;
 };
 
 export type PackageManagerRun = {
@@ -17,6 +16,8 @@ export type PackageManagerRun = {
 };
 
 export type BunPackage = [identity: string, address: string, metadata: Record<string, unknown>, integrity: string];
+
+export type LockedTarball = { name: string; version: string; address: string; integrity: string };
 
 export type NpmPackage = {
     name?: string | undefined;

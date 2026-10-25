@@ -3,19 +3,10 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { getValueAt } from '#cli/system/tables.ts';
-import { parseTomlText } from '#cli/settings/file.ts';
 import { SCHEMA_DIRECTIVE } from '#cli/config/settings/file.ts';
 import { localDateSchema } from '#cli/schemas/settings/fields.ts';
+import { setKey, deleteKey, getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import { DATED_IGNORE, SEMGREP_IGNORE, INITIAL_SETTINGS, SCOPE_SETTING_WRITES } from '#tests/config/settings/edit.ts';
-
-import {
-    setKey,
-    addToList,
-    deleteKey,
-    getScopeTable,
-    readSettingsEdit,
-    buildEditedSettings,
-} from '#cli/settings/edit.ts';
 
 test('an edit writes the new ignore as a table and keeps the authored comment', async () => {
     await using sandbox = await testdir();
@@ -48,19 +39,6 @@ test('setting a nested key, then deleting it, removes the empty table', async ()
     deleteKey(removedEdit.table, 'limits.bash.file_lines');
     const removed = buildEditedSettings(sandbox.path, removedEdit).text;
     expect(removed).toBe(INITIAL_SETTINGS);
-});
-
-test('adding to a list skips values that are already there', async () => {
-    await using sandbox = await testdir();
-    await writeFile(join(sandbox.path, 'gspot.toml'), INITIAL_SETTINGS);
-    const edit = readSettingsEdit(sandbox.path);
-    addToList(edit.table, 'naming.banned_words', ['dispatcher', 'orchestrator']);
-    addToList(edit.table, 'naming.banned_words', ['dispatcher']);
-    const written = buildEditedSettings(sandbox.path, edit).text;
-    expect(getValueAt(parseTomlText(written, 'gspot.toml'), ['naming', 'banned_words'])).toStrictEqual([
-        'dispatcher',
-        'orchestrator',
-    ]);
 });
 
 test.each([...SCOPE_SETTING_WRITES])(

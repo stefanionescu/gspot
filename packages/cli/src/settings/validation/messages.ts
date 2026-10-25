@@ -5,6 +5,12 @@ import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { TomlSyntax } from '#cli/types/parsers/formats/toml.ts';
 import { unwrapSettingSchema } from '#cli/schemas/settings/fields.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
+function unwrapValueSchema(schema: z.ZodType | undefined): z.ZodType | undefined {
+    const inner = schema === undefined ? undefined : unwrapSettingSchema(schema);
+    return inner instanceof z.ZodUnion ? (inner.options[0] as z.ZodType) : inner;
+}
+
 function formatValueAdvice(
     schema: z.ZodType | undefined,
     setting: Pick<Setting, 'type' | 'description'>,
@@ -12,8 +18,7 @@ function formatValueAdvice(
 ): string {
     const issue = error.issues.find((issue) => issue.code === 'invalid_value');
     if (issue !== undefined) return issue.values.map(String).join(' or ');
-    let inner = schema === undefined ? undefined : unwrapSettingSchema(schema);
-    if (inner instanceof z.ZodUnion) inner = inner.options[0] as z.ZodType;
+    const inner = unwrapValueSchema(schema);
     if (inner instanceof z.ZodNumber) return `a whole number of ${String(inner.minValue ?? 0)} or more`;
     const description = setting.description.replace(/\.$/u, '');
     return `a valid ${setting.type} value${description === '' ? '' : ': ' + description}`;
@@ -49,12 +54,6 @@ function getValueType(schema: z.ZodType | undefined): Setting['type'] {
     return schema instanceof z.ZodObject || schema instanceof z.ZodRecord ? 'table' : 'string';
 }
 
-function describeValueSchema(schema: z.ZodType | undefined): Pick<Setting, 'type' | 'description'> {
-    let inner = schema === undefined ? undefined : unwrapSettingSchema(schema);
-    if (inner instanceof z.ZodUnion) inner = inner.options[0] as z.ZodType;
-    return { type: getValueType(inner), description: schema?.description ?? inner?.description ?? '' };
-}
-
 function displayValue(value: unknown): string {
     if (typeof value === 'string') return value;
     return value === undefined ? 'undefined' : JSON.stringify(value);
@@ -69,13 +68,16 @@ Format a file value with the same sentence used by set, retaining custom validat
 @returns a value error or the field's own validation sentence.
 */
 export function formatFileValueError(schema: z.ZodType | undefined, issue: z.core.$ZodIssue, value: unknown): string {
-    const validation = schema?.safeParse(value);
-    if (validation === undefined || validation.success || issue.message.startsWith('needs ')) return issue.message;
-    const setting = { name: issue.path.map(String).join('.'), ...describeValueSchema(schema) };
-    return formatSettingValueError(displayValue(value), setting, {
-        schema,
-        error: validation.error,
-    });
+    if (schema === undefined || issue.message.startsWith('needs ')) return issue.message;
+    const validation = schema.safeParse(value);
+    if (validation.success) return issue.message;
+    const inner = unwrapValueSchema(schema);
+    const setting = {
+        name: issue.path.map(String).join('.'),
+        type: getValueType(inner),
+        description: schema.description ?? inner?.description ?? '',
+    };
+    return formatSettingValueError(displayValue(value), setting, { schema, error: validation.error });
 }
 
 /**

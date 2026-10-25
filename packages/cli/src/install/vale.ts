@@ -5,13 +5,12 @@ import { join, dirname, resolve } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { getTool } from '#cli/configurations/tools.ts';
-import { runInstallStep } from '#cli/install/steps.ts';
 import { getMiseBinPaths } from '#cli/tools/locate.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { downloadArchive } from '#cli/install/downloads.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
+import { runRequiredInstallStep } from '#cli/install/steps.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
-import { redactInstallOutput } from '#cli/install/credentials.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
@@ -99,12 +98,7 @@ export async function installValePackages(install: ToolInstall): Promise<string>
         mkdirSync(dirname(config), { recursive: true });
         writeFileSync(config, content);
         const command = [available.path, '--config', config, ...VALE_INSTALL_ARGUMENTS];
-        const result = await runInstallStep(install, command, { cwd: dirname(config) });
-        if (result.code !== 0)
-            throw new GspotError(
-                'install',
-                `Vale sync failed (exit ${String(result.code)}):\n${redactInstallOutput(result, [])}`,
-            );
+        await runRequiredInstallStep(install, command, { cwd: dirname(config), name: 'Vale sync' });
         files.deleteTree(GSPOT_PATHS.valePackages);
         renameSync(join(temporary, GSPOT_PATHS.valePackages), join(root, GSPOT_PATHS.valePackages));
         return `installed Vale packages in ${GSPOT_PATHS.valePackages}`;

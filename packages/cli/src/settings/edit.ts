@@ -5,12 +5,12 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import { isTable, getValueAt, createTable } from '#cli/system/tables.ts';
 import { mergeIgnores, buildSettingsText } from '#cli/settings/text/build.ts';
 import { parseTomlText, isReasonedValue, readSettingsFile } from '#cli/settings/file.ts';
-import { isTable, getValueAt, createTable, normalizeTables } from '#cli/system/tables.ts';
 import type { SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in this file share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
 function splitKey(key: string): SettingKey {
     const boundary = key.lastIndexOf('.');
     return { path: boundary === -1 ? [] : key.slice(0, boundary).split('.'), name: key.slice(boundary + 1) };
@@ -74,28 +74,6 @@ export function deleteKey(table: TomlTable, key: string): void {
     }
 }
 
-/**
-Append items to a list key, each once, and create the list.
-
-@param table the table to edit.
-@param key the dotted name of the list.
-@param values the items to append.
-*/
-export function addToList(table: TomlTable, key: string, values: unknown[]): void {
-    const { path, name } = splitKey(key);
-    const parent = createTable(table, path);
-    if (parent === undefined) throw new Error(`${key} runs through a value that is not a table.`);
-    const written = parent[name];
-    const value = getWrittenValue(written);
-    const writtenList: unknown[] = Array.isArray(value) ? value : [];
-    const list = [...writtenList];
-    for (const added of values) {
-        const tables = normalizeTables(added);
-        if (list.every((listed) => !isDeepStrictEqual(listed, tables))) list.push(tables);
-    }
-    parent[name] = replaceWrittenValue(written, list);
-}
-
 function removeRecordPaths(listed: unknown, gone: Set<string | undefined>): unknown[] {
     if (!isTable(listed) || !Array.isArray(listed['paths'])) return [listed];
     const paths = listed['paths'].filter((path) => !gone.has(JSON.stringify(path)));
@@ -114,22 +92,21 @@ export function removeFromList(table: TomlTable, key: string, values: unknown[])
     const parent = getValueAt(table, path);
     if (!isTable(parent)) return;
     const written = parent[name];
-    const value = getWrittenValue(written);
+    const value = isReasonedValue(written) ? written.value : written;
     if (!Array.isArray(value)) return;
-    const writtenList: unknown[] = value;
     const gone = new Set(
-        values.flatMap((value) =>
-            isTable(value) && Array.isArray(value['paths'])
-                ? value['paths'].map((path) => JSON.stringify(path))
-                : [JSON.stringify(value)],
+        values.flatMap((removed) =>
+            isTable(removed) && Array.isArray(removed['paths'])
+                ? removed['paths'].map((path) => JSON.stringify(path))
+                : [JSON.stringify(removed)],
         ),
     );
-    const kept = writtenList.flatMap((listed) => {
+    const kept = value.flatMap((listed: unknown) => {
         const identity = JSON.stringify(isTable(listed) && 'name' in listed ? listed['name'] : listed);
         return gone.has(identity) || gone.has(JSON.stringify(listed)) ? [] : removeRecordPaths(listed, gone);
     });
     if (kept.length === 0) deleteKey(table, key);
-    else parent[name] = replaceWrittenValue(written, kept);
+    else parent[name] = isReasonedValue(written) ? { ...written, value: kept } : kept;
 }
 
 /**
@@ -168,20 +145,4 @@ export function readSettingsEdit(repositoryRoot: string): SettingsEdit {
     const { text, previous } = readSettingsFile(repositoryRoot);
     const table = parseTomlText(text, SETTINGS_FILE);
     return { text, table, previous };
-}
-
-/**
-Read a written setting value from its reasoned value or its plain value.
-
-@param written the setting as written.
-@returns the value that a settings edit changes.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function getWrittenValue(written: unknown): unknown {
-    return isReasonedValue(written) ? written.value : written;
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function replaceWrittenValue(written: unknown, value: unknown): unknown {
-    return isReasonedValue(written) ? { ...written, value } : value;
 }

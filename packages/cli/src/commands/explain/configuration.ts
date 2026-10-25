@@ -1,6 +1,6 @@
 import type { Session } from '#cli/types/session.ts';
-import { listSettings } from '#cli/settings/available.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { checkStageSchema } from '#cli/schemas/configurations/fields.ts';
 import { listRuleFiles, readConfigurations } from '#cli/configurations/manifests.ts';
 import type { Explanation, ConfigurationExplanation } from '#cli/types/commands/explain.ts';
@@ -30,7 +30,7 @@ export function explainConfiguration(session: Session | undefined, configuration
             tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
         ),
         checks: configuration.checks.map((check) => ({ check: check.id, stage: check.stage })),
-        settings: listSettings(configuration.name).map((setting) => setting.name),
+        settings: (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []).map((setting) => setting.name),
         rules: (session === undefined ? [] : selectRuleFiles(session))
             .filter((file) => listRuleFiles(configuration).some((rule) => rule.path === file.path))
             .map((file) => file.path),

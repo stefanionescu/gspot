@@ -226,6 +226,7 @@ test('a Yarn Classic repository resolves its tool lockfile with npm and the rele
     });
     expect(install.steps).toStrictEqual([
         [
+            'npm',
             ...PACKAGE_MANAGER_ARGUMENTS.npm.lockfile,
             '--min-release-age=7',
             '--min-release-age-exclude=@gspothq/cli',

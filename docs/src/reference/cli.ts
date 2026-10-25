@@ -4,8 +4,8 @@ import { isDeepStrictEqual } from 'node:util';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildJsonSchema } from '#cli/settings/json-schema.ts';
-import { listSettings, buildAvailableSettings } from '#cli/settings/available.ts';
 import type { CliReference, SettingVariant, CommandReference } from '../types/reference.ts';
+import { buildAvailableSettings, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
 
 function groupSettingVariants(configurations: CliReference['configurations']): SettingVariant[] {
@@ -18,7 +18,7 @@ function groupSettingVariants(configurations: CliReference['configurations']): S
                 owner: 'gspot',
             })),
         ...configurations.flatMap((configuration) =>
-            listSettings(configuration.name).map((setting) => ({
+            (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []).map((setting) => ({
                 setting,
                 owner: configuration.name,
             })),
@@ -86,7 +86,10 @@ function readCliReference(): CliReference {
             ]),
         ),
         configurationSettings: Object.fromEntries(
-            configurations.map((configuration) => [configuration.name, listSettings(configuration.name)]),
+            configurations.map((configuration) => [
+                configuration.name,
+                SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? [],
+            ]),
         ),
     };
 }

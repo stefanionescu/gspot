@@ -1,4 +1,3 @@
-import { getScopeTable } from '#cli/settings/edit.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
@@ -28,7 +27,7 @@ function formatConfigurationChange(changed: string[], unchanged: string[], where
 }
 
 async function runAddCommand(options: ConfigurationsOptions): Promise<CommandResult> {
-    const { root, input, scopeSettings, selected } = prepareConfigurationEdit(options);
+    const { root, input, scope, scopeTable, scopeSettings, selected } = prepareConfigurationEdit(options);
     if (options.configurations.every((name) => selected.includes(name))) {
         return {
             text: `No change: ${options.configurations.join(' and ')} ${options.configurations.length === 1 ? 'is' : 'are'} already selected.\n`,
@@ -38,12 +37,11 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     }
     const scopeConfigurations = scopeSettings.configurations;
     const removed = scopeSettings.removed_configurations;
-    const scopeTable = getScopeTable(input.table, options.scope);
     const list = [...scopeConfigurations];
     for (const name of options.configurations) if (!selected.includes(name) && !list.includes(name)) list.push(name);
     scopeTable['configurations'] = list;
     restoreConfigurations(scopeTable, removed, options.configurations);
-    const where = options.scope === undefined ? '' : ` to scope ${options.scope}`;
+    const where = scope === undefined ? '' : ` to scope ${scope}`;
     const added = options.configurations.filter((name) => !selected.includes(name));
     const unchanged = options.configurations.filter((name) => selected.includes(name));
     const summary = formatConfigurationChange(added, unchanged, where);

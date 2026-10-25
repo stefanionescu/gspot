@@ -15,9 +15,9 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import type { Settings, SettingsFile } from '#cli/types/settings/file.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import type { PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
 import { applyDetectedDefaults, buildAvailableSettings } from '#cli/settings/available.ts';
-import { findRootScope, selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { classifyFile, listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 
@@ -27,10 +27,10 @@ function buildScopes(
     configurations: Map<string, Configuration>,
     readPackageManager: () => PackageManagerPin,
 ): Scope[] {
-    const { scopeFolders: scopes } = repository;
+    const { scopeFolders } = repository;
     const automatic = listAutomaticConfigurations(configurations, repository);
     const active = { ...settings, configurations: [...new Set([...settings.configurations, ...automatic])] };
-    return scopes.map((scope) => {
+    return scopeFolders.map((scope) => {
         const selected = selectForScope(active, scope.path, configurations);
         const available = buildAvailableSettings(selected, settings.level);
         const packageManager = available.defaults.has('site.build_command') ? readPackageManager() : undefined;
@@ -38,8 +38,8 @@ function buildScopes(
             packageManagerName: packageManager?.name,
             dependencyNames: listProjectDependencyNames(repository.dependencyFiles, scope.path),
         });
-        const view = buildScopeSettings(available, active, selected, scope.path);
-        return { folder: scope, configurations: selected, availableSettings: available, settings: view };
+        const scopeSettings = buildScopeSettings(available, active, selected, scope.path);
+        return { folder: scope, configurations: selected, availableSettings: available, settings: scopeSettings };
     });
 }
 
@@ -124,8 +124,11 @@ export async function openSession(
         cancelSignal?: AbortSignal | undefined;
     } = {},
 ): Promise<Session> {
-    const file = requestedSettings ?? readSettingsFile(rootPath);
-    const settingsFile = requestedSettings ?? { text: file.text, settings: parseSettings(file.text, rootPath) };
+    let settingsFile = requestedSettings;
+    if (settingsFile === undefined) {
+        const { text } = readSettingsFile(rootPath);
+        settingsFile = { text, settings: parseSettings(text, rootPath) };
+    }
     const root = reads.root;
     const configurations = readConfigurations();
     const settings = settingsFile.settings;
@@ -137,13 +140,12 @@ export async function openSession(
             repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
         ));
     const scopes = buildScopes(settings, repository, configurations, readPackageManager);
-    const timeoutSeconds = Number(findRootScope(scopes).settings.settings['tool_timeout_seconds']);
     const session: Session = {
         toolConfigurations: [],
         configuredChecks: [],
         resources,
         cancelSignal,
-        timeoutSeconds,
+        timeoutSeconds: settings.tool_timeout_seconds,
         packageManager: undefined,
         root,
         installedRoot,

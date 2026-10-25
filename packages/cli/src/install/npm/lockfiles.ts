@@ -5,13 +5,13 @@ import { isDeepStrictEqual } from 'node:util';
 import { modify, applyEdits } from 'jsonc-parser';
 import { GspotError } from '#cli/system/errors.ts';
 import { isTable, getValueAt } from '#cli/system/tables.ts';
-import type { BunPackage } from '#cli/types/install/npm.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { selectLockfileName } from '#cli/install/npm/package-json.ts';
 import { NPM_SETTING_PREFIX } from '#cli/config/install/npm/project.ts';
+import type { BunPackage, LockedTarball } from '#cli/types/install/npm.ts';
 import type { YarnPackage } from '#cli/types/parsers/projects/lockfiles.ts';
 import type { DependencyMap } from '#cli/types/parsers/projects/dependencies.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
@@ -47,17 +47,22 @@ function findPackageRegistry(name: string, env: Record<string, string>): string 
     return scopeRegistry ?? env[`${NPM_SETTING_PREFIX}registry`];
 }
 
-function isStandardTarball(bunPackage: BunPackage, env: Record<string, string>): boolean {
-    const [identity, address, , integrity] = bunPackage;
-    const separator = identity.lastIndexOf('@');
-    const name = identity.slice(0, separator);
-    const version = identity.slice(separator + 1);
+function isStandardTarball(tarball: LockedTarball, env: Record<string, string>): boolean {
+    const { name, version, address, integrity } = tarball;
     if (semver.valid(version) === null || !INTEGRITY.test(integrity)) return false;
     const registry = findPackageRegistry(name, env);
     if (registry === undefined) return false;
     const base = registry.endsWith('/') ? registry : `${registry}/`;
     const filename = posix.basename(name);
     return address === '' || address === new URL(`${name}/-/${filename}-${version}.tgz`, base).href;
+}
+
+function isStandardBunTarball(bunPackage: BunPackage, env: Record<string, string>): boolean {
+    const [identity, address, , integrity] = bunPackage;
+    const separator = identity.lastIndexOf('@');
+    const name = identity.slice(0, separator);
+    const version = identity.slice(separator + 1);
+    return isStandardTarball({ name, version, address, integrity }, env);
 }
 
 /**
@@ -72,7 +77,7 @@ export function stripBunRegistryUrls(content: string, env: Record<string, string
     let edited = content;
     for (const [key, bunPackage] of Object.entries(parsed.packages)) {
         const npm = bunPackageSchema.safeParse(bunPackage);
-        if (!npm.success || !isStandardTarball(npm.data, env)) continue;
+        if (!npm.success || !isStandardBunTarball(npm.data, env)) continue;
         edited = applyEdits(edited, modify(edited, ['packages', key, 1], '', {}));
     }
     return edited;
@@ -144,7 +149,7 @@ function isBunLockfileFresh(
         const parsed = bunPackageSchema.safeParse(value);
         if (!parsed.success) return false;
         const identity = splitIdentity(parsed.data[0]);
-        if (identity?.[0] !== getBunPackageName(key) || !isStandardTarball(parsed.data, env)) return false;
+        if (identity?.[0] !== getBunPackageName(key) || !isStandardBunTarball(parsed.data, env)) return false;
     }
     return Object.entries(dependencies).every(([name, version]) => packages[name]?.[0] === `${name}@${version}`);
 }
@@ -161,7 +166,7 @@ function isNpmLockfileFresh(
         const parsed = npmToolPackageSchema.safeParse(lockedPackage);
         if (!parsed.success) return false;
         const { version, resolved = '', integrity, name: identity = name } = parsed.data;
-        return identity === name && isStandardTarball([`${name}@${version}`, resolved, {}, integrity], env);
+        return identity === name && isStandardTarball({ name, version, address: resolved, integrity }, env);
     });
     return (
         matches &&
@@ -186,7 +191,7 @@ function isPnpmLockfileFresh(
             name: installed = name,
             resolution: { tarball = '', integrity },
         } = parsed.data;
-        return installed === name && isStandardTarball([`${name}@${version}`, tarball, {}, integrity], env);
+        return installed === name && isStandardTarball({ name, version, address: tarball, integrity }, env);
     });
     return (
         matches &&

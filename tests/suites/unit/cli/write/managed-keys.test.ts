@@ -8,7 +8,7 @@ import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { INVALID_PACKAGE_JSON_TEXTS } from '#tests/config/write.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
-import { openWriter, writePlans, hasManagedKeys, planSettingsWrite } from '#cli/write.ts';
+import { openWriter, writePlans, hasManagedKeys, planManagedKeys } from '#cli/write.ts';
 
 test('managed JSON keys survive reopening and updates and keep other bytes and the mode', async () => {
     await using sandbox = await testdir();
@@ -18,7 +18,7 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
     await chmod(join(sandbox.path, path), 0o640);
     const changes = [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }];
     const firstWriter = openWriter(sandbox.path);
-    writePlans(firstWriter, [planSettingsWrite(firstWriter, path, changes)]);
+    writePlans(firstWriter, [planManagedKeys(firstWriter, path, changes)]);
     expect(hasManagedKeys({ path, keys: changes }, firstWriter.read(path)!)).toBe(true);
     const installed = firstWriter.read(path)!.bytes.toString('utf8');
     expect(installed).toBe(
@@ -27,7 +27,7 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
     await writeFile(join(sandbox.path, path), installed.replace('native-project', 'edited-project'));
     firstWriter[Symbol.dispose]();
     using writer = openWriter(sandbox.path);
-    writePlans(writer, [planSettingsWrite(writer, path, [{ key: ['stylelint'], value: { extends: './next.json' } }])]);
+    writePlans(writer, [planManagedKeys(writer, path, [{ key: ['stylelint'], value: { extends: './next.json' } }])]);
     expect(hasManagedKeys({ path, keys: changes }, writer.read(path)!)).toBe(false);
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(
         previous
@@ -47,7 +47,7 @@ test.each(['tool.jsonc', 'package.json'])('%s key edits keep comments, container
         { key: ['created', 'nested', 'owned'], value: 0 },
         { key: ['kept', 'owned'], value: false },
     ];
-    writePlans(writer, [planSettingsWrite(writer, path, fields)]);
+    writePlans(writer, [planManagedKeys(writer, path, fields)]);
     expect(hasManagedKeys({ path, keys: fields }, writer.read(path)!)).toBe(true);
     const written =
         '// Keep this comment.\n{ "kept": {"owned": false}, "entries": [0, false, ""],"created": {"nested":{"owned":0}}, }\n';
@@ -61,7 +61,7 @@ test.each([...INVALID_PACKAGE_JSON_TEXTS])(
 
         using writer = openWriter(sandbox.path);
         expect(() =>
-            planSettingsWrite(writer, 'package.json', [{ key: ['stylelint'], value: { extends: './managed.json' } }]),
+            planManagedKeys(writer, 'package.json', [{ key: ['stylelint'], value: { extends: './managed.json' } }]),
         ).toThrow(
             matchFields<GspotError>({
                 name: 'GspotError',
@@ -80,7 +80,7 @@ test.each(['package.json', 'bunfig.toml'])(
         const bytes = Buffer.from([0xff, 0xfe, 0x41, 0x00]);
         await writeFile(join(sandbox.path, path), bytes);
         using writer = openWriter(sandbox.path);
-        expect(() => planSettingsWrite(writer, path, [])).toThrow(
+        expect(() => planManagedKeys(writer, path, [])).toThrow(
             matchFields<GspotError>({
                 name: 'GspotError',
                 code: 'filesystem',
@@ -96,18 +96,18 @@ test('managed TOML keys refuse a malformed file, create missing tables, and writ
 
     using writer = openWriter(sandbox.path);
     const changes = [{ key: ['tasks', 'gspot:check', 'run'], value: 'gspot check' }];
-    expect(() => planSettingsWrite(writer, 'broken.toml', changes)).toThrow(
+    expect(() => planManagedKeys(writer, 'broken.toml', changes)).toThrow(
         new GspotError(
             'filesystem',
             'broken.toml:1:7 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
         ),
     );
     expect(await readFile(join(sandbox.path, 'broken.toml'), 'utf8')).toBe('[tasks\n');
-    writePlans(writer, [planSettingsWrite(writer, 'mise.toml', changes)]);
+    writePlans(writer, [planManagedKeys(writer, 'mise.toml', changes)]);
     const installed = await readFile(join(sandbox.path, 'mise.toml'), 'utf8');
     expect(parseToml(installed)).toStrictEqual({ tasks: { 'gspot:check': { run: 'gspot check' } } });
     await writeFile(join(sandbox.path, 'mise.toml'), installed.replace('gspot check', 'authored check'));
-    writePlans(writer, [planSettingsWrite(writer, 'mise.toml', changes)]);
+    writePlans(writer, [planManagedKeys(writer, 'mise.toml', changes)]);
     expect(await readFile(join(sandbox.path, 'mise.toml'), 'utf8')).toBe(installed);
 });
 test('a managed TOML key update keeps the edits next to it', async () => {
@@ -116,13 +116,13 @@ test('a managed TOML key update keeps the edits next to it', async () => {
     await createFileTree(sandbox.path, { 'compiler.toml': previous });
     const firstWriter = openWriter(sandbox.path);
     writePlans(firstWriter, [
-        planSettingsWrite(firstWriter, 'compiler.toml', [{ key: ['extends'], value: './.gspot/first.json' }]),
+        planManagedKeys(firstWriter, 'compiler.toml', [{ key: ['extends'], value: './.gspot/first.json' }]),
     ]);
     const installed = firstWriter.read('compiler.toml')!.bytes.toString('utf8');
     const edited = installed.replace('strict = false', 'strict = true');
     await writeFile(join(sandbox.path, 'compiler.toml'), edited);
     writePlans(firstWriter, [
-        planSettingsWrite(firstWriter, 'compiler.toml', [{ key: ['extends'], value: './.gspot/second.json' }]),
+        planManagedKeys(firstWriter, 'compiler.toml', [{ key: ['extends'], value: './.gspot/second.json' }]),
     ]);
     expect(firstWriter.read('compiler.toml')!.bytes.toString('utf8')).toBe(
         edited.replace('./.gspot/first.json', './.gspot/second.json'),
@@ -137,7 +137,7 @@ test('setting a TOML key to the value it holds keeps the bytes and mode', async 
     await chmod(join(sandbox.path, 'package.toml'), 0o640);
     using writer = openWriter(sandbox.path);
     writePlans(writer, [
-        planSettingsWrite(writer, 'package.toml', [{ key: ['scripts', 'check'], value: 'gspot check' }]),
+        planManagedKeys(writer, 'package.toml', [{ key: ['scripts', 'check'], value: 'gspot check' }]),
     ]);
     expect(await readFile(join(sandbox.path, 'package.toml'), 'utf8')).toBe(content);
     const metadata = await stat(join(sandbox.path, 'package.toml'));

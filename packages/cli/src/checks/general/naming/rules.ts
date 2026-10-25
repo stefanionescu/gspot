@@ -4,7 +4,6 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { findParentCategory } from '#cli/settings/naming.ts';
 import type { NamingCase } from '#cli/types/settings/naming.ts';
 import { splitWords } from '#cli/checks/general/naming/settings.ts';
 import { NUMERIC_WORDS } from '#cli/config/checks/general/naming/settings.ts';
@@ -29,10 +28,10 @@ import {
     RUFF_CATEGORIES,
     TEST_TERM_GROUP,
     MIGRATION_DIGITS,
-    SWIFTLINT_PARENTS,
     BANNED_WORD_FORMS,
     WORD_FORM_SUFFIXES,
     WORD_FORM_CONSONANT,
+    SWIFTLINT_CATEGORIES,
 } from '#cli/config/checks/general/naming/rules.ts';
 
 function isSnakeMigration(name: string): boolean {
@@ -210,10 +209,9 @@ function buildIdentifierLimits(
     overrides: CompiledOverride[],
 ): CategoryLimits {
     const base = settings.limitsFor(identifier.language, identifier.category);
-    const parent = findParentCategory(identifier.category);
     if (identifier.language === 'python' && RUFF_CATEGORIES.has(identifier.category)) return { ...base, caseNames: [] };
     const caseOverride = overrides.findLast((override) => override.cases !== undefined);
-    return identifier.language === 'swift' && SWIFTLINT_PARENTS.has(parent)
+    return identifier.language === 'swift' && SWIFTLINT_CATEGORIES.has(identifier.category)
         ? { ...base, caseNames: [], maxChars: 0 }
         : { ...base, caseNames: [...(caseOverride?.cases ?? base.caseNames), ...(identifier.addedCases ?? [])] };
 }

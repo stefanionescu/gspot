@@ -58,7 +58,7 @@ function addConfigurationSettings(
     level: Level,
 ): void {
     const isAll = level === 'all';
-    const settings = listSettings(configuration.name).map((listed) =>
+    const settings = (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []).map((listed) =>
         isAll && listed.default_all !== undefined ? { ...listed, default: listed.default_all } : listed,
     );
     for (const setting of settings) {
@@ -199,18 +199,7 @@ function buildSettingsByConfiguration(): Map<string, Setting[]> {
     return settings;
 }
 
-const SETTINGS_BY_CONFIGURATION = buildSettingsByConfiguration();
-
-/**
-List the settings of one configuration.
-
-@param configuration the configuration name.
-@returns the settings of this configuration.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function listSettings(configuration: string): Setting[] {
-    return SETTINGS_BY_CONFIGURATION.get(configuration) ?? [];
-}
+export const SETTINGS_BY_CONFIGURATION = buildSettingsByConfiguration();
 
 /**
 Apply defaults detected from the package manager and project dependencies.

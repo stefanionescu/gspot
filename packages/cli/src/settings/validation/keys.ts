@@ -1,8 +1,8 @@
+import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { isLoosening, validateReason } from '#cli/settings/validation/reasons.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import { type Settings, type SettingsError, type SettingsTable } from '#cli/types/settings/file.ts';
-import type { SettingMatch, WrittenSetting, AvailableSettings } from '#cli/types/settings/inheritance.ts';
+import type { Setting, WrittenSetting, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 
 import {
     findSetting,
@@ -27,34 +27,34 @@ function formatLooseningError(
     return `\`${key} = ${value}\` is looser than the shipped ${shown}, so it needs a reason. Run: gspot set ${quoteArgument(key)} ${quoteArgument(argument)}${scopeFlag} --reason "<why>"`;
 }
 
-function validateWrittenList(
+function validateWrittenReason(
     key: string,
     written: WrittenSetting,
-    match: SettingMatch,
-    shipped: unknown,
-): SettingsError[] {
-    if (!Array.isArray(written.value)) return [];
-    const message =
-        written.reason === undefined && isLoosening(match.setting, written.value, shipped)
-            ? validateReason(
-                  key,
-                  undefined,
-                  `Write it as ${key} = { value = [...], reason = "..." }, or run gspot set ${key} ... --reason "<why>".`,
-              )
-            : undefined;
-    return message === undefined ? [] : [{ path: [...key.split('.'), 'reason'], message }];
-}
-
-function validateWrittenScalar(
-    key: string,
-    written: WrittenSetting,
-    match: SettingMatch,
+    setting: Setting,
     scope: string | undefined,
     shipped: unknown,
 ): SettingsError[] {
-    if (written.reason !== undefined || !isLoosening(match.setting, written.value, shipped)) return [];
-    const error = formatLooseningError(key, written, shipped, scope);
-    return [{ path: key.split('.'), message: error }];
+    const isLoose = isLoosening(setting, written.value, shipped);
+    if (written.reason !== undefined)
+        return isLoose
+            ? []
+            : [
+                  {
+                      path: key.split('.'),
+                      message: `\`${key}\` does not loosen the default. Write it as a plain value, without a reason.`,
+                  },
+              ];
+    if (!isLoose) return [];
+    if (setting.type !== 'list')
+        return [{ path: key.split('.'), message: formatLooseningError(key, written, shipped, scope) }];
+    return Array.isArray(written.value)
+        ? [
+              {
+                  path: [...key.split('.'), 'reason'],
+                  message: `${key} needs a reason. Write it as ${key} = { value = [...], reason = "..." }, or run gspot set ${key} ... --reason "<why>".`,
+              },
+          ]
+        : [];
 }
 
 function validateWrittenKey(
@@ -69,16 +69,7 @@ function validateWrittenKey(
     const written = getWrittenSetting(table, key);
     if (!written) return [];
     const shipped = findSettingDefault(availableSettings, settings, match, scope)?.value;
-    if (written.reason !== undefined && !isLoosening(match.setting, written.value, shipped))
-        return [
-            {
-                path: key.split('.'),
-                message: `\`${key}\` does not loosen the default. Write it as a plain value, without a reason.`,
-            },
-        ];
-    return match.setting.type === 'list'
-        ? validateWrittenList(key, written, match, shipped)
-        : validateWrittenScalar(key, written, match, scope, shipped);
+    return validateWrittenReason(key, written, match.setting, scope, shipped);
 }
 
 function listUnsettledConflicts(

@@ -34,6 +34,13 @@ export const RUFF_CATEGORIES: ReadonlySet<string> = new Set([
     'parameters',
 ]);
 
-export const SWIFTLINT_PARENTS: ReadonlySet<string> = new Set(['types', 'variables']);
+export const SWIFTLINT_CATEGORIES: ReadonlySet<string> = new Set([
+    'types',
+    'classes',
+    'type_aliases',
+    'exceptions',
+    'variables',
+    'constants',
+]);
 
 export const VOWEL_SUFFIX = /^[aeiou]/u;

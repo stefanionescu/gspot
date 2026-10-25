@@ -16,6 +16,7 @@ import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { toolPyprojectSchema } from '#cli/schemas/install/python.ts';
 import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
+import type { PythonIndexSettings } from '#cli/types/install/python.ts';
 import type { StaleLockfile } from '#cli/types/install/tool-projects.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/install/npm/project.ts';
 import { selectToolPackageManager } from '#cli/repository/npm/package-manager.ts';
@@ -34,6 +35,13 @@ function setLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
     else files[index] = lockfile;
 }
 
+function readMiseLockfileState(files: Files, toolProjectFile: GeneratedFile): StaleLockfile {
+    const path = GSPOT_PATHS.miseLockfile;
+    const saved = files.read(path);
+    if (isMiseLockfileFresh(toolProjectFile.content, saved?.bytes.toString('utf8'))) return { path };
+    return { path, kind: saved === undefined ? 'missing' : 'changed' };
+}
+
 function readNpmLockfileState(
     files: Files,
     name: PackageManager['name'],
@@ -48,6 +56,19 @@ function readNpmLockfileState(
     return matches ? { path } : { path, kind: 'changed' };
 }
 
+function readPythonLockfileState(
+    files: Files,
+    toolProjectFile: GeneratedFile,
+    indexes: PythonIndexSettings['settings'],
+): StaleLockfile {
+    const project = toolPyprojectSchema.parse(parseToml(toolProjectFile.content));
+    const path = GSPOT_PATHS.uvLockfile;
+    const saved = files.read(path);
+    if (saved === undefined) return { path, kind: 'missing' };
+    const matches = isPythonLockfileFresh(project, saved.bytes.toString('utf8'), indexes);
+    return matches ? { path } : { path, kind: 'changed' };
+}
+
 /**
 List the state of each tool project lockfile. It resolves and writes nothing.
 
@@ -59,46 +80,30 @@ export async function listStaleLockfiles(
     session: Pick<Session, 'root' | 'installedRoot' | 'packageManager' | 'timeoutSeconds' | 'reads'>,
     generated: GeneratedFile[],
 ): Promise<StaleLockfile[]> {
-    const { root } = session;
-    const env = generated.some((file) => file.path === GSPOT_PATHS.npmProject)
-        ? await readRegistryEnvironment(root)
-        : {};
-    const indexes = generated.some((file) => file.path === GSPOT_PATHS.pythonProject)
-        ? readPythonSettings(root).settings
-        : {};
-    using files = openFiles(root);
+    const { root, packageManager } = session;
     const mise = generated.find(({ path }) => path === GSPOT_PATHS.miseProject);
-    const miseLock = files.read(GSPOT_PATHS.miseLockfile);
-    const miseState: StaleLockfile[] =
-        mise === undefined || isMiseLockfileFresh(mise.content, miseLock?.bytes.toString('utf8'))
-            ? []
-            : [{ path: GSPOT_PATHS.miseLockfile, kind: miseLock === undefined ? 'missing' : 'changed' }];
+    const npm = generated.find(({ path }) => path === GSPOT_PATHS.npmProject);
+    const python = generated.find(({ path }) => path === GSPOT_PATHS.pythonProject);
+    const env = npm === undefined ? {} : await readRegistryEnvironment(root);
+    using files = openFiles(root);
     return [
-        ...miseState,
-        ...generated
-            .filter(
-                (toolProjectFile) =>
-                    toolProjectFile.path === GSPOT_PATHS.npmProject ||
-                    toolProjectFile.path === GSPOT_PATHS.pythonProject,
-            )
-            .flatMap((toolProjectFile) => {
-                if (toolProjectFile.path === GSPOT_PATHS.npmProject) {
-                    if (session.packageManager === undefined) return [];
-                    const name = selectToolPackageManager(
-                        session.installedRoot,
-                        session.packageManager,
-                        session.timeoutSeconds,
-                        session.reads,
-                    );
-                    return [readNpmLockfileState(files, name, toolProjectFile, env)];
-                }
-                const project = toolPyprojectSchema.parse(parseToml(toolProjectFile.content));
-                const path = GSPOT_PATHS.uvLockfile;
-                const saved = files.read(path);
-                if (saved === undefined) return [{ path, kind: 'missing' as const }];
-                const matches = isPythonLockfileFresh(project, saved.bytes.toString('utf8'), indexes);
-                return matches ? [{ path }] : [{ path, kind: 'changed' as const }];
-            }),
+        ...(mise === undefined ? [] : [readMiseLockfileState(files, mise)]),
+        ...(npm === undefined || packageManager === undefined
+            ? []
+            : [
+                  readNpmLockfileState(
+                      files,
+                      selectToolPackageManager(
+                          session.installedRoot,
+                          packageManager,
+                          session.timeoutSeconds,
+                          session.reads,
+                      ),
+                      npm,
+                      env,
+                  ),
+              ]),
+        ...(python === undefined ? [] : [readPythonLockfileState(files, python, readPythonSettings(root).settings)]),
     ];
 }
 

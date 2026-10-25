@@ -22,8 +22,8 @@ function isLfsHookScript(folder: string, name: string): boolean {
     return lines[0] === HOOK_SHEBANG && isCall && lines.slice(1, -1).every((line) => line.startsWith(LFS_GUARD_PREFIX));
 }
 
-function readForeignHooks(root: string, own: string): RepositorySetup['hooks'] {
-    const found = readHooks(root).filter((hook) => !(hook.kind === 'hooksPath' && hook.path === own));
+function readForeignHooks(root: string): RepositorySetup['hooks'] {
+    const found = readHooks(root).filter((hook) => !(hook.kind === 'hooksPath' && hook.path === GSPOT_PATHS.hooks));
     const folder = readHooksFolder(root);
     if (
         readGitSetting(root, HOOKS_PATH_SETTING) !== undefined ||
@@ -59,7 +59,7 @@ function planHooks(session: Session): HookPlan {
         return readGitSetting(repository.root, HOOKS_PATH_SETTING) === GSPOT_PATHS.hooks
             ? { command: UNSET_HOOKS_PATH, note: 'disabled hooks: unset core.hooksPath' }
             : { note: '' };
-    const foreign = readForeignHooks(repository.root, GSPOT_PATHS.hooks);
+    const foreign = readForeignHooks(repository.root);
     if (foreign.length > 0) return { note: formatForeignHooks(foreign, session) };
     return {
         command: [...SET_HOOKS_PATH, GSPOT_PATHS.hooks],
@@ -99,7 +99,7 @@ export function readHookStatus(session: Session, clone: Pick<Repository, 'root' 
     if (settings.hooks?.enabled !== true) return { ready: true, text: 'none' };
     if (!clone.hasGit) return { ready: false, text: 'not installed: no Git repository' };
     if (readGitSetting(clone.root, HOOKS_PATH_SETTING) === GSPOT_PATHS.hooks) return { ready: true, text: 'installed' };
-    const foreign = readForeignHooks(clone.root, GSPOT_PATHS.hooks);
+    const foreign = readForeignHooks(clone.root);
     if (foreign.length > 0) {
         const paths = foreign.flatMap((hook) => {
             if (hook.files.length === 0) return [resolve(clone.root, hook.path)];

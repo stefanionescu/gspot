@@ -24,7 +24,7 @@ import { TOML_EXTENSION, EMPTY_JSON_TEXT, WRITER_LOCK_FILE } from '#cli/config/w
 import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 
-function openSettingsDocument(path: string, onDisk: FileContents | undefined, keys: ManagedKeys['keys']): EditableFile {
+function openManagedKeysFile(path: string, onDisk: FileContents | undefined, keys: ManagedKeys['keys']): EditableFile {
     const text = onDisk === undefined ? undefined : decodeUtf8Text(path, onDisk.bytes);
     if (path.endsWith(TOML_EXTENSION)) {
         const headers = new Set(
@@ -51,9 +51,9 @@ Plan the managed keys of a shared file: merge the requested keys, and leave ever
 @param keys the keys and requested values.
 @returns the key write plan.
 */
-export function planSettingsWrite(writer: Files, path: string, keys: ManagedKeys['keys']): WritePlan {
+export function planManagedKeys(writer: Files, path: string, keys: ManagedKeys['keys']): WritePlan {
     const onDisk = writer.read(path);
-    const document = openSettingsDocument(path, onDisk, keys);
+    const document = openManagedKeysFile(path, onDisk, keys);
     const before = onDisk === undefined ? '' : document.getText();
     for (const field of keys) document.set(field.key, field.value);
     const updated = document.getText();
@@ -77,7 +77,7 @@ use.
 @returns whether every key holds its value.
 */
 export function hasManagedKeys(output: ManagedKeys, onDisk: FileContents): boolean {
-    const document = openSettingsDocument(output.path, onDisk, output.keys);
+    const document = openManagedKeysFile(output.path, onDisk, output.keys);
     return output.keys.every((field) => isDeepStrictEqual(document.getValue(field.key), normalizeTables(field.value)));
 }
 

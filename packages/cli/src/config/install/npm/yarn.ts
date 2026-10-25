@@ -19,7 +19,7 @@ export const YARN_SETTING_KEYS = {
     npmPreapprovedPackages: 'npmPreapprovedPackages',
 } as const;
 
-export const YARN_CONFIG_LIST_ARGUMENTS = ['yarn', 'config', '--json', '--no-defaults'] as const;
+export const YARN_CONFIG_LIST_ARGUMENTS = ['config', '--json', '--no-defaults'] as const;
 
 export const YARN_CONNECTION_KEYS = new Set([
     'npmRegistryServer',
@@ -38,7 +38,7 @@ export const YARN_CONNECTION_KEYS = new Set([
     'unsafeHttpWhitelist',
 ]);
 
-export const YARN_CONFIG_GET_ARGUMENTS = ['yarn', 'config', 'get'] as const;
+export const YARN_CONFIG_GET_ARGUMENTS = ['config', 'get'] as const;
 
 export const YARN_CONFIG_GET_FLAGS = ['--json', '--no-redacted'] as const;
 

@@ -38,10 +38,8 @@ function sortValue(value: unknown, path: string[]): unknown {
             ...recordOrder.filter((key) => Object.hasOwn(value, key)),
             ...names.filter((key) => !recordOrder.includes(key)),
         ];
-    else if (path[0] === 'tools') {
-        const isSortsNames = path.at(-1) === 'rules';
-        if (isSortsNames) order = names.toSorted((left, right) => compareText(left, right));
-    }
+    else if (path[0] === 'tools' && path.at(-1) === 'rules')
+        order = names.toSorted((left, right) => compareText(left, right));
     return Object.fromEntries(order.map((key) => [key, sortValue(value[key], [...path, key])]));
 }
 

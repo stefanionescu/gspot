@@ -5,7 +5,7 @@ import type { ArchiveDownload } from '#cli/types/install/downloads.ts';
 
 async function readBoundedArchive(response: Response, { url, name, limit }: ArchiveDownload): Promise<Buffer> {
     const reader: ReadableStreamDefaultReader<Uint8Array> | undefined = response.body?.getReader();
-    if (reader === undefined) return Buffer.alloc(0);
+    if (reader === undefined) throw new GspotError('install', `${url} sent no content for ${name}.`);
     const chunks: Uint8Array[] = [];
     let size = 0;
     try {

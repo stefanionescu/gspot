@@ -32,12 +32,6 @@ export type Scope = {
     settings: ScopeSettings;
 };
 
-export type ScopeValues = {
-    settings: Record<string, unknown>;
-    values: TableValues;
-    test_files: Settings['test_files'];
-};
-
 export type ScopeSettings = {
     configurations: string[];
     test_files: Settings['test_files'];

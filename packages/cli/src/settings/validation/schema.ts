@@ -91,11 +91,6 @@ function formatUnknownKey(segments: KeyPath, key: string): string {
     return `\`${key}\` is not a gspot.toml setting.${formatSimilarKeys(segments, key)} See ${SETTINGS_REFERENCE_URL} for every key.`;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function throwErrors(errors: SettingsError[], syntax: TomlSyntax): never {
-    throw new GspotError('settings', errors.map((error) => formatSettingsError(error, syntax)).join('\n'));
-}
-
 /**
 Validate the written configuration lists, tool options, ignores, and paths before a command uses them.
 
@@ -112,7 +107,8 @@ export function validateSettings(settings: Settings, repositoryRoot: string, syn
         ),
     ];
     const unknown = listUnknownConfigurations(written, configurations);
-    if (unknown.length > 0) throwErrors(unknown, syntax);
+    if (unknown.length > 0)
+        throw new GspotError('settings', unknown.map((error) => formatSettingsError(error, syntax)).join('\n'));
     const bundledChecks = listCheckIds([]);
     const checks = listCheckIds(Object.values(settings.commandChecks));
     const scopes = new Map(
@@ -151,5 +147,6 @@ export function validateSettings(settings: Settings, repositoryRoot: string, syn
         ...validateRuleFilePaths(repositoryRoot, settings),
         ...validateKeys(rootKeys, settings, scopes, buildAvailableSettings(general, settings.level)),
     ];
-    if (errors.length > 0) throwErrors(errors, syntax);
+    if (errors.length > 0)
+        throw new GspotError('settings', errors.map((error) => formatSettingsError(error, syntax)).join('\n'));
 }

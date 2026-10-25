@@ -1,11 +1,10 @@
 export const PACKAGE_MANAGER_ARGUMENTS = {
     yarn: {
-        lockfile: ['yarn', 'install', '--mode=update-lockfile'],
-        install: ['yarn', 'install', '--immutable'],
+        lockfile: ['install', '--mode=update-lockfile'],
+        install: ['install', '--immutable'],
     },
     npm: {
         lockfile: [
-            'npm',
             'install',
             '--package-lock-only',
             '--legacy-peer-deps',
@@ -15,7 +14,6 @@ export const PACKAGE_MANAGER_ARGUMENTS = {
             '--omit-lockfile-registry-resolved',
         ],
         install: [
-            'npm',
             'ci',
             '--legacy-peer-deps',
             '--ignore-scripts',
@@ -25,13 +23,12 @@ export const PACKAGE_MANAGER_ARGUMENTS = {
         ],
     },
     bun: {
-        lockfile: ['bun', 'install', '--lockfile-only', '--linker', 'hoisted', '--network-concurrency=1'],
-        install: ['bun', 'install', '--frozen-lockfile', '--linker', 'hoisted'],
+        lockfile: ['install', '--lockfile-only', '--linker', 'hoisted', '--network-concurrency=1'],
+        install: ['install', '--frozen-lockfile', '--linker', 'hoisted'],
     },
     pnpm: {
-        lockfile: ['pnpm', 'install', '--lockfile-only', '--node-linker=hoisted', '--config.auto-install-peers=false'],
+        lockfile: ['install', '--lockfile-only', '--node-linker=hoisted', '--config.auto-install-peers=false'],
         install: [
-            'pnpm',
             'install',
             '--frozen-lockfile',
             '--ignore-workspace',

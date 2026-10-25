@@ -12,10 +12,11 @@ import { TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
+import { readInstallPackageManager } from '#cli/install/tools.ts';
+import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { selectLockfileName } from '#cli/install/npm/package-json.ts';
-import { readToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 
@@ -50,15 +51,8 @@ Build the tool install for a sandbox.
 export function buildToolInstall(session: Session, writer: Files): ToolInstall {
     return {
         session,
-        packageManager:
-            session.packageManager === undefined
-                ? undefined
-                : readToolPackageManager(
-                      session.installedRoot,
-                      session.packageManager,
-                      session.timeoutSeconds,
-                      session.reads,
-                  ),
+        packageManager: readInstallPackageManager(session),
+        releaseAgeDays: getTable(findRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
         writer,
         generated: generate(session),
         tools: listDistinctTools(session.toolConfigurations),

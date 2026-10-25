@@ -15,7 +15,7 @@ import { getSettingValue, listSettingsTables } from '#cli/settings/inherit.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 import { ESLINT_LIMIT_RULES } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
 
-function readPathError(files: Files, value: string): ReturnType<Files['readStats']> | Error {
+function readPathStats(files: Files, value: string): ReturnType<Files['readStats']> | Error {
     try {
         return files.readStats(value);
     } catch (error) {
@@ -36,14 +36,15 @@ export function validateScopePaths(repositoryRoot: string, settings: Settings): 
     using files = openFiles(repositoryRoot);
     return paths.flatMap((path, index) => {
         const location: KeyPath = ['scope', index, 'path'];
-        const stats = readPathError(files, trimTrailingSlashes(path));
-        const message =
-            stats instanceof Error
-                ? stats.message
-                : `The scope \`${path}\` names a file. Name a folder under the repository root.`;
-        return !(stats instanceof Error) && (stats === undefined || stats.isDirectory())
-            ? []
-            : { path: location, message };
+        const stats = readPathStats(files, trimTrailingSlashes(path));
+        if (stats instanceof Error) return [{ path: location, message: stats.message }];
+        if (stats === undefined || stats.isDirectory()) return [];
+        return [
+            {
+                path: location,
+                message: `The scope \`${path}\` names a file. Name a folder under the repository root.`,
+            },
+        ];
     });
 }
 
@@ -76,15 +77,24 @@ export function validateRuleFilePaths(repositoryRoot: string, settings: Settings
                 : []),
         ];
         return paths.flatMap(({ value, key, path }) => {
-            const stats = readPathError(files, value);
-            const message =
-                stats instanceof Error
-                    ? stats.message.replace(
-                          'gspot does not write through links.',
-                          () => `Point ${key} at a tracked file.`,
-                      )
-                    : `\`${value}\` names no file. Point ${key} at a file, relative to the repository root.`;
-            return !(stats instanceof Error) && stats?.isFile() === true ? [] : { path, message };
+            const stats = readPathStats(files, value);
+            if (stats instanceof Error)
+                return [
+                    {
+                        path,
+                        message: stats.message.replace(
+                            'gspot does not write through links.',
+                            () => `Point ${key} at a tracked file.`,
+                        ),
+                    },
+                ];
+            if (stats?.isFile() === true) return [];
+            return [
+                {
+                    path,
+                    message: `\`${value}\` names no file. Point ${key} at a file, relative to the repository root.`,
+                },
+            ];
         });
     });
 }
@@ -104,23 +114,31 @@ export function validateRuleExcludes(exclude: string[], configurations: Map<stri
         .flatMap((configuration) => listRuleFiles(configuration).map((file) => file.path))
         .toArray();
     return exclude.flatMap((excluded, index) => {
+        const location: KeyPath = ['rules', 'exclude', index];
         const hasFirstRead = FIRST_READ.some((file) =>
             isInScope(`${GSPOT_PATHS.configurations}/${file}`, trimTrailingSlashes(excluded)),
         );
+        if (hasFirstRead)
+            return [
+                {
+                    path: location,
+                    message: `[rules] exclude names ${formatCodeList([excluded])}, which holds a file every agent opens first (${formatCodeList(FIRST_READ)}). Remove the entry.`,
+                },
+            ];
         const isRuleMatch = paths.some((path) =>
             isInScope(`${GSPOT_PATHS.configurations}/${path}`, trimTrailingSlashes(excluded)),
         );
-        const suggestion =
-            hasFirstRead || isRuleMatch
-                ? ''
-                : formatSimilarNames(
-                      excluded,
-                      paths.map((path) => `${GSPOT_PATHS.configurations}/${path}`),
-                  );
-        const message = hasFirstRead
-            ? `[rules] exclude names ${formatCodeList([excluded])}, which holds a file every agent opens first (${formatCodeList(FIRST_READ)}). Remove the entry.`
-            : `[rules] exclude names ${formatCodeList([excluded])}, which matches no rule.${suggestion}`;
-        return isRuleMatch && !hasFirstRead ? [] : { path: ['rules', 'exclude', index], message };
+        if (isRuleMatch) return [];
+        const suggestion = formatSimilarNames(
+            excluded,
+            paths.map((path) => `${GSPOT_PATHS.configurations}/${path}`),
+        );
+        return [
+            {
+                path: location,
+                message: `[rules] exclude names ${formatCodeList([excluded])}, which matches no rule.${suggestion}`,
+            },
+        ];
     });
 }
 

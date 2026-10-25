@@ -8,7 +8,6 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
@@ -16,6 +15,7 @@ import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/apply/generated.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { formatApplyReport, writeGeneratedFiles } from '#cli/apply/generated.ts';
 import { getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
@@ -34,26 +34,25 @@ export async function applySettingsEdit(
     repositoryRoot: string,
     options: SaveSettingsOptions,
 ): Promise<CommandResult<ApplyReport & { changed: boolean }>> {
-    const { edit: input, summary } = options;
+    const { edit, summary } = options;
     using writer = openWriter(repositoryRoot);
-    const result = buildEditedSettings(repositoryRoot, input);
+    const result = buildEditedSettings(repositoryRoot, edit);
     const previous = generate(await openSession(repositoryRoot));
     const session = await openSession(repositoryRoot, {
         settingsFile: { settings: result.settings, text: result.text },
     });
     const generated = generate(session);
-    writeSettings(writer, result.text, input.previous);
+    writeSettings(writer, result.text, edit.previous);
     let report: ApplyReport;
     try {
         report = await writeGeneratedFiles(session, generated, writer);
     } catch (error) {
         if (!(error instanceof GspotError)) throw error;
-        const message = error.message;
         throw new GspotError(
             'writing',
             [
                 summary,
-                `gspot.toml keeps this change, and applying it stopped: ${message}`,
+                `gspot.toml keeps this change, and applying it stopped: ${error.message}`,
                 'Fix that, then run gspot apply.',
             ].join('\n'),
             { cause: error },
@@ -73,17 +72,21 @@ export async function applySettingsEdit(
 }
 
 /**
-Read and validate the settings once before a command edits them.
+Read and validate the settings once before a command edits them, and find the table of the scope that the command
+writes into.
 
 @param cwd the folder where the command starts.
-@returns the settings and the gspot.toml text before the edit.
+@param scope the --scope path as typed, relative to cwd, or absent for the top level.
+@returns the settings and the gspot.toml text before the edit, the scope as a repository path, and its table.
 */
-export function prepareSettingsEdit(cwd: string): SettingsEditContext {
+export function prepareSettingsEdit(cwd: string, scope?: string): SettingsEditContext {
     const root = findRoot(cwd);
     const input = readSettingsEdit(root);
     const reads = createReadCache(root);
     const settings = parseSettings(input.text, root);
-    return { root, input, settings, reads };
+    const path = scope === undefined ? undefined : buildArgumentPath(root, cwd, scope);
+    const scopeTable = getScopeTable(input.table, path);
+    return { root, input, settings, reads, scope: path, scopeTable };
 }
 
 /**
@@ -95,25 +98,19 @@ Validate the configuration names and the scope for add and remove before either 
 export function prepareConfigurationEdit(options: ConfigurationsOptions): {
     root: string;
     input: SettingsEdit;
+    scope: string | undefined;
+    scopeTable: TomlTable;
     scopeSettings: Pick<Settings, 'configurations' | 'removed_configurations'>;
     selected: string[];
     configurations: Map<string, Configuration>;
 } {
-    const edit = prepareSettingsEdit(options.cwd);
-    if (options.scope !== undefined) options.scope = buildArgumentPath(edit.root, options.cwd, options.scope);
+    const { root, input, settings, scope, scopeTable } = prepareSettingsEdit(options.cwd, options.scope);
     const configurations = readConfigurations();
     assertConfigurationsExist(options.configurations, configurations);
     assertConfigurationsEditable(options.configurations, configurations);
-    getScopeTable(edit.input.table, options.scope);
-    const scopeSettings =
-        options.scope === undefined
-            ? edit.settings
-            : (edit.settings.scopes[options.scope] as Settings['scopes'][string]);
-    const selected = selectForScope(edit.settings, options.scope ?? '', configurations).map(
-        (configuration) => configuration.name,
-    );
-    const { root, input } = edit;
-    return { root, input, scopeSettings, selected, configurations };
+    const scopeSettings = scope === undefined ? settings : (settings.scopes[scope] as Settings['scopes'][string]);
+    const selected = selectForScope(settings, scope ?? '', configurations).map((configuration) => configuration.name);
+    return { root, input, scope, scopeTable, scopeSettings, selected, configurations };
 }
 
 /**
@@ -125,22 +122,20 @@ the repository select.
 @param context.input the settings text and table before the edit.
 @param context.settings the parsed gspot.toml before the edit.
 @param context.reads the file cache for the lookup.
+@param context.scope the folder to look in, or the root when absent.
 @param key the dotted setting name.
-@param scope the folder to look in, or the root when absent.
 @returns the declaration and defaults for that scope.
 */
 export async function readSetting(
     context: SettingsEditContext,
     key: string,
-    scope: string | undefined,
-): Promise<{ available: AvailableSettings; match: SettingMatch; scope: Scope }> {
+): Promise<{ availableSettings: AvailableSettings; match: SettingMatch; scope: Scope }> {
     if (['configurations', 'removed_configurations'].includes(key))
         throw new GspotError('arguments', 'Use gspot add or gspot remove to change configurations.');
-    getScopeTable(context.input.table, scope);
     const { settings, reads } = context;
     const session = await openSession(context.root, { settingsFile: { settings, text: context.input.text }, reads });
-    const selected = session.scopes.find((each) => each.folder.path === (scope ?? '')) as Scope;
-    const availableSettings = selected.availableSettings;
+    const selected = session.scopes.find((each) => each.folder.path === (context.scope ?? '')) as Scope;
+    const { availableSettings } = selected;
     const match = findSetting(availableSettings, key);
     if (match === undefined) {
         const selectedScope = session.scopes.find(
@@ -155,5 +150,5 @@ export async function readSetting(
             );
         throw new GspotError('arguments', formatUnknownSetting(availableSettings, key));
     }
-    return { available: availableSettings, match, scope: selected };
+    return { availableSettings, match, scope: selected };
 }

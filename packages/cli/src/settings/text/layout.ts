@@ -77,27 +77,24 @@ function splitSection(
         const hasComments = comments
             .values()
             .some(({ path: note }) => childPath.every((segment, index) => note[index] === segment));
-        const row = { key, child, isTable: isChildTable, childPath };
         return {
-            ...row,
+            key,
+            child,
+            isChildTable,
+            childPath,
             isScopeTable: isScope && isChildTable,
             isRecordList: isRecordArray(child) && !isToolRule,
             isInline: hasReason || key === 'output',
             isCommentedReasonedValue: hasReason && hasComments,
         };
     });
-    const scopeAssignments = new Map(
-        childRows
-            .filter(({ isScopeTable }) => isScopeTable)
-            .map(({ key, child }) => [key, listScopeAssignments(key, child)] as const),
-    );
     const sections = childRows.map(
-        ({ key, child, isTable, isScopeTable, isRecordList, isInline, isCommentedReasonedValue, childPath }) => {
+        ({ key, child, isChildTable, isScopeTable, isRecordList, isInline, isCommentedReasonedValue, childPath }) => {
             const assignments: [string, unknown][] = [];
             const children: LayoutSection[] = [];
-            if (isScopeTable) return { assignments: scopeAssignments.get(key) as [string, unknown][], children };
-            if (isTable && isInline && !isCommentedReasonedValue) assignments.push([key, child]);
-            else if (isTable) children.push({ path: childPath, table: child as TomlTable });
+            if (isScopeTable) return { assignments: listScopeAssignments(key, child), children };
+            if (isChildTable && isInline && !isCommentedReasonedValue) assignments.push([key, child]);
+            else if (isChildTable) children.push({ path: childPath, table: child as TomlTable });
             else if (isRecordList)
                 children.push(
                     ...(child as TomlTable[]).map((record, index) => ({
@@ -224,21 +221,20 @@ function listDestinationPaths(syntax: TomlSyntax, destination: TomlTable, path: 
     return mapped.filter((keyPath) => getValueAt(destination, keyPath) !== undefined);
 }
 
+function findEnclosingHeader(syntax: TomlSyntax, destination: TomlTable, owner: TomlCommentAnchor) {
+    if (owner.kind === 'item' || getValueAt(destination, owner.path) === undefined)
+        return { kind: owner.kind, path: undefined };
+    const header = syntax.pathNodes.findLast(
+        (pathNode) => pathNode.kind === 'header' && pathNode.path.every((key, index) => owner.path[index] === key),
+    )?.path;
+    if (header?.every((key) => typeof key === 'string') !== true) return { kind: 'preamble', path: [] };
+    createTable(destination, header);
+    return { kind: 'header', path: header };
+}
+
 function findCommentPlace(syntax: TomlSyntax, destination: TomlTable, owner: TomlCommentAnchor) {
     const path = listDestinationPaths(syntax, destination, owner.path)[0];
-    if (path === undefined) {
-        if (owner.kind === 'item' || getValueAt(destination, owner.path) === undefined)
-            return { kind: owner.kind, path };
-        const [header] = [
-            syntax.pathNodes.findLast(
-                (pathNode) =>
-                    pathNode.kind === 'header' && pathNode.path.every((key, index) => owner.path[index] === key),
-            ),
-        ].flatMap((table) => (table?.path.every((key) => typeof key === 'string') === true ? [table.path] : []));
-        if (header === undefined) return { kind: 'preamble', path: [] };
-        createTable(destination, header);
-        return { kind: 'header', path: header };
-    }
+    if (path === undefined) return findEnclosingHeader(syntax, destination, owner);
     if (owner.kind !== 'key') return { kind: owner.kind, path };
     const value: unknown = getValueAt(destination, path);
     if (isTable(value)) return { kind: 'header', path };
@@ -248,14 +244,14 @@ function findCommentPlace(syntax: TomlSyntax, destination: TomlTable, owner: Tom
 function findKeptCommentPlacement(
     syntax: TomlSyntax,
     destination: TomlTable,
-    { comment, anchor: owner }: TomlAnchoredComment,
+    { comment, anchor }: TomlAnchoredComment,
 ): TomlCommentPlacement {
     const isOpening =
-        owner === undefined &&
+        anchor === undefined &&
         syntax.pathNodes.every((pathNode) => getTomlRange(comment)[1] < getTomlRange(pathNode.node)[0]);
     if (isOpening) return { kind: 'preamble', path: [], comment, placement: 'free' };
-    if (owner !== undefined) {
-        const mapped = findCommentPlace(syntax, destination, owner);
+    if (anchor !== undefined) {
+        const mapped = findCommentPlace(syntax, destination, anchor);
         return { ...mapped, comment, placement: mapped.kind === 'preamble' ? 'free' : 'owned' };
     }
     const next = syntax.pathNodes.find(
@@ -263,8 +259,8 @@ function findKeptCommentPlacement(
             getTomlRange(pathNode.node)[0] > getTomlRange(comment)[1] &&
             listDestinationPaths(syntax, destination, pathNode.path).length > 0,
     );
-    const anchor = findCommentPlace(syntax, destination, next ?? { kind: 'preamble', path: [] });
-    return { ...anchor, comment, placement: 'free' };
+    const place = findCommentPlace(syntax, destination, next ?? { kind: 'preamble', path: [] });
+    return { ...place, comment, placement: 'free' };
 }
 
 /**

@@ -62,7 +62,8 @@ function removeUnusedSettings(
 }
 
 async function runRemoveCommand(options: ConfigurationsOptions & { reason: string }): Promise<CommandResult> {
-    const { root, input, scopeSettings, selected, configurations } = prepareConfigurationEdit(options);
+    const { root, input, scope, scopeTable, scopeSettings, selected, configurations } =
+        prepareConfigurationEdit(options);
     const kept = selected.filter((name) => !options.configurations.includes(name));
     assertNotRequired(options.configurations, kept, configurations);
     if (options.configurations.every((name) => !selected.includes(name))) {
@@ -73,7 +74,6 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         };
     }
     const scopeConfigurations = scopeSettings.configurations;
-    const scopeTable = getScopeTable(input.table, options.scope);
     const removed = options.configurations.filter((name) => selected.includes(name));
     scopeTable['configurations'] = scopeConfigurations.filter((name) => !removed.includes(name));
     const previous = scopeTable['removed_configurations'];
@@ -86,11 +86,10 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         value: [...new Set([...scopeSettings.removed_configurations, ...removed])],
         reason: options.reason,
     };
-    const where = options.scope === undefined ? '' : ` from scope ${options.scope}`;
+    const where = scope === undefined ? '' : ` from scope ${scope}`;
     const unchanged = options.configurations.filter((name) => !selected.includes(name));
     const summary =
-        formatConfigurationChange(removed, unchanged, where) +
-        removeUnusedSettings(input.table, configurations, options.scope);
+        formatConfigurationChange(removed, unchanged, where) + removeUnusedSettings(input.table, configurations, scope);
     return applySettingsEdit(root, {
         edit: input,
         summary,

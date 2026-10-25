@@ -6,7 +6,7 @@ import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
-import { planBlock, openWriter, writePlans, planReplacement, planSettingsWrite } from '#cli/write.ts';
+import { planBlock, openWriter, writePlans, planReplacement, planManagedKeys } from '#cli/write.ts';
 
 test('a batch writes binary bytes, and a removal plan deletes one file and keeps the other', async () => {
     await using sandbox = await testdir();
@@ -41,7 +41,7 @@ test.each(['replacement', 'block', 'keys'] as const)(
                     expected: writer.read('config.toml'),
                 }),
             block: () => planBlock(writer, 'config.toml', 'managed content', 'hash'),
-            keys: () => planSettingsWrite(writer, 'config.toml', [{ key: ['extends'], value: './managed.json' }]),
+            keys: () => planManagedKeys(writer, 'config.toml', [{ key: ['extends'], value: './managed.json' }]),
         };
         const plan = plans[kind]();
         expect(writer.read('config.toml')).toStrictEqual({

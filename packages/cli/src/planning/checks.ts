@@ -7,9 +7,9 @@ import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
-import { COVERAGE_DIMENSIONS } from '#cli/config/planning/checks.ts';
 import type { Check, ScopeCheck } from '#cli/types/configurations.ts';
 import { isRootOnlyCheck, selectCheckFiles } from '#cli/planning/files.ts';
+import { ROOT_RUNS, COVERAGE_DIMENSIONS } from '#cli/config/planning/checks.ts';
 import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/planning.ts';
 
 function listScopeChecks(session: Session, scope: Scope): ScopeCheck[] {
@@ -38,7 +38,7 @@ function isWanted(check: Check, options: PlanOptions): boolean {
 function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck {
     const { session, scope, options } = planned;
     const { check, configuration } = scopeCheck;
-    const isRootCheck = check.runs === 'once' || check.runs === 'history';
+    const isRootCheck = (ROOT_RUNS as readonly string[]).includes(check.runs);
     const rootScope = findRootScope(session.scopes);
     const name = getToolName(check);
     const tool = name === undefined ? undefined : getTool(session.configurations.values(), name);
@@ -85,7 +85,7 @@ function planScope(planned: PlannedScope, plannedRepositoryChecks: Set<string>):
         isWanted(configured.check, planned.options),
     );
     for (const configured of wanted) {
-        const isRootCheck = configured.check.runs === 'once' || configured.check.runs === 'history';
+        const isRootCheck = (ROOT_RUNS as readonly string[]).includes(configured.check.runs);
         if (isRootCheck && plannedRepositoryChecks.has(configured.check.id)) continue;
         const check = planCheck(planned, configured);
         if (check.skip?.cause === 'level') continue;
@@ -161,10 +161,16 @@ export function stripCoverageArguments(
     planned: Pick<PlannedCheck, 'check' | 'scope' | 'configuration'>,
     authored: Pick<Check, 'command'>,
 ): string[] | undefined {
-    const command = authored.command ?? planned.check.command;
-    if (command === undefined || authored.command !== undefined || planned.configuration === undefined) return command;
+    if (authored.command !== undefined) return authored.command;
+    const { command } = planned.check;
     const coverageArguments = planned.check.coverage_arguments ?? [];
-    if (!hasCoverageArguments(command, coverageArguments) || !isCoverageOff(planned.scope)) return command;
+    if (
+        command === undefined ||
+        planned.configuration === undefined ||
+        !hasCoverageArguments(command, coverageArguments) ||
+        !isCoverageOff(planned.scope)
+    )
+        return command;
     return command.filter((argument) => !hasCoverageArguments([argument], coverageArguments));
 }
 

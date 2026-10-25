@@ -9,6 +9,7 @@ import { registerApply } from '#cli/commands/apply.ts';
 import { registerUnset } from '#cli/commands/unset.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
 import { registerRemove } from '#cli/commands/remove.ts';
+import { isJsonRequested } from '#cli/system/runtime.ts';
 import { registerInit } from '#cli/commands/init/init.ts';
 import { registerInstall } from '#cli/commands/install.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
@@ -94,11 +95,17 @@ function formatProgramHelp(program: Command): string {
         groups.set(help.group, [...(groups.get(help.group) ?? []), row]);
     }
     const sections = [...groups].map(([group, rows]) => `${group}\n${rows.join('\n')}`);
-    return `Usage: gspot <command> [options]\n\n${program.description()}\n\n${sections.join('\n\n')}\n\nOptions:\n${Object.entries(
-        GLOBAL_OPTIONS,
-    )
-        .map(([flags, description]) => `  ${flags.padEnd(HELP_TERM_WIDTH)}${description}`)
-        .join('\n')}\n\nExit codes:\n${formatExitCodes(PROGRAM_EXIT_CODES)}\n\n${PROGRAM_HELP_FOOTER}`;
+    const options = Object.entries(GLOBAL_OPTIONS).map(
+        ([flags, description]) => `  ${flags.padEnd(HELP_TERM_WIDTH)}${description}`,
+    );
+    return [
+        'Usage: gspot <command> [options]',
+        program.description(),
+        sections.join('\n\n'),
+        `Options:\n${options.join('\n')}`,
+        `Exit codes:\n${formatExitCodes(PROGRAM_EXIT_CODES)}`,
+        PROGRAM_HELP_FOOTER,
+    ].join('\n\n');
 }
 
 /**
@@ -154,9 +161,7 @@ export async function runProgram(commandArguments: string[]): Promise<number> {
     const program = buildProgram((value) => {
         result = value;
     });
-    const end = commandArguments.indexOf('--');
-    const commandJson = (end === -1 ? commandArguments : commandArguments.slice(0, end)).includes('--json');
-    setOutputOptions({ json: commandJson, color: isColorAllowed() });
+    setOutputOptions({ json: isJsonRequested(commandArguments), color: isColorAllowed() });
     program.hook('preAction', (_program, command) => {
         if (GIT_COMMANDS.has(command.name()) && !isGitRepository(process.cwd()))
             throw new GspotError('git', 'gspot needs a Git repository. Run git init, then gspot init.');

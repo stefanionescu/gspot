@@ -1,6 +1,7 @@
 import { isUtf8 } from 'node:buffer';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
+import { ROOT_RUNS } from '#cli/config/planning/checks.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
@@ -194,7 +195,7 @@ export function selectCheckFiles(
 ): Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip'> {
     const { scope, children } = planned;
     const { check, configuration } = scopeCheck;
-    const isRootCheck = check.runs === 'once' || check.runs === 'history';
+    const isRootCheck = (ROOT_RUNS as readonly string[]).includes(check.runs);
     const scopePath = isRootCheck ? '' : scope.folder.path;
     const triggerPaths = listDeletedTriggers(planned, scopeCheck, scopePath);
     const keepsChildScopes = check.runs !== 'files' || isRootOnlyCheck(configuration, check);

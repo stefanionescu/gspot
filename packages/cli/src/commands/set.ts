@@ -1,15 +1,14 @@
+import { setKey } from '#cli/settings/edit.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { parseTomlText } from '#cli/settings/file.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
-import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { SettingsEditContext } from '#cli/types/apply.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
+import { parseTomlText, isReasonedValue } from '#cli/settings/file.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
-import { setKey, getScopeTable, getWrittenValue } from '#cli/settings/edit.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
 import { RECORD_FIELDS, findSettingSchema } from '#cli/schemas/settings/file.ts';
@@ -71,20 +70,21 @@ function parseReasonTable(options: SetOptions): ParsedSettingValue {
     return { type: 'scalar', value: Object.fromEntries(options.values.map((value) => [value, reason])) };
 }
 
-function editSetting(table: TomlTable, change: ParsedSettingValue, setting: Setting, options: SetOptions): void {
-    const scopeTable = getScopeTable(table, options.scope);
-    const written = getWrittenValue(getValueAt(scopeTable, options.key.split('.')));
-    const value =
-        change.type === 'scalar' && setting.type === 'table' && isTable(change.value)
-            ? { ...(isTable(written) && written), ...change.value }
-            : change.value;
-    setKey(
-        scopeTable,
-        options.key,
-        options.reason === undefined || setting.reason_values === true
-            ? value
-            : { value: getWrittenValue(value), reason: options.reason },
-    );
+function setSettingValue(scopeTable: TomlTable, change: ParsedSettingValue, setting: Setting, key: string): void {
+    if (change.type === 'list') setKey(scopeTable, key, change.value);
+    else if (setting.type === 'table' && isTable(change.value)) {
+        const written = getValueAt(scopeTable, key.split('.'));
+        const writtenValue = isReasonedValue(written) ? written.value : written;
+        setKey(scopeTable, key, { ...(isTable(writtenValue) && writtenValue), ...change.value });
+    } else setKey(scopeTable, key, change.value);
+}
+
+function editSetting(scopeTable: TomlTable, change: ParsedSettingValue, setting: Setting, options: SetOptions): void {
+    setSettingValue(scopeTable, change, setting, options.key);
+    if (options.reason === undefined || setting.reason_values === true) return;
+    const written = getValueAt(scopeTable, options.key.split('.'));
+    const value = isReasonedValue(written) ? written.value : written;
+    setKey(scopeTable, options.key, { value, reason: options.reason });
 }
 
 function assertReasonPresent({
@@ -107,10 +107,15 @@ function assertReasonPresent({
 
 function formatSettingChange(
     change: ParsedSettingValue,
-    context: { setting: Setting; options: SetOptions; previous: InheritedSetting | undefined },
+    context: {
+        setting: Setting;
+        options: SetOptions;
+        scope: string | undefined;
+        previous: InheritedSetting | undefined;
+    },
 ): string {
-    const { setting, options, previous } = context;
-    const displayKey = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
+    const { setting, options, scope, previous } = context;
+    const displayKey = scope === undefined ? options.key : `scope.${scope}.${options.key}`;
     const was =
         previous?.value === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
     if (setting.reason_values === true) return `Added ${options.values.join(' and ')} to ${displayKey}.${was}`;
@@ -137,12 +142,12 @@ async function readSettingChange(
     options: SetOptions,
 ): Promise<{ setting: Setting; change: ParsedSettingValue; summary: string }> {
     const { settings } = edit;
-    const { available: availableSettings, match, scope } = await readSetting(edit, options.key, options.scope);
+    const { availableSettings, match, scope } = await readSetting(edit, options.key);
     const setting = match.setting;
     const change =
         setting.reason_values === true ? parseReasonTable(options) : parseSettingValue(options.values, setting);
-    const previous = getSettingValue(availableSettings, settings, options.key, options.scope);
-    const shippedDefault = findSettingDefault(availableSettings, settings, match, options.scope)?.value;
+    const previous = getSettingValue(availableSettings, settings, options.key, edit.scope);
+    const shippedDefault = findSettingDefault(availableSettings, settings, match, edit.scope)?.value;
     assertReasonCoversList({ options, setting, change, previous, shippedDefault });
     assertReasonPresent({ options, setting, change, shippedDefault });
     const readers = listSettingReaders(settings, scope, options.key);
@@ -150,7 +155,7 @@ async function readSettingChange(
         options.key.startsWith('limits.') && readers.every((reader) => !reader.enabled)
             ? `\nnote     No selected check reads ${options.key} at level ${settings.level}.`
             : '';
-    const summary = formatSettingChange(change, { setting, options, previous }) + note;
+    const summary = formatSettingChange(change, { setting, options, scope: edit.scope, previous }) + note;
     return { setting, change, summary };
 }
 
@@ -162,12 +167,11 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
                 ? 'Run gspot ignore <check> --reason "<why>" to add an ignore.'
                 : `Write [[${options.key}]] by hand in gspot.toml. Record lists have their own fields.`,
         );
-    const edit = prepareSettingsEdit(options.cwd);
-    if (options.scope !== undefined) options.scope = buildArgumentPath(edit.root, options.cwd, options.scope);
-    const { root, input } = edit;
+    const edit = prepareSettingsEdit(options.cwd, options.scope);
+    const { root, input, scopeTable } = edit;
     const { setting, change, summary } = await readSettingChange(edit, options);
     try {
-        editSetting(input.table, change, setting, options);
+        editSetting(scopeTable, change, setting, options);
         return await applySettingsEdit(root, { edit: input, summary });
     } catch (error) {
         if (error instanceof GspotError && error.code === 'settings')

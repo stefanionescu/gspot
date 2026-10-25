@@ -5,12 +5,12 @@ import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { writePlans, planReplacement } from '#cli/write.ts';
+import { parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { ReasonedValue } from '#cli/types/settings/values.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import type { SettingsFileContents } from '#cli/types/settings/edits.ts';
-import { getTomlRange, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { type TomlTable, type SettingsFile } from '#cli/types/settings/file.ts';
 import { SETTINGS_FILE, PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts';
 
@@ -57,7 +57,7 @@ export function readSettingsFile(repositoryRoot: string): SettingsFileContents {
         throw new GspotError('settings', 'There is no gspot.toml here. Run `gspot init` to create one.');
     const text = decodeUtf8(previous.bytes);
     if (text === undefined) throw new GspotError('settings', 'gspot.toml must contain valid UTF-8 text.');
-    return { text, previous: previous };
+    return { text, previous };
 }
 
 /**
@@ -104,5 +104,5 @@ export function findSettingLine(file: SettingsFile, path: KeyPath): number {
         syntax.pathNodes.find(
             (node) => node.path.length === path.length && node.path.every((key, index) => key === path[index]),
         );
-    return found === undefined ? 1 : file.text.slice(0, getTomlRange(found.node)[0]).split('\n').length;
+    return found?.node.loc.start.line ?? 1;
 }

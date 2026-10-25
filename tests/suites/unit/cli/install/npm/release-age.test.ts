@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readdir, readFile } from 'node:fs/promises';
-import { prepareReleaseAge } from '#cli/install/npm/release-age.ts';
 import { OWN_PACKAGES } from '#tests/config/install/npm/release-age.ts';
 import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/install/npm/project.ts';
+import { prepareReleaseAge, writeBunReleaseAge } from '#cli/install/npm/release-age.ts';
 
 test('an npm tool lockfile gets the minimum release age as flags and writes no file', async () => {
     await using sandbox = await testdir();
@@ -21,7 +21,7 @@ test('an npm tool lockfile gets the minimum release age as flags and writes no f
     ]);
 });
 
-test('a Bun tool lockfile reads the release age from a bunfig.toml in its folder', async () => {
+test('a Bun run reads the release age from the bunfig.toml that it gets with --config', async () => {
     await using sandbox = await testdir();
     const hold = prepareReleaseAge(
         sandbox.path,
@@ -30,7 +30,10 @@ test('a Bun tool lockfile reads the release age from a bunfig.toml in its folder
         7,
     );
     expect(hold).toStrictEqual([...PACKAGE_MANAGER_ARGUMENTS.bun.lockfile]);
-    const contents = Bun.TOML.parse(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8'));
+    expect(await readdir(sandbox.path)).toStrictEqual([]);
+    const path = writeBunReleaseAge(sandbox.path, 7);
+    expect(path).toBe(join(sandbox.path, 'bunfig.toml'));
+    const contents = Bun.TOML.parse(await readFile(path, 'utf8'));
     expect(contents).toStrictEqual({
         install: { peer: false, minimumReleaseAge: 604_800, minimumReleaseAgeExcludes: [...OWN_PACKAGES] },
     });

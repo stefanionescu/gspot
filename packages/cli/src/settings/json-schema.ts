@@ -16,24 +16,7 @@ Build the editor schema for this gspot version.
 @returns the JSON Schema document.
 */
 export function buildJsonSchema(): z.core.JSONSchema.JSONSchema {
-    const converted = convertToJsonSchema(settingsSchema);
-    const properties = Object.entries(converted.properties as Record<string, z.core.JSONSchema.JSONSchema>).map<
-        [string, z.core.JSONSchema.JSONSchema]
-    >(([name, node]) => {
-        const description = node.description ?? TABLE_DESCRIPTIONS[name];
-        return [name, description === undefined ? node : { ...node, description }];
-    });
-    return {
-        $schema: JSON_SCHEMA_DIALECT,
-        $id: SCHEMA_URL,
-        title: SETTINGS_FILE,
-        description: 'The settings of gspot for one repository.',
-        ...converted,
-        properties: Object.fromEntries(properties),
-    };
-}
-function convertToJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
-    return z.toJSONSchema(schema, {
+    const converted = z.toJSONSchema(settingsSchema, {
         io: 'input',
         reused: 'ref',
         unrepresentable: ({ zodSchema }) =>
@@ -52,4 +35,18 @@ function convertToJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
                 Object.assign(jsonSchema, { examples: definition['examples'] });
         },
     });
+    const properties = Object.entries(converted.properties as Record<string, z.core.JSONSchema.JSONSchema>).map<
+        [string, z.core.JSONSchema.JSONSchema]
+    >(([name, node]) => {
+        const description = node.description ?? TABLE_DESCRIPTIONS[name];
+        return [name, description === undefined ? node : { ...node, description }];
+    });
+    return {
+        $schema: JSON_SCHEMA_DIALECT,
+        $id: SCHEMA_URL,
+        title: SETTINGS_FILE,
+        description: 'The settings of gspot for one repository.',
+        ...converted,
+        properties: Object.fromEntries(properties),
+    };
 }

@@ -3,14 +3,13 @@ import { compareText } from '#cli/system/text.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { findParentCategory } from '#cli/settings/naming.ts';
 import { findSettingSchema } from '#cli/schemas/settings/file.ts';
 import { commandSchema } from '#cli/schemas/configurations/fields.ts';
 import { unwrapSettingSchema } from '#cli/schemas/settings/fields.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, SettingsTable } from '#cli/types/settings/file.ts';
-import { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
+import { CATEGORY_PARENTS, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
 import { SETTING_TABLE_FIELDS, CATEGORY_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
 
 import {
@@ -184,21 +183,17 @@ export function getWrittenSetting(settings: Pick<Settings, 'written'>, key: stri
         : { value };
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function listPossibleKeys(match: SettingMatch, key: string): string[] {
-    const parent = match.category === undefined ? undefined : findParentCategory(match.category);
-    return match.language === undefined
-        ? [key]
-        : [
-              match.setting.name,
-              ...(match.category === undefined
-                  ? []
-                  : [`naming.${match.language}.${key.slice(key.lastIndexOf('.') + 1)}`]),
-              ...(parent === undefined
-                  ? []
-                  : [`naming.${match.language}.${parent}.${key.slice(key.lastIndexOf('.') + 1)}`]),
-              key,
-          ];
+    const { language, category } = match;
+    if (language === undefined) return [key];
+    const field = key.slice(key.lastIndexOf('.') + 1);
+    const keys = [match.setting.name];
+    if (category !== undefined) {
+        const parent = CATEGORY_PARENTS[category] ?? category;
+        keys.push(`naming.${language}.${field}`, `naming.${language}.${parent}.${field}`);
+    }
+    keys.push(key);
+    return keys;
 }
 
 /**
@@ -253,20 +248,18 @@ export function getSettingValue(
     const { setting } = match;
     const shipped = findSettingDefault(availableSettings, settings, match, scope);
     const tables = listApplicableTables(settings, scope);
-    let initialSource = 'unset';
-    if (shipped !== undefined)
-        initialSource =
-            shipped.configuration === 'gspot default' ? 'gspot default' : `configuration ${shipped.configuration}`;
-    const start: InheritedValue = {
-        value: shipped?.value,
-        source: initialSource,
-        origin: shipped ? 'configuration' : 'unset',
-        reason: undefined,
-    };
     const keys = listPossibleKeys(match, key);
-    let walked = start;
-    for (const table of tables) walked = mergeTable(setting, key, walked, table, keys);
-    const { value, source, reason, origin, originScope } = walked;
+    let inherited: InheritedValue = { value: undefined, source: 'unset', origin: 'unset', reason: undefined };
+    if (shipped !== undefined)
+        inherited = {
+            value: shipped.value,
+            source:
+                shipped.configuration === 'gspot default' ? 'gspot default' : `configuration ${shipped.configuration}`,
+            origin: 'configuration',
+            reason: undefined,
+        };
+    for (const table of tables) inherited = mergeTable(setting, key, inherited, table, keys);
+    const { value, source, reason, origin, originScope } = inherited;
     return {
         key,
         setting,

@@ -12,7 +12,6 @@ import { getSettingTable, getSettingValue, listInheritedSettings } from '#cli/se
 
 import type {
     Scope,
-    ScopeValues,
     ScopeSettings,
     InheritedSetting,
     AvailableSettings,
@@ -116,18 +115,18 @@ export function buildScopeSettings(
     configurations: Configuration[],
     scope: string,
 ): ScopeSettings {
-    const {
-        settings: settingRows,
-        values,
-        test_files: testFiles,
-    } = buildScopeValues(availableSettings, settings, scope);
-    const ignores = settings.ignore.map((ignore) => ({ ...ignore, paths: ignore.paths ?? [] }));
+    const listed = listInheritedSettings(availableSettings, settings, scope);
+    const valuesByKey = Object.fromEntries(listed.map((row) => [row.key, row.value]));
+    const namespaces: Record<string, unknown> = {};
+    fillTableValues(namespaces, listed);
+    fillTableValues(namespaces, listNamingVariants(availableSettings, settings, scope));
+    fillTableValues(namespaces, listLimitVariants(availableSettings, settings, scope));
     return {
         configurations: configurations.map((configuration) => configuration.name),
-        test_files: testFiles,
-        settings: settingRows,
-        values,
-        ignores,
+        settings: valuesByKey,
+        values: tableValuesSchema.parse(namespaces),
+        test_files: rootSettingSchemas.test_files.unwrap().parse(valuesByKey['test_files']),
+        ignores: settings.ignore.map((ignore) => ({ ...ignore, paths: ignore.paths ?? [] })),
     };
 }
 
@@ -193,21 +192,6 @@ export function listIgnoredRules(scope: Scope, check: string): string[] {
         .filter((rule) => rule !== undefined);
 }
 
-function buildScopeValues(availableSettings: AvailableSettings, settings: Settings, scope: string): ScopeValues {
-    const listed = listInheritedSettings(availableSettings, settings, scope);
-    const valuesByKey = Object.fromEntries(listed.map((row) => [row.key, row.value]));
-    const namespaces: Record<string, unknown> = {};
-    fillTableValues(namespaces, listed);
-    const variants = listNamingVariants(availableSettings, settings, scope);
-    fillTableValues(namespaces, variants);
-    fillTableValues(namespaces, listLimitVariants(availableSettings, settings, scope));
-    return {
-        settings: valuesByKey,
-        values: tableValuesSchema.parse(namespaces),
-        test_files: rootSettingSchemas.test_files.unwrap().parse(valuesByKey['test_files']),
-    };
-}
-
 function fillTableValues(tables: Record<string, unknown>, rows: InheritedSetting[]): void {
     const valueRows = rows
         .filter(
@@ -219,7 +203,7 @@ function fillTableValues(tables: Record<string, unknown>, rows: InheritedSetting
             const segments = row.key.split('.');
             const name = getSettingTable(row.key);
             const path = segments.slice(name.split('.').length);
-            return { row, name, path: path.slice(0, -1), field: path.slice(-1).join('') };
+            return { row, name, path: path.slice(0, -1), field: path.at(-1) ?? '' };
         });
     const empty = valueRows.filter(({ row }) => row.value === undefined);
     for (const { row, name } of empty) {

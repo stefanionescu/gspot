@@ -63,25 +63,20 @@ into a check.
 @returns normalized tables that keep the defaults and the scope values as written.
 */
 export function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
-    const { command_check: commandChecks, ...document } = parsed;
+    const { command_check: commandChecks, scope: scopes = [], ...document } = parsed;
     const writtenScopes = (written['scope'] ?? []) as TomlTable[];
-    const scopeTables = Object.fromEntries(
-        (parsed.scope ?? []).map((scope, index) => [
-            trimTrailingSlashes(scope.path),
-            stripUndefined({ ...scope, written: writtenScopes[index] as TomlTable }),
-        ]),
-    );
     return {
         ...stripUndefined(document),
         written,
-        limits: parsed.limits,
-        naming: parsed.naming,
-        structure: parsed.structure,
         format: stripUndefined({ ...parsed.format }),
         tools: stripUndefined({ ...parsed.tools }),
         ignore: (parsed.ignore ?? []).map((ignore) => stripUndefined(ignore)),
         commandChecks: normalizeCommandChecks(commandChecks),
-
-        scopes: scopeTables,
+        scopes: Object.fromEntries(
+            scopes.map((scope, index) => [
+                trimTrailingSlashes(scope.path),
+                stripUndefined({ ...scope, written: writtenScopes[index] as TomlTable }),
+            ]),
+        ),
     };
 }

@@ -3,6 +3,7 @@ import { findRoot } from '#cli/repository/read.ts';
 import { type Session } from '#cli/types/session.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { isRootOnlyCheck } from '#cli/planning/files.ts';
+import { ROOT_RUNS } from '#cli/config/planning/checks.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
@@ -43,7 +44,7 @@ function listCheckStates(
         if (!scope.configurations.includes(configuration)) return [];
         return configuration.checks.flatMap((check) => {
             const path =
-                check.runs === 'once' || check.runs === 'history' || isRootOnlyCheck(configuration, check)
+                (ROOT_RUNS as readonly string[]).includes(check.runs) || isRootOnlyCheck(configuration, check)
                     ? ''
                     : scope.folder.path;
             const key = `${path}\0${check.id}`;
