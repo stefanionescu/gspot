@@ -6,6 +6,7 @@ import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { buildLimitRuleBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/limits.ts';
 
 import type {
     EslintRuleBlock,
@@ -227,7 +228,7 @@ function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'no
     return blocks;
 }
 
-function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
+function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'scope' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session } = planned;
     const ignored = session.settingsFile.settings.ignore.flatMap((ignore): EslintRuleBlock[] =>
         ignore.rule === undefined || ignore.check !== ESLINT_CHECK
@@ -241,6 +242,7 @@ function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeF
               ],
     );
     return [
+        ...buildLimitRuleBlocks(planned),
         ...buildEnvironmentRuleBlocks(planned),
         ...buildTrivialRuleBlocks(planned),
         ...buildRulesOffBlocks(session.scopes),
@@ -249,14 +251,15 @@ function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeF
 }
 
 /**
-Build the settings blocks: environment, trivial-code, turned-off rule, and ignore blocks. Split each into a block for
-the code files and a block for the package.json files, and drop the blocks with no rules.
+Build the settings blocks: limit, environment, trivial-code, turned-off rule, and ignore blocks. Split each into a
+block for the code files and a block for the package.json files, and drop the blocks with no rules.
 
-@param planned every scope, your own scripts that run on Node.js, and the ESLint file sets.
+@param planned every scope, the scope that owns the file, your own scripts that run on Node.js, and the ESLint file
+sets.
 @returns the lint blocks with resolved file selectors.
 */
 export function splitSettingsBlocks(
-    planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles' | 'eslintFiles'>,
+    planned: Pick<PlannedEslintFile, 'session' | 'scope' | 'nodeFiles' | 'eslintFiles'>,
 ): EslintBlockFields[] {
     return buildSettingsBlocks(planned).flatMap(({ scope, includes, excludes, rules }) => {
         const rulePairs = Object.entries(rules);

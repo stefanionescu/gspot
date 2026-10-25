@@ -1,5 +1,5 @@
 import { escapeGlob } from '#cli/system/paths.ts';
-import { getLimit, getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/scopes.ts';
 import { MISE_SCRIPT_PATH } from '#cli/config/files/names.ts';
 import { readScopeAliases } from '#cli/repository/npm/aliases.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
@@ -9,6 +9,10 @@ import { getPreset } from '#cli/generation/configurations/language/javascript/es
 import { buildSelectorGroups } from '#cli/generation/configurations/language/javascript/eslint/blocks/selectors.ts';
 import { buildRestrictedImportBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 
+import {
+    buildLimitRules,
+    buildBarrelRule,
+} from '#cli/generation/configurations/language/javascript/eslint/blocks/limits.ts';
 import {
     serializePresetAccess,
     serializeProjectPaths,
@@ -54,8 +58,6 @@ import {
     NODE_RUNTIMES,
     RUNTIME_GLOBALS,
     JAVASCRIPT_RULES,
-    BARREL_FILES_RULE,
-    ESLINT_LIMIT_RULES,
     IMPORT_LAYOUT_RULES,
     ESLINT_PLUGIN_IMPORTS,
     ROOT_PACKAGE_JSON_RULES,
@@ -131,7 +133,7 @@ export function buildOpeningBlocks(
                         readScopeAliases(session.root, '', session.reads),
                     ),
                     ...IMPORT_LAYOUT_RULES,
-                    ...buildBarrelRule(planned, 'typescript'),
+                    ...buildBarrelRule(session.settingsFile.settings, planned.scope.settings, 'typescript'),
                 },
             },
             properties: `plugins: { ${pluginMap} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }, 'import-x/ignore': ${JSON.stringify(buildImportIgnores(ignoredGlobs))}${boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`,
@@ -223,7 +225,10 @@ export function buildClosingBlocks(
         {
             fields: {
                 files: eslintFiles.javascript,
-                rules: { ...rules.javascript, ...buildBarrelRule(planned, 'javascript') },
+                rules: {
+                    ...rules.javascript,
+                    ...buildBarrelRule(session.settingsFile.settings, planned.scope.settings, 'javascript'),
+                },
             },
         },
     ];
@@ -270,24 +275,6 @@ export function selectPlugins(planned: PlannedEslintFile, boundaryBlocks: Eslint
     };
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function buildBarrelRule(planned: PlannedEslintFile, language: 'typescript' | 'javascript'): Record<string, unknown> {
-    return planned.session.settingsFile.settings.structure.reexports === 'index-only'
-        ? {
-              [BARREL_FILES_RULE]: [
-                  'error',
-                  {
-                      amountOfExportsToConsiderModuleAsBarrel: getLimit(
-                          planned.scope.settings,
-                          'index_exports',
-                          language,
-                      ),
-                  },
-              ],
-          }
-        : {};
-}
-
 function buildBasePresetBlocks(
     presets: EslintPresets | undefined,
     sources: readonly (readonly [string, string])[],
@@ -303,15 +290,6 @@ function buildBasePresetBlocks(
             preset: { expression: `${source}.rules`, rules: fields.rules },
         };
     });
-}
-
-function buildLimitRules(settings: ScopeSettings, language: 'typescript' | 'javascript'): Record<string, unknown> {
-    return Object.fromEntries(
-        Object.entries(ESLINT_LIMIT_RULES).map(([rule, limitRule]) => {
-            const maximum = getLimit(settings, limitRule.limit, language);
-            return [rule, ['error', 'options' in limitRule ? { max: maximum, ...limitRule.options } : maximum]];
-        }),
-    );
 }
 
 /**

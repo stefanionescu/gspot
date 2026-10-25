@@ -13,7 +13,7 @@ import { SETTING_RULES } from '#cli/config/settings/validation/values.ts';
 import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { getSettingValue, listSettingsTables } from '#cli/settings/inherit.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
-import { ESLINT_LIMIT_RULES } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
+import { ESLINT_LIMIT_RULES } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/limits.ts';
 
 function readPathStats(files: Files, value: string): ReturnType<Files['readStats']> | Error {
     try {
