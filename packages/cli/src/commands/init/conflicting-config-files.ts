@@ -1,7 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { runGitBlocking } from '#cli/system/git.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { ManagedKeys } from '#cli/types/apply.ts';
+import type { ManagedKeys } from '#cli/types/write.ts';
 import { isEditedInPlace } from '#cli/repository/setup.ts';
 import type { ConflictingConfigFiles } from '#cli/types/commands/init.ts';
 import { PRETTIER_SCRIPT_FILE } from '#cli/config/commands/init/prettier.ts';

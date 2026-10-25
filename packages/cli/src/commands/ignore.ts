@@ -14,8 +14,8 @@ import { calendarDateSchema } from '#cli/schemas/settings/fields.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { ISO_DATE_LENGTH } from '#cli/config/checks/general/gspot.ts';
 import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
-import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+import { applySettingsEdit, prepareSettingsEdit } from '#cli/generation/settings-edit.ts';
 
 function assertIgnoreOptions(options: IgnoreOptions, settings: Settings): void {
     if (options.check !== undefined) {

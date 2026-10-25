@@ -390,10 +390,6 @@ name = "generation"
 paths = ["packages/cli/src/generation/**"]
 
 [[import_rule]]
-name = "apply"
-paths = ["packages/cli/src/apply/**"]
-
-[[import_rule]]
 name = "runs"
 paths = ["packages/cli/src/runs/**", "packages/cli/src/schemas/runs/**"]
 

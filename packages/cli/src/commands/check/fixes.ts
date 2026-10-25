@@ -1,10 +1,10 @@
 import { compareText } from '#cli/system/text.ts';
-import { buildDiff } from '#cli/apply/outdated.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
+import { buildDiff } from '#cli/generation/outdated.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { isReportedCrash } from '#cli/runs/command/output.ts';

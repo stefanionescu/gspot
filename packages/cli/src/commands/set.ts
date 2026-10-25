@@ -4,7 +4,6 @@ import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
-import type { SettingsEditContext } from '#cli/types/apply.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { parseTomlText, isReasonedValue } from '#cli/settings/file.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
@@ -12,10 +11,11 @@ import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/schemas.ts';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
+import type { SettingsEditContext } from '#cli/types/generation/settings-edit.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type Setting, type InheritedSetting } from '#cli/types/settings/inheritance.ts';
-import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
 import { NUMBER_TEXT, DASH_VALUE_HELP, TOML_COMPOUND_START } from '#cli/config/commands/set.ts';
+import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/generation/settings-edit.ts';
 import { type SetOptions, type ParsedSettingValue, type SettingReasonContext } from '#cli/types/commands/set.ts';
 
 function parseStructured(text: string): unknown {

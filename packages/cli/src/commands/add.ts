@@ -3,9 +3,9 @@ import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
-import { type ConfigurationsOptions } from '#cli/types/apply.ts';
+import { type ConfigurationsOptions } from '#cli/types/generation/settings-edit.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { applySettingsEdit, prepareConfigurationEdit } from '#cli/apply/settings.ts';
+import { applySettingsEdit, prepareConfigurationEdit } from '#cli/generation/settings-edit.ts';
 
 function restoreConfigurations(table: TomlTable, removed: string[], configurations: string[]): void {
     const previous = table['removed_configurations'];

@@ -5,9 +5,9 @@ import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { assertCheckExists } from '#cli/configurations/manifests.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
-import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
 import type { IgnoreTarget, IgnoreRemoval } from '#cli/types/commands/unignore.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+import { applySettingsEdit, prepareSettingsEdit } from '#cli/generation/settings-edit.ts';
 import { NO_CHECK_IGNORE_TEXTS, ESCAPED_GLOB_CHARACTERS } from '#cli/config/commands/unignore.ts';
 
 function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {

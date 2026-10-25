@@ -2,7 +2,6 @@ import { createTwoFilesPatch } from 'diff';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { OutdatedFile } from '#cli/types/apply.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
@@ -11,10 +10,10 @@ import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
 import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
-import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/apply/outdated.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { selectToolPackageManager } from '#cli/repository/npm/package-manager.ts';
+import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/generation/outdated.ts';
+import { type OutdatedFile, type GenerationResult } from '#cli/types/generation/files.ts';
 
 /**
 Build a source diff with the shared Git context.

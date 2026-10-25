@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from 'node:util';
 import type { Session } from '#cli/types/session.ts';
 import { posix, dirname, relative } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { ManagedKeys } from '#cli/types/apply.ts';
+import type { ManagedKeys } from '#cli/types/write.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';

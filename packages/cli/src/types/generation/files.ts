@@ -1,5 +1,5 @@
 import type { Session } from '#cli/types/session.ts';
-import type { ManagedKeys } from '#cli/types/apply.ts';
+import type { ManagedKeys } from '#cli/types/write.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
@@ -92,3 +92,17 @@ export type ConfigFileBuildState = {
 };
 
 export type UsedNames = { tools: Set<string>; checks: Set<string> };
+
+export type ApplyReport = {
+    written: string[];
+    unchanged: string[];
+    removed: string[];
+    updated: string[];
+    notes: string[];
+};
+
+export type OutdatedFile = {
+    path: string;
+    kind: 'changed' | 'missing' | 'stray';
+    diff?: string;
+};

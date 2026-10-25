@@ -154,6 +154,9 @@ repository.
 - Code that several configurations share stays at the top of `checks/` or in `generation/config-files/`.
 - `packages/cli/src/commands/` has one file per command, `commands/<command>.ts`. A command that needs more files gets
   a folder `commands/<command>/` with the entry file `<command>.ts`.
+- A command's folder holds all the code that only that command uses. Code that a second command or a check also uses
+  sits in the folder of the thing it handles, such as `installers/` or `generation/`. No folder outside `commands/`
+  takes a command's name.
 - `system/` holds the code every layer may import: access to files, processes, Git, the environment, and the terminal,
   and the pure text and value helpers that `parsers/` needs.
 - A unit test file mirrors the source file it tests, with the same name. `tests/suites/unit/<package>/<path>.test.ts` tests

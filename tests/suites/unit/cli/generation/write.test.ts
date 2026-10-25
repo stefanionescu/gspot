@@ -8,8 +8,8 @@ import { generate } from '#cli/generation/generate.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { writeGeneratedFiles } from '#cli/apply/generated.ts';
-import type { PackageFieldScenario } from '#tests/types/apply.ts';
+import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import type { PackageFieldScenario } from '#tests/types/write.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
@@ -18,7 +18,7 @@ import {
     STYLELINT_PACKAGE_FIELDS,
     COMMITLINT_PACKAGE_FIELDS,
     EDITED_COMMITLINT_PACKAGE,
-} from '#tests/config/apply.ts';
+} from '#tests/config/generation/write.ts';
 
 async function applyPackageFields(root: string, scenario: PackageFieldScenario): Promise<Map<string, string>> {
     const session = await openSession(root);

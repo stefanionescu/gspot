@@ -9,7 +9,7 @@ import { getValueAt } from '#cli/system/tables.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
-import { writeGeneratedFiles } from '#cli/apply/generated.ts';
+import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildIgnoreSections } from '#cli/generation/config-files/ignore-files.ts';

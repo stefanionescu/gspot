@@ -8,7 +8,7 @@ import type { UnsetOptions } from '#cli/types/commands/unset.ts';
 import { deleteKey, removeFromList } from '#cli/settings/edit.ts';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
+import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/generation/settings-edit.ts';
 
 function removeTableKeys(scopeTable: TomlTable, key: string, keys: string[]): void {
     const written = getValueAt(scopeTable, key.split('.'));

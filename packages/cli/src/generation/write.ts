@@ -1,13 +1,12 @@
 import { formatCount } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
-import { type ApplyReport } from '#cli/types/apply.ts';
-import { listExpectedPaths } from '#cli/apply/outdated.ts';
+import { listExpectedPaths } from '#cli/generation/outdated.ts';
 import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
-import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
+import { type ApplyReport, type GenerationResult } from '#cli/types/generation/files.ts';
 import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
-import { HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/apply/generated.ts';
+import { HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/generation/write.ts';
 import { planBlock, writePlans, planRemovals, listStrayPaths, planManagedKeys, planReplacements } from '#cli/write.ts';
 
 /**

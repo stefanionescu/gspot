@@ -13,14 +13,20 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
-import { formatApplyReport, writeGeneratedFiles } from '#cli/apply/generated.ts';
+import { formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
 import { getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import type { Scope, SettingMatch, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/configurations/select.ts';
-import type { ApplyReport, SaveSettingsOptions, SettingsEditContext, ConfigurationsOptions } from '#cli/types/apply.ts';
+
+import type {
+    SaveSettingsOptions,
+    SettingsEditContext,
+    ConfigurationsOptions,
+} from '#cli/types/generation/settings-edit.ts';
 
 /**
 Edit settings, check them, and write them and their generated files. Installs nothing.

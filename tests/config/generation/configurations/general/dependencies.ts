@@ -1,4 +1,4 @@
-import type { ManagedKeys } from '#cli/types/apply.ts';
+import type { ManagedKeys } from '#cli/types/write.ts';
 
 export const BUN_SCANNER_KEYS: ManagedKeys[] = [
     {

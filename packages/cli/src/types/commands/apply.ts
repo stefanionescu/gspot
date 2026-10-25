@@ -1,4 +1,4 @@
-import type { OutdatedFile } from '#cli/types/apply.ts';
+import type { OutdatedFile } from '#cli/types/generation/files.ts';
 
 export type ApplyOptions = {
     cwd: string;

@@ -9,14 +9,14 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import { deleteKey, getScopeTable } from '#cli/settings/edit.ts';
-import { type ConfigurationsOptions } from '#cli/types/apply.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
-import { MANAGED_KEYS_NOTE } from '#cli/config/apply/generated.ts';
+import { MANAGED_KEYS_NOTE } from '#cli/config/generation/write.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
+import { type ConfigurationsOptions } from '#cli/types/generation/settings-edit.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { applySettingsEdit, prepareConfigurationEdit } from '#cli/apply/settings.ts';
 import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
+import { applySettingsEdit, prepareConfigurationEdit } from '#cli/generation/settings-edit.ts';
 
 function assertNotRequired(names: string[], kept: string[], configurations: Map<string, Configuration>): void {
     for (const configuration of names) {

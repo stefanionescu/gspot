@@ -3,18 +3,18 @@ import { openSession } from '#cli/session.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { type Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { type OutdatedFile } from '#cli/types/apply.ts';
 import { type Command } from '@commander-js/extra-typings';
-import { listOutdatedFiles } from '#cli/apply/outdated.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
+import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
+import { type OutdatedFile } from '#cli/types/generation/files.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/apply.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { formatUpToDate, formatApplyReport, writeGeneratedFiles } from '#cli/apply/generated.ts';
+import { formatUpToDate, formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
 
 function formatFileChanges(files: OutdatedFile[], repair: string): string[] {
     if (files.length === 0) return [];

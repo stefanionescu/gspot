@@ -19,7 +19,7 @@ import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import type { BlockStyle } from '#cli/types/parsers/formats/managed-blocks.ts';
 import { openFiles, walkFiles, removeEmptyFolders } from '#cli/system/files/open.ts';
-import type { WritePlan, ManagedKeys, ReplacementRequest } from '#cli/types/apply.ts';
+import type { WritePlan, ManagedKeys, ReplacementRequest } from '#cli/types/write.ts';
 import { TOML_EXTENSION, EMPTY_JSON_TEXT, WRITER_LOCK_FILE } from '#cli/config/write.ts';
 import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';

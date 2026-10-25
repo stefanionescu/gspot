@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import type { ApplyReport } from '#cli/types/apply.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
-import { MANAGED_KEYS_NOTE } from '#cli/config/apply/generated.ts';
+import type { ApplyReport } from '#cli/types/generation/files.ts';
+import { MANAGED_KEYS_NOTE } from '#cli/config/generation/write.ts';
 import { readSandboxSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test.each(['api', './api'])('settings commands resolve scope %s from the calling folder', async (scope) => {

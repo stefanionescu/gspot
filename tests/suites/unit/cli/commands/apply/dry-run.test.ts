@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import type { ApplyReport } from '#cli/types/apply.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -10,6 +9,7 @@ import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { createFileTree, type TestdirResult } from 'testdirs';
 import { type DryRunJson } from '#cli/types/commands/apply.ts';
 import { TEST_VERSION } from '#tests/config/commands/samples.ts';
+import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
