@@ -56,7 +56,7 @@ allowed_names = ["Check", "Line", "Message", "Span"]
 reason = "Vale identifies these JSON diagnostic fields with this exact capitalization."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/infrastructure/docker.ts", "packages/cli/src/schemas/checks/infrastructure/docker/trivy-image.ts"]
+paths = ["packages/cli/src/types/checks/infrastructure/docker.ts", "packages/cli/src/schemas/checks/infrastructure/docker.ts"]
 allowed_names = ["PkgName", "Results", "RuleID", "Secrets", "Title", "Vulnerabilities", "VulnerabilityID"]
 reason = "Trivy identifies these JSON report fields with these exact names."
 
@@ -66,7 +66,7 @@ allowed_names = ["shouldTranslate"]
 reason = "The Xcode string format names its translation control shouldTranslate."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/language/python.ts", "packages/cli/src/schemas/checks/language/python/deptry.ts"]
+paths = ["packages/cli/src/types/checks/language/python.ts", "packages/cli/src/schemas/checks/language/python.ts"]
 allowed_names = ["extend_exclude", "known_first_party"]
 reason = "deptry names these TOML settings extend_exclude and known_first_party."
 
@@ -211,7 +211,7 @@ allowed_names = ["reason_when"]
 reason = "gspot list settings --json and the shipped setting definitions name this field reason_when."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/database/postgres/access.ts", "packages/cli/src/checks/database/postgres/foreign-key-indexes.ts", "packages/cli/src/checks/framework/react-dom.ts", "packages/cli/src/checks/general/dependencies/package-manager-pin.ts", "packages/cli/src/checks/general/gspot/conflicting-config-files.ts", "packages/cli/src/checks/general/structure/file-folder-clashes.ts", "packages/cli/src/checks/general/structure/pass-through-folders.ts", "packages/cli/src/checks/infrastructure/xcode/project.ts", "packages/cli/src/checks/infrastructure/xcode/settings.ts", "packages/cli/src/checks/platform/supabase.ts"]
+paths = ["packages/cli/src/checks/database/postgres/access.ts", "packages/cli/src/checks/database/postgres/foreign-key-indexes.ts", "packages/cli/src/checks/framework/react-dom.ts", "packages/cli/src/checks/general/dependencies.ts", "packages/cli/src/checks/general/gspot.ts", "packages/cli/src/checks/general/structure/file-folder-clashes.ts", "packages/cli/src/checks/general/structure/pass-through-folders.ts", "packages/cli/src/checks/infrastructure/xcode.ts", "packages/cli/src/checks/platform/supabase.ts"]
 categories = ["functions"]
 allowed_names = ["checkPostgresDefinerSearchPath", "checkPostgresRowLevelSecurity", "checkPostgresForeignKeyIndexes", "checkReactDomReactVersions", "checkDependenciesPackageManagerPin", "checkGspotConflictingConfigFiles", "checkStructureFileFolderClashes", "checkStructurePassThroughFolders", "checkXcodeFilesWithoutTarget", "checkXcodeAppTransportSecurity", "checkSupabaseServiceRoleKey"]
 reason = "Each check function is named check, then its configuration, then its check name."

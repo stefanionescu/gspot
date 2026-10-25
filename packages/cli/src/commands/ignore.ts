@@ -12,9 +12,9 @@ import { type IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { assertCheckExists } from '#cli/configurations/manifests.ts';
 import { calendarDateSchema } from '#cli/schemas/settings/fields.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
+import { ISO_DATE_LENGTH } from '#cli/config/checks/general/gspot.ts';
 import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
 import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
-import { ISO_DATE_LENGTH } from '#cli/config/checks/general/gspot/suppressions.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
 function assertIgnoreOptions(options: IgnoreOptions, settings: Settings): void {

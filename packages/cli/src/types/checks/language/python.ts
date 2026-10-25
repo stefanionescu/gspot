@@ -1,4 +1,4 @@
-import type { DOCSTRING_STYLES } from '#cli/config/checks/language/python/pydoclint.ts';
+import type { DOCSTRING_STYLES } from '#cli/config/checks/language/python.ts';
 
 export type PydoclintOptions = { command: string[]; style: PythonDocstringStyle | undefined };
 
