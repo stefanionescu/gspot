@@ -29,14 +29,14 @@ export const PACKAGE_MANAGER_ARGUMENTS = {
         install: ['bun', 'install', '--frozen-lockfile', '--linker', 'hoisted'],
     },
     pnpm: {
-        lockfile: ['pnpm', 'install', '--lockfile-only', '--node-linker=hoisted', '--auto-install-peers=false'],
+        lockfile: ['pnpm', 'install', '--lockfile-only', '--node-linker=hoisted', '--config.auto-install-peers=false'],
         install: [
             'pnpm',
             'install',
             '--frozen-lockfile',
             '--ignore-workspace',
             '--node-linker=hoisted',
-            '--auto-install-peers=false',
+            '--config.auto-install-peers=false',
         ],
     },
 } as const;

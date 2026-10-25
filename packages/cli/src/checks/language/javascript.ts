@@ -65,7 +65,7 @@ export async function checkJavascriptTsc(session: Session, planned: PlannedCheck
     const target = getConfigFileTarget(
         scope,
         getConfigFile(session, planned, extractConfigFileName(JSCONFIG_FILE)),
-        getConfigFiles(session).targets,
+        getConfigFiles(session),
     );
     const generated = readTsconfig(session.root, join(session.root, target), session.reads);
     if (generated === undefined) throw new GspotError('skip', `${target} is missing. Run gspot apply.`);

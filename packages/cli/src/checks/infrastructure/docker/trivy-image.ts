@@ -21,7 +21,7 @@ import {
 
 async function scanImage(session: Session, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
     const configFile = getConfigFile(session, planned, TRIVY_CONFIG_FILE);
-    const targets = getConfigFiles(session).targets;
+    const targets = getConfigFiles(session);
     const result = await runCheckTool(
         session,
         planned,

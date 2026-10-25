@@ -21,7 +21,7 @@ export function findConfigFilePath(session: Session, tool: string, scopePath = '
         .find((file) => extractConfigFileName(file.file) === tool);
     if (declaration === undefined)
         throw new Error(`The sandbox generates no ${tool} file for ${scopePath || 'the root'}.`);
-    return getConfigFileTarget(scopePath, declaration, getConfigFiles(session).targets);
+    return getConfigFileTarget(scopePath, declaration, getConfigFiles(session));
 }
 
 /**

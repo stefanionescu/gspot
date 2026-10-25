@@ -27,7 +27,9 @@ function listAt(value: unknown, path: string | undefined): unknown[] {
 
 function listChains(chain: unknown[], keys: string[]): unknown[][] {
     const [key, ...rest] = keys;
-    return key === undefined ? [chain] : listAt(chain[0], key).flatMap((child) => listChains([child, ...chain], rest));
+    if (key === undefined) return [chain];
+    const children = getValueAt(chain[0], key.split('.')) === undefined ? [] : listAt(chain[0], key);
+    return children.flatMap((child) => listChains([child, ...chain], rest));
 }
 
 function setPosition(finding: Finding, base: number, line: string | undefined, column: string | undefined): void {

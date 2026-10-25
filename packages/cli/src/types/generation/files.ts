@@ -38,7 +38,10 @@ export type ConfigFileOwner = { session: Session; scope: Scope; configuration: C
 export type ConfigFileGeneration = {
     files: GeneratedFile[];
     targets: ReadonlyMap<string, ReadonlyMap<string, string>>;
+    failures: ReadonlyMap<string, ReadonlyMap<string, Error>>;
 };
+
+export type ConfigFileTargets = Pick<ConfigFileGeneration, 'targets' | 'failures'>;
 
 export type SemgrepDocument = { rules: SemgrepRule[] };
 
@@ -73,7 +76,7 @@ export type PlannedPointerField = {
     tool: Tool;
     consumed: boolean;
     paths: ReadonlySet<string>;
-    targets: ConfigFileGeneration['targets'];
+    configFiles: ConfigFileTargets;
     scopePaths: string[];
 };
 
@@ -88,7 +91,11 @@ export type BuiltConfigFile = OwnedSourceFile & {
     companions: GeneratedFile[];
 };
 
-export type GeneratedConfigFiles = { targets: Map<string, Map<string, string>>; files: Map<string, GeneratedFile> };
+export type GeneratedConfigFiles = {
+    targets: Map<string, Map<string, string>>;
+    files: Map<string, GeneratedFile>;
+    failures: Map<string, Map<string, Error>>;
+};
 
 export type UsedNames = { tools: Set<string>; checks: Set<string> };
 

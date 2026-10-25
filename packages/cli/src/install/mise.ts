@@ -133,6 +133,7 @@ async function prepareMiseLockfile(install: ToolInstall): Promise<void> {
     using scratch = createTemporaryFolder();
     writeFileSync(join(scratch.path, MISE_CONFIG_FILE), project.content);
     if (recorded !== undefined) writeFileSync(join(scratch.path, MISE_LOCK_FILE), recorded.bytes);
+    let output = '';
     for (const command of [['mise', 'trust', join(scratch.path, MISE_CONFIG_FILE)], MISE_LOCK_ARGUMENTS]) {
         const result = await runInstallStep(install, command, { cwd: scratch.path });
         if (result.code !== 0)
@@ -140,12 +141,13 @@ async function prepareMiseLockfile(install: ToolInstall): Promise<void> {
                 'install',
                 `The command ${command.join(' ')} failed (exit ${String(result.code)}):\n${redactInstallOutput(result, [])}`,
             );
+        output = redactInstallOutput(result, []);
     }
     const content = await addMissingChecksums(install, readFileSync(join(scratch.path, MISE_LOCK_FILE), 'utf8'));
     if (!isMiseLockfileFresh(project.content, content))
         throw new GspotError(
             'install',
-            'The mise lockfile does not match the tool project. gspot kept the existing files.',
+            `mise lock left a tool without a download URL or checksum, so gspot kept the existing files. Its output:\n${output}`,
         );
     const lockfile: GeneratedFile = { path: GSPOT_PATHS.miseLockfile, content, kind: 'lock', read: recorded };
     install.generated.files.push(lockfile);

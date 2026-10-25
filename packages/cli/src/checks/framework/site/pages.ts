@@ -157,7 +157,7 @@ export async function checkSiteHtmlValidate(session: Session, planned: PlannedCh
         getConfigFileTarget(
             planned.scope.folder.path,
             getConfigFile(session, planned, HTML_VALIDATE),
-            getConfigFiles(session).targets,
+            getConfigFiles(session),
         ),
     );
     using reports = createTemporaryFolder();
@@ -204,7 +204,7 @@ export async function checkSitePurgecss(session: Session, planned: PlannedCheck)
         getConfigFileTarget(
             planned.scope.folder.path,
             getConfigFile(session, planned, PURGECSS),
-            getConfigFiles(session).targets,
+            getConfigFiles(session),
         ),
     );
     const result = await runCheckTool(

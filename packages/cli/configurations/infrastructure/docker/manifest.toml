@@ -82,7 +82,7 @@ summary = "Checks that an ignore file sits beside every Dockerfile and keeps the
 why = "Without it, the daemon receives the whole folder, and a `COPY` of it puts the history and secrets into the image."
 
 [[check]]
-command = ["trivy", "config", "--misconfig-scanners", "dockerfile", "--quiet", "--skip-check-update", "--config", "{config_file:trivy}", "--ignorefile", "{config_file:trivyignore}", "--exit-code", "10", "--format", "json", "{root}"]
+command = ["trivy", "config", "--misconfig-scanners", "dockerfile", "--quiet", "--skip-check-update", "--config", "{config_file:trivy}", "--ignorefile", "{config_file:trivyignore}", "--exit-code", "10", "--format", "json", "."]
 example = "A Dockerfile whose final stage runs as root reports a finding. Create an unprivileged user, and switch to it with `USER` before the application starts."
 exit_codes = [10]
 help = "Change the file the way the message says. Accept one advisory with `gspot ignore docker/trivy-config --rule <rule> --reason \"<why>\"`."

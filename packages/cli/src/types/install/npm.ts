@@ -31,6 +31,7 @@ export type PnpmPackage = {
 };
 
 export type ToolPackageJson = {
+    name: 'tools';
     private: true;
     devDependencies: Record<string, string>;
 };

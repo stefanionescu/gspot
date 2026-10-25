@@ -155,7 +155,7 @@ export async function checkSwiftSwiftlintAnalyze(session: Session, planned: Plan
         getConfigFileTarget(
             planned.scope.folder.path,
             getConfigFile(session, planned, SWIFTLINT_CONFIG_NAME),
-            getConfigFiles(session).targets,
+            getConfigFiles(session),
         ),
     );
     const commandArguments = [
@@ -187,7 +187,7 @@ export async function checkSwiftPeriphery(session: Session, planned: PlannedChec
         getConfigFileTarget(
             planned.scope.folder.path,
             getConfigFile(session, planned, PERIPHERY_CONFIG_FILE),
-            getConfigFiles(session).targets,
+            getConfigFiles(session),
         ),
     );
     const commandArguments = [...PERIPHERY_COMMAND, configFile];
@@ -215,9 +215,7 @@ export function listSwiftlintConfigFiles(session: Session, planned: PlannedCheck
             .values()
             .flatMap((configuration) => configuration.configFiles)
             .filter((configFile) => configFile.pointer?.path === SWIFTLINT_CONFIG_FILE)
-            .map((configFile) =>
-                getConfigFileTarget(planned.scope.folder.path, configFile, getConfigFiles(session).targets),
-            ),
+            .map((configFile) => getConfigFileTarget(planned.scope.folder.path, configFile, getConfigFiles(session))),
     ];
     for (const file of planned.files) {
         const folders = listEnclosingFolders(posix.dirname(file.path));

@@ -1,6 +1,6 @@
 import { PYTHON_VERSION } from '#cli/config/install/python/project.ts';
 
-export const NPM_TOOL_PROJECT = { private: true } as const;
+export const NPM_TOOL_PROJECT = { name: 'tools', private: true } as const;
 
 export const PYTHON_TOOL_PROJECT = {
     name: 'tools',

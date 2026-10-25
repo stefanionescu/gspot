@@ -1,4 +1,5 @@
 import { join } from 'node:path/posix';
+import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { type CacheKey } from '#cli/types/system/files.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
@@ -33,20 +34,34 @@ export function getConfigFiles(session: Session): ConfigFileGeneration {
     );
 }
 
+function buildOwnedOutput(
+    each: OwnedSourceFile,
+    ownedFiles: OwnedSourceFile[],
+    generated: GeneratedConfigFiles,
+): BuiltConfigFile[] {
+    try {
+        const planned = {
+            ...each.owner,
+            configFile: each.configFile,
+            targetPath: each.configFile.target,
+            level: each.owner.session.settingsFile.settings.level,
+        };
+        return [{ ...each, ...buildConfigFile(planned, generated.targets) }];
+    } catch (error) {
+        if (!(error instanceof GspotError)) throw error;
+        for (const { owner, configFile } of each.configFile.per_scope ? [each] : ownedFiles) {
+            const scope = owner.scope.folder.path;
+            const failures = generated.failures.get(scope) ?? new Map<string, Error>();
+            failures.set(configFile.target, error);
+            generated.failures.set(scope, failures);
+        }
+        return [];
+    }
+}
+
 function groupToolOutputs(ownedFiles: OwnedSourceFile[], generated: GeneratedConfigFiles): BuiltConfigFile[][] {
     const owners = ownedFiles[0]?.configFile.per_scope === true ? ownedFiles : ownedFiles.slice(0, 1);
-    const outputs = owners.map((each) => ({
-        ...each,
-        ...buildConfigFile(
-            {
-                ...each.owner,
-                configFile: each.configFile,
-                targetPath: each.configFile.target,
-                level: each.owner.session.settingsFile.settings.level,
-            },
-            generated.targets,
-        ),
-    }));
+    const outputs = owners.flatMap((each) => buildOwnedOutput(each, ownedFiles, generated));
     return Map.groupBy(outputs, ({ file }) => file.content)
         .values()
         .toArray()
@@ -110,7 +125,7 @@ function addPointerFiles(
 ): void {
     const { configFile, owner } = selected;
     if (isRootTextShared(selected, configFiles)) return;
-    const target = getConfigFileTarget(owner.scope.folder.path, configFile, generated.targets);
+    const target = getConfigFileTarget(owner.scope.folder.path, configFile, generated);
     const pointerOnlyPaths = listPointerOnlyPaths(configFiles, selected);
     for (const pointer of buildPointerFiles(owner, configFile, target)) {
         if (
@@ -124,10 +139,12 @@ function addPointerFiles(
 
 function buildConfigFiles(session: Session): ConfigFileGeneration {
     const configFiles = listOwnedConfigFiles(session);
-    const state: GeneratedConfigFiles = { targets: new Map(), files: new Map() };
+    const state: GeneratedConfigFiles = { targets: new Map(), files: new Map(), failures: new Map() };
     buildSourceFiles(configFiles, state);
-    for (const configFile of configFiles) addPointerFiles(configFile, configFiles, state);
-    return { files: state.files.values().toArray(), targets: state.targets };
+    for (const configFile of configFiles)
+        if (state.failures.get(configFile.owner.scope.folder.path)?.has(configFile.configFile.target) !== true)
+            addPointerFiles(configFile, configFiles, state);
+    return { files: state.files.values().toArray(), targets: state.targets, failures: state.failures };
 }
 
 function buildPerScopeTarget(configFile: Pick<ConfigFile, 'target' | 'file' | 'root'>, scope: string): string {

@@ -69,9 +69,9 @@ export const INVALID_FINDING_REPORTS = [
         message: 'The JSON report contains a finding without its mapped message.',
     },
     {
-        name: 'a missing nested list',
+        name: 'a nested value that is not a list',
         output: { format: 'json', children: 'messages' },
-        stdout: '[{}]',
+        stdout: '[{"messages":{}}]',
         message: 'Required JSON report array messages is missing or invalid.',
     },
 ] as const;

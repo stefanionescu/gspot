@@ -38,10 +38,10 @@ test.each([...FAILED_INSTALL_CASES])(
         const password = 'synthetic-registry-password/with spaces';
         const registry = `https://alex:${encodeURIComponent(password)}@registry.example.com/`;
         const source = `registry=${registry}\n//registry.example.com/:_authToken=${token}\n`;
-        const packageJson = JSON.stringify({ private: true, devDependencies: { prettier: '3.8.1' } });
+        const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
         const original = frozen
             ? packageJson
-            : JSON.stringify({ private: true, devDependencies: { prettier: '3.8.0' } });
+            : JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.0' } });
         const lockfile = JSON.stringify({
             workspaces: { '': { devDependencies: { prettier: frozen ? '3.8.1' : '3.8.0' } } },
         });
@@ -83,7 +83,7 @@ test.each([...FAILED_INSTALL_CASES])(
 
 test('an npm install that runs past the time limit names the limit', async () => {
     await using sandbox = await testdir();
-    const packageJson = JSON.stringify({ private: true, devDependencies: { prettier: '3.8.1' } });
+    const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
@@ -109,12 +109,14 @@ test.each([false, true])('credentials in a lockfile are refused (frozen install:
     await using sandbox = await testdir();
     const token = 'synthetic-generated-lockfile-token';
     const source = `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${token}\n`;
-    const packageJson = JSON.stringify({ private: true, devDependencies: { prettier: '3.8.1' } });
+    const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
     const credentialLockfile = JSON.stringify({
         workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
         packages: { prettier: ['prettier@3.8.1', `https://registry.example.com/${token}`, {}, 'integrity'] },
     });
-    const original = frozen ? packageJson : JSON.stringify({ private: true, devDependencies: { prettier: '3.8.0' } });
+    const original = frozen
+        ? packageJson
+        : JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.0' } });
     const lockfile = frozen
         ? credentialLockfile
         : JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.0' } } } });
@@ -215,7 +217,7 @@ test('a Yarn Classic repository resolves its tool lockfile with npm and the rele
     const install = buildToolInstall(session, writer) as NpmToolInstall;
     const lockfile = await prepareNpmLockfile(
         install,
-        { path: GSPOT_PATHS.npmProject, content: '{"private":true,"devDependencies":{}}' },
+        { path: GSPOT_PATHS.npmProject, content: JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: {} }) },
         undefined,
     );
     expect(JSON.parse(lockfile.content)).toStrictEqual({

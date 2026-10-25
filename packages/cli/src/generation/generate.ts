@@ -175,10 +175,12 @@ export function generate(session: Session): GenerationResult {
         managedKeys: [],
     };
     const configFiles = getConfigFiles(session);
+    const [failure] = configFiles.failures.values().flatMap((failures) => failures.values());
+    if (failure !== undefined) throw failure;
     generated.files.push(...configFiles.files);
     generated.managedKeys.push(
         ...buildBunScannerEdits(session),
-        ...buildPointerFieldEdits(session, generated.files, configFiles.targets),
+        ...buildPointerFieldEdits(session, generated.files, configFiles),
     );
     const minimumAge = getTable(findRootScope(scopes).settings, 'dependencies').min_release_age_days;
     generated.files.push(

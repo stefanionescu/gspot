@@ -93,14 +93,14 @@ function listPointerFieldTargets({
     tool,
     consumed,
     paths,
-    targets,
+    configFiles,
     scopePaths,
 }: PlannedPointerField) {
     return (tool.replace_key ?? [])
         .filter((replacement) => replacement.pointer === true)
         .flatMap((replacement) =>
             configuration.configFiles
-                .map((file) => ({ file, target: getConfigFileTarget(scope.folder.path, file, targets) }))
+                .map((file) => ({ file, target: getConfigFileTarget(scope.folder.path, file, configFiles) }))
                 .filter(
                     ({ file, target }) =>
                         file.tool.includes(tool.name) && (!file.per_scope || consumed || !paths.has(target)),
@@ -124,13 +124,13 @@ Point the package fields that manifests declare at the generated config files.
 
 @param session the repository files and scopes.
 @param generated the config files that this run generates.
-@param targets the config file path for each scope and config file.
+@param configFiles the config file path for each scope and config file.
 @returns changes to the declared package fields.
 */
 export function buildPointerFieldEdits(
     session: Session,
     generated: GeneratedFile[],
-    targets: PlannedPointerField['targets'],
+    configFiles: PlannedPointerField['configFiles'],
 ): ManagedKeys[] {
     const { root, repository, scopes } = session;
     const paths = new Set(generated.map(({ path }) => path));
@@ -145,7 +145,7 @@ export function buildPointerFieldEdits(
             .toArray();
     });
     const pointerTargets = tools.flatMap((selected) =>
-        listPointerFieldTargets({ ...selected, paths, targets, scopePaths }),
+        listPointerFieldTargets({ ...selected, paths, configFiles, scopePaths }),
     );
     const pointerFields = new Map(pointerTargets.map((row) => [JSON.stringify([row.key, row.scope, row.target]), row]));
     if (pointerFields.size === 0) return [];

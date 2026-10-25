@@ -51,7 +51,7 @@ export async function checkDuplicationJscpd(session: Session, planned: PlannedCh
     const generatedPath = getConfigFileTarget(
         planned.scope.folder.path,
         getConfigFile(session, planned, JSCPD),
-        getConfigFiles(session).targets,
+        getConfigFiles(session),
     );
     const generated = files.read(generatedPath);
     if (generated === undefined) throw new GspotError('check', `Missing ${generatedPath}. Run gspot apply.`);

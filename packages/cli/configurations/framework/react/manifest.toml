@@ -59,3 +59,7 @@ all_level_rules = ["@eslint-react/no-missing-component-display-name", "@eslint-r
 files = ["**/*.tsx", "**/*.jsx"]
 reason = "React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks for."
 rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
+
+[[eslint.rules_off]]
+reason = "eslint-plugin-react-hooks reports the same hook mistakes under its react-hooks/ names."
+rules = ["@eslint-react/error-boundaries", "@eslint-react/exhaustive-deps", "@eslint-react/purity", "@eslint-react/rules-of-hooks", "@eslint-react/set-state-in-effect", "@eslint-react/set-state-in-render", "@eslint-react/static-components", "@eslint-react/unsupported-syntax", "@eslint-react/use-memo"]

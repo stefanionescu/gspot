@@ -31,8 +31,15 @@ name = "eslint-plugin-jsx-a11y-x"
 [[tool]]
 name = "astro-check"
 npm = "@astrojs/check"
+requires = ["@emnapi/runtime"]
 version = "0.9.10"
 version_command = ["astro", "check", "--version"]
+
+[[tool]]
+kind = "library"
+name = "@emnapi/runtime"
+npm = "@emnapi/runtime"
+version = "1.11.3"
 
 [[tool]]
 kind = "library"

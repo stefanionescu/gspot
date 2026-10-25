@@ -44,6 +44,11 @@ test('a nested list reads the file from the item and the rest from the child', (
     expect([finding?.file, finding?.line, finding?.rule]).toStrictEqual(['a.sql', 3, 'LT01']);
 });
 
+test('an item without its nested list has no findings, as Trivy reports a clean file', () => {
+    const stdout = JSON.stringify({ files: [{ filepath: 'clean.sql' }] });
+    expect(parseJsonReport('sql/sqlfluff', NESTED_LIST_FORMAT, stdout)).toStrictEqual([]);
+});
+
 test.each([...FIX_FIELD_CASES])(
     'a JSON finding is fixable only when the check has a fix command: %s fix field',
     (name, fields, expected) => {

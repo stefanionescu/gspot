@@ -3,7 +3,7 @@ import type { ConfigFile } from '#cli/types/configurations.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listCheckTools, listConfiguredChecks } from '#cli/planning/tools.ts';
 import { buildMarkdownlintFile } from '#cli/generation/configurations/language/markdown.ts';
-import type { UsedNames, OwnedConfigFile, ConfigFileGeneration } from '#cli/types/generation/files.ts';
+import type { UsedNames, OwnedConfigFile, ConfigFileTargets } from '#cli/types/generation/files.ts';
 
 /**
 Check whether a Markdown scope inherits the root config because both scopes generate the same text.
@@ -33,16 +33,16 @@ Find the repository-relative path of the config file for a scope.
 
 @param scope the folder, empty for the root.
 @param configFile the config file from the manifest.
-@param targets the generated paths by scope and file name without extension.
+@param configFiles the generated paths by scope and file name, and the scopes whose file failed to build.
 @returns the file of the scope, or the root file as a fallback.
+@throws the build failure of the file in this scope.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 16 calls in 11 files share it.
-export function getConfigFileTarget(
-    scope: string,
-    configFile: ConfigFile,
-    targets: ConfigFileGeneration['targets'],
-): string {
-    return configFile.per_scope ? (targets.get(scope)?.get(configFile.target) ?? configFile.target) : configFile.target;
+export function getConfigFileTarget(scope: string, configFile: ConfigFile, configFiles: ConfigFileTargets): string {
+    const failure = configFiles.failures.get(scope)?.get(configFile.target);
+    if (failure !== undefined) throw failure;
+    return configFile.per_scope
+        ? (configFiles.targets.get(scope)?.get(configFile.target) ?? configFile.target)
+        : configFile.target;
 }
 
 function isConfigFileWritten(session: Session, file: ConfigFile, used: UsedNames): boolean {

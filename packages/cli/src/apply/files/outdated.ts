@@ -14,6 +14,7 @@ import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
+import { selectToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/apply/files/outdated.ts';
 
 /**
@@ -115,12 +116,16 @@ List every managed path, with the lockfiles of the tool projects in use.
 @param generated the files that this run generates.
 @returns every path that this run writes or keeps.
 */
-export function listExpectedPaths(session: Pick<Session, 'packageManager'>, generated: GenerationResult): Set<string> {
+export function listExpectedPaths(
+    session: Pick<Session, 'packageManager' | 'installedRoot' | 'timeoutSeconds' | 'reads'>,
+    generated: GenerationResult,
+): Set<string> {
     const paths = new Set([...generated.files, ...generated.blocks, ...generated.managedKeys].map((file) => file.path));
-    if (session.packageManager !== undefined) {
-        const project = generated.files.find((file) => file.path === GSPOT_PATHS.npmProject);
-        if (project !== undefined)
-            paths.add(parseToolPackageJson(project.content, session.packageManager.name).lockfilePath);
+    const { packageManager, installedRoot, timeoutSeconds, reads } = session;
+    const project = generated.files.find((file) => file.path === GSPOT_PATHS.npmProject);
+    if (packageManager !== undefined && project !== undefined) {
+        const name = selectToolPackageManager(installedRoot, packageManager, timeoutSeconds, reads);
+        paths.add(parseToolPackageJson(project.content, name).lockfilePath);
     }
     for (const file of generated.files) {
         if (file.path === GSPOT_PATHS.miseProject) paths.add(GSPOT_PATHS.miseLockfile);

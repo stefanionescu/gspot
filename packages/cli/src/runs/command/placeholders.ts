@@ -118,7 +118,7 @@ export function listCommandConfigFiles(session: Session, planned: PlannedCheck, 
                         getConfigFileTarget(
                             planned.scope.folder.path,
                             getConfigFile(session, planned, name),
-                            getConfigFiles(session).targets,
+                            getConfigFiles(session),
                         ),
                     )
                     .toArray();
@@ -145,7 +145,7 @@ Lists the source and config files that a copy needs for a command.
 export function listCopyFiles(session: Session, planned: PlannedCheck, command: string[]): string[] {
     const scope = planned.scope.folder.path;
     const owned = (planned.configuration?.configFiles ?? []).map((configFile) =>
-        getConfigFileTarget(scope, configFile, getConfigFiles(session).targets),
+        getConfigFileTarget(scope, configFile, getConfigFiles(session)),
     );
     return [
         ...new Set([
@@ -194,7 +194,7 @@ export function replacePlaceholders(
         )
         .replaceAll(CONFIG_FILE_PLACEHOLDER, (_match, name: string) => {
             const configFile = getConfigFile(session, planned, name);
-            const target = getConfigFileTarget(planned.scope.folder.path, configFile, getConfigFiles(session).targets);
+            const target = getConfigFileTarget(planned.scope.folder.path, configFile, getConfigFiles(session));
             return convertToSystemPath(join(session.root, target));
         })
         .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) =>
