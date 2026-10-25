@@ -3,29 +3,42 @@
 #MISE dir="{{config_root}}/packages/cli"
 set -euo pipefail
 
-mkdir -p dist
-{
-    printf '%s\n' '#!/usr/bin/env node'
-    bun build src/bin.ts --target node --format esm --packages external
-} >dist/gspot.js
-bun build src/checks/framework/site/purgecss-process.ts --outdir dist --target node --format esm --packages external
+# download_verified_file: Downloads a file unless it already matches its SHA-256 checksum, and checks the download.
+# Arguments:
+#   SHA-256 checksum.
+#   Target file.
+#   Source URL.
+download_verified_file() {
+    local checksum="$1"
+    local file="$2"
+    local url="$3"
 
-mkdir -p grammars/licenses
-for grammar in bash css html javascript python typescript; do
-    cp "node_modules/tree-sitter-${grammar}/LICENSE" "grammars/licenses/tree-sitter-${grammar}.txt"
-done
-for grammar in bash css html javascript python; do
-    cp "node_modules/tree-sitter-${grammar}/tree-sitter-${grammar}.wasm" "grammars/${grammar}.wasm"
-done
-cp node_modules/tree-sitter-typescript/tree-sitter-typescript.wasm grammars/typescript.wasm
-cp node_modules/tree-sitter-typescript/tree-sitter-tsx.wasm grammars/tsx.wasm
-
-for pin in \
-    "0258a7ef17303a8079ffe0748b3583d59656b5c3e8653fca7b6451b3e6689eb2 grammars/swift.wasm https://github.com/alex-pinkus/tree-sitter-swift/releases/download/0.7.3/tree-sitter-swift.wasm" \
-    "3533cec129bb4bba015c0d61d86dd7c3b7e82110e4d2ff7837a01eff5bad5ccc grammars/licenses/tree-sitter-swift.txt https://raw.githubusercontent.com/alex-pinkus/tree-sitter-swift/b8b22bffbb3441780e6471665bacfb263741c86a/LICENSE"; do
-    read -r checksum file url <<<"${pin}"
     if ! sha256sum -c - <<<"${checksum}  ${file}" >/dev/null 2>&1; then
         curl --fail --silent --show-error --location --connect-timeout 10 --max-time 60 --output "${file}" "${url}"
         sha256sum -c - <<<"${checksum}  ${file}"
     fi
-done
+}
+
+# main: Bundles the CLI and the PurgeCSS child process, and copies or downloads each grammar and its license.
+main() {
+    local grammar
+
+    mkdir -p dist
+    bun build src/bin.ts --target node --format esm --packages external --banner '#!/usr/bin/env node' >dist/gspot.js
+    bun build src/checks/framework/site/purgecss-process.ts --outdir dist --target node --format esm --packages external
+
+    mkdir -p grammars/licenses
+    for grammar in bash css html javascript python typescript; do
+        cp "node_modules/tree-sitter-${grammar}/LICENSE" "grammars/licenses/tree-sitter-${grammar}.txt"
+        cp "node_modules/tree-sitter-${grammar}/tree-sitter-${grammar}.wasm" "grammars/${grammar}.wasm"
+    done
+    cp node_modules/tree-sitter-typescript/tree-sitter-tsx.wasm grammars/tsx.wasm
+
+    download_verified_file 0258a7ef17303a8079ffe0748b3583d59656b5c3e8653fca7b6451b3e6689eb2 grammars/swift.wasm \
+        https://github.com/alex-pinkus/tree-sitter-swift/releases/download/0.7.3/tree-sitter-swift.wasm
+    download_verified_file 3533cec129bb4bba015c0d61d86dd7c3b7e82110e4d2ff7837a01eff5bad5ccc \
+        grammars/licenses/tree-sitter-swift.txt \
+        https://raw.githubusercontent.com/alex-pinkus/tree-sitter-swift/b8b22bffbb3441780e6471665bacfb263741c86a/LICENSE
+}
+
+main "$@"

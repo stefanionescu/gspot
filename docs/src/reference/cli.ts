@@ -1,12 +1,10 @@
-import { posix } from 'node:path';
 import { buildProgram } from '#cli/main.ts';
 import { isDeepStrictEqual } from 'node:util';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildJsonSchema } from '#cli/settings/json-schema.ts';
+import { listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
 import type { CliReference, SettingVariant, CommandReference } from '../types/reference.ts';
 import { buildAvailableSettings, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import { listRuleFiles, listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
 
 function groupSettingVariants(configurations: CliReference['configurations']): SettingVariant[] {
     const settings = new Map<string, SettingVariant[]>();
@@ -79,18 +77,6 @@ function readCliReference(): CliReference {
         checks: listChecksById(configurations).values().toArray(),
         settings: groupSettingVariants(configurations),
         schema: buildJsonSchema(),
-        ruleFiles: Object.fromEntries(
-            configurations.map((configuration) => [
-                configuration.name,
-                listRuleFiles(configuration).map(({ path }) => posix.join(GSPOT_PATHS.configurations, path)),
-            ]),
-        ),
-        configurationSettings: Object.fromEntries(
-            configurations.map((configuration) => [
-                configuration.name,
-                SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? [],
-            ]),
-        ),
     };
 }
 

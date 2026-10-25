@@ -42,7 +42,7 @@ Format a Markdown table.
 @param rows the cells of each line, in Markdown; the table escapes them
 @returns the table, with a separator line under the header, or nothing without rows
 */
-export function formatTable(header: string[], rows: string[][]): string {
+export function formatTable(header: readonly string[], rows: readonly (readonly string[])[]): string {
     if (rows.length === 0) return '';
     const cells = rows.map((row) => row.map((cell) => cell.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ')));
     return [header, header.map(() => '---'), ...cells].map((line) => `| ${line.join(' | ')} |`).join('\n');
@@ -55,7 +55,7 @@ Build the canonical route of a reference index or named page.
 @param name the page name, or empty for the index.
 @returns the absolute site path.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 4 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in 5 files share it.
 export function formatReferencePath(folder: keyof typeof REFERENCE_FOLDERS, name: string): string {
     return `${REFERENCE_PATH}${REFERENCE_FOLDERS[folder]}/${name === '' ? '' : name + '/'}`;
 }

@@ -1,8 +1,9 @@
 ---
 import Example from '../components/home/Example.astro';
 import InlineText from '../components/InlineText.astro';
-import { TOOLS, USE_CASES, HOME_TITLE } from '../config/home.ts';
+import { formatReferencePath } from '../reference/markdown.ts';
 import '../components/home/page.css';
+import { TOOLS, USE_CASES, HOME_TITLE } from '../config/home.ts';
 import { DOCS_PATH, DESCRIPTION, REPOSITORY_URL } from '../config/site.ts';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 ---
@@ -77,7 +78,7 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
                 ))}
             </ul>
             <p class="more">
-                <a href="/reference/checks/">See every check →</a>
+                <a href={formatReferencePath('checks', '')}>See every check →</a>
             </p>
         </section>
         <footer class="home-footer">

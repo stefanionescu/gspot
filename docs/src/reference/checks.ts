@@ -1,18 +1,19 @@
 import { CLI_REFERENCE } from './cli.ts';
+import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 import type { Check, Configuration } from '#cli/types/configurations.ts';
+import type { GuideCheck, Suppression, ReferencePage } from '../types/reference.ts';
 import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
-import type { GuideCheck, Suppression, CliReference, ReferencePage } from '../types/reference.ts';
 import { formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
-import { LIST_FORMAT, CHECK_RUN_LABELS, CHECK_NEEDS_LABELS, SUPPRESSIONS_CHECK } from '../config/reference.ts';
+import { CHECK_RUN_LABELS, CONJUNCTION_FORMAT, CHECK_NEEDS_LABELS, SUPPRESSIONS_CHECK } from '../config/reference.ts';
 
 function formatToolNames(check: Check): string | undefined {
     const program = getToolName(check);
     if (program === undefined) return undefined;
     const setting = SETTING_ONLY_PLACEHOLDER.exec(program)?.groups?.['name'];
     const tool = setting === undefined ? program : `the command in \`${setting}\``;
-    return check.other_tools === undefined ? tool : `${tool}, with ${LIST_FORMAT.format(check.other_tools)}`;
+    return check.other_tools === undefined ? tool : `${tool}, with ${CONJUNCTION_FORMAT.format(check.other_tools)}`;
 }
 
 function listCheckRequirements(check: Check): string[] {
@@ -21,8 +22,8 @@ function listCheckRequirements(check: Check): string[] {
     const needs = check.needs?.map((need) => CHECK_NEEDS_LABELS[need]);
     return [
         tools === undefined ? 'gspot runs this check itself.' : `It runs ${tools}.`,
-        needs === undefined ? '' : `It needs ${LIST_FORMAT.format(needs)}.`,
-        systems === undefined ? '' : `It runs on ${LIST_FORMAT.format(systems)}.`,
+        needs === undefined ? '' : `It needs ${CONJUNCTION_FORMAT.format(needs)}.`,
+        systems === undefined ? '' : `It runs on ${CONJUNCTION_FORMAT.format(systems)}.`,
     ];
 }
 
@@ -97,18 +98,17 @@ export function buildCheckPage(
 /**
 Build the check index: one table per group, each check linked to its page.
 
-@param checks every check, with the configuration that owns it
-@param groups the title of each folder of configurations
 @returns the index page
 */
-export function buildCheckIndex(checks: CliReference['checks'], groups: Record<string, string>): ReferencePage {
+export function buildCheckIndex(): ReferencePage {
+    const { checks } = CLI_REFERENCE;
     return buildReferencePage(
         'Checks',
         `${String(checks.length)} checks declared by shipped configurations.`,
         'Each check ID is `<configuration>/<name>`. The [stage](/start/concepts/#stage) says when it runs, and the ' +
             '[level](/start/concepts/#levels) says which setting of `level` turns it on. ' +
             '`gspot explain <check>` shows its state in your repository.\n' +
-            Object.entries(groups)
+            Object.entries(GROUP_LABELS)
                 .map(([group, title]) => {
                     const groupChecks = checks.filter(({ configuration }) => configuration.group === group);
                     return formatSection(title, formatCheckTable(groupChecks.map(({ check }) => check)));
@@ -127,9 +127,7 @@ export function listSuppressions(configurations: Configuration[]): Map<string, S
     return new Map(
         configurations.flatMap((configuration) =>
             configuration.tools.flatMap((tool) =>
-                typeof tool === 'string' || tool.suppression === undefined
-                    ? []
-                    : [[tool.name, tool.suppression] as const],
+                tool.suppression === undefined ? [] : [[tool.name, tool.suppression] as const],
             ),
         ),
     );

@@ -27,14 +27,14 @@ export const DETECTION_LABELS = {
     project_files: 'project files',
 } as const;
 
-export const SCHEMA_TYPE_LABELS = {
+export const SCHEMA_TYPE_LABELS: Readonly<Record<string, string>> = {
     string: 'Text',
     integer: 'Whole number',
     number: 'Number',
     boolean: '`true` or `false`',
     array: 'List',
     object: 'Table',
-} as const;
+};
 
 export const CHECK_RUN_LABELS = {
     once: 'once for the repository',
@@ -81,7 +81,7 @@ export const MAP_KEY_NAME = '<name>';
 export const ANGLE_BRACKETS = /[<>]/gu;
 export const TABLE_HEADING_LEVEL = 2;
 export const REASONED_VALUE_LABEL = 'a reasoned value `{ value = …, reason = "…" }`';
-export const HEADING_ID_DROPPED = /[^\p{L}\p{N} _-]/gu;
+export const HEADING_ID_STRIPPED = /[^\p{L}\p{N} _-]/gu;
 export const LANGUAGE_PLACEHOLDER = '<language>';
 export const CATEGORY_PLACEHOLDER = '<category>';
 
@@ -109,4 +109,5 @@ export const ENVIRONMENT_VARIABLES: readonly [name: string, meaning: string][] =
     ['`NO_COLOR`', 'Any nonempty value turns color off.'],
 ];
 
-export const LIST_FORMAT = new Intl.ListFormat('en', { type: 'conjunction' });
+export const CONJUNCTION_FORMAT = new Intl.ListFormat('en', { type: 'conjunction' });
+export const DISJUNCTION_FORMAT = new Intl.ListFormat('en', { type: 'disjunction' });

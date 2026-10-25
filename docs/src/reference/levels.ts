@@ -13,9 +13,9 @@ export function buildLevelRows(): { level: string; description: string; count: n
     // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
     const listToolNames = (levelChecks: typeof checks) =>
         new Set(levelChecks.flatMap(({ check }) => (check.tool === undefined ? [] : check.tool)));
-    const usual = listToolNames(recommended);
+    const recommendedTools = listToolNames(recommended);
     const allLevelTools = [...listToolNames(checks)]
-        .filter((tool) => !usual.has(tool))
+        .filter((tool) => !recommendedTools.has(tool))
         .toSorted((first, second) => first.localeCompare(second));
     return [
         {

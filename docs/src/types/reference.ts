@@ -22,8 +22,6 @@ export type CliReference = {
     checks: ConfigurationCheck[];
     settings: SettingVariant[];
     schema: SettingsSchema;
-    ruleFiles: Record<string, string[]>;
-    configurationSettings: Record<string, Setting[]>;
 };
 
 export type ReferencePage = {

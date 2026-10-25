@@ -1,14 +1,14 @@
 import { SIDEBAR } from './navigation.ts';
 import { SITE_URL, DOCS_PATH } from './site.ts';
 import { START_RUNNERS } from '#cli/config/repository/npm.ts';
-import { REFERENCE_PATH, REFERENCE_FOLDERS } from './reference.ts';
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { SKILLS_FOLDER, SKILLS_INDEX_FILE, MARKDOWN_COPY_FILE } from './agents.ts';
 import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/generation/ci.ts';
 import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/definitions/root.ts';
+import { REFERENCE_PATH, REFERENCE_FOLDERS, DISJUNCTION_FORMAT, CONJUNCTION_FORMAT } from './reference.ts';
 
-const PACKAGE_MANAGER_DOCS = {
+const PACKAGE_MANAGERS = {
     bun: { label: 'Bun', lockfile: 'bun.lock' },
     npm: { label: 'npm', lockfile: 'package-lock.json' },
     pnpm: { label: 'pnpm', lockfile: 'pnpm-lock.yaml' },
@@ -16,7 +16,7 @@ const PACKAGE_MANAGER_DOCS = {
     mise: { label: 'mise', lockfile: undefined },
 } as const;
 
-export const SETUP_COMMANDS = Object.entries(PACKAGE_MANAGER_DOCS).map(([name, { label, lockfile }]) => {
+export const SETUP_COMMANDS = Object.entries(PACKAGE_MANAGERS).map(([name, { label, lockfile }]) => {
     const { command, installCommand } = START_RUNNERS[name as keyof typeof START_RUNNERS];
     const frozen = lockfile === 'yarn.lock' ? YARN_BERRY_INSTALL : lockfile && FROZEN_INSTALLS[lockfile];
     return {
@@ -62,6 +62,8 @@ export const RELEASE_AGE_EXCLUSIONS = [
     { label: 'Yarn', key: 'npmPreapprovedPackages', file: '.yarnrc.yml' },
 ] as const;
 
+const REFERENCE_URL = `${SITE_URL}${REFERENCE_PATH}`;
+
 export const LLMS_URL = `${SITE_URL}/llms.txt`;
 export const LLMS_COMMAND = `curl -fsSL ${LLMS_URL}`;
 
@@ -71,18 +73,15 @@ export const AGENT_STEPS = `## Steps for coding agents
 
 Set up gspot in the repository of the user. Run each command at the root of the repository. gspot needs Git and
 Node.js ${RUNTIME_MINIMUMS.node} or newer, or Bun ${RUNTIME_MINIMUMS.bun} or newer when Bun runs it. A package manager that holds new
-releases, such as pnpm 11, needs @gspothq/cli and @gspothq/eslint-plugin in its exclusions: ${new Intl.ListFormat(
-    'en',
-    { type: 'conjunction' },
-).format(RELEASE_AGE_EXCLUSIONS.map(({ label, key }) => `${key} for ${label}`))}.
+releases, such as pnpm 11, needs @gspothq/cli and @gspothq/eslint-plugin in its exclusions: ${CONJUNCTION_FORMAT.format(
+    RELEASE_AGE_EXCLUSIONS.map(({ label, key }) => `${key} for ${label}`),
+)}.
 
 1. Add gspot, pinned to one version, with the package manager of the repository, or with mise when the repository
    has no \`package.json\`:
 ${SETUP_COMMANDS.map(({ label, lines }) => `   - ${label}: \`${lines[0]}\``).join('\n')}
 
-   Start the next commands with ${new Intl.ListFormat('en', { type: 'disjunction' }).format(
-       SETUP_COMMANDS.map(({ start }) => `\`${start}\``),
-   )}.
+   Start the next commands with ${DISJUNCTION_FORMAT.format(SETUP_COMMANDS.map(({ start }) => `\`${start}\``))}.
 2. Ask the user which level, and wait for the answer. ${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY} Level \`all\` also
    installs a few more tools. Suggest \`recommended\`, the default, for an existing codebase, and \`all\` for a new
    repository or one that agents write. The level decides which config files the plan replaces.
@@ -106,7 +105,7 @@ ${SETUP_COMMANDS.map(({ label, lines }) => `   - ${label}: \`${lines[0]}\``).joi
   \`gspot install\`, then \`gspot doctor\`.
 - \`gspot explain <check, lint rule, setting, or file>\` explains it and names the commands that change it.
   \`gspot check --fix\` runs the formatters and other fixers. Each check has a page at
-  ${SITE_URL}/reference/checks/<check>/.
+  ${REFERENCE_URL}${REFERENCE_FOLDERS.checks}/<check>/.
 - Fix the code first. Ask the user before you ignore a finding, remove a configuration, or raise a limit; each takes
   \`--reason "<why>"\`. To ignore a finding:
   \`gspot ignore <check> --reason "<why>"\`, with \`--rule <rule>\` and \`--paths "<glob>"\` to narrow it.
@@ -136,17 +135,17 @@ export const LLMS_PAGES = {
     optionalLinks: [
         {
             label: 'Commands',
-            url: `${SITE_URL}${REFERENCE_PATH}${REFERENCE_FOLDERS.commands}/`,
+            url: `${REFERENCE_URL}${REFERENCE_FOLDERS.commands}/`,
             description: 'every command, its options, and exit codes',
         },
         {
             label: 'Settings',
-            url: `${SITE_URL}${REFERENCE_PATH}${REFERENCE_FOLDERS.settings}/`,
+            url: `${REFERENCE_URL}${REFERENCE_FOLDERS.settings}/`,
             description: 'every key of gspot.toml, its accepted values, and its default',
         },
         {
             label: 'JSON output',
-            url: `${SITE_URL}${REFERENCE_PATH}${REFERENCE_FOLDERS.jsonOutput}/`,
+            url: `${REFERENCE_URL}${REFERENCE_FOLDERS.jsonOutput}/`,
             description: 'the fields of gspot check --json',
         },
         {

@@ -41,18 +41,10 @@ export default defineConfig({
     },
     integrations: [
         {
-            name: 'settings-schema',
+            name: 'site-files',
             hooks: {
                 'astro:build:done': async ({ dir }) => {
-                    const { schema } = CLI_REFERENCE;
-                    await writeFile(new URL(SCHEMA_FILE, dir), JSON.stringify(schema) + '\n');
-                },
-            },
-        },
-        {
-            name: 'font-licenses',
-            hooks: {
-                'astro:build:done': async ({ dir }) => {
+                    await writeFile(new URL(SCHEMA_FILE, dir), JSON.stringify(CLI_REFERENCE.schema) + '\n');
                     const licenses = new URL('licenses/', dir);
                     await mkdir(licenses, { recursive: true });
                     for (const font of FONT_PACKAGES) {
@@ -61,12 +53,9 @@ export default defineConfig({
                             new URL(`${font}.txt`, licenses),
                         );
                     }
+                    await writeAgentFiles(dir);
                 },
             },
-        },
-        {
-            name: 'agent-files',
-            hooks: { 'astro:build:done': ({ dir }) => writeAgentFiles(dir) },
         },
         starlight({
             title: 'gspot',
@@ -92,7 +81,7 @@ export default defineConfig({
                 { tag: 'meta', attrs: { property: 'og:image:height', content: String(SOCIAL_IMAGE_SIZE.height) } },
                 { tag: 'meta', attrs: { property: 'og:image:alt', content: SOCIAL_IMAGE_ALT } },
                 { tag: 'link', attrs: { rel: 'apple-touch-icon', href: APPLE_TOUCH_ICON } },
-                { tag: 'link', attrs: { rel: 'expect', href: FIRST_PAINT_ELEMENT, blocking: 'render' } },
+                { tag: 'link', attrs: { rel: 'expect', href: `#${FIRST_PAINT_ELEMENT}`, blocking: 'render' } },
             ],
             components: {
                 Header: './src/components/starlight/Header.astro',

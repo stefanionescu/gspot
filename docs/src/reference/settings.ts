@@ -1,3 +1,4 @@
+import { CLI_REFERENCE } from './cli.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { SCHEMA_FILE } from '#cli/config/files/names.ts';
 import type { CliReference, ReferencePage, SettingsSchema } from '../types/reference.ts';
@@ -6,8 +7,8 @@ import { formatTable, formatSection, buildReferencePage, formatReferencePath } f
 import {
     MAP_KEY_NAME,
     ANGLE_BRACKETS,
-    HEADING_ID_DROPPED,
     SCHEMA_TYPE_LABELS,
+    HEADING_ID_STRIPPED,
     LISTED_VALUES_LIMIT,
     TABLE_HEADING_LEVEL,
     CATEGORY_PLACEHOLDER,
@@ -56,10 +57,9 @@ function formatAcceptedValue(schema: SettingsSchema, subschema: SettingsSchema |
         }
         return [...new Set(node.anyOf.map((option) => formatAcceptedValue(schema, option)))].join(' or ');
     }
-    const labels: Readonly<Record<string, string>> = SCHEMA_TYPE_LABELS;
     return [node.type ?? 'Value']
         .flat()
-        .map((type) => labels[type] ?? type)
+        .map((type) => SCHEMA_TYPE_LABELS[type] ?? type)
         .join(' or ');
 }
 
@@ -79,9 +79,11 @@ function listSchemaProperties(
                   node: getSchemaNode(schema, child),
                   required: required.has(name),
               }));
-    const map =
+    const recordShape =
         typeof shape.additionalProperties === 'object' ? getSchemaNode(schema, shape.additionalProperties) : undefined;
-    return map?.properties === undefined ? fixed : [...fixed, { name: MAP_KEY_NAME, node: map, required: false }];
+    return recordShape?.properties === undefined
+        ? fixed
+        : [...fixed, { name: MAP_KEY_NAME, node: recordShape, required: false }];
 }
 
 function formatDefaults(variants: CliReference['settings']): string {
@@ -106,16 +108,12 @@ function formatLanguageDefaults(variants: CliReference['settings']): string {
     return defaultTexts.length === 0 ? '' : ` Language defaults: ${defaultTexts.join(', ')}.`;
 }
 
-function formatSetting(
-    facts: CliReference,
-    key: string,
-    { node, required }: { node: SettingsSchema; required: boolean },
-): string {
-    const variants = facts.settings.filter(({ setting }) => setting.name === key);
+function formatSetting(key: string, { node, required }: { node: SettingsSchema; required: boolean }): string {
+    const variants = CLI_REFERENCE.settings.filter(({ setting }) => setting.name === key);
     const reasons = [
         ...new Set(variants.flatMap(({ setting }) => (setting.reason_when === undefined ? [] : setting.reason_when))),
     ];
-    const accepted = formatAcceptedValue(facts.schema, node);
+    const accepted = formatAcceptedValue(CLI_REFERENCE.schema, node);
     const sentence = accepted.charAt(0).toUpperCase() + accepted.slice(1) + (/[.\n]$/u.test(accepted) ? '' : '.');
     const schemaDefault = node.default === undefined ? 'unset' : `\`${JSON.stringify(node.default)}\``;
     const presence = required ? 'Required.' : `Default: ${formatDefaults(variants) || schemaDefault}.`;
@@ -132,17 +130,12 @@ function isSettingValue(schema: SettingsSchema, node: SettingsSchema): boolean {
     return isReasonedValue(node) || listSchemaProperties(schema, node).length === 0;
 }
 
-function formatSettingKeys(
-    facts: CliReference,
-    prefix: string,
-    keys: ReturnType<typeof listSchemaProperties>,
-    level: number,
-): string {
+function formatSettingKeys(prefix: string, keys: ReturnType<typeof listSchemaProperties>, level: number): string {
     return keys
         .map(({ name, node, required }) => {
             const key = prefix === '' ? name : `${prefix}.${name}`;
             const heading = `<h${String(level)} id="${key.replaceAll(ANGLE_BRACKETS, '')}"><code>${key}</code></h${String(level)}>`;
-            return `${heading}\n\n${formatSetting(facts, key, { node, required })}\n`;
+            return `${heading}\n\n${formatSetting(key, { node, required })}\n`;
         })
         .join('\n');
 }
@@ -163,31 +156,29 @@ function formatVariantSection(schema: SettingsSchema, key: string, node: Setting
     if (languages.length === 0) return '';
     const pattern = `${key}.${LANGUAGE_PLACEHOLDER}`;
     const categories = languages.map(({ name, node: table }) => [name, listVariantTables(schema, table)] as const);
-    const named = categories.filter(([, tables]) => tables.length > 0);
+    const categorizedLanguages = categories.filter(([, tables]) => tables.length > 0);
     const languageNames = languages.map(({ name }) => `\`${name}\``).join(', ');
     return (
         `\n${'#'.repeat(level)} \`${pattern}\`\n\n` +
         `The keys of \`[${key}]\` for one language: ${languageNames}. ` +
         `A key you leave out takes the value of \`[${key}]\`.\n` +
-        (named.length === 0
+        (categorizedLanguages.length === 0
             ? ''
             : `\n\`${pattern}.${CATEGORY_PLACEHOLDER}\` sets the same keys for one category of names, and a key you ` +
               `leave out takes the value of \`${pattern}\`. The categories of each language:\n\n` +
               formatTable(
                   ['Language', 'Categories'],
-                  named.map(([name, tables]) => [`\`${name}\``, tables.map((table) => `\`${table.name}\``).join(', ')]),
+                  categorizedLanguages.map(([name, tables]) => [
+                      `\`${name}\``,
+                      tables.map((table) => `\`${table.name}\``).join(', '),
+                  ]),
               ) +
               '\n')
     );
 }
 
-function formatSettingTable(
-    facts: CliReference,
-    key: string,
-    subschema: SettingsSchema | boolean,
-    level: number,
-): string {
-    const { schema } = facts;
+function formatSettingTable(key: string, subschema: SettingsSchema | boolean, level: number): string {
+    const { schema } = CLI_REFERENCE;
     const node = getSchemaNode(schema, subschema);
     const children = listSchemaProperties(schema, node);
     const keys = children.filter((child) => isSettingValue(schema, child.node));
@@ -199,17 +190,17 @@ function formatSettingTable(
         (key === 'naming'
             ? 'See [Accept a banned name](/configure/gspot-toml/#accept-a-banned-name) for an exact-name override.\n\n'
             : '') +
-        (keys.length === 0 ? '' : `${formatSettingKeys(facts, key, keys, level + 1)}\n`) +
+        (keys.length === 0 ? '' : `${formatSettingKeys(key, keys, level + 1)}\n`) +
         children
             .filter((child) => !isSettingValue(schema, child.node) && !variants.has(child.name))
-            .map((child) => formatSettingTable(facts, `${key}.${child.name}`, child.node, level + 1))
+            .map((child) => formatSettingTable(`${key}.${child.name}`, child.node, level + 1))
             .join('') +
         formatVariantSection(schema, key, node, level + 1)
     );
 }
 
-function formatScopeSection(facts: CliReference, subschema: SettingsSchema | boolean): string {
-    const { schema } = facts;
+function formatScopeSection(subschema: SettingsSchema | boolean): string {
+    const { schema } = CLI_REFERENCE;
     const node = getSchemaNode(schema, subschema);
     const children = listSchemaProperties(schema, node);
     const accepted = new Set(children.map(({ name }) => name));
@@ -222,7 +213,6 @@ function formatScopeSection(facts: CliReference, subschema: SettingsSchema | boo
         (node.description === undefined ? '' : `${node.description}\n\n`) +
         'See [Monorepos](/configure/monorepos/) for how a scope inherits settings.\n\n' +
         formatSettingKeys(
-            facts,
             'scope',
             children.filter((child) => isSettingValue(schema, child.node)),
             TABLE_HEADING_LEVEL + 1,
@@ -248,35 +238,32 @@ function findSettingPath(schema: SettingsSchema, key: string): { path: string[];
 /**
 Link a setting to its row, or a table or record to its heading, on the gspot.toml pages.
 
-@param schema the JSON Schema of gspot.toml
 @param key the dotted key, such as format.indent_style or import_rule
 @returns the Markdown link
 */
-export function linkSetting(schema: SettingsSchema, key: string): string {
+export function linkSetting(key: string): string {
+    const { schema } = CLI_REFERENCE;
     const { path, node } = findSettingPath(schema, key);
     const name = path.join('.');
     const header = node.type === 'array' ? `[[${name}]]` : `[${name}]`;
     const anchor = isSettingValue(schema, node)
         ? name.replaceAll(ANGLE_BRACKETS, '')
-        : header.toLowerCase().replaceAll(HEADING_ID_DROPPED, '');
+        : header.toLowerCase().replaceAll(HEADING_ID_STRIPPED, '');
     return `[\`${key}\`](${formatReferencePath('settings', '')}#${anchor})`;
 }
 
 /**
 Build the settings page: the top-level keys, then every table and record, each key under its own heading.
 
-@param facts the CLI reference facts
 @returns the settings page, whose table of contents lists the tables only.
 */
-export function buildSettingsPage(facts: CliReference): ReferencePage {
-    const { schema } = facts;
+export function buildSettingsPage(): ReferencePage {
+    const { schema } = CLI_REFERENCE;
     const roots = listSchemaProperties(schema, schema);
     const sections = roots
         .filter((child) => !isSettingValue(schema, child.node))
         .map(({ name, node }) =>
-            name === 'scope'
-                ? formatScopeSection(facts, node)
-                : formatSettingTable(facts, name, node, TABLE_HEADING_LEVEL),
+            name === 'scope' ? formatScopeSection(node) : formatSettingTable(name, node, TABLE_HEADING_LEVEL),
         );
     const topLevelKeys = roots.filter((child) => isSettingValue(schema, child.node));
     const page = buildReferencePage(
@@ -284,7 +271,7 @@ export function buildSettingsPage(facts: CliReference): ReferencePage {
         'Every key, accepted value, and default of gspot.toml.',
         'Every key of `gspot.toml`, its accepted values, and its default. See [gspot.toml](/configure/gspot-toml/) to change them.\n\n' +
             `The [JSON Schema](/${SCHEMA_FILE}) describes every key.\n` +
-            formatSection('Top-level keys', formatSettingKeys(facts, '', topLevelKeys, TABLE_HEADING_LEVEL + 1)) +
+            formatSection('Top-level keys', formatSettingKeys('', topLevelKeys, TABLE_HEADING_LEVEL + 1)) +
             sections.join(''),
     );
     page.data.tableOfContents = { maxHeadingLevel: TABLE_HEADING_LEVEL };

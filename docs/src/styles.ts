@@ -47,9 +47,7 @@ Remove unused built styles and update their content hashes. Run it after the bui
 */
 export async function pruneUnusedStyles(siteFolder: URL): Promise<void> {
     const folder = fileURLToPath(siteFolder);
-    const documents: string[] = [];
-    const files = glob(STYLE_CONTENT, { cwd: folder });
-    for await (const file of files) documents.push(join(folder, file));
+    const documents = await Array.fromAsync(glob(STYLE_CONTENT, { cwd: folder }), (file) => join(folder, file));
     const report = await new PurgeCSS().purge({
         content: documents,
         css: [join(folder, STYLESHEETS)],
