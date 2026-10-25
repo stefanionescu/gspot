@@ -1,5 +1,6 @@
 import { getPosition } from '#cli/system/text.ts';
 import type { Parsed } from '#cli/types/shapes.ts';
+import type { TextRange } from '#cli/types/text.ts';
 import { dirname, basename } from 'node:path/posix';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
@@ -15,7 +16,6 @@ import {
 } from '#cli/config/parsers/code/sql.ts';
 import type {
     SqlFile,
-    SqlRange,
     SqlToken,
     BlankedSql,
     SqlStatement,
@@ -308,7 +308,7 @@ export function* listSqlTokens(text: string): Generator<SqlToken> {
 }
 
 function replacePsqlSyntax(text: string): BlankedSql {
-    const variables: SqlRange[] = [];
+    const variables: TextRange[] = [];
     const pieces: string[] = [];
     let offset = 0;
     for (const { start, end, kind } of listSqlTokens(text)) {

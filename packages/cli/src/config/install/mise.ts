@@ -11,10 +11,6 @@ export const MISE_LOCK_ARGUMENTS = [MISE_TOOL, 'lock', '--platform', MISE_PLATFO
 
 export const MISE_LOCKED_ENVIRONMENT = { MISE_LOCKED: '1' } as const;
 
-export const MISE_CONFIG_FILE = 'mise.toml';
-
-export const MISE_LOCK_FILE = 'mise.lock';
-
 export const MISE_CHECKSUM_PATTERN = /^(?:sha256|blake3):[a-f0-9]{64}$/u;
 
 export const MISE_PLATFORM_PREFIX = 'platforms.';

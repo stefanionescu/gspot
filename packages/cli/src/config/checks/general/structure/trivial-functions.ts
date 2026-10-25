@@ -37,7 +37,7 @@ export const SWIFT_FUNCTION_LABELS: Readonly<Record<string, string>> = {
     computed_property: 'getter',
     willset_clause: 'willSet observer',
     didset_clause: 'didSet observer',
-} as const;
+};
 
 export const SWIFT_ACCESSOR_NODES = new Set([
     'computed_getter',

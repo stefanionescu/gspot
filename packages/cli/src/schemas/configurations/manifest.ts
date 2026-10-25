@@ -34,7 +34,7 @@ import {
 
 const fileKindSchema = z.enum(FILE_KINDS) satisfies z.ZodType<FileKind>;
 
-const optionalStringList = z.string().array().default([]);
+const optionalStringList = z.string().array().default([]) satisfies z.ZodType<string[]>;
 
 const filesSchema = z.strictObject({
     extensions: optionalStringList,

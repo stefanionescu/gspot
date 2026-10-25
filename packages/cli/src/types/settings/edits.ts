@@ -3,7 +3,7 @@ import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
 
 export type SettingsFileContents = { text: string; previous: FileContents };
 
-export type SettingsEdit = { text: string; table: TomlTable; previous: FileContents };
+export type SettingsEdit = SettingsFileContents & { table: TomlTable };
 
 export type EditedSettings = { text: string; settings: Settings; changed: boolean };
 

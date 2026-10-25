@@ -1,4 +1,5 @@
 import type { Node } from '@pgsql/types';
+import type { TextRange } from '#cli/types/text.ts';
 
 export type SqlToken = {
     start: number;
@@ -6,11 +7,9 @@ export type SqlToken = {
     kind: 'block-comment' | 'line-comment' | 'dollar' | 'command' | 'variable' | 'other';
 };
 
-export type SqlRange = { start: number; end: number };
+export type BlankedSql = { text: string; variables: TextRange[] };
 
-export type BlankedSql = { text: string; variables: SqlRange[] };
-
-export type SqlNodeFields = { [Entry in Node as keyof Entry]: Entry[keyof Entry] };
+export type SqlNodeFields = { [Variant in Node as keyof Variant]: Variant[keyof Variant] };
 
 export type SqlStatement<Kind extends keyof SqlNodeFields = keyof SqlNodeFields> = {
     [Name in Kind]: { kind: Name; fields: SqlNodeFields[Name]; start: number };
@@ -22,7 +21,7 @@ export type SqlStatementVisitors<Result, Arguments extends unknown[] = []> = {
 
 export type SqlFile = {
     source: string;
-    variables: SqlRange[];
+    variables: TextRange[];
     statements: SqlStatement[];
     error: { text: string; line: number; column: number } | undefined;
 };

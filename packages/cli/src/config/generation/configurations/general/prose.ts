@@ -1,4 +1,3 @@
-import { PROSE_GRAMMARS } from '#cli/config/prose.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 
 export const VALE_PACKAGES = ['Google', 'write-good', 'proselint', 'alex', 'Harper'] as const;
@@ -12,10 +11,6 @@ export const VALE_PACKAGE_RELEASES = {
 } as const;
 
 export const VALE_PACKAGE_REPOSITORY = 'https://github.com/vale-cli/';
-
-export const PROSE_FORMATS = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
-    'format' in grammar ? [[extension.slice(1), grammar.format] as const] : [],
-);
 
 export const VALE_REGEX_SYMBOLS = /[.*+?^${}()|[\]\\/-]/gu;
 
@@ -113,7 +108,7 @@ export const VALE_OFF_RULES: Readonly<Record<string, string>> = {
     'Harper.OkToOkay': 'OK names a successful status and a button action',
     'write-good.Passive': 'Google.Passive owns passive voice',
     'Harper.NumericRangeEnDash': 'gspot.en-dashes owns ranges',
-} as const;
+};
 
 export const ACRONYMS = [
     'API',

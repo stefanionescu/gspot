@@ -2,11 +2,11 @@ import type { z } from 'zod';
 
 type IsOptional<Value, Key extends keyof Value> = Pick<Value, Key> extends Required<Pick<Value, Key>> ? false : true;
 
-export type Parsed<T, E = string> = { value: T } | { error: E };
+export type Parsed<Value, Failure = string> = { value: Value } | { error: Failure };
 
-export type Optional<T> = { [K in keyof T]?: T[K] | undefined };
+export type Optional<Value> = { [Key in keyof Value]?: Value[Key] | undefined };
 
-export type Defined<T> = { [K in keyof T]: Exclude<T[K], undefined> };
+export type Defined<Value> = { [Key in keyof Value]: Exclude<Value[Key], undefined> };
 
 export type SchemaShape<Value, Input = never> = {
     [Key in keyof Value]-?: z.ZodType<

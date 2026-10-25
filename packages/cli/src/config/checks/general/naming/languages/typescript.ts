@@ -2,7 +2,7 @@ export const TYPESCRIPT_PATTERN_FIELDS: Readonly<Record<string, string>> = {
     pair_pattern: 'value',
     object_assignment_pattern: 'left',
     assignment_pattern: 'left',
-} as const;
+};
 
 export const TYPESCRIPT_NAME_NODES = new Set([
     'identifier',

@@ -4,14 +4,20 @@ import { namingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
 import { nonemptyPaths, namingCategorySchema } from '#cli/schemas/settings/fields.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { type TableSettings, type WrittenNaming, type WrittenNamingOverride } from '#cli/types/settings/file.ts';
-import { type NamingCategory, type SettingLanguage, type ParsedNamingOverride } from '#cli/types/settings/naming.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
+
+import {
+    type NamingCategory,
+    type SettingLanguage,
+    type ParsedNamingOverride,
+    type ParsedNamingLanguageFields,
+} from '#cli/types/settings/naming.ts';
 
 const namingLanguageSchema = namingCategorySchema.extend(
     Object.fromEntries(
         NAMING_TABLE_CATEGORIES.map((category) => [category, namingCategorySchema.optional()]),
     ) as Record<NamingCategory, z.ZodOptional<typeof namingCategorySchema>>,
-);
+) satisfies z.ZodType<ParsedNamingLanguageFields>;
 
 const namingLanguages = Object.fromEntries(
     Object.entries(NAMING_LANGUAGE_CATEGORIES).map(([language, categories]) => [

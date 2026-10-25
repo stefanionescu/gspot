@@ -1,4 +1,4 @@
-import type { StylelintComponent } from '#cli/types/generation/files.ts';
+import type { StylelintComponent } from '#cli/types/generation/css.ts';
 import { VUE_CONFIGURATION, SVELTE_CONFIGURATION } from '#cli/config/configurations/names.ts';
 
 const VUE_STYLELINT_OVERRIDE = {

@@ -12,4 +12,4 @@ export const findingSchema = z.object({
     code: (z.union([z.string(), z.number()]) satisfies z.ZodType<string | number>).optional(),
 } satisfies SchemaShape<SvelteFinding>);
 
-export const failureMessageSchema = z.string();
+export const failureMessageSchema = z.string() satisfies z.ZodType<string>;

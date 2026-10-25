@@ -19,4 +19,4 @@ export type Pipeline = {
     manualChecks: PlannedCheck[];
 };
 
-export type Lockfile = keyof typeof FROZEN_INSTALLS;
+export type FrozenLockfile = keyof typeof FROZEN_INSTALLS;

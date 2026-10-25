@@ -153,7 +153,7 @@ export type ToolProjectPackage = {
     requires?: readonly string[];
 };
 
-export type MisePin = {
+export type MiseToolPin = {
     name: string;
     version: string;
     options?: Record<string, string | number | boolean>;

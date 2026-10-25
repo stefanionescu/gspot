@@ -2,7 +2,7 @@ import type { ToolInstall, ToolPackageManager } from '#cli/types/install/tools.t
 
 export type NpmToolInstall = ToolInstall & { packageManager: ToolPackageManager };
 
-export type PackageManagerCommand = {
+export type PackageManagerRequest = {
     runFolder: string;
     packageManager: ToolPackageManager;
     commandArguments: string[];

@@ -31,4 +31,4 @@ export const CATEGORY_PARENTS: Readonly<Record<string, string>> = {
     enum_cases: 'properties',
     modules: 'files',
     packages: 'folders',
-} as const;
+};

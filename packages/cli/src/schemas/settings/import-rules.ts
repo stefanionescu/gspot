@@ -29,4 +29,4 @@ export const importRulesSchema = importRuleSchema
             context.addIssue({ code: 'custom', path: [...path], message });
     })
     .default(SETTING_DEFINITIONS['import_rule'].default)
-    .meta(SETTING_DEFINITIONS['import_rule']);
+    .meta(SETTING_DEFINITIONS['import_rule']) satisfies z.ZodType<ImportRule[]>;

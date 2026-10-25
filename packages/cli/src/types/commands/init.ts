@@ -1,5 +1,6 @@
 import type { Session } from '#cli/types/session.ts';
 import { type FileContents } from '#cli/types/system/files.ts';
+import type { TRAILING_COMMAS } from '#cli/config/settings/fields.ts';
 import type { RepositorySetup } from '#cli/types/repository/setup.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
@@ -104,7 +105,7 @@ export type PrettierOptions = {
     singleQuote?: boolean | undefined;
     useTabs?: boolean | undefined;
     semi?: boolean | undefined;
-    trailingComma?: 'all' | 'es5' | 'none' | undefined;
+    trailingComma?: (typeof TRAILING_COMMAS)[number] | undefined;
     overrides?: { files: string | string[]; options: Omit<PrettierOptions, 'overrides'> }[] | undefined;
 };
 

@@ -14,7 +14,7 @@ export function listCodeFences(text: string): CodeFence[] {
         if (node.position === undefined) return;
         fences.push({
             language: node.lang ?? '',
-            meta: node.meta ?? '',
+            attributes: node.meta ?? '',
             body: node.value,
             startLine: node.position.start.line,
             endLine: node.position.end.line,

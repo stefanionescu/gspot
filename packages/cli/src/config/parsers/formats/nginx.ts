@@ -5,7 +5,7 @@ export const NGINX_ESCAPES: Readonly<Record<string, string>> = {
     '"': '"',
     "'": "'",
     '\\': '\\',
-} as const;
+};
 
 export const WORD_START_STOPS = /[\s"'{};#\\]/u;
 

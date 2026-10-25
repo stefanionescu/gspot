@@ -1,11 +1,11 @@
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { text } from 'node:stream/consumers';
-import { PURGECSS } from '#cli/config/checks/framework/site/purgecss-process.ts';
+import { PURGECSS_TOOL } from '#cli/config/checks/framework/site/purgecss-process.ts';
 import type { PurgecssRequest, PurgecssConstructor } from '#cli/types/checks/framework/site.ts';
 
 const executable = process.argv[2] as string;
-const api = (await import(pathToFileURL(createRequire(executable).resolve(PURGECSS)).href)) as {
+const api = (await import(pathToFileURL(createRequire(executable).resolve(PURGECSS_TOOL)).href)) as {
     PurgeCSS: PurgecssConstructor;
 };
 const request = JSON.parse(await text(process.stdin)) as PurgecssRequest;

@@ -1,1 +1,1 @@
-export const PURGECSS = 'purgecss';
+export const PURGECSS_TOOL = 'purgecss';

@@ -41,7 +41,7 @@ export const ESLINT_LIMIT_RULES = {
 
 export const RUNTIME_GLOBALS: Readonly<Record<string, string>> = { node: 'nodeBuiltin', commonjs: 'node' };
 
-export const NODE_RUNTIMES: readonly string[] = ['node', 'nodeBuiltin', 'commonjs'] as const;
+export const NODE_RUNTIMES: readonly string[] = ['node', 'nodeBuiltin', 'commonjs'];
 
 export const LEVEL_ALL_PLUGIN_IMPORTS = {
     perfectionist: ['perfectionist', 'eslint-plugin-perfectionist'],

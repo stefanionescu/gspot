@@ -10,5 +10,3 @@ export const OPENNEXT_TYPE_DEFAULTS = {
 export const PATH_ROLES = ['source', 'destination', 'build'] as const;
 
 export const BUILD_SCRIPT = ['run', 'build'] as const;
-
-export const LANGUAGE_SETTING_FIELDS = 2;

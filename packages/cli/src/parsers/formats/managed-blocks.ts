@@ -1,6 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
+import type { TextRange } from '#cli/types/text.ts';
+import type { BlockFile } from '#cli/types/parsers/formats/managed-blocks.ts';
 import { MARKERS, LEADING_NEWLINE } from '#cli/config/parsers/formats/managed-blocks.ts';
-import type { BlockSpan, BlockFile } from '#cli/types/parsers/formats/managed-blocks.ts';
 
 /**
 Locate one complete block. Refuse ambiguous or malformed markers.
@@ -9,7 +10,7 @@ Locate one complete block. Refuse ambiguous or malformed markers.
 @param file the file path and marker style.
 @returns the character range of the block, or undefined when the file holds none.
 */
-export function findBlockSpan(text: string, file: BlockFile): BlockSpan | undefined {
+export function findBlockSpan(text: string, file: BlockFile): TextRange | undefined {
     const markersForStyle = MARKERS[file.style];
     const start = text.indexOf(markersForStyle.start);
     const closing = text.indexOf(markersForStyle.end);

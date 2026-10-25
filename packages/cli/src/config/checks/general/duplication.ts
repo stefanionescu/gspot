@@ -1,4 +1,4 @@
-export const JSCPD = 'jscpd';
+export const JSCPD_TOOL = 'jscpd';
 
 export const JSCPD_CONFIG_FILE = 'jscpd.json';
 

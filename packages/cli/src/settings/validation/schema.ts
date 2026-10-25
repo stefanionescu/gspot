@@ -8,15 +8,15 @@ import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { LimitLanguage } from '#cli/types/settings/values.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import type { TomlSyntax } from '#cli/types/parsers/formats/toml.ts';
-import { unwrapSettingSchema } from '#cli/schemas/settings/fields.ts';
 import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
 import type { WrittenConfiguration } from '#cli/types/configurations.ts';
 import { listUnknownConfigurations } from '#cli/configurations/select.ts';
+import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
+import { RECORD_FIELDS, unwrapSettingSchema } from '#cli/settings/schemas.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 import { SETTINGS_REFERENCE_URL } from '#cli/config/settings/validation/schema.ts';
 import { listCheckIds, readConfigurations } from '#cli/configurations/manifests.ts';
-import { scopeSchema, RECORD_FIELDS, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { formatSettingsError, formatFileValueError } from '#cli/settings/validation/messages.ts';
 
 import {

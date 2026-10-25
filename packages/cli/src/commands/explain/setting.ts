@@ -1,8 +1,8 @@
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
+import { RECORD_FIELDS } from '#cli/settings/schemas.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
-import { RECORD_FIELDS } from '#cli/schemas/settings/file.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';

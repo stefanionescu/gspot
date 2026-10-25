@@ -16,19 +16,19 @@ import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import { type NpmToolProject } from '#cli/types/install/tool-projects.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm/yarn.ts';
-import { RELEASE_AGE_VERSIONS } from '#cli/config/install/npm/release-age.ts';
 import { buildPackageManagerCommand } from '#cli/repository/npm/package-manager.ts';
 import { isLockfileFresh, stripBunRegistryUrls } from '#cli/install/npm/lockfiles.ts';
 import { prepareReleaseAge, writeBunReleaseAge } from '#cli/install/npm/release-age.ts';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
 import { writeNpmrc, readRegistryEnvironment, extractRegistryCredentials } from '#cli/install/npm/registry.ts';
-import { type NpmToolInstall, type PackageManagerRun, type PackageManagerCommand } from '#cli/types/install/npm.ts';
+import { type NpmToolInstall, type PackageManagerRun, type PackageManagerRequest } from '#cli/types/install/npm.ts';
 
 import {
     NODE_TOOL,
     NPMRC_FILE,
     NPM_SETTING_PREFIX,
     YARN_ENABLE_SCRIPTS,
+    RELEASE_AGE_VERSIONS,
     PACKAGE_MANAGER_ARGUMENTS,
     NPM_CONFIG_FOLDER_VARIABLE,
     YARN_SETTINGS_FILE_VARIABLE,
@@ -76,7 +76,7 @@ async function createNpmLockfile(
     return lockfile;
 }
 
-async function runPackageManager(install: ToolInstall, request: PackageManagerCommand): Promise<PackageManagerRun> {
+async function runPackageManager(install: ToolInstall, request: PackageManagerRequest): Promise<PackageManagerRun> {
     const { runFolder, packageManager, commandArguments, failure } = request;
     const env = { ...request.env };
     const credentials = extractRegistryCredentials(env);

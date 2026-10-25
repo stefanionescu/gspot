@@ -86,7 +86,7 @@ function isLicenseFile(path: string): boolean {
 function findGeneratedKind(path: string, prefix: Buffer): FileClassification | undefined {
     if (path.startsWith(`${GSPOT_PATHS.valePackages}/`)) return { kind: 'vendored', origin: KIND_ORIGINS.gspot };
     if (path.startsWith(`${DOT_GSPOT}/`)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
-    if (BUILD_LAUNCHERS.has(posix.basename(path))) return { kind: 'generated', origin: KIND_ORIGINS.buildWrapper };
+    if (BUILD_LAUNCHERS.has(posix.basename(path))) return { kind: 'generated', origin: KIND_ORIGINS.buildLauncher };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
     return hasGeneratedHeader(start) || GENERATOR_OUTPUT_BANNERS.some((banner) => banner.test(start))
         ? { kind: 'generated', origin: KIND_ORIGINS.banner }
@@ -122,7 +122,7 @@ function classifyKind(
             .slice(0, -1)
             .some((segment) => VENDORED_FOLDERS.has(segment))
     )
-        return { kind: 'vendored', origin: KIND_ORIGINS.directory };
+        return { kind: 'vendored', origin: KIND_ORIGINS.vendoredFolder };
     return classifyManagedDocument(root, listed, prefix);
 }
 

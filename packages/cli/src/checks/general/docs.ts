@@ -153,7 +153,7 @@ function readTaskNames(session: Session, scope: string): TaskNames {
 function extractProseLines(text: string): NumberedLine[] {
     const ignored = new Set<number>();
     for (const fence of listCodeFences(text)) {
-        const titled = fence.meta.split(/\s+/u).some((attribute) => attribute.startsWith(TITLE_ATTRIBUTE));
+        const titled = fence.attributes.split(/\s+/u).some((attribute) => attribute.startsWith(TITLE_ATTRIBUTE));
         for (let line = fence.startLine; line <= fence.endLine; line += 1)
             if (titled || [fence.startLine, fence.endLine].includes(line) || !COMMAND_FENCES.has(fence.language))
                 ignored.add(line);

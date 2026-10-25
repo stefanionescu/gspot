@@ -73,7 +73,7 @@ export const SWIFTFORMAT_ALWAYS_OFF: Readonly<Record<string, string>> = {
         '# Inserts an availability attribute into UIKit initializers, a behavior change, not a layout one.',
     redundantInternal: '# SwiftLint owns explicit access annotations, so the formatter keeps them.',
     redundantPublic: '# SwiftLint owns explicit access annotations, so the formatter keeps them.',
-} as const;
+};
 
 export const SWIFTFORMAT_ALL_LEVEL_ON = ['blockComments', 'wrapEnumCases'] as const;
 

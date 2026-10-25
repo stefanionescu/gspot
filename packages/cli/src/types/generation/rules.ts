@@ -1,3 +1,4 @@
+import type { TextRange } from '#cli/types/text.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 
 export type RuleFile = {
@@ -21,7 +22,7 @@ export type RuleSection = {
     start: number;
     end: number;
     depth: number;
-    marker: { start: number; end: number } | undefined;
+    marker: TextRange | undefined;
 };
 
 export type ShippedRule = {

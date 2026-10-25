@@ -25,6 +25,8 @@ export const PYTHON_PACKAGE_ORIGINS = ['https://files.pythonhosted.org'] as cons
 
 export const URL_SCHEME = /^[a-z][a-z0-9+.-]*:/iu;
 
+export const HTTP_URL = /^https?:\/\//u;
+
 export const INDEX_SETTINGS = new Set([
     'index',
     'index-url',

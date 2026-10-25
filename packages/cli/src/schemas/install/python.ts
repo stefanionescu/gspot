@@ -15,7 +15,7 @@ export const toolPyprojectSchema = z.object({
     tool: z.object({
         uv: uvSchema,
     } satisfies SchemaShape<ToolPyproject['tool']>),
-}) satisfies z.ZodType<ToolPyproject>;
+} satisfies SchemaShape<ToolPyproject>);
 
 const uvIndexSchema = z.looseObject({ url: z.string() } satisfies SchemaShape<Pick<PythonIndex, 'url'>>);
 
@@ -33,4 +33,4 @@ export const uvProjectSettingsSchema = z.object({
             { uv?: PythonIndexSettings['settings'] | undefined }
         >)
         .default({ uv: {} }),
-}) satisfies z.ZodType<PythonProjectSettings>;
+} satisfies SchemaShape<PythonProjectSettings>);

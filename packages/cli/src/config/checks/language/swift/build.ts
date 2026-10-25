@@ -9,7 +9,7 @@ export const RESPONSE_FILE = /@(?<path>(?:[A-Za-z]:)?[\\/]\S+)/gu;
 
 export const BUILD_LEVELS: ReadonlySet<string> = new Set(['error']);
 
-export const SWIFTLINT_CONFIG_NAME = 'swiftlint';
+export const SWIFTLINT_TOOL = 'swiftlint';
 
 export const SWIFTLINT_ANALYZE_COMMAND = ['swiftlint', 'analyze', '--strict', '--quiet'] as const;
 
@@ -19,7 +19,7 @@ export const COMPILER_LOG_FLAG = '--compiler-log-path';
 
 export const REPORTED_LEVELS: ReadonlySet<string> = new Set(['error', 'warning']);
 
-export const PERIPHERY_CONFIG_FILE = 'periphery';
+export const PERIPHERY_TOOL = 'periphery';
 
 export const PERIPHERY_COMMAND = [
     'periphery',

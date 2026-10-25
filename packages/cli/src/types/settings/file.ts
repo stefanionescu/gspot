@@ -54,35 +54,19 @@ type StructureSettings = Defined<Required<NonNullable<ParsedSettings['structure'
 
 export type Settings = Omit<
     ParsedSettings,
-    | 'scope'
-    | 'command_check'
-    | 'tools'
-    | 'limits'
-    | 'naming'
-    | 'import_rule'
-    | 'structure'
-    | 'format'
-    | 'hooks'
-    | 'ci'
-    | 'rules'
-    | 'ignore'
+    'scope' | 'command_check' | 'tools' | 'structure' | 'hooks' | 'ci' | 'ignore'
 > & {
     written: TomlTable;
     level: NonNullable<ParsedSettings['level']>;
     configurations: string[];
     removed_configurations: string[];
-    limits: NonNullable<ParsedSettings['limits']>;
-    naming: NonNullable<ParsedSettings['naming']>;
-    import_rule: ImportRule[];
     structure: StructureSettings;
-    format: ParsedFormat;
     tools: Record<string, TomlTable>;
     test_files: string[];
     ignore: IgnoreRecord[];
     commandChecks: Record<string, CommandCheck>;
     hooks?: Defined<Required<NonNullable<ParsedSettings['hooks']>>>;
     ci?: ParsedCi;
-    rules: ParsedRules;
     scopes: Record<string, NonNullable<ParsedSettings['scope']>[number] & Pick<Settings, 'written'>>;
 };
 
@@ -275,6 +259,7 @@ export type FormatSettings = Required<Defined<Omit<NonNullable<ParsedSettings['f
 
 export type WrittenScope = Omit<WrittenSettings, RootOnlyFields | keyof ParsedScopeTables> & {
     path: string;
+    limits?: WrittenLimits | undefined;
     dependencies?: Omit<WrittenDependencies, 'min_release_age_days'> | undefined;
     coverage?: Omit<WrittenCoverage, 'swift_target'> | undefined;
     docs?: Omit<WrittenDocs, 'banned_headings'> | undefined;
@@ -291,5 +276,3 @@ export type WrittenScope = Omit<WrittenSettings, RootOnlyFields | keyof ParsedSc
 };
 
 export type TomlTable = Record<string, unknown>;
-
-export type StylelintOptions = { severity?: 'error' | undefined };

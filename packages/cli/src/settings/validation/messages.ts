@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { unwrapSettingSchema } from '#cli/settings/schemas.ts';
 import type { SettingsError } from '#cli/types/settings/file.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { TomlSyntax } from '#cli/types/parsers/formats/toml.ts';
-import { unwrapSettingSchema } from '#cli/schemas/settings/fields.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function unwrapValueSchema(schema: z.ZodType | undefined): z.ZodType | undefined {

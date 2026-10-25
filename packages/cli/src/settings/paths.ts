@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { isTable } from '#cli/system/tables.ts';
-import { findSettingSchema } from '#cli/schemas/settings/file.ts';
+import { findSettingSchema } from '#cli/settings/schemas.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { PathVisitor } from '#cli/types/settings/inheritance.ts';
 

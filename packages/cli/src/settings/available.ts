@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { mergeValue } from '#cli/settings/inherit.ts';
+import { unwrapSettingSchema } from '#cli/settings/schemas.ts';
 import { SETTING_LANGUAGES } from '#cli/config/settings/naming.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
-import { unwrapSettingSchema } from '#cli/schemas/settings/fields.ts';
 import { LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
+import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/inheritance.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
@@ -18,7 +19,6 @@ import {
     OPENNEXT_PACKAGE,
     OVERRIDING_GROUPS,
     OPENNEXT_TYPE_DEFAULTS,
-    LANGUAGE_SETTING_FIELDS,
 } from '#cli/config/settings/available.ts';
 
 function getSchemaPathRole(schema: z.core.JSONSchema.JSONSchema): unknown {
@@ -67,7 +67,7 @@ function addConfigurationSettings(
     }
     const languageSettings = settings.filter((setting) => setting.language_defaults !== undefined);
     for (const setting of languageSettings) {
-        const [table, field] = setting.name.split('.', LANGUAGE_SETTING_FIELDS);
+        const [table, field] = setting.name.split('.', TABLE_KEY_SEGMENTS);
         const languageDefaults = setting.language_defaults as NonNullable<Setting['language_defaults']>;
         for (const [language, value] of Object.entries(languageDefaults))
             availableSettings.defaults.set(`${table as string}.${language}.${field as string}`, {

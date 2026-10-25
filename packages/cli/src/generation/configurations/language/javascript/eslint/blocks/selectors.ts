@@ -9,6 +9,7 @@ import { type SelectorGroup, type SelectorPaths } from '#cli/types/generation/es
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
 import {
+    REEXPORT_MESSAGE,
     REEXPORT_SELECTORS,
     ENVIRONMENT_SELECTOR,
     ALIAS_IMPORT_SELECTORS,
@@ -104,7 +105,7 @@ export function buildSelectorGroups(
             .toArray();
         if (level === 'all') {
             const except = reexports === 'index-only' ? [posix.join(prefix, '**/index.*')] : [];
-            applied.push(...REEXPORT_SELECTORS.map((selector) => ({ ...selector, except })));
+            applied.push(...REEXPORT_SELECTORS.map((selector) => ({ selector, message: REEXPORT_MESSAGE, except })));
         }
         applied.push(...listSettingSelectors(scope, level));
         return groupSelectors(applied).map((group) => ({

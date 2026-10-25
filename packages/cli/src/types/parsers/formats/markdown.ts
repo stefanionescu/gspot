@@ -1,1 +1,1 @@
-export type CodeFence = { language: string; meta: string; body: string; startLine: number; endLine: number };
+export type CodeFence = { language: string; attributes: string; body: string; startLine: number; endLine: number };

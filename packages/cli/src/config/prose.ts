@@ -22,4 +22,4 @@ export const PROSE_GRAMMARS: Readonly<Record<string, Omit<ProseRoute, 'path'> & 
     '.sql': { mode: 'path', extension: '.sql', format: 'lua' },
     '.pgsql': { mode: 'path', extension: '.pgsql', format: 'lua' },
     '.psql': { mode: 'path', extension: '.psql', format: 'lua' },
-} as const;
+};

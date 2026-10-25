@@ -4,11 +4,20 @@ export const ASSET_CONTENTS = 'Contents.json';
 
 export const XCASSETS_FOLDER = '.xcassets/';
 
-export const IMAGE_SET = '.imageset/Contents.json';
+export const IMAGE_SET = `.imageset/${ASSET_CONTENTS}`;
 
-export const ASSET_REFERENCE_ENDINGS = ['.swift', '.storyboard', '.xib', '.plist', PBXPROJ_NAME, '.xcconfig'] as const;
+export const PLIST_SUFFIX = '.plist';
 
-export const NAMED_SETS = [IMAGE_SET, '.colorset/Contents.json'] as const;
+export const ASSET_REFERENCE_ENDINGS = [
+    '.swift',
+    '.storyboard',
+    '.xib',
+    PLIST_SUFFIX,
+    PBXPROJ_NAME,
+    '.xcconfig',
+] as const;
+
+export const NAMED_SETS = [IMAGE_SET, `.colorset/${ASSET_CONTENTS}`] as const;
 
 export const ASSET_KIND_SUFFIX = /(?:Color|Image)$/u;
 
@@ -21,7 +30,5 @@ export const DEFAULT_SOURCE_LANGUAGE = 'en';
 export const ENTITLEMENTS_SUFFIX = '.entitlements';
 
 export const PLIST_KEY = /<key>(?<name>[^<]+)<\/key>/gu;
-
-export const PLIST_SUFFIX = '.plist';
 
 export const INSECURE_TRANSPORT_SETTING = /<key>NSAllowsArbitraryLoads<\/key>\s*<true\s*\/>/u;

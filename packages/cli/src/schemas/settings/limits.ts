@@ -4,7 +4,7 @@ import { allowReasonedValue } from '#cli/schemas/settings/fields.ts';
 import type { LimitSchemas } from '#cli/types/settings/definitions.ts';
 import { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';
 import { type WrittenLimits, type TableSettings } from '#cli/types/settings/file.ts';
-import { type LimitLanguage, type LanguageLimitField } from '#cli/types/settings/values.ts';
+import { type LimitFields, type LimitLanguage, type LanguageLimitField } from '#cli/types/settings/values.ts';
 
 const limitFields = Object.fromEntries(
     Object.entries(LIMIT_DEFINITIONS).map(([key, definition]) => [
@@ -19,7 +19,7 @@ const limitFields = Object.fromEntries(
     ]),
 ) as LimitSchemas;
 
-const languageLimitFields = z.strictObject(limitFields).partial();
+const languageLimitFields = z.strictObject(limitFields).partial() satisfies z.ZodType<LimitFields<number>>;
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in this file share it.
 function buildLanguageMask<Language extends LimitLanguage>(

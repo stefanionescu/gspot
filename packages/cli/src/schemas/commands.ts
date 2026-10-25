@@ -18,20 +18,20 @@ const overridesSchema = z.object({
 
 export const prettierSettingsSchema = prettierOptionsSchema.extend({
     overrides: overridesSchema.array().optional(),
-}) satisfies z.ZodType<PrettierOptions>;
+} satisfies SchemaShape<Pick<PrettierOptions, 'overrides'>>);
 
 const ruffQuotesSchema = z.looseObject({ 'quote-style': z.string().optional() } satisfies SchemaShape<
     NonNullable<RuffFormatSettings['format']>
 >);
-const ruffOptionsSchema = z.looseObject({ format: ruffQuotesSchema.optional() }) satisfies z.ZodType<
+const ruffOptionsSchema = z.looseObject({ format: ruffQuotesSchema.optional() } satisfies SchemaShape<
     NonNullable<NonNullable<RuffFormatSettings['tool']>['ruff']>
->;
+>);
 
 export const ruffFormatSchema = z.looseObject({
     format: ruffQuotesSchema.optional(),
     tool: z
         .looseObject({
             ruff: ruffOptionsSchema.optional(),
-        })
+        } satisfies SchemaShape<NonNullable<RuffFormatSettings['tool']>>)
         .optional(),
-}) satisfies z.ZodType<RuffFormatSettings>;
+} satisfies SchemaShape<RuffFormatSettings>);

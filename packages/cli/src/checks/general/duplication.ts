@@ -18,7 +18,7 @@ import { parseJsonFile, parseToolReport } from '#cli/parsers/formats/json.ts';
 import { cloneReportSchema } from '#cli/schemas/checks/general/duplication.ts';
 
 import {
-    JSCPD,
+    JSCPD_TOOL,
     JSCPD_ARGUMENTS,
     JSCPD_CONFIG_FILE,
     JSCPD_REPORT_FILE,
@@ -45,13 +45,13 @@ export async function checkDuplicationJscpd(session: Session, planned: PlannedCh
         ),
     );
     using files = openFiles(session.root);
-    const generatedPath = getConfigFilePath(session, planned, JSCPD);
+    const generatedPath = getConfigFilePath(session, planned, JSCPD_TOOL);
     const generated = files.read(generatedPath);
     if (generated === undefined) throw new GspotError('check', `Missing ${generatedPath}. Run gspot apply.`);
     const shipped = parseJsonFile(generatedPath, generated.bytes.toString('utf8'));
     const configFile = join(workFolder.path, JSCPD_CONFIG_FILE);
     writeFileSync(configFile, JSON.stringify({ ...shipped, path: [...owned].map((path) => join(session.root, path)) }));
-    const commandArguments = [JSCPD, '--config', configFile, ...JSCPD_ARGUMENTS, '--output', workFolder.path];
+    const commandArguments = [JSCPD_TOOL, '--config', configFile, ...JSCPD_ARGUMENTS, '--output', workFolder.path];
     const result = await runCheckTool(session, planned, commandArguments, { cwd: session.root });
     if (result.code !== 0) throw new Error(`The jscpd command failed: ${formatOutputTail(result)}`);
     let bytes: Buffer;
@@ -63,7 +63,7 @@ export async function checkDuplicationJscpd(session: Session, planned: PlannedCh
             cause: error,
         });
     }
-    const report = parseToolReport(JSCPD, bytes.toString('utf8'), cloneReportSchema);
+    const report = parseToolReport(JSCPD_TOOL, bytes.toString('utf8'), cloneReportSchema);
 
     // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
     const normalizeClonePath = (name: string): string =>

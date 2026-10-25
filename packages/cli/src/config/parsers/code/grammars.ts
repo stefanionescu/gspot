@@ -18,3 +18,5 @@ export const GRAMMAR_EXTENSIONS: Readonly<Record<string, readonly string[]>> = {
 };
 
 export const GRAMMAR_FILE_EXTENSION = '.wasm';
+
+export const GRAMMARS_FOLDER = 'grammars';

@@ -51,7 +51,7 @@ export const EXTENSION_TAGS: Readonly<Record<string, readonly string[]>> = {
     '.env': ['dotenv', 'text'],
     '.conf': ['text'],
     '.webmanifest': ['json', 'text'],
-} as const satisfies Readonly<Record<string, readonly string[]>>;
+};
 
 export const NOTICE_FILE = /^NOTICE(?:$|[.-])/iu;
 
@@ -60,11 +60,11 @@ export const LICENSE_TAGS = new Set(['text', 'markdown']);
 export const KIND_ORIGINS = {
     default: 'default',
     gspot: 'gspot',
-    buildWrapper: 'build wrapper',
+    buildLauncher: 'build wrapper',
     banner: 'banner',
     content: 'content',
     license: 'license',
-    directory: 'directory',
+    vendoredFolder: 'directory',
 } as const;
 
 export const BUILD_LAUNCHERS = new Set(['gradlew', 'gradlew.bat', 'mvnw', 'mvnw.cmd']);
@@ -121,7 +121,7 @@ export const SHEBANG_TAGS: Readonly<Record<string, readonly string[]>> = {
     shell: ['shell', 'executable', 'text'],
     python: ['python', 'executable', 'text'],
     node: ['javascript', 'node', 'executable', 'text'],
-} as const satisfies Readonly<Record<string, readonly string[]>>;
+};
 
 export const TEXT_TAG = 'text';
 

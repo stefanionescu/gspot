@@ -3,14 +3,14 @@ import { compareText } from '#cli/system/text.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { findSettingSchema } from '#cli/schemas/settings/file.ts';
 import { commandSchema } from '#cli/schemas/configurations/fields.ts';
-import { unwrapSettingSchema } from '#cli/schemas/settings/fields.ts';
+import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/inheritance.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, SettingsTable } from '#cli/types/settings/file.ts';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
+import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/schemas.ts';
 import { CATEGORY_PARENTS, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
-import { SETTING_TABLE_FIELDS, CATEGORY_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
+import { CATEGORY_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
 
 import {
     type Setting,
@@ -348,6 +348,6 @@ Get the table name of a setting: tools.<tool> for a tool setting, else the first
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function getSettingTable(key: string): string {
-    const [table, tool] = key.split('.', SETTING_TABLE_FIELDS);
+    const [table, tool] = key.split('.', TABLE_KEY_SEGMENTS);
     return table === 'tools' && tool !== undefined ? `${table}.${tool}` : (table as string);
 }

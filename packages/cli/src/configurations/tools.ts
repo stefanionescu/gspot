@@ -10,7 +10,7 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type {
     Tool,
     Check,
-    MisePin,
+    MiseToolPin,
     Configuration,
     ToolProjectPins,
     VersionedInstaller,
@@ -52,7 +52,7 @@ tool project needs it.
 @param configurations the configurations in use.
 @returns the name and version of each mise tool.
 */
-export function listMisePins(configurations: Configuration[]): MisePin[] {
+export function listMisePins(configurations: Configuration[]): MiseToolPin[] {
     const tools = listDistinctTools(configurations);
     const pins = tools.flatMap((tool) => findMisePin(tool) ?? []);
     if (
@@ -70,8 +70,8 @@ Get the mise pin that the shipped Python configuration declares for uv.
 @returns the uv installer pin.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function getUvPin(): MisePin {
-    return findMisePin(getTool(readConfigurations().values(), UV_TOOL)) as MisePin;
+export function getUvPin(): MiseToolPin {
+    return findMisePin(getTool(readConfigurations().values(), UV_TOOL)) as MiseToolPin;
 }
 
 /**
@@ -80,7 +80,7 @@ Find the mise pin of one tool: its version, its systems, and its backend options
 @param tool the tool to read.
 @returns the mise pin, or undefined when mise does not install the tool.
 */
-export function findMisePin(tool: Tool): MisePin | undefined {
+export function findMisePin(tool: Tool): MiseToolPin | undefined {
     const isExcluded = findToolProjectPackage(tool) !== undefined;
     const pin = isExcluded ? undefined : findMiseInstaller(tool);
     return pin === undefined

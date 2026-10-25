@@ -29,7 +29,7 @@ export const FENCE_PARSERS: Readonly<Record<string, FenceParser>> = {
     cjs: 'javascript',
     python: 'python',
     py: 'python',
-} as const;
+};
 
 export const JSON_FENCE_OPTIONS = { disallowComments: true, allowTrailingComma: false } as const;
 

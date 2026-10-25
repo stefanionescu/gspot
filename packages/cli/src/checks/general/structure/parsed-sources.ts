@@ -4,13 +4,14 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
+import { SCRIPT_TAG } from '#cli/config/repository/files/classify.ts';
 import type { ParsedSource, ParsedLanguage } from '#cli/types/checks/general/structure.ts';
 import { SOURCE_QUERIES, LANGUAGE_BY_EXTENSION } from '#cli/config/checks/general/structure/parsed-sources.ts';
 
 function detectLanguage(file: TrackedFile): ParsedLanguage | undefined {
     for (const [extension, language] of Object.entries(LANGUAGE_BY_EXTENSION))
         if (file.path.endsWith(extension)) return language;
-    return file.tags.includes('shell') ? 'bash' : undefined;
+    return file.tags.includes(SCRIPT_TAG) ? 'bash' : undefined;
 }
 
 function captureSource(source: ParsedSource): void {

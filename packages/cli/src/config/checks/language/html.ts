@@ -30,7 +30,7 @@ export const DOCUMENT_URL_ATTRIBUTES: Readonly<Record<string, readonly string[]>
     frame: ['src'],
     object: ['data'],
     embed: ['src'],
-} as const;
+};
 
 export const ACTIVE_DOCUMENT_TYPES = new Set(['text/html', 'application/xhtml+xml', 'image/svg+xml']);
 

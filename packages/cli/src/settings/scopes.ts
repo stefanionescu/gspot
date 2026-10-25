@@ -1,10 +1,11 @@
+import { findSettingSchema } from '#cli/settings/schemas.ts';
 import { getValueAt, createTable } from '#cli/system/tables.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
-import { findSettingSchema, rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import type { Settings, TableValues, TableSettings } from '#cli/types/settings/file.ts';
 import { isInScope, isScopeCovered, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { SETTING_LANGUAGES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';

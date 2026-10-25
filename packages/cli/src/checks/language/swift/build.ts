@@ -24,14 +24,14 @@ import {
     BUILD_LEVELS,
     MESSAGE_LINE,
     RESPONSE_FILE,
+    PERIPHERY_TOOL,
+    SWIFTLINT_TOOL,
     REPORTED_LEVELS,
     PERIPHERY_COMMAND,
     COMPILER_LOG_FLAG,
     MACOS_PRIVATE_PATH,
     SWIFTLINT_CONFIG_FILE,
-    PERIPHERY_CONFIG_FILE,
     SWIFTLINT_CONFIG_FLAG,
-    SWIFTLINT_CONFIG_NAME,
     SWIFTLINT_ANALYZE_COMMAND,
 } from '#cli/config/checks/language/swift/build.ts';
 
@@ -150,7 +150,7 @@ export async function checkSwiftSwiftlintAnalyze(session: Session, planned: Plan
     const plan = planSwiftBuild(session, planned, 'analyze');
     const build = await runSwiftBuild(session, planned, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
-    const configFile = join(session.root, getConfigFilePath(session, planned, SWIFTLINT_CONFIG_NAME));
+    const configFile = join(session.root, getConfigFilePath(session, planned, SWIFTLINT_TOOL));
     const commandArguments = [
         ...SWIFTLINT_ANALYZE_COMMAND,
         SWIFTLINT_CONFIG_FLAG,
@@ -175,7 +175,7 @@ Runs Periphery over the project and reports every declaration nothing uses.
 */
 export async function checkSwiftPeriphery(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const folder = getScopeBuildFolder(session.installedRoot, planned.scope.folder.path, 'periphery');
-    const configFile = join(session.root, getConfigFilePath(session, planned, PERIPHERY_CONFIG_FILE));
+    const configFile = join(session.root, getConfigFilePath(session, planned, PERIPHERY_TOOL));
     const commandArguments = [...PERIPHERY_COMMAND, configFile];
     const setup = prepareBuild(session.root, planned.files, folder);
     using files = setup.files;

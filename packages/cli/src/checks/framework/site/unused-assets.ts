@@ -6,7 +6,8 @@ import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { FILENAME_TAGS } from '#cli/config/repository/files/classify.ts';
-import { ASSET_FOLDER, TEXT_SUFFIXES, REGULAR_FILE_MODES } from '#cli/config/checks/framework/site/unused-assets.ts';
+import { SYMLINK_MODE, GIT_FILE_MODES } from '#cli/config/files/modes.ts';
+import { ASSET_FOLDER, TEXT_SUFFIXES } from '#cli/config/checks/framework/site/unused-assets.ts';
 
 /**
 Reports each asset that no text file in the scope or the index names.
@@ -20,7 +21,12 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
     const paths = new Set([
         ...local,
         ...session.repository.index
-            .filter((indexFile) => indexFile.stage === 0 && REGULAR_FILE_MODES.has(indexFile.mode))
+            .filter(
+                (indexFile) =>
+                    indexFile.stage === 0 &&
+                    indexFile.mode !== SYMLINK_MODE &&
+                    Object.hasOwn(GIT_FILE_MODES, indexFile.mode),
+            )
             .map((indexFile) => indexFile.path),
     ]);
     const texts = paths

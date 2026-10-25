@@ -1,8 +1,8 @@
 import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
+import { RECORD_FIELDS } from '#cli/settings/schemas.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { RECORD_FIELDS } from '#cli/schemas/settings/file.ts';
 import { parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import type { ParsedFormat } from '#cli/types/settings/values.ts';
 import { parseTomlText, isReasonedValue } from '#cli/settings/file.ts';

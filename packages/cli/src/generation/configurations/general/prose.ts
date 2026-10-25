@@ -3,6 +3,7 @@ import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/session.ts';
+import { PROSE_GRAMMARS } from '#cli/config/prose.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 
@@ -10,7 +11,6 @@ import {
     ACRONYMS,
     BLOCK_IGNORES,
     LENGTH_STYLES,
-    PROSE_FORMATS,
     TOKEN_IGNORES,
     VALE_PACKAGES,
     VALE_OFF_RULES,
@@ -85,6 +85,9 @@ export function buildValeIniFile(planned: PlannedConfigFile): string {
         (name) =>
             `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${VALE_PACKAGE_RELEASES[name].version}/${name}.zip`,
     );
+    const formats = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
+        'format' in grammar ? [[extension.slice(1), grammar.format] as const] : [],
+    );
     const lines = [
         ...(isAll ? ['# Vale reads both StylesPath lines in order and installs packages in the last folder.'] : []),
         ...styles.map((path) => `StylesPath = ${path}`),
@@ -93,7 +96,7 @@ export function buildValeIniFile(planned: PlannedConfigFile): string {
         ...(isAll ? [`Packages = ${packages.join(', ')}`, 'Vocab = words'] : []),
         '',
         '[formats]',
-        ...PROSE_FORMATS.map(([extension, format]) => `${extension} = ${format}`),
+        ...formats.map(([extension, format]) => `${extension} = ${format}`),
         '',
         '[*]',
         `BasedOnStyles = ${(isAll ? ['gspot', 'Vale', ...VALE_PACKAGES] : ['gspot']).join(', ')}`,
@@ -104,7 +107,7 @@ export function buildValeIniFile(planned: PlannedConfigFile): string {
         'gspot.alt-text = NO',
         ...(isAll ? VALE_MARKUP_RULES.map((rule) => `${rule} = NO`) : []),
         '',
-        `[*.{${PROSE_FORMATS.map(([extension]) => extension).join(',')}}]`,
+        `[*.{${formats.map(([extension]) => extension).join(',')}}]`,
         'BasedOnStyles =',
         ...VALE_COMMENT_RULES.map((rule) => `${rule} = YES`),
         '',

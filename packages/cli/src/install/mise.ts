@@ -22,14 +22,13 @@ import { redactInstallOutput } from '#cli/install/credentials.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { MISE_LOCK_FILE, MISE_CONFIG_FILE } from '#cli/config/files/names.ts';
 import { MISE_TOOL, MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/locate.ts';
 import { miseProjectSchema, miseLockfileSchema } from '#cli/schemas/install/mise.ts';
 import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/configurations/tools.ts';
 
 import {
     MISE_URL_LINE,
-    MISE_LOCK_FILE,
-    MISE_CONFIG_FILE,
     MISE_CHECKSUM_LINE,
     MISE_ARCHIVE_LIMIT,
     MISE_LOCK_ARGUMENTS,

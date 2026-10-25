@@ -7,11 +7,11 @@ import { rulesSchema } from '#cli/schemas/settings/rules.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
+import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { SETTINGS_EXAMPLES, NAMED_FINDING_CHECKS } from '#cli/config/settings/file.ts';
 import { levelSchema, commandCheckFields } from '#cli/schemas/configurations/fields.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools/tables.ts';
-import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { type WrittenScope, type ParsedSettings, type WrittenSettings } from '#cli/types/settings/file.ts';
 
 import {
@@ -21,10 +21,9 @@ import {
     relativePaths,
     localDateSchema,
     allowReasonedValue,
-    unwrapSettingSchema,
 } from '#cli/schemas/settings/fields.ts';
 
-const ignoreSchema = z
+export const ignoreSchema = z
     .strictObject({
         check: z.string().optional().describe(SETTING_DEFINITIONS['ignore.check'].description),
         rule: z.string().optional().describe(SETTING_DEFINITIONS['ignore.rule'].description),
@@ -56,7 +55,7 @@ const ignoreSchema = z
             });
     });
 
-const commandCheckSchema = z.strictObject({
+export const commandCheckSchema = z.strictObject({
     id: z.string().min(1).describe(SETTING_DEFINITIONS['command_check.id'].description),
     command: commandCheckFields.command.unwrap().meta(SETTING_DEFINITIONS['command_check.command']),
     paths: nonemptyPaths.meta(SETTING_DEFINITIONS['command_check.paths']),
@@ -154,7 +153,7 @@ export const scopeSchema = z.strictObject({
     removed_configurations: allowReasonedValue(z.string().array(), SETTING_DEFINITIONS['scope.removed_configurations']),
     test_files: relativePath.array().optional().describe(SETTING_DEFINITIONS['scope.test_files'].description),
     ...scopeBody,
-}) satisfies z.ZodType<NonNullable<ParsedSettings['scope']>[number], WrittenScope>;
+} satisfies SchemaShape<NonNullable<ParsedSettings['scope']>[number], WrittenScope>);
 
 export const rootSettingSchemas = {
     level: levelSchema.default(SETTING_DEFINITIONS['level'].default).meta(SETTING_DEFINITIONS['level']),
@@ -226,53 +225,3 @@ export const settingsSchema = z
         }
     })
     .meta({ examples: SETTINGS_EXAMPLES }) satisfies z.ZodType<ParsedSettings, WrittenSettings>;
-
-export const RECORD_FIELDS: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
-    Object.entries({
-        scope: scopeSchema.pick({
-            path: true,
-            configurations: true,
-            removed_configurations: true,
-            test_files: true,
-        }).shape,
-        command_check: commandCheckSchema.shape,
-        ignore: ignoreSchema.shape,
-        import_rule: importRulesSchema.unwrap().element.shape,
-        'format.override': formatSchema.shape.override.unwrap().element.shape,
-        'naming.override': namingSchema.shape.override.unwrap().element.shape,
-        'coverage.swift_target': configurationTableSchemas.coverage.unwrap().shape.swift_target.unwrap().element.shape,
-        'licenses.allowed_package': configurationTableSchemas.licenses.unwrap().shape.allowed_package.unwrap().element
-            .shape,
-        'site.size_limit': configurationTableSchemas.site.unwrap().shape.size_limit.unwrap().element.shape,
-        'tools.eslint.override': publicToolsSchema.shape.eslint.unwrap().shape.override.unwrap().element.shape,
-        'tools.v8r.schema': publicToolsSchema.shape.v8r.unwrap().shape.schema.unwrap().element.shape,
-    }).map(([name, fields]) => [name, Object.keys(fields)]),
-);
-
-const schemas = new Map<string, z.ZodType>(Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }));
-const toolSchemas = new Map<string, z.ZodType>(Object.entries(publicToolsSchema.shape));
-const configurationSchemas = new Map<string, z.ZodType>(Object.entries(configurationTableSchemas));
-
-/**
-Locate one setting in the root, configuration, and tool schemas.
-
-@param key the dotted setting name.
-@returns its schema, or undefined when the key names no setting.
-*/
-export function findSettingSchema(key: string): z.ZodType | undefined {
-    const direct = schemas.get(key);
-    if (direct !== undefined) return direct;
-    const segments = key.split('.');
-    const table = segments.shift();
-    let schema: z.ZodType | undefined;
-    if (table === 'tools') {
-        const tool = segments.shift();
-        schema = toolSchemas.get(tool ?? '');
-    } else schema = configurationSchemas.get(table ?? '');
-    for (const segment of segments) {
-        if (schema !== undefined) schema = unwrapSettingSchema(schema);
-        if (!(schema instanceof z.ZodObject)) return undefined;
-        schema = schema.shape[segment] as z.ZodType | undefined;
-    }
-    return schema;
-}

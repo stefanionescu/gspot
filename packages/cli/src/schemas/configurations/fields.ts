@@ -7,9 +7,9 @@ import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.t
 import { MAX_EXIT_CODE, DEFAULT_OUTPUT_FORMAT } from '#cli/config/configurations/fields.ts';
 import type { Level, Stage, ParsedCheck, ConditionFields } from '#cli/types/configurations.ts';
 
-const findingExitCodesSchema = z.number().int().min(1).max(MAX_EXIT_CODE).array();
+const findingExitCodesSchema = z.number().int().min(1).max(MAX_EXIT_CODE).array() satisfies z.ZodType<number[]>;
 
-export const nonemptyString = z.string().min(1);
+export const nonemptyString = z.string().min(1) satisfies z.ZodType<string>;
 
 export const checkStageSchema = z.enum(STAGES) satisfies z.ZodType<Stage>;
 
@@ -18,7 +18,7 @@ export const commandSchema = z
     .array()
     .min(1)
     .refine((command) => command[0] !== '', { message: 'The executable cannot be empty.', path: [0] })
-    .meta({ prefixItems: [{ type: 'string', minLength: 1 }] });
+    .meta({ prefixItems: [{ type: 'string', minLength: 1 }] }) satisfies z.ZodType<string[]>;
 
 export const regexSchema = z.string().superRefine((pattern, context) => {
     try {
@@ -26,7 +26,7 @@ export const regexSchema = z.string().superRefine((pattern, context) => {
     } catch {
         context.addIssue({ code: 'custom', message: 'Use a valid Unicode regular expression.' });
     }
-});
+}) satisfies z.ZodType<string>;
 
 export const levelSchema = z.enum(LEVELS) satisfies z.ZodType<Level>;
 

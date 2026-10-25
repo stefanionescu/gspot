@@ -8,7 +8,7 @@ export const INDEX_PAGE = 'index.html';
 
 export const HTML_EXTENSION = '.html';
 
-export const LYCHEE = 'lychee';
+export const LYCHEE_TOOL = 'lychee';
 
 export const LYCHEE_ARGUMENTS = [
     '--offline',
@@ -22,7 +22,7 @@ export const LYCHEE_ARGUMENTS = [
     '--no-progress',
 ] as const;
 
-export const HTML_VALIDATE = 'html-validate';
+export const HTML_VALIDATE_TOOL = 'html-validate';
 
 export const HTML_VALIDATE_CONFIG_FLAG = '--config';
 

@@ -12,8 +12,8 @@ import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 import { CHECK_LIST_SEPARATOR } from '#cli/config/commands/check/check.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { compareText, quoteCommand, quoteArgument } from '#cli/system/text.ts';
-import type { Pipeline, Lockfile, ActionPin } from '#cli/types/generation/ci.ts';
 import { getUvPin, findMisePin, findMissingBuild } from '#cli/configurations/tools.ts';
+import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation/ci.ts';
 import { TOOL_BUILDS, NEXTJS_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
 import type { PackageManager, PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
@@ -262,7 +262,7 @@ function readProjectPackageManager(session: Session, scope: string, name: Packag
     return readPackageManagerVersion(session.installedRoot, pin, session.timeoutSeconds, session.reads);
 }
 
-function buildFrozenInstall(session: Session, scope: string, lockfile: Lockfile): readonly string[] {
+function buildFrozenInstall(session: Session, scope: string, lockfile: FrozenLockfile): readonly string[] {
     const command = FROZEN_INSTALLS[lockfile];
     const name = PACKAGE_MANAGERS.find((tool) => tool === command[0]);
     const runner = name === undefined ? getUvPin() : readProjectPackageManager(session, scope, name);
@@ -282,7 +282,7 @@ List the tracked lockfiles of the root and of each scope, which CI installs from
 export function listProjectLockfiles(session: Session): string[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
     return session.scopes.flatMap(({ folder }) =>
-        (Object.keys(FROZEN_INSTALLS) as Lockfile[])
+        (Object.keys(FROZEN_INSTALLS) as FrozenLockfile[])
             .map((lockfile) => joinScope(folder.path, lockfile))
             .filter((path) => tracked.has(path)),
     );
@@ -298,7 +298,7 @@ Next.js project, which typed lint rules read.
 export function listProjectInstallLines(session: Session): string[] {
     const lockfiles = new Set(listProjectLockfiles(session));
     return session.scopes.flatMap(({ folder, configurations }) => {
-        const installs = (Object.keys(FROZEN_INSTALLS) as Lockfile[])
+        const installs = (Object.keys(FROZEN_INSTALLS) as FrozenLockfile[])
             .filter((lockfile) => lockfiles.has(joinScope(folder.path, lockfile)))
             .map((lockfile) => quoteCommand(buildFrozenInstall(session, folder.path, lockfile)));
         const isNext = configurations.some((configuration) => configuration.name === NEXTJS_CONFIGURATION);

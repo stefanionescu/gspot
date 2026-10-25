@@ -13,7 +13,7 @@ import {
 } from '#cli/types/system/processes.ts';
 import {
     GIT_LOCALE,
-    GIT_EXECUTABLE,
+    GIT_PROGRAM,
     GIT_DIR_VARIABLE,
     TRAILING_NEWLINE,
     GIT_CLONE_COMMAND,
@@ -42,7 +42,7 @@ function readInheritedGitEnvironment(origin: string): GitLookup {
             return value === undefined ? [] : [[name, resolve(origin, value)]];
         }),
     );
-    const source = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_SOURCE_ARGUMENTS], {
+    const source = spawnProcessBlocking([GIT_PROGRAM, ...GIT_SOURCE_ARGUMENTS], {
         cwd: origin,
         env,
     });
@@ -55,7 +55,7 @@ function readInheritedGitEnvironment(origin: string): GitLookup {
         readEnvironmentVariable(GIT_DIR_VARIABLE) !== undefined &&
         readEnvironmentVariable(GIT_WORK_TREE_VARIABLE) === undefined
     ) {
-        const worktree = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_TOP_LEVEL_ARGUMENTS], {
+        const worktree = spawnProcessBlocking([GIT_PROGRAM, ...GIT_TOP_LEVEL_ARGUMENTS], {
             cwd: origin,
             env,
         });
@@ -67,7 +67,7 @@ function readInheritedGitEnvironment(origin: string): GitLookup {
 
 function readFolderGitEnvironment(root: string, source: GitRepository, environment: GitVariableGroups): GitEnvironment {
     const { isolated, overrides, explicit } = environment;
-    const target = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_FOLDER_ARGUMENTS], {
+    const target = spawnProcessBlocking([GIT_PROGRAM, ...GIT_FOLDER_ARGUMENTS], {
         cwd: root,
         env: { ...isolated, ...overrides, ...GIT_LOCALE },
     });
@@ -100,7 +100,7 @@ export function readGitEnvironment(
         return { env: explicit };
     const origin = process.cwd();
     if (inheritedGit === undefined) {
-        const listed = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_LOCAL_VARIABLES_ARGUMENTS], {
+        const listed = spawnProcessBlocking([GIT_PROGRAM, ...GIT_LOCAL_VARIABLES_ARGUMENTS], {
             cwd: origin,
             env: {},
         });
@@ -114,7 +114,7 @@ export function readGitEnvironment(
     const { localVariables } = inheritedGit;
     if (localVariables.every((name) => readEnvironmentVariable(name) === undefined)) return { env: explicit };
     const isolated = Object.fromEntries(localVariables.map((name) => [name, undefined]));
-    if ([GIT_EXECUTABLE, GIT_CLONE_COMMAND].every((word, index) => command[index] === word))
+    if ([GIT_PROGRAM, GIT_CLONE_COMMAND].every((word, index) => command[index] === word))
         return { env: { ...isolated, ...explicit } };
     const overrides = Object.fromEntries(
         Object.entries(explicit).filter(([name]) => !localVariables.includes(foldVariableName(name))),
@@ -138,7 +138,7 @@ export function runGitBlocking(
     commandArguments: readonly string[],
     options: Omit<SpawnOptions, 'cwd' | 'timeoutSeconds'> = {},
 ): SpawnResult {
-    const command = [GIT_EXECUTABLE, ...commandArguments];
+    const command = [GIT_PROGRAM, ...commandArguments];
     const selected = readGitEnvironment(workingFolder, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
     return spawnProcessBlocking(command, { ...options, env: selected.env, cwd: workingFolder });
@@ -157,7 +157,7 @@ export async function runGit(
     commandArguments: readonly string[],
     options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<SpawnResult> {
-    const command = [GIT_EXECUTABLE, ...commandArguments];
+    const command = [GIT_PROGRAM, ...commandArguments];
     const selected = readGitEnvironment(workingFolder, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
     return spawnProcess(command, { ...options, env: selected.env, cwd: workingFolder });
@@ -178,7 +178,7 @@ export async function runGitStream(
     options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
     read: StdoutReader,
 ): Promise<SpawnResult> {
-    const command = [GIT_EXECUTABLE, ...commandArguments];
+    const command = [GIT_PROGRAM, ...commandArguments];
     const selected = readGitEnvironment(workingFolder, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
     return streamProcess(command, { ...options, env: selected.env, cwd: workingFolder }, read);

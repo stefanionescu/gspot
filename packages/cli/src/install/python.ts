@@ -13,7 +13,6 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
-import { HTTP_URL } from '#cli/config/install/npm/lockfiles.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -29,6 +28,7 @@ import { uvSettingsSchema, toolPyprojectSchema, uvProjectSettingsSchema } from '
 import { redactInstallOutput, extractUrlPasswords, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
 
 import {
+    HTTP_URL,
     URL_SCHEME,
     INDEX_SETTINGS,
     UV_SETTINGS_FILE,

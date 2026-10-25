@@ -15,7 +15,7 @@ export const GIT_COMMAND_CONFIGURATION: ReadonlySet<string> = new Set(['GIT_CONF
 
 export const GIT_CLONE_COMMAND = 'clone';
 
-export const GIT_EXECUTABLE = 'git';
+export const GIT_PROGRAM = 'git';
 
 export const NOT_REPOSITORY_CODE = 128;
 

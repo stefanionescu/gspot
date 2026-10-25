@@ -16,7 +16,7 @@ import type {
     OwnedConfigFile,
     OwnedSourceFile,
     ConfigFileGeneration,
-    GeneratedConfigFiles,
+    ConfigFileBuildState,
 } from '#cli/types/generation/files.ts';
 
 const configFilesKey: CacheKey<Map<Repository, ConfigFileGeneration>> = { create: () => new Map() };
@@ -38,7 +38,7 @@ export function getConfigFiles(session: Session): ConfigFileGeneration {
 function buildOwnedOutput(
     each: OwnedSourceFile,
     ownedFiles: OwnedSourceFile[],
-    generated: GeneratedConfigFiles,
+    generated: ConfigFileBuildState,
 ): BuiltConfigFile[] {
     try {
         return [{ ...each, ...buildConfigFile(each, each.configFile.target, generated.targets) }];
@@ -54,7 +54,7 @@ function buildOwnedOutput(
     }
 }
 
-function groupToolOutputs(ownedFiles: OwnedSourceFile[], generated: GeneratedConfigFiles): BuiltConfigFile[][] {
+function groupToolOutputs(ownedFiles: OwnedSourceFile[], generated: ConfigFileBuildState): BuiltConfigFile[][] {
     const owners = ownedFiles[0]?.configFile.per_scope === true ? ownedFiles : ownedFiles.slice(0, 1);
     const outputs = owners.flatMap((each) => buildOwnedOutput(each, ownedFiles, generated));
     return Map.groupBy(outputs, ({ file }) => file.content)
@@ -67,7 +67,7 @@ function groupToolOutputs(ownedFiles: OwnedSourceFile[], generated: GeneratedCon
         );
 }
 
-function addToolOutput(target: string, group: BuiltConfigFile[], index: number, generated: GeneratedConfigFiles): void {
+function addToolOutput(target: string, group: BuiltConfigFile[], index: number, generated: ConfigFileBuildState): void {
     const [first] = group as [BuiltConfigFile, ...BuiltConfigFile[]];
     const written = index === 0 ? target : buildPerScopeTarget(first.configFile, first.owner.scope.folder.path);
     const { file, companions } = written === target ? first : buildConfigFile(first, written, generated.targets);
@@ -80,7 +80,7 @@ function addToolOutput(target: string, group: BuiltConfigFile[], index: number, 
     }
 }
 
-function buildSourceFiles(configFiles: OwnedConfigFile[], generated: GeneratedConfigFiles): void {
+function buildSourceFiles(configFiles: OwnedConfigFile[], generated: ConfigFileBuildState): void {
     const sourced = configFiles.filter((each): each is OwnedSourceFile => each.configFile.source !== undefined);
     const sources = Map.groupBy(sourced, ({ configFile }) => configFile.target);
     for (const [declared, ownedFiles] of sources) {
@@ -105,7 +105,7 @@ function listPointerOnlyPaths(configFiles: OwnedConfigFile[], selected: OwnedCon
 function addPointerFiles(
     selected: OwnedConfigFile,
     configFiles: OwnedConfigFile[],
-    generated: GeneratedConfigFiles,
+    generated: ConfigFileBuildState,
 ): void {
     const { configFile, owner } = selected;
     if (isMarkdownlintShared(selected, configFiles)) return;
@@ -123,7 +123,7 @@ function addPointerFiles(
 
 function buildConfigFiles(session: Session): ConfigFileGeneration {
     const configFiles = listOwnedConfigFiles(session);
-    const state: GeneratedConfigFiles = { targets: new Map(), files: new Map(), failures: new Map() };
+    const state: ConfigFileBuildState = { targets: new Map(), files: new Map(), failures: new Map() };
     buildSourceFiles(configFiles, state);
     for (const configFile of configFiles)
         if (state.failures.get(configFile.owner.scope.folder.path)?.has(configFile.configFile.target) !== true)

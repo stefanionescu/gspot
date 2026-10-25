@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import semver from 'semver';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { PACKAGE_MANAGERS } from '#cli/config/repository/npm.ts';
 import { type PackageManager, type PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
 
@@ -13,8 +14,8 @@ const exactVersionSchema = z
 export const packageManagerPinSchema = z.strictObject({
     name: z.enum(PACKAGE_MANAGERS),
     version: z.string().optional(),
-}) satisfies z.ZodType<PackageManagerPin>;
+} satisfies SchemaShape<PackageManagerPin>);
 
 export const packageManagerSchema = packageManagerPinSchema.extend({
     version: exactVersionSchema,
-}) satisfies z.ZodType<PackageManager>;
+} satisfies SchemaShape<Pick<PackageManager, 'version'>>);

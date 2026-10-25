@@ -21,15 +21,14 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import type { SitemapUrls } from '#cli/types/checks/framework/site.ts';
 import { purgecssReportSchema } from '#cli/schemas/checks/framework/site.ts';
-import { PURGECSS } from '#cli/config/checks/framework/site/purgecss-process.ts';
+import { PURGECSS_TOOL } from '#cli/config/checks/framework/site/purgecss-process.ts';
 import { listBuiltFiles, getSuccessfulBuild } from '#cli/checks/framework/site/build.ts';
 
 import {
-    LYCHEE,
     INDEX_PAGE,
+    LYCHEE_TOOL,
     SITEMAP_FILE,
     CSS_EXTENSION,
-    HTML_VALIDATE,
     HTML_EXTENSION,
     PURGECSS_CONTENT,
     PURGECSS_PROCESS,
@@ -37,6 +36,7 @@ import {
     LYCHEE_ARGUMENTS,
     SITEMAP_LOCATION,
     SITEMAP_EXTENSION,
+    HTML_VALIDATE_TOOL,
     HTML_VALIDATE_CONFIG_FLAG,
     HTML_VALIDATE_FORMATTER_FLAG,
 } from '#cli/config/checks/framework/site/pages.ts';
@@ -121,7 +121,7 @@ export async function checkSiteLychee(session: Session, planned: PlannedCheck): 
     const paths = [...pages].filter((path) => path.endsWith(HTML_EXTENSION));
     if (paths.length === 0) return [];
     const command = [
-        LYCHEE,
+        LYCHEE_TOOL,
         ...LYCHEE_ARGUMENTS,
         '--root-dir',
         build.folder,
@@ -136,7 +136,7 @@ export async function checkSiteLychee(session: Session, planned: PlannedCheck): 
         const parsed = assertToolFindings(
             result,
             parseOutput(planned.check, result.stdout, result.stderr, { root: build.folder, cwd: build.folder }),
-            LYCHEE,
+            LYCHEE_TOOL,
         );
         findings.push(...parsed.map((finding) => ({ ...finding, file: joinBuildFolder(planned, finding.file) })));
     }
@@ -156,10 +156,10 @@ export async function checkSiteHtmlValidate(session: Session, planned: PlannedCh
         .filter((path) => path.endsWith(HTML_EXTENSION))
         .map((path) => join(build.folder, path));
     if (pages.length === 0) return [];
-    const configFile = join(session.root, getConfigFilePath(session, planned, HTML_VALIDATE));
+    const configFile = join(session.root, getConfigFilePath(session, planned, HTML_VALIDATE_TOOL));
     using reports = createTemporaryFolder();
     const command = [
-        HTML_VALIDATE,
+        HTML_VALIDATE_TOOL,
         HTML_VALIDATE_CONFIG_FLAG,
         configFile,
         HTML_VALIDATE_FORMATTER_FLAG,
@@ -196,11 +196,11 @@ export async function checkSitePurgecss(session: Session, planned: PlannedCheck)
     const build = await getSuccessfulBuild(session, planned);
     const sheets = listBuiltFiles(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
     if (sheets.length === 0) return [];
-    const configFile = join(session.root, getConfigFilePath(session, planned, PURGECSS));
+    const configFile = join(session.root, getConfigFilePath(session, planned, PURGECSS_TOOL));
     const result = await runCheckTool(
         session,
         planned,
-        { tool: PURGECSS, modulePath: PURGECSS_PROCESS },
+        { tool: PURGECSS_TOOL, modulePath: PURGECSS_PROCESS },
         { cwd: build.folder, stdin: JSON.stringify({ configFile, css: sheets, content: PURGECSS_CONTENT }) },
     );
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);

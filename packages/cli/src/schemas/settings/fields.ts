@@ -22,10 +22,10 @@ import {
     FORMAT_OVERRIDE_MIN_FIELDS,
 } from '#cli/config/settings/fields.ts';
 
-export const nonemptyStrings = nonemptyString.array();
+export const nonemptyStrings = nonemptyString.array() satisfies z.ZodType<string[]>;
 
-export const nonnegativeInteger = z.number().int().nonnegative();
-export const percentage = z.number().min(0).max(MAX_PERCENTAGE);
+export const nonnegativeInteger = z.number().int().nonnegative() satisfies z.ZodType<number>;
+export const percentage = z.number().min(0).max(MAX_PERCENTAGE) satisfies z.ZodType<number>;
 
 const formatFields = z.strictObject({
     indent_style: z
@@ -79,11 +79,11 @@ export const relativePath = z
         /^(?!!?\/)(?![\s\S]*(?:^!?|\/)\.\.(?:\/|$))(?:[^\\:\p{Cc}]|\\[()[\]{}*?!+@,])+$/u,
         'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
     )
-    .meta({ path_role: 'source' });
+    .meta({ path_role: 'source' }) satisfies z.ZodType<string>;
 
-export const destinationPath = relativePath.meta({ path_role: 'destination' });
-export const relativePaths = relativePath.array();
-export const nonemptyPaths = relativePaths.min(1);
+export const destinationPath = relativePath.meta({ path_role: 'destination' }) satisfies z.ZodType<string>;
+export const relativePaths = relativePath.array() satisfies z.ZodType<string[]>;
+export const nonemptyPaths = relativePaths.min(1) satisfies z.ZodType<string[]>;
 
 export const namingCategorySchema = z.strictObject({
     max_characters: allowReasonedValue(z.number().int().positive(), SETTING_DEFINITIONS['naming.max_characters']),
@@ -93,12 +93,12 @@ export const namingCategorySchema = z.strictObject({
 
 namingCategorySchema.register(z.globalRegistry, { id: 'namingCategory' });
 
-export const calendarDateSchema = z.iso.date();
+export const calendarDateSchema = z.iso.date() satisfies z.ZodType<string>;
 
 export const localDateSchema = z.custom<LocalDate>(
     (value) => value instanceof LocalDate && calendarDateSchema.safeParse(value.toISOString()).success,
     { error: 'Use an unquoted TOML local date in YYYY-MM-DD form, without a time or offset.' },
-);
+) satisfies z.ZodType<LocalDate>;
 
 const formatOverrideSchema = z
     .strictObject({
@@ -165,17 +165,4 @@ export function allowReasonedValue<Output, Input>(
         ])
         .default(definition.default)
         .meta(definition);
-}
-
-/**
-Remove optional and default wrappers to inspect the shape of a setting.
-
-@param schema the validator to inspect.
-@returns the inner validator.
-*/
-export function unwrapSettingSchema(schema: z.ZodType): z.ZodType {
-    let inner = schema;
-    while (inner instanceof z.ZodOptional || inner instanceof z.ZodDefault || inner instanceof z.ZodPrefault)
-        inner = inner.unwrap() as z.ZodType;
-    return inner;
 }

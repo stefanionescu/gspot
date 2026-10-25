@@ -4,14 +4,8 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
-import { GRAMMARS_FOLDER } from '#cli/config/system/assets.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 
-import {
-    GRAMMAR_EXTENSIONS,
-    GRAMMAR_CONFIGURATIONS,
-    GRAMMAR_FILE_EXTENSION,
-} from '#cli/config/parsers/code/grammars.ts';
 import type {
     ParseCache,
     SourceTree,
@@ -19,6 +13,12 @@ import type {
     ParserGrammars,
     GrammarSourceFiles,
 } from '#cli/types/parsers/code/grammars.ts';
+import {
+    GRAMMARS_FOLDER,
+    GRAMMAR_EXTENSIONS,
+    GRAMMAR_CONFIGURATIONS,
+    GRAMMAR_FILE_EXTENSION,
+} from '#cli/config/parsers/code/grammars.ts';
 
 const PARSED_TREES = { create: () => new Map<string, Tree>() };
 

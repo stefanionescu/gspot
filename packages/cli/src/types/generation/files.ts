@@ -85,17 +85,10 @@ export type BuiltConfigFile = OwnedSourceFile & {
     companions: GeneratedFile[];
 };
 
-export type GeneratedConfigFiles = {
+export type ConfigFileBuildState = {
     targets: Map<string, Map<string, string>>;
     files: Map<string, GeneratedFile>;
     failures: Map<string, Map<string, Error>>;
 };
 
 export type UsedNames = { tools: Set<string>; checks: Set<string> };
-
-export type StylelintComponent = {
-    files: readonly string[];
-    customSyntax: string;
-    ignorePseudoClasses: readonly string[];
-    functions?: readonly string[];
-};
