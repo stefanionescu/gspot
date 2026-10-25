@@ -1,3 +1,5 @@
+import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
+
 export const PACKAGE_MANAGER_TIMEOUT = {
     code: 1,
     missing: false,
@@ -24,6 +26,13 @@ export const PACKAGE_MANAGER_AGE_CASES = [
     { name: 'yarn', version: '4.10.0', minimum: '4.10.0', accepted: true },
 ];
 
-export const CREDENTIAL_TOKEN = 'synthetic-generated-lockfile-token';
+const CREDENTIAL_TOKEN = 'synthetic-generated-lockfile-token';
 
 export const CREDENTIAL_NPMRC = `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${CREDENTIAL_TOKEN}\n`;
+
+export const CREDENTIAL_PACKAGE_JSON = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
+
+export const CREDENTIAL_LOCKFILE = JSON.stringify({
+    workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
+    packages: { prettier: ['prettier@3.8.1', `https://registry.example.com/${CREDENTIAL_TOKEN}`, {}, 'integrity'] },
+});

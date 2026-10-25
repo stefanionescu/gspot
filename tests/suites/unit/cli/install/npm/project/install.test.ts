@@ -17,9 +17,15 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
 import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/install/npm/project.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/install/npm/project.ts';
-import { CREDENTIAL_NPMRC, CREDENTIAL_TOKEN, FAILED_INSTALL_CASES } from '#tests/config/install/npm/project.ts';
 
-async function openCredentialProject(root: string, packageJson: string, lockfile: string) {
+import {
+    CREDENTIAL_NPMRC,
+    CREDENTIAL_LOCKFILE,
+    FAILED_INSTALL_CASES,
+    CREDENTIAL_PACKAGE_JSON,
+} from '#tests/config/install/npm/project.ts';
+
+async function prepareCredentialProject(root: string, packageJson: string, lockfile: string) {
     const files = {
         '.npmrc': CREDENTIAL_NPMRC,
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
@@ -29,7 +35,12 @@ async function openCredentialProject(root: string, packageJson: string, lockfile
         'gspot.toml': buildSandboxSettings([]),
     };
     await createFileTree(root, files);
-    return { files, session: await openSession(root) };
+    using owner = openWriter(root);
+    const install = buildToolInstall(await openSession(root), owner) as NpmToolInstall;
+    const error = await captureRejection(
+        prepareNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: CREDENTIAL_PACKAGE_JSON }, undefined),
+    );
+    return { files, error };
 }
 
 test.each([...FAILED_INSTALL_CASES])(
@@ -114,20 +125,7 @@ test('an npm install that runs past the time limit names the limit', async () =>
 
 test('a cached lockfile that holds registry credentials is refused and the files stay', async () => {
     await using sandbox = await testdir();
-    const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
-    const lockfile = JSON.stringify({
-        workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
-        packages: { prettier: ['prettier@3.8.1', `https://registry.example.com/${CREDENTIAL_TOKEN}`, {}, 'integrity'] },
-    });
-    const { files, session } = await openCredentialProject(sandbox.path, packageJson, lockfile);
-    using owner = openWriter(sandbox.path);
-    const error = await captureRejection(
-        prepareNpmLockfile(
-            buildToolInstall(session, owner) as NpmToolInstall,
-            { path: GSPOT_PATHS.npmProject, content: packageJson },
-            undefined,
-        ),
-    );
+    const { files, error } = await prepareCredentialProject(sandbox.path, CREDENTIAL_PACKAGE_JSON, CREDENTIAL_LOCKFILE);
     expect(error.message).toBe(
         'The npm lockfile holds the registry credentials of the repository. gspot kept the existing files. Remove the credentials from the registry URL.',
     );
@@ -137,35 +135,14 @@ test('a cached lockfile that holds registry credentials is refused and the files
 
 test('a lockfile that the package manager writes with registry credentials is refused and the files stay', async () => {
     await using sandbox = await testdir();
-    const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
-    const previous = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.0' } });
-    const lockfile = JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.0' } } } });
-    const { files, session } = await openCredentialProject(sandbox.path, previous, lockfile);
-    using owner = openWriter(sandbox.path);
     using _bun = fakeCommand('mise', async (command, options) => {
-        if (command.at(-1) !== '--version')
-            await writeFile(
-                join(options.cwd, 'bun.lock'),
-                JSON.stringify({
-                    workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
-                    packages: {
-                        prettier: [
-                            'prettier@3.8.1',
-                            `https://registry.example.com/${CREDENTIAL_TOKEN}`,
-                            {},
-                            'integrity',
-                        ],
-                    },
-                }),
-            );
+        if (command.at(-1) !== '--version') await writeFile(join(options.cwd, 'bun.lock'), CREDENTIAL_LOCKFILE);
         return buildProcessResult({ stdout: command.at(-1) === '--version' ? '1.4.2\n' : '' });
     });
-    const error = await captureRejection(
-        prepareNpmLockfile(
-            buildToolInstall(session, owner) as NpmToolInstall,
-            { path: GSPOT_PATHS.npmProject, content: packageJson },
-            undefined,
-        ),
+    const { files, error } = await prepareCredentialProject(
+        sandbox.path,
+        JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.0' } }),
+        JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.0' } } } }),
     );
     expect(error.message).toBe(
         'The package manager wrote registry credentials into its lockfile. gspot kept the existing files.',
