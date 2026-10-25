@@ -255,7 +255,7 @@ function formatDetectedTools(summary: DetectionSummary): (string | undefined)[] 
 }
 
 function formatUncheckedFiles(summary: DetectionSummary): string[] {
-    const matchers = summary.configurations
+    const matchers = summary.configurationsByName
         .values()
         .flatMap((configuration) => [
             configuration.files,
@@ -296,7 +296,7 @@ Format the detection header: tracked files, the evidence for each group, scopes,
 */
 export function formatDetection(summary: DetectionSummary): string {
     const detected = summary.detected.filter(
-        (evidence) => summary.configurations.get(evidence.configuration)?.always_selected !== true,
+        (evidence) => summary.configurationsByName.get(evidence.configuration)?.always_selected !== true,
     );
     const languages = detected
         .filter((evidence) => evidence.group === 'language')

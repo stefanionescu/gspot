@@ -66,7 +66,7 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
     for (const path of paths) await writeFile(join(session.root, path), '// Changed after the run read it.\n');
 
     using resources = new DisposableStack();
-    const fakes = fakeToolExecutables([getTool(session.configurations.values(), 'vale')]);
+    const fakes = fakeToolExecutables([getTool(session.configurationsByName.values(), 'vale')]);
     resources.use(fakes);
     const scanned: string[] = [];
     const nativePaths: string[] = [];

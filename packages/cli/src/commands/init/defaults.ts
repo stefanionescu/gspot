@@ -104,7 +104,7 @@ Drop written values that equal the default, but keep a scope override of its par
 @returns the draft without values that equal the default.
 */
 export function stripDefaults(settings: TomlTable): TomlTable {
-    const configurations = readConfigurations();
+    const configurationsByName = readConfigurations();
     const allSettings = buildSettings(settingsSchema.parse(settings), settings);
     const level = settingsSchema.shape.level.parse(settings['level']);
     const scopes = ((settings['scope'] ?? []) as TomlTable[]).map((table) => ({
@@ -118,14 +118,14 @@ export function stripDefaults(settings: TomlTable): TomlTable {
     const root = {
         scope: '',
         table: settings,
-        available: buildAvailableSettings(selectForScope(selected, '', configurations), level),
+        available: buildAvailableSettings(selectForScope(selected, '', configurationsByName), level),
     };
     const tables = [
         root,
         ...scopes.map<WrittenTable>(({ path, table }) => ({
             scope: path,
             table,
-            available: buildAvailableSettings(selectForScope(selected, path, configurations), level),
+            available: buildAvailableSettings(selectForScope(selected, path, configurationsByName), level),
         })),
     ].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
     for (const key of DETECTED_SETTINGS) for (const table of tables) table.available.defaults.delete(key);

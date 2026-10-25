@@ -6,13 +6,15 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildConfiguration } from '#tests/setup/cli/configurations.ts';
 
 test('adds required configurations, dependencies first, in order of first mention', () => {
-    const configurations = new Map([
+    const configurationsByName = new Map([
         ['app', buildConfiguration('app', { requires: ['client', 'server'] })],
         ['client', buildConfiguration('client', { requires: ['base'] })],
         ['server', buildConfiguration('server', { requires: ['base'] })],
         ['base', buildConfiguration('base')],
     ]);
-    const ids = selectConfigurations(['app', 'client'], configurations).map((configuration) => configuration.name);
+    const ids = selectConfigurations(['app', 'client'], configurationsByName).map(
+        (configuration) => configuration.name,
+    );
     expect(ids).toStrictEqual(['base', 'client', 'server', 'app']);
 });
 

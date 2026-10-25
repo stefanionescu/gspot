@@ -12,27 +12,31 @@ import { getTool, getToolName, extractRulePrefix } from '#cli/configurations/too
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
 import { type Tool, type Check, type ScopeCheck, type Configuration } from '#cli/types/configurations.ts';
 
-function findRulePlugin(prefix: string, configurations: Map<string, Configuration>): Tool | undefined {
-    return configurations
+function findRulePlugin(prefix: string, configurationsByName: Map<string, Configuration>): Tool | undefined {
+    return configurationsByName
         .values()
         .flatMap((configuration) => configuration.tools)
         .find((pin) => pin.rule_prefix === prefix);
 }
 
-function findRulePage(tool: string, rule: string, configurations: Map<string, Configuration>): string | undefined {
+function findRulePage(
+    tool: string,
+    rule: string,
+    configurationsByName: Map<string, Configuration>,
+): string | undefined {
     const prefix = extractRulePrefix(rule);
     if (prefix === undefined) {
-        const pin = getTool(configurations.values(), tool);
+        const pin = getTool(configurationsByName.values(), tool);
         return pin.rule_url?.replace(RULE_PLACEHOLDER, () => rule);
     }
-    const plugin = findRulePlugin(prefix, configurations);
+    const plugin = findRulePlugin(prefix, configurationsByName);
     return plugin?.rule_url?.replace(RULE_PLACEHOLDER, () => rule.slice(prefix.length + 1));
 }
 
 function buildCheckFacts(
     check: Check,
     configuration: ScopeCheck['configuration'],
-    configurations: Map<string, Configuration>,
+    configurationsByName: Map<string, Configuration>,
     installedRules: ReadonlySet<string>,
 ): CheckFacts {
     const toolName = getToolName(check);
@@ -45,7 +49,8 @@ function buildCheckFacts(
             : listRuleFiles(configuration)
                   .filter((file) => installedRules.has(file.path))
                   .map((file) => file.path);
-    const crashPattern = toolName === undefined ? undefined : getTool(configurations.values(), toolName).crash_pattern;
+    const crashPattern =
+        toolName === undefined ? undefined : getTool(configurationsByName.values(), toolName).crash_pattern;
     return {
         source: configuration === undefined ? 'repository command' : `${configuration.name} configuration`,
         settings,
@@ -54,7 +59,7 @@ function buildCheckFacts(
         minVersions: Object.fromEntries(
             [toolName, ...(check.other_tools ?? [])]
                 .filter((name) => name !== undefined)
-                .map((name) => getTool(configurations.values(), name))
+                .map((name) => getTool(configurationsByName.values(), name))
                 .flatMap((tool) => (tool.min_version === undefined ? [] : [[tool.name, tool.min_version]])),
         ),
     };
@@ -116,17 +121,17 @@ Explain a shipped check or a command check.
 @returns the explanation, or undefined when no check has the ID.
 */
 export function explainCheck(session: Session | undefined, checkId: string): Explanation | undefined {
-    const configurations = readConfigurations();
+    const configurationsByName = readConfigurations();
     const commandCheck = session?.settings.commandChecks[checkId];
     const found: ScopeCheck | undefined =
-        listChecksById(configurations.values()).get(checkId) ??
+        listChecksById(configurationsByName.values()).get(checkId) ??
         (commandCheck === undefined ? undefined : { check: commandCheck, configuration: undefined });
     if (found === undefined) return undefined;
     const { check, configuration } = found;
     const facts = buildCheckFacts(
         check,
         configuration,
-        configurations,
+        configurationsByName,
         new Set(session === undefined ? [] : selectRuleFiles(session).map((file) => file.path)),
     );
     return {
@@ -162,11 +167,11 @@ Explain one lint rule: its page, and how to turn it off or change its options.
 @returns the explanation, or undefined when no check runs the tool.
 */
 export function explainLintRule(tool: string, rule: string): Explanation | undefined {
-    const configurations = readConfigurations();
+    const configurationsByName = readConfigurations();
     const qualified = `${tool}/${rule}`;
-    const plugin = findRulePlugin(extractRulePrefix(qualified) ?? tool, configurations);
+    const plugin = findRulePlugin(extractRulePrefix(qualified) ?? tool, configurationsByName);
     const [ruleTool, identifier] = plugin === undefined ? [tool, rule] : [ESLINT_MANIFEST_TOOL, qualified];
-    const found = listChecksById(configurations.values())
+    const found = listChecksById(configurationsByName.values())
         .values()
         .find(
             ({ check: declaration }) =>
@@ -174,7 +179,7 @@ export function explainLintRule(tool: string, rule: string): Explanation | undef
         );
     if (!found) return undefined;
     const { check, configuration } = found;
-    const page = findRulePage(ruleTool, identifier, configurations);
+    const page = findRulePage(ruleTool, identifier, configurationsByName);
     const key = quoteArgument(`tools.${ruleTool}.rules`);
     const ruleExample = quoteArgument(`{ ${JSON.stringify(identifier)} = [<options>] }`);
     const optionLines = (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []).some(

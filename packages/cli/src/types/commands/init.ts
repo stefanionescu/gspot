@@ -66,7 +66,7 @@ export type DetectionSummary = {
     repositorySetup: RepositorySetup;
     owned: string[];
     unowned: string[];
-    configurations: Map<string, Configuration>;
+    configurationsByName: Map<string, Configuration>;
     hasGit: boolean;
     ciProvider: InitAnswers['ci'];
 };
@@ -93,7 +93,7 @@ export type InitConfigurations = {
 
 export type InitRepository = {
     repository: Repository;
-    configurations: Map<string, Configuration>;
+    configurationsByName: Map<string, Configuration>;
     options: Pick<InitOptions, 'configurations'>;
 };
 

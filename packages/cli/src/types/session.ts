@@ -22,7 +22,7 @@ export type Session = {
     cancelSignal?: AbortSignal | undefined;
     settings: Settings;
     settingsText: string;
-    configurations: Map<string, Configuration>;
+    configurationsByName: Map<string, Configuration>;
     repository: Repository;
     scopes: Scope[];
 };

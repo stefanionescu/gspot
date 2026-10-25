@@ -18,7 +18,7 @@ function getCheckTool(
     name: string,
     options: CheckToolOptions,
 ): CheckTool {
-    const tool = getTool(session.configurations.values(), name);
+    const tool = getTool(session.configurationsByName.values(), name);
     const env = { ...planned.check.env, ...options.env };
     const availability = readToolAvailability(session, options.cwd, tool);
     if ('status' in availability) {
@@ -94,7 +94,7 @@ export function buildOtherToolEnvironment(
             (name) =>
                 inspectTool(
                     { ...session, miseBinPaths: session.readMiseBinPaths() },
-                    getTool(session.configurations.values(), name),
+                    getTool(session.configurationsByName.values(), name),
                 ).path,
         )
         .filter((path) => path !== undefined)

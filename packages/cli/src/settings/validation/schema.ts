@@ -99,14 +99,14 @@ Validate the written configuration lists, tool options, ignores, and paths befor
 @param syntax the written keys and source locations.
 */
 export function validateSettings(settings: Settings, root: string, syntax: TomlSyntax): void {
-    const configurations = readConfigurations();
+    const configurationsByName = readConfigurations();
     const written: WrittenConfiguration[] = [
         ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
         ...Object.values(settings.scopes).flatMap((scope, scopeIndex) =>
             scope.configurations.map((name, index) => ({ name, path: ['scope', scopeIndex, 'configurations', index] })),
         ),
     ];
-    const unknown = listUnknownConfigurations(written, configurations);
+    const unknown = listUnknownConfigurations(written, configurationsByName);
     if (unknown.length > 0)
         throw new GspotError('settings', unknown.map((error) => formatSettingsError(error, syntax)).join('\n'));
     const bundledChecks = listCheckIds([]);
@@ -114,11 +114,11 @@ export function validateSettings(settings: Settings, root: string, syntax: TomlS
     const scopes = new Map(
         Object.keys(settings.scopes).map((scope) => [
             scope,
-            buildAvailableSettings(selectForScope(settings, scope, configurations), settings.level),
+            buildAvailableSettings(selectForScope(settings, scope, configurationsByName), settings.level),
         ]),
     );
-    const rootKeys = buildAvailableSettings(selectForScope(settings, '', configurations), settings.level);
-    const general = configurations
+    const rootKeys = buildAvailableSettings(selectForScope(settings, '', configurationsByName), settings.level);
+    const general = configurationsByName
         .values()
         .filter((configuration) => configuration.group === 'general')
         .toArray();
@@ -142,7 +142,7 @@ export function validateSettings(settings: Settings, root: string, syntax: TomlS
                       message: `There is no check called ${ignore.check}.${formatSimilarNames(ignore.check, checks)}`,
                   },
         ),
-        ...validateRuleExcludes(settings.rules.exclude, configurations),
+        ...validateRuleExcludes(settings.rules.exclude, configurationsByName),
         ...validateScopePaths(root, settings),
         ...validateRuleFilePaths(root, settings),
         ...validateKeys(rootKeys, settings, scopes, buildAvailableSettings(general, settings.level)),

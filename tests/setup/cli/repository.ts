@@ -27,6 +27,6 @@ export async function readTestRepository(root: string): Promise<Repository> {
     return readRepository(reads, await listRepositoryFiles(reads), {
         generatedPaths: [],
         scopes: [],
-        configurations: readConfigurations(),
+        configurationsByName: readConfigurations(),
     });
 }

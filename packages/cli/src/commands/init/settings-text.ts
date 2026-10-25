@@ -72,7 +72,7 @@ function buildSwiftTables(
 function buildSettingsTable(
     draft: SettingsDraft,
     repository: Repository,
-    configurations: Map<string, Configuration>,
+    configurationsByName: Map<string, Configuration>,
 ): TomlTable {
     const selected = {
         configurations: draft.configurations,
@@ -82,7 +82,7 @@ function buildSettingsTable(
     const scopes = ['', ...draft.scopes.map((each) => each.path)];
     const scopeConfigurations = scopes.map((scopePath) => ({
         scope: scopePath,
-        selected: selectForScope(selected, scopePath, configurations),
+        selected: selectForScope(selected, scopePath, configurationsByName),
     }));
     const projects = buildSwiftTables(scopeConfigurations, draft, repository);
     const formats = new Map(
@@ -115,15 +115,15 @@ Build the gspot.toml text for a settings draft.
 
 @param draft the settings choices.
 @param repository the tracked source files.
-@param configurations the configurations to choose from.
+@param configurationsByName the configurations to choose from.
 @returns the TOML text, with the preface comment and the line that names the template.
 */
 export function buildInitSettings(
     draft: SettingsDraft,
     repository: Repository,
-    configurations: Map<string, Configuration>,
+    configurationsByName: Map<string, Configuration>,
 ): string {
-    const document = buildSettingsTable(draft, repository, configurations);
+    const document = buildSettingsTable(draft, repository, configurationsByName);
     if (draft.hooks) setKey(document, 'hooks.enabled', true);
     else Reflect.deleteProperty(document, 'hooks');
     if (draft.ci === 'none') {

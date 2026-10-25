@@ -82,7 +82,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
             new GspotError('skip', 'Set swift.xcode_project or add Package.swift in this scope.'),
         );
         using _executables = fakeToolExecutables(
-            session.configurations
+            session.configurationsByName
                 .values()
                 .flatMap((configuration) => configuration.tools)
                 .toArray(),

@@ -54,7 +54,7 @@ test('JavaScript pointers import modules from folders with URI characters and Un
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['javascript']) });
 
     const session = await openSession(sandbox.path);
-    const configuration = session.configurations.get('javascript')!;
+    const configuration = session.configurationsByName.get('javascript')!;
     const configFile = configuration.configFiles
         .filter((file) => file.source !== undefined)
         .find((file) => file.pointer?.body.includes('{target_module}') === true)!;

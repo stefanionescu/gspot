@@ -155,9 +155,9 @@ test.each([...CHECK_TOOL_MINIMUMS])(
     'explain <check> lists the minimum versions of the tools that the check runs, not of every tool of its configuration: $check',
     async ({ check, tools }) => {
         await using sandbox = await createGitSandbox({});
-        const configurations = readConfigurations();
+        const configurationsByName = readConfigurations();
         const expected = tools.map((name) => {
-            const minimum = getTool(configurations.values(), name).min_version;
+            const minimum = getTool(configurationsByName.values(), name).min_version;
             return `Needs ${name} ${String(minimum)} or newer`;
         });
         const result = await runGspot(sandbox.path, ['explain', check]);

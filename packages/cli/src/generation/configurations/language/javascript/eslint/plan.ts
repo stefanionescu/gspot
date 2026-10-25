@@ -35,7 +35,7 @@ function listConfigFileConfigurations(scopes: Scope[], scope: Scope, configFile:
 
 function readEslintPresets(session: PlannedConfigFile['session']): Map<string, EslintPresets> {
     return new Map(
-        session.configurations
+        session.configurationsByName
             .values()
             .filter((configuration) => PRESET_ASSET_PATHS.has(`${configuration.folder}/${ESLINT_PRESETS_FILE}`))
             .map((configuration): [string, EslintPresets] => [
@@ -87,7 +87,7 @@ export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslin
         blockWriter: {
             applied: new Set(),
             allLevelRules: new Set(
-                session.configurations.values().flatMap((configuration) => configuration.eslint.all_level_rules),
+                session.configurationsByName.values().flatMap((configuration) => configuration.eslint.all_level_rules),
             ),
             level,
             codeFiles: eslintFiles.code,

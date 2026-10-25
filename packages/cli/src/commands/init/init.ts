@@ -144,10 +144,10 @@ async function openPlannedSession(
 
 async function planInit(root: string, options: InitOptions): Promise<InitPlanning> {
     const reads = createReadCache(root);
-    const configurations = readConfigurations();
+    const configurationsByName = readConfigurations();
     const listing = await listRepositoryFiles(reads);
-    const repository = await readRepository(reads, listing, { generatedPaths: [], scopes: [], configurations });
-    const initConfigurations = selectForInit({ repository, configurations, options });
+    const repository = await readRepository(reads, listing, { generatedPaths: [], scopes: [], configurationsByName });
+    const initConfigurations = selectForInit({ repository, configurationsByName, options });
     const repositorySetup = readRepositorySetup(reads, repository);
     const ciProvider = detectCiProvider(root, repositorySetup);
     const answers: InitAnswers = {
@@ -156,7 +156,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         ci: readLintJobs(root, repositorySetup.ci).length > 0 ? 'none' : ciProvider,
     };
     const draft = buildSettingsDraft(initConfigurations, answers, options);
-    const settingsText = buildInitSettings(draft, repository, configurations);
+    const settingsText = buildInitSettings(draft, repository, configurationsByName);
     const settings = parseSettings(settingsText, root);
     const session = await openPlannedSession(root, { reads, listing, settingsFile: { settings, text: settingsText } });
     const everySelected = listSelectedConfigurations(session.scopes);
@@ -172,7 +172,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         repositorySetup,
         owned: detectedTools.filter((tool) => tools.has(tool)),
         unowned: detectedTools.filter((tool) => !tools.has(tool)),
-        configurations,
+        configurationsByName,
         hasGit: repository.hasGit,
         ciProvider,
     };
@@ -192,14 +192,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         foreignDisableComments: listForeignDisableComments(session),
     };
     const plan = planInitFiles(planning, { settings, settingsText, requirements: applicable, generated });
-    return {
-        detection,
-        session,
-        generated,
-        plan,
-        settingsText,
-        read: conflicts.read,
-    };
+    return { detection, session, generated, plan, settingsText, read: conflicts.read };
 }
 
 async function askConfirmation({ yes }: { yes: boolean }): Promise<boolean> {

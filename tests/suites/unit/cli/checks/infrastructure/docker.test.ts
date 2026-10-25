@@ -43,7 +43,7 @@ test.each([...COMPOSE_PAIRING_CASES])(
         const session = await openSession(sandbox.path);
         using resources = new DisposableStack();
         const fakes = fakeToolExecutables([
-            { ...getTool(session.configurations.values(), 'docker'), version: '29.0.0' },
+            { ...getTool(session.configurationsByName.values(), 'docker'), version: '29.0.0' },
         ]);
         resources.use(fakes);
         const toolRun = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult()));

@@ -27,7 +27,7 @@ type ConfigFilePointer = {
 };
 
 export type RequirementWalk = {
-    configurations: Map<string, Configuration>;
+    configurationsByName: Map<string, Configuration>;
     errors: string[];
     order: Configuration[];
     seen: Set<string>;

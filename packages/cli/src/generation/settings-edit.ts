@@ -102,15 +102,17 @@ export function prepareConfigurationEdit(options: ConfigurationsOptions): {
     scopeTable: TomlTable;
     scopeSettings: Pick<Settings, 'configurations' | 'removed_configurations'>;
     selected: string[];
-    configurations: Map<string, Configuration>;
+    configurationsByName: Map<string, Configuration>;
 } {
     const { root, input, settings, scope, scopeTable } = prepareSettingsEdit(options.cwd, options.scope);
-    const configurations = readConfigurations();
-    assertConfigurationsExist(options.configurations, configurations);
-    assertConfigurationsEditable(options.configurations, configurations);
+    const configurationsByName = readConfigurations();
+    assertConfigurationsExist(options.configurations, configurationsByName);
+    assertConfigurationsEditable(options.configurations, configurationsByName);
     const scopeSettings = scope === undefined ? settings : (settings.scopes[scope] as Settings['scopes'][string]);
-    const selected = selectForScope(settings, scope ?? '', configurations).map((configuration) => configuration.name);
-    return { root, input, scope, scopeTable, scopeSettings, selected, configurations };
+    const selected = selectForScope(settings, scope ?? '', configurationsByName).map(
+        (configuration) => configuration.name,
+    );
+    return { root, input, scope, scopeTable, scopeSettings, selected, configurationsByName };
 }
 
 /**

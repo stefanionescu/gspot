@@ -65,12 +65,12 @@ test.each([
     const manifest = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n';
     const paths = ownerFirst ? [owner, consumer] : [consumer, owner];
     const files = Object.fromEntries(paths.map((path) => [path, path === consumer ? consumed : manifest]));
-    const configurations = await readTestManifests(files);
-    expect(configurations.get('consumer')!.tools).toStrictEqual(configurations.get('owner')!.tools);
+    const configurationsByName = await readTestManifests(files);
+    expect(configurationsByName.get('consumer')!.tools).toStrictEqual(configurationsByName.get('owner')!.tools);
 });
 
 test('only declared config files are loaded and each record sets its tool and scope', async () => {
-    const configurations = await readTestManifests(
+    const configurationsByName = await readTestManifests(
         {
             [EXAMPLE_MANIFEST_PATH]:
                 CONFIGURATION_TABLE +
@@ -79,7 +79,7 @@ test('only declared config files are loaded and each record sets its tool and sc
         },
         SEMGREP_ASSETS,
     );
-    const configuration = configurations.get('example')!;
+    const configuration = configurationsByName.get('example')!;
     expect(configuration.configFiles.map(({ source, target }) => [source, target])).toStrictEqual([
         ['config-files/other.yml', `${GSPOT_PATHS.configurations}/language/example/other.yml`],
         ['config-files/semgrep/first.yml', `${GSPOT_PATHS.configurations}/language/example/semgrep/first.yml`],

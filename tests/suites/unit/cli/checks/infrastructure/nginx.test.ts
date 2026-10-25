@@ -19,8 +19,8 @@ test.each([...NGINX_MOUNT_CASES])(
         await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['nginx']), 'nginx.conf': source });
         const session = await openSession(sandbox.path);
         using _pins = fakeToolExecutables([
-            getTool(session.configurations.values(), 'openssl'),
-            getTool(session.configurations.values(), 'docker'),
+            getTool(session.configurationsByName.values(), 'openssl'),
+            getTool(session.configurationsByName.values(), 'docker'),
         ]);
         using run = spyOn(processes, 'spawnProcess').mockImplementation(async (command) => {
             if (!command.includes('--rm')) return buildProcessResult();
@@ -53,8 +53,8 @@ test.each(['stdout', 'stderr'])(
 
         using resources = new DisposableStack();
         const fakes = fakeToolExecutables([
-            getTool(session.configurations.values(), 'openssl'),
-            getTool(session.configurations.values(), 'docker'),
+            getTool(session.configurationsByName.values(), 'openssl'),
+            getTool(session.configurationsByName.values(), 'docker'),
         ]);
         resources.use(fakes);
         const folders: string[] = [];

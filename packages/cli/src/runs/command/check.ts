@@ -144,7 +144,7 @@ function findMissingOtherTool(
     cwd: string,
 ): ProcessFailure | undefined {
     for (const name of listOtherTools(planned.scope, planned.check, command)) {
-        const required = getTool(session.configurations.values(), name);
+        const required = getTool(session.configurationsByName.values(), name);
         const availability = readToolAvailability(session, cwd, required);
         if ('status' in availability) return availability;
     }

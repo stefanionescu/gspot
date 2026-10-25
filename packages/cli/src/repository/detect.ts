@@ -161,23 +161,23 @@ const EVIDENCE_FINDERS = [
 Propose configurations from the files and the dependencies, with the evidence for each.
 
 @param repository the inventory and parsed package declarations.
-@param configurations every configuration manifest.
+@param configurationsByName every configuration manifest.
 @param scope the folder, '' for the root.
 @returns each matching configuration with its repository evidence.
 */
 export function detectConfigurations(
     repository: Pick<Repository, 'root' | 'files' | 'dependencyFiles'>,
-    configurations: Map<string, Configuration>,
+    configurationsByName: Map<string, Configuration>,
     scope = '',
 ): ConfigurationEvidence[] {
     const { root, files, dependencyFiles } = repository;
-    const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, configurations.values());
+    const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, configurationsByName.values());
     const contents = buildScopeContents(
         files.filter((file) => !toolOnlyPackages.has(file.path)),
         dependencyFiles.filter((dependencyFile) => !toolOnlyPackages.has(dependencyFile.path)),
         scope,
     );
-    return configurations
+    return configurationsByName
         .values()
         .map((configuration) => findConfigurationEvidence(root, configuration, contents))
         .filter((evidence) => evidence !== undefined)
@@ -210,15 +210,15 @@ export function detectConditions(
 /**
 List the general configurations that gspot adds without an explicit selection.
 
-@param configurations every shipped configuration
+@param configurationsByName every shipped configuration
 @param repository the available inventory, if any
 @returns the automatic configurations, each once
 */
 export function listAutomaticConfigurations(
-    configurations: Map<string, Configuration>,
+    configurationsByName: Map<string, Configuration>,
     repository?: Pick<Repository, 'root' | 'files' | 'hasGit'>,
 ): string[] {
-    const general = new Map([...configurations].filter(([, configuration]) => configuration.group === 'general'));
+    const general = new Map([...configurationsByName].filter(([, configuration]) => configuration.group === 'general'));
     const automatic = new Set(
         general
             .values()

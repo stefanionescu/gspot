@@ -37,16 +37,16 @@ test.each([...IGNORE_COMMENT_CASES, ...ARRAY_COMMENT_CASES, ...FIELD_COMMENT_CAS
 test('setting level keeps the schema directive first and the opening init comment after it', async () => {
     await using sandbox = await testdir();
     const reads = createReadCache(sandbox.path);
-    const configurations = readConfigurations();
+    const configurationsByName = readConfigurations();
     const repository = await readRepository(reads, await listRepositoryFiles(reads), {
         generatedPaths: [],
         scopes: [],
-        configurations,
+        configurationsByName,
     });
     const text = buildInitSettings(
         { configurations: [], scopes: [], hooks: false, ci: 'none', rules: true },
         repository,
-        configurations,
+        configurationsByName,
     );
     await createFileTree(sandbox.path, { 'gspot.toml': text });
     const edit = readSettingsEdit(sandbox.path);

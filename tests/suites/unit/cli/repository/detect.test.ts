@@ -51,12 +51,14 @@ test.each(['.d.ts', '.d.mts', '.d.cts'])(
 
         const before = await openSession(sandbox.path);
         expect(
-            detectConfigurations(before.repository, before.configurations).map(({ configuration }) => configuration),
+            detectConfigurations(before.repository, before.configurationsByName).map(
+                ({ configuration }) => configuration,
+            ),
         ).not.toContain('typescript');
         await writeFile(join(sandbox.path, 'tsconfig.json'), '{"compilerOptions":{"strict":true}}\n');
         const configured = await openSession(sandbox.path);
         expect(
-            detectConfigurations(configured.repository, configured.configurations).find(
+            detectConfigurations(configured.repository, configured.configurationsByName).find(
                 ({ configuration }) => configuration === 'typescript',
             )?.evidence,
         ).toBe('tsconfig.json');
@@ -72,10 +74,10 @@ test('a FastAPI dependency proposes fastapi and python in its own scope until it
 
     const repository = await readTestRepository(sandbox.path);
     const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
-    const configurations = readConfigurations();
+    const configurationsByName = readConfigurations();
     const proposed = detectConfigurations(
         { root: sandbox.path, files: repository.files, dependencyFiles },
-        configurations,
+        configurationsByName,
         'api',
     );
     expect(proposed.find((detection) => detection.configuration === 'fastapi')?.evidence).toBe(
@@ -85,7 +87,7 @@ test('a FastAPI dependency proposes fastapi and python in its own scope until it
     expect(
         detectConfigurations(
             { root: sandbox.path, files: repository.files, dependencyFiles },
-            configurations,
+            configurationsByName,
             'other',
         ).some((detection) => detection.configuration === 'fastapi'),
     ).toBe(false);
@@ -94,7 +96,7 @@ test('a FastAPI dependency proposes fastapi and python in its own scope until it
     expect(
         detectConfigurations(
             { root: sandbox.path, files: repository.files, dependencyFiles: corrected },
-            configurations,
+            configurationsByName,
             'api',
         ).some((detection) => detection.configuration === 'fastapi'),
     ).toBe(false);
@@ -110,18 +112,18 @@ test.each(PRISMA_SCHEMA_CASES.flatMap((row) => ['', 'apps/api'].map((scope) => (
             'other/prisma/schema.prisma': 'datasource db {\n  provider = "postgresql"\n}\n',
         });
         const repository = await readTestRepository(sandbox.path);
-        const configurations = readConfigurations();
+        const configurationsByName = readConfigurations();
         expect(
             detectConfigurations(
                 { root: sandbox.path, files: repository.files, dependencyFiles: [] },
-                configurations,
+                configurationsByName,
                 scope,
             ).some((detection) => detection.configuration === 'postgres'),
         ).toBe(detected);
         expect(
             detectConfigurations(
                 { root: sandbox.path, files: repository.files, dependencyFiles: [] },
-                configurations,
+                configurationsByName,
                 'other',
             ).find((detection) => detection.configuration === 'postgres'),
         ).toStrictEqual({ configuration: 'postgres', group: 'database', evidence: 'other/prisma/schema.prisma' });
@@ -148,13 +150,16 @@ test('a Prisma read error stops detection, and a session with saved choices does
     });
 
     const repository = await readTestRepository(sandbox.path);
-    const configurations = readConfigurations();
+    const configurationsByName = readConfigurations();
     const failure = Object.assign(new Error('Prisma read failed.'), { code: 'EIO' });
     using read = spyOn(filesystem, 'readFileSync').mockImplementationOnce(() => {
         throw failure;
     });
     expect(() =>
-        detectConfigurations({ root: sandbox.path, files: repository.files, dependencyFiles: [] }, configurations),
+        detectConfigurations(
+            { root: sandbox.path, files: repository.files, dependencyFiles: [] },
+            configurationsByName,
+        ),
     ).toThrow(failure);
     expect(String(read.mock.calls[0]?.[0])).toBe(join(sandbox.path, 'prisma/schema.prisma'));
     read.mockClear();
@@ -179,7 +184,7 @@ test('Testing Library is detected only in the scope that declares it', async () 
         ['child', 'neighbor'].map((scope) =>
             detectConfigurations(
                 { root: sandbox.path, files: session.repository.files, dependencyFiles: projects },
-                session.configurations,
+                session.configurationsByName,
                 scope,
             ).find((row) => row.configuration === 'testing-library'),
         ),
@@ -209,12 +214,12 @@ test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection within its p
 });
 
 test('site is detected from a sitemap.xml in any folder', () => {
-    const configurations = readConfigurations();
+    const configurationsByName = readConfigurations();
     for (const path of SITE_DETECTION_PATHS) {
         if (!path.endsWith('sitemap.xml')) continue;
         const detected = detectConfigurations(
             { root: process.cwd(), files: [buildTrackedFile(path)], dependencyFiles: [] },
-            configurations,
+            configurationsByName,
         );
         expect(detected.find(({ configuration }) => configuration === 'site')?.evidence).toBe(path);
     }

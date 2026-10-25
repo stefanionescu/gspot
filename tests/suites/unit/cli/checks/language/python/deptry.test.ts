@@ -67,7 +67,7 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
 async function runFakeDeptry(root: string) {
     const session = await openSession(root);
     using resources = fakeToolExecutables(
-        ['uv', 'deptry'].map((name) => getTool(session.configurations.values(), name)),
+        ['uv', 'deptry'].map((name) => getTool(session.configurationsByName.values(), name)),
     );
     const spawn = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: '[]' })),

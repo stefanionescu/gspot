@@ -64,7 +64,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
         name: configuration.name,
         checks: listCheckStates(session, configuration, planned),
     }));
-    const available = session.configurations
+    const available = session.configurationsByName
         .values()
         .filter((configuration) => !names.has(configuration.name))
         .map((configuration) => ({ name: configuration.name, description: configuration.description }))

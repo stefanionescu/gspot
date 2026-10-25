@@ -45,7 +45,7 @@ async function readSessionAfterFixes(session: CheckSession): Promise<CheckSessio
     const reads = createReadCache(session.root);
     const repository = await readSessionRepository({
         settings: session.settings,
-        configurations: session.configurations,
+        configurationsByName: session.configurationsByName,
         reads,
         listing: await listRepositoryFiles(reads),
     });
@@ -60,7 +60,7 @@ function findUnrunnableResult(
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: CANCELED_CHECK_NOTE };
     if (planned.check.needs?.includes('docker') !== true) return undefined;
     return 'status' in
-        readToolAvailability(session, session.root, getTool(session.configurations.values(), DOCKER_TOOL))
+        readToolAvailability(session, session.root, getTool(session.configurationsByName.values(), DOCKER_TOOL))
         ? { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE }
         : undefined;
 }

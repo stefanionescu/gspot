@@ -83,7 +83,7 @@ function assertOnlyChecks(session: Session, only: string[] | undefined): void {
     const selected = session.scopes.flatMap((scope) =>
         scope.configurations.flatMap((configuration) => configuration.checks.map((check) => ({ check, scope }))),
     );
-    const shipped = listChecksById(session.configurations.values());
+    const shipped = listChecksById(session.configurationsByName.values());
     const settings = session.settings;
     const requested = only ?? [];
     for (const id of requested) {

@@ -7,9 +7,9 @@ import { type Configuration, type RequirementWalk, type WrittenConfiguration } f
 function addRequiredConfigurations(walk: RequirementWalk, configurationName: string): void {
     if (walk.seen.has(configurationName)) return;
     walk.seen.add(configurationName);
-    const configuration = walk.configurations.get(configurationName);
+    const configuration = walk.configurationsByName.get(configurationName);
     if (!configuration) {
-        const names = walk.configurations.keys().toArray();
+        const names = walk.configurationsByName.keys().toArray();
         walk.errors.push(formatUnknownConfiguration(configurationName, names));
         return;
     }
@@ -21,14 +21,19 @@ function addRequiredConfigurations(walk: RequirementWalk, configurationName: str
 Resolve configuration names to configurations in order, and throw for unknown names.
 
 @param configurationNames the names to resolve.
-@param configurations every configuration.
+@param configurationsByName every configuration.
 @returns the configurations, requirements first, in order of first mention.
 */
 export function selectConfigurations(
     configurationNames: string[],
-    configurations: Map<string, Configuration>,
+    configurationsByName: Map<string, Configuration>,
 ): Configuration[] {
-    const walk: RequirementWalk = { configurations, errors: [], order: [], seen: new Set() };
+    const walk: RequirementWalk = {
+        configurationsByName,
+        errors: [],
+        order: [],
+        seen: new Set(),
+    };
     for (const configurationName of configurationNames) addRequiredConfigurations(walk, configurationName);
     if (walk.errors.length > 0) throw new GspotError('arguments', walk.errors.join('\n'));
     return walk.order;
@@ -79,16 +84,16 @@ function formatUnknownConfiguration(name: string, available: string[]): string {
 Find the unknown configuration names, and keep their order and location.
 
 @param written the requested names, with their original fields.
-@param configurations the shipped configurations.
+@param configurationsByName the shipped configurations.
 @returns each unknown name with its error message.
 */
 export function listUnknownConfigurations<Written extends Pick<WrittenConfiguration, 'name'>>(
     written: readonly Written[],
-    configurations: ReadonlyMap<string, Configuration>,
+    configurationsByName: ReadonlyMap<string, Configuration>,
 ): (Written & { message: string })[] {
-    const available = configurations.keys().toArray();
+    const available = configurationsByName.keys().toArray();
     return written
-        .filter(({ name }) => !configurations.has(name))
+        .filter(({ name }) => !configurationsByName.has(name))
         .map((missing) => ({
             ...missing,
             message: formatUnknownConfiguration(missing.name, available),
@@ -99,10 +104,10 @@ export function listUnknownConfigurations<Written extends Pick<WrittenConfigurat
 Refuse explicit edits to configurations that gspot selects itself.
 
 @param names the configurations that the command edits.
-@param configurations the shipped configurations
+@param configurationsByName the shipped configurations
 */
-export function assertConfigurationsEditable(names: string[], configurations: Map<string, Configuration>): void {
-    const name = names.find((each) => configurations.get(each)?.always_selected === true);
+export function assertConfigurationsEditable(names: string[], configurationsByName: Map<string, Configuration>): void {
+    const name = names.find((each) => configurationsByName.get(each)?.always_selected === true);
     if (name !== undefined)
         throw new GspotError(
             'arguments',
@@ -114,12 +119,12 @@ export function assertConfigurationsEditable(names: string[], configurations: Ma
 Refuse every unknown configuration named by a command.
 
 @param names the requested configuration names.
-@param configurations every available configuration.
+@param configurationsByName every available configuration.
 */
-export function assertConfigurationsExist(names: string[], configurations: Map<string, Configuration>): void {
+export function assertConfigurationsExist(names: string[], configurationsByName: Map<string, Configuration>): void {
     const unknown = listUnknownConfigurations(
         names.map((name) => ({ name })),
-        configurations,
+        configurationsByName,
     );
     if (unknown.length > 0) throw new GspotError('arguments', unknown.map(({ message }) => message).join('\n'));
 }
@@ -128,21 +133,21 @@ export function assertConfigurationsExist(names: string[], configurations: Map<s
 Include suggested configurations when their detection has evidence or they need none.
 
 @param names the configurations already chosen.
-@param configurations every shipped configuration.
+@param configurationsByName every shipped configuration.
 @param detected the configurations with detection evidence.
 @returns chosen names and applicable suggestions, once each.
 */
 export function expandSuggestions(
     names: string[],
-    configurations: Map<string, Configuration>,
+    configurationsByName: Map<string, Configuration>,
     detected: Set<string>,
 ): string[] {
-    const suggestions = names.flatMap((name) => configurations.get(name)?.suggests ?? []);
+    const suggestions = names.flatMap((name) => configurationsByName.get(name)?.suggests ?? []);
     return [
         ...new Set([
             ...names,
             ...suggestions.filter((name) => {
-                const configuration = configurations.get(name);
+                const configuration = configurationsByName.get(name);
                 const hasDetection =
                     configuration !== undefined &&
                     Object.values(configuration.detect).some((patterns) => Object.keys(patterns).length > 0);

@@ -22,7 +22,7 @@ test('vulture reads every Python file of the scope and reports unused definition
         [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'vulture')]: 'stub',
     });
     const session = await openSession(sandbox.path);
-    using resources = fakeToolExecutables([getTool(session.configurations.values(), 'vulture')]);
+    using resources = fakeToolExecutables([getTool(session.configurationsByName.values(), 'vulture')]);
     const output = [...VULTURE_OUTPUT].join('\n');
     const spawn = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: output, code: 3 })),

@@ -130,11 +130,11 @@ export function selectToolConfigurations(session: Session, checks: PlannedCheck[
     const selectedTools = new Set(
         configurations.flatMap((configuration) => configuration.tools.map(({ name }) => name)),
     );
-    addPeerPackages(toolNames, [...session.configurations.values()]);
+    addPeerPackages(toolNames, [...session.configurationsByName.values()]);
     const unselected = [...toolNames].flatMap((name) =>
         selectedTools.has(name)
             ? []
-            : ([...session.configurations.values()].find((configuration) =>
+            : ([...session.configurationsByName.values()].find((configuration) =>
                   configuration.tools.some((tool) => tool.name === name),
               ) ?? []),
     );

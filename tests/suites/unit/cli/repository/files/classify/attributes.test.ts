@@ -46,7 +46,7 @@ test('.gitattributes wins, then the files configurations declare, then banners, 
     const configuredRepository = await readRepository(reads, await listRepositoryFiles(reads), {
         generatedPaths: declarations,
         scopes: [],
-        configurations: readConfigurations(),
+        configurationsByName: readConfigurations(),
     });
     expect(configuredRepository.files.find((file) => file.path === 'src/a.ts')).toMatchObject({
         kind: 'generated',

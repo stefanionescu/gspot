@@ -41,7 +41,7 @@ function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck 
     const isRootCheck = (ROOT_RUNS as readonly string[]).includes(check.runs);
     const rootScope = findRootScope(session.scopes);
     const name = getToolName(check);
-    const tool = name === undefined ? undefined : getTool(session.configurations.values(), name);
+    const tool = name === undefined ? undefined : getTool(session.configurationsByName.values(), name);
     const plannedCheck: PlannedCheck = {
         scope: isRootCheck ? rootScope : scope,
         check,

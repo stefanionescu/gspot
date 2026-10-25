@@ -16,9 +16,9 @@ import { readLintJobs, isEditedInPlace, readRepositorySetup } from '#cli/reposit
 import { type RepositorySetup, type ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 
 function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
-    const { root, repository, configurations, settings } = session;
+    const { root, repository, configurationsByName, settings } = session;
     const { dependencyFiles } = repository;
-    return detectConfigurations(repository, configurations).flatMap((detection) => {
+    return detectConfigurations(repository, configurationsByName).flatMap((detection) => {
         if (settings.removed_configurations.includes(detection.configuration)) return [];
         const removedScopes = Object.entries(settings.scopes)
             .filter(([, table]) => table.removed_configurations.includes(detection.configuration))
@@ -28,13 +28,13 @@ function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
         const paths = new Set(files.map((file) => file.path));
         return detectConfigurations(
             { root, files, dependencyFiles: dependencyFiles.filter((file) => paths.has(file.path)) },
-            new Map([...configurations].filter(([name]) => name === detection.configuration)),
+            new Map([...configurationsByName].filter(([name]) => name === detection.configuration)),
         );
     });
 }
 
 function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'detected' | 'suggested' | 'undetected'> {
-    const { repository, configurations, settings } = session;
+    const { repository, configurationsByName, settings } = session;
     const selectedConfigurations = listSelectedConfigurations(session.scopes);
     const selected = new Set(selectedConfigurations.map((configuration) => configuration.name));
     const detected = listDetectedConfigurations(session);
@@ -45,11 +45,11 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
     const undetected = choices
         .filter(({ configurations: names }) => names.length > 0)
         .flatMap(({ path, configurations: names }) => {
-            const evidence = path === '' ? detected : detectConfigurations(repository, configurations, path);
+            const evidence = path === '' ? detected : detectConfigurations(repository, configurationsByName, path);
             const found = new Set(evidence.map((detection) => detection.configuration));
             const scopeArgument = path === '' ? '' : ` --scope ${quoteArgument(path)}`;
             return names.flatMap((name) => {
-                const configuration = configurations.get(name);
+                const configuration = configurationsByName.get(name);
                 if (
                     configuration === undefined ||
                     configuration.group === 'general' ||
@@ -68,7 +68,7 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
         });
     const rows = new Map<string, Suggestions['suggested'][number]>();
     for (const configuration of selectedConfigurations) {
-        const suggested = expandSuggestions([configuration.name], configurations, new Set());
+        const suggested = expandSuggestions([configuration.name], configurationsByName, new Set());
         for (const name of suggested)
             if (!selected.has(name) && !rows.has(name))
                 rows.set(name, {
@@ -141,7 +141,7 @@ function listUnownedConfigFiles(
                 !hasGeneratedHeader(readCachedPrefix(session.reads, configFile.path, BANNER_BYTES).toString('utf8')),
         )
         .flatMap((configFile) => {
-            const configuration = session.configurations
+            const configuration = session.configurationsByName
                 .values()
                 .find((configuration) => configuration.tools.some((tool) => tool.name === configFile.tool));
             return configuration === undefined ? [] : [buildFileRow(session, configFile, tools, configuration)];

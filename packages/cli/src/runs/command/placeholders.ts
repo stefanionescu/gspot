@@ -47,7 +47,7 @@ function listConfigFiles(session: Session, planned: PlannedCheck): ConfigFile[] 
     const own = planned.scope.configurations
         .filter((configuration) => configuration.checks.some((check) => check.id === planned.check.id))
         .flatMap((configuration) => configuration.configFiles);
-    const every = session.configurations
+    const every = session.configurationsByName
         .values()
         .flatMap((configuration) => configuration.configFiles)
         .toArray();

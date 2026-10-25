@@ -50,7 +50,7 @@ export function checkGspotConflictingConfigFiles(session: Session, planned: Plan
         session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
     );
     const generated = listGeneratedPaths(session.repository.files);
-    return listConflictingConfigFiles(session.root, session.repository.files, session.configurations.values())
+    return listConflictingConfigFiles(session.root, session.repository.files, session.configurationsByName.values())
         .filter(({ tool, path, shared }) => !shared && tools.has(tool) && !generated.has(path))
         .map(({ tool, path }) =>
             buildFinding(

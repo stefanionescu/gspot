@@ -18,10 +18,10 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
 import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
 import { applySettingsEdit, prepareConfigurationEdit } from '#cli/generation/settings-edit.ts';
 
-function assertNotRequired(names: string[], kept: string[], configurations: Map<string, Configuration>): void {
+function assertNotRequired(names: string[], kept: string[], configurationsByName: Map<string, Configuration>): void {
     for (const configuration of names) {
         const chain = kept
-            .map((name) => findRequirementChain(configuration, name, configurations))
+            .map((name) => findRequirementChain(configuration, name, configurationsByName))
             .find((found) => found !== undefined);
         if (chain)
             throw new GspotError(
@@ -40,18 +40,18 @@ function formatConfigurationChange(changed: string[], unchanged: string[], where
 
 function removeUnusedSettings(
     table: TomlTable,
-    configurations: Map<string, Configuration>,
+    configurationsByName: Map<string, Configuration>,
     scope: string | undefined = '',
 ): string {
     const edited = buildSettings(settingsSchema.parse(table), table);
-    const general = configurations
+    const general = configurationsByName
         .values()
         .filter((configuration) => configuration.group === 'general')
         .toArray();
     const removed: string[] = [];
     const affected = listSettingsTables(edited).filter((written) => isInScope(written.scope ?? '', scope));
     for (const written of affected) {
-        const selected = selectForScope(edited, written.scope ?? '', configurations);
+        const selected = selectForScope(edited, written.scope ?? '', configurationsByName);
         const available = buildAvailableSettings([...general, ...selected], edited.level);
         const keys = listWrittenKeys(written.table, available).filter(
             (key) => findSetting(available, key) === undefined,
@@ -63,10 +63,10 @@ function removeUnusedSettings(
 }
 
 async function runRemoveCommand(options: ConfigurationsOptions & { reason: string }): Promise<CommandResult> {
-    const { root, input, scope, scopeTable, scopeSettings, selected, configurations } =
+    const { root, input, scope, scopeTable, scopeSettings, selected, configurationsByName } =
         prepareConfigurationEdit(options);
     const kept = selected.filter((name) => !options.configurations.includes(name));
-    assertNotRequired(options.configurations, kept, configurations);
+    assertNotRequired(options.configurations, kept, configurationsByName);
     if (options.configurations.every((name) => !selected.includes(name))) {
         return {
             text: `No change: ${options.configurations.join(' and ')} ${options.configurations.length === 1 ? 'is' : 'are'} not selected.\n`,
@@ -90,8 +90,9 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const where = scope === undefined ? '' : ` from scope ${scope}`;
     const unchanged = options.configurations.filter((name) => !selected.includes(name));
     const summary =
-        formatConfigurationChange(removed, unchanged, where) + removeUnusedSettings(input.table, configurations, scope);
-    const ownsManagedKeys = configurations
+        formatConfigurationChange(removed, unchanged, where) +
+        removeUnusedSettings(input.table, configurationsByName, scope);
+    const ownsManagedKeys = configurationsByName
         .values()
         .filter((configuration) => removed.includes(configuration.name))
         .flatMap((configuration) => configuration.tools)
@@ -106,14 +107,14 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
 function findRequirementChain(
     required: string,
     from: string,
-    configurations: Map<string, Configuration>,
+    configurationsByName: Map<string, Configuration>,
 ): string[] | undefined {
     const seen = new Set<string>();
     function findChain(start: string): string[] | undefined {
         if (start === required) return [start];
         if (seen.has(start)) return undefined;
         seen.add(start);
-        const requirements = configurations.get(start)?.requires ?? [];
+        const requirements = configurationsByName.get(start)?.requires ?? [];
         for (const next of requirements) {
             const rest = findChain(next);
             if (rest !== undefined) return [start, ...rest];

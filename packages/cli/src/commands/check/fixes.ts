@@ -127,7 +127,7 @@ async function runFixer(session: CheckSession, planned: PlannedCheck, root: stri
         return { check, status: 'skipped', changed: [] };
     const command = planned.check.fix as string[];
     const name = command[0] as string;
-    const tool = planned.tool?.name === name ? planned.tool : getTool(session.configurations.values(), name);
+    const tool = planned.tool?.name === name ? planned.tool : getTool(session.configurationsByName.values(), name);
     return runFixTool(session, planned, { root, command, tool });
 }
 

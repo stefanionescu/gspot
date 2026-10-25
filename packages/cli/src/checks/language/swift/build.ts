@@ -201,7 +201,7 @@ Lists the SwiftLint files a copy keeps: the scope pointer, the config file, and 
 export function listSwiftlintConfigFiles(session: Session, planned: PlannedCheck): string[] {
     const paths = [
         joinScope(planned.scope.path, SWIFTLINT_CONFIG_FILE),
-        ...session.configurations
+        ...session.configurationsByName
             .values()
             .flatMap((configuration) => configuration.configFiles)
             .filter((configFile) => configFile.pointer?.path === SWIFTLINT_CONFIG_FILE)

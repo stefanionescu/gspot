@@ -159,7 +159,7 @@ test.each([...NEXT_REQUIREMENTS])(
         const session = await openSession(join(sandbox.path, 'project'));
         const generated = generate(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
         expect((JSON.parse(generated!.content) as ToolPackageJson).devDependencies['@next/eslint-plugin-next']).toBe(
-            getTool(session.configurations.values(), '@next/eslint-plugin-next').version,
+            getTool(session.configurationsByName.values(), '@next/eslint-plugin-next').version,
         );
     },
 );
@@ -177,6 +177,6 @@ test('Next.js scopes keep one manifest plugin pin', async () => {
     const session = await openSession(sandbox.path);
     const output = generate(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
     expect((JSON.parse(output!.content) as ToolPackageJson).devDependencies['@next/eslint-plugin-next']).toBe(
-        getTool(session.configurations.values(), '@next/eslint-plugin-next').version,
+        getTool(session.configurationsByName.values(), '@next/eslint-plugin-next').version,
     );
 });

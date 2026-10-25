@@ -13,9 +13,9 @@ import {
 } from '#tests/config/repository/files/selection.ts';
 
 test('files are covered by extension, file name at any depth, tag and glob', () => {
-    const configurations = readConfigurations();
+    const configurationsByName = readConfigurations();
 
-    const bash = configurations.get('bash')!;
+    const bash = configurationsByName.get('bash')!;
     expect(buildFileMatcher(bash.files)(buildTrackedFile('scripts/build.sh'))).toBe(true);
     expect(
         buildFileMatcher(bash.files)(buildTrackedFile(`${GSPOT_PATHS.hooks}/pre-commit`, ['text', 'shebang:shell'])),
@@ -29,10 +29,10 @@ test('files are covered by extension, file name at any depth, tag and glob', () 
 });
 
 test('with bash selected, structure covers the Bash script and not README.md', () => {
-    const configurations = readConfigurations();
+    const configurationsByName = readConfigurations();
 
-    const selected = selectConfigurations(['bash'], configurations);
-    const structure = configurations.get('structure')!;
+    const selected = selectConfigurations(['bash'], configurationsByName);
+    const structure = configurationsByName.get('structure')!;
     const owned = listCoveredFiles(structure.files, [buildTrackedFile('a.sh'), buildTrackedFile('README.md')], {
         configurations: selected,
         scopePath: '',
@@ -44,7 +44,7 @@ test('with bash selected, structure covers the Bash script and not README.md', (
 test.each([...PRETTIER_PLUGIN_CASES])(
     'the Prettier plugin files follow the selected configurations %j',
     (configurationNames, expected) => {
-        const configurations = readConfigurations();
+        const configurationsByName = readConfigurations();
 
         const files = [
             buildTrackedFile('src/Page.astro'),
@@ -52,8 +52,8 @@ test.each([...PRETTIER_PLUGIN_CASES])(
             buildTrackedFile('src/index.ts'),
         ];
         expect(
-            listCoveredFiles(configurations.get('format')!.files, files, {
-                configurations: selectConfigurations([...configurationNames], configurations),
+            listCoveredFiles(configurationsByName.get('format')!.files, files, {
+                configurations: selectConfigurations([...configurationNames], configurationsByName),
                 scopePath: '',
                 settings: { test_files: [], valuesByKey: {} },
             }).map((coveredFile) => coveredFile.path),
@@ -64,14 +64,14 @@ test.each([...PRETTIER_PLUGIN_CASES])(
 test.each(MIGRATION_CASES)(
     'migration paths in scope "%s" are covered and other file kinds are not',
     (scope, expected) => {
-        const configurations = readConfigurations();
+        const configurationsByName = readConfigurations();
 
         const files = ['migrations/V1_root.sql', 'app/migrations/V2_first.sql', 'other/migrations/V3_other.sql'].map(
             (path) => buildTrackedFile(path),
         );
-        const table = configurations.get('postgres')!.files;
+        const table = configurationsByName.get('postgres')!.files;
         const options = {
-            configurations: selectConfigurations(['postgres'], configurations),
+            configurations: selectConfigurations(['postgres'], configurationsByName),
             scopePath: scope,
             settings: { test_files: [], valuesByKey: {} },
         };
@@ -83,11 +83,11 @@ test.each(MIGRATION_CASES)(
 );
 
 test.each([...JEST_CASES])('Jest covers the test paths of scope "$scope" with $tests', ({ scope, tests, expected }) => {
-    const configurations = readConfigurations();
+    const configurationsByName = readConfigurations();
 
-    const selected = selectConfigurations(['jest'], configurations);
+    const selected = selectConfigurations(['jest'], configurationsByName);
     const files = JEST_PATHS.map((path) => buildTrackedFile(path));
-    const owned = listCoveredFiles(configurations.get('jest')!.files, files, {
+    const owned = listCoveredFiles(configurationsByName.get('jest')!.files, files, {
         configurations: selected,
         scopePath: scope,
         settings: { test_files: [...tests], valuesByKey: {} },

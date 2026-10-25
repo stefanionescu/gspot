@@ -83,7 +83,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         });
 
         const session = await openSession(sandbox.path);
-        const tool = getTool(session.configurations.values(), 'vale');
+        const tool = getTool(session.configurationsByName.values(), 'vale');
         const executable = join(sandbox.path, 'node_modules/.bin', listExecutableNames('vale')[0]!);
         const runBlocking = processes.spawnProcessBlocking;
         using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>

@@ -64,7 +64,7 @@ async function preparePydoclintCheck(
     const session = await openSession(root, { resources });
     const [planned] = planChecks(session, { stage: 'all', only: ['python/pydoclint'] });
     if (planned === undefined) throw new Error('The Python sandbox does not plan pydoclint.');
-    const fakes = fakeToolExecutables([getTool(session.configurations.values(), 'pydoclint')]);
+    const fakes = fakeToolExecutables([getTool(session.configurationsByName.values(), 'pydoclint')]);
     resources.use(fakes);
     return Object.assign(cleanup.move(), { session, planned });
 }

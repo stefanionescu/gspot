@@ -64,13 +64,13 @@ Classify the listed files, and read the dependency files and the written and dis
 @param options what the read needs.
 @param options.generatedPaths the generated and vendored path rules.
 @param options.scopes the written scope tables.
-@param options.configurations the shipped configurations.
+@param options.configurationsByName the shipped configurations.
 @returns the repository inventory.
 */
 export async function readRepository(
     reads: ReadCache,
     listing: RepositoryListing,
-    { generatedPaths, scopes, configurations }: RepositoryReadOptions,
+    { generatedPaths, scopes, configurationsByName }: RepositoryReadOptions,
 ): Promise<Repository> {
     const { root, hasGit, index, attributes } = listing;
     using files = openFiles(root);
@@ -84,7 +84,7 @@ export async function readRepository(
         tracked.push(file);
     }
     const dependencyFiles = await readDependencyFiles(reads, tracked);
-    const discovered = findScopePaths(tracked, dependencyFiles, configurations.values());
+    const discovered = findScopePaths(tracked, dependencyFiles, configurationsByName.values());
     const written: ScopeFolder[] = [
         { ...ROOT_SCOPE, configurations: [] },
         ...scopes

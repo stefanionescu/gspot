@@ -24,14 +24,14 @@ import { selectStartRunner, detectPackageManager } from '#cli/repository/npm/pac
 function buildScopes(
     settings: Settings,
     repository: Repository,
-    configurations: Map<string, Configuration>,
+    configurationsByName: Map<string, Configuration>,
     readPackageManager: () => PackageManagerPin,
 ): Scope[] {
     const { scopeFolders } = repository;
-    const automatic = listAutomaticConfigurations(configurations, repository);
+    const automatic = listAutomaticConfigurations(configurationsByName, repository);
     const active = { ...settings, configurations: [...new Set([...settings.configurations, ...automatic])] };
     return scopeFolders.map((scope) => {
-        const selected = selectForScope(active, scope.path, configurations);
+        const selected = selectForScope(active, scope.path, configurationsByName);
         const available = buildAvailableSettings(selected, settings.level);
         const packageManager = available.defaults.has('site.build_command') ? readPackageManager() : undefined;
         applyDetectedDefaults(available, {
@@ -54,24 +54,27 @@ Classify the listed files of the repository from the authored settings and scope
 
 @param input the inputs of the repository read.
 @param input.settings the authored settings and scope configuration.
-@param input.configurations the shipped configuration declarations.
+@param input.configurationsByName the shipped configuration declarations.
 @param input.reads the current repository cache and root folder.
 @param input.listing the files of the repository.
 @returns the inventory used both before and after fixes.
 */
 export async function readSessionRepository({
     settings,
-    configurations,
+    configurationsByName,
     reads,
     listing,
 }: {
     settings: Settings;
-    configurations: Map<string, Configuration>;
+    configurationsByName: Map<string, Configuration>;
     reads: ReadCache;
     listing: RepositoryListing;
 }): Promise<Repository> {
     const selected = new Map(
-        ['', ...Object.keys(settings.scopes)].map((path) => [path, selectForScope(settings, path, configurations)]),
+        ['', ...Object.keys(settings.scopes)].map((path) => [
+            path,
+            selectForScope(settings, path, configurationsByName),
+        ]),
     );
     return readRepository(reads, listing, {
         generatedPaths: listConfigurationGeneratedPaths(selected),
@@ -79,7 +82,7 @@ export async function readSessionRepository({
             path,
             configurations: scope.configurations,
         })),
-        configurations,
+        configurationsByName,
     });
 }
 
@@ -112,11 +115,11 @@ export async function openSession(
         const { text } = readSettingsFile(root);
         settingsFile = { text, settings: parseSettings(text, root) };
     }
-    const configurations = readConfigurations();
+    const configurationsByName = readConfigurations();
     const settings = settingsFile.settings;
     const repository = await readSessionRepository({
         settings,
-        configurations,
+        configurationsByName,
         reads,
         listing: listing ?? (await listRepositoryFiles(reads)),
     });
@@ -126,7 +129,7 @@ export async function openSession(
             root,
             repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
         ));
-    const scopes = buildScopes(settings, repository, configurations, readPackageManager);
+    const scopes = buildScopes(settings, repository, configurationsByName, readPackageManager);
     const session: Session = {
         toolConfigurations: [],
         configuredChecks: [],
@@ -139,7 +142,7 @@ export async function openSession(
         startRunner: selectStartRunner(root),
         settings: settingsFile.settings,
         settingsText: settingsFile.text,
-        configurations,
+        configurationsByName,
         repository,
         scopes,
         inspections: new Map(),

@@ -204,12 +204,12 @@ export function readRepositorySetup(
     const root = reads.root;
     const { files, dependencyFiles } = repository;
     const paths = new Set(files.map((file) => file.path));
-    const configurations = readConfigurations();
-    const toolOnlyPackages = [...listToolOnlyPackages(dependencyFiles, configurations.values())].toSorted(
+    const configurationsByName = readConfigurations();
+    const toolOnlyPackages = [...listToolOnlyPackages(dependencyFiles, configurationsByName.values())].toSorted(
         (a, b) => Number(a === PACKAGE_JSON) - Number(b === PACKAGE_JSON),
     );
 
-    const conflictingConfigFiles = listConflictingConfigFiles(root, files, configurations.values());
+    const conflictingConfigFiles = listConflictingConfigFiles(root, files, configurationsByName.values());
     return {
         conflictingConfigFiles: new Map(
             conflictingConfigFiles.map((conflictingConfigFile) => [

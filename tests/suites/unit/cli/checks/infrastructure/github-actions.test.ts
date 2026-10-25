@@ -36,7 +36,7 @@ test('actionlint copies root actions and unchanged actions outside .github with 
     });
     const session = await openSession(sandbox.path);
     using _pins = fakeToolExecutables(
-        ['actionlint', 'shellcheck'].map((name) => getTool(session.configurations.values(), name)),
+        ['actionlint', 'shellcheck'].map((name) => getTool(session.configurationsByName.values(), name)),
     );
     using boundary = spyOn(processes, 'spawnProcess').mockImplementation(async (_command, options) => {
         expect(await readFile(join(options.cwd, 'action.yml'), 'utf8')).toContain('uses: ./actions/setup');
@@ -66,7 +66,7 @@ test.each([...GENERATED_WORKFLOW_CHECKS])(
         await writeGeneratedFiles(previous, generate(previous), writer);
         const session = await openSession(sandbox.path);
         using _pins = fakeToolExecutables(
-            ['actionlint', 'shellcheck', 'zizmor'].map((name) => getTool(session.configurations.values(), name)),
+            ['actionlint', 'shellcheck', 'zizmor'].map((name) => getTool(session.configurationsByName.values(), name)),
         );
         using boundary = spyOn(processes, 'spawnProcess').mockImplementation((command) => {
             expect(command).toContain('.github/workflows/gspot.yml');
@@ -96,8 +96,8 @@ test.each([...WORKFLOW_TEXT_CASES])(
         });
         const session = await openSession(sandbox.path);
         using _pins = fakeToolExecutables([
-            getTool(session.configurations.values(), 'actionlint'),
-            getTool(session.configurations.values(), 'shellcheck'),
+            getTool(session.configurationsByName.values(), 'actionlint'),
+            getTool(session.configurationsByName.values(), 'shellcheck'),
         ]);
         using run = spyOn(processes, 'spawnProcess').mockImplementation(async (_command, options) => {
             const written = await readFile(join(options.cwd, path), 'utf8');
@@ -138,7 +138,7 @@ test.each([...ACTIONLINT_EXITS])(
         );
         await chmod(join(sandbox.path, '.github/workflows/caller.yml'), 0o444);
         const session = await openSession(sandbox.path);
-        using _pins = fakeToolExecutables([getTool(session.configurations.values(), 'shellcheck')]);
+        using _pins = fakeToolExecutables([getTool(session.configurationsByName.values(), 'shellcheck')]);
         const plans = planChecks(session, { stage: 'commit', only: ['github-actions/actionlint'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };

@@ -32,7 +32,7 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
         '--exit',
         '1',
     );
-    const configuration = session.configurations.get('typescript')!;
+    const configuration = session.configurationsByName.get('typescript')!;
     const check: Check = {
         ...BASE_CHECK,
         id: 'typescript/tsc',

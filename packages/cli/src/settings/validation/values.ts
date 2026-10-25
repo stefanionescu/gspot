@@ -104,12 +104,15 @@ Find the errors in [rules] exclude: an item that matches no rule, and an item th
 first.
 
 @param exclude the written items, relative to the rules folder.
-@param configurations the shipped configurations by name.
+@param configurationsByName the shipped configurations by name.
 @returns each error with its position in the exclusion list.
 */
-export function validateRuleExcludes(exclude: string[], configurations: Map<string, Configuration>): SettingsError[] {
+export function validateRuleExcludes(
+    exclude: string[],
+    configurationsByName: Map<string, Configuration>,
+): SettingsError[] {
     if (exclude.length === 0) return [];
-    const paths = configurations
+    const paths = configurationsByName
         .values()
         .flatMap((configuration) => listRuleFiles(configuration).map((file) => file.path))
         .toArray();

@@ -48,13 +48,15 @@ export async function checkNextjsTsc(session: CheckSession, planned: PlannedChec
     });
     const output = `${generated.stdout}${generated.stderr}`;
     if (generated.code !== 0) throw new Error(`The next typegen command failed: ${formatNextjsFailure(output)}`);
-    const compiler = listChecksById(session.configurations.values()).get(TYPESCRIPT_TSC_CHECK) as ConfigurationCheck;
+    const compiler = listChecksById(session.configurationsByName.values()).get(
+        TYPESCRIPT_TSC_CHECK,
+    ) as ConfigurationCheck;
     const result = await runTsc(
         scratchSession,
         {
             ...planned,
             check: { ...compiler.check, ...planned.check, output: compiler.check.output },
-            tool: getTool(session.configurations.values(), TSC_TOOL),
+            tool: getTool(session.configurationsByName.values(), TSC_TOOL),
         },
         root,
         readTsconfigProject(

@@ -60,7 +60,7 @@ test('a changed Vale archive is refused before sync and preserves installed pack
         [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: 'previous bytes\n',
     });
     const session = await openSession(sandbox.path);
-    const tool = getTool(session.configurations.values(), 'vale');
+    const tool = getTool(session.configurationsByName.values(), 'vale');
     await writeProgramCommand(sandbox.path, 'node_modules/.bin/vale', 'fakes/tool', '--line', String(tool.version));
     using _request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('replaced archive'));
     using writer = openWriter(sandbox.path);

@@ -32,7 +32,7 @@ async function buildPipeline(): Promise<Pipeline> {
         manualChecks: session.configuredChecks.filter(({ check }) =>
             ['docs/lychee-external', 'project/audit'].includes(check.id),
         ),
-        tools: session.configurations.get('docs')!.tools.filter((tool) => tool.name === 'lychee'),
+        tools: session.configurationsByName.get('docs')!.tools.filter((tool) => tool.name === 'lychee'),
     };
 }
 
@@ -184,7 +184,7 @@ test('without a setup command, CI installs the locked dependencies of each proje
     });
 
     const session = await openSession(sandbox.path);
-    const uv = session.configurations.get('python')!.tools.find(({ name }) => name === 'uv')?.version;
+    const uv = session.configurationsByName.get('python')!.tools.find(({ name }) => name === 'uv')?.version;
     expect(listProjectInstallLines(session)).toStrictEqual([
         'mise exec node@24 npm@11.10.1 -- npm ci',
         `mise exec node@24 uv@${String(uv)} -- uv sync --locked`,

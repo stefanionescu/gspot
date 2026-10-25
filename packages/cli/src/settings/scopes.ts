@@ -41,15 +41,15 @@ Select the configurations of the root and each parent scope, each once, in order
 @param selected.scopes each folder with its written choices.
 @param selected.removed_configurations the names that you removed.
 @param scope the folder to select for.
-@param configurations every configuration.
+@param configurationsByName every configuration.
 @returns the configurations in order.
 */
 export function selectForScope(
     selected: SelectedConfigurations,
     scope: string,
-    configurations: Map<string, Configuration>,
+    configurationsByName: Map<string, Configuration>,
 ): Configuration[] {
-    const automatic = listAutomaticConfigurations(configurations);
+    const automatic = listAutomaticConfigurations(configurationsByName);
     const choices = new Set<string>();
     const tables = [
         selected,
@@ -62,7 +62,7 @@ export function selectForScope(
         for (const removed of table.removed_configurations) choices.delete(removed);
         for (const configuration of table.configurations) choices.add(configuration);
     }
-    return selectConfigurations([...choices, ...automatic], configurations);
+    return selectConfigurations([...choices, ...automatic], configurationsByName);
 }
 
 function listNamingVariants(
