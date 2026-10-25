@@ -81,7 +81,7 @@ version = "10.0.1"
 kind = "library"
 name = "@gspothq/eslint-plugin"
 npm = "@gspothq/eslint-plugin"
-version = "0.2.2"
+version = "0.2.3"
 rule_prefix = "gspot"
 rule_url = "https://generativespotting.com/reference/eslint-plugin/{rule}/"
 
