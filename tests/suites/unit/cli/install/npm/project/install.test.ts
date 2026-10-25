@@ -15,9 +15,22 @@ import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
-import { FAILED_INSTALL_CASES } from '#tests/config/install/npm/project.ts';
 import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/install/npm/project.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/install/npm/project.ts';
+import { CREDENTIAL_NPMRC, CREDENTIAL_TOKEN, FAILED_INSTALL_CASES } from '#tests/config/install/npm/project.ts';
+
+async function openCredentialProject(root: string, packageJson: string, lockfile: string) {
+    const files = {
+        '.npmrc': CREDENTIAL_NPMRC,
+        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
+        [GSPOT_PATHS.npmProject]: packageJson,
+        [`${DOT_GSPOT}/bun.lock`]: lockfile,
+        [`${GSPOT_PATHS.nodeModules}/authored.txt`]: 'keep installed files',
+        'gspot.toml': buildSandboxSettings([]),
+    };
+    await createFileTree(root, files);
+    return { files, session: await openSession(root) };
+}
 
 test.each([...FAILED_INSTALL_CASES])(
     'a failed $operation keeps the files and hides credentials',
@@ -101,22 +114,12 @@ test('an npm install that runs past the time limit names the limit', async () =>
 
 test('a cached lockfile that holds registry credentials is refused and the files stay', async () => {
     await using sandbox = await testdir();
-    const token = 'synthetic-generated-lockfile-token';
-    const source = `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${token}\n`;
     const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
     const lockfile = JSON.stringify({
         workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
-        packages: { prettier: ['prettier@3.8.1', `https://registry.example.com/${token}`, {}, 'integrity'] },
+        packages: { prettier: ['prettier@3.8.1', `https://registry.example.com/${CREDENTIAL_TOKEN}`, {}, 'integrity'] },
     });
-    await createFileTree(sandbox.path, {
-        '.npmrc': source,
-        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
-        [GSPOT_PATHS.npmProject]: packageJson,
-        [`${DOT_GSPOT}/bun.lock`]: lockfile,
-        [`${GSPOT_PATHS.nodeModules}/authored.txt`]: 'keep installed files',
-        'gspot.toml': buildSandboxSettings([]),
-    });
-    const session = await openSession(sandbox.path);
+    const { files, session } = await openCredentialProject(sandbox.path, packageJson, lockfile);
     using owner = openWriter(sandbox.path);
     const error = await captureRejection(
         prepareNpmLockfile(
@@ -128,30 +131,16 @@ test('a cached lockfile that holds registry credentials is refused and the files
     expect(error.message).toBe(
         'The npm lockfile holds the registry credentials of the repository. gspot kept the existing files. Remove the credentials from the registry URL.',
     );
-    expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(packageJson);
-    expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/bun.lock`), 'utf8')).toBe(lockfile);
-    expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.nodeModules}/authored.txt`), 'utf8')).toBe(
-        'keep installed files',
-    );
+    for (const [path, text] of Object.entries(files))
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
 });
 
 test('a lockfile that the package manager writes with registry credentials is refused and the files stay', async () => {
     await using sandbox = await testdir();
-    const token = 'synthetic-generated-lockfile-token';
-    const source = `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${token}\n`;
     const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
     const previous = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.0' } });
     const lockfile = JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.0' } } } });
-    await createFileTree(sandbox.path, {
-        '.npmrc': source,
-        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
-        [GSPOT_PATHS.npmProject]: previous,
-        [`${DOT_GSPOT}/bun.lock`]: lockfile,
-        [`${GSPOT_PATHS.nodeModules}/authored.txt`]: 'keep installed files',
-        'gspot.toml': buildSandboxSettings([]),
-    });
-    const session = await openSession(sandbox.path);
+    const { files, session } = await openCredentialProject(sandbox.path, previous, lockfile);
     using owner = openWriter(sandbox.path);
     using _bun = fakeCommand('mise', async (command, options) => {
         if (command.at(-1) !== '--version')
@@ -160,7 +149,12 @@ test('a lockfile that the package manager writes with registry credentials is re
                 JSON.stringify({
                     workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
                     packages: {
-                        prettier: ['prettier@3.8.1', `https://registry.example.com/${token}`, {}, 'integrity'],
+                        prettier: [
+                            'prettier@3.8.1',
+                            `https://registry.example.com/${CREDENTIAL_TOKEN}`,
+                            {},
+                            'integrity',
+                        ],
                     },
                 }),
             );
@@ -176,12 +170,8 @@ test('a lockfile that the package manager writes with registry credentials is re
     expect(error.message).toBe(
         'The package manager wrote registry credentials into its lockfile. gspot kept the existing files.',
     );
-    expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(previous);
-    expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/bun.lock`), 'utf8')).toBe(lockfile);
-    expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.nodeModules}/authored.txt`), 'utf8')).toBe(
-        'keep installed files',
-    );
+    for (const [path, text] of Object.entries(files))
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
 });
 
 test('a missing Node stops npm before it writes a lockfile and keeps a cached lockfile', async () => {

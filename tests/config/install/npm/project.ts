@@ -23,3 +23,7 @@ export const PACKAGE_MANAGER_AGE_CASES = [
     { name: 'yarn', version: '4.9.0', minimum: '4.10.0', accepted: false },
     { name: 'yarn', version: '4.10.0', minimum: '4.10.0', accepted: true },
 ];
+
+export const CREDENTIAL_TOKEN = 'synthetic-generated-lockfile-token';
+
+export const CREDENTIAL_NPMRC = `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${CREDENTIAL_TOKEN}\n`;

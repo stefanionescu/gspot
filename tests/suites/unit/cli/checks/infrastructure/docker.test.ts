@@ -24,6 +24,14 @@ import {
     INVALID_COMPOSE_SOURCES,
 } from '#tests/config/checks/infrastructure/docker.ts';
 
+async function scanImages(root: string, stdout: string, resources: DisposableStack) {
+    const session = await openFakeToolSession(root, ['trivy'], resources);
+    const scan = resources.use(
+        spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ code: 10, stdout })),
+    );
+    return { scan, findings: await runSandboxCheck(session.root, 'docker/trivy-image') };
+}
+
 test.each([...COMPOSE_PAIRING_CASES])(
     'Compose $override runs after $base in one docker compose call',
     async ({ base, override }) => {
@@ -98,16 +106,12 @@ test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', asyn
     });
 
     using resources = new DisposableStack();
-    const session = await openFakeToolSession(sandbox.path, ['trivy'], resources);
-    const scan = resources.use(
-        spyOn(processes, 'spawnProcess').mockResolvedValue(
-            buildProcessResult({
-                code: 10,
-                stdout: '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}',
-            }),
-        ),
+    const { scan, findings } = await scanImages(
+        sandbox.path,
+        '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}',
+        resources,
     );
-    expect(await runSandboxCheck(session.root, 'docker/trivy-image')).toStrictEqual([...TRIVY_IMAGE_FINDINGS]);
+    expect(findings).toStrictEqual([...TRIVY_IMAGE_FINDINGS]);
     expect(scan.mock.calls.map(([command, options]) => ({ image: command.at(-1), cwd: options.cwd }))).toStrictEqual([
         { image: 'nginx:1.27.2', cwd: sandbox.path },
     ]);
@@ -148,16 +152,11 @@ test('Trivy scans a repeated image once and reports each advisory and secret in 
         'docker-compose.prod.yml': NGINX_COMPOSE,
     });
     using resources = new DisposableStack();
-    const session = await openFakeToolSession(sandbox.path, ['trivy'], resources);
-    const scan = resources.use(
-        spyOn(processes, 'spawnProcess').mockResolvedValue(
-            buildProcessResult({
-                code: 10,
-                stdout: '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"},{"VulnerabilityID":"CVE-neighbor","PkgName":"neighbor"}],"Secrets":[{"RuleID":"private-key","Title":"Private key","Secret":"sensitive-native-value"}]}]}',
-            }),
-        ),
+    const { scan, findings } = await scanImages(
+        sandbox.path,
+        '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"},{"VulnerabilityID":"CVE-neighbor","PkgName":"neighbor"}],"Secrets":[{"RuleID":"private-key","Title":"Private key","Secret":"sensitive-native-value"}]}]}',
+        resources,
     );
-    const findings = await runSandboxCheck(session.root, 'docker/trivy-image');
     expect(scan).toHaveBeenCalledTimes(1);
     expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual(
         ['compose.yaml', 'docker-compose.prod.yml'].flatMap((file) => [
