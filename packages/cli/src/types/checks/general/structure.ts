@@ -7,9 +7,7 @@ export type FolderChild = { name: string; kind: 'file' | 'folder' };
 
 export type ParsedSource = { path: string; language: ParsedLanguage; tree: Tree; captures: Map<string, Node[]> };
 
-export type ImportedFile = { module: string; path: string };
-
-export type LocatedImport = ImportedFile & { node: Node };
+export type LocatedImport = { module: string; path: string; node: Node };
 
 export type ImportOwners = { node: Node; module: string; owners: (number | undefined)[] };
 
