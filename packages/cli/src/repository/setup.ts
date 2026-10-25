@@ -126,6 +126,18 @@ function readHooksPathSetup(root: string, hooksPath: string): RepositorySetup['h
 }
 
 /**
+Read core.hooksPath as a path from the repository root, without a leading ./ or a trailing slash.
+
+@param repositoryRoot the repository to read.
+@returns the hooks folder that Git uses, or an empty string when Git has no such setting.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 2 files share it.
+export function readHooksPath(repositoryRoot: string): string {
+    const written = readGitSetting(repositoryRoot, HOOKS_PATH_SETTING) ?? '';
+    return convertToPosixPath(relative(repositoryRoot, resolve(repositoryRoot, written))).replace(TRAILING_SLASH, '');
+}
+
+/**
 Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings.
 
 @param repositoryRoot the repository to read.
@@ -134,11 +146,7 @@ Read the hooks that a clone already runs: another hooks folder, a tool hooks fol
 export function readHooks(repositoryRoot: string): RepositorySetup['hooks'] {
     const packageJson = readPackageJson(repositoryRoot, PACKAGE_JSON);
     const isPackageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
-    const written = readGitSetting(repositoryRoot, HOOKS_PATH_SETTING) ?? '';
-    const hooksPath = convertToPosixPath(relative(repositoryRoot, resolve(repositoryRoot, written))).replace(
-        TRAILING_SLASH,
-        '',
-    );
+    const hooksPath = readHooksPath(repositoryRoot);
     const isHuskyPath = hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
     const foreignHooksPath = isHuskyPath ? '' : hooksPath;
     const hookNames = [

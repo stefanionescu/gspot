@@ -1,12 +1,12 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { join, resolve, relative } from 'node:path';
-import { readHooks } from '#cli/repository/setup.ts';
 import type { Session } from '#cli/types/session.ts';
 import { listHookNames } from '#cli/generation/hooks.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { statSync, readdirSync, readFileSync } from 'node:fs';
 import { type Repository } from '#cli/types/repository/files.ts';
+import { readHooks, readHooksPath } from '#cli/repository/setup.ts';
 import { HOOKS_PATH_SETTING } from '#cli/config/repository/setup.ts';
 import { type RepositorySetup } from '#cli/types/repository/setup.ts';
 import type { HookPlan, HookStatus } from '#cli/types/install/hooks.ts';
@@ -56,7 +56,7 @@ function planHooks(session: Session): HookPlan {
     const { repository } = session;
     const { settings } = session.settingsFile;
     if (settings.hooks?.enabled !== true)
-        return readGitSetting(repository.root, HOOKS_PATH_SETTING) === GSPOT_PATHS.hooks
+        return readHooksPath(repository.root) === GSPOT_PATHS.hooks
             ? { command: UNSET_HOOKS_PATH, note: 'disabled hooks: unset core.hooksPath' }
             : { note: '' };
     const foreign = readForeignHooks(repository.root);
@@ -98,7 +98,7 @@ export function readHookStatus(session: Session, clone: Pick<Repository, 'root' 
     const { settings } = session.settingsFile;
     if (settings.hooks?.enabled !== true) return { ready: true, text: 'none' };
     if (!clone.hasGit) return { ready: false, text: 'not installed: no Git repository' };
-    if (readGitSetting(clone.root, HOOKS_PATH_SETTING) === GSPOT_PATHS.hooks) return { ready: true, text: 'installed' };
+    if (readHooksPath(clone.root) === GSPOT_PATHS.hooks) return { ready: true, text: 'installed' };
     const foreign = readForeignHooks(clone.root);
     if (foreign.length > 0) {
         const paths = foreign.flatMap((hook) => {

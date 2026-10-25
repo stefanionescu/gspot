@@ -166,3 +166,28 @@ test('the hooks that git lfs install wrote are not other hooks, so install point
         'hooks already run from .git/hooks; add these gspot lines to them:\n  pre-commit: mise exec -- gspot check --hook pre-commit\n  pre-push: mise exec -- gspot check --hook pre-push -- "$@"',
     );
 });
+
+test('a core.hooksPath that names the gspot hooks as an absolute, ./, or slash-ended path is installed', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
+    });
+    const session = await openSession(sandbox.path);
+    const root = session.repository.root;
+    for (const hooksPath of [join(root, GSPOT_PATHS.hooks), `./${GSPOT_PATHS.hooks}`, `${GSPOT_PATHS.hooks}/`]) {
+        runGitStep(root, ['config', 'core.hooksPath', hooksPath]);
+        expect(readHookStatus(session, session.repository), hooksPath).toStrictEqual({
+            ready: true,
+            text: 'installed',
+        });
+    }
+});
+
+test('with hooks off, install unsets an absolute core.hooksPath that names the gspot hooks', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const session = await openSession(sandbox.path);
+    runGitStep(sandbox.path, ['config', 'core.hooksPath', join(session.repository.root, GSPOT_PATHS.hooks)]);
+    const steps: (readonly string[])[] = [];
+    expect(installHooks(session, steps)).toBe('disabled hooks: unset core.hooksPath');
+    expect(steps).toStrictEqual([['git', 'config', '--unset', 'core.hooksPath']]);
+    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
+});
