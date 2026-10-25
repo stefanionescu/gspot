@@ -24,7 +24,10 @@ main() {
     local grammar
 
     mkdir -p dist
-    bun build src/bin.ts --target node --format esm --packages external --banner '#!/usr/bin/env node' >dist/gspot.js
+    {
+        printf '%s\n' '#!/usr/bin/env node'
+        bun build src/bin.ts --target node --format esm --packages external
+    } >dist/gspot.js
     bun build src/checks/framework/site/purgecss-process.ts --outdir dist --target node --format esm --packages external
 
     mkdir -p grammars/licenses
