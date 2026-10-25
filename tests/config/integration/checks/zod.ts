@@ -6,7 +6,9 @@ export const LOOSE_ZOD_SCHEMA = `// A test file.
 
 import { z } from 'zod';
 
-/** Accepts anything. */
+/**
+Accepts anything.
+*/
 export const loose = z.object({ value: z.any() });
 `;
 

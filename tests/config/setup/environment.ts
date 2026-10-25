@@ -17,3 +17,5 @@ export const OFFLINE_ENVIRONMENT = {
     no_proxy: undefined,
     MISE_OFFLINE: '1',
 } as const;
+
+export const MISE_LOCK_ENVIRONMENT = { MISE_GITHUB_ATTESTATIONS: 'false', MISE_SLSA: 'false' } as const;

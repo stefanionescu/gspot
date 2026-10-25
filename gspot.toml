@@ -286,6 +286,7 @@ markdownlint = "Official product name."
 React = "Official product name."
 Native = "Part of the React Native product name."
 Simple = "Part of the Simple Icons product name."
+certifi = "The tests name the Python certificate bundle package certifi."
 
 [tools.eslint]
 import_extension = "ts"
@@ -297,6 +298,12 @@ path = "packages/eslint-plugin/repository/plugin.mjs"
 [tools.eslint.plugins.rules]
 no-promise-matchers = []
 schema-location = [{ folders = ["packages/cli/src/schemas", "tests/schemas"] }]
+
+[[tools.eslint.override]]
+paths = ["packages/cli/src/**"]
+
+[tools.eslint.override.rules]
+no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 
 [tools.knip]
 entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/repository/plugin.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/configurations/linter-exports.ts"]
@@ -550,11 +557,3 @@ reason = "The react and react-dom configurations name these generators, after th
 check = "structure/shared-prefixes"
 paths = ["packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/src/config/rules/**", "tests/suites/unit/eslint-plugin/rules/**"]
 reason = "ESLint rule IDs are the file names, and they share their first word by convention."
-
-[[tools.eslint.override]]
-paths = ["packages/cli/src/**"]
-rules.no-restricted-properties = [
-    { object = "Bun", property = "env" },
-    { object = "Deno", property = "env" },
-    { property = "localeCompare", message = "Use compareText for stable ordering." },
-]

@@ -13,7 +13,12 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { TOOL_PATHS_FILE, GSPOT_LAUNCHER_PATH } from '#tests/config/setup/runner.ts';
 import { testModules, workspaceModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { PACKED_PACKAGES_FILE, TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/environment.ts';
+
+import {
+    PACKED_PACKAGES_FILE,
+    MISE_LOCK_ENVIRONMENT,
+    TEST_TIMEOUT_MILLISECONDS,
+} from '#tests/config/setup/environment.ts';
 
 setDefaultTimeout(TEST_TIMEOUT_MILLISECONDS);
 
@@ -39,6 +44,7 @@ const toolFolders = toolPaths.split(/\r?\n/u).filter((folder) => folder !== '');
 const work = resources.use(await testdir());
 const registry = resources.use(await createNpmRegistry(work.path));
 const observed = overrideEnvironment({
+    ...MISE_LOCK_ENVIRONMENT,
     MISE_STATE_DIR: join(TEST_RUN_FOLDER, 'mise-state'),
     GSPOT_TEST_NPM_REGISTRY: registry.url,
     NPM_CONFIG_USERCONFIG: registry.npmrc,

@@ -23,16 +23,16 @@ export default config;
 const NEXT_PAGE = `// The home page.
 
 /**
- * Renders the home page.
- * @returns text for the application entry route
- */
+Renders the home page.
+@returns text for the application entry route
+*/
 export default function Page(): string {
     return "home";
 }
 `;
 
 const NEXT_LAYOUT =
-    '// The root layout.\nimport type { ReactNode } from \'react\';\n\n/**\n * Wraps every page.\n * @param props content to place inside the document body\n * @param props.children route content to render inside the body\n * @returns the HTML wrapper shared by every route\n */\nexport default function Layout({ children }: Readonly<{ children: ReactNode }>): ReactNode {\n    return (\n        <html lang="en">\n            <body>{children}</body>\n        </html>\n    );\n}\n';
+    '// The root layout.\nimport type { ReactNode } from \'react\';\n\n/**\nWraps every page.\n@param props content to place inside the document body\n@param props.children route content to render inside the body\n@returns the HTML wrapper shared by every route\n*/\nexport default function Layout({ children }: Readonly<{ children: ReactNode }>): ReactNode {\n    return (\n        <html lang="en">\n            <body>{children}</body>\n        </html>\n    );\n}\n';
 
 export const NEXT_MESSAGES = {
     'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',

@@ -13,15 +13,16 @@ import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { shareProseSandbox } from '#tests/setup/sandboxes/create.ts';
+import { PROSE_SANDBOX } from '#tests/config/checks/general/prose.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { hasValePackages, installValePackages } from '#cli/install/vale.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { VALE_PACKAGES_INI, VALE_INSTALL_FAILURES } from '#tests/config/install/vale.ts';
-import { GOOGLE_TERMS_PATH, AUTHORED_STYLE_PATH, AUTHORED_VALE_FILES } from '#tests/config/integration/install/vale.ts';
+import { GOOGLE_RULE_PATH, AUTHORED_STYLE_PATH, AUTHORED_VALE_FILES } from '#tests/config/integration/install/vale.ts';
 
-const installedSandbox = shareProseSandbox();
+const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 
 test('gspot install restores deleted Vale dictionaries, and prose/vale passes again', async () => {
     const { root } = installedSandbox();
@@ -43,7 +44,7 @@ test('Vale package install deletes a package gspot no longer ships', async () =>
     const installed = await spawnGspot(sandbox.root, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.root, `${GSPOT_PATHS.valePackages}/Retired`))).toBe(false);
-    expect(await isOnDisk(join(sandbox.root, GOOGLE_TERMS_PATH))).toBe(true);
+    expect(await isOnDisk(join(sandbox.root, GOOGLE_RULE_PATH))).toBe(true);
     expect({
         authored: await readFile(join(sandbox.root, 'authored.txt'), 'utf8'),
         style: await readFile(join(sandbox.root, AUTHORED_STYLE_PATH), 'utf8'),
@@ -53,12 +54,12 @@ test('Vale package install deletes a package gspot no longer ships', async () =>
 test('Vale package install replaces an edited package and keeps your files', async () => {
     const sandbox = installedSandbox();
     await using _change = await changeAppliedSandbox(sandbox, AUTHORED_VALE_FILES);
-    const original = await readFile(join(sandbox.root, GOOGLE_TERMS_PATH));
-    await chmod(join(sandbox.root, GOOGLE_TERMS_PATH), 0o644);
-    await writeFile(join(sandbox.root, GOOGLE_TERMS_PATH), 'edited\n');
+    const original = await readFile(join(sandbox.root, GOOGLE_RULE_PATH));
+    await chmod(join(sandbox.root, GOOGLE_RULE_PATH), 0o644);
+    await writeFile(join(sandbox.root, GOOGLE_RULE_PATH), 'edited\n');
     const installed = await spawnGspot(sandbox.root, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    expect(await readFile(join(sandbox.root, GOOGLE_TERMS_PATH))).toStrictEqual(original);
+    expect(await readFile(join(sandbox.root, GOOGLE_RULE_PATH))).toStrictEqual(original);
     expect({
         authored: await readFile(join(sandbox.root, 'authored.txt'), 'utf8'),
         style: await readFile(join(sandbox.root, AUTHORED_STYLE_PATH), 'utf8'),

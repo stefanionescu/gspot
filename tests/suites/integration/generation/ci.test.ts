@@ -7,11 +7,11 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
-import { CLI_BIN, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { CLI_BIN, applyThenInstall } from '#tests/setup/cli/commands.ts';
 import { type CiDocument, type GithubWorkflow } from '#tests/types/ci.ts';
 import { CI_CHECKS, GITHUB_PIPELINE, GITLAB_PIPELINE } from '#tests/config/integration/generation/ci.ts';
 
@@ -38,8 +38,7 @@ async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
         'legacy.sh': 'if then\n',
     });
     await writeFile(join(root, 'gspot.toml'), settings);
-    const applied = await spawnGspot(root, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await applyThenInstall(root);
 }
 
 async function commitCiChanges(root: string, provider: 'gitlab' | 'github') {
@@ -131,11 +130,11 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         const lines = invalid.stdout.split('\n');
         const start = lines.indexOf('project/syntax  failed  1 finding');
-        expect(lines.slice(start, start + 4)).toStrictEqual([
+        expect(lines.slice(start, start + 4), invalid.stdout).toStrictEqual([
             'project/syntax  failed  1 finding',
             '  changed.sh: syntax error',
             '  help: Read the command output; this repository declares the check.',
-            '  run again: gspot check --only project/syntax',
+            `  run again: gspot check --only project/syntax --changed ${base}`,
         ]);
         await writeFile(join(sandbox.path, 'changed.sh'), 'echo corrected\n');
         runGitStep(sandbox.path, ['add', 'changed.sh']);

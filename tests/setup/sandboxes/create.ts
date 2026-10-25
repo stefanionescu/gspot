@@ -1,34 +1,20 @@
 import { join } from 'node:path';
 import { format } from 'prettier';
-import { strToU8, zipSync } from 'fflate';
 import { afterAll, beforeAll } from 'bun:test';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
-import { planReplacement } from '#cli/apply/write/plans.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import type { FileContents } from '#cli/types/system/files.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
-import { openWriter, writePlans } from '#cli/apply/write/writer.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { PROSE_SANDBOX } from '#tests/config/checks/general/prose.ts';
 import { linkPackages } from '#tests/setup/sandboxes/node-modules.ts';
 import { readCheckoutCacheFolder } from '#cli/checks/language/swift/cache.ts';
-import { VALE_PACKAGES } from '#cli/config/generation/configurations/general/prose.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
+import { SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/config/setup/sandboxes.ts';
 import { type Sandbox, type SandboxPlan, type InstalledSandboxPlan } from '#tests/types/sandbox.ts';
 import { runGspot, spawnGspot, runGspotStep, buildInitArguments } from '#tests/setup/cli/commands.ts';
-
-import {
-    REGISTRY_HOST,
-    ZIP_FILE_OPTIONS,
-    SANDBOX_GITIGNORE,
-    VALE_PACKAGE_FILES,
-    SANDBOX_PACKAGE_JSON,
-} from '#tests/config/setup/sandboxes.ts';
 
 /**
 Name the installed npm in the root package.json, as a repository at level all must.
@@ -123,59 +109,6 @@ export function shareInstalledSandbox(plan: InstalledSandboxPlan): () => Sandbox
     });
     afterAll(() => resources.disposeAsync());
     return () => sandbox;
-}
-
-/**
-Share a prose sandbox whose Vale packages come from the local package server.
-*/
-export function shareProseSandbox(): () => Sandbox {
-    const resources = new DisposableStack();
-    let server: ReturnType<typeof Bun.serve>;
-    beforeAll(() => {
-        const archive = zipSync(
-            Object.fromEntries(
-                Object.entries(VALE_PACKAGE_FILES).map(([path, content]) => [
-                    path,
-                    [strToU8(content), ZIP_FILE_OPTIONS.regular],
-                ]),
-            ),
-        );
-        server = resources.use(Bun.serve({ hostname: REGISTRY_HOST, port: 0, fetch: () => new Response(archive) }));
-    });
-    function pointValePackages(root: string): void {
-        const packages = VALE_PACKAGES.map((name) => `http://${REGISTRY_HOST}:${String(server.port)}/${name}.zip`).join(
-            ', ',
-        );
-        using writer = openWriter(root);
-        const file = writer.read(GSPOT_PATHS.valeConfigFile) as FileContents;
-        const observed = [
-            planReplacement(writer, {
-                path: GSPOT_PATHS.valeConfigFile,
-                next: {
-                    bytes: Buffer.from(
-                        file.bytes.toString('utf8').replace(/^Packages = .*$/mu, () => `Packages = ${packages}`),
-                    ),
-                    mode: 0o444,
-                },
-            }),
-        ];
-        writePlans(writer, observed);
-    }
-    const sandbox = shareInstalledSandbox({
-        ...PROSE_SANDBOX,
-        prepare: pointValePackages,
-    });
-    afterAll(() => {
-        resources.dispose();
-    });
-    return () => ({
-        ...sandbox(),
-        async run(root, commandArguments) {
-            const result = await spawnGspot(root, commandArguments);
-            if (commandArguments[0] === 'apply' && result.code === 0) pointValePackages(root);
-            return result;
-        },
-    });
 }
 
 /**

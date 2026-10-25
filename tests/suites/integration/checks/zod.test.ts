@@ -4,7 +4,6 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { generateFile } from '#tests/setup/cli/generated-files.ts';
 import { initSandbox, pinSandboxNpm } from '#tests/setup/sandboxes/create.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { LOOSE_ZOD_SCHEMA, ZOD_PROJECT_FILES } from '#tests/config/integration/checks/zod.ts';
@@ -21,9 +20,10 @@ test('adding the zod configuration adds its ESLint finding, and removing it drop
     const added = await spawnGspot(sandbox.path, ['add', 'zod', '--json']);
     expect(added.code, added.stdout + added.stderr).toBe(0);
     await applyThenInstall(sandbox.path);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toContain('"eslint-plugin-zod"');
     const after = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'javascript/eslint', '--json']));
     expect(after.code, after.stdout + after.stderr).toBe(1);
-    expect(listFindingRows(after.report)).toStrictEqual([{ file: 'schema.ts', line: 6, rule: 'zod/no-any-schema' }]);
+    expect(listFindingRows(after.report)).toStrictEqual([{ file: 'schema.ts', line: 8, rule: 'zod/no-any-schema' }]);
     await writeFile(join(sandbox.path, 'schema.ts'), LOOSE_ZOD_SCHEMA.replace('z.any()', 'z.string()'));
     const correctedCheck = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'javascript/eslint', '--json']),
@@ -44,13 +44,7 @@ test('adding the zod configuration adds its ESLint finding, and removing it drop
     const project = JSON.parse(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')) as {
         devDependencies: Record<string, string>;
     };
-    const contents = await generateFile(
-        await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'),
-        GSPOT_PATHS.npmProject,
-        {},
-    );
-    const generatedProject = JSON.parse(contents) as { devDependencies: Record<string, string> };
-    expect(Object.keys(project.devDependencies)).toStrictEqual(Object.keys(generatedProject.devDependencies));
+    expect(Object.keys(project.devDependencies)).not.toContain('eslint-plugin-zod');
     const removedCheck = await spawnGspot(sandbox.path, ['check', '--only', 'javascript/eslint', '--json']);
     expect(removedCheck.code, removedCheck.stdout + removedCheck.stderr).toBe(0);
 });

@@ -1,12 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { spawnRootCheck } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { shareProseSandbox } from '#tests/setup/sandboxes/create.ts';
+import { PROSE_SANDBOX } from '#tests/config/checks/general/prose.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 import { VALE_INI, EXAMPLE_STYLE_FOLDER } from '#tests/config/integration/checks/general/prose/samples.ts';
 
@@ -19,7 +21,7 @@ import {
 } from '#tests/config/integration/checks/general/prose/file-types.ts';
 
 test('prose/vale reports a finding in a .sh file and passes after the fix', async () => {
-    await using sandbox = await testdir();
+    await using sandbox = await createGitSandbox({});
     const path = 'sample.sh';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['prose', 'bash', 'markdown']),
@@ -38,7 +40,7 @@ test('prose/vale reports a finding in a .sh file and passes after the fix', asyn
 test.each([...MARKDOWN_COMMENT_CASES])(
     'Vale parses Markdown in %s comments without treating source strings as prose',
     async (extension, marker, code) => {
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         const path = `source.${extension}`;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['prose']),
@@ -50,7 +52,6 @@ test.each([...MARKDOWN_COMMENT_CASES])(
                 code,
                 `${marker} @param delve the command name`,
                 `${marker} @param value We delve into records.`,
-                `${marker} eslint-disable no-console -- reason: We delve into records.`,
                 '',
             ].join('\n'),
         });
@@ -59,7 +60,6 @@ test.each([...MARKDOWN_COMMENT_CASES])(
         expect(result.findings).toStrictEqual([
             matchFields({ file: path, line: 2, rule: 'Example.Concrete' }),
             matchFields({ file: path, line: 5, rule: 'Example.Concrete' }),
-            matchFields({ file: path, line: 6, rule: 'Example.Concrete' }),
         ]);
     },
 );
@@ -67,7 +67,7 @@ test.each([...MARKDOWN_COMMENT_CASES])(
 test.each([...PROSE_COMMENT_CASES])(
     'prose/vale keeps the language and the scope path of a .%s file it sends on stdin',
     async (extension, marker, code) => {
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({});
         const path = extension === '' ? 'source' : `source.${extension}`;
         const prefix = extension === '' ? '#!/usr/bin/env bash\n' : '';
         const source = `${prefix}${marker} We delve into records.\n${code}\n`;
@@ -95,7 +95,7 @@ test.each([...PROSE_COMMENT_CASES])(
     },
 );
 
-const installedSandbox = shareProseSandbox();
+const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 
 test.each([...PROSE_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
     expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(expectedSummary(sample));

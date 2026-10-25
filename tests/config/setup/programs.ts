@@ -100,7 +100,7 @@ export const SPAWN_DESCENDANT_OPTIONS = {
     forward: { type: 'string' },
 } as const;
 
-export const RUN_CLI_OPTIONS = { 'signal-marker': { type: 'string' } } as const;
+export const SIGNAL_MARKER_OPTION = '--signal-marker';
 
 export const STYLELINT_MODULE_PATH = '.gspot/node_modules/stylelint/lib/index.mjs';
 

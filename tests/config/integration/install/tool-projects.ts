@@ -1,5 +1,77 @@
 export const TOOL_ADVISORY_EXCEPTIONS = [
     {
+        package: 'certifi',
+        advisory: 'GHSA-6q48-6c7w-9gw2',
+        reason: 'The fixed certifi 2026.10.19 clears the seven-day release-age hold on 2026-10-27.',
+        recheck: '2026-10-27',
+    },
+    {
+        package: 'fast-uri',
+        advisory: 'GHSA-333x-w4r6-6crp',
+        reason: 'The fixed fast-uri 3.1.9 clears the seven-day release-age hold on 2026-10-27, and the ajv range takes it.',
+        recheck: '2026-10-27',
+    },
+    {
+        package: 'fast-uri',
+        advisory: 'GHSA-w74x-v6f9-j3xg',
+        reason: 'The fixed fast-uri 3.1.9 clears the seven-day release-age hold on 2026-10-27, and the ajv range takes it.',
+        recheck: '2026-10-27',
+    },
+    {
+        package: 'fast-uri',
+        advisory: 'GHSA-wjr9-j795-jxcr',
+        reason: 'The fixed fast-uri 3.1.9 clears the seven-day release-age hold on 2026-10-27, and the ajv range takes it.',
+        recheck: '2026-10-27',
+    },
+    {
+        package: 'fast-uri',
+        advisory: 'GHSA-xhq7-xmqj-769h',
+        reason: 'The fixed fast-uri 3.1.9 clears the seven-day release-age hold on 2026-10-27, and the ajv range takes it.',
+        recheck: '2026-10-27',
+    },
+    {
+        package: 'handlebars',
+        advisory: 'GHSA-8r5x-fm3f-whwj',
+        reason: 'eslint-plugin-boundaries 7.2.0 pins handlebars 4.7.9. Its release 7.2.1 pins the fixed 4.7.10 and clears the seven-day release-age hold on 2026-10-28.',
+        recheck: '2026-10-28',
+    },
+    {
+        package: 'handlebars',
+        advisory: 'GHSA-p8wg-vrv2-v86f',
+        reason: 'eslint-plugin-boundaries 7.2.0 pins handlebars 4.7.9. Its release 7.2.1 pins the fixed 4.7.10 and clears the seven-day release-age hold on 2026-10-28.',
+        recheck: '2026-10-28',
+    },
+    {
+        package: 'handlebars',
+        advisory: 'GHSA-xw65-4hp5-5hc7',
+        reason: 'eslint-plugin-boundaries 7.2.0 pins handlebars 4.7.9. Its release 7.2.1 pins the fixed 4.7.10 and clears the seven-day release-age hold on 2026-10-28.',
+        recheck: '2026-10-28',
+    },
+    {
+        package: 'markdown-it',
+        advisory: 'GHSA-gfr2-rv44-r23c',
+        reason: 'markdownlint-cli2 0.23.3 pins markdown-it 15.0.1. Its release 0.24.0 pins the fixed 15.0.3 and clears the seven-day release-age hold on 2026-10-28.',
+        recheck: '2026-10-28',
+    },
+    {
+        package: 'markdown-it',
+        advisory: 'GHSA-r7fv-28h4-cvq7',
+        reason: 'markdownlint-cli2 0.23.3 pins markdown-it 15.0.1. Its release 0.24.0 pins the fixed 15.0.3 and clears the seven-day release-age hold on 2026-10-28.',
+        recheck: '2026-10-28',
+    },
+    {
+        package: 'markdown-it',
+        advisory: 'GHSA-vfgh-jcmw-g37q',
+        reason: 'markdownlint-cli2 0.23.3 pins markdown-it 15.0.1. Its release 0.24.0 pins the fixed 15.0.3 and clears the seven-day release-age hold on 2026-10-28.',
+        recheck: '2026-10-28',
+    },
+    {
+        package: 'smol-toml',
+        advisory: 'GHSA-r4xh-jqrq-34v2',
+        reason: 'markdownlint-cli2 0.23.3 pins smol-toml 1.8.0. Its release 0.24.0 pins the fixed 1.9.1 and clears the seven-day release-age hold on 2026-10-28.',
+        recheck: '2026-10-28',
+    },
+    {
         package: 'katex',
         advisory: 'GHSA-238p-pmpm-9mq7',
         reason: 'markdownlint parses math syntax and never renders KaTeX output.',

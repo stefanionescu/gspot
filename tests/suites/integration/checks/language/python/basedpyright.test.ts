@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
@@ -26,6 +27,8 @@ test('init replaces your pyrightconfig.json with a pointer, and basedpyright rep
         `${header}${JSON.stringify(pointer, null, JSON_INDENT)}\n`,
     );
     expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(settings);
+    const venv = await runCommand(['uv', 'venv', '.venv'], { cwd: root });
+    expect(venv.code, venv.stdout + venv.stderr).toBe(0);
     const command = ['check', '--only', 'python/basedpyright', '--json'];
     const refused = parseCheckReport(await spawnGspot(root, command));
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);

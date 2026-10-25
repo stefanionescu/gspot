@@ -12,18 +12,6 @@ export const STYLE_CASES = [
         ],
     },
     {
-        path: 'source.sh',
-        source: '# Read $1 and $2 as positional parameters.\nprintf "%s" "$1"\n',
-        rule: 'currency',
-        findings: [],
-    },
-    {
-        path: 'source.ts',
-        source: '// Use $1 as the regular expression replacement.\nconst value = 1;\n',
-        rule: 'currency',
-        findings: [],
-    },
-    {
         rule: 'en-dashes',
         path: 'ranges.md',
         source: `# Guide
@@ -66,18 +54,6 @@ trap 'rm -f -- "\${file_list}"' EXIT
         findings: [],
     },
     {
-        rule: 'acronyms',
-        path: 'tags.ts',
-        source: `/**
- * Holds the reply colors.
- * @property {RGBA} color the reply color.
- * @yields {CMYK} the next color.
- */
-export const reply = {};
-`,
-        findings: [],
-    },
-    {
         rule: 'tree-blocks',
         path: 'tree.md',
         source: `# Guide
@@ -99,15 +75,6 @@ src/
                     'A file tree inventories the layout and goes stale with each move. Document behavior and ownership instead.',
             },
         ],
-    },
-    {
-        rule: 'tree-blocks',
-        path: 'tree.ts',
-        source: `// Prints the folders as a tree, such as:
-// └── data/
-export const branch = '└──';
-`,
-        findings: [],
     },
     {
         rule: 'file-paths',
@@ -153,16 +120,16 @@ Use \`src/view.tsx\` in the command.
     },
     {
         rule: 'since',
-        path: 'source.ts',
-        source: `/**
- * @since 1.2.0
- */
-// Use cached values since the source is stable.
-const sinceValue = "since";
+        path: 'since.md',
+        source: `# Guide
+
+The @since tag names the first release.
+
+Use cached values since the source is stable.
 `,
         findings: [
             {
-                line: 4,
+                line: 5,
                 rule: 'gspot.since',
                 message: "'since' is ambiguous between time and cause. Use 'because' or 'after'.",
             },

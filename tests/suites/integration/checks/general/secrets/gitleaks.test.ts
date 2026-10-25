@@ -53,21 +53,15 @@ function assertSecretFindings(check: CheckResult | undefined, output: string, pr
     for (const token of [AWS_KEY_ID, API_TOKEN]) expect(output).not.toContain(token);
 }
 
-test('secrets/gitleaks-staged skips a folder without Git and checks staged changes once Git exists', async () => {
+test('secrets/gitleaks-staged passes a committed secret and reports a staged one', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['secrets']),
         'src/config.js': `const token = "${API_TOKEN}";\n`,
     });
+    commitAll(sandbox.path);
 
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const withoutGit = parseCheckReport(
-        await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json']),
-    ).report.checks;
-    expect(withoutGit).toMatchObject([{ check: 'secrets/gitleaks-staged', status: 'skipped' }]);
-    commitAll(sandbox.path);
-    const reapplied = await spawnGspot(sandbox.path, ['apply']);
-    expect(reapplied.code, reapplied.stdout + reapplied.stderr).toBe(0);
     const committed = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json']),
     ).report.checks;

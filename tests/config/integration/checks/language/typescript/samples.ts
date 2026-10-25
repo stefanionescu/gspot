@@ -20,18 +20,19 @@ const TYPESCRIPT_PACKAGE = `{
 const DOUBLE_SOURCE = `// A plain JavaScript file that doubles a number.
 
 /**
- * Doubles a number, and returns an infinite number unchanged.
- *
- * @param {number} value the operand to multiply
- * @returns {number} twice the value
- */
+Doubles a number, and returns an infinite number unchanged.
+
+@param {number} value the operand to multiply
+@returns {number} twice the value
+*/
 export function twice(value) {
     if (Number.isNaN(value)) throw new RangeError('A missing number has no double.');
-    if (!Number.isFinite(value)) return value;
-    return value * 2;
+    return Number.isFinite(value) ? value * 2 : value;
 }
 
-/** A call with the sample value. */
+/**
+A call with the sample value.
+*/
 export const wrong = twice(3);
 `;
 
@@ -43,10 +44,14 @@ import { receiptOptions } from './orders/receipt.js';
 const formatter = new Intl.NumberFormat('en-US', receiptOptions);
 const total = orderTotal([{ price: 2, quantity: 3 }], 'EUR');
 
-/** The receipt line of the sample order. */
+/**
+The receipt line of the sample order.
+*/
 export const receipt = formatter.format(total.amount);
 
-/** Twice the sample result. */
+/**
+Twice the sample result.
+*/
 export const doubled = twice(wrong);
 `;
 
@@ -68,12 +73,16 @@ export const TYPESCRIPT_SANDBOX = {
         '.gitignore': 'node_modules/\n',
         'types/orders.ts': `// Type aliases of the orders module.
 
-/** One line of an order. */
+/**
+One line of an order.
+*/
 export type OrderLine = { price: number; quantity: number };
 `,
         'types/totals.ts': `// Type aliases of the totals.
 
-/** A total with its currency. */
+/**
+A total with its currency.
+*/
 export type Total = { amount: number; currency: string };
 `,
         'src/orders/total.ts': `// The total of an order.
@@ -81,12 +90,12 @@ import type { Total } from '#types/totals.js';
 import type { OrderLine } from '#types/orders.js';
 
 /**
- * Adds up the lines of an order.
- *
- * @param lines the purchased quantities and unit prices
- * @param currency the currency of every line
- * @returns the total price
- */
+Adds up the lines of an order.
+
+@param lines the purchased quantities and unit prices
+@param currency the currency of every line
+@returns the total price
+*/
 export function orderTotal(lines: OrderLine[], currency: string): Total {
     let amount = 0;
     for (const line of lines) amount += line.price * line.quantity;
@@ -95,7 +104,9 @@ export function orderTotal(lines: OrderLine[], currency: string): Total {
 `,
         'src/orders/receipt.ts': `// The receipt currency format.
 
-/** Formats the euro amounts on receipts. */
+/**
+Formats the euro amounts on receipts.
+*/
 export const receiptOptions = { style: 'currency', currency: 'EUR' } as const;
 `,
         'src/orders/double.js': DOUBLE_SOURCE,

@@ -3,15 +3,13 @@ import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { listMisePins } from '#cli/configurations/tools.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { readRuntimePins } from '#tests/setup/runner/run-folder.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { GIT_ISOLATION_ENVIRONMENT } from '#tests/config/setup/system/git.ts';
 import { listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { SWIFT_TUTORIAL, PYTHON_TUTORIAL } from '#tests/config/e2e/quickstart.ts';
-import { readRuntimePins, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 
 test('the Python quickstart reports its finding through the installed hook and passes after the fix', async () => {
     await runQuickstart(PYTHON_TUTORIAL);
@@ -37,7 +35,6 @@ async function runQuickstart(row: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL
         MISE_CEILING_PATHS: dirname(root),
     };
     const runtimePins = await readRuntimePins();
-    await linkQuickstartTools(root, environment);
     for (const command of [
         ['mise', 'use', `node@${runtimePins.node}`, `npm:@gspothq/cli@${cliPackage.version}`],
         ...row.projectCommands,
@@ -72,22 +69,6 @@ async function runQuickstart(row: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL
     runGitStep(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', row.sourcePath]);
     const corrected = await runCommand(command, { cwd: root, env: environment });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-}
-
-async function linkQuickstartTools(tutorialRoot: string, environment: Record<string, string>): Promise<void> {
-    for (const pin of listMisePins(readConfigurations().values().toArray())) {
-        if (!hasToolBuild(pin.name)) continue;
-        const requirement = `${pin.name}@${pin.version}`;
-        const installed = await runCommand(
-            pin.name === 'uv' ? ['mise', 'which', 'uv'] : ['mise', 'where', requirement],
-            { cwd: TEST_RUN_FOLDER },
-        );
-        expect(installed.code, `Quickstart tool lookup failed: ${installed.stdout}${installed.stderr}`).toBe(0);
-        const location = installed.stdout.trim();
-        const folder = pin.name === 'uv' ? dirname(location) : location;
-        const linked = await runCommand(['mise', 'link', requirement, folder], { cwd: tutorialRoot, env: environment });
-        expect(linked.code, `Quickstart tool linking failed: ${linked.stdout}${linked.stderr}`).toBe(0);
-    }
 }
 
 function assertCommitRejected(repositoryRoot: string, rule: string, environment: Record<string, string>): void {

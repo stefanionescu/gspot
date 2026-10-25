@@ -131,7 +131,7 @@ test('markdownlint reports line, column, and fixable for findings in files whose
     await using _change = await applySandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['markdown'], { level: 'all' }),
-            ...Object.fromEntries(paths.map((path) => [path, 'café <img src="example.png">   \n'])),
+            ...Object.fromEntries(paths.map((path) => [path, 'café <img src="example.png"> https://example.com\n'])),
         },
     });
     const configuration = findManifestTarget('markdown', 'markdownlint-cli2.mjs');
@@ -147,7 +147,7 @@ test('markdownlint reports line, column, and fixable for findings in files whose
         paths
             .toSorted((left, right) => left.localeCompare(right))
             .flatMap((file) => [
-                { file, line: 1, column: 29, rule: 'MD009', fixable: true },
+                { file, line: 1, column: 30, rule: 'MD034', fixable: true },
                 { file, line: 1, column: undefined, rule: 'MD041', fixable: false },
                 { file, line: 1, column: 6, rule: 'MD045', fixable: false },
             ]),

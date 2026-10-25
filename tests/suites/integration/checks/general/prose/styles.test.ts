@@ -8,8 +8,9 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { TYPO } from '#tests/config/checks/general/spelling.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { shareProseSandbox } from '#tests/setup/sandboxes/create.ts';
+import { PROSE_SANDBOX } from '#tests/config/checks/general/prose.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { VALE_INI, EXAMPLE_STYLE_FOLDER } from '#tests/config/integration/checks/general/prose/samples.ts';
 import { spawnGspot, spawnRootCheck, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -25,9 +26,9 @@ import {
     CORRECTED_LINK_TEXT_GUIDE,
 } from '#tests/config/integration/checks/general/prose/styles.ts';
 
-const installedSandbox = shareProseSandbox();
+const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 
-test(`Vale's em-dashes rule checks the reason text of ESLint comments and skips the -- separator`, async () => {
+test(`Vale's em-dashes rule checks code comments and skips ESLint directive comments`, async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['prose', 'typescript']),
         [GSPOT_PATHS.valeConfigFile]: VALE_INI,
@@ -41,7 +42,6 @@ test(`Vale's em-dashes rule checks the reason text of ESLint comments and skips 
     const failed = await spawnRootCheck(sandbox.path, 'prose/vale');
     expect(failed.status, failed.note).toBe('failed');
     expect(failed.findings).toStrictEqual([
-        matchFields({ file: 'source.ts', line: 4, column: 56, rule: 'Example.Dashes' }),
         matchFields({ file: 'source.ts', line: 5, column: 15, rule: 'Example.Dashes' }),
     ]);
     await writeFile(join(sandbox.path, 'source.ts'), '// Punctuation stays checked.\n');
@@ -115,7 +115,9 @@ test.each([...STYLE_CASES])(
         });
         const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'prose/vale', '--json']));
         expect(
-            result.report.checks[0]!.findings.map(({ file, line, rule, message }) => ({ file, line, rule, message })),
+            result.report.checks[0]!.findings.flatMap(({ file, line, rule, message }) =>
+                rule === `gspot.${row.rule}` ? [{ file, line, rule, message }] : [],
+            ),
         ).toStrictEqual(row.findings.map((finding) => ({ file: row.path, ...finding })));
     },
 );

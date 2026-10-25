@@ -119,7 +119,7 @@ jobs:
 });
 
 test('zizmor checks composite actions in the root and a scope', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['github-actions'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['github-actions'] }],

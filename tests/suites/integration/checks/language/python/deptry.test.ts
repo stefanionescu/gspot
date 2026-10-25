@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
-test("deptry ignores gspot's tool folder without Git and keeps your exclude settings", async () => {
-    await using sandbox = await testdir();
+test("deptry ignores gspot's tool folder and reads your exclude settings again after they change", async () => {
+    await using sandbox = await createGitSandbox({});
     const project = `[project]
 name = "dependency-example"
 version = "1.0.0"
@@ -35,11 +35,6 @@ extend_exclude = ["^vendor/"]
     const corrected = parseCheckReport(await spawnGspot(sandbox.path, commandArguments));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
-    runGitStep(sandbox.path, ['init', '-q']);
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const primed = await spawnGspot(sandbox.path, commandArguments);
-    expect(primed.code, primed.stdout + primed.stderr).toBe(0);
     await writeFile(join(sandbox.path, 'pyproject.toml'), project + exclusions.replace('"^vendor/"', '"^other/"'));
     const changed = parseCheckReport(await spawnGspot(sandbox.path, commandArguments));
     expect(changed.code, changed.stdout + changed.stderr).toBe(1);

@@ -22,7 +22,7 @@ export const CI_CHECKS = {
     ignore: [
         {
             check: 'data-files/v8r',
-            reason: 'The jobs test the generated workflow; without an npm check, each install runs mise only.',
+            reason: 'The jobs test the generated workflow, not the JSON schema check.',
         },
     ],
 } as const;

@@ -1,12 +1,9 @@
-import { parseArgs } from 'node:util';
 import { writeFileSync } from 'node:fs';
-import { RUN_CLI_OPTIONS } from '#tests/config/setup/programs.ts';
-import { splitProgramArguments } from '#tests/setup/system/programs.ts';
+import { SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
 
-const { own, call } = splitProgramArguments();
-const { values } = parseArgs({ args: own, options: RUN_CLI_OPTIONS });
-const marker = values['signal-marker'];
-if (marker !== undefined)
+const [option, marker, ...markedCall] = process.argv.slice(2);
+const call = option === SIGNAL_MARKER_OPTION ? markedCall : process.argv.slice(2);
+if (option === SIGNAL_MARKER_OPTION && marker !== undefined)
     process.on('newListener', (name) => {
         if (name === 'SIGTERM')
             setImmediate(() => {

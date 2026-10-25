@@ -7,7 +7,9 @@ export const TYPESCRIPT_CASES = [
             'src/orders/back.ts': `// An order module that reaches back into the entry.
 import { receipt } from '#entry';
 
-/** The entry receipt with the order label, as the order screen shows it. */
+/**
+The entry receipt with the order label, as the order screen shows it.
+*/
 export const receiptLabel = \`Order: \${receipt}\`;
 `,
         },
@@ -18,7 +20,9 @@ export const receiptLabel = \`Order: \${receipt}\`;
         files: {
             'src/orders/unused.ts': `// Nothing imports this.
 
-/** A value nobody reads. */
+/**
+A value nobody reads.
+*/
 export const unused = 1;
 `,
         },
@@ -27,7 +31,9 @@ export const unused = 1;
             files: {
                 'src/orders/unused.ts': `// Nothing imports this.
 
-/** A value nobody reads. */
+/**
+A value nobody reads.
+*/
 export const unused = 1;
 `,
                 'src/main.ts':

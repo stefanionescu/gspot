@@ -78,6 +78,7 @@ The other native branch.
             [0, 'gspot.title-case'],
             [0, 'gspot.merge-conflict-markers'],
             [0, 'gspot.acronyms'],
+            [1, 'Google.HeadingPunctuation'],
             [2, 'gspot.merge-conflict-markers'],
             [4, 'gspot.merge-conflict-markers'],
         ],

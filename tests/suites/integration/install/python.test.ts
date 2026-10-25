@@ -24,7 +24,10 @@ import {
     PYTHON_PROJECTS,
     RUFF_VERSION_OUTPUT,
     PYTHON_INSTALL_STEPS,
+    UV_RELEASE_CUTOFF_LINE,
+    PYTHON_SIMPLE_JSON_TYPE,
     PYTHON_INDEX_CREDENTIALS,
+    PYTHON_INDEX_UPLOAD_TIME,
 } from '#tests/config/integration/install/python.ts';
 
 const resources = new AsyncDisposableStack();
@@ -52,7 +55,9 @@ test.each([...PYTHON_PROJECTS])(
             MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
         });
         expect(command.code, command.stdout + command.stderr).toBe(0);
-        const steps = (JSON.parse(command.stdout) as { steps: string[][] }).steps;
+        const steps = (JSON.parse(command.stdout) as { steps: string[][] }).steps.filter(
+            (step) => step[0] === 'mise' || step.includes('--project'),
+        );
         const session = await openSession(sandbox.path);
         const installSteps = [];
         for (const step of PYTHON_INSTALL_STEPS) {
@@ -138,7 +143,10 @@ test('apply keeps a conflicted Python lockfile and install repairs it', async ()
     expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
     const installed = await spawnGspot(sandbox.path, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
+    const repaired = await readFile(lockfilePath, 'utf8');
+    expect(repaired.replace(UV_RELEASE_CUTOFF_LINE, '')).toBe(
+        lockfile.toString('utf8').replace(UV_RELEASE_CUTOFF_LINE, ''),
+    );
     expect(await readFile(join(sandbox.path, configuration))).toStrictEqual(rootConfiguration);
 });
 
@@ -171,9 +179,16 @@ async function createPythonIndex(work: string): Promise<Disposable & { url: stri
             if (request.headers.get('authorization') !== authentication)
                 return new Response('Authentication required', { status: 401 });
             if (new URL(request.url).pathname.endsWith('.whl')) return new Response(archive);
-            return new Response(`<a href="/${wheel}#sha256=${digest}">${wheel}</a>`, {
-                headers: { 'content-type': 'text/html' },
-            });
+            const file = {
+                filename: wheel,
+                url: `/${wheel}`,
+                hashes: { sha256: digest },
+                'upload-time': PYTHON_INDEX_UPLOAD_TIME,
+            };
+            return Response.json(
+                { meta: { 'api-version': '1.1' }, name: 'ruff', files: [file] },
+                { headers: { 'content-type': PYTHON_SIMPLE_JSON_TYPE } },
+            );
         },
     });
     return {

@@ -1,15 +1,14 @@
 const JAVASCRIPT_MODULE = `// Doubles numbers.
 
 /**
- * Doubles a number, and returns an infinite number unchanged.
- *
- * @param {number} value the operand to multiply
- * @returns {number} twice the value
- */
+Doubles a number, and returns an infinite number unchanged.
+
+@param {number} value the operand to multiply
+@returns {number} twice the value
+*/
 export function twice(value) {
     if (Number.isNaN(value)) throw new RangeError('A missing number has no double.');
-    if (!Number.isFinite(value)) return value;
-    return value * 2;
+    return Number.isFinite(value) ? value * 2 : value;
 }
 `;
 
@@ -25,8 +24,8 @@ export const ESLINT_SANDBOX = {
 export const DEBUGGER_SAMPLE = {
     check: 'javascript/eslint',
     files: {
-        'src/paused.js': JAVASCRIPT_MODULE.replace('    return value * 2', '    debugger;\n    return value * 2'),
+        'src/paused.js': JAVASCRIPT_MODULE.replace('    return Number', '    debugger;\n    return Number'),
     },
-    expected: { file: 'src/paused.js', line: 12, rule: 'no-debugger' },
+    expected: { file: 'src/paused.js', line: 11, rule: 'no-debugger' },
     corrected: { files: { 'src/paused.js': JAVASCRIPT_MODULE } },
 };

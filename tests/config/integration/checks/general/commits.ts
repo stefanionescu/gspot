@@ -40,3 +40,14 @@ export function buildUntypedMessageFindings(hash: string): { rule: string; messa
         { rule: 'subject-full-stop', message: `${hash}: subject may not end with full stop` },
     ];
 }
+
+export const COMMITLINT_LEVEL_RESULTS = {
+    recommended: {
+        code: 2,
+        output: {
+            error: 'arguments',
+            message: 'commits/commitlint is off at level recommended. Run gspot set level all to turn it on.',
+        },
+    },
+    all: { code: 0, output: { checks: [{ check: 'commits/commitlint', status: 'passed', findings: [] }] } },
+} as const;

@@ -7,4 +7,4 @@ export const AUTHORED_VALE_FILES = {
     files: { 'authored.txt': 'keep\n', [AUTHORED_STYLE_PATH]: 'authored legacy bytes\n' },
 } as const;
 
-export const GOOGLE_TERMS_PATH = `${GSPOT_PATHS.valePackages}/Google/terms.yml`;
+export const GOOGLE_RULE_PATH = `${GSPOT_PATHS.valePackages}/Google/Passive.yml`;

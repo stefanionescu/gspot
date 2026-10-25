@@ -26,6 +26,7 @@ import {
     COMMITS_FILES,
     COMMIT_MESSAGES,
     COMMITLINT_EXECUTABLE,
+    COMMITLINT_LEVEL_RESULTS,
     buildUntypedMessageFindings,
 } from '#tests/config/integration/checks/general/commits.ts';
 
@@ -83,7 +84,7 @@ test('commitlint accepts exact folder-name scopes or no scope, reports bad messa
             stringify({
                 tools: {
                     commitlint: {
-                        rules: { 'header-max-length': ['always', 40], 'scope-case': ['always', 'lower-case'] },
+                        rules: { 'header-max-length': ['always', 40] },
                     },
                 },
             }),
@@ -96,16 +97,15 @@ test('commitlint accepts exact folder-name scopes or no scope, reports bad messa
         await writeFile(draft, `${message}\n`);
         await assertDraftCheck(sandbox.path, draft);
     }
-    for (const level of ['recommended', 'all', 'recommended']) {
+    for (const level of ['recommended', 'all', 'recommended'] as const) {
         const switched = await spawnGspot(sandbox.path, ['set', 'level', level]);
         expect(switched.code, switched.stdout + switched.stderr).toBe(0);
         const isObserved = await isOnDisk(join(sandbox.path, findManifestTarget('commits', 'commitlint.json')));
         expect(isObserved).toBe(level === 'all');
-        const checked = parseCheckReport(await spawnGspot(sandbox.path, command));
-        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        expect(checked.report.checks).toMatchObject(
-            level === 'all' ? [{ check: 'commits/commitlint', status: 'passed', findings: [] }] : [],
-        );
+        const checked = await spawnGspot(sandbox.path, command);
+        const expected = COMMITLINT_LEVEL_RESULTS[level];
+        expect(checked.code, checked.stdout + checked.stderr).toBe(expected.code);
+        expect(JSON.parse(checked.stdout)).toMatchObject(expected.output);
     }
 });
 
@@ -143,9 +143,14 @@ describe('a repository with the commit hooks installed', () => {
         const good = runGitStep(root, ['commit-tree', tree, '-p', base, '-m', 'docs: reviewed']);
         const bad = runGitStep(root, ['commit-tree', tree, '-p', base, '-m', 'Bad message.']);
         const command = ['check', '--hook', 'pre-push', '--only', 'commits/commitlint-pushed', '--json'];
-        const rejected = await spawnGspot(root, command, {
-            stdin: `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/bad ${bad} refs/heads/bad ${base}\n`,
-        });
+        const rejected = await spawnGspot(
+            root,
+            command,
+            {},
+            {
+                stdin: `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/bad ${bad} refs/heads/bad ${base}\n`,
+            },
+        );
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
         const report = JSON.parse(rejected.stdout) as PushReport;
         expect(report.revisions.map(({ hash, commits }) => ({ hash, commits }))).toStrictEqual([
@@ -155,9 +160,12 @@ describe('a repository with the commit hooks installed', () => {
         expect(
             report.revisions[1]!.report.checks[0]!.findings.map(({ rule, message }) => ({ rule, message })),
         ).toStrictEqual(buildUntypedMessageFindings(bad));
-        const corrected = await spawnGspot(root, command, {
-            stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
-        });
+        const corrected = await spawnGspot(
+            root,
+            command,
+            {},
+            { stdin: `refs/heads/good ${good} refs/heads/good ${base}\n` },
+        );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(runGitStep(root, ['rev-parse', 'HEAD'])).toBe(base);
     });

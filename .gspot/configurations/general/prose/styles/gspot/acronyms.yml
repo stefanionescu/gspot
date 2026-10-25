@@ -106,6 +106,7 @@ exceptions:
   - React
   - Native
   - Simple
+  - certifi
   - API
   - CLI
   - HTTP

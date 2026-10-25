@@ -20,7 +20,7 @@ await runNpmPack(TEST_RUN_FOLDER, [
     { ...eslintPluginPackage, source: join(REPOSITORY_ROOT, 'packages/eslint-plugin') },
     { ...cliPackage, source: join(REPOSITORY_ROOT, 'packages/cli') },
 ]);
-await writeProgramCommand(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH, 'processes/cli', '--');
+await writeProgramCommand(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH, 'processes/cli');
 const paths = await installTools();
 await writeFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), paths.join('\n') + '\n');
 

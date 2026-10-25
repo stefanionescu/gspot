@@ -185,7 +185,7 @@ test.each([...PARTIAL_FIX_CASES])(
 );
 
 test('shfmt reports and fixes script formatting with tabs', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash', 'format'], TAB_FORMAT_SETTINGS),
         'example.sh': `if true; then
   echo ready

@@ -63,29 +63,6 @@ export const SANDBOX_PACKAGE_JSON = {
 
 export const SANDBOX_GITIGNORE = 'node_modules\n';
 
-const AMBIGUOUS_WORD_RULE = `extends: existence
-message: "Avoid '%s'."
-level: error
-tokens:
-  - ambiguousword
-`;
-
-export const VALE_PACKAGE_FILES = {
-    ...Object.fromEntries<string>(
-        [
-            'Google/terms.yml',
-            'Microsoft/terms.yml',
-            'write-good/terms.yml',
-            'proselint/terms.yml',
-            'alex/terms.yml',
-            'RedHat/terms.yml',
-            'Harper/styles/Harper/terms.yml',
-        ].map((path) => [path, AMBIGUOUS_WORD_RULE]),
-    ),
-    'Harper/styles/config/dictionaries/harper.txt': `dictionary fixture
-`,
-};
-
 export const NPM_PROJECT_FILES = {
     'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
     'source.js': 'export const greeting="hello";',
@@ -122,6 +99,7 @@ export const UV_PROJECT_VARIABLES = ['UV_PROJECT', 'UV_WORKING_DIR', 'UV_PROJECT
 
 export const PYTHON_PROJECT_IGNORES = [
     'data-files/v8r',
+    'data-files/yamllint',
     'security/semgrep',
     'security/semgrep-registry',
     'format/editorconfig-checker',

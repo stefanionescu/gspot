@@ -4,6 +4,8 @@ export const COMPONENT_TSCONFIG = { compilerOptions: STRICT_COMPILER_OPTIONS, in
 
 export const ANSWER_MODULE = `// A value the test files build on.
 
-/** The fixed input shared by the component examples. */
+/**
+The fixed input shared by the component examples.
+*/
 export const answer = 42;
 `;

@@ -3,12 +3,13 @@ import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { shareProseSandbox } from '#tests/setup/sandboxes/create.ts';
+import { PROSE_SANDBOX } from '#tests/config/checks/general/prose.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { PACKAGE_STYLE_CASES } from '#tests/config/integration/checks/general/prose/scopes.ts';
 
-const installedSandbox = shareProseSandbox();
+const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 
 test.each([...LEVELS])(
     'prose/vale at level %s checks child files once at the root and reads the shared styles',

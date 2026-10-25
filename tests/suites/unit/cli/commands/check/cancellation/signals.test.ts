@@ -14,6 +14,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/environment.ts';
+import { SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { SLOW_COMMAND_CHECK } from '#tests/config/commands/check/cancellation.ts';
 import { CLI_BIN, runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -197,7 +198,7 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
         const indexed = runGitStep(root, ['ls-files', '--stage', '-z']);
         const started = join(root, 'listening');
         const hook = ['check', '--hook', 'pre-push', '--json'];
-        const command = buildProgramCommand('processes/cli', '--signal-marker', started, '--', ...hook);
+        const command = buildProgramCommand('processes/cli', SIGNAL_MARKER_OPTION, started, ...hook);
         const limited = limitCommand(command, { cwd: root });
         const child = Bun.spawn(command, {
             cwd: root,

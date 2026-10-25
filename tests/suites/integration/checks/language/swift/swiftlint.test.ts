@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
@@ -44,7 +44,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
 
 async function prepareSwiftScope(scope: string) {
     await using resources = new AsyncDisposableStack();
-    const sandbox = resources.use(await testdir());
+    const sandbox = resources.use(await createGitSandbox({}));
     const root = sandbox.path;
     const prefix = scope === '' ? '' : `${scope}/`;
     await createFileTree(root, {

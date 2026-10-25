@@ -9,7 +9,7 @@ import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     SYNTAX_FILES,
@@ -25,6 +25,7 @@ test('ShellCheck reports a finding in a filename that starts with a dash', async
         '-f.sh': '#!/bin/sh\necho $1\n',
         'ok.sh': '#!/bin/sh\necho ok\n',
     });
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     const result = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(result.report.checks).toMatchObject([

@@ -17,12 +17,13 @@ import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/config/e2e/cl
 async function assertConflictingConfigFiles(root: string, output: string): Promise<void> {
     const { plan } = JSON.parse(output) as InitJson;
     expect(plan.delete).toStrictEqual([]);
-    expect(plan.write.filter(({ path }) => ['prettier.config.mjs', '.editorconfig'].includes(path))).toStrictEqual(
-        ['.editorconfig', 'prettier.config.mjs'].map((path) => ({
-            path,
-            note: `replaces your file; read the old one with git show HEAD:${path}`,
-        })),
-    );
+    expect(plan.write.filter(({ path }) => ['prettier.config.mjs', '.editorconfig'].includes(path))).toStrictEqual([
+        { path: '.editorconfig', note: 'replaces your file; read the old one with git show HEAD:.editorconfig' },
+        {
+            path: 'prettier.config.mjs',
+            note: 'replaces your file; read the old one with git show HEAD:prettier.config.mjs; gspot cannot read a JavaScript Prettier config, so set format.indent_width and format.print_width by hand',
+        },
+    ]);
     expect(await isOnDisk(join(root, 'gspot.toml'))).toBe(true);
     const settings = await readFile(join(root, 'gspot.toml'), 'utf8');
     expect(await readFile(join(root, 'prettier.config.mjs'), 'utf8')).toBe(

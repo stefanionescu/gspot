@@ -8,21 +8,21 @@ export const EDITORCONFIG_SAMPLES = [
         broken: 'content\r\n',
         corrected: 'content\n',
         findings: [
-            { line: undefined, message: 'Wrong line endings or no final newline' },
-            { line: undefined, message: 'Not all lines have the correct end of line character' },
+            { line: undefined, message: 'not all lines have the correct end of line character' },
+            { line: undefined, message: 'wrong line endings or no final newline' },
         ],
     },
     {
         file: 'final-newline.txt',
         broken: 'content',
         corrected: 'content\n',
-        findings: [{ line: undefined, message: 'Wrong line endings or no final newline' }],
+        findings: [{ line: undefined, message: 'wrong line endings or no final newline' }],
     },
     {
         file: 'trailing-whitespace.txt',
         broken: 'content \n',
         corrected: 'content\n',
-        findings: [{ line: 1, message: 'Trailing whitespace' }],
+        findings: [{ line: 1, message: 'trailing whitespace' }],
     },
 ] as const;
 
