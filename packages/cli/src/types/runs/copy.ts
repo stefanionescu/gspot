@@ -14,9 +14,9 @@ export type DependencyTreeCopy = {
 
 export type DependencyCopy = { path: string; operation: 'clone' | 'link' };
 
-export type CopyFile =
-    | string
-    | { indexFile: Omit<GitFile, 'mode'> & { mode: Exclude<GitFile['mode'], typeof GITLINK_MODE> }; bytes: Buffer };
+export type CopyIndexFile = Omit<GitFile, 'mode'> & { mode: Exclude<GitFile['mode'], typeof GITLINK_MODE> };
+
+export type CopyFile = string | { indexFile: CopyIndexFile; bytes: Buffer };
 
 export type CopyPlan = {
     root: string;

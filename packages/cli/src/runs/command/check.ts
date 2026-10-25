@@ -44,13 +44,13 @@ import {
 async function runCommands(
     planned: PlannedCheck,
     {
-        cancelSignal,
+        session,
         verbose,
         tool,
         launch,
         base,
     }: {
-        cancelSignal: AbortSignal | undefined;
+        session: Session;
         verbose: boolean | undefined;
         tool: Tool;
         launch: CommandLaunch;
@@ -64,8 +64,8 @@ async function runCommands(
     for (const commandLine of launch.commandLines) {
         const { result, failure } = await runToolProcess(commandLine.commandArguments, {
             ...launch,
-            cancelSignal,
-            timeoutSeconds: Number(planned.scope.settings.settings['tool_timeout_seconds']),
+            cancelSignal: session.cancelSignal,
+            timeoutSeconds: session.timeoutSeconds,
             name: tool.name,
         });
         if (failure !== undefined)
@@ -95,12 +95,11 @@ function findMissingConfigFile(
         session,
         command,
         base,
-        options,
-    }: { session: Session; command: string[]; base: CheckResult; options: CheckRunOptions },
+        configFiles,
+    }: { session: Session; command: string[]; base: CheckResult; configFiles: string[] },
 ): CheckResult | undefined {
-    const paths = options.listConfigFiles?.(session, planned) ?? [];
     using files = openFiles(session.root);
-    const missing = [...paths, ...listCommandConfigFiles(session, planned, command)].find(
+    const missing = [...configFiles, ...listCommandConfigFiles(session, planned, command)].find(
         (path) =>
             (path.startsWith(`${DOT_GSPOT}/`) ? files.read(path) : findCachedText(session.reads, path)) === undefined,
     );
@@ -113,10 +112,10 @@ function findMissingConfigFile(
 }
 
 async function runInFolder(run: FolderRun): Promise<CheckResult> {
-    const { session, planned, tool, command, toolPath, setup, base, options } = run;
+    const { session, planned, tool, command, toolPath, setup, base, options, configFiles } = run;
     using copy =
         options.copyRoot === undefined && planned.check.run_in_copy === true
-            ? await copyCheckFiles(planned, { session, command, options })
+            ? await createCommandCopy(planned, { session, command, configFiles })
             : undefined;
     const folder = options.copyRoot ?? copy?.path;
     const commandSetup =
@@ -129,14 +128,14 @@ async function runInFolder(run: FolderRun): Promise<CheckResult> {
         commandSetup.env,
     );
     const result = await runCommands(planned, {
-        cancelSignal: session.cancelSignal,
+        session,
         verbose: options.verbose,
         tool,
         launch: commandSetup,
         base,
     });
     if (folder === undefined) return result;
-    const reported = expandCommand(session, planned, command, setup.substitutions).with(0, toolPath);
+    const reported = expandCommand(session, planned, command.with(0, toolPath), setup.substitutions);
     return { ...result, command: reported.filter((argument) => typeof argument === 'string') };
 }
 
@@ -158,20 +157,20 @@ function findMissingOtherTool(
 Copy a check's source, dependencies and config files into a temporary folder.
 
 @param planned the check to run.
-@param copy the repository, command, and implementation overrides.
+@param copy the repository, command, and config files.
 @param copy.session the repository and its tools.
 @param copy.command the executable and authored arguments.
-@param copy.options the implementation overrides.
+@param copy.configFiles the config files that the check code lists.
 @returns the disposable temporary folder.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
-export async function copyCheckFiles(
+export async function createCommandCopy(
     planned: PlannedCheck,
-    { session, command, options }: { session: Session; command: string[]; options: CheckRunOptions },
+    { session, command, configFiles }: { session: Session; command: string[]; configFiles: string[] },
 ): Promise<TemporaryFolder> {
     return createCopy({
         root: session.root,
-        paths: [...listCopyFiles(session, planned, command), ...(options.listConfigFiles?.(session, planned) ?? [])],
+        paths: [...listCopyFiles(session, planned, command), ...configFiles],
         dependencies: [],
         cancelSignal: session.cancelSignal,
     });
@@ -207,26 +206,6 @@ export function prepareCommandIn(
         setup: buildCommandSetup(selected, planned, options),
         toolPath,
     });
-}
-
-/**
-Select the command's tool declaration and build its environment.
-
-@param session the repository and its tools.
-@param planned the check and its selected scope.
-@param name the executable that the command runs.
-@param options the implementation overrides.
-@returns the tool declaration and its expanded environment.
-*/
-export function prepareToolEnvironment(
-    session: Session,
-    planned: PlannedCheck,
-    name: string,
-    options: CheckRunOptions,
-): { tool: Tool; setup: CommandSetup } {
-    const tool = planned.tool?.name === name ? planned.tool : getTool(session.configurations.values(), name);
-    const setup = buildCommandSetup(session, { ...planned, tool }, options);
-    return { tool, setup };
 }
 
 /**
@@ -299,11 +278,12 @@ export function prepareCommand(
     planned: PlannedCheck,
     expansion: { session: Session; command: string[]; setup: CommandSetup; toolPath: string },
 ): CommandLaunch {
-    const { session, command, setup, toolPath } = expansion;
+    const { session, setup, toolPath } = expansion;
     const { root, cwd, files, substitutions, env } = setup;
-    const commandArguments = expandCommand(session, planned, command, substitutions).with(0, toolPath);
+    const command = expansion.command.with(0, toolPath);
+    const commandArguments = expandCommand(session, planned, command, substitutions);
     const commandLines = command.includes(FILES_PLACEHOLDER)
-        ? buildCommandLines(planned, { session, command, substitutions, toolPath })
+        ? buildCommandLines(planned, { session, command, substitutions })
         : buildFileCommandLines(commandArguments, files);
     return {
         root,
@@ -342,19 +322,30 @@ export async function runCheckCommand(
     const base = buildBaseResult(planned, session);
     const environment = findMissingProjectEnvironment(session, planned);
     if (environment !== undefined) return { ...base, ...environment };
-    const { setup } = prepareToolEnvironment(session, planned, tool.name, options);
+    const setup = buildCommandSetup(session, planned, options);
     const command = [
         ...(stripCoverageArguments(planned, options) as string[]),
         ...listCopyPythonArguments(tool, setup.env),
     ];
     const { cwd } = setup;
-    const missing = findMissingConfigFile(planned, { session, command, base, options });
+    const configFiles = options.listConfigFiles?.(session, planned) ?? [];
+    const missing = findMissingConfigFile(planned, { session, command, base, configFiles });
     if (missing !== undefined) return missing;
     const availability = findTool(session, cwd, tool);
     if ('status' in availability) return { ...base, ...availability };
     const companion = findMissingOtherTool(session, planned, command, cwd);
     return companion === undefined
-        ? runInFolder({ session, planned, tool, command, toolPath: availability.path, setup, base, options })
+        ? runInFolder({
+              session,
+              planned,
+              tool,
+              command,
+              toolPath: availability.path,
+              setup,
+              base,
+              options,
+              configFiles,
+          })
         : { ...base, ...companion };
 }
 

@@ -1,7 +1,7 @@
 import { join, posix } from 'node:path';
 import { statSync, readdirSync } from 'node:fs';
-import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { MISE_FILES } from '#cli/config/files/names.ts';
 import type { Finding } from '#cli/types/runs/check.ts';

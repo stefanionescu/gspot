@@ -8,7 +8,7 @@ import { stripUndefined } from '#cli/system/tables.ts';
 import { findSettingsSkip } from '#cli/planning/skips.ts';
 import type { StageFilter } from '#cli/types/planning.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
-import { DRY_RUN_NOTE } from '#cli/config/commands/apply.ts';
+import { DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
 import type { RunReport, RunOptions } from '#cli/types/runs/run.ts';
 import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
@@ -32,7 +32,6 @@ function buildHistorySelection(
 
 function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: RevisionSource | undefined): RunOptions {
     const { changed, staging, stage, paths } = filters;
-    const changedPaths = changed?.paths;
     const comparison = buildComparison(revision, changed);
     return {
         cwd: revision?.content === 'index' ? revision.cwd : options.cwd,
@@ -44,7 +43,7 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
             isDryRun: options.isDryRun,
             onProgress: options.onProgress,
             staged: staging.staged,
-            changed: changedPaths,
+            changed: changed?.paths,
             comparison,
             only: options.only,
             paths,
@@ -170,8 +169,8 @@ export async function checkTree(
     });
     assertOnlyChecks(session, options.only);
     warnAboutHooks(session, revision);
-    const { changed, staging, stage, paths } = await readRunFilters(session, options, cancelSignal, revision);
-    const result = await runChecks(session, buildRunOptions(options, { changed, staging, stage, paths }, revision));
+    const filters = await readRunFilters(session, options, cancelSignal, revision);
+    const result = await runChecks(session, buildRunOptions(options, filters, revision));
     if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
     if (revision?.dependencyNote !== undefined) result.report.notes = [revision.dependencyNote];
     const reportText =

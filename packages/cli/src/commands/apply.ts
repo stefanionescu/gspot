@@ -9,16 +9,16 @@ import { type Command } from '@commander-js/extra-typings';
 import { listOutdatedFiles } from '#cli/apply/outdated.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { DRY_RUN_NOTE } from '#cli/config/commands/apply.ts';
 import { TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
+import { DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/apply.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { formatUpToDate, formatApplyReport, writeGeneratedFiles } from '#cli/apply/generated.ts';
 
 function formatFileChanges(files: OutdatedFile[], repair: string): string[] {
+    if (files.length === 0) return [];
     const lines: string[] = [];
-    if (files.length === 0) return lines;
     for (const file of files) {
         lines.push(`  ${file.path}  ${file.kind}`);
         if (file.diff !== undefined && file.diff !== '')

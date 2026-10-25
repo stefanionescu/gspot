@@ -14,6 +14,8 @@ type SqlfluffDialect = (typeof SQLFLUFF_DIALECTS)[number];
 
 type TrivySeverity = (typeof TRIVY_SEVERITIES)[number];
 
+export type ImportExtensionStyle = (typeof IMPORT_EXTENSION_STYLES)[number];
+
 export type WrittenTools = {
     hadolint?: { trusted_registries?: string[] | undefined } | undefined;
     nginx?: { image?: string | undefined } | undefined;
@@ -59,7 +61,7 @@ type ParsedSwiftlint = { always_keep_imports: string[] };
 type ParsedTrivy = { severity: TrivySeverity[] };
 
 type ParsedEslint = {
-    import_extension: (typeof IMPORT_EXTENSION_STYLES)[number];
+    import_extension: ImportExtensionStyle;
     restricted_imports: { name: string; message: string }[];
     rules: Record<
         string,

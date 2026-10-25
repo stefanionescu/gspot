@@ -36,10 +36,11 @@ function assertArgumentList(value: unknown, name: string): string[] {
 function expandEachPlaceholder(planned: PlannedCheck, argument: string): string[] | undefined {
     const groups = EACH_PLACEHOLDER.exec(argument)?.groups;
     if (groups === undefined) return undefined;
-    const name = groups['setting'] ?? '';
-    const held = planned.scope.settings.settings[name];
-    const values = held ?? [];
-    return assertArgumentList(values, name).flatMap((value) => [groups['flag'] ?? '', convertToSystemPath(value)]);
+    const name = groups['setting'] as string;
+    return assertArgumentList(planned.scope.settings.settings[name] ?? [], name).flatMap((value) => [
+        groups['flag'] as string,
+        convertToSystemPath(value),
+    ]);
 }
 
 function listConfigFiles(session: Session, planned: PlannedCheck): ConfigFile[] {

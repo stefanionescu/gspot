@@ -12,14 +12,14 @@ import { findText } from '#cli/system/files/reads.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { openWriter, writePlans } from '#cli/write.ts';
+import { CI_FILE_LABELS } from '#cli/config/commands/ci.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { DRY_RUN_NOTE } from '#cli/config/commands/apply.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { writeGeneratedFiles } from '#cli/apply/generated.ts';
+import { DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
-import { CI_FILE_LABELS } from '#cli/config/commands/doctor.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
 import { findRoot, readRepository } from '#cli/repository/read.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -42,6 +42,7 @@ import {
 } from '#cli/config/commands/init/init.ts';
 import type {
     InitJson,
+    InitPlan,
     InitScan,
     InitAnswers,
     InitOptions,
@@ -60,29 +61,16 @@ async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJ
     const { plan, settingsText } = initPlan;
     print(formatDetection(initPlan.detection));
     print(formatInitPlan(plan));
+    const json: InitJson = { root, plan, settings: settingsText, written: false };
     if (options.isDryRun) {
         print(`${DRY_RUN_NOTE}\n`);
-        return { text: '', json: { root, plan, settings: settingsText, written: false }, exitCode: 0 };
+        return { text: '', json, exitCode: 0 };
     }
     const accepted = await askConfirmation({ yes: options.yes });
-    if (!accepted)
-        return {
-            text: 'Nothing written.\n',
-            json: { root, plan, settings: settingsText, written: false },
-            exitCode: 0,
-        };
+    if (!accepted) return { text: 'Nothing written.\n', json, exitCode: 0 };
     const written = await writeInitFiles(root, initPlan);
     written.push('Next: run gspot install to install the tools and turn on the Git hooks.');
-    return {
-        text: written.join('\n'),
-        json: {
-            root,
-            plan,
-            settings: settingsText,
-            written: true,
-        },
-        exitCode: 0,
-    };
+    return { text: written.join('\n'), json: { ...json, written: true }, exitCode: 0 };
 }
 
 /**
@@ -186,7 +174,6 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         generated,
         plan,
         settingsText,
-        deleted: plan.delete,
         read: conflicts.read,
     };
 }
@@ -202,7 +189,7 @@ async function askConfirmation({ yes }: { yes: boolean }): Promise<boolean> {
 
 function deleteConflictingConfigFiles(
     writer: Files,
-    deleted: InitPlanning['deleted'],
+    deleted: InitPlan['delete'],
     read: ReadonlyMap<string, FileContents | undefined>,
 ): string[] {
     const kept: string[] = [];
@@ -221,16 +208,14 @@ async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<str
     const { session, generated } = initPlan;
     writeSettings(writer, initPlan.settingsText, initPlan.read.get(SETTINGS_FILE));
     const applied = await writeGeneratedFiles(session, generated, writer, { reviewed: initPlan.read });
-    const kept = deleteConflictingConfigFiles(writer, initPlan.deleted, initPlan.read);
+    const kept = deleteConflictingConfigFiles(writer, initPlan.plan.delete, initPlan.read);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
     return ['Wrote the plan above.', ...applied.notes.filter((note) => !INIT_INSTALL_NOTES.has(note)), ''];
 }
 
 function detectCiProvider(root: string, repositorySetup: RepositorySetup): InitAnswers['ci'] {
-    let previous: InitAnswers['ci'] | undefined;
-    if (repositorySetup.ci.includes(GITLAB_CI_FILE)) previous = 'gitlab';
-    else if (repositorySetup.ci.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) previous = 'github';
-    if (previous !== undefined) return previous;
+    if (repositorySetup.ci.includes(GITLAB_CI_FILE)) return 'gitlab';
+    if (repositorySetup.ci.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) return 'github';
     const remote = readGitSetting(root, ORIGIN_URL_SETTING) ?? '';
     const host = remote.replace(REMOTE_URL_SCHEME, '').replace(REMOTE_URL_USER, '');
     return (

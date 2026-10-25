@@ -1,5 +1,5 @@
-import { buildFinding } from '#cli/runs/finding.ts';
 import { type Session } from '#cli/types/session.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { findSettingLine } from '#cli/settings/file.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';

@@ -1,5 +1,3 @@
-export const COMMIT_PREFIX_LENGTH = 7;
-
 export const NOTE_STATUSES = new Set(['missing', 'error', 'skipped']);
 
 export const FINDINGS_SHOWN = 200;

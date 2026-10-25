@@ -2,8 +2,8 @@ import type { Node } from 'web-tree-sitter';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { getNodePlace, buildFinding } from '#cli/runs/finding.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import { getNodePlace, buildFinding } from '#cli/checks/finding.ts';
 
 import {
     COMMENT_LINE,

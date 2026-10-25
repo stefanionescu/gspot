@@ -8,7 +8,7 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { getSiblingCommand, runOverPushedCommits } from '#cli/runs/commits.ts';
+import { getSiblingCommand, runOverPushedCommits } from '#cli/checks/pushed-commits.ts';
 import { MESSAGE_FILE, COMMITLINT_CHECK, GIT_COMMIT_MESSAGE_ARGUMENTS } from '#cli/config/checks/general/commits.ts';
 
 /**

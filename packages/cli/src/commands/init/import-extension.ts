@@ -7,18 +7,18 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
+import type { ScopeConfigurations } from '#cli/types/commands/init.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
+import type { ImportExtensionStyle } from '#cli/types/settings/tools.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
-import type { IMPORT_EXTENSION_STYLES } from '#cli/config/settings/tools/tables.ts';
 import { BUNDLER_PACKAGES, IMPORT_EXTENSION_SETTING } from '#cli/config/commands/init/import-extension.ts';
 
 function detectImportExtension(
     repository: Repository,
     scope: string,
     reads: ReadCache,
-): (typeof IMPORT_EXTENSION_STYLES)[number] | undefined {
+): ImportExtensionStyle | undefined {
     const path = join(repository.root, joinScope(scope, TSCONFIG_FILE));
     const options = readTsconfig(repository.root, path, reads)?.options;
     if (
@@ -40,7 +40,7 @@ Choose the import extension style of each JavaScript scope that no framework con
 @returns the settings table to write for each scope that needs a style other than the default.
 */
 export function buildImportExtensionTables(
-    scopes: { scope: string; selected: Configuration[] }[],
+    scopes: ScopeConfigurations[],
     repository: Repository,
 ): Map<string, TomlTable> {
     const reads = createReadCache(repository.root);

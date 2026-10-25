@@ -23,28 +23,23 @@ Splits a command into command lines that fit the system argument limit.
 @param planned the check to run.
 @param expansion what to run.
 @param expansion.session the repository and its tools.
-@param expansion.command the executable and authored arguments.
+@param expansion.command the resolved executable path and authored arguments.
 @param expansion.substitutions the file paths and placeholder values.
-@param expansion.toolPath the resolved executable path.
 @returns the runs, in order.
 */
 export function buildCommandLines(
     planned: PlannedCheck,
-    expansion: { session: Session; command: string[]; substitutions: Substitutions; toolPath: string },
+    expansion: { session: Session; command: string[]; substitutions: Substitutions },
 ): CommandLine[] {
-    const { session, command, substitutions, toolPath } = expansion;
-    const fixed = expandCommand(session, planned, command, { ...substitutions, files: [] }).with(0, toolPath);
+    const { session, command, substitutions } = expansion;
+    const fixed = expandCommand(session, planned, command, { ...substitutions, files: [] });
     return splitFileArguments(
         substitutions.files,
         fixed.filter((argument) => typeof argument === 'string'),
         process.platform,
-    ).flatMap((files) => {
-        const commandArguments = expandCommand(session, planned, command, { ...substitutions, files }).with(
-            0,
-            toolPath,
-        );
-        return buildFileCommandLines(commandArguments, files);
-    });
+    ).flatMap((files) =>
+        buildFileCommandLines(expandCommand(session, planned, command, { ...substitutions, files }), files),
+    );
 }
 
 /**

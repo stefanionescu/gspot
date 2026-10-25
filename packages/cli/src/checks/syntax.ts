@@ -1,6 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
 import type { Parsed } from '#cli/types/shapes.ts';
-import { buildFinding } from '#cli/runs/finding.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 

@@ -148,11 +148,10 @@ function assertMessageSelection(options: CheckOptions, paths: string[]): void {
 
 function assertReadableMessageFile(options: CheckOptions): void {
     if (options.messageFile === undefined) return;
-    const commitFile = options.messageFile;
     try {
-        accessSync(commitFile, constants.R_OK);
+        accessSync(options.messageFile, constants.R_OK);
     } catch (error) {
-        throw new GspotError('filesystem', `gspot cannot read the commit message file ${commitFile}.`, {
+        throw new GspotError('filesystem', `gspot cannot read the commit message file ${options.messageFile}.`, {
             cause: error,
         });
     }

@@ -2,8 +2,8 @@ import { posix } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { buildFinding } from '#cli/runs/finding.ts';
 import { type Session } from '#cli/types/session.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
@@ -12,7 +12,7 @@ import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/code/environment.ts';
-import { getSiblingCommand, runOverPushedCommits } from '#cli/runs/commits.ts';
+import { getSiblingCommand, runOverPushedCommits } from '#cli/checks/pushed-commits.ts';
 import { listPythonEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
 
 import {

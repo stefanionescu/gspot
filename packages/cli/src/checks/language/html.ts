@@ -3,8 +3,8 @@ import { decodeHTMLAttribute } from 'entities';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { buildFinding, getNodePlace } from '#cli/runs/finding.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import { buildFinding, getNodePlace } from '#cli/checks/finding.ts';
 import type { SourceTree } from '#cli/types/parsers/code/grammars.ts';
 import type { MarkupAttribute } from '#cli/types/checks/language/html.ts';
 

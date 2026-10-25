@@ -10,6 +10,7 @@ import { EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import type { Command } from '@commander-js/extra-typings';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { CI_FILE_LABELS } from '#cli/config/commands/ci.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
@@ -21,14 +22,7 @@ import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { findMissingBuild, listDistinctTools } from '#cli/configurations/tools.ts';
-
-import {
-    VERSION_GAP,
-    COLUMN_WIDTHS,
-    CI_FILE_LABELS,
-    TOOL_STATE_COLORS,
-    SUGGESTION_SECTIONS,
-} from '#cli/config/commands/doctor.ts';
+import { VERSION_GAP, COLUMN_WIDTHS, TOOL_STATE_COLORS, SUGGESTION_SECTIONS } from '#cli/config/commands/doctor.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
 function isToolAvailable(inspection: ToolInspection): inspection is ToolInspection & { path: string } {
@@ -93,7 +87,7 @@ function buildDoctorVersion(session: Session, pin: string | undefined): DoctorRe
     return version;
 }
 
-function buildDoctorReport(session: Session, versionPin: string | undefined): DoctorReport {
+function inspectScopeTools(session: Session): ToolInspection[] {
     const platform = getOperatingSystem();
     const inspections = new Map<string, ToolInspection>();
     const pins = listDistinctTools(session.toolConfigurations).filter(
@@ -112,18 +106,19 @@ function buildDoctorReport(session: Session, versionPin: string | undefined): Do
             inspections.set(JSON.stringify(inspection), inspection);
         }
     }
-    const tools = inspections
+    return inspections
         .values()
         .toArray()
         .toSorted((left, right) => compareText(left.name, right.name));
+}
+
+function buildDoctorReport(session: Session, versionPin: string | undefined): DoctorReport {
+    const tools = inspectScopeTools(session);
     const { settings } = session.settingsFile;
     const hooks = readHookStatus(session, session.repository);
     const version = buildDoctorVersion(session, versionPin);
-    const isBroken = [
-        !hooks.ready,
-        tools.some((tool) => !isToolAvailable(tool)),
-        version.installCommand !== undefined,
-    ].some(Boolean);
+    const isBroken =
+        !hooks.ready || tools.some((tool) => !isToolAvailable(tool)) || version.installCommand !== undefined;
     return {
         submodules: listSubmodulePaths(session.repository.index),
         tools,

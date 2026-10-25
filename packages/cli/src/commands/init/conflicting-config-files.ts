@@ -4,7 +4,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import type { ManagedKeys } from '#cli/types/apply.ts';
 import { isEditedInPlace } from '#cli/repository/setup.ts';
 import type { ConflictingConfigFiles } from '#cli/types/commands/init.ts';
-import { PRETTIER_SCRIPT_FILE } from '#cli/config/commands/init/formatter-settings.ts';
+import { PRETTIER_SCRIPT_FILE } from '#cli/config/commands/init/prettier.ts';
 import type { RepositorySetup, ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 
 /**
@@ -28,7 +28,7 @@ export function listCommittedPaths(root: string, paths: string[]): Set<string> {
 function addConflictingConfigFile(file: ConflictingConfigFile, conflicts: ConflictingConfigFiles): void {
     const { tool, path, shared } = file;
     if (shared)
-        conflicts.retained.push({
+        conflicts.kept.push({
             path,
             note: `${file.table ?? file.key ?? file.tool} settings stay here, and the generated ${tool} config file takes over. Delete the section; the generated config file replaces it.`,
         });
@@ -54,18 +54,18 @@ export function readConflictingConfigFiles(
     tools: Set<string>,
     fileEdits: ManagedKeys[],
 ): ConflictingConfigFiles {
-    const conflicts: ConflictingConfigFiles = { read: new Map(), deleted: [], retained: [], changed: [] };
+    const conflicts: ConflictingConfigFiles = { read: new Map(), deleted: [], kept: [], changed: [] };
     const owned = repositorySetup.conflictingConfigFiles.filter(({ tool }) => tools.has(tool));
     using files = openFiles(root);
     const paths = new Set(owned.filter((file) => !file.shared).map((file) => file.path));
     for (const path of paths) {
         conflicts.read.set(path, files.read(path));
     }
-    for (const output of fileEdits) {
-        conflicts.read.set(output.path, files.read(output.path));
+    for (const edit of fileEdits) {
+        conflicts.read.set(edit.path, files.read(edit.path));
         conflicts.changed.push({
-            path: output.path,
-            note: `managed ${output.keys.map((field) => field.key.join('.')).join(', ')} fields; other content stays`,
+            path: edit.path,
+            note: `managed ${edit.keys.map((field) => field.key.join('.')).join(', ')} fields; other content stays`,
         });
     }
     for (const file of owned) {

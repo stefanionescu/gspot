@@ -4,5 +4,3 @@ export type FixResult = { check: string; changed: string[] } & (
 );
 
 export type FixReport = { results: FixResult[]; changed: string[]; broken: string[]; diffs: string[] };
-
-export type FixOptions = { isDryRun: boolean };

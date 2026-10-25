@@ -1,8 +1,8 @@
 import { realpathSync } from 'node:fs';
 import { getTable } from '#cli/settings/scopes.ts';
-import { buildFinding } from '#cli/runs/finding.ts';
 import { join, resolve, relative } from 'node:path';
 import type { Session } from '#cli/types/session.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { MAX_PERCENTAGE } from '#cli/config/units.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';

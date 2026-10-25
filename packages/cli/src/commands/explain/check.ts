@@ -35,9 +35,9 @@ function buildCheckFacts(
     configurations: Map<string, Configuration>,
     installedRules: ReadonlySet<string>,
 ): CheckFacts {
-    const tool = getToolName(check);
+    const toolName = getToolName(check);
     const settings = (configuration === undefined ? [] : listSettings(configuration.name))
-        .filter((setting) => tool !== undefined && setting.name.startsWith(`tools.${tool}.`))
+        .filter((setting) => toolName !== undefined && setting.name.startsWith(`tools.${toolName}.`))
         .map((setting) => setting.name);
     const rules =
         configuration === undefined
@@ -45,14 +45,14 @@ function buildCheckFacts(
             : listRuleFiles(configuration)
                   .filter((file) => installedRules.has(file.path))
                   .map((file) => file.path);
-    const crashPattern = tool === undefined ? undefined : getTool(configurations.values(), tool).crash_pattern;
+    const crashPattern = toolName === undefined ? undefined : getTool(configurations.values(), toolName).crash_pattern;
     return {
         source: configuration === undefined ? 'repository command' : `${configuration.name} configuration`,
         settings,
         rules,
         crashPattern,
         minVersions: Object.fromEntries(
-            [tool, ...(check.other_tools ?? [])]
+            [toolName, ...(check.other_tools ?? [])]
                 .filter((name) => name !== undefined)
                 .map((name) => getTool(configurations.values(), name))
                 .flatMap((tool) => (tool.min_version === undefined ? [] : [[tool.name, tool.min_version]])),

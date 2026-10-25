@@ -3,22 +3,21 @@ import { getColors } from '#cli/system/terminal.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { FixReport } from '#cli/types/runs/fixes.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
-import { PROGRESS_CLEAR } from '#cli/config/commands/check/check.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
 import type { RunReport, CheckProgress } from '#cli/types/runs/run.ts';
+import { PROGRESS_CLEAR, SHORT_HASH_LENGTH } from '#cli/config/commands/check/check.ts';
 
 import {
     NOTE_STATUSES,
     FINDINGS_SHOWN,
     FIXER_ERROR_MESSAGE,
     CHECK_STATUS_COLORS,
-    COMMIT_PREFIX_LENGTH,
 } from '#cli/config/commands/check/report.ts';
 
 function formatCheckedContent(comparison: CheckProgress['comparison']): string {
     if (comparison?.content === 'index') return 'the staged files';
     return comparison?.content === 'commit'
-        ? `commit ${comparison.reference.slice(0, COMMIT_PREFIX_LENGTH)}`
+        ? `commit ${comparison.reference.slice(0, SHORT_HASH_LENGTH)}`
         : 'the working tree';
 }
 
@@ -130,9 +129,12 @@ export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: bool
             note
                 .split('\n')
                 .find((line) => FIXER_ERROR_MESSAGE.test(line))
-                ?.replace(FIXER_ERROR_MESSAGE, '') ?? note.split('\n').slice(0, 1).join('');
+                ?.replace(FIXER_ERROR_MESSAGE, '') ??
+            note.split('\n', 1)[0] ??
+            '';
+        const failure = detail.endsWith('.') ? detail.slice(0, -1) : detail;
         process.stderr.write(
-            `${getColors().yellow('[warn]')} The ${result.check} fixer failed: ${detail.endsWith('.') ? detail.slice(0, -1) : detail}. Run gspot check --only ${result.check} --fix --verbose.\n`,
+            `${getColors().yellow('[warn]')} The ${result.check} fixer failed: ${failure}. Run gspot check --only ${result.check} --fix --verbose.\n`,
         );
         if (verbose)
             process.stderr.write(

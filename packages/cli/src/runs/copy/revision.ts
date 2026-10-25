@@ -19,17 +19,27 @@ import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names
 import { TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 import { visitGitBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
-import type { CopyFile, RevisionCopy, DependencyCopy, RevisionDependencies } from '#cli/types/runs/copy.ts';
 import { statSync, chmodSync, lstatSync, mkdirSync, realpathSync, copyFileSync, writeFileSync } from 'node:fs';
 import { copyDependencies, readIgnoredPaths, readDeclarationDependencies } from '#cli/runs/copy/dependencies.ts';
 
+import type {
+    CopyFile,
+    RevisionCopy,
+    CopyIndexFile,
+    DependencyCopy,
+    RevisionDependencies,
+} from '#cli/types/runs/copy.ts';
 import {
+    GIT_INIT_ARGUMENTS,
     GIT_HASH_ARGUMENTS,
+    GIT_PATH_ARGUMENTS,
     OWNER_WRITABLE_FOLDER,
     GIT_SET_HEAD_ARGUMENTS,
     DEPENDENCY_REVISION_NOTE,
     GIT_WRITE_TREE_ARGUMENTS,
     GIT_EMPTY_INDEX_ARGUMENTS,
+    GIT_VERIFY_HEAD_ARGUMENTS,
+    GIT_HASH_FORMAT_ARGUMENTS,
     GIT_UPDATE_INDEX_ARGUMENTS,
 } from '#cli/config/runs/copy/revision.ts';
 
@@ -43,13 +53,11 @@ function listDependencyFolders(installed: Files, projects: string[]): string[] {
 
 function assertDependencyReady(copyRoot: string, folder: string): void {
     if (
-        LOCKFILES.every(
+        !LOCKFILES.some(
             (lockfile) =>
-                !(
-                    'copied' in lockfile &&
-                    (statSync(join(copyRoot, folder, lockfile.file), { throwIfNoEntry: false }) !== undefined ||
-                        statSync(join(copyRoot, lockfile.file), { throwIfNoEntry: false }) !== undefined)
-                ),
+                'copied' in lockfile &&
+                (statSync(join(copyRoot, folder, lockfile.file), { throwIfNoEntry: false }) !== undefined ||
+                    statSync(join(copyRoot, lockfile.file), { throwIfNoEntry: false }) !== undefined),
         )
     )
         throw new GspotError(
@@ -177,12 +185,10 @@ async function writeRevisionFiles(
     }
     for (const linked of [false, true]) {
         const selected = Map.groupBy(
-            indexFiles.flatMap<Exclude<CopyFile, string>['indexFile']>((indexFile) => {
-                const isLink = indexFile.mode === SYMLINK_MODE;
-                return isLink !== linked || indexFile.mode === GITLINK_MODE
-                    ? []
-                    : { ...indexFile, mode: indexFile.mode };
-            }),
+            indexFiles.filter(
+                (indexFile): indexFile is CopyIndexFile =>
+                    indexFile.mode !== GITLINK_MODE && (indexFile.mode === SYMLINK_MODE) === linked,
+            ),
             (indexFile) => indexFile.hash,
         );
         await visitGitBlobs(
@@ -214,21 +220,17 @@ async function initializeRevisionCopy(
     source: Revision,
     cancelSignal: AbortSignal | undefined,
 ): Promise<void> {
-    const formatLine = await readGitText(toplevel, ['rev-parse', '--show-object-format'], { cancelSignal });
-    await readGitText(copyRoot, ['init', '--quiet', `--object-format=${formatLine.trim()}`, copyRoot], {
+    const formatLine = await readGitText(toplevel, GIT_HASH_FORMAT_ARGUMENTS, { cancelSignal });
+    await readGitText(copyRoot, [...GIT_INIT_ARGUMENTS, `--object-format=${formatLine.trim()}`, copyRoot], {
         cancelSignal,
     });
-    const gitStoreLine = await readGitText(toplevel, ['rev-parse', '--path-format=absolute', '--git-path', 'objects'], {
-        cancelSignal,
-    });
+    const gitStoreLine = await readGitText(toplevel, [...GIT_PATH_ARGUMENTS, 'objects'], { cancelSignal });
     writeFileSync(join(copyRoot, '.git/objects/info/alternates'), `${gitStoreLine.trim()}\n`);
-    const shallowLine = await readGitText(toplevel, ['rev-parse', '--path-format=absolute', '--git-path', 'shallow'], {
-        cancelSignal,
-    });
+    const shallowLine = await readGitText(toplevel, [...GIT_PATH_ARGUMENTS, 'shallow'], { cancelSignal });
     const shallow = shallowLine.trim();
     if (statSync(shallow, { throwIfNoEntry: false }) !== undefined)
         copyFileSync(shallow, join(copyRoot, '.git/shallow'));
-    const head = await runGit(toplevel, ['rev-parse', '--verify', 'HEAD'], { cancelSignal });
+    const head = await runGit(toplevel, GIT_VERIFY_HEAD_ARGUMENTS, { cancelSignal });
     if (source.kind === 'index' && head.code === 0)
         await readGitText(copyRoot, [...GIT_SET_HEAD_ARGUMENTS, head.stdout.trim()], { cancelSignal });
     if (source.kind === 'commit')

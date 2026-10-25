@@ -10,20 +10,24 @@ import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { FORMAT_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { PRETTIER_SCRIPT_FILE } from '#cli/config/commands/init/prettier.ts';
 import { ruffFormatSchema, prettierSettingsSchema } from '#cli/schemas/commands.ts';
 import { PYTHON_FILES } from '#cli/config/generation/configurations/language/python.ts';
 import { DEFAULT_QUOTES } from '#cli/config/generation/configurations/general/format.ts';
 import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
-import type { SettingsDraft, PrettierOptions, EditorconfigSection } from '#cli/types/commands/init.ts';
 
+import type {
+    SettingsDraft,
+    PrettierOptions,
+    ScopeConfigurations,
+    EditorconfigSection,
+} from '#cli/types/commands/init.ts';
 import {
     PRETTIER_DEFAULTS,
     EDITORCONFIG_FILE,
     RUFF_SETTINGS_FILES,
-    PRETTIER_SCRIPT_FILE,
     EDITORCONFIG_SECTION,
     EDITORCONFIG_COMMENT,
     PRETTIER_FILE_FORMATS,
@@ -159,15 +163,21 @@ function readFormatOptions(
     return readEditorconfig(folder);
 }
 
-function readScopeFormat(
-    scope: string,
-    selected: Configuration[],
-    init: {
-        draft: SettingsDraft;
-        repository: Repository;
-    },
+/**
+Read the formatting options of one scope that init sets up.
+
+@param selection the scope and its selected configurations.
+@param selection.scope the scope path, empty for the root.
+@param selection.selected the configurations selected in the scope.
+@param draft the configurations and the template.
+@param repository the root and the tracked files.
+@returns the formatting table, with the template values kept.
+*/
+export function readScopeFormat(
+    { scope, selected }: ScopeConfigurations,
+    draft: SettingsDraft,
+    repository: Repository,
 ): TomlTable {
-    const { draft, repository } = init;
     const format = selected.find((configuration) => configuration.name === FORMAT_CONFIGURATION);
     if (format === undefined) return {};
     const options = readFormatOptions(
@@ -191,23 +201,4 @@ function readScopeFormat(
         override: overrides.length === 0 ? undefined : overrides,
     });
     return Object.keys(fields).length === 0 ? {} : { format: fields };
-}
-
-/**
-Read the formatting options for each scope that init sets up.
-
-@param scopes the selected configurations for each scope.
-@param draft the configurations and the template.
-@param repository the root and the tracked files.
-@returns the formatting tables, with the template values kept.
-*/
-export function readFormatTables(
-    scopes: { scope: string; selected: Configuration[] }[],
-    draft: SettingsDraft,
-    repository: Repository,
-): Map<string, TomlTable> {
-    const context = { draft, repository };
-    return new Map(
-        scopes.map(({ scope, selected }): [string, TomlTable] => [scope, readScopeFormat(scope, selected, context)]),
-    );
 }

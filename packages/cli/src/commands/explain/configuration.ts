@@ -20,7 +20,7 @@ Describe a configuration's detection, checks, rules, and settings.
 export function explainConfiguration(session: Session | undefined, configurationName: string): Explanation | undefined {
     const configuration = readConfigurations().get(configurationName);
     if (configuration === undefined) return undefined;
-    const row: ConfigurationExplanation = {
+    const facts: ConfigurationExplanation = {
         name: configuration.name,
         group: configuration.group,
         title: configuration.title,
@@ -38,9 +38,9 @@ export function explainConfiguration(session: Session | undefined, configuration
     };
     const { detect, files } = configuration;
     const lines = [
-        `${row.title} (${row.group} configuration)`,
+        `${facts.title} (${facts.group} configuration)`,
         '',
-        row.description,
+        facts.description,
         '',
         ...formatList('Detected by', [
             ...detect.extensions,
@@ -58,16 +58,16 @@ export function explainConfiguration(session: Session | undefined, configuration
         ...(files.languages ? ['Files: every file a language configuration selects'] : []),
         ...(files.prettier_plugins ? ['Files: the file types of the selected Prettier plugins'] : []),
         ...(files.eslint_plugins ? ['Files: the file types of the selected ESLint plugins'] : []),
-        ...formatList('Requires', row.requires),
-        ...formatList('Tools it pins', row.tools),
+        ...formatList('Requires', facts.requires),
+        ...formatList('Tools it pins', facts.tools),
         ...checkStageSchema.options.flatMap((stage) =>
             formatList(
                 `Checks at ${stage}`,
-                row.checks.filter((check) => check.stage === stage).map((check) => check.check),
+                facts.checks.filter((check) => check.stage === stage).map((check) => check.check),
             ),
         ),
-        ...formatList('Settings', row.settings),
-        ...formatList('Rules', row.rules),
+        ...formatList('Settings', facts.settings),
+        ...formatList('Rules', facts.rules),
     ];
-    return { kind: 'configuration', subject: configurationName, text: `${lines.join('\n')}\n`, facts: row };
+    return { kind: 'configuration', subject: configurationName, text: `${lines.join('\n')}\n`, facts };
 }

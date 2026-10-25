@@ -3,10 +3,10 @@ import { parseTomlText } from '#cli/settings/file.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import { listSettingReaders } from '#cli/planning/readers.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { SettingsEditContext } from '#cli/types/apply.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
-import { listSettingReaders } from '#cli/commands/explain/setting.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { setKey, getScopeTable, getWrittenValue } from '#cli/settings/edit.ts';
@@ -35,8 +35,7 @@ function parseValueArgument(text: string): unknown {
     if (text === 'true') return true;
     if (text === 'false') return false;
     if (NUMBER.test(text)) return Number(text);
-    const isStructured = STRUCTURED.test(text);
-    return isStructured ? parseStructured(text) : text;
+    return STRUCTURED.test(text) ? parseStructured(text) : text;
 }
 
 function buildSettingValue(words: unknown[], setting: Setting): ParsedSettingValue {
@@ -46,22 +45,20 @@ function buildSettingValue(words: unknown[], setting: Setting): ParsedSettingVal
 }
 
 function parseSettingValue(values: string[], setting: Setting): ParsedSettingValue {
-    const converted = buildSettingValue(
+    const typed = buildSettingValue(
         values.map((text) => parseValueArgument(text)),
         setting,
     );
-    const parsedValues = [converted, buildSettingValue(values, setting)];
     const schema = findSettingSchema(setting.name);
-    const picked =
-        parsedValues.find((parsedValue) => schema?.safeParse(parsedValue.value).success !== false) ?? converted;
-    const validation = schema?.safeParse(picked.value);
-    if (validation?.success === false) {
-        throw new GspotError(
-            'arguments',
-            formatSettingValueError(values.join(' '), setting, { schema, error: validation.error }),
-        );
-    }
-    return picked;
+    if (schema === undefined) return typed;
+    const validation = schema.safeParse(typed.value);
+    if (validation.success) return typed;
+    const untyped = buildSettingValue(values, setting);
+    if (schema.safeParse(untyped.value).success) return untyped;
+    throw new GspotError(
+        'arguments',
+        formatSettingValueError(values.join(' '), setting, { schema, error: validation.error }),
+    );
 }
 
 function parseReasonTable(options: SetOptions): ParsedSettingValue {
@@ -76,16 +73,18 @@ function parseReasonTable(options: SetOptions): ParsedSettingValue {
 
 function editSetting(table: TomlTable, change: ParsedSettingValue, setting: Setting, options: SetOptions): void {
     const scopeTable = getScopeTable(table, options.scope);
-    if (change.type === 'list') setKey(scopeTable, options.key, change.value);
-    else if (setting.type === 'table' && isTable(change.value)) {
-        const written = getValueAt(scopeTable, options.key.split('.'));
-        const writtenValue = getWrittenValue(written);
-        setKey(scopeTable, options.key, { ...(isTable(writtenValue) && writtenValue), ...change.value });
-    } else setKey(scopeTable, options.key, change.value);
-    if (options.reason === undefined || setting.reason_values === true) return;
-    const written = getValueAt(scopeTable, options.key.split('.'));
-    const value = getWrittenValue(written);
-    setKey(scopeTable, options.key, { value, reason: options.reason });
+    const written = getWrittenValue(getValueAt(scopeTable, options.key.split('.')));
+    const value =
+        change.type === 'scalar' && setting.type === 'table' && isTable(change.value)
+            ? { ...(isTable(written) && written), ...change.value }
+            : change.value;
+    setKey(
+        scopeTable,
+        options.key,
+        options.reason === undefined || setting.reason_values === true
+            ? value
+            : { value: getWrittenValue(value), reason: options.reason },
+    );
 }
 
 function assertReasonPresent({
@@ -112,10 +111,9 @@ function formatSettingChange(
 ): string {
     const { setting, options, previous } = context;
     const displayKey = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
-    const isReasonTable = setting.reason_values === true;
     const was =
         previous?.value === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
-    if (isReasonTable) return `Added ${options.values.join(' and ')} to ${displayKey}.${was}`;
+    if (setting.reason_values === true) return `Added ${options.values.join(' and ')} to ${displayKey}.${was}`;
     const reason = options.reason === undefined ? '' : `  # ${options.reason}`;
     return `Set ${displayKey} to ${JSON.stringify(change.value)}.${reason}${was}`;
 }

@@ -1,5 +1,3 @@
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
-
 export const VERSION_GAP = 4;
 
 export const TOOL_STATE_COLORS = {
@@ -20,8 +18,3 @@ export const SUGGESTION_SECTIONS = [
     { key: 'unowned', title: 'config files gspot does not own' },
     { key: 'lintJobs', title: 'existing lint jobs' },
 ] as const;
-
-export const CI_FILE_LABELS = {
-    github: GITHUB_WORKFLOW,
-    gitlab: `${GITLAB_WORKFLOW} (include from .gitlab-ci.yml)`,
-} as const;

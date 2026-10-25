@@ -32,7 +32,7 @@ export type ConflictingConfigFiles = {
     changed: InitFileRow[];
     read: Map<string, FileContents | undefined>;
     deleted: InitFileRow[];
-    retained: InitFileRow[];
+    kept: InitFileRow[];
 };
 
 export type SettingsDraft = InitAnswers & {
@@ -53,7 +53,6 @@ export type InitPlanning = {
     generated: GenerationResult;
     plan: InitPlan;
     settingsText: string;
-    deleted: { path: string }[];
     read: Map<string, FileContents | undefined>;
 };
 
@@ -115,6 +114,8 @@ export type RuffFormatSettings = {
     format?: RuffFormatOptions | undefined;
     tool?: { ruff?: { format?: RuffFormatOptions | undefined } | undefined } | undefined;
 };
+
+export type ScopeConfigurations = { scope: string; selected: Configuration[] };
 
 export type WrittenTable = { scope: string; table: TomlTable; available: AvailableSettings };
 

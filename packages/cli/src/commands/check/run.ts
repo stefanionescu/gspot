@@ -2,35 +2,33 @@ import pLimit from 'p-limit';
 import { join, relative } from 'node:path';
 import { availableParallelism } from 'node:os';
 import { GspotError } from '#cli/system/errors.ts';
+import { quoteArgument } from '#cli/system/text.ts';
 import { findTool } from '#cli/runs/command/tool.ts';
 import type { Session } from '#cli/types/session.ts';
+import { buildBaseResult } from '#cli/runs/report.ts';
 import { getTool } from '#cli/configurations/tools.ts';
+import { stripUndefined } from '#cli/system/tables.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
 import { readSessionRepository } from '#cli/session.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { FixReport } from '#cli/types/runs/fixes.ts';
 import { DOCKER_TOOL } from '#cli/config/tools/inspect.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { SHORT_HASH_LENGTH } from '#cli/config/runs/report.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import type { IgnoreRecord } from '#cli/types/settings/file.ts';
-import type { ReproduceOptions } from '#cli/types/runs/report.ts';
+import { INCOMPLETE_STATUSES } from '#cli/config/runs/report.ts';
+import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/terminal.ts';
+import { SHORT_HASH_LENGTH } from '#cli/config/commands/check/check.ts';
 import { RAN_STATUSES, FAILED_STATUSES } from '#cli/config/runs/check.ts';
 import { DOCKER_MISSING_MESSAGE } from '#cli/config/commands/check/run.ts';
-import type { Run, RunResult, RunOptions, PlanAfterFixes } from '#cli/types/runs/run.ts';
-import { buildRunReport, buildBaseResult, formatReproduceCommand } from '#cli/runs/report.ts';
-
-import type {
-    Finding,
-    CheckCode,
-    CheckResult,
-    BuiltInCheck,
-    CheckRunOptions,
-    BuiltInCheckResult,
-} from '#cli/types/runs/check.ts';
+import type { FinishedRun, ReproduceOptions } from '#cli/types/commands/check.ts';
+import type { Run, RunResult, RunReport, RunOptions, PlanAfterFixes } from '#cli/types/runs/run.ts';
+import type { Finding, CheckCode, CheckResult, BuiltInCheck, CheckRunOptions } from '#cli/types/runs/check.ts';
 
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     if ((['check', 'rule'] as const).some((key) => record[key] !== undefined && record[key] !== finding[key]))
@@ -70,19 +68,19 @@ function classifyCheckError(name: string, error: unknown): Pick<CheckResult, 'st
     };
 }
 
-async function runPlannedCheck(run: Run, runnable: PlannedCheck): Promise<CheckResult> {
+async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckResult> {
     const { session } = run;
-    const base = buildBaseResult(runnable, session);
-    const early = findUnrunnableResult(session, runnable, base);
-    if (early) return early;
+    const base = buildBaseResult(planned, session);
+    const unrunnable = findUnrunnableResult(session, planned, base);
+    if (unrunnable) return unrunnable;
     const started = performance.now();
     try {
-        return await runCheckCode(session, runnable, findCheckCode(runnable.check), { verbose: run.options.verbose });
+        return await runCheckCode(session, planned, findCheckCode(planned.check), { verbose: run.options.verbose });
     } catch (error) {
         return {
             ...base,
             duration: Math.round(performance.now() - started),
-            ...classifyCheckError(runnable.check.id, error),
+            ...classifyCheckError(planned.check.id, error),
         };
     }
 }
@@ -111,6 +109,18 @@ function buildReproduceOptions(options: RunOptions): ReproduceOptions {
         messageFile: options.messageFile,
         staged: comparison?.content === 'index',
     };
+}
+
+function formatReproduceCommand(checkId: string, scopeArgument: string | undefined, options: ReproduceOptions): string {
+    const { paths, changed, messageFile, staged } = options;
+    const words = ['gspot check'];
+    if (paths.length > 0) words.push(...paths.map((path) => quoteArgument(path)));
+    else if (scopeArgument !== undefined && messageFile === undefined) words.push(quoteArgument(scopeArgument));
+    words.push('--only', quoteArgument(checkId));
+    if (changed !== undefined) words.push('--changed', quoteArgument(changed));
+    if (messageFile !== undefined) words.push('--hook', 'commit-msg', '--', quoteArgument(messageFile));
+    if (staged) words.push('--staged');
+    return words.join(' ');
 }
 
 function finishResult(run: Run, result: CheckResult): void {
@@ -160,6 +170,54 @@ async function planAfterFixes(session: Session, options: RunOptions): Promise<Pl
     return { planned: planChecks(session, options), fixes };
 }
 
+function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
+    const checks = results.filter((result) => FAILED_STATUSES.has(result.status)).map((result) => result.check);
+    const failedFixers = (fixes?.results ?? []).flatMap((result) => (result.status === 'failed' ? [result.check] : []));
+    return [...new Set([...checks, ...failedFixers])];
+}
+
+function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport | undefined): boolean {
+    return (
+        session.cancelSignal?.aborted === true ||
+        results.some((result) => INCOMPLETE_STATUSES.has(result.status)) ||
+        fixes?.results.some((result) => result.status === 'failed') === true
+    );
+}
+
+function buildRunReport(run: FinishedRun): RunReport {
+    const { session, options, started, planned, ran, fixes } = run;
+    const results = new Map(run.active.map((check, index) => [check, ran[index] as CheckResult]));
+    const checks = planned.map<CheckResult>(
+        (check) =>
+            results.get(check) ?? {
+                ...buildBaseResult(check, session),
+                status: 'skipped' as const,
+                cause: check.skip?.cause ?? 'no-files',
+                note: check.skip?.note ?? 'No matching files.',
+            },
+    );
+    const failed = listFailedChecks(checks, fixes);
+    let code = failed.length > 0 ? EXIT_FINDINGS : 0;
+    if (isIncomplete(session, ran, fixes)) code = EXIT_ERROR;
+    if (session.cancelSignal?.aborted === true && typeof session.cancelSignal.reason === 'number')
+        code = session.cancelSignal.reason;
+    return {
+        ...(options.comparison !== undefined && { comparison: options.comparison }),
+        version: cliPackage.version,
+        stage: options.stage,
+        started: started.toISOString(),
+        duration: Date.now() - started.getTime(),
+        checks,
+        ignores: session.settingsFile.settings.ignore.map(({ until, ...record }) =>
+            stripUndefined({ ...record, until: until?.toISOString() }),
+        ),
+        unstagedChanges: options.unstagedChanges ?? 0,
+        partial: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),
+        failed,
+        exitCode: code,
+    };
+}
+
 /**
 Plan and run the checks, after the fixers when --fix asks, then drop ignored findings and build the run report.
 
@@ -170,12 +228,8 @@ Plan and run the checks, after the fixers when --fix asks, then drop ignored fin
 export async function runChecks(session: Session, options: RunOptions): Promise<RunResult> {
     const started = new Date();
     const { planned, fixes } = await planAfterFixes(session, options);
-    const runState: Run = {
-        session,
-        options,
-    };
     const active = planned.filter((check) => isActive(check) && check.skip === undefined);
-    const ran = await runActiveChecks(runState, active);
+    const ran = await runActiveChecks({ session, options }, active);
     const report = buildRunReport({
         session,
         options,
@@ -211,19 +265,15 @@ export async function runCheckCode(
     });
 }
 
-function buildBuiltInResult(
+async function runBuiltInCheck(
+    builtInCheck: BuiltInCheck,
+    session: Session,
     planned: PlannedCheck,
-    session: Pick<Session, 'scopes'>,
-    completion: { result: Finding[] | BuiltInCheckResult; started: number },
-): CheckResult {
-    const { result, started } = completion;
-    let findings: Finding[];
-    let files: string[] | undefined;
-    if (Array.isArray(result)) findings = result;
-    else {
-        findings = result.findings;
-        files = [...new Set(result.files)];
-    }
+): Promise<CheckResult> {
+    const started = performance.now();
+    const result = await builtInCheck(session, planned);
+    const findings = Array.isArray(result) ? result : result.findings;
+    const files = Array.isArray(result) ? undefined : [...new Set(result.files)];
     for (const finding of findings) finding.help ??= planned.check.help;
     return {
         ...buildBaseResult(planned, session),
@@ -232,14 +282,4 @@ function buildBuiltInResult(
         status: findings.length > 0 ? 'failed' : 'passed',
         duration: Math.round(performance.now() - started),
     };
-}
-
-async function runBuiltInCheck(
-    builtInCheck: BuiltInCheck,
-    session: Session,
-    planned: PlannedCheck,
-): Promise<CheckResult> {
-    const started = performance.now();
-    const result = await builtInCheck(session, planned);
-    return buildBuiltInResult(planned, session, { result, started });
 }

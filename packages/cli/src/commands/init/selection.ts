@@ -22,8 +22,9 @@ function selectRootConfigurations(
     init: InitRepository,
     detected: Pick<ConfigurationEvidence, 'configuration'>[],
 ): string[] {
-    const hasScopes = init.repository.scopeFolders.length > 1;
     const named = init.options.configurations;
+    if (named !== undefined) return [...new Set(named)];
+    const hasScopes = init.repository.scopeFolders.length > 1;
     const detectedConfigurations = detected
         .filter((evidence) => {
             const configuration = findInitConfiguration(init, evidence.configuration);
@@ -32,7 +33,7 @@ function selectRootConfigurations(
             return !hasScopes || group === 'general' || group === 'language';
         })
         .map((evidence) => evidence.configuration);
-    return [...new Set(named ?? detectedConfigurations)];
+    return [...new Set(detectedConfigurations)];
 }
 
 function selectScopeConfigurations(init: InitRepository, scopeFolder: ScopeFolder, rootNames: string[]): string[] {

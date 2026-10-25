@@ -41,9 +41,9 @@ cases = ["camel", "upper-snake", "snake"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/commands/explain.ts", "packages/cli/src/types/commands/init.ts"]
-allowed_names = ["effective", "retained"]
-reason = "gspot explain --json and gspot init --json print these field names."
+paths = ["packages/cli/src/types/commands/init.ts"]
+allowed_names = ["retained"]
+reason = "gspot init --json prints this field name."
 
 [[naming.override]]
 paths = ["packages/cli/src/types/parsers/formats/markdown.ts", "packages/eslint-plugin/src/rules/no-magic-numbers.ts", "packages/eslint-plugin/src/types/rules.ts"]

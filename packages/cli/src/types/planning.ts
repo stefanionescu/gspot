@@ -55,3 +55,7 @@ export type LicenseProject = {
     settings: ConfigurationTables['licenses'];
     skip: SettingsSkip | undefined;
 };
+
+export type LimitCheck = { check: string; languages: readonly string[]; limits: readonly string[] };
+
+export type SettingReader = { check: string; enabled: boolean; note?: string };

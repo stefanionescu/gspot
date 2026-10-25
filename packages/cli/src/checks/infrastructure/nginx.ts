@@ -1,9 +1,9 @@
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
-import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { DOCKER_TOOL } from '#cli/config/tools/inspect.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';

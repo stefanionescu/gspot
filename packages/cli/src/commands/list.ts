@@ -36,35 +36,29 @@ function buildSettingsResult(session: Session): CommandResult {
 function listCheckStates(
     session: Session,
     configuration: Configuration,
-    planned: Map<string, PlannedCheck>,
+    planned: Map<string, PlannedCheck[]>,
 ): ConfigurationsListJson['selected'][number]['checks'] {
     const listed = new Set<string>();
-    return session.scopes.flatMap((scope) =>
-        scope.configurations.includes(configuration)
-            ? configuration.checks
-                  .values()
-                  .map((check) => {
-                      const path =
-                          check.runs === 'once' || check.runs === 'history' || isRootOnlyCheck(configuration, check)
-                              ? ''
-                              : scope.folder.path;
-                      const key = `${path}\0${check.id}`;
-                      if (listed.has(key)) return undefined;
-                      listed.add(key);
-                      return { name: check.id, scope: path, state: formatCheckState(planned.get(key)) };
-                  })
-                  .filter((check) => check !== undefined)
-                  .toArray()
-            : [],
-    );
+    return session.scopes.flatMap((scope) => {
+        if (!scope.configurations.includes(configuration)) return [];
+        return configuration.checks.flatMap((check) => {
+            const path =
+                check.runs === 'once' || check.runs === 'history' || isRootOnlyCheck(configuration, check)
+                    ? ''
+                    : scope.folder.path;
+            const key = `${path}\0${check.id}`;
+            if (listed.has(key)) return [];
+            listed.add(key);
+            const state = formatCheckState(planned.get(path)?.findLast((each) => each.check.id === check.id));
+            return [{ name: check.id, scope: path, state }];
+        });
+    });
 }
 
 function buildConfigurationsResult(session: Session): CommandResult {
     const configurations = listSelectedConfigurations(session.scopes);
     const names = new Set(configurations.map((configuration) => configuration.name));
-    const planned = new Map(
-        planChecks(session, { stage: 'any' }).map((check) => [`${check.scope.folder.path}\0${check.check.id}`, check]),
-    );
+    const planned = Map.groupBy(planChecks(session, { stage: 'any' }), (check) => check.scope.folder.path);
     const selected = configurations.map((configuration) => ({
         name: configuration.name,
         checks: listCheckStates(session, configuration, planned),

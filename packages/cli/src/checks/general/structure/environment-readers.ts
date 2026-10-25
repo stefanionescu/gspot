@@ -1,6 +1,6 @@
 import { getTable } from '#cli/settings/scopes.ts';
-import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';

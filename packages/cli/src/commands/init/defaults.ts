@@ -105,15 +105,15 @@ Drop written values that equal the default, but keep a scope override of its par
 */
 export function stripDefaults(settings: TomlTable): TomlTable {
     const configurations = readConfigurations();
-    const parsed = settingsSchema.parse(settings);
-    const allSettings = buildSettings(parsed, settings);
+    const allSettings = buildSettings(settingsSchema.parse(settings), settings);
     const level = settingsSchema.shape.level.parse(settings['level']);
-    const scopes = (settings['scope'] ?? []) as TomlTable[];
+    const scopes = ((settings['scope'] ?? []) as TomlTable[]).map((table) => ({
+        path: trimTrailingSlashes(table['path'] as string),
+        table,
+    }));
     const selected = {
         ...parseSelectedConfigurations(settings),
-        scopes: Object.fromEntries(
-            scopes.map((table) => [trimTrailingSlashes(table['path'] as string), parseSelectedConfigurations(table)]),
-        ),
+        scopes: Object.fromEntries(scopes.map(({ path, table }) => [path, parseSelectedConfigurations(table)])),
     };
     const root = {
         scope: '',
@@ -122,19 +122,15 @@ export function stripDefaults(settings: TomlTable): TomlTable {
     };
     const tables = [
         root,
-        ...scopes.map<WrittenTable>((table) => {
-            const scopePath = trimTrailingSlashes(table['path'] as string);
-            return {
-                scope: scopePath,
-                table,
-                available: buildAvailableSettings(selectForScope(selected, scopePath, configurations), level),
-            };
-        }),
+        ...scopes.map<WrittenTable>(({ path, table }) => ({
+            scope: path,
+            table,
+            available: buildAvailableSettings(selectForScope(selected, path, configurations), level),
+        })),
     ].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
     for (const key of DETECTED_SETTINGS) for (const table of tables) table.available.defaults.delete(key);
-    const scopeValues = scopes.map((table) => {
-        const scopePath = trimTrailingSlashes(table['path'] as string);
-        const writtenTable = tables.find((each) => each.scope === scopePath) as WrittenTable;
+    const scopeValues = scopes.map(({ path }) => {
+        const writtenTable = tables.find((each) => each.scope === path) as WrittenTable;
         return stripTableDefaults(writtenTable.table, writtenTable, tables, allSettings);
     });
     const rootValues = stripTableDefaults(settings, root, tables, allSettings);

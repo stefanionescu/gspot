@@ -22,12 +22,11 @@ function buildUnexplainedFailure(check: Check, tool: Tool, result: SpawnResult, 
             tool.finding_header_pattern === undefined ? undefined : new RegExp(tool.finding_header_pattern, 'u');
         text = output.split('\n').find((line) => line.trim() !== '' && header?.test(line) !== true) ?? emptyOutputText;
     }
-    const { id: name, help } = check;
     return {
-        check: name,
+        check: check.id,
         file: file === undefined ? '' : convertToPosixPath(file),
         message: text,
-        help,
+        help: check.help,
         fixable: false,
     };
 }
@@ -62,9 +61,10 @@ function isSilentCrash(check: Check, result: SpawnResult, parsed: Finding[], pat
     if (check.runs === 'history' || result.code === 0 || (check.command?.includes(FILE_PLACEHOLDER) ?? false))
         return false;
     const output = check.output;
-    return outputFormats[output.format].namesFiles(output)
-        ? parsed.every((finding) => !isOnDisk(finding.file, [paths.cwd, paths.root]))
-        : false;
+    return (
+        outputFormats[output.format].namesFiles(output) &&
+        parsed.every((finding) => !isOnDisk(finding.file, [paths.cwd, paths.root]))
+    );
 }
 
 function parseVerifiedFindings(

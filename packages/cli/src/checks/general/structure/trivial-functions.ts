@@ -5,7 +5,7 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import { isDocstring } from '#cli/parsers/code/python.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { buildFinding, getNodePlace } from '#cli/runs/finding.ts';
+import { buildFinding, getNodePlace } from '#cli/checks/finding.ts';
 import { PARSED_SOURCES } from '#cli/checks/general/structure/parsed-sources.ts';
 import type { ParsedSource, ParsedLanguage } from '#cli/types/checks/general/structure.ts';
 

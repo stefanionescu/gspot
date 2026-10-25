@@ -13,27 +13,28 @@ import { buildSettingsText } from '#cli/settings/text/build.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
-import { readFormatTables } from '#cli/commands/init/formatter-settings.ts';
+import { readScopeFormat } from '#cli/commands/init/formatter-settings.ts';
 import { buildImportExtensionTables } from '#cli/commands/init/import-extension.ts';
 import { PREFACE_BODY, XCODE_DESTINATIONS } from '#cli/config/commands/init/settings-text.ts';
 import { SWIFT_CONFIGURATION, OPENAPI_CONFIGURATION } from '#cli/config/configurations/names.ts';
-import type { InitAnswers, InitOptions, SettingsDraft, InitConfigurations } from '#cli/types/commands/init.ts';
+
+import type {
+    InitAnswers,
+    InitOptions,
+    SettingsDraft,
+    InitConfigurations,
+    ScopeConfigurations,
+} from '#cli/types/commands/init.ts';
 
 function buildOpenApiTables(
-    scopes: { scope: string; selected: Configuration[] }[],
+    scopes: ScopeConfigurations[],
     draft: SettingsDraft,
     repository: Repository,
 ): Map<string, TomlTable> {
-    const openapiSelections = scopes
-        .map(({ scope, selected: configurations }) => ({
-            scope,
-            openapi: configurations.find((configuration) => configuration.name === OPENAPI_CONFIGURATION),
-        }))
-        .filter(
-            (selection): selection is typeof selection & { openapi: Configuration } => selection.openapi !== undefined,
-        );
     return new Map(
-        openapiSelections.flatMap(({ scope, openapi }) => {
+        scopes.flatMap(({ scope, selected }) => {
+            const openapi = selected.find((configuration) => configuration.name === OPENAPI_CONFIGURATION);
+            if (openapi === undefined) return [];
             const isDocument = buildFilenameMatcher(openapi.detect.filenames);
             const document = repository.files.find(
                 (file) => findScopeFolder(file.path, draft.scopes).path === scope && isDocument(file.path),
@@ -44,24 +45,18 @@ function buildOpenApiTables(
 }
 
 function buildSwiftTables(
-    scopes: { scope: string; selected: Configuration[] }[],
+    scopes: ScopeConfigurations[],
     draft: SettingsDraft,
     repository: Repository,
 ): Map<string, TomlTable> {
     const projectFiles = repository.files.filter((each) => each.path.endsWith(PBXPROJ));
-    const swiftFiles = scopes
-        .values()
-        .map(({ scope, selected: configurations }) => {
-            if (configurations.every((configuration) => configuration.name !== SWIFT_CONFIGURATION)) return undefined;
+    return new Map(
+        scopes.flatMap(({ scope, selected }) => {
+            if (selected.every((configuration) => configuration.name !== SWIFT_CONFIGURATION)) return [];
             const file = projectFiles.find(
                 (projectFile) => findScopeFolder(projectFile.path, draft.scopes).path === scope,
             )?.path;
-            return file === undefined ? undefined : { scope, file };
-        })
-        .filter((file) => file !== undefined)
-        .toArray();
-    return new Map(
-        swiftFiles.map(({ scope, file }) => {
+            if (file === undefined) return [];
             const text = findText(repository.root, file);
             const sdkRoot = text === undefined ? undefined : parseBuildSettings(text).sdkRoot;
             const destination = XCODE_DESTINATIONS.get(sdkRoot);
@@ -69,7 +64,7 @@ function buildSwiftTables(
                 xcode_project: posix.dirname(file),
                 ...stripUndefined({ xcode_destination: destination }),
             };
-            return [scope, { swift: swiftSettings }];
+            return [[scope, { swift: swiftSettings }] as const];
         }),
     );
 }
@@ -90,7 +85,9 @@ function buildSettingsTable(
         selected: selectForScope(selected, scopePath, configurations),
     }));
     const projects = buildSwiftTables(scopeConfigurations, draft, repository);
-    const formats = readFormatTables(scopeConfigurations, draft, repository);
+    const formats = new Map(
+        scopeConfigurations.map((selection) => [selection.scope, readScopeFormat(selection, draft, repository)]),
+    );
     const openapiTables = buildOpenApiTables(scopeConfigurations, draft, repository);
     const importStyles = buildImportExtensionTables(scopeConfigurations, repository);
     const tables = new Map(

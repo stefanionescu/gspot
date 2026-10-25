@@ -1,7 +1,10 @@
-import type { StageFilter } from '#cli/types/planning.ts';
+import type { Session } from '#cli/types/session.ts';
+import type { CheckResult } from '#cli/types/runs/check.ts';
+import type { HookName } from '#cli/types/generation/files.ts';
 import type { CanceledCommandJson } from '#cli/types/terminal.ts';
-import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
-import type { RunReport, CheckProgress } from '#cli/types/runs/run.ts';
+import type { FixReport, FixResult } from '#cli/types/runs/fixes.ts';
+import type { StageFilter, PlannedCheck } from '#cli/types/planning.ts';
+import type { RunReport, RunOptions, CheckProgress } from '#cli/types/runs/run.ts';
 import type { PushInput, StagedPaths, ChangedPaths, PushedRevisions } from '#cli/types/repository/revisions.ts';
 
 type CheckedRevision = { hash: string; refs: string[]; commits: string[]; shallow: boolean; report: RunReport };
@@ -22,7 +25,7 @@ export type RunFilters = {
 
 export type CheckOptions = {
     allFiles?: 'empty-base' | 'new-branch';
-    hook?: (typeof CHECK_HOOKS)[number];
+    hook?: HookName;
     onProgress?: (progress: CheckProgress) => void;
     cwd: string;
     only?: string[];
@@ -65,8 +68,29 @@ export type CheckFlags = {
     changed?: boolean | string;
     fix?: boolean;
     dryRun?: boolean;
-    hook?: (typeof CHECK_HOOKS)[number];
+    hook?: HookName;
     verbose?: boolean;
 };
 
 export type CheckCommandJson = RunReport | PushReport | CanceledCommandJson;
+
+export type FinishedRun = {
+    session: Session;
+    options: RunOptions;
+    started: Date;
+    planned: PlannedCheck[];
+    active: PlannedCheck[];
+    ran: CheckResult[];
+    fixes: FixReport | undefined;
+};
+
+export type ReproduceOptions = {
+    paths: string[];
+    changed: string | undefined;
+    messageFile: string | undefined;
+    staged: boolean;
+};
+
+export type PathBytes = Map<string, Buffer | undefined>;
+
+export type FixRounds = { results: FixResult[]; before: PathBytes; after: PathBytes };

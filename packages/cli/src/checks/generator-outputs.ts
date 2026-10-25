@@ -1,7 +1,7 @@
 import { join, posix } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
-import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { type Finding } from '#cli/types/runs/check.ts';

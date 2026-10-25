@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { MISE_FILES } from '#cli/config/files/names.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';

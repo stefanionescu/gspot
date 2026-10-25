@@ -50,25 +50,23 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
             const evidence = path === '' ? detected : detectConfigurations(repository, configurations, path);
             const found = new Set(evidence.map((detection) => detection.configuration));
             const scopeArgument = path === '' ? '' : ` --scope ${quoteArgument(path)}`;
-            return names
-                .values()
-                .map((name) => {
-                    const configuration = configurations.get(name);
-                    if (
-                        configuration === undefined ||
-                        configuration.group === 'general' ||
-                        found.has(name) ||
-                        Object.values(configuration.detect).every((patterns) => Object.keys(patterns).length === 0)
-                    )
-                        return undefined;
-                    return {
+            return names.flatMap((name) => {
+                const configuration = configurations.get(name);
+                if (
+                    configuration === undefined ||
+                    configuration.group === 'general' ||
+                    found.has(name) ||
+                    Object.values(configuration.detect).every((patterns) => Object.keys(patterns).length === 0)
+                )
+                    return [];
+                return [
+                    {
                         configuration: name,
                         evidence: `no detection evidence in ${path === '' ? ROOT_SCOPE_LABEL : path}; remove it if you no longer need it`,
                         command: `gspot remove ${name}${scopeArgument} --reason "<why>"`,
-                    };
-                })
-                .filter((suggestion) => suggestion !== undefined)
-                .toArray();
+                    },
+                ];
+            });
         });
     const rows = new Map<string, Suggestions['suggested'][number]>();
     for (const configuration of selectedConfigurations) {

@@ -25,7 +25,7 @@ export type PathExplanation = {
 export type SettingScope = {
     scope: string;
     shipped: unknown;
-    effective: InheritedSetting | undefined;
+    inherited: InheritedSetting | undefined;
     readBy: string[];
 };
 
@@ -49,6 +49,3 @@ export type CheckFacts = {
     crashPattern: string | undefined;
     minVersions: Record<string, string>;
 };
-
-export type LimitCheck = { check: string; languages: readonly string[]; limits: readonly string[] };
-export type SettingReader = { check: string; enabled: boolean; note?: string };

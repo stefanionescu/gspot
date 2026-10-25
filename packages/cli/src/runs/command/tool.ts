@@ -95,14 +95,10 @@ export function buildOtherToolEnvironment(
         .filter((path) => path !== undefined)
         .map((path) => dirname(path));
     if (folders.length === 0) return env;
+    const pathKey = Object.keys(env).find((name) => foldVariableName(name) === 'PATH') ?? 'PATH';
     return {
         ...env,
-        PATH: [
-            ...folders,
-            env[Object.keys(env).find((name) => foldVariableName(name) === 'PATH') ?? 'PATH'] ??
-                readEnvironmentVariable('PATH') ??
-                '',
-        ].join(delimiter),
+        [pathKey]: [...folders, env[pathKey] ?? readEnvironmentVariable('PATH') ?? ''].join(delimiter),
     };
 }
 
@@ -133,7 +129,7 @@ export async function runCheckTool(
         ...options,
         env: buildOtherToolEnvironment(session, listOtherTools(planned.scope, planned.check), env),
         cancelSignal: session.cancelSignal,
-        timeoutSeconds: Number(planned.scope.settings.settings['tool_timeout_seconds']),
+        timeoutSeconds: session.timeoutSeconds,
         name,
     });
     if (failure?.status === 'missing') throw new GspotError('tool', failure.note);

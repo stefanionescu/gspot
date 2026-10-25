@@ -1,8 +1,8 @@
 import { isUtf8 } from 'node:buffer';
 import { getTable } from '#cli/settings/scopes.ts';
-import { buildFinding } from '#cli/runs/finding.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { SYMLINK_MODE } from '#cli/config/files/modes.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';

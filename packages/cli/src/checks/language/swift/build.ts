@@ -1,7 +1,7 @@
 import { compareText } from '#cli/system/text.ts';
 import { join, posix, relative } from 'node:path';
-import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { type Files } from '#cli/types/system/files.ts';

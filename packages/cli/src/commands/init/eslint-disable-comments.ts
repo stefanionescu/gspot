@@ -1,5 +1,6 @@
 import type { Session } from '#cli/types/session.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
+import type { InitFileRow } from '#cli/types/commands/init.ts';
 import { extractRulePrefix } from '#cli/configurations/tools.ts';
 import { DIRECTIVE_TAIL, CODE_FILE_TAGS, ESLINT_DIRECTIVE } from '#cli/config/commands/init/eslint-disable-comments.ts';
 
@@ -10,7 +11,7 @@ such a comment as a rule it cannot find.
 @param session the repository and the tools that the selected checks run.
 @returns a plan row for each file, with the rules it names.
 */
-export function listForeignDisableComments(session: Session): { path: string; note: string }[] {
+export function listForeignDisableComments(session: Session): InitFileRow[] {
     const prefixes = new Set(
         session.toolConfigurations.flatMap((configuration) =>
             configuration.tools.flatMap((tool) => (tool.rule_prefix === undefined ? [] : [tool.rule_prefix])),
@@ -19,7 +20,7 @@ export function listForeignDisableComments(session: Session): { path: string; no
     return session.repository.files
         .values()
         .filter((file) => file.kind === 'source' && file.tags.some((tag) => CODE_FILE_TAGS.has(tag)))
-        .map((file) => {
+        .flatMap((file) => {
             const text = readCachedText(session.reads, file.path);
             const rules = text
                 .matchAll(ESLINT_DIRECTIVE)
@@ -30,12 +31,13 @@ export function listForeignDisableComments(session: Session): { path: string; no
                     return prefix !== undefined && !prefixes.has(prefix);
                 })
                 .toArray();
-            if (rules.length === 0) return undefined;
-            return {
-                path: file.path,
-                note: `${[...new Set(rules)].join(', ')}: gspot does not load these rules; delete the comments`,
-            };
+            if (rules.length === 0) return [];
+            return [
+                {
+                    path: file.path,
+                    note: `${[...new Set(rules)].join(', ')}: gspot does not load these rules; delete the comments`,
+                },
+            ];
         })
-        .filter((file) => file !== undefined)
         .toArray();
 }

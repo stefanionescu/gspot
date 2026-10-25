@@ -88,13 +88,13 @@ Copies source files and dependency trees into a new copy.
 export async function createCopy(source: CopyPaths): Promise<TemporaryFolder> {
     const folder = createTemporaryFolder();
     try {
-        const input = {
+        const plan = {
             ...source,
             target: folder.path,
             files: new Set(source.paths),
         };
-        await writeCopyFiles(input);
-        await copyDependencies(input);
+        await writeCopyFiles(plan);
+        await copyDependencies(plan);
         return folder;
     } catch (error) {
         folder[Symbol.dispose]();

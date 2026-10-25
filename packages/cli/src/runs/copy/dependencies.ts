@@ -76,9 +76,9 @@ async function copyTree(
 
 function findCopiedPath(copies: Map<string, string>, source: string): string | undefined {
     const roots = [...copies].toSorted(([left], [right]) => right.length - left.length);
-    for (const [original, copied] of roots) {
-        const local = relative(original, source);
-        if (isInside(local)) return join(copied, local);
+    for (const [sourceRoot, copyRoot] of roots) {
+        const local = relative(sourceRoot, source);
+        if (isInside(local)) return join(copyRoot, local);
     }
     return undefined;
 }
@@ -143,8 +143,7 @@ export async function copyDependencies(
     }
     while (context.links.length > 0) {
         context.links = context.links.toSorted((left, right) => left.source.length - right.source.length);
-        const link = context.links.shift();
-        if (link !== undefined) await replaceLink(context, link);
+        await replaceLink(context, context.links.shift() as PendingLink);
         plan.cancelSignal?.throwIfAborted();
     }
 }

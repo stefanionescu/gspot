@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
-import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
+import { buildFinding } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';

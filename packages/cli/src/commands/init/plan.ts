@@ -38,20 +38,23 @@ import {
 
 function buildToolProjectRows(configurations: Configuration[]): InitPlan['change'] {
     const pins = listToolProjectPins(configurations);
-    const count = Object.keys(pins.npm).length;
-    const rows: InitPlan['change'] =
-        count === 0
-            ? []
-            : [{ path: GSPOT_PATHS.npmProject, note: `${formatCount(count, 'pinned npm tool')}; matching lockfile` }];
-    const python = pins.python.length;
-    if (python > 0)
-        rows.push({
-            path: GSPOT_PATHS.pythonProject,
-            note: `${formatCount(python, 'pinned Python tool')}; matching uv.lock and tool environment`,
-        });
     const mise = listMisePins(configurations).length;
-    if (mise > 0) rows.unshift({ path: GSPOT_PATHS.miseProject, note: formatCount(mise, 'tool pin') });
-    return rows;
+    const npm = Object.keys(pins.npm).length;
+    const python = pins.python.length;
+    return [
+        ...(mise === 0 ? [] : [{ path: GSPOT_PATHS.miseProject, note: formatCount(mise, 'tool pin') }]),
+        ...(npm === 0
+            ? []
+            : [{ path: GSPOT_PATHS.npmProject, note: `${formatCount(npm, 'pinned npm tool')}; matching lockfile` }]),
+        ...(python === 0
+            ? []
+            : [
+                  {
+                      path: GSPOT_PATHS.pythonProject,
+                      note: `${formatCount(python, 'pinned Python tool')}; matching uv.lock and tool environment`,
+                  },
+              ]),
+    ];
 }
 
 function buildToolDependencyRows(
@@ -59,29 +62,27 @@ function buildToolDependencyRows(
     requirements: Configuration[],
 ): InitFileRow[] {
     const toolPackages = new Set(Object.keys(listToolProjectPins(requirements).npm));
-    return repositorySetup.toolOnlyPackages
-        .values()
-        .map((path) => {
-            const packageJson = readPackageJson(repository.root, path) as PackageJson;
-            const names = Object.keys({
-                ...packageJson.dependencies,
-                ...packageJson.devDependencies,
-                ...packageJson.peerDependencies,
-                ...packageJson.optionalDependencies,
-            })
-                .filter((name) => toolPackages.has(name))
-                .toSorted(compareText);
-            if (names.length === 0) return undefined;
-            const subject = names.join(', ');
-            const verb = names.length === 1 ? 'is' : 'are';
-            const pronoun = names.length === 1 ? 'it' : 'them';
-            return {
+    return repositorySetup.toolOnlyPackages.flatMap((path) => {
+        const packageJson = readPackageJson(repository.root, path) as PackageJson;
+        const names = Object.keys({
+            ...packageJson.dependencies,
+            ...packageJson.devDependencies,
+            ...packageJson.peerDependencies,
+            ...packageJson.optionalDependencies,
+        })
+            .filter((name) => toolPackages.has(name))
+            .toSorted(compareText);
+        if (names.length === 0) return [];
+        const subject = names.join(', ');
+        const verb = names.length === 1 ? 'is' : 'are';
+        const pronoun = names.length === 1 ? 'it' : 'them';
+        return [
+            {
                 path,
                 note: `${subject} ${verb} now pinned in ${GSPOT_PATHS.npmProject}; remove ${pronoun} from package.json if nothing else uses ${pronoun}`,
-            };
-        })
-        .filter((row) => row !== undefined)
-        .toArray();
+            },
+        ];
+    });
 }
 
 function buildKeptCiRows(ci: InitAnswers['ci'], ciFiles: string[], lintJobs: string[]): InitPlan['retained'] {
@@ -177,7 +178,7 @@ export function planInitFiles(
         write,
         delete: conflicts.deleted.filter(({ path }) => write.every((row) => row.path !== path)),
         retained: [
-            ...conflicts.retained,
+            ...conflicts.kept,
             ...listSubmodulePaths(repository.index).map((path) => ({ path, note: 'submodule; init does not read it' })),
             ...buildKeptCiRows(answers.ci, repositorySetup.ci, readLintJobs(root, repositorySetup.ci)),
             ...scan.foreignDisableComments,
@@ -294,12 +295,11 @@ Format the detection header: tracked files, the evidence for each group, scopes,
 @returns the text, with a final blank line when the repository has existing tools.
 */
 export function formatDetection(summary: DetectionSummary): string {
-    const languages = summary.detected
-        .filter(
-            (evidence) =>
-                evidence.group === 'language' &&
-                summary.configurations.get(evidence.configuration)?.always_selected !== true,
-        )
+    const detected = summary.detected.filter(
+        (evidence) => summary.configurations.get(evidence.configuration)?.always_selected !== true,
+    );
+    const languages = detected
+        .filter((evidence) => evidence.group === 'language')
         .map((evidence) => {
             const count = evidence.evidence.split(' ', 1)[0] ?? '';
             return DIGITS_ONLY.test(count)
@@ -314,12 +314,8 @@ export function formatDetection(summary: DetectionSummary): string {
             .map(([group, label]) =>
                 formatDetectionRow(
                     label.toLowerCase(),
-                    summary.detected
-                        .filter(
-                            (evidence) =>
-                                evidence.group === group &&
-                                summary.configurations.get(evidence.configuration)?.always_selected !== true,
-                        )
+                    detected
+                        .filter((evidence) => evidence.group === group)
                         .map((evidence) => `${evidence.configuration}  ${evidence.evidence}`),
                 ),
             ),

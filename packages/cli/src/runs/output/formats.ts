@@ -7,12 +7,11 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { parseJsonFindings } from '#cli/runs/output/json.ts';
 import { parseKnipFindings } from '#cli/runs/output/knip.ts';
 import { parseSarifFindings } from '#cli/runs/output/sarif.ts';
-import { parseTaploFindings } from '#cli/runs/output/taplo.ts';
 import { parseTyposFindings } from '#cli/runs/output/typos.ts';
 import { DRIVE_LETTER } from '#cli/config/files/path-patterns.ts';
 import { parseSemgrepFindings } from '#cli/runs/output/semgrep.ts';
 import { parseMarkdownlintFindings } from '#cli/runs/output/markdownlint.ts';
-import { FILE_GROUP, MISSING_PATH_CODES } from '#cli/config/runs/output/formats.ts';
+import { FILE_GROUP, TAPLO_OUTPUTS, MISSING_PATH_CODES } from '#cli/config/runs/output/formats.ts';
 import { parseLineFindings, parseRegexFindings, parseGroupedFindings } from '#cli/runs/output/text.ts';
 import type { CheckOutput, OutputPaths, ParsingCheck, OutputParser } from '#cli/types/runs/output/formats.ts';
 
@@ -49,7 +48,10 @@ export const outputFormats = {
     },
     sarif: { parse: parseSarifFindings, namesFiles: () => true },
     typos: { parse: parseTyposFindings, namesFiles: () => true },
-    taplo: { parse: parseTaploFindings, namesFiles: () => true },
+    taplo: {
+        parse: (output) => TAPLO_OUTPUTS.flatMap((format) => parseRegexFindings({ ...output, output: format })),
+        namesFiles: () => true,
+    },
     markdownlint: { parse: parseMarkdownlintFindings, namesFiles: () => true },
     knip: { parse: parseKnipFindings, namesFiles: () => true },
     semgrep: { parse: parseSemgrepFindings, namesFiles: () => true },
