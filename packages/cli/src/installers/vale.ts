@@ -70,7 +70,8 @@ export function hasValePackages(repositoryRoot: string, level: Settings['level']
 }
 
 /**
-Download the Vale packages for the level, and replace the installed ones. Needs the network.
+Download the Vale packages for the level, and replace the installed ones, when a selected configuration uses Vale.
+Needs the network.
 
 @param install what install needs for this step.
 @param miseBinPaths the program folders that mise installed, where Vale may sit.
@@ -80,7 +81,8 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     const { session } = install;
     const { root } = session;
     const level = session.settingsFile.settings.level;
-    if (level === 'recommended') return '';
+    const usesVale = session.toolConfigurations.some(({ tools }) => tools.some((tool) => tool.name === VALE_TOOL));
+    if (level === 'recommended' || !usesVale) return '';
     const tool = getTool(session.toolConfigurations, VALE_TOOL);
     const available = buildToolAvailability(tool, inspectTool({ ...session, miseBinPaths }, tool));
     if ('status' in available) throw new GspotError('tool', available.note);

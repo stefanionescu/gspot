@@ -1,5 +1,4 @@
 import which from 'which';
-import { VALE_TOOL } from '#cli/config/prose.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { MISE_TOOL } from '#cli/config/tools/locate.ts';
@@ -44,7 +43,6 @@ export async function installTools(
 ): Promise<InstallResult> {
     const configurations = session.toolConfigurations;
     const steps: (readonly string[])[] = [];
-    const notes: string[] = [];
     const tools = listDistinctTools(configurations);
     const misePath = which.sync(MISE_TOOL, { nothrow: true });
     try {
@@ -60,11 +58,12 @@ export async function installTools(
         };
         await assertPackageManagerVersion(context);
         const mise = await installMiseTools(context);
-        notes.push(...(await installToolProjects(context, mise.binPaths)));
-        if (configurations.some((configuration) => configuration.tools.some((tool) => tool.name === VALE_TOOL))) {
-            notes.push(await installValePackages(context, mise.binPaths));
-        }
-        notes.push(installHooks(session, steps), mise.note);
+        const notes = [
+            ...(await installToolProjects(context, mise.binPaths)),
+            await installValePackages(context, mise.binPaths),
+            installHooks(session, steps),
+            mise.note,
+        ];
         return { note: notes.filter(Boolean).join('\n'), steps };
     } catch (error) {
         session.cancelSignal?.throwIfAborted();
