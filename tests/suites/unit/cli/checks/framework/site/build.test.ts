@@ -45,7 +45,7 @@ test('build: a build that reads an untracked file fails until the file is in the
     expect(findings).toMatchObject([{ rule: 'build', line: 1 }]);
     const [summary, ...output] = findings[0]!.message.split('\n');
     expect(summary).toBe(`${command.map((argument) => quoteArgument(argument)).join(' ')} did not build the site.`);
-    expect(output).toContain("ENOENT: no such file or directory, lstat 'local-input.txt'");
+    expect(output).toContain("ENOENT: no such file or directory, stat 'local-input.txt'");
     const checkedSession = await openSession(sandbox.path, { resources });
     const corrected = await readSuccessfulBuild(
         buildCheckSession(checkedSession),
