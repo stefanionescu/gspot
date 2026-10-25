@@ -10,7 +10,7 @@ import { convertToGlobs, listIgnoreSections } from '#cli/generation/config-files
 import { buildRuntimes } from '#cli/generation/configurations/language/javascript/eslint/runtimes.ts';
 import type { GeneratedFile, ConfigFileOutput, PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { buildPlannedEslintFile } from '#cli/generation/configurations/language/javascript/eslint/plan.ts';
-import { buildSelectedBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
+import { splitSettingsBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 import { buildBoundaryBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/boundaries.ts';
 import { serializeBlock, serializeImports } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
 import { listConfigurationBlocks } from '#cli/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
@@ -86,7 +86,7 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
     const runtimes = buildRuntimes(session.scopes);
     const boundaryBlocks = buildBoundaryBlocks(eslintFile);
     const ignoredGlobs = convertToGlobs(listIgnoreSections(planned, ESLINT_CHECK));
-    const { configurationBlocks, configurationImports, configurationSelectors } = listConfigurationBlocks(eslintFile);
+    const { configurationBlocks, configurationImports } = listConfigurationBlocks(eslintFile);
     const shipped = selectPlugins(eslintFile, boundaryBlocks);
     const plugins = { ...shipped, ...listLocalPlugins(session.scopes, planned.targetPath, shipped) };
     const presets = eslintFile.eslintPresets.get(JAVASCRIPT_CONFIGURATION);
@@ -109,9 +109,9 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
         ),
         ...configurationFiles.map(({ importName }) => `${ESLINT_INDENT}...${importName}`),
         ...[
-            ...buildClosingBlocks(eslintFile, configurationSelectors, runtimes),
+            ...buildClosingBlocks(eslintFile, runtimes),
             ...[
-                ...buildSelectedBlocks(eslintFile),
+                ...splitSettingsBlocks(eslintFile),
                 ...buildLocalPluginBlocks(session.scopes, eslintFile.eslintFiles.code),
             ].map((fields) => ({ fields })),
         ].map((block) => writeEslintBlock(blockWriter, { ...block, label: ESLINT_BASE_LABEL })),
@@ -120,7 +120,13 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
     const declarations = body.includes(RUNTIME_DECLARATIONS)
         ? `const ${RUNTIME_DECLARATIONS} = ${JSON.stringify(runtimes, null, JSON_INDENT)};\n`
         : '';
-    assertRulesRun(blockWriter);
+    assertRuleOptionsRun({
+        configured: listUnappliedRules(blockWriter),
+        running: blockWriter.applied,
+        higher: blockWriter.allLevelRules,
+        level: blockWriter.level,
+        suffix: ' For a rule of your own, add a [[tools.eslint.plugins]] record.',
+    });
     return {
         content:
             serializeImports(
@@ -132,15 +138,4 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
             body,
         companions: configurationFiles.map(({ file }) => file),
     };
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function assertRulesRun(writer: BlockWriter): void {
-    assertRuleOptionsRun({
-        configured: listUnappliedRules(writer),
-        running: writer.applied,
-        higher: writer.allLevelRules,
-        level: writer.level,
-        suffix: ' For a rule of your own, add a [[tools.eslint.plugins]] record.',
-    });
 }

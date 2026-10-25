@@ -1,3 +1,4 @@
+import { getTable } from '#cli/settings/scopes.ts';
 import { DRIZZLE_RULES } from '#cli/config/generation/configurations/library/drizzle.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
 import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
@@ -10,7 +11,7 @@ Require safe changes in Drizzle queries.
 */
 export function buildDrizzleBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>): ConfigurationBlocks {
     const { eslintFiles, settings } = scope;
-    const rule = ['error', { drizzleObjectName: settings.settings['drizzle.client_names'] }];
+    const rule = ['error', { drizzleObjectName: getTable(settings, 'drizzle').client_names }];
     const blocks: ConfigurationBlocks['blocks'] = [
         {
             fields: {

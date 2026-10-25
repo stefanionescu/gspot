@@ -99,10 +99,10 @@ test.each([...LICENSE_TOOL_CASES])(
 test.each([...YARN_CLIENTS])(
     'Yarn $packageManager.version gets the matching tool project settings',
     ({ packageManager, settings }) => {
-        const files = buildNpmProject({
-            configurations: [],
-            packageManager: Number(packageManager.version.split('.', 1)[0]) < 2 ? 'npm' : packageManager.name,
-        });
+        const files = buildNpmProject(
+            [],
+            Number(packageManager.version.split('.', 1)[0]) < 2 ? 'npm' : packageManager.name,
+        );
         expect(files.map((file) => file.path)).toStrictEqual(
             settings ? [GSPOT_PATHS.npmProject, GSPOT_PATHS.yarnSettings] : [GSPOT_PATHS.npmProject],
         );

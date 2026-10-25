@@ -17,7 +17,6 @@ import { buildTypescriptBlocks } from '#cli/generation/configurations/language/t
 import { buildTanstackQueryBlocks } from '#cli/generation/configurations/library/tanstack-query.ts';
 import { buildTestingLibraryBlocks } from '#cli/generation/configurations/library/testing-library.ts';
 import { buildPluginRuleBlocks } from '#cli/generation/configurations/language/javascript/eslint/plugin-rules.ts';
-import { buildSelectorGroups } from '#cli/generation/configurations/language/javascript/eslint/blocks/selectors.ts';
 import { PLUGIN_RULE_BLOCKS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 import {
@@ -26,16 +25,34 @@ import {
     listCodeTestFiles,
 } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import type {
-    EslintScope,
     EslintPlugins,
     PlannedEslintFile,
     PlannedEslintBlock,
     ConfigurationBlocks,
+    ConfigurationBuilder,
+    ConfigurationScopeBlocks,
 } from '#cli/types/generation/eslint.ts';
+
+const CONFIGURATION_BUILDERS: Readonly<Record<string, ConfigurationBuilder | undefined>> = {
+    ...Object.fromEntries(Object.keys(PLUGIN_RULE_BLOCKS).map((name) => [name, buildPluginRuleBlocks])),
+    astro: buildAstroBlocks,
+    vue: buildVueBlocks,
+    svelte: buildSvelteBlocks,
+    nextjs: buildNextjsBlocks,
+    typescript: buildTypescriptBlocks,
+    zustand: buildZustandBlocks,
+    'testing-library': buildTestingLibraryBlocks,
+    vitest: buildVitestBlocks,
+    react: buildReactBlocks,
+    'react-dom': buildReactDomBlocks,
+    nestjs: buildNestjsBlocks,
+    drizzle: buildDrizzleBlocks,
+    'tanstack-query': buildTanstackQueryBlocks,
+};
 
 function buildConfigurationBlocks(
     configuration: Configuration,
-    builder: (scope: EslintScope, configuration: string) => ConfigurationBlocks,
+    builder: ConfigurationBuilder,
     scope: Scope,
     planned: PlannedEslintFile,
 ): ConfigurationBlocks {
@@ -87,13 +104,10 @@ function listMatchingScopes(
 }
 
 function buildScopeConfigurationBlocks(
-    configurations: {
-        configuration: Configuration;
-        builder: (scope: EslintScope, configuration: string) => ConfigurationBlocks;
-    }[],
+    configurations: { configuration: Configuration; builder: ConfigurationBuilder }[],
     planned: PlannedEslintFile,
-): { configuration: Configuration; imports: EslintPlugins; blocks: PlannedEslintBlock[] }[] {
-    const result: { configuration: Configuration; imports: EslintPlugins; blocks: PlannedEslintBlock[] }[] = [];
+): ConfigurationScopeBlocks[] {
+    const result: ConfigurationScopeBlocks[] = [];
     for (const { configuration, builder } of configurations) {
         const scopeBlocks = planned.session.scopes
             .filter((each) => each.configurations.includes(configuration))
@@ -125,7 +139,7 @@ function buildScopeConfigurationBlocks(
 }
 
 /**
-Collect imported bindings, the scoped blocks of each configuration, and configuration selectors.
+Collect imported bindings and the scoped blocks of each configuration.
 
 @param planned the source facts and resolved scopes.
 @returns the configuration data before serialization, with the blocks of each configuration in plan order.
@@ -133,12 +147,9 @@ Collect imported bindings, the scoped blocks of each configuration, and configur
 export function listConfigurationBlocks(planned: PlannedEslintFile): {
     configurationBlocks: Map<Configuration, PlannedEslintBlock[]>;
     configurationImports: EslintPlugins;
-    configurationSelectors: ReturnType<typeof buildSelectorGroups>;
 } {
     const configurations = planned.configurations.flatMap((configuration) => {
-        const builder = Object.hasOwn(CONFIGURATION_BUILDERS, configuration.name)
-            ? CONFIGURATION_BUILDERS[configuration.name]
-            : undefined;
+        const builder = CONFIGURATION_BUILDERS[configuration.name];
         return builder === undefined ? [] : { configuration, builder };
     });
     const selected = buildScopeConfigurationBlocks(configurations, planned);
@@ -149,27 +160,5 @@ export function listConfigurationBlocks(planned: PlannedEslintFile): {
                 .map(([configuration, groups]) => [configuration, groups.flatMap(({ blocks }) => blocks)]),
         ),
         configurationImports: Object.fromEntries(selected.flatMap((blocks) => Object.entries(blocks.imports))),
-        configurationSelectors: buildSelectorGroups(
-            planned.session.scopes,
-            planned.level,
-            planned.session.settingsFile.settings.structure.reexports,
-        ),
     };
 }
-
-const CONFIGURATION_BUILDERS: Record<string, (scope: EslintScope, configuration: string) => ConfigurationBlocks> = {
-    ...Object.fromEntries(Object.keys(PLUGIN_RULE_BLOCKS).map((name) => [name, buildPluginRuleBlocks])),
-    astro: buildAstroBlocks,
-    vue: buildVueBlocks,
-    svelte: buildSvelteBlocks,
-    nextjs: buildNextjsBlocks,
-    typescript: buildTypescriptBlocks,
-    zustand: buildZustandBlocks,
-    'testing-library': buildTestingLibraryBlocks,
-    vitest: buildVitestBlocks,
-    react: buildReactBlocks,
-    'react-dom': buildReactDomBlocks,
-    nestjs: buildNestjsBlocks,
-    drizzle: buildDrizzleBlocks,
-    'tanstack-query': buildTanstackQueryBlocks,
-};

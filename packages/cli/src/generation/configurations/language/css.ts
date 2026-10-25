@@ -28,6 +28,17 @@ function dropPickedRules(
     );
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
+function buildFunctionRules(functions: readonly string[]): Record<string, unknown> {
+    return {
+        'function-no-unknown': [true, { ignoreFunctions: functions }],
+        'declaration-property-value-no-unknown': [
+            true,
+            { ignoreProperties: { '/.*/': functions.map((name) => String.raw`/\b${name}\(/`) } },
+        ],
+    };
+}
+
 function buildComponentOverrides(
     configurations: string[],
     tailwindFunctions: string[],
@@ -42,12 +53,8 @@ function buildComponentOverrides(
             const rules: Record<string, unknown> = {
                 'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses }],
                 ...(functions.length > 0 && {
-                    'function-no-unknown': [true, { ignoreFunctions: functions }],
+                    ...buildFunctionRules(functions),
                     'value-keyword-case': ['lower', { ignoreFunctions: override.functions }],
-                    'declaration-property-value-no-unknown': [
-                        true,
-                        { ignoreProperties: { '/.*/': functions.map((name) => String.raw`/\b${name}\(/`) } },
-                    ],
                 }),
             };
             return {
@@ -90,11 +97,9 @@ Build stylelint.json: the CSS lint presets and rules for this level.
 export function buildStylelintFile(planned: PlannedConfigFile): string {
     const { scope } = planned;
     const { dependencyFiles } = planned.session.repository;
-    const level = planned.level;
-
     const { configurations } = scope.settings;
     const options = getTable(scope.settings, 'tools.stylelint');
-    const isAll = level === 'all';
+    const isAll = planned.level === 'all';
     const scopeDependencies = listProjectDependencyNames(dependencyFiles, scope.folder.path);
     const ruleNamesFile = buildAssetPath(STYLELINT_RULE_NAMES_FILE);
     const stylelintRuleNames = nameListSchema.parse(JSON.parse(readFileSync(ruleNamesFile, 'utf8'))).names;
@@ -107,7 +112,7 @@ export function buildStylelintFile(planned: PlannedConfigFile): string {
         configured: Object.keys(options.rules),
         running: activeRules,
         higher: STYLELINT_RECOMMENDED_OFF,
-        level,
+        level: planned.level,
     });
     const picked = options.rules;
     const isTailwind = scopeDependencies.includes('tailwindcss');
@@ -117,15 +122,12 @@ export function buildStylelintFile(planned: PlannedConfigFile): string {
         ...buildComponentOverrides(configurations, tailwindFunctions, picked, off),
         ...buildCssModulesOverrides(planned, tailwindAtRules, picked, off),
     ];
-    const syntaxRules: Record<string, unknown> = {};
-    if (isTailwind) {
-        syntaxRules['at-rule-no-unknown'] = [true, { ignoreAtRules: tailwindAtRules }];
-        syntaxRules['function-no-unknown'] = [true, { ignoreFunctions: tailwindFunctions }];
-        syntaxRules['declaration-property-value-no-unknown'] = [
-            true,
-            { ignoreProperties: { '/.*/': [String.raw`/\btheme\(/`] } },
-        ];
-    }
+    const syntaxRules = isTailwind
+        ? {
+              'at-rule-no-unknown': [true, { ignoreAtRules: tailwindAtRules }],
+              ...buildFunctionRules(tailwindFunctions),
+          }
+        : {};
     const document = {
         extends: 'stylelint-config-standard',
         rules: Object.assign(

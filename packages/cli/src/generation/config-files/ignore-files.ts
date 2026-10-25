@@ -1,3 +1,4 @@
+import { join, basename } from 'node:path/posix';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -6,11 +7,11 @@ import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
-import { join, dirname, basename, relative } from 'node:path/posix';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { listPointerPaths } from '#cli/generation/config-files/pointers.ts';
+import { listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
 import type { IgnoreSection, PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { isRootTextShared, listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
+import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';
 
 import {
     BUILD_OUTPUT_FOLDERS,
@@ -29,7 +30,10 @@ function listGeneratedPaths(session: Session): string[] {
             configFile.source === undefined || configFile.target.startsWith(`${DOT_GSPOT}/`)
                 ? []
                 : [configFile.per_scope ? joinScope(owner.scope.folder.path, configFile.target) : configFile.target];
-        return [...sourceTargets, ...(isRootTextShared(owned, configFiles) ? [] : listPointerPaths(owner, configFile))];
+        return [
+            ...sourceTargets,
+            ...(isMarkdownlintShared(owned, configFiles) ? [] : listPointerPaths(owner, configFile)),
+        ];
     });
     return [...new Set(paths)].map((path) => `/${path}`);
 }
@@ -93,7 +97,14 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
     ];
 }
 
-function listCheckIgnoreSections(scopeSettings: ScopeSettings, check: string): IgnoreSection[] {
+/**
+List the path ignores of one check, each with its written reason.
+
+@param scopeSettings the merged settings and ignores of the scope.
+@param check the ID whose path ignores apply.
+@returns one section for each path ignore.
+*/
+export function listCheckIgnoreSections(scopeSettings: ScopeSettings, check: string): IgnoreSection[] {
     return listIgnores(scopeSettings, check)
         .filter((ignore) => ignore.rule === undefined && ignore.names === undefined)
         .map(({ reason, paths }): IgnoreSection => ({ key: 'settings', title: reason, patterns: paths }));
@@ -145,19 +156,6 @@ export function formatReasonLines(reason: string, indent: string): string[] {
         .map((line) => `${indent}# ${line}`);
 }
 
-function formatIgnoreFile(sections: IgnoreSection[]): string {
-    const ordered = sections.map((section) => ({
-        ...section,
-        patterns: section.patterns.some((pattern) => pattern.startsWith('!'))
-            ? section.patterns
-            : section.patterns.toSorted((left, right) => compareText(left, right)),
-    }));
-    const lines = keepFirstPatterns(ordered).flatMap(({ title, patterns: paths }) => {
-        return paths.length === 0 ? [] : ['', ...formatReasonLines(title, ''), ...paths];
-    });
-    return [`# ${PRETTIERIGNORE_PURPOSE}`, ...lines, ''].join('\n');
-}
-
 function convertToGlob(pattern: string): string {
     const negative = pattern.startsWith('!') ? '!' : '';
     let path = negative === '' ? pattern : pattern.slice(1);
@@ -181,34 +179,20 @@ export function convertToGlobs(sections: IgnoreSection[]): string[] {
 }
 
 /**
-List the shared and check-specific globs that a Python tool leaves out.
-
-@param planned the config file and its scope.
-@param check the check whose path ignores apply.
-@returns the globs relative to the config file.
-*/
-export function listPythonIgnoredGlobs(planned: PlannedConfigFile, check: string): string[] {
-    const base = relative(dirname(planned.targetPath), '.');
-    const ignoredGlobs = convertToGlobs(buildIgnoreSections(planned.session)).filter(
-        (pattern) =>
-            pattern.endsWith('/**') ||
-            planned.configuration.files.extensions.some((extension) => pattern.endsWith(extension)),
-    );
-    return [
-        ...ignoredGlobs,
-        ...listIgnores(planned.scope.settings, check)
-            .filter((ignore) => ignore.rule === undefined && ignore.names === undefined)
-            .flatMap((ignore) => ignore.paths),
-    ].map((path) => `${base}/${path}`);
-}
-
-/**
 Build .prettierignore: the ignored paths in the shared section order, with the written reasons.
 
 @param planned the config file with its scope, level, and target path.
 @returns the ignore file text.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildPrettierignoreFile(planned: PlannedConfigFile): string {
-    return formatIgnoreFile(listIgnoreSections(planned, 'format/prettier'));
+    const ordered = listIgnoreSections(planned, 'format/prettier').map((section) => ({
+        ...section,
+        patterns: section.patterns.some((pattern) => pattern.startsWith('!'))
+            ? section.patterns
+            : section.patterns.toSorted((left, right) => compareText(left, right)),
+    }));
+    const lines = keepFirstPatterns(ordered).flatMap(({ title, patterns }) =>
+        patterns.length === 0 ? [] : ['', ...formatReasonLines(title, ''), ...patterns],
+    );
+    return [`# ${PRETTIERIGNORE_PURPOSE}`, ...lines, ''].join('\n');
 }

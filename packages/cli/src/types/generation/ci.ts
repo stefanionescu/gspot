@@ -9,7 +9,7 @@ export type ActionPin = { name: string; sha: string; version: string };
 export type Pipeline = {
     version: string;
     packageManager?: PackageManager | undefined;
-    manualTools: Tool[];
+    tools: Tool[];
     setupCommand?: NonNullable<Settings['ci']>['setup_command'];
     projectInstall: string[];
     operatingSystems: NonNullable<Settings['ci']>['operating_systems'];

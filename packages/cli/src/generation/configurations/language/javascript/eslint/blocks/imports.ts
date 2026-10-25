@@ -51,8 +51,8 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): Es
     });
     return changed.flatMap((scope) => {
         const path = scope.folder.path;
-        const styles = scope.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension;
-        return styles === undefined
+        const importExtension = scope.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension;
+        return importExtension === undefined
             ? []
             : {
                   files: [buildSourcePattern(...CODE_LANGUAGES), ...buildNodePatterns(nodeFiles, path)].map(
@@ -65,12 +65,14 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): Es
                   settings: {
                       n: {
                           tryExtensions: IMPORT_EXTENSIONS,
-                          typescriptExtensionMap: styles === 'js' ? TYPESCRIPT_EXTENSION_MAP : [],
+                          typescriptExtensionMap: importExtension === 'js' ? TYPESCRIPT_EXTENSION_MAP : [],
                       },
                   },
                   rules: {
                       [FILE_EXTENSION_RULE]:
-                          styles === 'extensionless' ? ['error', 'always', EXTENSIONLESS_CODE] : ['error', 'always'],
+                          importExtension === 'extensionless'
+                              ? ['error', 'always', EXTENSIONLESS_CODE]
+                              : ['error', 'always'],
                   },
               };
     });

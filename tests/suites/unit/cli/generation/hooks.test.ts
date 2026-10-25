@@ -59,10 +59,11 @@ test.each(
         const files = buildHookFiles(
             selectStartRunner(root),
             HOOK_CASES.map(([name]) => name),
-            false,
         );
         expect(files.map((file) => file.path)).toStrictEqual(
-            HOOK_CASES.map(([name]) => `${GSPOT_PATHS.hooks}/${name}`),
+            [...HOOK_CASES.map(([name]) => name), 'post-checkout', 'post-commit', 'post-merge'].map(
+                (name) => `${GSPOT_PATHS.hooks}/${name}`,
+            ),
         );
         await writeProgramCommand(
             sandbox.path,
@@ -72,6 +73,7 @@ test.each(
             'GSPOT_HOOK',
             '--',
         );
+        await writeProgramCommand(sandbox.path, 'bin/git-lfs', 'fakes/tool');
         const cwd = await realpath(sandbox.path);
         for (const [index, [name, commandArguments]] of HOOK_CASES.entries()) {
             const file = files[index]!;
@@ -106,16 +108,15 @@ test('a hook says how to install mise when mise is missing', async () => {
     const hook = buildHookFiles(
         selectStartRunner(sandbox.path),
         HOOK_CASES.map(([name]) => name),
-        false,
-    ).find((file) => file.path.endsWith('pre-push'))!;
-    const path = join(sandbox.path, 'pre-push');
+    ).find((file) => file.path.endsWith('pre-commit'))!;
+    const path = join(sandbox.path, 'pre-commit');
     await writeFile(path, hook.content);
     await chmod(path, 0o755);
     const shExecutable = Bun.which('sh')!;
-    const result = await runCommand([shExecutable, path, 'origin', 'https://example.com/repository.git'], {
+    const result = await runCommand([shExecutable, path], {
         cwd: sandbox.path,
         env: { PATH: join(sandbox.path, 'empty') },
-        stdin: 'refs/heads/main 123 refs/heads/main 456\n',
+        stdin: '',
     });
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stderr).toBe(
@@ -176,9 +177,7 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
 
 test('an LFS hook passes when git-lfs is absent', async () => {
     await using sandbox = await testdir();
-    const hook = buildHookFiles(selectStartRunner(sandbox.path), [], true).find(({ path }) =>
-        path.endsWith('/post-merge'),
-    )!;
+    const hook = buildHookFiles(selectStartRunner(sandbox.path), []).find(({ path }) => path.endsWith('/post-merge'))!;
     await createFileTree(sandbox.path, { [hook.path]: hook.content });
     const path = join(sandbox.path, hook.path);
     await chmod(path, 0o755);

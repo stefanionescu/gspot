@@ -15,6 +15,7 @@ import type {
     ScopeEslintSettings,
 } from '#cli/types/generation/eslint.ts';
 import {
+    ESLINT_CHECK,
     CODE_LANGUAGES,
     PACKAGE_JSON_PATTERN,
     ESLINT_SETTINGS_TABLE,
@@ -104,15 +105,7 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
     return [...scopeOptions, ...overrides];
 }
 
-/**
-Build the blocks that turn off the lint rules that a manifest excludes with a reason.
-They follow the structure defaults and come before your own settings.
-
-@param scopes every project and its configurations.
-
-@returns lint blocks that leave out every nested scope.
-*/
-export function buildRulesOffBlocks(scopes: Scope[]): EslintRuleBlock[] {
+function buildRulesOffBlocks(scopes: Scope[]): EslintRuleBlock[] {
     return scopes.flatMap((scope) => {
         const scopePath = scope.folder.path;
         const excluded = listNestedScopeGlobs(
@@ -127,39 +120,6 @@ export function buildRulesOffBlocks(scopes: Scope[]): EslintRuleBlock[] {
                 rules: Object.fromEntries(rules.map((rule) => [rule, 'off'])),
             }));
     });
-}
-
-/**
-Build the settings blocks: environment, trivial-code, turned-off rule, and ignore blocks. Code files and package.json
-files stay apart.
-
-@param planned the settings blocks and the ESLint file sets.
-@returns the lint blocks with resolved file selectors.
-*/
-export function buildSelectedBlocks(
-    planned: Pick<PlannedEslintFile, 'settingsBlocks' | 'eslintFiles'>,
-): EslintBlockFields[] {
-    const result: EslintBlockFields[] = [];
-    for (const { scope, includes, excludes, rules } of planned.settingsBlocks) {
-        const rulePairs = Object.entries(rules);
-        for (const block of [
-            {
-                files: buildScopeFiles(planned.eslintFiles.code, scope, includes),
-                ignores: excludes,
-                rules: Object.fromEntries(rulePairs.filter(([name]) => !name.startsWith('package-json/'))),
-            },
-            {
-                files: buildScopeFiles([PACKAGE_JSON_PATTERN], scope, includes),
-                ignores: excludes,
-                rules: Object.fromEntries(rulePairs.filter(([name]) => name.startsWith('package-json/'))),
-            },
-        ]) {
-            if (Object.keys(block.rules).length === 0) continue;
-
-            result.push(block);
-        }
-    }
-    return result;
 }
 
 /**
@@ -196,16 +156,7 @@ export function buildRestrictedImportBlocks(
     }));
 }
 
-/**
-Build the environment-variable rule blocks for each project with its own environment readers.
-
-@param planned what the lint rules cover.
-
-@returns the lint blocks at level all, or none.
-*/
-export function buildEnvironmentRuleBlocks(
-    planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>,
-): EslintRuleBlock[] {
+function buildEnvironmentRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session, nodeFiles } = planned;
     if (session.settingsFile.settings.level !== 'all') return [];
     const { scopes } = session;
@@ -239,14 +190,7 @@ export function buildEnvironmentRuleBlocks(
     });
 }
 
-/**
-Calculate the trivial-code limits for each project.
-
-@param planned what the limits cover.
-
-@returns the lint rules that detect trivial functions and files that only forward code.
-*/
-export function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
+function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session, nodeFiles } = planned;
     if (session.settingsFile.settings.level !== 'all') return [];
     const { scopes } = session;
@@ -281,4 +225,52 @@ export function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session
         }
     }
     return blocks;
+}
+
+function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
+    const { session } = planned;
+    const ignored = session.settingsFile.settings.ignore.flatMap((ignore): EslintRuleBlock[] =>
+        ignore.rule === undefined || ignore.check !== ESLINT_CHECK
+            ? []
+            : [
+                  {
+                      scope: '',
+                      ...splitGlobs(ignore.paths === undefined || ignore.paths.length === 0 ? ['**/*'] : ignore.paths),
+                      rules: { [ignore.rule]: 'off' },
+                  },
+              ],
+    );
+    return [
+        ...buildEnvironmentRuleBlocks(planned),
+        ...buildTrivialRuleBlocks(planned),
+        ...buildRulesOffBlocks(session.scopes),
+        ...ignored,
+    ];
+}
+
+/**
+Build the settings blocks: environment, trivial-code, turned-off rule, and ignore blocks. Split each into a block for
+the code files and a block for the package.json files, and drop the blocks with no rules.
+
+@param planned every scope, your own scripts that run on Node.js, and the ESLint file sets.
+@returns the lint blocks with resolved file selectors.
+*/
+export function splitSettingsBlocks(
+    planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles' | 'eslintFiles'>,
+): EslintBlockFields[] {
+    return buildSettingsBlocks(planned).flatMap(({ scope, includes, excludes, rules }) => {
+        const rulePairs = Object.entries(rules);
+        return [
+            {
+                files: buildScopeFiles(planned.eslintFiles.code, scope, includes),
+                ignores: excludes,
+                rules: Object.fromEntries(rulePairs.filter(([name]) => !name.startsWith('package-json/'))),
+            },
+            {
+                files: buildScopeFiles([PACKAGE_JSON_PATTERN], scope, includes),
+                ignores: excludes,
+                rules: Object.fromEntries(rulePairs.filter(([name]) => name.startsWith('package-json/'))),
+            },
+        ].filter((block) => Object.keys(block.rules).length > 0);
+    });
 }

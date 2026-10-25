@@ -15,9 +15,7 @@ Build hadolint.yml: the Hadolint exclusions and trusted registry settings.
 @returns the Hadolint exclusions and trusted registry settings.
 */
 export function buildHadolintFile(planned: PlannedConfigFile): string {
-    const level = planned.level;
-
-    const isAll = level === 'all';
+    const isAll = planned.level === 'all';
     const off = [...listIgnoredRules(planned.scope, 'docker/hadolint'), ...(isAll ? [] : HADOLINT_RECOMMENDED_OFF)];
     const registries = getTable(planned.scope.settings, 'tools.hadolint').trusted_registries;
     const document = {

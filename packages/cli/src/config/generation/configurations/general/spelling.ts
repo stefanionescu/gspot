@@ -1,7 +1,5 @@
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 
-export const TYPOS_EXCLUDED_ARRAY = /^extend-exclude = .+$/mu;
-
 export const TYPOS_LOCKFILE_GLOBS = [
     '*.lock',
     ...LOCKFILES.map(({ file }) => file).filter((file) => !file.endsWith('.lock')),

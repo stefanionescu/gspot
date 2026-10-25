@@ -1,7 +1,6 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
-import { listCheckTools } from '#cli/planning/tools.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
@@ -47,7 +46,6 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
     } = session;
     if (settings.ci?.enabled !== true) return;
     const manual = session.configuredChecks.filter((planned) => planned.check.stage === 'manual');
-    const required = new Set(manual.flatMap((planned) => listCheckTools(planned)));
     generated.files.push(
         (settings.ci.provider === 'github' ? buildGithubWorkflow : buildGitlabWorkflow)({
             version: cliPackage.version,
@@ -67,7 +65,7 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
             lockfiles: listProjectLockfiles(session),
             hasSwift: isConfigurationSelected(scopes, SWIFT_CONFIGURATION),
             manualChecks: manual,
-            manualTools: listDistinctTools(session.toolConfigurations).filter((tool) => required.has(tool.name)),
+            tools: listDistinctTools(session.toolConfigurations),
         }),
     );
 }
@@ -81,16 +79,16 @@ function buildAttributePattern(path: string): string {
 }
 
 function buildAttributesBlock(outsidePaths: string[], authored: string): string {
-    const isInheritsLineEndings = parseAttributePatterns(authored, '.').some(
+    const hasAutoLineEndings = parseAttributePatterns(authored, '.').some(
         ({ pattern, attributes }) =>
             pattern === '**/*' && AUTO_LF_ATTRIBUTES.every((attribute) => attributes.includes(attribute)),
     );
-    const block = isInheritsLineEndings
+    const block = hasAutoLineEndings
         ? GIT_ATTRIBUTES_BLOCK.split('\n')
               .filter((line) => !line.endsWith(` ${LF_ATTRIBUTES}`))
               .join('\n')
         : GIT_ATTRIBUTES_BLOCK;
-    const suffix = isInheritsLineEndings ? '' : ` ${LF_ATTRIBUTES}`;
+    const suffix = hasAutoLineEndings ? '' : ` ${LF_ATTRIBUTES}`;
     const lines = outsidePaths
         .toSorted((left, right) => compareText(left, right))
         .map((path) => `${buildAttributePattern(path)} linguist-generated${suffix}`);
@@ -163,9 +161,7 @@ export function generate(session: Session): GenerationResult {
         settingsFile: { settings },
         scopes,
     } = session;
-    const { installedRoot, timeoutSeconds, reads } = session;
-    const packageManager = session.packageManager;
-    const configurations = session.toolConfigurations;
+    const { installedRoot, timeoutSeconds, reads, packageManager, toolConfigurations } = session;
     const generated: GenerationResult = {
         files: [
             { path: GSPOT_PATHS.versionPin, content: cliPackage.version + '\n' },
@@ -185,16 +181,16 @@ export function generate(session: Session): GenerationResult {
     const minimumAge = getTable(findRootScope(scopes).settings, 'dependencies').min_release_age_days;
     generated.files.push(
         ...(settings.hooks?.enabled === true
-            ? buildHookFiles(session.startRunner, listHookNames(session.configuredChecks), true)
+            ? buildHookFiles(session.startRunner, listHookNames(session.configuredChecks))
             : []),
         ...(packageManager === undefined
             ? []
-            : buildNpmProject({
-                  configurations,
-                  packageManager: selectToolPackageManager(installedRoot, packageManager, timeoutSeconds, reads),
-              })),
-        ...buildPythonProject(configurations, minimumAge),
-        buildMiseProject(configurations),
+            : buildNpmProject(
+                  toolConfigurations,
+                  selectToolPackageManager(installedRoot, packageManager, timeoutSeconds, reads),
+              )),
+        ...buildPythonProject(toolConfigurations, minimumAge),
+        buildMiseProject(toolConfigurations),
     );
     buildWorkflow(session, generated);
     const rules = selectRuleFiles(session);

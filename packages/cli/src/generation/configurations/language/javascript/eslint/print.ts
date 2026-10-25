@@ -205,3 +205,14 @@ export function serializeImports(
     }
     return lines.join('\n') + '\n';
 }
+
+/**
+Print the TypeScript projects as JavaScript that joins each one to the repository root.
+
+@param projects the tsconfig.json paths, relative to the repository root.
+@returns the join expressions, separated by commas.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
+export function serializeProjectPaths(projects: string[]): string {
+    return projects.map((project) => 'join(root, ' + JSON.stringify(project) + ')').join(', ');
+}

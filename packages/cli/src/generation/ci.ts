@@ -6,12 +6,12 @@ import { listCheckTools } from '#cli/planning/tools.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { PACKAGE_MANAGERS } from '#cli/config/repository/npm.ts';
-import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 import { CHECK_LIST_SEPARATOR } from '#cli/config/commands/check/check.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
+import { compareText, quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import type { Pipeline, Lockfile, ActionPin } from '#cli/types/generation/ci.ts';
 import { getUvPin, findMisePin, findMissingBuild } from '#cli/configurations/tools.ts';
 import { TOOL_BUILDS, NEXTJS_CONFIGURATION } from '#cli/config/configurations/names.ts';
@@ -65,7 +65,7 @@ function buildGspotCommand(pipeline: Pipeline): string {
     const tools = [CI_NODE, `npm:${cliPackage.name}[allow_low_downloads=true]@${pipeline.version}`];
     if (packageManager !== undefined && packageManager.name !== 'npm')
         tools.push(`${packageManager.name}@${packageManager.version}`);
-    return `mise exec ${tools.map((tool) => quoteArgument(tool)).join(' ')} -- gspot`;
+    return `mise exec ${quoteCommand(tools)} -- gspot`;
 }
 
 function selectManualChecks(pipeline: Pipeline, platform: Pipeline['operatingSystems'][number], arch: string) {
@@ -73,7 +73,7 @@ function selectManualChecks(pipeline: Pipeline, platform: Pipeline['operatingSys
         (planned) => findSystemSkip(planned.check, planned.tool, { platform, arch }) === undefined,
     );
     const required = new Set(checks.flatMap((check) => listCheckTools(check)));
-    const tools = pipeline.manualTools.flatMap((tool) => {
+    const tools = pipeline.tools.flatMap((tool) => {
         const pin = findMisePin(tool);
         return pin !== undefined && required.has(tool.name) && findMissingBuild(tool, { platform, arch }) === undefined
             ? pin.name
@@ -100,7 +100,7 @@ function listInstallSteps(pipeline: Pipeline, command: string): Record<string, u
             : [
                   {
                       name: CI_STEP_NAMES.setup,
-                      run: pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' '),
+                      run: quoteCommand(pipeline.setupCommand),
                   },
               ]),
         ...(pipeline.projectInstall.length === 0
@@ -172,9 +172,7 @@ function spaceWorkflowGroups(workflow: Document): void {
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function listManualLines(command: string, manual: { checks: string[]; tools: string[] }): string[] {
     return [
-        ...(manual.tools.length === 0
-            ? []
-            : [`(cd ${DOT_GSPOT} && mise install ${manual.tools.map((tool) => quoteArgument(tool)).join(' ')})`]),
+        ...(manual.tools.length === 0 ? [] : [`(cd ${DOT_GSPOT} && mise install ${quoteCommand(manual.tools)})`]),
         `${command} check --only ${quoteArgument(manual.checks.join(CHECK_LIST_SEPARATOR))}`,
     ];
 }
@@ -217,10 +215,7 @@ Build a GitLab include, and leave the authored pipeline unchanged. Platform and 
 */
 export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
     const command = buildGspotCommand(pipeline);
-    const setup =
-        pipeline.setupCommand === undefined
-            ? pipeline.projectInstall
-            : [pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' ')];
+    const setup = pipeline.setupCommand === undefined ? pipeline.projectInstall : [quoteCommand(pipeline.setupCommand)];
     const check = [GITLAB_BASE_LINE, `${command} check --changed "\${${CI_BASE_VARIABLE}}"`].join('\n');
     const builds = OPERATING_SYSTEMS.flatMap((system) =>
         TOOL_BUILDS.filter((build) => build.startsWith(`${system.name}-`)).flatMap((build) => {
@@ -263,13 +258,8 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
 function readProjectPackageManager(session: Session, scope: string, name: PackageManagerPin['name']): PackageManager {
     const packageJson = readPackageJson(session.root, joinScope(scope, PACKAGE_JSON));
     const written = packageJson === undefined ? undefined : readPackageManagerPin(packageJson);
-    const selected = written?.name === name ? written : session.packageManager;
-    return readPackageManagerVersion(
-        session.installedRoot,
-        selected?.name === name ? selected : { name },
-        session.timeoutSeconds,
-        session.reads,
-    );
+    const pin = [written, session.packageManager].find((each) => each?.name === name) ?? { name };
+    return readPackageManagerVersion(session.installedRoot, pin, session.timeoutSeconds, session.reads);
 }
 
 function buildFrozenInstall(session: Session, scope: string, lockfile: Lockfile): readonly string[] {
@@ -310,10 +300,7 @@ export function listProjectInstallLines(session: Session): string[] {
     return session.scopes.flatMap(({ folder, configurations }) => {
         const installs = (Object.keys(FROZEN_INSTALLS) as Lockfile[])
             .filter((lockfile) => lockfiles.has(joinScope(folder.path, lockfile)))
-            .map((lockfile) => {
-                const command = buildFrozenInstall(session, folder.path, lockfile);
-                return command.map((argument) => quoteArgument(argument)).join(' ');
-            });
+            .map((lockfile) => quoteCommand(buildFrozenInstall(session, folder.path, lockfile)));
         const isNext = configurations.some((configuration) => configuration.name === NEXTJS_CONFIGURATION);
         const lines = [...installs, ...(isNext && installs.length > 0 ? [NEXT_TYPEGEN_LINE] : [])];
         return folder.path === '' ? lines : lines.map((line) => `(cd ${quoteArgument(folder.path)} && ${line})`);

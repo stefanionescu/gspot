@@ -1,7 +1,7 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { assertRuleOptionsRun } from '#cli/generation/config-files/rule-options.ts';
+import type { OwnedConfigFile, PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { MARKDOWNLINT_RULES, MARKDOWNLINT_ALL_RULES } from '#cli/config/generation/configurations/language/markdown.ts';
 
 /**
@@ -11,9 +11,7 @@ Build markdownlint.jsonc: the Markdown lint rules for the level, indentation, an
 @returns the Markdown lint rules for the level, indentation, and your own rule options.
 */
 export function buildMarkdownlintFile(planned: Pick<PlannedConfigFile, 'scope' | 'level'>): string {
-    const level = planned.level;
-
-    const isAll = level === 'all';
+    const isAll = planned.level === 'all';
     const document: Record<string, string | boolean | Record<string, unknown>> = {
         extends: 'markdownlint/style/prettier',
         ...MARKDOWNLINT_RULES,
@@ -22,7 +20,12 @@ export function buildMarkdownlintFile(planned: Pick<PlannedConfigFile, 'scope' |
     };
     const options = getTable(planned.scope.settings, 'tools.markdownlint').rules;
     const running = new Set(Object.keys(options).filter((rule) => document[rule] !== false));
-    assertRuleOptionsRun({ configured: Object.keys(options), running, higher: new Set(MARKDOWNLINT_ALL_RULES), level });
+    assertRuleOptionsRun({
+        configured: Object.keys(options),
+        running,
+        higher: new Set(MARKDOWNLINT_ALL_RULES),
+        level: planned.level,
+    });
     for (const [rule, chosen] of Object.entries(options))
         document[rule] = { ...(typeof document[rule] === 'object' && document[rule]), ...chosen };
     Object.assign(
@@ -30,4 +33,23 @@ export function buildMarkdownlintFile(planned: Pick<PlannedConfigFile, 'scope' |
         Object.fromEntries(listIgnoredRules(planned.scope, 'markdown/markdownlint').map((rule) => [rule, false])),
     );
     return JSON.stringify(document, null, JSON_INDENT);
+}
+
+/**
+Check whether a Markdown scope inherits the root config because both scopes generate the same text.
+
+@param selected the scoped config file.
+@param configFiles the config files and their owners.
+@returns whether the root supplies the same text.
+*/
+export function isMarkdownlintShared(selected: OwnedConfigFile, configFiles: OwnedConfigFile[]): boolean {
+    const { configFile, owner } = selected;
+    if (configFile.pointer?.inherit !== true || owner.scope.folder.path === '') return false;
+    const root = configFiles.find(
+        (each) => each.configFile.target === configFile.target && each.owner.scope.folder.path === '',
+    );
+    if (root === undefined) return false;
+    const level = owner.session.settingsFile.settings.level;
+    const texts = [selected, root].map((owned) => buildMarkdownlintFile({ scope: owned.owner.scope, level }));
+    return texts[0] === texts[1];
 }

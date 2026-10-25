@@ -1,9 +1,9 @@
-import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { buildRelativeTarget } from '#cli/generation/config-files/pointers.ts';
 import type { EslintPlugins, EslintBlockFields } from '#cli/types/generation/eslint.ts';
 import { buildScopeGlob } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
@@ -47,11 +47,7 @@ export function listLocalPlugins(scopes: Scope[], targetPath: string, shipped: E
                     'settings',
                     `tools.eslint.plugins: ${name} is the rule prefix of a plugin that gspot loads. Choose another name.`,
                 );
-            const relative = posix.relative(posix.dirname(targetPath), path);
-            return [
-                name,
-                [`localPlugin${String(index)}`, relative.startsWith('.') ? relative : `./${relative}`] as const,
-            ];
+            return [name, [`localPlugin${String(index)}`, buildRelativeTarget(targetPath, path)] as const];
         }),
     );
 }

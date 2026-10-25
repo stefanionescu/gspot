@@ -120,9 +120,7 @@ export function buildKnipFile(planned: PlannedConfigFile): string {
         ...tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name),
         startRunner.name,
     ];
-    const toolPackages = tools.flatMap((tool) =>
-        tool.installers['npm']?.name === undefined ? [] : tool.installers['npm'].name,
-    );
+    const toolPackages = tools.flatMap((tool) => tool.installers['npm']?.name ?? []);
     const workspaces = buildWorkspaces(root, settingsFile.settings, scopes);
     const externals = [...new Set(scopes.flatMap(({ settings }) => settings.values.javascript?.externals ?? []))];
     return JSON.stringify(

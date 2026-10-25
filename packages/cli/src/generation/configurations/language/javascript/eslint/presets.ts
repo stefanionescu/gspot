@@ -1,13 +1,8 @@
-import { readFileSync } from 'node:fs';
-import { buildAssetPath } from '#cli/system/assets.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
-import { eslintPresetsSchema } from '#cli/schemas/configurations/eslint-presets.ts';
 import { serializePresetAccess } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
 
 import {
     TABINDEX_RULES,
     FOCUSABLE_ROLES,
-    ESLINT_PRESETS_FILE,
 } from '#cli/config/generation/configurations/language/javascript/eslint/presets.ts';
 import type {
     EslintPreset,
@@ -32,18 +27,6 @@ export function convertWarningsToErrors(rules: Record<string, unknown>): Record<
             return [rule, level === 'off' || level === 0 ? 'off' : ['error', ...options]];
         }),
     );
-}
-
-/**
-Read the pinned presets shipped beside their configuration.
-
-@param configuration the configuration owning the preset.
-@returns preset blocks without executable plugin or parser objects.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
-export function readPresets(configuration: Configuration): EslintPresets {
-    const path = buildAssetPath(`${configuration.folder}/${ESLINT_PRESETS_FILE}`);
-    return eslintPresetsSchema.parse(JSON.parse(readFileSync(path, 'utf8')));
 }
 
 /**

@@ -15,12 +15,12 @@ import {
     COMMIT_MESSAGE_PATH_LINES,
 } from '#cli/config/generation/hooks.ts';
 
-function buildHookScript(name: HookName, runner: StartRunner, usesLfs: boolean): string {
+function buildHookScript(name: HookName, runner: StartRunner): string {
     const program = runner.name;
     const { missing } = runner;
     const installCommand = runner.installCommand.replace('<version>', () => cliPackage.version);
-    const absolutePath = name === 'commit-msg' ? COMMIT_MESSAGE_PATH_LINES : [];
-    const isLfs = usesLfs && (LFS_HOOKS as readonly string[]).includes(name);
+    const messagePathLines = name === 'commit-msg' ? COMMIT_MESSAGE_PATH_LINES : [];
+    const isLfs = (LFS_HOOKS as readonly string[]).includes(name);
     const replay = isLfs ? PUSH_INPUT_REPLAY : '';
     const body = [
         ...(isLfs
@@ -29,7 +29,7 @@ function buildHookScript(name: HookName, runner: StartRunner, usesLfs: boolean):
                   `if command -v git-lfs >/dev/null 2>&1; then ${replay}git lfs ${name} "$@" || exit $?; fi`,
               ]
             : []),
-        ...absolutePath,
+        ...messagePathLines,
         `command -v ${program} >/dev/null 2>&1 || { echo '${program} is not installed. ${missing} Install gspot with: ${installCommand}' >&2; exit 2; }`,
         `${isLfs ? replay : 'exec '}${runner.command} ${HOOK_CHECKS[name].arguments}`,
         '',
@@ -50,17 +50,17 @@ export function listHookNames(checks: PlannedCheck[]): HookName[] {
 }
 
 /**
-Build a script for each hook.
+Build a script for each hook that runs a check, and one for each other hook of Git Large File Storage (LFS), which
+runs git lfs when Git has it.
 
 @param runner the command that starts gspot.
 @param names the hooks that run a configured check.
-@param usesLfs whether Git Large File Storage needs every hook in LFS_HOOKS.
 @returns the hook scripts.
 */
-export function buildHookFiles(runner: StartRunner, names: HookName[], usesLfs: boolean): GeneratedFile[] {
-    const lfsOnly = usesLfs ? LFS_HOOKS.filter((name) => !(names as readonly string[]).includes(name)) : [];
+export function buildHookFiles(runner: StartRunner, names: HookName[]): GeneratedFile[] {
+    const lfsOnly = LFS_HOOKS.filter((name) => !(names as readonly string[]).includes(name));
     return [
-        ...names.map((name) => ({ name, content: buildHookScript(name, runner, usesLfs) })),
+        ...names.map((name) => ({ name, content: buildHookScript(name, runner) })),
         ...lfsOnly.map((name) => ({
             name,
             content: `${HOOK_SHEBANG}\n${LFS_GUARD_PREFIX}exit 0\nexec git lfs ${name} "$@"\n`,

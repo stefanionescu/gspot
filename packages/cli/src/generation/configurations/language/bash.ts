@@ -14,9 +14,7 @@ Build shellcheckrc: the ShellCheck source-path and excluded-rule settings.
 @returns the ShellCheck source-path and excluded-rule settings.
 */
 export function buildShellcheckFile(planned: PlannedConfigFile): string {
-    const level = planned.level;
-
-    const isAll = level === 'all';
+    const isAll = planned.level === 'all';
     const enable = [...SHELLCHECK_CHECKS, ...(isAll ? SHELLCHECK_ALL_LEVEL_ON : [])];
     const disable = listIgnoredRules(planned.scope, 'bash/shellcheck');
     return [

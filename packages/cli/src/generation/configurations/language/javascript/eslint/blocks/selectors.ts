@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
+import type { Level } from '#cli/types/configurations.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { Level, Configuration } from '#cli/types/configurations.ts';
 import { type SelectorGroup, type SelectorPaths } from '#cli/types/generation/eslint.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
@@ -61,17 +61,13 @@ function listSettingSelectors(scope: Scope, level: Level): SelectorPaths[] {
     const selectors: SelectorPaths[] = [];
     const owners = scope.settings.values.structure?.environment_readers ?? [];
     if (level === 'all' && owners.length > 0) selectors.push({ ...ENVIRONMENT_SELECTOR, except: owners });
-    const styles = scope.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension;
-    if (styles !== undefined)
-        selectors.push({ ...ALIAS_IMPORT_SELECTORS[styles === 'extensionless' ? 'never' : 'always'], except: [] });
+    const importExtension = scope.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension;
+    if (importExtension !== undefined)
+        selectors.push({
+            ...ALIAS_IMPORT_SELECTORS[importExtension === 'extensionless' ? 'never' : 'always'],
+            except: [],
+        });
     return selectors;
-}
-
-function buildSelectorPaths(scope: Scope, declaration: Configuration['eslint']['selectors'][number]): SelectorPaths {
-    const listed =
-        declaration.paths_setting === undefined ? undefined : scope.settings.settings[declaration.paths_setting];
-    const files = declaration.paths_setting === undefined ? {} : { files: (listed as string[] | undefined) ?? [] };
-    return { selector: declaration.selector, message: declaration.message, ...files, except: [] };
 }
 
 /**
@@ -95,7 +91,16 @@ export function buildSelectorGroups(
         );
         const applied: SelectorPaths[] = new Map(declarations.map((declaration) => [declaration.selector, declaration]))
             .values()
-            .map((declaration) => buildSelectorPaths(scope, declaration))
+            .map(
+                (declaration): SelectorPaths => ({
+                    selector: declaration.selector,
+                    message: declaration.message,
+                    ...(declaration.paths_setting !== undefined && {
+                        files: (scope.settings.settings[declaration.paths_setting] as string[] | undefined) ?? [],
+                    }),
+                    except: [],
+                }),
+            )
             .toArray();
         if (level === 'all') {
             const except = reexports === 'index-only' ? [posix.join(prefix, '**/index.*')] : [];

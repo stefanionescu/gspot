@@ -1,9 +1,9 @@
-import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { CommandCheck } from '#cli/types/settings/file.ts';
+import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations/names.ts';
@@ -67,10 +67,7 @@ function formatRepositoryUse(
 ): string[] {
     const lines: string[] = [];
     if (commandCheck !== undefined)
-        lines.push(
-            `Command: ${commandCheck.command.map((argument) => quoteArgument(argument)).join(' ')}`,
-            `Paths: ${commandCheck.files.paths.join(', ')}`,
-        );
+        lines.push(`Command: ${quoteCommand(commandCheck.command)}`, `Paths: ${commandCheck.files.paths.join(', ')}`);
     if (session && configuration !== undefined)
         lines.push(
             isConfigurationSelected(session.scopes, configuration.name)

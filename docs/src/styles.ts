@@ -3,20 +3,24 @@ import { fileURLToPath } from 'node:url';
 import { PurgeCSS, type ResultPurge } from 'purgecss';
 import { join, dirname, basename, relative } from 'node:path';
 import { glob, rename, readFile, writeFile } from 'node:fs/promises';
-import { STYLESHEETS, STYLE_CONTENT, STYLE_FILE_HASH, STYLE_HASH_LENGTH, STYLE_ASSET_FOLDER } from './config/styles.ts';
 
 import {
-    PURGECSS_EXTRACTOR,
-    PURGECSS_TOKEN_END,
-    PURGECSS_PSEUDO_CLASS_PATTERN,
-} from '#cli/config/generation/configurations/framework/site.ts';
+    STYLESHEETS,
+    STYLE_TOKEN,
+    STYLE_CONTENT,
+    STYLE_FILE_HASH,
+    STYLE_TOKEN_END,
+    STYLE_HASH_LENGTH,
+    STYLE_ASSET_FOLDER,
+    PSEUDO_CLASS_SELECTOR,
+} from './config/styles.ts';
 
 function extractStyleTokens(content: string): string[] {
     return content
-        .matchAll(PURGECSS_EXTRACTOR)
+        .matchAll(STYLE_TOKEN)
         .map(([token]) => {
             let end = token.length;
-            while (end > 0 && token[end - 1] === PURGECSS_TOKEN_END) end--;
+            while (end > 0 && token[end - 1] === STYLE_TOKEN_END) end--;
             return token.slice(0, end);
         })
         .filter((token) => token !== '')
@@ -50,7 +54,7 @@ export async function pruneUnusedStyles(siteFolder: URL): Promise<void> {
         content: documents,
         css: [join(folder, STYLESHEETS)],
         defaultExtractor: extractStyleTokens,
-        safelist: { standard: [PURGECSS_PSEUDO_CLASS_PATTERN] },
+        safelist: { standard: [PSEUDO_CLASS_SELECTOR] },
     });
     await Promise.all(report.map(({ file = '', css }) => writeFile(file, css)));
     const replacements = await renameBuiltStyles(report, folder);

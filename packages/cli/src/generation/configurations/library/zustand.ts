@@ -16,7 +16,7 @@ export function buildZustandBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'set
         {
             fields: {
                 files: eslintFiles.code,
-                ignores: (settings.settings['zustand.store_files'] as string[] | undefined) ?? [],
+                ignores: getTable(settings, 'zustand').store_files,
                 rules: {
                     'no-restricted-imports': [
                         'error',

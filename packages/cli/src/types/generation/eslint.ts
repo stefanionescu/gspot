@@ -117,15 +117,11 @@ export type EslintPresets = Record<string, EslintPreset>;
 export type PlannedEslintFile = {
     session: Session;
     scope: Scope;
-    level: Level;
     nodeFiles: string[];
     projects: string[];
-    ruleOptions: EslintRuleOptions[];
     blockWriter: BlockWriter;
     eslintFiles: EslintFiles;
     levelRules: EslintLevelRules;
-    settingsBlocks: EslintRuleBlock[];
-    allLevelRules: Set<string>;
     eslintPresets: Map<string, EslintPresets>;
     configurations: Configuration[];
 };
@@ -163,6 +159,14 @@ export type EslintScope = {
     scopeDependencies: string[];
     sourceFiles: string[];
     projects: string[];
+};
+
+export type ConfigurationBuilder = (scope: EslintScope, configuration: string) => ConfigurationBlocks;
+
+export type ConfigurationScopeBlocks = {
+    configuration: Configuration;
+    imports: EslintPlugins;
+    blocks: PlannedEslintBlock[];
 };
 
 export type PluginRuleBlock = {

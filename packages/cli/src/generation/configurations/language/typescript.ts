@@ -1,5 +1,6 @@
 import { ASTRO_FILES } from '#cli/config/generation/configurations/framework/astro.ts';
 import type { EslintScope, ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
+import { serializeProjectPaths } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
 import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES } from '#cli/config/generation/configurations/language/typescript.ts';
 import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
@@ -28,7 +29,7 @@ export function buildTypescriptBlocks(
             })),
             {
                 fields: { files: eslintFiles.typed, rules: TYPESCRIPT_RULES },
-                properties: `plugins: { '@typescript-eslint': tseslint.plugin }, languageOptions: { parserOptions: { tsconfigRootDir: root } }, settings: { 'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] }, 'import-x/resolver-next': [createTypeScriptImportResolver({ project: [${projects.map((project) => 'join(root, ' + JSON.stringify(project) + ')').join(', ')}] })] }`,
+                properties: `plugins: { '@typescript-eslint': tseslint.plugin }, languageOptions: { parserOptions: { tsconfigRootDir: root } }, settings: { 'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] }, 'import-x/resolver-next': [createTypeScriptImportResolver({ project: [${serializeProjectPaths(projects)}] })] }`,
             },
             {
                 fields: { files: eslintFiles.typed, ignores: [...ASTRO_FILES] },

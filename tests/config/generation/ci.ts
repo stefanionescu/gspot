@@ -41,7 +41,7 @@ printf 'setup err\n' >&2
 exit "$GSPOT_SETUP_EXIT"
 `;
 
-export const LINUX_PIPELINE: Omit<Pipeline, 'manualChecks' | 'manualTools'> = {
+export const LINUX_PIPELINE: Omit<Pipeline, 'manualChecks' | 'tools'> = {
     version: '1.2.3',
     packageManager: { name: 'npm', version: '11.10.1' },
     operatingSystems: ['linux'],

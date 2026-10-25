@@ -10,12 +10,12 @@ import {
 } from '#cli/config/generation/config-files/html-validate.ts';
 
 /**
-Build HTML validation settings for source files or built site pages.
+Build html-validate.json: the HTML validation rules for source files or built site pages.
 
-@param planned the settings file to build.
+@param planned the config file with its scope, level, and target path.
 @returns the rules for the configuration's HTML validation check.
 */
-export function buildHtmlSettings(planned: PlannedConfigFile): string {
+export function buildHtmlValidateFile(planned: PlannedConfigFile): string {
     const configuration = planned.configuration.name;
     const check = `${configuration}/html-validate`;
     const rules: Record<string, unknown> = { ...HTML_RULES, ...HTML_VALIDATE_OVERRIDES[configuration] };

@@ -15,7 +15,7 @@ import {
 /**
 Apply the React, hooks, and refresh lint rules for the JSX mode.
 
-@param scope the presets and the block writer.
+@param scope the presets of the scope.
 @returns the imports and ESLint blocks for this configuration.
 */
 export function buildReactBlocks(scope: Pick<EslintScope, 'presets'>): ConfigurationBlocks {

@@ -18,7 +18,7 @@ function selectFrameworkRuntime(configurations: string[]): string | undefined {
     return ESLINT_BROWSER_CONFIGURATIONS.some((name) => configurations.includes(name)) ? 'browser' : undefined;
 }
 
-function resetsRuntime(scope: string, scopes: Scope[]): boolean {
+function isRuntimeRoot(scope: string, scopes: Scope[]): boolean {
     return (
         scope === '' ||
         scopes.some(
@@ -46,7 +46,7 @@ export function buildRuntimes(scopes: Scope[]): EslintRuntime[] {
     for (const scope of orderedScopes) {
         const scopePath = scope.folder.path;
         const escaped = escapeGlob(scopePath);
-        if (resetsRuntime(scopePath, scopes))
+        if (isRuntimeRoot(scopePath, scopes))
             blocks.push(
                 { scope: scopePath, runtime: 'node', ...splitGlobs([joinScope(escaped, '**/*')]) },
                 { scope: scopePath, runtime: 'commonjs', ...splitGlobs([joinScope(escaped, COMMONJS_FILES)]) },

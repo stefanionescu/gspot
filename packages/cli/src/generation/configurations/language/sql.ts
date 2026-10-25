@@ -15,9 +15,7 @@ Build sqlfluff.cfg: the SQL dialect, formatting choices, and SQLFluff rule exclu
 */
 export function buildSqlfluffFile(planned: PlannedConfigFile): string {
     const { format } = planned.scope.settings.values;
-    const level = planned.level;
-
-    const isAll = level === 'all';
+    const isAll = planned.level === 'all';
 
     const off = [...listIgnoredRules(planned.scope, 'sql/sqlfluff'), ...(isAll ? [] : SQLFLUFF_RECOMMENDED_OFF)];
     const sections = {

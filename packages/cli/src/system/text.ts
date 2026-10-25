@@ -64,6 +64,18 @@ export function quoteArgument(argument: string): string {
 }
 
 /**
+Quote each argument of a command for a POSIX shell, and join them with spaces.
+
+@param command the program and its arguments.
+
+@returns the command line, which a shell runs as the same arguments.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 3 files share it.
+export function quoteCommand(command: readonly string[]): string {
+    return command.map((argument) => quoteArgument(argument)).join(' ');
+}
+
+/**
 Get the line and column of an offset in a text, both from one.
 
 @param text the source for counting line breaks before the offset.

@@ -321,7 +321,7 @@ paths = ["packages/cli/src/**"]
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 
 [tools.knip]
-entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/repository/plugin.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/configurations/linter-exports.ts"]
+entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/repository/plugin.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config-files/purgecss.ts", "packages/cli/src/configurations/linter-exports.ts"]
 
 [[scope]]
 path = "docs"
@@ -550,8 +550,8 @@ reason = "This literal supplies a deliberate misspelling to the spelling checks 
 [[ignore]]
 check = "structure/lone-files"
 rule = "lone-file"
-paths = ["packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts"]
-reason = "The manifest loader discovers config files in config-files/ and reads this module by its external markdownlint-cli2 target filename."
+paths = ["packages/cli/configurations/framework/site/config-files/purgecss.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts"]
+reason = "The manifest loader discovers config files in config-files/ and names each of these modules as the source of its config file target."
 
 [[ignore]]
 check = "structure/pass-through-folders"

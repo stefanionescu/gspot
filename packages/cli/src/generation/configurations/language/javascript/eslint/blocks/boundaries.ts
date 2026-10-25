@@ -145,17 +145,17 @@ export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' |
         ...new Set(javascriptScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.test_files)),
     ]);
     const hasFixedPolicies = trpcPaths.length > 0 || isEnforceTests;
-    const input = { importRules, tests, enforceTests: isEnforceTests, hasFixedPolicies, trpcPaths, serverFiles };
+    const boundaries = { importRules, tests, enforceTests: isEnforceTests, hasFixedPolicies, trpcPaths, serverFiles };
     return [
         {
             files: [buildSourcePattern(...CODE_LANGUAGES), ...buildNodePatterns(nodeFiles, '')],
-            settings: buildBoundarySettings(input),
+            settings: buildBoundarySettings(boundaries),
             rules: {
                 'boundaries/dependencies': [
                     'error',
                     {
                         default: importRules.length > 0 ? 'disallow' : 'allow',
-                        policies: buildDependencyPolicies(input),
+                        policies: buildDependencyPolicies(boundaries),
                         checkInternals: hasFixedPolicies,
                     },
                 ],

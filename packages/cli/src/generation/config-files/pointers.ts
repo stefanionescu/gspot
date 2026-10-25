@@ -9,6 +9,7 @@ import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { listCheckTools, listConfiguredChecks } from '#cli/planning/tools.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
@@ -31,9 +32,17 @@ function fillTarget(body: string, pointerPath: string, targetPath: string): stri
     });
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
-function buildRelativeTarget(pointerPath: string, targetPath: string): string {
-    const relativePath = convertToPosixPath(relative(dirname(pointerPath), targetPath));
+/**
+Build the path from the folder of a file to a target, which starts with ./ or ../ so that a module import or an extends
+field reads it as relative.
+
+@param filePath the file that names the target, from the repository root.
+@param targetPath the target, from the repository root.
+@returns the relative path.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
+export function buildRelativeTarget(filePath: string, targetPath: string): string {
+    const relativePath = convertToPosixPath(relative(dirname(filePath), targetPath));
     return relativePath.startsWith('./') || relativePath.startsWith('../') ? relativePath : `./${relativePath}`;
 }
 
@@ -150,9 +159,9 @@ export function buildPointerFieldEdits(
     const pointerFields = new Map(pointerTargets.map((row) => [JSON.stringify([row.key, row.scope, row.target]), row]));
     if (pointerFields.size === 0) return [];
     const packages = new Set([
-        'package.json',
+        PACKAGE_JSON,
         ...repository.files
-            .filter((file) => file.kind === 'source' && posix.basename(file.path) === 'package.json')
+            .filter((file) => file.kind === 'source' && posix.basename(file.path) === PACKAGE_JSON)
             .map(({ path }) => path),
     ]);
     using files = openFiles(root);

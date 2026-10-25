@@ -1,13 +1,7 @@
 import { serializeBlock } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
+import type { BlockWriter, EslintBlockFields, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
 import { ESLINT_INDENT } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 import { buildScopeGlob, buildScopeFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
-
-import type {
-    BlockWriter,
-    EslintBlockFields,
-    PlannedEslintBlock,
-    EslintRuleExpression,
-} from '#cli/types/generation/eslint.ts';
 
 function buildOptionBlocks(
     block: EslintBlockFields & { rules: Record<string, unknown> },
@@ -35,24 +29,18 @@ function buildOptionBlocks(
 }
 
 function formatBlocks(blocks: EslintBlockFields[], planned: PlannedEslintBlock, level: BlockWriter['level']): string {
+    const blockLevel = planned.scope === undefined ? level : undefined;
+    const presetNote = planned.preset === undefined ? '' : `: ${planned.preset.expression}`;
     return blocks
         .map((block, index) => {
-            let runtimeText = '';
-            let selectedPreset: EslintRuleExpression | undefined;
-            let note = planned.label;
-            if (index === 0) {
-                runtimeText = planned.properties ?? '';
-                selectedPreset = planned.preset;
-                if (planned.preset !== undefined) note += ': ' + planned.preset.expression;
-            } else note += ': your own rule options';
+            const isFirst = index === 0;
+            const properties = isFirst ? (planned.properties ?? '') : '';
+            const preset = isFirst ? planned.preset : undefined;
+            const note = `${planned.label}${isFirst ? presetNote : ': your own rule options'}`;
             const { ignores, ...fields } = block;
             const source = serializeBlock(
                 { ...fields, ...(ignores !== undefined && ignores.length > 0 && { ignores }) },
-                {
-                    properties: runtimeText,
-                    preset: selectedPreset,
-                    level: planned.scope === undefined ? level : undefined,
-                },
+                { properties, preset, level: blockLevel },
             );
             const value = planned.scope === undefined ? source : `stripRuntimeGlobals(${source}, globals)`;
             return `// ${note}\n${value}`

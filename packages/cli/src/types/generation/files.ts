@@ -4,7 +4,6 @@ import type { FileContents } from '#cli/types/system/files.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { BlockStyle } from '#cli/types/parsers/formats/managed-blocks.ts';
-import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import type { IGNORE_SECTION_TITLES } from '#cli/config/generation/config-files/ignore-files.ts';
 
 import {
@@ -46,11 +45,6 @@ export type ConfigFileTargets = Pick<ConfigFileGeneration, 'targets' | 'failures
 export type SemgrepDocument = { rules: SemgrepRule[] };
 
 export type HookName = (typeof CHECK_HOOKS)[number];
-
-export type PlannedNpmProject = {
-    configurations: Configuration[];
-    packageManager: PackageManager['name'];
-};
 
 export type PlannedConfigFile = ConfigFileOwner & {
     targetPath: string;

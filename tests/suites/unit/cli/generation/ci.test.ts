@@ -41,7 +41,7 @@ async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline>
         manualChecks: session.configuredChecks.filter(({ check }) =>
             ['docs/lychee-external', 'project/audit'].includes(check.id),
         ),
-        manualTools: session.configurations.get('docs')!.tools.filter((tool) => tool.name === 'lychee'),
+        tools: session.configurations.get('docs')!.tools.filter((tool) => tool.name === 'lychee'),
     };
     return pipeline;
 }
@@ -153,7 +153,7 @@ test.each([...SETUP_CASES])(
         const pipeline = {
             ...selectedPipeline,
             manualChecks: [],
-            manualTools: [],
+            tools: [],
             setupCommand: [join(sandbox.path, 'bin', 'project setup'), ...SETUP_ARGUMENTS],
         };
         const script =

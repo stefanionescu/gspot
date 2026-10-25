@@ -4,17 +4,16 @@ import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import type { IgnoreSection, PlannedConfigFile } from '#cli/types/generation/files.ts';
 
 import {
+    TYPOS_FORMAT_GLOBS,
+    TYPOS_LOCKFILE_GLOBS,
+    TYPOS_IGNORE_PATTERNS,
+} from '#cli/config/generation/configurations/general/spelling.ts';
+import {
     convertToGlobs,
     formatReasonLines,
     keepFirstPatterns,
     listIgnoreSections,
 } from '#cli/generation/config-files/ignore-files.ts';
-import {
-    TYPOS_FORMAT_GLOBS,
-    TYPOS_LOCKFILE_GLOBS,
-    TYPOS_EXCLUDED_ARRAY,
-    TYPOS_IGNORE_PATTERNS,
-} from '#cli/config/generation/configurations/general/spelling.ts';
 
 function buildTyposSections(planned: PlannedConfigFile): IgnoreSection[] {
     const sections = listIgnoreSections(planned, 'spelling/typos').map((section) => {
@@ -56,8 +55,6 @@ Build typos.toml: the spelling dictionaries and reason-grouped exclusions as TOM
 @returns the spelling dictionaries and reason-grouped exclusions as TOML.
 */
 export function buildTyposFile(planned: PlannedConfigFile): string {
-    const grouped = buildTyposSections(planned);
-    const ignoredGlobs = grouped.flatMap((section) => section.patterns);
     const allowed = Object.fromEntries<string>(
         Object.keys(getTable(planned.scope.settings, 'spelling').allowed_words).map((word) => [word, word]),
     );
@@ -68,11 +65,8 @@ export function buildTyposFile(planned: PlannedConfigFile): string {
                 'extend-ignore-re': TYPOS_IGNORE_PATTERNS,
                 'extend-words': allowed,
             },
-            files: {
-                'extend-exclude': ignoredGlobs,
-            },
         },
         CONFIG_FILE_TOML_FORMAT,
     );
-    return text.replace(TYPOS_EXCLUDED_ARRAY, () => serializeIgnoredGlobs(grouped));
+    return [text, '[files]', serializeIgnoredGlobs(buildTyposSections(planned))].join('\n');
 }

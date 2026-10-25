@@ -10,8 +10,8 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
+import { compareText, quoteCommand } from '#cli/system/text.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
-import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { type SiteBuild } from '#cli/types/checks/framework/site.ts';
 
@@ -97,7 +97,7 @@ export async function checkSiteBuild(session: Session, planned: PlannedCheck): P
             planned,
             { file: '', line: 1 },
             'build',
-            `${build.command.map((argument) => quoteArgument(argument)).join(' ')} did not build the site.\n${build.failure}`,
+            `${quoteCommand(build.command)} did not build the site.\n${build.failure}`,
         ),
     ];
 }

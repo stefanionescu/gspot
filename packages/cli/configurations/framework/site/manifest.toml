@@ -29,6 +29,13 @@ tool = "html-validate"
 [[config_file]]
 check = "site/purgecss"
 per_scope = true
+target = "purgecss-safelist.json"
+tool = "purgecss"
+
+[[config_file]]
+check = "site/purgecss"
+per_scope = true
+source = "purgecss.ts"
 target = "purgecss.mjs"
 tool = "purgecss"
 

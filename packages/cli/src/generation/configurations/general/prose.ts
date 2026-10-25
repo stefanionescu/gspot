@@ -183,19 +183,12 @@ export function buildAcceptedWordsFile(planned: PlannedConfigFile): string {
 }
 
 function listAllowedWords(session: Session): string[] {
+    const products = session.scopes.flatMap(({ configurations }) =>
+        configurations.flatMap((configuration) => [
+            ...configuration.tools.map((tool) => tool.name),
+            ...configuration.allowed_words,
+        ]),
+    );
     const words = session.scopes.flatMap((scope) => Object.keys(getTable(scope.settings, 'spelling').allowed_words));
-    return [...new Set([...listProductNames(session), ...words])];
-}
-
-function listProductNames(session: Session): string[] {
-    return [
-        ...new Set(
-            session.scopes.flatMap(({ configurations }) =>
-                configurations.flatMap((configuration) => [
-                    ...configuration.tools.map((tool) => tool.name),
-                    ...configuration.allowed_words,
-                ]),
-            ),
-        ),
-    ];
+    return [...new Set([...products, ...words])];
 }

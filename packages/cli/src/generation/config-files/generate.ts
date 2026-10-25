@@ -6,9 +6,10 @@ import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import { buildConfigFile } from '#cli/generation/config-files/build.ts';
+import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';
 import { CONFIG_FILE_SCOPES_FOLDER } from '#cli/config/generation/config-files/generate.ts';
 import { listPointerPaths, buildPointerFiles } from '#cli/generation/config-files/pointers.ts';
-import { isRootTextShared, getConfigFileTarget, listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
+import { getConfigFileTarget, listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
 
 import type {
     BuiltConfigFile,
@@ -40,13 +41,7 @@ function buildOwnedOutput(
     generated: GeneratedConfigFiles,
 ): BuiltConfigFile[] {
     try {
-        const planned = {
-            ...each.owner,
-            configFile: each.configFile,
-            targetPath: each.configFile.target,
-            level: each.owner.session.settingsFile.settings.level,
-        };
-        return [{ ...each, ...buildConfigFile(planned, generated.targets) }];
+        return [{ ...each, ...buildConfigFile(each, each.configFile.target, generated.targets) }];
     } catch (error) {
         if (!(error instanceof GspotError)) throw error;
         for (const { owner, configFile } of each.configFile.per_scope ? [each] : ownedFiles) {
@@ -75,18 +70,7 @@ function groupToolOutputs(ownedFiles: OwnedSourceFile[], generated: GeneratedCon
 function addToolOutput(target: string, group: BuiltConfigFile[], index: number, generated: GeneratedConfigFiles): void {
     const [first] = group as [BuiltConfigFile, ...BuiltConfigFile[]];
     const written = index === 0 ? target : buildPerScopeTarget(first.configFile, first.owner.scope.folder.path);
-    const { file, companions } =
-        written === target
-            ? first
-            : buildConfigFile(
-                  {
-                      ...first.owner,
-                      configFile: first.configFile,
-                      targetPath: written,
-                      level: first.owner.session.settingsFile.settings.level,
-                  },
-                  generated.targets,
-              );
+    const { file, companions } = written === target ? first : buildConfigFile(first, written, generated.targets);
     for (const written of [file, ...companions]) generated.files.set(written.path, written);
     for (const { owner } of group) {
         const scope = owner.scope.folder.path;
@@ -124,7 +108,7 @@ function addPointerFiles(
     generated: GeneratedConfigFiles,
 ): void {
     const { configFile, owner } = selected;
-    if (isRootTextShared(selected, configFiles)) return;
+    if (isMarkdownlintShared(selected, configFiles)) return;
     const target = getConfigFileTarget(owner.scope.folder.path, configFile, generated);
     const pointerOnlyPaths = listPointerOnlyPaths(configFiles, selected);
     for (const pointer of buildPointerFiles(owner, configFile, target)) {

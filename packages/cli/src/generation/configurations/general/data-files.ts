@@ -1,4 +1,4 @@
-import { stringify, stringify as stringifyYaml } from 'yaml';
+import { stringify as stringifyYaml } from 'yaml';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
@@ -76,5 +76,5 @@ export function buildYamllintFile(planned: PlannedConfigFile): string {
         Object.fromEntries(listIgnoredRules(planned.scope, 'data-files/yamllint').map((name) => [name, 'disable'])),
     );
     const document = { rules };
-    return stringify(document, YAMLLINT_YAML_OPTIONS);
+    return stringifyYaml(document, YAMLLINT_YAML_OPTIONS);
 }

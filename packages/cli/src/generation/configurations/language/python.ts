@@ -7,11 +7,15 @@ import { stripUndefined } from '#cli/system/tables.ts';
 import type { FormatSettings } from '#cli/types/settings/file.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
-import { listPythonIgnoredGlobs } from '#cli/generation/config-files/ignore-files.ts';
 import { DEFAULT_QUOTES } from '#cli/config/generation/configurations/general/format.ts';
 import { PROJECT_UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { getTable, getLimit, listIgnores, listIgnoredRules } from '#cli/settings/scopes.ts';
 
+import {
+    convertToGlobs,
+    buildIgnoreSections,
+    listCheckIgnoreSections,
+} from '#cli/generation/config-files/ignore-files.ts';
 import {
     RUFF_ISORT,
     PYTHON_FILES,
@@ -20,6 +24,16 @@ import {
     BASEDPYRIGHT_ALL_LEVEL_OPTIONS,
 } from '#cli/config/generation/configurations/language/python.ts';
 
+function listIgnoredGlobs(planned: PlannedConfigFile, check: string, root: string): string[] {
+    const shared = convertToGlobs(buildIgnoreSections(planned.session)).filter(
+        (pattern) =>
+            pattern.endsWith('/**') ||
+            planned.configuration.files.extensions.some((extension) => pattern.endsWith(extension)),
+    );
+    const own = listCheckIgnoreSections(planned.scope.settings, check).flatMap(({ patterns }) => patterns);
+    return [...shared, ...own].map((path) => `${root}/${path}`);
+}
+
 /**
 Build basedpyright.json: the Python environment and source paths used by Basedpyright.
 
@@ -27,10 +41,8 @@ Build basedpyright.json: the Python environment and source paths used by Basedpy
 @returns the Python environment and source paths used by Basedpyright.
 */
 export function buildBasedpyrightFile(planned: PlannedConfigFile): string {
-    const pythonScopePath = posix.join(
-        posix.relative(posix.dirname(planned.targetPath), '.'),
-        planned.scope.folder.path,
-    );
+    const root = posix.relative(posix.dirname(planned.targetPath), '.');
+    const pythonScopePath = posix.join(root, planned.scope.folder.path);
     const pythonVenv = planned.session.repository.files.some(
         (file) => file.path === joinScope(planned.scope.folder.path, PROJECT_UV_LOCKFILE),
     )
@@ -45,7 +57,7 @@ export function buildBasedpyrightFile(planned: PlannedConfigFile): string {
             ...(pythonVenv !== undefined && { venvPath: pythonScopePath, venv: pythonVenv }),
             include: [pythonScopePath],
             extraPaths: [pythonScopePath, ...extraPaths.map((path) => posix.join(pythonScopePath, path))],
-            exclude: listPythonIgnoredGlobs(planned, 'python/basedpyright'),
+            exclude: listIgnoredGlobs(planned, 'python/basedpyright', root),
         },
         null,
         JSON_INDENT,
@@ -69,10 +81,8 @@ Build ruff.toml: the Ruff lint rules, import settings, and source exclusions.
 */
 export function buildRuffFile(planned: PlannedConfigFile): string {
     const format = selectPythonFormat(planned.scope.settings);
-    const pythonScopePath = posix.join(
-        posix.relative(posix.dirname(planned.targetPath), '.'),
-        planned.scope.folder.path,
-    );
+    const root = posix.relative(posix.dirname(planned.targetPath), '.');
+    const pythonScopePath = posix.join(root, planned.scope.folder.path);
     const ruffRules = planned.scope.configurations.flatMap((configuration) => [
         ...configuration.ruff.recommended,
         ...(planned.level === 'all' ? configuration.ruff.all : []),
@@ -92,7 +102,7 @@ export function buildRuffFile(planned: PlannedConfigFile): string {
     const document = {
         'line-length': format.print_width,
         'indent-width': format.indent_width,
-        'extend-exclude': listPythonIgnoredGlobs(planned, 'python/ruff'),
+        'extend-exclude': listIgnoredGlobs(planned, 'python/ruff', root),
         format: {
             'indent-style': format.indent_style === 'tab' ? 'tab' : 'space',
             'quote-style': format.quotes ?? DEFAULT_QUOTES.ruff,

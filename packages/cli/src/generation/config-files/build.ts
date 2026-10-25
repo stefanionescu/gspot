@@ -6,16 +6,16 @@ import { join, dirname, relative } from 'node:path/posix';
 import { buildSemgrepFile } from '#cli/generation/config-files/semgrep.ts';
 import { buildSquawkFile } from '#cli/generation/configurations/postgres.ts';
 import { buildLycheeFile } from '#cli/generation/configurations/general/docs.ts';
-import { buildHtmlSettings } from '#cli/generation/config-files/html-validate.ts';
 import { buildSqlfluffFile } from '#cli/generation/configurations/language/sql.ts';
 import { buildTyposFile } from '#cli/generation/configurations/general/spelling.ts';
 import { buildStylelintFile } from '#cli/generation/configurations/language/css.ts';
-import { buildPurgecssFile } from '#cli/generation/configurations/framework/site.ts';
+import { buildHtmlValidateFile } from '#cli/generation/config-files/html-validate.ts';
 import { buildShellcheckFile } from '#cli/generation/configurations/language/bash.ts';
 import { buildPrettierignoreFile } from '#cli/generation/config-files/ignore-files.ts';
 import { buildJscpdFile } from '#cli/generation/configurations/general/duplication.ts';
 import { buildGixyFile } from '#cli/generation/configurations/infrastructure/nginx.ts';
 import { buildCommitlintFile } from '#cli/generation/configurations/general/commits.ts';
+import { buildPurgecssSafelist } from '#cli/generation/configurations/framework/site.ts';
 import { buildKnipFile } from '#cli/generation/configurations/language/javascript/knip.ts';
 import { buildMarkdownlintFile } from '#cli/generation/configurations/language/markdown.ts';
 import { buildOsvScannerFile } from '#cli/generation/configurations/general/dependencies.ts';
@@ -38,6 +38,7 @@ import {
 } from '#cli/config/generation/config-files/build.ts';
 import {
     type BuiltConfigFile,
+    type OwnedSourceFile,
     type PlannedConfigFile,
     type ConfigFileBuilder,
     type ConfigFileGeneration,
@@ -69,8 +70,8 @@ const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefine
     'data-files/v8r.yml': buildV8rFile,
     'data-files/yamllint.yml': buildYamllintFile,
     'dependencies/osv-scanner.toml': buildOsvScannerFile,
-    'site/purgecss.mjs': buildPurgecssFile,
-    'site/html-validate.json': buildHtmlSettings,
+    'site/purgecss-safelist.json': buildPurgecssSafelist,
+    'site/html-validate.json': buildHtmlValidateFile,
     'format/.prettierignore': buildPrettierignoreFile,
     'format/.editorconfig': buildEditorconfigFile,
     'prose/styles/config/vocabularies/words/accept.txt': buildAcceptedWordsFile,
@@ -86,7 +87,7 @@ const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefine
     'python/basedpyright.json': buildBasedpyrightFile,
     'python/ruff.toml': buildRuffFile,
     'css/stylelint.json': buildStylelintFile,
-    'html/html-validate.json': buildHtmlSettings,
+    'html/html-validate.json': buildHtmlValidateFile,
     'swift/periphery.yml': buildPeripheryFile,
     'swift/swiftformat': buildSwiftformatFile,
     'swift/swiftlint.yml': buildSwiftlintFile,
@@ -100,15 +101,23 @@ const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefine
 /**
 Build the text of one config file, and of the files that it imports.
 
-@param planned the config file with its scope, level, and target path.
+@param owned the config file and the scope that owns it.
+@param targetPath the repository path where gspot writes the file.
 @param targets the config file path for each scope.
 @returns the generated file, with paths relative to where it sits, and its companion files.
 */
 export function buildConfigFile(
-    planned: PlannedConfigFile,
+    owned: OwnedSourceFile,
+    targetPath: string,
     targets: ConfigFileGeneration['targets'],
 ): Pick<BuiltConfigFile, 'file' | 'companions'> {
-    const { configFile, targetPath } = planned;
+    const { configFile, owner } = owned;
+    const planned: PlannedConfigFile = {
+        ...owner,
+        configFile,
+        targetPath,
+        level: owner.session.settingsFile.settings.level,
+    };
     const builder =
         configFile.file === SEMGREP_RULE_PACK_FILE
             ? buildSemgrepFile

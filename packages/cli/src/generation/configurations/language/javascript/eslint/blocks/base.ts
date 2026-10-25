@@ -6,9 +6,13 @@ import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { getPreset } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
-import { serializePresetAccess } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
+import { buildSelectorGroups } from '#cli/generation/configurations/language/javascript/eslint/blocks/selectors.ts';
 import { buildRestrictedImportBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 
+import {
+    serializePresetAccess,
+    serializeProjectPaths,
+} from '#cli/generation/configurations/language/javascript/eslint/print.ts';
 import {
     buildScopeGlob,
     buildScopeFiles,
@@ -72,14 +76,13 @@ function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBl
                 fields,
                 properties: '',
             };
-        const projectPaths = projects.map((project) => 'join(root, ' + JSON.stringify(project) + ')').join(', ');
-        const runtime =
+        const properties =
             settings['boundaries/files'] === undefined
                 ? `settings: ${JSON.stringify(settings)}`
-                : `settings: { ...${JSON.stringify(settings)}, 'import/resolver': { typescript: { project: [${projectPaths}] } } }`;
+                : `settings: { ...${JSON.stringify(settings)}, 'import/resolver': { typescript: { project: [${serializeProjectPaths(projects)}] } } }`;
         return {
             fields,
-            properties: runtime,
+            properties,
         };
     });
 }
@@ -99,14 +102,13 @@ export function buildOpeningBlocks(
     boundaryBlocks: EslintBlock[],
     ignoredGlobs: string[],
 ): ConfigurationBlocks['blocks'] {
-    const { eslintFiles, session } = planned;
-    const isAll = planned.level === 'all';
+    const { eslintFiles, session, blockWriter } = planned;
     const rules = planned.levelRules;
     const pluginMap = Object.entries(plugins)
         .map(([name, [importName]]) => `${JSON.stringify(name)}: ${importName}`)
         .join(', ');
     const pluginOptions = Object.fromEntries(
-        planned.ruleOptions.flatMap(({ rules }) =>
+        blockWriter.ruleOptions.flatMap(({ rules }) =>
             Object.keys(rules)
                 .filter((name) => name.startsWith('gspot/'))
                 .map((name) => [name, 'error']),
@@ -133,7 +135,7 @@ export function buildOpeningBlocks(
                 },
             },
             properties: `plugins: { ${pluginMap} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }, 'import-x/ignore': ${JSON.stringify(buildImportIgnores(ignoredGlobs))}${boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`,
-            preset: { expression: `gspot.configs.${isAll ? 'all' : 'recommended'}.rules`, rules: {} },
+            preset: { expression: `gspot.configs.${blockWriter.level}.rules`, rules: {} },
         },
         {
             fields: { files: eslintFiles.javascript, rules: JAVASCRIPT_RULES },
@@ -171,22 +173,26 @@ function buildRuntimeBlocks(eslintFiles: EslintFiles, runtimeBlocks: EslintRunti
 }
 
 /**
-Build the blocks after the configuration blocks: runtime, selector, test, script, and final pinned rules.
+Build the blocks after the configuration blocks: runtime, selector, test, script, and final pinned rules. The selector
+blocks hold the syntax selectors that the configurations and settings add.
 
 @param planned the ESLint context of the scope.
-@param selectorGroups the syntax selectors that the configurations and settings add.
 @param runtimeBlocks the runtime declarations shared with file matchers.
 @returns the blocks for package and file conventions.
 */
 export function buildClosingBlocks(
     planned: PlannedEslintFile,
-    selectorGroups: SelectorGroup[],
     runtimeBlocks: EslintRuntime[],
 ): ConfigurationBlocks['blocks'] {
-    const { eslintFiles } = planned;
-    const isAll = planned.level === 'all';
+    const { eslintFiles, session } = planned;
+    const { level } = planned.blockWriter;
     const rules = planned.levelRules;
     const presets = planned.eslintPresets.get(JAVASCRIPT_CONFIGURATION);
+    const selectorGroups = buildSelectorGroups(
+        session.scopes,
+        level,
+        session.settingsFile.settings.structure.reexports,
+    );
     return [
         ...buildRuntimeBlocks(eslintFiles, runtimeBlocks),
         ...selectorGroups.map((group): ConfigurationBlocks['blocks'][number] => ({
@@ -196,7 +202,9 @@ export function buildClosingBlocks(
                     ...(group.ignoredScopes ?? []).map((scope) => `${escapeGlob(scope)}/**`),
                     ...(group.ignores ?? []),
                 ],
-                rules: { 'no-restricted-syntax': ['error', ...(isAll ? BASE_SELECTORS : []), ...group.selectors] },
+                rules: {
+                    'no-restricted-syntax': ['error', ...(level === 'all' ? BASE_SELECTORS : []), ...group.selectors],
+                },
             },
         })),
         ...buildConsoleBlocks(planned).map((block): ConfigurationBlocks['blocks'][number] => ({
@@ -249,7 +257,7 @@ Choose the plugin imports and names for the module header and the lint blocks.
 @returns the ESLint plugins to load.
 */
 export function selectPlugins(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): EslintPlugins {
-    const isAll = planned.level === 'all';
+    const isAll = planned.blockWriter.level === 'all';
     const repositorySettings = planned.session.settingsFile.settings;
     return {
         ...ESLINT_PLUGIN_IMPORTS,

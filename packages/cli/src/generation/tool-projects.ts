@@ -3,9 +3,10 @@ import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
+import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
-import { type GeneratedFile, type PlannedNpmProject } from '#cli/types/generation/files.ts';
+import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 
 import {
     NPM_TOOL_PROJECT,
@@ -42,13 +43,15 @@ export function buildMiseProject(configurations: Configuration[]): GeneratedFile
 /**
 Build the npm tools as a tool project, and add no dependencies to the repository.
 
-@param project what the tool project holds.
-@param project.configurations the configurations with npm tools.
-@param project.packageManager the package manager of the tool project after mapping Yarn Classic to npm.
+@param configurations the configurations with npm tools.
+@param packageManager the package manager of the tool project after mapping Yarn Classic to npm.
 
 @returns the tool project files.
 */
-export function buildNpmProject({ configurations, packageManager }: PlannedNpmProject): GeneratedFile[] {
+export function buildNpmProject(
+    configurations: Configuration[],
+    packageManager: PackageManager['name'],
+): GeneratedFile[] {
     const pins = listToolProjectPins(configurations).npm;
     const files: GeneratedFile[] = [
         {

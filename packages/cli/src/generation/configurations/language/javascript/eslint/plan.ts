@@ -1,35 +1,29 @@
+import { readFileSync } from 'node:fs';
 import { basename } from 'node:path/posix';
-import { listAssets } from '#cli/system/assets.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { MISE_SCRIPT_PATH } from '#cli/config/files/names.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations/names.ts';
 import { NODE_SHEBANG_TAG } from '#cli/config/repository/files/classify.ts';
 import type { ConfigFile, Configuration } from '#cli/types/configurations.ts';
-import { readPresets } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
+import { eslintPresetsSchema } from '#cli/schemas/configurations/eslint-presets.ts';
+import { type EslintPresets, type PlannedEslintFile } from '#cli/types/generation/eslint.ts';
 import { buildLevelRules } from '#cli/generation/configurations/language/javascript/eslint/blocks/base.ts';
+import { buildRuleOptions } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/configurations/language/javascript/eslint/presets.ts';
-import { type EslintPresets, type EslintRuleBlock, type PlannedEslintFile } from '#cli/types/generation/eslint.ts';
 
 import {
-    ESLINT_CHECK,
     BASE_SELECTORS,
     CODE_LANGUAGES,
 } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 import {
-    splitGlobs,
     buildScopeGlob,
     buildFilePatterns,
     buildSourcePattern,
 } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
-import {
-    buildRuleOptions,
-    buildRulesOffBlocks,
-    buildTrivialRuleBlocks,
-    buildEnvironmentRuleBlocks,
-} from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 
 const PRESET_ASSET_PATHS = new Set(listAssets(CONFIGURATIONS_FOLDER));
 
@@ -44,36 +38,20 @@ function readEslintPresets(session: PlannedConfigFile['session']): Map<string, E
         session.configurations
             .values()
             .filter((configuration) => PRESET_ASSET_PATHS.has(`${configuration.folder}/${ESLINT_PRESETS_FILE}`))
-            .map((configuration): [string, EslintPresets] => [configuration.name, readPresets(configuration)]),
+            .map((configuration): [string, EslintPresets] => [
+                configuration.name,
+                eslintPresetsSchema.parse(
+                    JSON.parse(readFileSync(buildAssetPath(`${configuration.folder}/${ESLINT_PRESETS_FILE}`), 'utf8')),
+                ),
+            ]),
     );
-}
-
-function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
-    const { session } = planned;
-    const ignored = session.settingsFile.settings.ignore.flatMap((ignore): EslintRuleBlock[] =>
-        ignore.rule === undefined || ignore.check !== ESLINT_CHECK
-            ? []
-            : [
-                  {
-                      scope: '',
-                      ...splitGlobs(ignore.paths === undefined || ignore.paths.length === 0 ? ['**/*'] : ignore.paths),
-                      rules: { [ignore.rule]: 'off' },
-                  },
-              ],
-    );
-    return [
-        ...buildEnvironmentRuleBlocks(planned),
-        ...buildTrivialRuleBlocks(planned),
-        ...buildRulesOffBlocks(session.scopes),
-        ...ignored,
-    ];
 }
 
 /**
-Collect what the ESLint config file of one scope needs: its file patterns, presets, rule options, and settings blocks.
+Collect what the ESLint config file of one scope needs: its file patterns, presets, and rule options.
 
 @param planned the config file to build.
-@returns the scopes, presets, rule options, and settings blocks of the ESLint file.
+@returns the scopes, presets, and rule options of the ESLint file.
 */
 export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslintFile {
     const { session, scope, configFile } = planned;
@@ -86,10 +64,6 @@ export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslin
         .filter((file) => !isRecognized(file.path) && file.kind === 'source' && file.tags.includes(NODE_SHEBANG_TAG))
         .map((file) => file.path);
     const configurations = listConfigFileConfigurations(scopes, scope, configFile);
-    const options = buildRuleOptions(repositorySettings, scopes);
-    const allLevelRules = new Set(
-        session.configurations.values().flatMap((configuration) => configuration.eslint.all_level_rules),
-    );
     const eslintFiles = buildFilePatterns({
         components: configurations,
         nodeFiles,
@@ -106,20 +80,18 @@ export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslin
         session,
         nodeFiles,
         scope,
-        level,
         projects: session.repository.files
             .filter((file) => basename(file.path) === TSCONFIG_FILE)
             .map((file) => file.path),
-        ruleOptions: options,
         levelRules: buildLevelRules(settings, level === 'all' ? BASE_SELECTORS : []),
-        settingsBlocks: buildSettingsBlocks({ session, nodeFiles }),
-        allLevelRules,
         blockWriter: {
             applied: new Set(),
-            allLevelRules,
+            allLevelRules: new Set(
+                session.configurations.values().flatMap((configuration) => configuration.eslint.all_level_rules),
+            ),
             level,
             codeFiles: eslintFiles.code,
-            ruleOptions: options,
+            ruleOptions: buildRuleOptions(repositorySettings, scopes),
         },
         eslintFiles,
         eslintPresets: readEslintPresets(session),

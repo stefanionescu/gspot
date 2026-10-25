@@ -10,9 +10,9 @@ import {
 } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 /**
-Apply the typed presets and the project files.
+Apply the Vitest recommended preset and the test rules to the test files.
 
-@param scope the planned ESLint file of the scope.
+@param scope the presets and file selectors of the scope.
 @returns the imports and ESLint blocks for this configuration.
 */
 export function buildVitestBlocks(scope: Pick<EslintScope, 'presets' | 'eslintFiles'>): ConfigurationBlocks {
