@@ -7,16 +7,16 @@ import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { parseSettings } from '#cli/settings/read.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
+import type { Configuration } from '#cli/types/configurations.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
-import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
+import { type AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 
 import {
-    CONFLICTING_SETTINGS,
     REPLACED_LIST_DEFAULTS,
     CSS_HTML_NAMING_SETTINGS,
     PURGECSS_SAFELIST_TABLES,
@@ -24,6 +24,20 @@ import {
     PURGECSS_SCOPE_CONFIGURATIONS,
     PURGECSS_SIBLING_CONFIGURATIONS,
 } from '#tests/config/settings/inherit.ts';
+
+const sqlConfiguration = readConfigurations().get('sql') as Configuration;
+
+const CONFLICTING_SETTINGS: AvailableSettings = buildAvailableSettings(
+    [
+        sqlConfiguration,
+        {
+            ...sqlConfiguration,
+            name: 'alternate-sql',
+            defaults: { 'tools.sqlfluff.dialect': 'postgres' },
+        },
+    ],
+    'recommended',
+);
 
 test('[naming.css] and [naming.html.folders] accept max_words, max_characters, and cases', () => {
     using sandbox = createTemporaryFolder();

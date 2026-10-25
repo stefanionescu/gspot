@@ -1,14 +1,18 @@
 import { join } from 'node:path';
+import { parse } from '@decimalturn/toml-patch';
 import { open, readFile } from 'node:fs/promises';
 import type { Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { Tool } from '#cli/types/configurations.ts';
+import { runtimePinsSchema } from '#tests/schemas/runner.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
+import { TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { selectLockfileName } from '#cli/install/npm/package-json.ts';
 import { readToolPackageManager } from '#cli/repository/npm/package-manager.ts';
@@ -106,4 +110,15 @@ export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}):
         inspections: new Map(),
         ...fields,
     };
+}
+
+/**
+Read this checkout's validated Bun and Node pins.
+
+@returns the two pinned runtime versions.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The e2e and integration tests read the runtime pins through it.
+export async function readRuntimePins(): Promise<{ bun: string; node: string }> {
+    const runtimeSettings: unknown = parse(await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8'));
+    return runtimePinsSchema.parse(runtimeSettings).tools;
 }

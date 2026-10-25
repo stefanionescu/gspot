@@ -14,13 +14,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { installHooks, readHookStatus } from '#cli/install/hooks.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
-
-import {
-    HOOK_REPOSITORIES,
-    STOCK_LFS_PRE_PUSH,
-    buildHookInstructions,
-    HOOK_CONFIGURATION_CASES,
-} from '#tests/config/install/hooks.ts';
+import { HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH, HOOK_CONFIGURATION_CASES } from '#tests/config/install/hooks.ts';
 
 test.each([...HOOK_REPOSITORIES])(
     'a repository with $name keeps its hooks, gets the lines to add, and is ready only after both lines',
@@ -171,3 +165,7 @@ test('the hooks that git lfs install wrote are not other hooks, so install point
     runGitStep(sandbox.path, ['config', '--unset', 'core.hooksPath']);
     expect(installHooks(session, [])).toBe(buildHookInstructions('.git/hooks', 'mise exec -- gspot'));
 });
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function buildHookInstructions(location: string, command: string): string {
+    return `hooks already run from ${location}; add these gspot lines to them:\n  pre-commit: ${command} check --hook pre-commit\n  pre-push: ${command} check --hook pre-push -- "$@"`;
+}

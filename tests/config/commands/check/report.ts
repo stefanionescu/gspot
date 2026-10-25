@@ -117,32 +117,3 @@ export const VERBOSITY_FILES = {
 };
 
 export const DURATION = /\b\d+\.\ds\b/gu;
-
-/**
-Build the report of the verbosity run, with every duration written as `0.0s`.
-
-@param isVerbose whether the run printed every finding and every command.
-@returns the report text.
-*/
-export function buildVerbosityReport(isVerbose: boolean): string {
-    const total = String(FINDINGS_SHOWN + 1);
-    return [
-        'Checked the files changed since HEAD.',
-        `example/findings  failed  ${total} findings`,
-        ...(isVerbose ? [`  $ ${process.execPath} findings.ts`] : []),
-        ...Array.from(
-            { length: isVerbose ? FINDINGS_SHOWN + 1 : FINDINGS_SHOWN },
-            (_, index) => `  finding ${String(index + 1)}.`,
-        ),
-        '  help: Read the command output; this repository declares the check.',
-        ...(isVerbose ? [] : ['  and 1 more (--verbose prints every finding)']),
-        '  run again: gspot check --only example/findings --changed HEAD',
-        '',
-        ...(isVerbose
-            ? ['example/passing  passed  1 file  0.0s', `  $ ${buildProgramCommand('fakes/tool').join(' ')}`, '']
-            : []),
-        `Failed: 1 check with ${total} findings. Passed: 1 check. Skipped: 0 checks.`,
-        'Time: 0.0s. Exit code 1.',
-        '',
-    ].join('\n');
-}

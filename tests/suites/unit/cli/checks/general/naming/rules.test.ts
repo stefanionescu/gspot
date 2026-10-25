@@ -1,8 +1,9 @@
 import { test, expect } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
+import { buildScopeNamingSettings } from '#tests/setup/cli/naming.ts';
 import { validateIdentifier } from '#cli/checks/general/naming/rules.ts';
-import { type FileNaming, type Identifier } from '#cli/types/checks/general/naming.ts';
-import { buildFileNaming, buildIdentifier, buildScopeNamingSettings } from '#tests/setup/cli/naming.ts';
+import { type FileNaming, type Identifier, type NamingSettings } from '#cli/types/checks/general/naming.ts';
 
 import {
     NAME_WORDS,
@@ -257,4 +258,13 @@ function readNaming(tables: string): FileNaming {
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function listRuleMessages(identifier: Identifier, naming: FileNaming): { rule: string | undefined; message: string }[] {
     return validateIdentifier(identifier, naming).map(({ rule, message }) => ({ rule, message }));
+}
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function buildFileNaming(settings: NamingSettings): FileNaming {
+    return { check: getShippedCheck('naming/identifiers'), settings, isTestFile: false };
+}
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function buildIdentifier(fields: Pick<Identifier, 'name'> & Partial<Identifier>): Identifier {
+    const { file = 'src/a.ts', language = 'typescript', category = 'functions', line = 1, column = 1 } = fields;
+    return { file, language, category, line, column, label: `${language} ${category}`, ...fields };
 }

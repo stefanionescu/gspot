@@ -1,8 +1,9 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import * as clack from '@clack/prompts';
-import { test, spyOn, expect } from 'bun:test';
+import * as systemEnvironment from 'std-env';
 import { testdir, createFileTree } from 'testdirs';
+import { mock, test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -14,9 +15,8 @@ import { EDITED_STYLELINT_PACKAGE } from '#tests/config/apply.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
 import { CSS_MANAGED_PLAN_CHANGES } from '#tests/config/commands/init/write.ts';
-import { simulateInteractiveTerminal } from '#tests/setup/system/environment.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { INVALID_CSS, buildRetainedNote } from '#tests/config/commands/init/samples.ts';
+import { INVALID_CSS, SQLFLUFF_RETAINED_NOTE } from '#tests/config/commands/init/samples.ts';
 
 test.each([
     [
@@ -135,7 +135,7 @@ test('init keeps a shared file that was edited after the plan', async () => {
 
     const preview = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'sql', '--json']);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
-    expect(plan.retained).toStrictEqual([{ path: 'setup.cfg', note: buildRetainedNote('sqlfluff') }]);
+    expect(plan.retained).toStrictEqual([{ path: 'setup.cfg', note: SQLFLUFF_RETAINED_NOTE }]);
     const edited = `[sqlfluff]
 exclude_rules = LT01, RF01
 [flake8]
@@ -174,3 +174,21 @@ test('init writes nothing and says Canceled. Nothing was written. when you cance
     expect(refused.stderr).toBe('Canceled. Nothing was written.\n');
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
 });
+
+async function simulateInteractiveTerminal(): Promise<AsyncDisposable> {
+    const resources = new AsyncDisposableStack();
+    const previousEnvironment = { ...systemEnvironment };
+    await mock.module('std-env', () => ({ ...previousEnvironment, isCI: false }));
+    resources.defer(async () => {
+        await mock.module('std-env', () => previousEnvironment);
+    });
+    for (const stream of [process.stdin, process.stdout]) {
+        const descriptor = Object.getOwnPropertyDescriptor(stream, 'isTTY');
+        Object.defineProperty(stream, 'isTTY', { configurable: true, value: true });
+        resources.defer(() => {
+            if (descriptor === undefined) Reflect.deleteProperty(stream, 'isTTY');
+            else Object.defineProperty(stream, 'isTTY', descriptor);
+        });
+    }
+    return resources;
+}

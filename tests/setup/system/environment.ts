@@ -1,6 +1,3 @@
-import { mock } from 'bun:test';
-import * as systemEnvironment from 'std-env';
-
 /**
 Change a set of environment variables: a string sets a variable, and undefined removes it.
 
@@ -32,25 +29,4 @@ export function overrideEnvironment(variables: Record<string, string | undefined
             applyEnvironment(process.env, previous);
         },
     };
-}
-
-/**
-Make the terminal look interactive and not CI, until the caller disposes the returned resource.
-*/
-export async function simulateInteractiveTerminal(): Promise<AsyncDisposable> {
-    const resources = new AsyncDisposableStack();
-    const previousEnvironment = { ...systemEnvironment };
-    await mock.module('std-env', () => ({ ...previousEnvironment, isCI: false }));
-    resources.defer(async () => {
-        await mock.module('std-env', () => previousEnvironment);
-    });
-    for (const stream of [process.stdin, process.stdout]) {
-        const descriptor = Object.getOwnPropertyDescriptor(stream, 'isTTY');
-        Object.defineProperty(stream, 'isTTY', { configurable: true, value: true });
-        resources.defer(() => {
-            if (descriptor === undefined) Reflect.deleteProperty(stream, 'isTTY');
-            else Object.defineProperty(stream, 'isTTY', descriptor);
-        });
-    }
-    return resources;
 }

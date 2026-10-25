@@ -1,8 +1,3 @@
-import type { Configuration } from '#cli/types/configurations.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
-import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
-
 export const REPLACED_LIST_DEFAULTS = [
     {
         key: 'ci.operating_systems',
@@ -57,20 +52,6 @@ configurations = []
 path = "sibling"
 removed_configurations = { value = ["site"], reason = "This scope does not use the inherited site checks." }
 `;
-
-const sqlConfiguration = readConfigurations().get('sql') as Configuration;
-
-export const CONFLICTING_SETTINGS: AvailableSettings = buildAvailableSettings(
-    [
-        sqlConfiguration,
-        {
-            ...sqlConfiguration,
-            name: 'alternate-sql',
-            defaults: { 'tools.sqlfluff.dialect': 'postgres' },
-        },
-    ],
-    'recommended',
-);
 
 export const CSS_HTML_NAMING_SETTINGS = `configurations = ["css", "html"]
 [naming.css]

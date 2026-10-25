@@ -10,7 +10,7 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
 import { planFixer, buildFixerSettings } from '#tests/setup/cli/runs.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
-import { COPY_FAILURES, buildSourceDiff } from '#tests/config/commands/check/fixes/copies.ts';
+import { COPY_FAILURES } from '#tests/config/commands/check/fixes/copies.ts';
 
 test("a fixer's {root} environment paths point into the copy during a dry run", async () => {
     await using sandbox = await testdir({
@@ -206,3 +206,7 @@ test.each([false, true])(
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
     },
 );
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function buildSourceDiff(after: string): string {
+    return `===================================================================\n--- a/source.txt\n+++ b/source.txt\n@@ -1,1 +1,1 @@\n-original\n\\ No newline at end of file\n+${after}\n\\ No newline at end of file\n`;
+}

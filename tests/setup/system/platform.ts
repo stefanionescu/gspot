@@ -4,8 +4,6 @@ import { getTool, findMissingBuild } from '#cli/configurations/tools.ts';
 
 export const isWindows = process.platform === 'win32';
 
-export const FOLDER_LINK_TYPE = isWindows ? 'junction' : 'dir';
-
 export const isLinux = process.platform === 'linux';
 
 export const isMacos = process.platform === 'darwin';

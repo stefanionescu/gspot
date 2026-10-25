@@ -16,7 +16,7 @@ import { SQL_COMMAND_CHECK_TABLES } from '#tests/config/commands/samples.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { GOOGLE_PYPROJECT } from '#tests/config/checks/language/python/project.ts';
 import { stat, chmod, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
-import { INVALID_CSS, buildRetainedNote } from '#tests/config/commands/init/samples.ts';
+import { INVALID_CSS, SQLFLUFF_RETAINED_NOTE } from '#tests/config/commands/init/samples.ts';
 import { runGspot, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -101,7 +101,7 @@ test.each(['setup.cfg', 'tox.ini'])('init leaves a shared %p in place and names 
     const settings = readSandboxSettings(sandbox.path).ignore;
     expect(settings).toStrictEqual([]);
     const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
-    expect(plan.retained).toStrictEqual([{ path, note: buildRetainedNote('sqlfluff') }]);
+    expect(plan.retained).toStrictEqual([{ path, note: SQLFLUFF_RETAINED_NOTE }]);
     await assertRetainedFile(sandbox.path, path, SHARED_SETUP_CONFIG);
 });
 async function assertRetainedFile(root: string, path: string, original: string): Promise<void> {
@@ -147,7 +147,7 @@ test.each([true, false])(
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
-        expect(plan.retained).toStrictEqual([{ path: 'setup.cfg', note: buildRetainedNote('sqlfluff') }]);
+        expect(plan.retained).toStrictEqual([{ path: 'setup.cfg', note: SQLFLUFF_RETAINED_NOTE }]);
         expect(plan.delete.map(({ path }) => path)).not.toContain('setup.cfg');
         expect(await readlink(join(sandbox.path, 'setup.cfg'))).toBe(join('settings', 'shared.cfg'));
         expect(await readFile(target, 'utf8')).toBe(LINKED_SETUP_CONFIG);
@@ -160,7 +160,7 @@ test.each([true, false])(
 );
 test.each([...REPLACED_PYPROJECT_TABLES])(
     'init names the $table table it leaves in pyproject.toml',
-    async ({ configuration, table, text, source, tool, generated }) => {
+    async ({ configuration, text, source, note, generated }) => {
         await using sandbox = await testdir();
         runGitStep(sandbox.path, ['init', '--quiet']);
         const path = 'pyproject.toml';
@@ -173,15 +173,11 @@ test.each([...REPLACED_PYPROJECT_TABLES])(
         const commandArguments = buildInitArguments([configuration]);
         const preview = await runGspot(sandbox.path, [...commandArguments, '--dry-run', '--json']);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-        expect((JSON.parse(preview.stdout) as InitJson).plan.retained).toStrictEqual([
-            { path, note: buildRetainedNote(tool, table) },
-        ]);
+        expect((JSON.parse(preview.stdout) as InitJson).plan.retained).toStrictEqual([{ path, note: note }]);
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
         const initialized = await runGspot(sandbox.path, [...commandArguments, '--json']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        expect((JSON.parse(initialized.stdout) as InitJson).plan.retained).toStrictEqual([
-            { path, note: buildRetainedNote(tool, table) },
-        ]);
+        expect((JSON.parse(initialized.stdout) as InitJson).plan.retained).toStrictEqual([{ path, note: note }]);
         await assertRetainedFile(sandbox.path, path, original);
         expect(await isOnDisk(join(sandbox.path, generated))).toBe(true);
     },

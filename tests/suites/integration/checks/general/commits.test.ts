@@ -27,7 +27,6 @@ import {
     COMMIT_MESSAGES,
     COMMITLINT_EXECUTABLE,
     COMMITLINT_LEVEL_RESULTS,
-    buildUntypedMessageFindings,
 } from '#tests/config/integration/checks/general/commits.ts';
 
 async function assertDraftCheck(root: string, draft: string, rules: string[] = []): Promise<void> {
@@ -235,4 +234,12 @@ async function replaceCommitlint(
         execution.env,
     );
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+}
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function buildUntypedMessageFindings(hash: string): { rule: string; message: string }[] {
+    return [
+        { rule: 'type-empty', message: `${hash}: type may not be empty` },
+        { rule: 'subject-empty', message: `${hash}: subject may not be empty` },
+        { rule: 'subject-full-stop', message: `${hash}: subject may not end with full stop` },
+    ];
 }

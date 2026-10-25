@@ -5,7 +5,6 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { listMisePins } from '#cli/configurations/tools.ts';
-import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { writeGeneratedFiles } from '#cli/apply/generated.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
@@ -14,10 +13,10 @@ import type { NpmToolInstall } from '#cli/types/install/npm.ts';
 import { prepareNpmLockfile } from '#cli/install/npm/project.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readRuntimePins } from '#tests/setup/runner/run-folder.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { toolAdvisoryReportSchema } from '#tests/schemas/tool-projects.ts';
+import { readRuntimePins, buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { TOOL_ADVISORY_EXCEPTIONS } from '#tests/config/integration/install/tool-projects.ts';
 
 async function scanToolProjects(root: string, configurations: Configuration[]) {

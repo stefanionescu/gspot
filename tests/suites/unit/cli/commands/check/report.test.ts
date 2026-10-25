@@ -9,6 +9,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PROGRESS_CLEAR } from '#cli/config/commands/check/check.ts';
 import { FINDINGS_SHOWN } from '#cli/config/commands/check/report.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { printProgress, formatRunReport } from '#cli/commands/check/report.ts';
@@ -20,7 +21,6 @@ import {
     FAILED_REPORT_TEXT,
     VERBOSITY_ARGUMENTS,
     FAILED_CHECK_REPORT,
-    buildVerbosityReport,
     SKIPPED_REPORT_CHECKS,
     COMPARISON_NOTICE_CASES,
     CHECK_REPORT_COMPARISONS,
@@ -244,3 +244,26 @@ test('a finding message occupies one report line', () => {
     expect(text).toContain('First line. Second line. Third line.');
     expect(text).not.toContain('\nSecond line.');
 });
+
+function buildVerbosityReport(isVerbose: boolean): string {
+    const total = String(FINDINGS_SHOWN + 1);
+    return [
+        'Checked the files changed since HEAD.',
+        `example/findings  failed  ${total} findings`,
+        ...(isVerbose ? [`  $ ${process.execPath} findings.ts`] : []),
+        ...Array.from(
+            { length: isVerbose ? FINDINGS_SHOWN + 1 : FINDINGS_SHOWN },
+            (_, index) => `  finding ${String(index + 1)}.`,
+        ),
+        '  help: Read the command output; this repository declares the check.',
+        ...(isVerbose ? [] : ['  and 1 more (--verbose prints every finding)']),
+        '  run again: gspot check --only example/findings --changed HEAD',
+        '',
+        ...(isVerbose
+            ? ['example/passing  passed  1 file  0.0s', `  $ ${buildProgramCommand('fakes/tool').join(' ')}`, '']
+            : []),
+        `Failed: 1 check with ${total} findings. Passed: 1 check. Skipped: 0 checks.`,
+        'Time: 0.0s. Exit code 1.',
+        '',
+    ].join('\n');
+}

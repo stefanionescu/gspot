@@ -6,12 +6,12 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import type { RunReport } from '#cli/types/runs/run.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { SHARED_IMPORTS, DUPLICATED_METADATA } from '#tests/config/integration/checks/general/duplication.ts';
 
-import {
-    SHARED_IMPORTS,
-    buildCountScript,
-    DUPLICATED_METADATA,
-} from '#tests/config/integration/checks/general/duplication.ts';
+const COUNT_STEPS = Array.from(
+    { length: 30 },
+    (_, index) => `    printf 'step %s of %s\\n' "${String(index)}" "$total"\n    total=$((total + ${String(index)}))`,
+).join('\n');
 
 async function runJscpdCheck(root: string, code: number): Promise<RunReport> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'duplication/jscpd', '--json']));
@@ -61,3 +61,7 @@ test('duplication/jscpd skips an import list that two files share', async () => 
     const report = await runJscpdCheck(sandbox.path, 0);
     expect(report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'passed', findings: [] }]);
 });
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function buildCountScript(name: string): string {
+    return `#!/usr/bin/env bash\nset -euo pipefail\n\n${name}() {\n    local total=0\n${COUNT_STEPS}\n    printf '%s\\n' "$total"\n}\n\n${name}\n`;
+}

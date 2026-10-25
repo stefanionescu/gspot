@@ -78,16 +78,3 @@ export const HOOK_CONFIGURATION_CASES = [
             '{"simple-git-hooks":{"pre-commit":"gspot check --hook pre-commit","pre-push":"gspot check --hook pre-push"}}',
     },
 ] as const;
-
-/**
-The install text for a repository whose hooks run from somewhere else.
-
-@param location the hooks folder or hook manager file.
-@param command the gspot command, such as `mise exec -- gspot`.
-@returns the lines to add to those hooks.
-*/
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 1 file share it.
-export function buildHookInstructions(location: string, command: string): string {
-    return `hooks already run from ${location}; add these gspot lines to them:\n  pre-commit: ${command} check --hook pre-commit\n  pre-push: ${command} check --hook pre-push -- "$@"`;
-}
