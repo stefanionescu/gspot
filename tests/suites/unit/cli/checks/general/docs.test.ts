@@ -5,9 +5,9 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
+import { README, LICENSE } from '#tests/config/samples.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { README, LICENSE } from '#tests/config/checks/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 

@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { CLEAN_SWIFT } from '#tests/config/samples.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -9,7 +10,6 @@ import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { CLEAN_SWIFT } from '#tests/config/checks/language/swift/sandbox.ts';
 import { SWIFT_SANDBOX } from '#tests/config/integration/checks/language/swift/samples.ts';
 
 import {

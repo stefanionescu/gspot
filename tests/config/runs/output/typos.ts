@@ -1,4 +1,4 @@
-import { TYPO } from '#tests/config/checks/general/spelling.ts';
+import { TYPO } from '#tests/config/spelling.ts';
 
 export const TYPO_REPORT = {
     type: 'typo',

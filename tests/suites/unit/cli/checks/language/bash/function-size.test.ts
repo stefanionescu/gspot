@@ -4,9 +4,9 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { BASH_HEADER } from '#tests/config/samples.ts';
 import { type SizeCase } from '#tests/types/samples.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { BASH_HEADER } from '#tests/config/checks/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PASSED_BASH_RESULTS } from '#tests/config/checks/language/bash/samples.ts';
 

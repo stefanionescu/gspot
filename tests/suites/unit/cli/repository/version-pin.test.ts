@@ -5,11 +5,11 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readVersionPin, assertVersionPin } from '#cli/repository/version-pin.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
 
 test('the version pin is written, read, and refused when it differs', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });

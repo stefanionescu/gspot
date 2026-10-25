@@ -1,4 +1,4 @@
-import { ANSWER_MODULE } from '#tests/config/checks/component-samples.ts';
+import { ANSWER_MODULE } from '#tests/config/integration/checks/component-samples.ts';
 
 export const ASTRO_PAGE =
     '---\nconst title: string = \'Home\';\n---\n\n<h1>{title}</h1>\n<img src="logo.png" alt="The logo" />\n';

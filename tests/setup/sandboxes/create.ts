@@ -3,18 +3,18 @@ import { format } from 'prettier';
 import { afterAll, beforeAll } from 'bun:test';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { commitAll } from '#tests/setup/system/git.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkPackages } from '#tests/setup/sandboxes/node-modules.ts';
+import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
 import { readCheckoutCacheFolder } from '#cli/checks/language/swift/cache.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/config/setup/sandboxes.ts';
 import { type Sandbox, type SandboxPlan, type InstalledSandboxPlan } from '#tests/types/sandbox.ts';
 import { runGspot, spawnGspot, runGspotStep, buildInitArguments } from '#tests/setup/cli/commands.ts';
+import { BASH_SANDBOX, SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/config/setup/sandboxes.ts';
 
 /**
 Name the installed npm in the root package.json, as a repository at level all must.
@@ -137,4 +137,22 @@ export async function initSandbox(
     await options.prepare?.(sandbox.root);
     if (options.install !== false) await runGspotStep(sandbox, ['install']);
     return initialized;
+}
+
+/**
+Create the Bash sandbox once for a test file and remove it after the tests of that file.
+*/
+export function shareBashSandbox(): () => Sandbox {
+    let sandbox: Sandbox & AsyncDisposable;
+    beforeAll(async () => {
+        sandbox = await createSandbox(BASH_SANDBOX);
+        for (const path of Object.keys(BASH_SANDBOX.files)) {
+            if (!path.endsWith('.sh')) continue;
+            await markExecutable(sandbox.root, path);
+        }
+    });
+    afterAll(async () => {
+        await sandbox[Symbol.asyncDispose]();
+    });
+    return () => sandbox;
 }

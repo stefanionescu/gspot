@@ -3,12 +3,12 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/samples.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
 import { INIT_FILES } from '#tests/config/commands/init/conflicting-config-files.ts';
 import { spawnGspot, applyThenInstall, buildInitArguments } from '#tests/setup/cli/commands.ts';
 

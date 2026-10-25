@@ -1,7 +1,6 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { PackageFieldScenario } from '#tests/types/apply.ts';
-import { STYLELINT_FILES } from '#tests/config/checks/language/css.ts';
-import { COMMITLINT_PACKAGE } from '#tests/config/checks/general/commits.ts';
+import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/authored-config-files.ts';
 
 const COMMITLINT_PROJECT = {
     'package.json': COMMITLINT_PACKAGE,

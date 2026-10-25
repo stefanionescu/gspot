@@ -10,7 +10,7 @@ export const VALE_INSTALL_FAILURES = [
         name: 'its error',
         fakeArguments: [
             '--stderr',
-            'Registry request failed: https://alex:synthetic-password@example.com/styles.zip\n',
+            'Registry request failed: https://alex:synthetic-password@example.com/styles.zip',
             '--exit',
             '7',
         ],

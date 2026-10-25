@@ -529,7 +529,7 @@ reason = "Starlight and Expressive Code write this markup."
 
 [[ignore]]
 check = "spelling/typos"
-paths = ["tests/config/checks/general/spelling.ts"]
+paths = ["tests/config/spelling.ts"]
 reason = "This literal supplies a deliberate misspelling to the spelling checks and their corrections."
 
 [[ignore]]

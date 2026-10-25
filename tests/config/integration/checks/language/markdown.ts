@@ -1,5 +1,5 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { GUIDE, README, LICENSE } from '#tests/config/checks/samples.ts';
+import { GUIDE, README, LICENSE } from '#tests/config/samples.ts';
 
 export const MARKDOWNLINT_EXECUTABLE = `${GSPOT_PATHS.nodeModules}/.bin/markdownlint-cli2`;
 

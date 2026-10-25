@@ -1,7 +1,6 @@
 import { join } from 'node:path/posix';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { GUIDE, README, LICENSE } from '#tests/config/checks/samples.ts';
 
 export const VALE_ALERT = {
     Line: 1,
@@ -70,8 +69,3 @@ export const VALE_OUTPUT_CASES = [
     },
     { name: 'empty reports', stdout: '{}', findings: [] },
 ] as const;
-
-export const PROSE_SANDBOX = {
-    configurations: ['prose'],
-    files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },
-} as const;

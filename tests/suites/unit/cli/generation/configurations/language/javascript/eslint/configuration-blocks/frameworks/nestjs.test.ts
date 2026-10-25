@@ -3,10 +3,10 @@ import type { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
 import testsPackage from '#tests/package.json';
 import { readFile, writeFile } from 'node:fs/promises';
+import { NESTJS_SANDBOX } from '#tests/config/nestjs.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { NESTJS_SANDBOX } from '#tests/config/checks/framework/nestjs.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
 

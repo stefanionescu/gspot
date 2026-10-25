@@ -4,6 +4,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -12,8 +13,7 @@ import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { test, expect, describe, beforeAll, beforeEach } from 'bun:test';
-import { COMMITLINT_PACKAGE } from '#tests/config/checks/general/commits.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
+import { COMMITLINT_PACKAGE } from '#tests/config/authored-config-files.ts';
 
 import {
     runGspot,

@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
+import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
-import { BASH_SANDBOX } from '#tests/config/checks/language/bash/sandbox.ts';
 import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 import { FILE_FOLDER_CLASH_CASES } from '#tests/config/checks/general/structure/file-folder-clashes.ts';
 

@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
+import { TYPO } from '#tests/config/spelling.ts';
 import { getPosition } from '#cli/system/text.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { TYPO } from '#tests/config/checks/general/spelling.ts';
 import { parseSqlFile, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
 
 import {

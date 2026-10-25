@@ -6,12 +6,12 @@ import { readGitSetting } from '#cli/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { readRuntimePins } from '#tests/setup/runner/run-folder.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { MISE_TRUST, TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
 import { UNQUOTED_FINDING_LINE } from '#tests/config/integration/generation/hooks.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 

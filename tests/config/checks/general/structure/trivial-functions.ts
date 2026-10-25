@@ -1,5 +1,4 @@
-import { BASH_HEADER } from '#tests/config/checks/samples.ts';
-import { CLEAN_SWIFT } from '#tests/config/checks/language/swift/sandbox.ts';
+import { CLEAN_SWIFT, BASH_HEADER } from '#tests/config/samples.ts';
 
 const SWIFT_ACCESSORS = `struct A {
     var x: Int { 1 }

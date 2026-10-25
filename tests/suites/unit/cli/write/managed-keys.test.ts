@@ -7,7 +7,7 @@ import { parse as parseToml } from '@decimalturn/toml-patch';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { INVALID_PACKAGE_JSON_TEXTS } from '#tests/config/write.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { STYLELINT_PACKAGE_JSON } from '#tests/config/checks/language/css.ts';
+import { STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
 import { openWriter, writePlans, hasManagedKeys, planSettingsWrite } from '#cli/write.ts';
 
 test('managed JSON keys survive reopening and updates and keep other bytes and the mode', async () => {

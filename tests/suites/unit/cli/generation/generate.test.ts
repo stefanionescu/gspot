@@ -1,6 +1,10 @@
 import { join } from 'node:path';
+import * as prettier from 'prettier';
+import { type Options } from 'prettier';
+import { parse as parseYaml } from 'yaml';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
+import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
@@ -8,9 +12,10 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { findRuleFilePath } from '#tests/setup/cli/generated-files.ts';
+import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { runGit, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { findRuleFilePath, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 test.each(['absent', 'authored', 'managed'])(
     '%s attributes keep LF in generated files, also in a scope folder with a space',
@@ -123,4 +128,46 @@ test('adding the first Markdown and LFS files leaves generated output unchanged'
     });
     runGitStep(sandbox.path, ['add', '-A']);
     expect(generate(await openSession(sandbox.path))).toStrictEqual(before);
+});
+
+test('format.indent_width reaches EditorConfig, Prettier and each config file', async () => {
+    const width = 6;
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['format', 'data-files', 'python', 'swift', 'sql', 'markdown', 'bash'], {
+            level: 'all',
+            rules: true,
+            tables: stringify({ format: { indent_width: width } }),
+        }),
+        'sample.yaml': 'parent:\n child: value\n',
+        'sample.sh': 'echo example\n',
+        'sample.md': '# Sample\n',
+        'sample.py': 'value = 1\n',
+        'sample.sql': 'SELECT 1;\n',
+        'Sample.swift': 'let value = 1\n',
+    });
+
+    const session = await openSession(sandbox.path);
+    const generated = new Map(generate(session).files.map((file) => [file.path, file.content]));
+    await writeFile(join(sandbox.path, '.editorconfig'), generated.get('.editorconfig')!);
+    const path = join(sandbox.path, 'sample.yaml');
+    const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
+    expect(editor?.tabWidth).toBe(width);
+    const configuration = JSON.parse(generated.get(findManifestTarget('format', 'prettier.json'))!) as Options;
+    expect(configuration.tabWidth).toBe(width);
+    const observed: unknown = parseJsonc(generated.get(findManifestTarget('markdown', 'markdownlint.jsonc'))!);
+    expect(observed).not.toHaveProperty('MD007');
+    const parsed: unknown = parseYaml(generated.get(findManifestTarget('data-files', 'yamllint.yml'))!);
+    expect(parsed).toMatchObject({
+        rules: { anchors: {}, 'key-duplicates': {}, truthy: { 'check-keys': false } },
+    });
+    const yamllint: unknown = parseYaml(generated.get(findManifestTarget('data-files', 'yamllint.yml'))!);
+    expect(yamllint).not.toHaveProperty('rules.indentation');
+    const ruff: unknown = parseToml(generated.get(findManifestTarget('python', 'ruff.toml'))!);
+    expect(ruff).toHaveProperty('indent-width', width);
+    const taplo: unknown = parseToml(generated.get(findManifestTarget('data-files', 'taplo.toml'))!);
+    expect(taplo).toMatchObject({
+        formatting: { indent_string: ' '.repeat(width) },
+    });
+    expect(generated.get(findManifestTarget('sql', 'sqlfluff.cfg'))).toContain(`tab_space_size = ${String(width)}`);
+    expect(generated.get(findManifestTarget('swift', 'swiftformat'))).toContain(`--indent ${String(width)}\n`);
 });

@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
+import { TYPO } from '#tests/config/spelling.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { TYPO } from '#tests/config/checks/general/spelling.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';

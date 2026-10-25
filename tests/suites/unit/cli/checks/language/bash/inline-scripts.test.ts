@@ -1,10 +1,11 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { BASH_SANDBOX } from '#tests/config/checks/language/bash/sandbox.ts';
+import { shareBashSandbox } from '#tests/setup/sandboxes/create.ts';
+import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 import { INLINE_SCRIPT_CASES } from '#tests/config/checks/language/bash/inline-scripts.ts';
-import { runCheckSample, expectedSummary, shareBashSandbox } from '#tests/setup/cli/samples.ts';
 
 const bashSandbox = shareBashSandbox();
 test('a heredoc that writes a data file is not reported', async () => {

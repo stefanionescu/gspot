@@ -6,12 +6,13 @@ import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { shareBashSandbox } from '#tests/setup/sandboxes/create.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
-import { BASH_SANDBOX } from '#tests/config/checks/language/bash/sandbox.ts';
+import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 import { BASH_SAFETY_CASES } from '#tests/config/checks/language/bash/safety.ts';
 import { PASSED_BASH_RESULTS } from '#tests/config/checks/language/bash/samples.ts';
-import { runCheckSample, expectedSummary, shareBashSandbox } from '#tests/setup/cli/samples.ts';
 
 const bashSandbox = shareBashSandbox();
 

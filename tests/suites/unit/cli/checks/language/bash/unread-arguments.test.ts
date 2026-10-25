@@ -1,11 +1,13 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { shareBashSandbox } from '#tests/setup/sandboxes/create.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
+import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 import { UNREAD_ARGUMENT_CASES } from '#tests/config/checks/language/bash/unread-arguments.ts';
-import { BASH_SANDBOX, CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
-import { runCheckSample, expectedSummary, shareBashSandbox } from '#tests/setup/cli/samples.ts';
 
 const bashSandbox = shareBashSandbox();
 test('main "$@" with a main that reads no argument is not reported', async () => {

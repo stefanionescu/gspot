@@ -1,3 +1,5 @@
+import { GUIDE, README, LICENSE, CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
+
 export const NPM_INSTALL_FLAGS = ['--ignore-scripts', '--no-audit', '--no-fund'] as const;
 
 export const PNPM_WORKSPACE = 'packages:\n  - "**"\n';
@@ -116,3 +118,32 @@ export const NESTED_SCOPE_FILES = {
     'outside.txt': 'repository context',
     'nested settings/source.txt': 'committed',
 } as const;
+
+export const BASH_SANDBOX = {
+    cleanSource: CLEAN_BASH_SCRIPT,
+    configurations: ['bash', 'javascript'],
+    files: {
+        'scripts/a.sh': CLEAN_BASH_SCRIPT,
+        'scripts/b.sh': CLEAN_BASH_SCRIPT,
+        'scripts/build.sh': CLEAN_BASH_SCRIPT,
+        'package.json': '{"private":true}\n',
+    },
+} as const;
+
+export const PROSE_SANDBOX = {
+    configurations: ['prose'],
+    files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },
+} as const;
+
+export const SWIFT_PACKAGE = `// swift-tools-version: 6.0
+import PackageDescription
+let package = Package(name: "Example", targets: [.target(name: "Example", path: ".")])
+`;
+
+export const BASH_SYNTAX_CHECK = String.raw`[[command_check]]
+id = "project/bash-syntax"
+command = ["bash", "-n", "{file}"]
+paths = ["**/*.sh"]
+stage = "commit"
+output = { format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$" }
+`;

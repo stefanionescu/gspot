@@ -4,10 +4,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { unlink, writeFile } from 'node:fs/promises';
 import { getTool } from '#cli/configurations/tools.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { type PathExplanation } from '#cli/types/commands/explain.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {

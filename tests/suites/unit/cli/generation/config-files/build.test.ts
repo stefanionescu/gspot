@@ -8,7 +8,7 @@ import { formatSchema } from '#cli/schemas/settings/fields.ts';
 import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { LocalDate, stringify, parse as parseToml } from '@decimalturn/toml-patch';
-import { SPECIAL_CHARACTER_FILES, SPECIAL_CHARACTER_SETTINGS } from '#tests/config/generation/config-files/escaping.ts';
+import { SPECIAL_CHARACTER_FILES, SPECIAL_CHARACTER_SETTINGS } from '#tests/config/generation/config-files/build.ts';
 
 test('keys and values with quotes, backslashes, newlines, and accented letters stay literal in JSON and YAML config files', async () => {
     const REGISTRIES = ['null', 'registry.example.com:5000'] as const;

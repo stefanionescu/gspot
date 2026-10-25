@@ -1,9 +1,9 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { TYPO } from '#tests/config/spelling.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
-import { TYPO } from '#tests/config/checks/general/spelling.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getShippedCheck } from '#tests/setup/cli/configurations.ts';

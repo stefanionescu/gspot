@@ -5,9 +5,10 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { BASH_SYNTAX_CHECK, PENDING_NOTES_CHECK, PENDING_NOTE_RESULTS } from '#tests/config/runs/command.ts';
+import { PENDING_NOTES_CHECK, PENDING_NOTE_RESULTS } from '#tests/config/runs/command.ts';
 
 test('a command check runs its command and reports file and line through its output format', async () => {
     await using sandbox = await createGitSandbox({

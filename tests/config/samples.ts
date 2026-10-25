@@ -35,3 +35,25 @@ set -euo pipefail
 shopt -s inherit_errexit
 
 `;
+
+export const CLEAN_BASH_SCRIPT = `${BASH_HEADER}# main: runs the script.
+main() {
+    local name="world"
+    local greeting="hello \${name}"
+    echo "\${greeting}"
+}
+
+main "$@"
+`;
+
+export const CLEAN_SWIFT = String.raw`import Foundation
+
+/// Builds the greeting for a person.
+public func greeting(for name: String) -> String {
+    let person = name.trimmingCharacters(in: .whitespacesAndNewlines)
+    if person.isEmpty {
+        return "hello"
+    }
+    return "hello \(person)"
+}
+`;

@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
+import { NESTJS_SANDBOX } from '#tests/config/nestjs.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { NESTJS_SANDBOX } from '#tests/config/checks/framework/nestjs.ts';
 import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 import { NESTJS_CASES } from '#tests/config/integration/checks/framework/nestjs.ts';
 

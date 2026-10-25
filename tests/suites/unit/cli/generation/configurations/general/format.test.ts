@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import * as prettier from 'prettier';
 import { test, expect } from 'bun:test';
 import { type Options } from 'prettier';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
@@ -9,7 +10,9 @@ import { generate } from '#cli/generation/generate.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { generateFile, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/format.ts';
 import { EDITORCONFIG_SELECTOR_ERRORS } from '#tests/config/generation/configurations/general/format.ts';
 
 test.each([...EDITORCONFIG_SELECTOR_ERRORS])(
@@ -69,4 +72,54 @@ test('the Prettier plugin overrides come before your overrides, and without a pl
     ) as Options;
     expect(without).not.toHaveProperty('plugins');
     expect(without['overrides']).toMatchObject([{ files: ['docs/**'] }]);
+});
+
+test('a YAML indent override gives EditorConfig and Prettier the same width', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['format', 'javascript'], {
+            rules: true,
+            tables: stringify({ format: { indent_width: 6, override: [{ paths: ['**/*.yaml'], indent_width: 2 }] } }),
+        }),
+        'sample.yaml': 'parent:\n child: value\n',
+    });
+
+    await applyGeneratedFiles(sandbox.path);
+    const path = join(sandbox.path, 'sample.yaml');
+    const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
+    const configuration = await prettier.resolveConfig(path, {
+        config: join(sandbox.path, 'prettier.config.mjs'),
+        editorconfig: false,
+        useCache: false,
+    });
+    expect(editor?.tabWidth).toBe(2);
+    expect(configuration?.tabWidth).toBe(2);
+});
+
+test('Prettier overrides agree in the root pointer and editor lookup', async () => {
+    await using sandbox = await testdir();
+    const root = sandbox.path;
+    await createFileTree(root, {
+        'gspot.toml': FORMAT_OVERRIDES_SETTINGS,
+        'package.json': '{"private":true}\n',
+        ...Object.fromEntries(PRETTIER_OPTIONS_BY_FILE.map(({ file }) => [file, 'const greeting="hello";'])),
+    });
+    await applyGeneratedFiles(root);
+    for (const { file, ...expected } of PRETTIER_OPTIONS_BY_FILE) {
+        const computed = await prettier.resolveConfig(join(root, file), {
+            config: join(root, 'prettier.config.mjs'),
+            editorconfig: true,
+            useCache: false,
+        });
+        expect(computed, file).toMatchObject(expected);
+        expect(await prettier.resolveConfig(join(root, file), { editorconfig: true, useCache: false })).toMatchObject(
+            expected,
+        );
+    }
+    await writeFile(join(root, 'tests/future.js'), 'const greeting="hello";');
+    expect(
+        await prettier.resolveConfig(join(root, 'tests/future.js'), {
+            config: join(root, 'prettier.config.mjs'),
+            useCache: false,
+        }),
+    ).toMatchObject({ singleQuote: true, semi: true });
 });

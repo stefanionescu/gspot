@@ -21,14 +21,6 @@ export const LOCATED_CHECK = {
     output: { format: 'regex', pattern: '^(?<file>[^:]+): (?<message>.*)$' },
 } as const;
 
-export const BASH_SYNTAX_CHECK = String.raw`[[command_check]]
-id = "project/bash-syntax"
-command = ["bash", "-n", "{file}"]
-paths = ["**/*.sh"]
-stage = "commit"
-output = { format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$" }
-`;
-
 export const SQL_CHECK_COMMAND = buildProgramCommand(
     'checks/search',
     '--text',

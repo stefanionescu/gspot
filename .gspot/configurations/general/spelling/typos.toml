@@ -68,5 +68,5 @@ extend-exclude = [
   # Local environment files
   "**/.env*",
   # This literal supplies a deliberate misspelling to the spelling checks and their corrections.
-  "tests/config/checks/general/spelling.ts",
+  "tests/config/spelling.ts",
 ]

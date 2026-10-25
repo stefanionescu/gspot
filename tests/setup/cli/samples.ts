@@ -1,15 +1,11 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { afterAll, beforeAll } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { type Sandbox } from '#tests/types/sandbox.ts';
 import type { RunReport } from '#cli/types/runs/run.ts';
-import { markExecutable } from '#tests/setup/system/git.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
-import { BASH_SANDBOX } from '#tests/config/checks/language/bash/sandbox.ts';
 import { changeSandbox, applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import type { SampleFix, CheckSample, SampleResult, SampleSummary, SandboxChanges } from '#tests/types/samples.ts';
 
@@ -114,22 +110,4 @@ export function expectedSummary(sample: CheckSample): SampleSummary {
         },
         passed: { code: 0, reported: [] },
     };
-}
-
-/**
-Create the Bash sandbox once for a test file and remove it after the tests of that file.
-*/
-export function shareBashSandbox(): () => Sandbox {
-    let sandbox: Sandbox & AsyncDisposable;
-    beforeAll(async () => {
-        sandbox = await createSandbox(BASH_SANDBOX);
-        for (const path of Object.keys(BASH_SANDBOX.files)) {
-            if (!path.endsWith('.sh')) continue;
-            await markExecutable(sandbox.root, path);
-        }
-    });
-    afterAll(async () => {
-        await sandbox[Symbol.asyncDispose]();
-    });
-    return () => sandbox;
 }

@@ -12,7 +12,7 @@ import { TEST_VERSION } from '#tests/config/commands/samples.ts';
 import { rm, stat, readFile, writeFile } from 'node:fs/promises';
 import { EDITED_STYLELINT_PACKAGE } from '#tests/config/apply.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { STYLELINT_PACKAGE_JSON } from '#tests/config/checks/language/css.ts';
+import { STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
 import { CSS_MANAGED_PLAN_CHANGES } from '#tests/config/commands/init/write.ts';
 import { simulateInteractiveTerminal } from '#tests/setup/system/environment.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';

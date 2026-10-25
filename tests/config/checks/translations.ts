@@ -1,4 +1,4 @@
-import { NEXT_MESSAGES } from '#tests/config/integration/checks/framework/nextjs.ts';
+import { NEXT_MESSAGES } from '#tests/config/translations.ts';
 
 export const TRANSLATION_TABLES = `[translations]
 messages_folder = "messages"

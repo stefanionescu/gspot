@@ -7,9 +7,8 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { type DoctorReport } from '#cli/types/commands/doctor.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { STYLELINT_FILES } from '#tests/config/checks/language/css.ts';
-import { COMMITLINT_PACKAGE } from '#tests/config/checks/general/commits.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/authored-config-files.ts';
 import { REMOVE_SUGGESTIONS, REMOVED_CONFIGURATION_SUGGESTIONS } from '#tests/config/commands/doctor/suggestions.ts';
 
 test('doctor names Git setup for commitlint and apply --dry-run refuses outside Git', async () => {

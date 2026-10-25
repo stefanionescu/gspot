@@ -3,13 +3,13 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { WRITER_LOCK_FILE } from '#cli/config/write.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
 import { UNCOMMITTED_FORMAT_CASES } from '#tests/config/commands/init/conflicting-config-files.ts';
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {

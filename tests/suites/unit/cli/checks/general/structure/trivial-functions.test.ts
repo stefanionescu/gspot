@@ -5,9 +5,10 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { BASH_SANDBOX } from '#tests/config/checks/language/bash/sandbox.ts';
-import { runCheckSample, expectedSummary, shareBashSandbox } from '#tests/setup/cli/samples.ts';
+import { shareBashSandbox } from '#tests/setup/sandboxes/create.ts';
+import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     TRIVIAL_FILES,

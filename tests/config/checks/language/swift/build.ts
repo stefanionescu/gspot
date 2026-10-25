@@ -3,11 +3,6 @@ import PackageDescription
 let package = Package(name: "Example", targets: [.target(name: "Example")])
 `;
 
-export const SWIFT_PACKAGE = `// swift-tools-version: 6.0
-import PackageDescription
-let package = Package(name: "Example", targets: [.target(name: "Example", path: ".")])
-`;
-
 export const PRIVATE_OTHER_FINDING = {
     file: '/var/folders/project/Other.swift',
     line: 5,

@@ -5,14 +5,13 @@ import { readFile, writeFile } from 'node:fs/promises';
 import type { RunReport } from '#cli/types/runs/run.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
-import { PUSH_CONTENT } from '#tests/config/setup/sandboxes.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { CLI_BIN, runGspot } from '#tests/setup/cli/commands.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check/push.ts';
 import { preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { PUSH_CONTENT, BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 
 async function assertWorkingTreeKept(root: string, head: string): Promise<void> {
     expect(runGitStep(root, ['rev-parse', 'HEAD'])).toBe(head);

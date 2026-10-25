@@ -1,4 +1,4 @@
-import { BASH_HEADER } from '#tests/config/checks/samples.ts';
+import { BASH_HEADER } from '#tests/config/samples.ts';
 
 export const TRAP_SCRIPT_FORMS = ['_cleanup', "'_cleanup'", '"_cleanup"', "'_cleanup; exit 1'"];
 

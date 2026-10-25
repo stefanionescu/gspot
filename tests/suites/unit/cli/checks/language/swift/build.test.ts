@@ -8,6 +8,7 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { SWIFT_PACKAGE } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
@@ -24,7 +25,6 @@ import {
     redirectCacheFolder,
 } from '#tests/setup/cli/checks.ts';
 import {
-    SWIFT_PACKAGE,
     ANALYZER_EXIT_CASES,
     PRIVATE_MAIN_FINDING,
     FAILED_BUILD_FINDINGS,

@@ -7,11 +7,11 @@ import { runCheckCode } from '#cli/commands/check/run.ts';
 import * as environment from '#cli/system/environment.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
+import { SWIFT_PACKAGE } from '#tests/config/setup/sandboxes.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { SWIFT_PACKAGE } from '#tests/config/checks/language/swift/build.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 
 /**

@@ -1,4 +1,4 @@
-import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/checks/component-samples.ts';
+import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/integration/checks/component-samples.ts';
 
 export const CLEAN_SVELTE =
     '<script lang="ts">\n    const { name }: { name: string } = $props();\n</script>\n\n<p>{name}</p>\n';

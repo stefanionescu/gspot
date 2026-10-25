@@ -1,8 +1,7 @@
+import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { COMMITLINT_PACKAGE } from '#tests/config/checks/general/commits.ts';
-import { STYLELINT_PACKAGE_JSON } from '#tests/config/checks/language/css.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
 import { TOOL_PLAN_CHANGES, MANAGED_PLAN_CHANGES } from '#tests/config/commands/init/plan.ts';
+import { COMMITLINT_PACKAGE, STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
 
 export const REPLACED_PYPROJECT_TABLES = [
     {

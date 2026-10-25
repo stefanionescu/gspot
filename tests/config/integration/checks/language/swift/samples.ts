@@ -1,4 +1,4 @@
-import { CLEAN_SWIFT } from '#tests/config/checks/language/swift/sandbox.ts';
+import { CLEAN_SWIFT } from '#tests/config/samples.ts';
 
 export const SWIFT_SANDBOX = {
     install: false,

@@ -1,4 +1,4 @@
-import { BASH_HEADER } from '#tests/config/checks/samples.ts';
+import { BASH_HEADER } from '#tests/config/samples.ts';
 
 export const BASH_ENV_READ_CASES = [
     {

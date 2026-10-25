@@ -1,4 +1,4 @@
-import { BASH_HEADER } from '#tests/config/checks/samples.ts';
+import { BASH_HEADER } from '#tests/config/samples.ts';
 
 export const SHEBANG_DOC_SCRIPT = String.raw`#!/usr/bin/env bash
 # log_line: print a timestamped message to standard error.

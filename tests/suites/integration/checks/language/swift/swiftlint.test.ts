@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { CLEAN_SWIFT } from '#tests/config/samples.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
@@ -10,7 +11,6 @@ import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { CLEAN_SWIFT } from '#tests/config/checks/language/swift/sandbox.ts';
 import { SWIFT_SANDBOX } from '#tests/config/integration/checks/language/swift/samples.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 

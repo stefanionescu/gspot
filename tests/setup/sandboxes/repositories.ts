@@ -1,11 +1,10 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { HOOKS_SETTINGS } from '#tests/config/setup/cli.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
-import { PUSH_CONTENT, LFS_ATTRIBUTES, NESTED_SCOPE_FILES } from '#tests/config/setup/sandboxes.ts';
+import { PUSH_CONTENT, LFS_ATTRIBUTES, BASH_SYNTAX_CHECK, NESTED_SCOPE_FILES } from '#tests/config/setup/sandboxes.ts';
 
 /**
 Create base, reviewed, and broken commits, plus different working-tree bytes, for the push tests.
