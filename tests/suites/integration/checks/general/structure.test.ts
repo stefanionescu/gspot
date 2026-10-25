@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import type { LinterJsonFinding } from '#tests/types/tools.ts';
@@ -10,19 +10,24 @@ import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { spawnGspot, applyThenInstall } from '#tests/setup/cli/commands.ts';
 import { PARAMETER_LIMIT_TOOLS } from '#tests/config/integration/checks/general/structure.ts';
 
-test.each(['default', 8] as const)('Ruff counts declared parameters with maximum %s', async (supplied) => {
+test.each(['default', 8] as const)('Ruff counts parameters with maximum %s', async (supplied) => {
     const scenario = PARAMETER_LIMIT_TOOLS[0];
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, scenario, supplied);
     await applyThenInstall(sandbox.path);
     const result = runCommandBlocking(
         [
             buildVenvExecutablePath(join(sandbox.path, GSPOT_PATHS.pythonEnvironment), 'ruff'),
-            ...scenario.command.slice(1),
+            'check',
+            '--config',
+            findManifestTarget('python', 'ruff.toml'),
+            '--output-format',
+            'json',
+            scenario.file,
         ],
         { cwd: sandbox.path },
     );
@@ -34,13 +39,25 @@ test.each(['default', 8] as const)('Ruff counts declared parameters with maximum
 });
 
 test.skipIf(!hasToolBuild('swiftlint')).each(['default', 8] as const)(
-    'SwiftLint counts declared parameters with maximum %s',
+    'SwiftLint counts parameters with maximum %s',
     async (supplied) => {
         const scenario = PARAMETER_LIMIT_TOOLS[1];
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
+        await using sandbox = await createGitSandbox({});
         const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, scenario, supplied);
-        const result = runCommandBlocking(scenario.command, { cwd: sandbox.path });
+        const result = runCommandBlocking(
+            [
+                'swiftlint',
+                'lint',
+                '--config',
+                findManifestTarget('swift', 'swiftlint.yml'),
+                '--reporter',
+                'json',
+                '--quiet',
+                '--no-cache',
+                scenario.file,
+            ],
+            { cwd: sandbox.path },
+        );
         const findings = JSON.parse(result.stdout) as LinterJsonFinding[];
         expect(result.code, result.stdout + result.stderr).toBe(
             maximum === defaultMaximum ? scenario.failureStatus : 0,

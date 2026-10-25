@@ -62,15 +62,7 @@ export const LOOSENED_SETTINGS = [
     } as const,
 ] as const;
 
-export const RESTRICTED_IMPORT_RECORDS = [
-    { name: 'unreviewed-module', message: 'Import the reviewed entrypoint for this dependency.' },
-] as const;
-
-export const RESTRICTED_IMPORTS = `[{name = "unreviewed-module", message = "Import the reviewed entrypoint for this dependency."}]`;
-
 export const SETTING_REASON = 'The project contract requires this reviewed exception.';
-
-export const SCOPE_BANNED_WORDS = ['discardedword'] as const;
 
 export const SET_REFUSALS = [
     [

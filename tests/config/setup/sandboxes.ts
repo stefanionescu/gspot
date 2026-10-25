@@ -1,4 +1,4 @@
-import { GUIDE, README, LICENSE, CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 
 export const NPM_INSTALL_FLAGS = ['--ignore-scripts', '--no-audit', '--no-fund'] as const;
 
@@ -12,40 +12,9 @@ export const PUSH_CONTENT = {
     settings: 'invalid working policy',
 } as const;
 
-export const NPM_CHECK_IGNORES = `[[ignore]]
-check = "data-files/v8r"
-reason = "This sandbox exercises tools without JSON schema checks."
-[[ignore]]
-check = "format/editorconfig-checker"
-reason = "This sandbox exercises tools without the npm editor checker."
-[[ignore]]
-check = "format/prettier"
-reason = "This sandbox exercises tools without the npm formatter."
-`;
-
-export const BASE_INSTALLED_FILES = {
-    '.gitignore': 'node_modules/\n',
-    'package.json': '{"name":"example","private":true,"type":"module"}',
-    'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
-    'source.ts': 'export const VALUE = 1;\n',
-    'source.js': 'export const VALUE = 1;\n',
-    'source.py': '"""Example module."""\nVALUE = 1\n',
-    'source.sh': '#!/usr/bin/env bash\nset -euo pipefail\nprintf "%s\\n" ready\n',
-    'Source.swift': 'let value = 1\n',
-    'index.html':
-        '<!doctype html><html lang="en"><head><title>Example</title></head><body><p>Example.</p></body></html>',
-    'style.css': 'body { color: black; }\n',
-    'pyproject.toml': '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = []\n',
-} as const;
-
 export const REGISTRY_HOST = '127.0.0.1';
 
 export const NPM_REGISTRY_TOKEN = 'synthetic-package-install-token';
-
-export const ZIP_FILE_OPTIONS = {
-    regular: { os: 3, attrs: 0o10_0644 * 0x1_00_00 },
-    executable: { os: 3, attrs: 0o10_0755 * 0x1_00_00 },
-} as const;
 
 export const NPM_PACK_FLAGS = ['--ignore-scripts', '--json'] as const;
 
@@ -129,16 +98,6 @@ export const BASH_SANDBOX = {
         'package.json': '{"private":true}\n',
     },
 } as const;
-
-export const PROSE_SANDBOX = {
-    configurations: ['prose'],
-    files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },
-} as const;
-
-export const SWIFT_PACKAGE = `// swift-tools-version: 6.0
-import PackageDescription
-let package = Package(name: "Example", targets: [.target(name: "Example", path: ".")])
-`;
 
 export const BASH_SYNTAX_CHECK = String.raw`[[command_check]]
 id = "project/bash-syntax"

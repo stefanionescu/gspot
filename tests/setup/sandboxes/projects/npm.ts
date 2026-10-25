@@ -81,8 +81,7 @@ export async function createNpmProject(
 
         token: NPM_REGISTRY_TOKEN,
     };
-    const served = await createNpmRegistry(artifacts, installPlan);
-    const registry = resources.use(served);
+    const registry = resources.use(await createNpmRegistry(artifacts, installPlan));
     const authored = await writeNpmProject({ root, artifacts, registry, packageManager, projectPath });
     await runGspotStep({ root, run: spawnGspot }, ['apply']);
     const owned = resources.move();
@@ -91,6 +90,8 @@ export async function createNpmProject(
         artifacts,
         registry,
         ...authored,
+        toolPackageManager:
+            packageManager === 'yarn' && authored.yarnConfiguration === undefined ? 'npm' : packageManager,
         [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned),
     };
 }

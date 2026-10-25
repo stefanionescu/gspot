@@ -1,7 +1,15 @@
 import { ARITHMETIC_MODULE } from '#tests/config/integration/checks/samples.ts';
 import { COVERAGE_ZERO_LIMITS } from '#tests/config/integration/checks/testing/samples.ts';
 
-export const PYTEST_PYPROJECT = `[project]\nname = "example"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = ["pytest==9.1.1", "pytest-cov==7.1.0"]\n\n[tool.pytest.ini_options]\npythonpath = ["."]\n`;
+export const PYTEST_PYPROJECT = `[project]
+name = "example"
+version = "1.0.0"
+requires-python = ">=3.12"
+dependencies = ["pytest==9.1.1", "pytest-cov==7.1.0"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+`;
 
 const ARITHMETIC_TESTS = `"""Tests of the arithmetic."""
 

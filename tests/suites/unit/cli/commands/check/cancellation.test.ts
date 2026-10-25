@@ -15,9 +15,9 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/environment.ts';
 import { SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
-import { SLOW_COMMAND_CHECK } from '#tests/config/commands/check/cancellation.ts';
 import { CLI_BIN, runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { SLOW_COMMAND_CHECK, SLOW_TOOL_ARGUMENTS } from '#tests/config/commands/check/cancellation.ts';
 import { waitForExit, waitForFile, captureChild, startCommand, limitCommand } from '#tests/setup/system/processes.ts';
 
 async function prepareStagedCancellation(root: string, operation: 'diff' | 'init' | 'cat-file') {
@@ -80,7 +80,13 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
     'check passes %s to a running tool and reports the run as canceled',
     async (signal) => {
         await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [SLOW_COMMAND_CHECK] }) }),
+            'gspot.toml': buildSandboxSettings([], {
+                tables: stringify({
+                    command_check: [
+                        { ...SLOW_COMMAND_CHECK, command: buildProgramCommand('fakes/tool', ...SLOW_TOOL_ARGUMENTS) },
+                    ],
+                }),
+            }),
             'source.txt': 'input\n',
         });
 
@@ -270,7 +276,13 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
     'a canceled text report prints the %s process exit code',
     async (signal) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [SLOW_COMMAND_CHECK] }) }),
+            'gspot.toml': buildSandboxSettings([], {
+                tables: stringify({
+                    command_check: [
+                        { ...SLOW_COMMAND_CHECK, command: buildProgramCommand('fakes/tool', ...SLOW_TOOL_ARGUMENTS) },
+                    ],
+                }),
+            }),
             'source.txt': 'input\n',
         });
         commitAll(sandbox.path);

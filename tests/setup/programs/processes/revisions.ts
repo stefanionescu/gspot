@@ -9,7 +9,7 @@ const [timeoutSeconds = '', reportPath = ''] = process.argv.slice(2);
 const root = process.cwd();
 const nested = join(root, 'nested');
 const gitDirOutput = await readGitText(root, ['rev-parse', '--absolute-git-dir'], {});
-const gitDir = gitDirOutput.replace(/\n$/u, '');
+const gitDir = gitDirOutput.trim();
 const index = resolve(root, readEnvironmentVariable('GIT_INDEX_FILE') ?? '');
 const head = readFileSync(join(gitDir, 'HEAD'));
 const indexed = readFileSync(index);
@@ -26,8 +26,8 @@ for (const source of [{ kind: 'index' as const }, { kind: 'commit' as const, has
         cwd: copy.root,
         timeoutSeconds: Number(timeoutSeconds),
     });
-    const configured = runGitBlocking(copy.root, ['config', '--get', 'gspot.boundary'], {});
-    const intentional = runGitBlocking(copy.root, ['config', '--get', 'gspot.explicit'], {
+    const boundaryConfig = runGitBlocking(copy.root, ['config', '--get', 'gspot.boundary'], {});
+    const explicitConfig = runGitBlocking(copy.root, ['config', '--get', 'gspot.explicit'], {
         env: { GIT_CONFIG_COUNT: '1', GIT_CONFIG_KEY_0: 'gspot.explicit', GIT_CONFIG_VALUE_0: 'caller' },
     });
     const controller = new AbortController();
@@ -40,8 +40,8 @@ for (const source of [{ kind: 'index' as const }, { kind: 'commit' as const, has
         ownMetadata: folder !== gitDir,
         toolMetadata: tool.stdout.trim() === folder,
         paths: Buffer.from(bytes.stdout).toString('utf8').split('\0').filter(Boolean),
-        configuration: configured.stdout.trim(),
-        explicit: intentional.stdout.trim(),
+        configuration: boundaryConfig.stdout.trim(),
+        explicit: explicitConfig.stdout.trim(),
         cancelled: cancelled.canceled && cancelled.code !== 0,
     });
 }
@@ -49,8 +49,8 @@ writeFileSync(
     reportPath,
     JSON.stringify({
         reports,
-        headRetained: readFileSync(join(gitDir, 'HEAD')).equals(head),
-        indexRetained: readFileSync(index).equals(indexed),
+        headKept: readFileSync(join(gitDir, 'HEAD')).equals(head),
+        indexKept: readFileSync(index).equals(indexed),
         workingBytes: readFileSync(join(nested, 'source.txt'), 'utf8'),
     }),
 );

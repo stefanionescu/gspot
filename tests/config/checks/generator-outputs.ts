@@ -27,12 +27,6 @@ export const DATABASE_SCHEMAS = ['public', 'private', 'audit'] as const;
 
 export const SUPABASE_TYPES_OUTPUT = 'export type Database = { public: { Tables: {} } };\n';
 
-export const DOCKER_VERSION_OUTPUT = 'Docker version 29.2.1\n';
-
-export const SUPABASE_VERSION_OUTPUT = '2.75.0\n';
-
-export const SUPABASE_PROJECT_FILE_SOURCE = 'project_id = "types-sample"\n';
-
 export const UNTRACKED_CLOUDFLARE_FINDINGS = [
     {
         file: 'cloudflare-env.d.ts',

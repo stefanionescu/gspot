@@ -31,11 +31,12 @@ export const PROGRAM_NAMES = [
     'fakes/generator',
     'fakes/site-build',
     'fakes/package-bin',
+    'runner/preload',
+    'runner/environment.test',
+    'runner/interrupt.test',
 ] as const;
 
 export const WAIT_INTERVAL_MILLISECONDS = 60_000;
-
-export const POLL_INTERVAL_MILLISECONDS = 10;
 
 export const FAKE_TOOL_OPTIONS = {
     'version-line': { type: 'string' },
@@ -79,13 +80,11 @@ export const FIND_TEXT_OPTIONS = {
 export const EXPECT_ARGUMENTS_OPTIONS = { includes: { type: 'string' }, equals: { type: 'string' } } as const;
 
 export const CHECK_STAGED_COPY_OPTIONS = {
-    payload: { type: 'string' },
+    file: { type: 'string' },
     bytes: { type: 'string' },
     executable: { type: 'string' },
     write: { type: 'string' },
 } as const;
-
-export const EXECUTABLE_BITS = 0o111;
 
 export const SITE_BUILD_OPTIONS = { copy: { type: 'string', multiple: true }, import: { type: 'string' } } as const;
 

@@ -58,12 +58,12 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
     expect(checks.map(({ check, status }) => ({ check, status }))).toStrictEqual(
         ['bash/shellcheck', 'dependencies/lockfiles', 'format/prettier'].map((check) => ({ check, status: 'failed' })),
     );
-    const lockfileHosts = checks.find(({ check }) => check === 'dependencies/lockfiles')!.findings;
+    const lockfileFindings = checks.find(({ check }) => check === 'dependencies/lockfiles')!.findings;
     const lockfile = JSON.parse(await readFile(join(root, 'package-lock.json'), 'utf8')) as {
         packages: Record<string, { resolved?: string }>;
     };
     const registry = new URL('/', readEnvironmentVariable('GSPOT_TEST_NPM_REGISTRY')).href;
-    expect(lockfileHosts.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual(
+    expect(lockfileFindings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual(
         Object.values(lockfile.packages)
             .flatMap(({ resolved }) => (resolved?.startsWith(registry) === true ? resolved : []))
             .map((url) => ({ file: 'package-lock.json', rule: 'host', message: `${url} is not HTTPS.` })),

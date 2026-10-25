@@ -17,8 +17,6 @@ export const CHECK_OUTPUTS = [
     { format: 'markdownlint' },
 ] as const;
 
-export const FOREIGN_OUTPUT = 'not the output of any tool {\n';
-
 export const OUTPUT_PARSE_RESULTS = {
     regex: {
         empty: { findings: [] },

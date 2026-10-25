@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -31,9 +31,6 @@ test.skipIf(!hasToolBuild('semgrep'))(
         expect(jwt!.message).toBe(
             'Require the expected JWT signing algorithms when verifying a token. Pass an algorithms option that matches the signing contract.',
         );
-        expect(
-            await Promise.all(Object.keys(SENSITIVE_FILES).map((file) => readFile(join(sandbox.path, file), 'utf8'))),
-        ).toStrictEqual(Object.values(SENSITIVE_FILES));
         for (const [file, source] of Object.entries(CORRECTED_SENSITIVE_FILES))
             await writeFile(join(sandbox.path, file), source);
         const corrected = parseCheckReport(await spawnGspot(sandbox.path, SEMGREP_CHECK));

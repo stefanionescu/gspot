@@ -14,7 +14,7 @@ import { MANAGED_KEYS_NOTE } from '#cli/config/apply/generated.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { readSandboxSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { API_BASH_FILES, API_SCOPE_FILES, TOOLS_CHANGED_NOTE } from '#tests/config/commands/samples.ts';
+import { API_SCOPE_FILES, TOOLS_CHANGED_NOTE, BASH_CONFIG_FILE_NAMES } from '#tests/config/commands/samples.ts';
 
 import {
     SCOPE_REMOVALS,
@@ -139,10 +139,10 @@ test('remove --scope writes removed_configurations with its reason and applies i
     const { written, removed, notes } = JSON.parse(result.stdout) as ApplyReport;
     expect({ written, removed, notes }).toStrictEqual({
         written: [GSPOT_PATHS.miseProject],
-        removed: API_BASH_FILES,
+        removed: BASH_CONFIG_FILE_NAMES.map((file) => findManifestTarget('bash', file)),
         notes: [TOOLS_CHANGED_NOTE],
     });
-    expect(npm.installations).toStrictEqual([]);
+    expect(npm.commands).toStrictEqual([]);
     const saved = readSandboxSettings(sandbox.path);
     expect(saved.scopes['api']!.configurations).toStrictEqual([]);
     expect(saved.configurations).toStrictEqual(['markdown']);

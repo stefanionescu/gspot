@@ -3,18 +3,17 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { type EslintConfiguration } from '#tests/types/tools.ts';
+import { STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { STRICT_TSCONFIG_TEXT } from '#tests/config/checks/language/typescript.ts';
 import { createEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     MOBILE_FILES,
-    SERVER_FILES,
     EXPRESS_SOURCE,
     COMPONENT_FILES,
     EXPRESS_FINDINGS,
+    NEXTJS_ROUTE_FILES,
     HTML_INJECTION_CASES,
-    NEXTJS_ROUTE_PROJECTS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/frameworks.ts';
 
 test('Vue, Svelte and Astro files parse in their scopes, and a plain scope gets none of their rules', async () => {
@@ -148,7 +147,16 @@ configurations = ["nextjs"]
 );
 
 test('Next.js reports require-server-only in .server files and server folders', async () => {
-    await using sandbox = await testdir(SERVER_FILES);
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            level: 'all',
+            rules: true,
+            scopes: [{ path: 'app', configurations: ['nextjs'] }],
+        }),
+        'app/lib/widget/server.js': 'export const value = 1;\n',
+        'app/lib/widget/data.server.js': 'export const value = 1;\n',
+        'app/server/data.js': 'export const value = 1;\n',
+    });
 
     const eslint = await createEslint(sandbox.path);
     expect(
@@ -165,7 +173,17 @@ test('Next.js reports require-server-only in .server files and server folders', 
 });
 
 test('Next.js route rules use each project root and stay off in a scope without pages', async () => {
-    await using sandbox = await testdir(NEXTJS_ROUTE_PROJECTS);
+    await using sandbox = await testdir({
+        ...NEXTJS_ROUTE_FILES,
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            level: 'all',
+            scopes: [
+                { path: 'apps/first', configurations: ['nextjs'] },
+                { path: 'apps/second', configurations: ['nextjs'] },
+                { path: 'apps/empty', configurations: ['nextjs'] },
+            ],
+        }),
+    });
 
     const eslint = await createEslint(sandbox.path);
     using warnings = spyOn(console, 'warn');

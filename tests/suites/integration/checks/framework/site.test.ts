@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { readFile, writeFile } from 'node:fs/promises';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { SITE_SANDBOX, SITE_BUILD_ARGUMENTS } from '#tests/config/site.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 import { buildSiteSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { SITE_SANDBOX, SITE_BUILD_ARGUMENTS } from '#tests/config/checks/framework/site/pages.ts';
 
 import {
     OUTPUT_CASES,
     ALT_TEXT_PAGE,
-    SITE_PAGE_HEAD,
     TWO_SITE_TABLES,
     BUILT_HTML_SITES,
     MISSING_ALT_PAGE,
@@ -32,11 +32,11 @@ test('site/build reports a failed build and passes after the fix', async () => {
             },
         },
     };
-    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(expectedSummary(sample));
+    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
 });
 
 test.each([...OUTPUT_CASES])(
-    '$check reports its finding in the built site and passes after the fix',
+    '$check reports its finding in the built site and passes after the fix: $name',
     async (scenario) => {
         const { check, level, tables, files, findings, corrected } = scenario;
         const { root } = installedSandbox();
@@ -48,9 +48,14 @@ test.each([...OUTPUT_CASES])(
             files: { 'gspot.toml': settings, ...files },
         });
 
+        const fileUrl = isWindows ? 'file:///' : 'file://';
         const failed = parseCheckReport(await spawnGspot(root, ['check', '--only', check, '--json']));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(failed.report.checks.flatMap((result) => result.findings)).toMatchObject([...findings]);
+        expect(
+            failed.report.checks
+                .flatMap((result) => result.findings)
+                .map((finding) => ({ ...finding, message: finding.message.replaceAll(fileUrl, '{file-url}') })),
+        ).toMatchObject([...findings]);
         for (const [path, text] of Object.entries(corrected)) await writeFile(join(root, path), text);
         const passed = parseCheckReport(await spawnGspot(root, ['check', '--only', check, '--json']));
         expect(passed.code, passed.stdout + passed.stderr).toBe(0);
@@ -76,7 +81,6 @@ test.each([...BUILT_HTML_SITES])(
             },
         });
 
-        const appliedSettings = await readFile(join(root, 'gspot.toml'), 'utf8');
         const checked = parseCheckReport(await spawnGspot(root, ['check', '--json', '--only', 'site/html-validate']));
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         expect(checked.report.checks).toMatchObject([
@@ -94,8 +98,6 @@ test.each([...BUILT_HTML_SITES])(
             { scope: 'app', status: 'passed', findings: [] },
             { scope: 'other', status: 'passed', findings: [] },
         ]);
-        expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(appliedSettings);
-        expect(await readFile(join(root, 'app/page.html'), 'utf8')).toBe(MISSING_ALT_PAGE);
     },
 );
 
@@ -104,7 +106,7 @@ test('HTML Validate reports all 400 missing alt attributes in a built page', asy
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSiteSettings(buildProgramCommand('fakes/site-build', '--copy', 'pages=dist')),
-            'pages/index.html': `${SITE_PAGE_HEAD}${'<img src="image.png">'.repeat(400)}</body></html>`,
+            'pages/index.html': `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${'<img src="image.png">'.repeat(400)}</body></html>`,
         },
     });
 

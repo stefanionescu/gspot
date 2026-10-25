@@ -31,5 +31,3 @@ def double(value: int) -> int:
     return value * 2
 `,
 } as const;
-
-export const TYPED_DOCSTRING_RULES = ['DOC109', 'DOC110', 'DOC105', 'DOC203'] as const;

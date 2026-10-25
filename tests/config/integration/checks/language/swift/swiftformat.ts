@@ -69,3 +69,13 @@ public let example = "/** not documentation */"
 
 // Ordinary comment with a nested* comment inside.
 `;
+
+export const BLOCK_COMMENT_FINDINGS = [
+    [1, 1, 'blockComments'],
+    [9, 1, 'blockComments'],
+] as const;
+
+export const SPACED_COMMENT_FINDINGS = [
+    [9, 1, 'docComments'],
+    [9, 1, 'spaceInsideComments'],
+] as const;

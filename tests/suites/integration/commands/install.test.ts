@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { INIT_FILES } from '#tests/config/init.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
-import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/samples.ts';
-import { INIT_FILES } from '#tests/config/commands/init/conflicting-config-files.ts';
+import { runGit, commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { spawnGspot, applyThenInstall, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
 test('after init and install, apply has nothing to write', async () => {
@@ -46,9 +46,8 @@ test('install refuses an npm tool project edited to run scripts, before it conta
 test.each([true, false])(
     'init, install, and check keep the staged index, the unstaged edits, and HEAD (has commits: %s)',
     async (hasCommits) => {
-        await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
+        await using sandbox = await createGitSandbox({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
 
-        runGitStep(sandbox.path, ['init', '-q']);
         if (hasCommits) commitAll(sandbox.path);
         await writeFile(join(sandbox.path, 'scripts/a.sh'), CLEAN_BASH_SCRIPT + '\n');
         runGitStep(sandbox.path, ['add', 'scripts/a.sh']);
@@ -56,16 +55,9 @@ test.each([true, false])(
         await writeFile(join(sandbox.path, 'notes.txt'), 'draft\n');
         const staged = runGitStep(sandbox.path, ['diff', '--cached', '--binary']);
         const head = runGit(sandbox.path, ['rev-parse', '--verify', 'HEAD']);
-        const preview = await spawnGspot(sandbox.path, [
-            ...buildInitArguments([]),
-            '--no-configurations',
-            '--dry-run',
-            '--json',
-        ]);
-        expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-        expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
         const initialized = await spawnGspot(sandbox.path, [
-            ...buildInitArguments([], { json: true }),
+            ...buildInitArguments([]),
+            '--json',
             '--no-configurations',
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);

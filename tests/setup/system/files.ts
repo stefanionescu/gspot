@@ -14,15 +14,13 @@ export async function readTree(repositoryRoot: string): Promise<Record<string, s
             paths.map(async (path) => {
                 const absolute = join(repositoryRoot, path);
                 const attributes = await lstat(absolute);
-                let bytes = 'directory';
-                if (attributes.isSymbolicLink()) bytes = `symlink:${await readlink(absolute)}`;
-                else if (attributes.isFile()) {
-                    await using file = await open(absolute, 'r');
-                    const content = await file.readFile();
-                    const fileAttributes = await file.stat();
-                    return [path, `${String(fileAttributes.mode)}:file:${content.toString('base64')}`] as const;
-                }
-                return [path, `${String(attributes.mode)}:${bytes}`] as const;
+                if (attributes.isSymbolicLink())
+                    return [path, `${String(attributes.mode)}:symlink:${await readlink(absolute)}`] as const;
+                if (!attributes.isFile()) return [path, `${String(attributes.mode)}:directory`] as const;
+                await using file = await open(absolute, 'r');
+                const content = await file.readFile();
+                const fileAttributes = await file.stat();
+                return [path, `${String(fileAttributes.mode)}:file:${content.toString('base64')}`] as const;
             }),
         ),
     );

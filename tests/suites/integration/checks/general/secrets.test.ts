@@ -8,14 +8,17 @@ import { type PushReport } from '#cli/types/commands/check.ts';
 import { type GitleaksHistory } from '#tests/types/secrets.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     API_TOKEN,
     AWS_KEY_ID,
     SECRET_FILES,
     FIXED_SECRET_FILES,
-} from '#tests/config/integration/checks/general/secrets/gitleaks.ts';
+    DOTENV_LINTER_CASES,
+} from '#tests/config/integration/checks/general/secrets.ts';
 
 async function prepareSecrets(root: string): Promise<void> {
     runGitStep(root, ['init', '-q']);
@@ -96,7 +99,6 @@ test('gitleaks reports both staged secrets, hides the tokens, and passes after t
 
 test('secrets/gitleaks-pushed reports the secrets of the pushed commits only', async () => {
     await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
     const { base, leaked, removed } = await prepareHistory(sandbox.path);
     const command = ['check', '--hook', 'pre-push', '--only', 'secrets/gitleaks-pushed', '--json'];
     const history = await spawnGspot(
@@ -126,7 +128,6 @@ test('secrets/gitleaks-pushed reports the secrets of the pushed commits only', a
 
 test('secrets/gitleaks-pushed drops a finding only when an ignore names its exact fingerprint, and never prints a token', async () => {
     await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
     const { base, leaked } = await prepareHistory(sandbox.path);
     const command = ['check', '--hook', 'pre-push', '--only', 'secrets/gitleaks-pushed', '--json'];
     const settings = buildSandboxSettings(['secrets']);
@@ -175,4 +176,14 @@ test('secrets/gitleaks-pushed drops a finding only when an ignore names its exac
     );
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect((JSON.parse(accepted.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings).toStrictEqual([]);
+});
+
+const installedSandbox = shareInstalledSandbox({
+    install: false,
+    configurations: ['secrets'],
+    files: { '.env.example': 'PORT=3000\n' },
+});
+
+test.each([...DOTENV_LINTER_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
+    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
 });

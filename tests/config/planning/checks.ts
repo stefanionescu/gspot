@@ -1,5 +1,3 @@
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-
 export const TSC_REPLACEMENTS = [
     { configuration: 'vue', check: 'vue/vue-tsc', source: 'src/App.vue', text: '<template><p>App</p></template>' },
     { configuration: 'svelte', check: 'svelte/svelte-check', source: 'src/App.svelte', text: '<p>App</p>' },
@@ -8,8 +6,9 @@ export const TSC_REPLACEMENTS = [
 export const CONFIGURED_CHECK_CASES = [
     {
         name: 'a TypeScript-only scope selects Knip',
+        configurations: ['typescript'],
+        options: {},
         files: {
-            'gspot.toml': buildSandboxSettings(['typescript'], { tables: '[rules]\nenabled = false\n' }),
             'src/main.ts': 'export const value = 1;\n',
         },
         check: 'javascript/knip',
@@ -17,8 +16,9 @@ export const CONFIGURED_CHECK_CASES = [
     },
     {
         name: 'Prettier stays configured without matching sources',
+        configurations: [],
+        options: { level: 'all', rules: true },
         files: {
-            'gspot.toml': buildSandboxSettings([], { level: 'all', rules: true }),
             'main.go': 'package main\nfunc main() {}\n',
             'main.rs': 'fn main() {}\n',
         },
@@ -26,12 +26,6 @@ export const CONFIGURED_CHECK_CASES = [
         selected: true,
     },
 ] as const;
-
-export const STRIPPED_COVERAGE_COMMANDS: Record<string, string[]> = {
-    'jest/coverage': ['jest', '--ci', '--rootDir={root}/{scope}'],
-    'vitest/coverage': ['vitest', 'run'],
-    'pytest/coverage': ['pytest', '-q', '--strict-markers', '--strict-config', '--no-header', '-p', 'no:cacheprovider'],
-};
 
 export const SCOPE_WIDE_IGNORE_CASES = [
     { paths: ['api/**'], ignored: true },

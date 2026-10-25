@@ -13,7 +13,7 @@ import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import {
     PROSE_STYLE_CASES,
     PRODUCT_WORD_SETTINGS,
-    RECOMMENDED_VALE_FILES,
+    RECOMMENDED_VALE_STYLE_FILES,
 } from '#tests/config/generation/configurations/general/prose.ts';
 
 test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (level) => {
@@ -47,7 +47,10 @@ test('at level recommended, gspot writes only the Vale styles that run', async (
     const paths = output.files
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${dirname(GSPOT_PATHS.valeConfigFile)}/`));
-    expect(paths.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([...RECOMMENDED_VALE_FILES]);
+    expect(paths.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+        ...RECOMMENDED_VALE_STYLE_FILES.map((file) => findManifestTarget('prose', file)),
+        GSPOT_PATHS.valeConfigFile,
+    ]);
 });
 
 test('your banned headings and the shipped ones reach the heading style once', async () => {

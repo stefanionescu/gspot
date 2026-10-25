@@ -1,5 +1,4 @@
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { BASE_INSTALLED_FILES } from '#tests/config/setup/sandboxes.ts';
+import { BASE_INSTALLED_FILES } from '#tests/config/integration/checks/samples.ts';
 
 export const REFERENCE_BUILD_FILES = {
     '.gitignore': `node_modules/
@@ -7,8 +6,6 @@ export const REFERENCE_BUILD_FILES = {
 .gspot/
 `,
     'package.json': '{"private":true,"type":"module"}\n',
-    'tsconfig.json': '{"files":[],"references":[{"path":"app"}]}',
-    'app/tsconfig.json': '{"extends":"../config/base.json","include":["src/**/*.ts"]}',
     'config/base.json':
         '{"compilerOptions":{"composite":true,"strict":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","types":[]}}',
     'app/src/main.ts': 'import type { Value } from "../shared/value.js"; export const port: Value = "wrong";\n',
@@ -51,19 +48,13 @@ export const TYPESCRIPT_PROJECTS_SANDBOX = {
     files: BASE_INSTALLED_FILES,
 } as const;
 
-export const IMPLICIT_PROJECT_TREE = {
-    ...IMPLICIT_PROJECT_FILES,
-    'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-};
-
 const TSCONFIG_PROJECT =
     '{"compilerOptions":{"composite":true,"strict":true,"types":[],"target":"ES2020"},"include":["*.ts"]}';
 
 const SOLUTION_TSCONFIG =
     '{// The solution has no sources.\n"files":[],"references":[{"path":"./orders"},{"path":"./users"}],}';
 
-export const SOLUTION_PROJECT_TREE = {
-    'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+export const SOLUTION_PROJECT_FILES = {
     '.gitignore': 'node_modules/\n.gspot/\n',
     'tsconfig.json': SOLUTION_TSCONFIG,
     'orders/tsconfig.json': TSCONFIG_PROJECT,

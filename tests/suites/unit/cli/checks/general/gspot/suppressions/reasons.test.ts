@@ -5,8 +5,8 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { COMPILER_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { COMPILER_SOURCE } from '#tests/config/checks/language/typescript.ts';
 
 import {
     SWIFT_REASON_CASES,

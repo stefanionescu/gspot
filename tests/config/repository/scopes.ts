@@ -45,8 +45,6 @@ dependencies = ["fastapi>=1"]
     'member-only/main.py': 'print("not a project file")\n',
 } as const;
 
-export const TOOL_ONLY_FOLDERS = ['packages/custom', 'packages/hooks', 'packages/next', 'packages/process'] as const;
-
 export const TOOL_ONLY_PACKAGES = {
     'packages/process/package.json': '{"devDependencies":{"concurrently":"9.0.0"}}',
     'packages/custom/package.json': '{"devDependencies":{"eslint-plugin-custom":"1.0.0"}}',

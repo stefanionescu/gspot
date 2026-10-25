@@ -17,8 +17,6 @@ export type CheckSample = SandboxChanges & {
     corrected?: SampleFix;
 };
 
-export type GspotCall = (cwd: string, commandArguments: readonly string[]) => Promise<ProcessOutput>;
-
 export type SampleResult = {
     failed: ProcessOutput & { report: RunReport };
     passed: ProcessOutput & { report: RunReport };
@@ -31,19 +29,7 @@ export type SandboxChanges = {
     executable?: readonly string[] | undefined;
 };
 
-export type PreviousFile = { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string };
-
-export type SandboxWrite = {
-    files: Record<string, string>;
-    settings: string;
-    previousFiles: Map<string, PreviousFile | undefined>;
-    removed: readonly string[];
-    executable: readonly string[];
-};
-
 export type SampleSummary = {
     failed: { code: number; reported: readonly CheckResult[] };
     passed: { code: number; reported: readonly CheckResult[] };
 };
-
-export type SizeCase = { file: string; rule: string; line: number; source: string; corrected: string; message: string };

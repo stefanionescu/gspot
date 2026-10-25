@@ -6,17 +6,17 @@ import { type RunResult } from '#cli/types/runs/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import * as environment from '#cli/system/environment.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { SWIFT_PACKAGE_HEADER } from '#tests/config/swift.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { planSandboxCheck, redirectCacheFolder } from '#tests/setup/cli/checks.ts';
-import { SWIFT_PACKAGE_HEADER } from '#tests/config/checks/language/swift/samples.ts';
 
 import {
+    XCTEST_TABLES,
     XCTEST_FAILURES,
-    XCTEST_SETTINGS,
     COVERAGE_LIMIT_CASES,
     UNTESTED_COVERAGE_RESULTS,
     SWIFT_PACKAGE_COVERAGE_FILES,
@@ -25,11 +25,11 @@ import {
 
 test.each([...XCTEST_FAILURES])(
     'swift/coverage: XCTest coverage classifies $failure and passes after the fix',
-    async ({ settings, build, coverage, code, status, produced, note }) => {
+    async ({ tables, build, coverage, code, status, produced, note }) => {
         await using sandbox = await testdir();
         await using _cache = await redirectCacheFolder();
         const result = await runXcodeCoverage(sandbox, {
-            settings,
+            tables,
             xcodebuild: [...build],
             xcrun: [
                 '--write',
@@ -44,7 +44,10 @@ test.each([...XCTEST_FAILURES])(
         expect(result.report.checks[0]!.status).toBe(status);
         expect(result.report.checks[0]!.note).toBe(note);
         expect(await isOnDisk(join(sandbox.path, 'viewed.txt'))).toBe(false);
-        await writeFile(join(sandbox.path, 'gspot.toml'), XCTEST_SETTINGS);
+        await writeFile(
+            join(sandbox.path, 'gspot.toml'),
+            buildSandboxSettings(['swift', 'xcode'], { tables: XCTEST_TABLES }),
+        );
         const session = await openSession(sandbox.path);
         const viewed = join(
             planSwiftBuild(session, planSandboxCheck(session, 'swift/coverage'), 'coverage').folder,
@@ -54,7 +57,7 @@ test.each([...XCTEST_FAILURES])(
             produced ? 'viewed' : undefined,
         );
         const corrected = await runXcodeCoverage(sandbox, {
-            settings: XCTEST_SETTINGS,
+            tables: XCTEST_TABLES,
             xcodebuild: [],
             xcrun: ['--line', JSON.stringify({ targets: [{ name: 'Example', lineCoverage: 1 }] })],
         });
@@ -65,11 +68,11 @@ test.each([...XCTEST_FAILURES])(
 
 async function runXcodeCoverage(
     sandbox: TestdirResult,
-    files: { settings: string; xcodebuild: string[]; xcrun: string[] },
+    files: { tables: string; xcodebuild: string[]; xcrun: string[] },
 ): Promise<RunResult> {
     using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
     await createFileTree(sandbox.path, {
-        'gspot.toml': files.settings,
+        'gspot.toml': buildSandboxSettings(['swift', 'xcode'], { tables: files.tables }),
         'ExampleTests.swift': 'import XCTest\n',
         'Example.xcodeproj/project.pbxproj': '',
     });
@@ -86,13 +89,13 @@ test('swift/coverage: XCTest coverage refuses an external result link and remove
     await using outside = await testdir();
     await using _cache = await redirectCacheFolder();
     await createFileTree(sandbox.path, {
-        'gspot.toml': XCTEST_SETTINGS,
+        'gspot.toml': buildSandboxSettings(['swift', 'xcode'], { tables: XCTEST_TABLES }),
         'ExampleTests.swift': 'import XCTest\n',
         'Example.xcodeproj/project.pbxproj': '',
     });
 
     const files = {
-        settings: XCTEST_SETTINGS,
+        tables: XCTEST_TABLES,
         xcodebuild: ['--refuse-previous-bundle', '--mark-tested'],
         xcrun: ['--line', JSON.stringify({ targets: [{ name: 'Example', lineCoverage: 1 }] })],
     };
@@ -185,9 +188,7 @@ test.each([...COVERAGE_LIMIT_CASES])(
         await using _cache = await redirectCacheFolder();
         await using sandbox = await testdir();
         const result = await runXcodeCoverage(sandbox, {
-            settings: buildSandboxSettings(['swift', 'xcode'], {
-                tables: `[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n${tables}`,
-            }),
+            tables: `[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n${tables}`,
             xcodebuild: [],
             xcrun: ['--line', JSON.stringify(report)],
         });

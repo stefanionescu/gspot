@@ -1,5 +1,5 @@
 export const SPECIAL_CHARACTER_FILES = {
-    'package.json': '{"name":"serialization-fixture","private":true,"type":"module"}',
+    'package.json': '{"name":"serialization-sample","private":true,"type":"module"}',
     'sample.ts': 'export const value = 1;',
     'sample.md': '# Sample',
     Dockerfile: 'FROM alpine:3.22',

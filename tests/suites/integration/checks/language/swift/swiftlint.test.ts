@@ -109,8 +109,8 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
             [`${scope}/Value.swift`]: PARSER_SOURCE,
         });
 
-        const reapplied = await spawnGspot(sandbox.path, ['apply']);
-        expect(reapplied.code, reapplied.stdout + reapplied.stderr).toBe(0);
+        const applied = await spawnGspot(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         expect(await isOnDisk(join(sandbox.path, `${scope}/.swiftlint.yml`))).toBe(true);
         const toolResult = await runCommand(
             ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],

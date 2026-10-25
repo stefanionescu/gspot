@@ -1,6 +1,3 @@
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-
 export const PRETTIER_IGNORE_SETTINGS = {
     configurations: ['format', 'javascript'],
     ignore: [
@@ -28,13 +25,15 @@ export const PRETTIER_IGNORE_CASES = [
 export const LANGUAGE_IGNORES = [
     {
         name: 'Python without JavaScript',
-        settings: buildSandboxSettings(['format', 'markdown', 'python'], { rules: true }),
+        configurations: ['format', 'markdown', 'python'],
+        scopes: [],
         ignored: [{ path: '.venv/', pattern: '**/.venv/**' }],
         absent: ['.build/', 'Package.resolved'],
     },
     {
         name: 'Swift without JavaScript',
-        settings: buildSandboxSettings(['format', 'markdown', 'swift'], { rules: true }),
+        configurations: ['format', 'markdown', 'swift'],
+        scopes: [],
         ignored: [
             { path: '.build/', pattern: '.build/' },
             { path: 'DerivedData/', pattern: 'DerivedData/' },
@@ -44,16 +43,15 @@ export const LANGUAGE_IGNORES = [
     },
     {
         name: 'JavaScript',
-        settings: buildSandboxSettings(['format', 'markdown', 'javascript'], { rules: true }),
+        configurations: ['format', 'markdown', 'javascript'],
+        scopes: [],
         ignored: [{ path: 'node_modules/', pattern: '**/node_modules/**' }],
         absent: ['.build/', 'Package.resolved', '**/.venv/**', 'uv.lock'],
     },
     {
         name: 'a JavaScript child of Python',
-        settings: buildSandboxSettings(['format', 'markdown', 'python'], {
-            rules: true,
-            scopes: [{ path: 'web', configurations: ['javascript'] }],
-        }),
+        configurations: ['format', 'markdown', 'python'],
+        scopes: [{ path: 'web', configurations: ['javascript'] }],
         ignored: [
             { path: '.venv/', pattern: '**/.venv/**' },
             { path: 'node_modules/', pattern: '**/node_modules/**' },
@@ -66,32 +64,33 @@ export const PATH_IGNORE_CASES = [
     {
         configuration: 'spelling',
         check: 'spelling/typos',
-        path: findManifestTarget('spelling', 'typos.toml'),
+        file: 'typos.toml',
         nativePath: ['files', 'extend-exclude'],
     },
     {
         configuration: 'duplication',
         check: 'duplication/jscpd',
-        path: findManifestTarget('duplication', 'jscpd.json'),
+        file: 'jscpd.json',
         nativePath: ['ignore'],
     },
     {
         configuration: 'javascript',
         check: 'javascript/knip',
-        path: findManifestTarget('javascript', 'knip.json'),
+        file: 'knip.json',
         nativePath: ['ignore'],
     },
 ] as const;
 
-export const IGNORE_LIST_REPOSITORY = {
-    'gspot.toml': buildSandboxSettings(['javascript', 'python', 'markdown'], {
-        level: 'all',
-        rules: true,
-        scopes: [
-            { path: 'apps/web', configurations: ['javascript', 'css'] },
-            { path: 'services/api', configurations: ['python'] },
-        ],
-    }),
+export const IGNORE_LIST_SETTINGS = {
+    level: 'all',
+    rules: true,
+    scopes: [
+        { path: 'apps/web', configurations: ['javascript', 'css'] },
+        { path: 'services/api', configurations: ['python'] },
+    ],
+} as const;
+
+export const IGNORE_LIST_FILES = {
     'apps/web/package.json': '{"name":"web","private":true}\n',
     'apps/web/source.js': 'export const value = 1;\n',
     'apps/web/style.css': 'a { color: red; }\n',

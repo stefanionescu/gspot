@@ -1,7 +1,3 @@
-import { LICENSE, CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
-
-export const COMMITLINT_EXECUTABLE = '.bin/commitlint';
-
 export const COMMIT_MESSAGES = [
     { message: 'fix(Core): repair the parser', rule: undefined },
     { message: 'fix: repair the parser', rule: undefined },
@@ -18,12 +14,6 @@ export const COMMIT_MESSAGES = [
     { message: 'fix(Core): xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', rule: 'header-max-length' },
 ] as const;
 
-export const COMMITS_FILES = {
-    'scripts/a.sh': CLEAN_BASH_SCRIPT,
-    'README.md': '# Test\n',
-    LICENSE,
-} as const;
-
 export const COMMITLINT_LEVEL_RESULTS = {
     recommended: {
         code: 2,
@@ -34,3 +24,9 @@ export const COMMITLINT_LEVEL_RESULTS = {
     },
     all: { code: 0, output: { checks: [{ check: 'commits/commitlint', status: 'passed', findings: [] }] } },
 } as const;
+
+export const UNTYPED_MESSAGE_FINDINGS = [
+    { rule: 'type-empty', message: 'type may not be empty' },
+    { rule: 'subject-empty', message: 'subject may not be empty' },
+    { rule: 'subject-full-stop', message: 'subject may not end with full stop' },
+] as const;

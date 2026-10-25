@@ -179,13 +179,7 @@ export async function applyThenInstall(root: string): Promise<void> {
 /**
 The init arguments for a test run without prompts.
 */
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 45 calls in 14 files share it.
-export function buildInitArguments(configurations: readonly string[], options: { json?: boolean } = {}): string[] {
-    return [
-        'init',
-        '--yes',
-        ...(configurations.length === 0 ? [] : ['--configurations', ...configurations]),
-        ...(options.json === true ? ['--json'] : []),
-    ];
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 48 calls in 14 files share it.
+export function buildInitArguments(configurations: readonly string[]): string[] {
+    return ['init', '--yes', ...(configurations.length === 0 ? [] : ['--configurations', ...configurations])];
 }

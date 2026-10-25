@@ -13,9 +13,9 @@ import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { readSandboxSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
-    API_BASH_FILES,
     API_SCOPE_FILES,
     TOOLS_CHANGED_NOTE,
+    BASH_CONFIG_FILE_NAMES,
     ALWAYS_SELECTED_RESULTS,
     UNKNOWN_CONFIGURATION_REFUSALS,
     INHERITED_CONFIGURATION_SETTINGS,
@@ -35,11 +35,11 @@ test('add --scope writes the scope list and applies it without an npm install', 
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { written, removed, notes } = JSON.parse(result.stdout) as ApplyReport;
     expect({ written, removed, notes }).toStrictEqual({
-        written: [...API_BASH_FILES, GSPOT_PATHS.miseProject],
+        written: [...BASH_CONFIG_FILE_NAMES.map((file) => findManifestTarget('bash', file)), GSPOT_PATHS.miseProject],
         removed: [],
         notes: [TOOLS_CHANGED_NOTE],
     });
-    expect(npm.installations).toStrictEqual([]);
+    expect(npm.commands).toStrictEqual([]);
     const saved = readSandboxSettings(sandbox.path);
     expect(saved.scopes['api']!.configurations).toStrictEqual(['bash']);
     expect(saved.configurations).toStrictEqual(['markdown']);

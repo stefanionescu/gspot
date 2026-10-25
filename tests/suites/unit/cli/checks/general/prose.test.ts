@@ -119,7 +119,9 @@ test.each([...VALE_OUTPUT_CASES])(
     'Vale alerts with $name become findings at the reported file, line, and column',
     async ({ stdout, findings }) => {
         await using resources = new AsyncDisposableStack();
-        const sandbox = resources.use(await testdir(VALE_SANDBOX_FILES));
+        const sandbox = resources.use(
+            await testdir({ ...VALE_SANDBOX_FILES, 'gspot.toml': buildSandboxSettings(['prose', 'markdown']) }),
+        );
         const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
         const parsed = Object.fromEntries(
             Object.entries(JSON.parse(stdout) as Record<string, unknown>).map(([path, alerts]) => [
@@ -138,7 +140,9 @@ test.each([...VALE_OUTPUT_CASES])(
 
 test.each(['diagnostic text', '{"file.md":[{}]}'])('the Vale check refuses malformed output %s', async (stdout) => {
     await using resources = new AsyncDisposableStack();
-    const sandbox = resources.use(await testdir(VALE_SANDBOX_FILES));
+    const sandbox = resources.use(
+        await testdir({ ...VALE_SANDBOX_FILES, 'gspot.toml': buildSandboxSettings(['prose', 'markdown']) }),
+    );
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
 
     resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout })));
@@ -148,7 +152,9 @@ test.each(['diagnostic text', '{"file.md":[{}]}'])('the Vale check refuses malfo
 
 test('the Vale check fails with the error line Vale prints when Vale exits non-zero', async () => {
     await using resources = new AsyncDisposableStack();
-    const sandbox = resources.use(await testdir(VALE_SANDBOX_FILES));
+    const sandbox = resources.use(
+        await testdir({ ...VALE_SANDBOX_FILES, 'gspot.toml': buildSandboxSettings(['prose', 'markdown']) }),
+    );
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
     resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(
@@ -161,7 +167,9 @@ test('the Vale check fails with the error line Vale prints when Vale exits non-z
 
 test('the Vale check fails before running Vale when the Vale packages are not installed', async () => {
     await using resources = new AsyncDisposableStack();
-    const sandbox = resources.use(await testdir(VALE_SANDBOX_FILES));
+    const sandbox = resources.use(
+        await testdir({ ...VALE_SANDBOX_FILES, 'gspot.toml': buildSandboxSettings(['prose', 'markdown']) }),
+    );
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
     await rm(join(sandbox.path, GSPOT_PATHS.valeConfigFile));
     using run = spyOn(processes, 'spawnProcess');

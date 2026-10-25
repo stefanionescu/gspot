@@ -86,11 +86,8 @@ test.each([...DOCKERIGNORE_ALLOWLISTS])(
 
 test.each([...DOCKERIGNORE_CASES])(
     `docker/dockerignore requires an ignore file with the entries of each scope's configurations: $name`,
-    async ({ files, findings: expectedFindings }) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['docker'], { level: 'all' }),
-            ...files,
-        });
+    async ({ configurations, options, files, findings: expectedFindings }) => {
+        await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(configurations, options), ...files });
 
         const findings = await runSandboxCheck(sandbox.path, 'docker/dockerignore');
         expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([

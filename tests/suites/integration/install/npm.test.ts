@@ -1,7 +1,6 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
-import { testdir, createFileTree } from 'testdirs';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
@@ -14,46 +13,19 @@ import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import prettierPackage from 'prettier/package.json' with { type: 'json' };
-import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { spawnGspot, applyThenInstall } from '#tests/setup/cli/commands.ts';
 import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/samples.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
+import { PACKAGE_MANAGER_AGE_REFUSALS } from '#tests/config/integration/install/npm.ts';
 import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
+import { runGit, commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { REGISTRY_HOST, PNPM_WORKSPACE, NPM_REGISTRY_TOKEN } from '#tests/config/setup/sandboxes.ts';
-import { TOOL_PROJECT_BYTE_ATTRIBUTES, PACKAGE_MANAGER_AGE_REFUSALS } from '#tests/config/integration/install/npm.ts';
-
-function createAuthenticatedRegistry(token: string) {
-    const requests = { rejected: 0, authenticated: 0 };
-    const server = Bun.serve({
-        hostname: REGISTRY_HOST,
-        port: 0,
-        fetch(request) {
-            if (request.headers.get('authorization') !== `Bearer ${token}`) {
-                requests.rejected++;
-                return Response.json({ error: 'Authentication required' }, { status: 401 });
-            }
-            requests.authenticated++;
-            return Response.json({
-                name: 'private-check-tool',
-                'dist-tags': { latest: '1.0.0' },
-                versions: { '1.0.0': { name: 'private-check-tool', version: '1.0.0' } },
-            });
-        },
-    });
-    return {
-        url: `http://${REGISTRY_HOST}:${String(server.port)}/`,
-        requests,
-        [Symbol.dispose]: server[Symbol.dispose].bind(server),
-    };
-}
 
 test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     '%s from %s: apply keeps a stale lockfile and install repairs it',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
-        const { root, registry, yarnConfiguration } = sandbox;
-        const toolPackageManager =
-            packageManager === 'yarn' && yarnConfiguration === undefined ? 'npm' : packageManager;
+        const { root, registry, toolPackageManager } = sandbox;
         await applyThenInstall(root);
         const { lockfilePath, lockfile } = await readToolProjectFiles(root, toolPackageManager);
         expect(Buffer.from(lockfile).toString('utf8')).not.toContain(NPM_REGISTRY_TOKEN);
@@ -86,9 +58,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     '%s from %s keeps a conflicted lockfile through apply until the packageManager pin is fixed, and install repairs it',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
-        const { root, rootPackage, yarnConfiguration } = sandbox;
-        const toolPackageManager =
-            packageManager === 'yarn' && yarnConfiguration === undefined ? 'npm' : packageManager;
+        const { root, rootPackage, toolPackageManager } = sandbox;
         await applyThenInstall(root);
         const { lockfilePath, lockfile } = await readToolProjectFiles(root, toolPackageManager);
         const stale = Buffer.from(lockfile).toString('utf8').replaceAll(prettierPackage.version, '0.0.0');
@@ -119,21 +89,19 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const repaired = JSON.parse(applied.stdout) as ApplyReport;
         expect(repaired.written).not.toContain(`${DOT_GSPOT}/${selectLockfileName(toolPackageManager)}`);
+        expect(repaired.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        expect(repaired.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
         expect(await readFile(lockfilePath)).toStrictEqual(Buffer.from(lockfile));
     },
 );
 
 test.each([...PACKAGE_MANAGER_CASES])(
-    '%s from %s keeps your package files and the lockfile, and a reinstall restores an edited config file',
+    '%s from %s keeps the authored package files and the lockfile, and a reinstall restores an edited config file',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
-        const { root, rootPackage, yarnConfiguration } = sandbox;
-        const toolPackageManager =
-            packageManager === 'yarn' && yarnConfiguration === undefined ? 'npm' : packageManager;
+        const { root, rootPackage, yarnConfiguration, toolPackageManager } = sandbox;
         await applyThenInstall(root);
         const { projectFile, lockfilePath, lockfile, mode } = await readToolProjectFiles(root, toolPackageManager);
         const installed = await spawnGspot(root, ['install']);
@@ -188,13 +156,11 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     'a fresh clone of a %s project from %s installs the committed lockfile twice and leaves tracked files unchanged',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
-        const { root, artifacts, yarnConfiguration } = sandbox;
-        const toolPackageManager =
-            packageManager === 'yarn' && yarnConfiguration === undefined ? 'npm' : packageManager;
+        const { root, artifacts, toolPackageManager } = sandbox;
         await applyThenInstall(root);
         const { projectFile, lockfile, lockfilePath } = await readToolProjectFiles(root, toolPackageManager);
         const clone = join(artifacts, 'clone');
-        await appendFile(join(root, '.gitattributes'), TOOL_PROJECT_BYTE_ATTRIBUTES);
+        await appendFile(join(root, '.gitattributes'), '\n.gspot/* -text\n');
         commitAll(root);
         runGitStep(root, ['clone', '--quiet', '--no-local', root, clone]);
         expect(await isOnDisk(join(clone, GSPOT_PATHS.nodeModules))).toBe(false);
@@ -219,19 +185,30 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
 );
 
 test('registry settings from the repository .npmrc authenticate an isolated project and leave the .npmrc unchanged', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
-    await using isolated = await testdir();
-    runGitStep(isolated.path, ['init', '--quiet']);
     const token = 'synthetic-registry-credential';
-    using registry = createAuthenticatedRegistry(token);
-    const requests = registry.requests;
-    const url = registry.url;
-    await createFileTree(sandbox.path, {
+    const requests = { rejected: 0, authenticated: 0 };
+    using server = Bun.serve({
+        hostname: REGISTRY_HOST,
+        port: 0,
+        fetch(request) {
+            if (request.headers.get('authorization') !== `Bearer ${token}`) {
+                requests.rejected++;
+                return Response.json({ error: 'Authentication required' }, { status: 401 });
+            }
+            requests.authenticated++;
+            return Response.json({
+                name: 'private-check-tool',
+                'dist-tags': { latest: '1.0.0' },
+                versions: { '1.0.0': { name: 'private-check-tool', version: '1.0.0' } },
+            });
+        },
+    });
+    const url = `http://${REGISTRY_HOST}:${String(server.port)}/`;
+    await using sandbox = await createGitSandbox({
         'package.json': '{"private":true}\n',
         '.npmrc': `registry=${url}\n`,
     });
-    await createFileTree(isolated.path, { 'package.json': '{"private":true}\n' });
+    await using isolated = await createGitSandbox({ 'package.json': '{"private":true}\n' });
     const command = ['npm', 'view', 'private-check-tool', 'version', '--json', '--cache', join(isolated.path, 'cache')];
     const missing = await runTool(command, {
         timeoutSeconds: SETTING_DEFINITIONS['tool_timeout_seconds'].default,

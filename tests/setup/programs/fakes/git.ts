@@ -1,6 +1,5 @@
-import { renameSync } from 'node:fs';
 import { parseArgs } from 'node:util';
-import { splitProgramArguments } from '#tests/setup/system/programs.ts';
+import { writeMarker, splitProgramArguments } from '#tests/setup/system/programs.ts';
 import { PAUSING_GIT_OPTIONS, WAIT_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
 
 const { own, call } = splitProgramArguments();
@@ -11,9 +10,10 @@ if (call[0] === values.operation) {
     const count = ((await counter.exists()) ? Number(await counter.text()) : 0) + 1;
     await Bun.write(counter, String(count));
     if (count === Number(values['pause-on-call'])) {
-        const marker = values.marker ?? '';
-        await Bun.write(`${marker}.tmp`, JSON.stringify({ pid: process.pid, checkout: checkouts[call[0] ?? ''] }));
-        renameSync(`${marker}.tmp`, marker);
+        await writeMarker(
+            values.marker ?? '',
+            JSON.stringify({ pid: process.pid, checkout: checkouts[call[0] ?? ''] }),
+        );
         await Bun.sleep(WAIT_INTERVAL_MILLISECONDS);
     }
 }

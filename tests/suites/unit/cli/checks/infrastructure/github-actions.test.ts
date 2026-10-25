@@ -20,12 +20,11 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { CI_SOURCE_WORKFLOW, CI_INJECTION_SETTINGS } from '#tests/config/github-actions.ts';
 
 import {
     ACTIONLINT_EXITS,
-    CI_SOURCE_WORKFLOW,
     WORKFLOW_TEXT_CASES,
-    CI_INJECTION_SETTINGS,
     OUTSIDE_GITHUB_ACTIONS,
     GENERATED_WORKFLOW_CHECKS,
 } from '#tests/config/checks/infrastructure/github-actions.ts';

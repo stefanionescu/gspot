@@ -1,6 +1,5 @@
-import { BASE_INSTALLED_FILES } from '#tests/config/setup/sandboxes.ts';
-import { ARITHMETIC_MODULE } from '#tests/config/integration/checks/samples.ts';
-import { GOOGLE_PYPROJECT } from '#tests/config/checks/language/python/project.ts';
+import { GOOGLE_PYPROJECT } from '#tests/config/python.ts';
+import { ARITHMETIC_MODULE, BASE_INSTALLED_FILES } from '#tests/config/integration/checks/samples.ts';
 
 export const ARITHMETIC_MODULE_PATH = 'example/math.py';
 

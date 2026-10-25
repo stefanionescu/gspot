@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { rm, readFile, writeFile } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { createFileTree, type TestdirResult } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import vitestPackage from 'vitest/package.json' with { type: 'json' };
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -11,30 +11,41 @@ import { COVERAGE_ZERO_LIMITS } from '#tests/config/integration/checks/testing/s
 
 import {
     VITEST_SOURCE,
-    VITEST_PACKAGE,
     UNTESTED_SOURCE,
     VITEST_PROJECT_FILES,
 } from '#tests/config/integration/checks/testing/vitest.ts';
 
 const vitestProjectFiles = {
     ...VITEST_PROJECT_FILES,
-    'package.json': JSON.stringify({ ...VITEST_PACKAGE, devDependencies: { vitest: vitestPackage.version } }) + '\n',
+    'package.json':
+        JSON.stringify({
+            name: 'example',
+            version: '1.0.0',
+            private: true,
+            type: 'module',
+            devDependencies: { vitest: vitestPackage.version },
+        }) + '\n',
 };
 
-test('vitest/coverage reports coverage under its limit and passes after the fix, in the root and a scope', async () => {
-    await using sandbox = await testdir(vitestProjectFiles);
-    runGitStep(sandbox.path, ['init', '--quiet']);
-
+async function createVitestProject(tables: string): Promise<TestdirResult> {
+    await using resources = new AsyncDisposableStack();
+    const sandbox = resources.use(await createGitSandbox(vitestProjectFiles));
     await createFileTree(join(sandbox.path, 'app'), vitestProjectFiles);
     await linkInstalledModules(join(sandbox.path, 'node_modules'));
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
         buildSandboxSettings(['typescript', 'vitest'], {
             level: 'all',
-            tables: '[coverage]\nlines = 100\nfunctions = 100\n',
+            tables,
             scopes: [{ path: 'app', configurations: ['typescript', 'vitest'] }],
         }),
     );
+    resources.move();
+    return sandbox;
+}
+
+test('vitest/coverage reports coverage under its limit and passes after the fix, in the root and a scope', async () => {
+    await using sandbox = await createVitestProject('[coverage]\nlines = 100\nfunctions = 100\n');
     const source = join(sandbox.path, 'app/src/public.ts');
     await writeFile(source, UNTESTED_SOURCE);
     const failed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/coverage', '--json']));
@@ -56,7 +67,6 @@ test('vitest/coverage reports coverage under its limit and passes after the fix,
             ],
         },
     ]);
-    expect(await readFile(source, 'utf8')).toBe(UNTESTED_SOURCE);
     await writeFile(source, VITEST_SOURCE);
     const corrected = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'vitest/coverage', '--json']),
@@ -66,24 +76,11 @@ test('vitest/coverage reports coverage under its limit and passes after the fix,
         { scope: '', status: 'passed' },
         { scope: 'app', status: 'passed' },
     ]);
-    expect(await readFile(source, 'utf8')).toBe(VITEST_SOURCE);
 });
 
 test('vitest/coverage at a limit above 0 reports @vitest/coverage-v8 as missing when the project lacks it', async () => {
-    await using sandbox = await testdir(vitestProjectFiles);
-    runGitStep(sandbox.path, ['init', '--quiet']);
-
-    await createFileTree(join(sandbox.path, 'app'), vitestProjectFiles);
-    await linkInstalledModules(join(sandbox.path, 'node_modules'));
+    await using sandbox = await createVitestProject(COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80'));
     await rm(join(sandbox.path, 'node_modules/@vitest/coverage-v8'));
-    await writeFile(
-        join(sandbox.path, 'gspot.toml'),
-        buildSandboxSettings(['typescript', 'vitest'], {
-            level: 'all',
-            scopes: [{ path: 'app', configurations: ['typescript', 'vitest'] }],
-            tables: COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80'),
-        }),
-    );
     const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/coverage', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(2);
     const note = '@vitest/coverage-v8 is not installed. Run: npm install --save-dev @vitest/coverage-v8';

@@ -1,5 +1,3 @@
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-
 export const LINK_PAGE = `<!doctype html>
 <html lang="en"><head><title>Setup</title></head><body><h1 id="setup">Setup</h1><p>Current setup.</p></body></html>
 `;
@@ -19,12 +17,6 @@ export const LINK_TEXT_CASES = [
 ] as const;
 
 export const ROOT_LINK_FILES = {
-    'gspot.toml': buildSandboxSettings([], {
-        level: 'recommended',
-        rules: true,
-        scopes: [{ path: 'web', configurations: ['site'] }],
-        tables: '[scope.site]\nbuild_command = ["node", "build.mjs"]\n',
-    }),
     'root.md': '# Links\n\nRead [the setup guide](/guides/setup.md#setup).\n',
     'guides/setup.md': '# Setup\n',
     'guides/shop.mdx': '# Shop\n\n<a href={link}>Open the shop</a>\n',

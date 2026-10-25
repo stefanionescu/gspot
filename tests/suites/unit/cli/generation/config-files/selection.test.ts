@@ -21,13 +21,12 @@ import {
     CONFIG_FILE_PROJECT,
     IGNORED_CHECK_FILES,
     UNPARSED_CONFIG_FILES,
-    NESTED_PYTHON_GSPOT_TOML,
-    JSCONFIG_TITLE_IGNORE_PROJECT,
+    NESTED_PYTHON_SETTINGS,
 } from '#tests/config/generation/config-files/selection.ts';
 
 test('a Ruff-only Python scope gets no type checker file or pointer', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': NESTED_PYTHON_GSPOT_TOML,
+        'gspot.toml': buildSandboxSettings([], NESTED_PYTHON_SETTINGS),
         'linted/source.py': 'value = 1\n',
         'typed/source.py': 'value: int = 1\n',
     });
@@ -58,7 +57,8 @@ test.each([...IGNORED_CHECK_FILES])(
         await using sandbox = await testdir({ 'gspot.toml': settings, ...files });
 
         const paths = generate(await openSession(sandbox.path)).files.map((file) => file.path);
-        expect(paths.filter((path) => [...kept, ...dropped].includes(path))).toStrictEqual([...kept]);
+        const listed = new Set<string>([...kept, ...dropped]);
+        expect(paths.filter((path) => listed.has(path))).toStrictEqual([...kept]);
     },
 );
 test('Go and Rust sources keep the files and tools of every selected configuration', async () => {
@@ -119,7 +119,15 @@ test.each([...LEVELS])("every configuration's generated config files parse at le
     }
 });
 test('an ignore whose reason equals a built-in section title keeps its paths in the jsconfig exclude', async () => {
-    await using sandbox = await testdir(JSCONFIG_TITLE_IGNORE_PROJECT);
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            level: 'all',
+            rules: true,
+            tables: '[[ignore]]\npaths = ["legacy/**"]\nreason = "Build output"\n',
+        }),
+        'source.js': 'export const value = 1;\n',
+        'legacy/source.js': 'export const legacy = 1;\n',
+    });
     const files = generate(await openSession(sandbox.path)).files;
     const content = files.find(({ path }) => path === findManifestTarget('javascript', 'jsconfig.json'))!.content;
     const jsconfig: unknown = JSON.parse(content);

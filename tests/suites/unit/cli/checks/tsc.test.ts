@@ -5,11 +5,12 @@ import { openSession } from '#cli/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { join, parse, dirname, resolve, relative } from 'node:path';
 import { writeScopeTsconfig } from '#cli/checks/tsc/scope-tsconfig.ts';
 import { DEFAULT_TSCONFIG_PROJECTS } from '#tests/config/checks/tsc.ts';
-import { STRICT_TSCONFIG_TEXT, IMPLICIT_RETURNS_IGNORE } from '#tests/config/checks/language/typescript.ts';
+import { IMPLICIT_RETURNS_IGNORE } from '#tests/config/checks/language/typescript.ts';
 
 test('a project with its own tsconfig.json gets a tsconfig that extends it and adds only typeRoots', async () => {
     await using sandbox = await testdir({

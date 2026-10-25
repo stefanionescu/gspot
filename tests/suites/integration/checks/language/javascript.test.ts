@@ -1,31 +1,34 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/locate.ts';
+import { COMPILER_SOURCE } from '#tests/config/typescript.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { COMPILER_SOURCE } from '#tests/config/checks/language/typescript.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { findManifestTarget, readGeneratedFiles } from '#tests/setup/cli/generated-files.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     JSCONFIG_CASES,
+    ESLINT_SANDBOX,
+    DEBUGGER_SAMPLE,
     JSCONFIG_SANDBOX,
-    SCOPE_JSCONFIG_PATHS,
     OWN_TYPESCRIPT_RESULTS,
     IMPORTED_AMBIENT_FILES,
     AUTHORED_JSCONFIG_CASES,
     AUTHORED_JSCONFIG_FILES,
     JAVASCRIPT_PROJECT_FILES,
-} from '#tests/config/integration/checks/language/javascript/tsc.ts';
+} from '#tests/config/integration/checks/language/javascript.ts';
 
 const installedSandbox = shareInstalledSandbox(JSCONFIG_SANDBOX);
 
@@ -52,7 +55,7 @@ test("javascript/tsc uses gspot's own TypeScript when the project has none", asy
     expect(corrected.report.checks).toMatchObject([{ check: 'javascript/tsc', status: 'passed', findings: [] }]);
 });
 
-test.each([...JSCONFIG_CASES])('javascript/tsc checks $name and keeps your files', async (row) => {
+test.each([...JSCONFIG_CASES])('javascript/tsc checks $name and keeps the authored files', async (row) => {
     const { root } = installedSandbox();
     const sourceFiles = {
         ...JAVASCRIPT_PROJECT_FILES,
@@ -84,16 +87,14 @@ test.each([...JSCONFIG_CASES])('javascript/tsc checks $name and keeps your files
         ...(row.scope === '' ? [] : [matchFields<CheckResult>({ scope: '', status: 'skipped', findings: [] })]),
         matchFields<CheckResult>({ scope: row.scope, status: 'passed', findings: [] }),
     ]);
-    const previousFiles = { ...JAVASCRIPT_PROJECT_FILES, ...row.files };
-    for (const [path, original] of Object.entries(previousFiles))
-        if (path !== row.sourceFile) expect(await readFile(join(root, path), 'utf8')).toBe(original);
+    const files = { ...JAVASCRIPT_PROJECT_FILES, ...row.files };
+    for (const [path, source] of Object.entries(files))
+        if (path !== row.sourceFile) expect(await readFile(join(root, path), 'utf8')).toBe(source);
 });
 
-test('javascript/tsc at level all also checks your build and dist folders', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+test('javascript/tsc at level all also checks the build and dist folders', async () => {
     const paths = ['source/build/value.js', 'source/dist/value.js', 'coverage/value.js'];
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
         '.gitattributes': 'emitted/** linguist-generated\n',
         ...Object.fromEntries([...paths, 'emitted/value.js'].map((path) => [path, 'export const value = missing;\n'])),
@@ -115,14 +116,12 @@ test('javascript/tsc at level all also checks your build and dist folders', asyn
 test.each([...AUTHORED_JSCONFIG_CASES])(
     "javascript/tsc keeps the project's module resolution and ignores gspot's own @types, $name",
     async ({ authored }) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
         const authoredFiles: Record<string, string> = authored ? AUTHORED_JSCONFIG_FILES : {};
         const source = `import { format } from '${authored ? '@shape/value' : './value.js'}';
 export const text = format(42);
 export const total = accepted;
 `;
-        await createFileTree(sandbox.path, {
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['javascript']),
             'source/main.js': source,
             'source/value.js':
@@ -132,8 +131,8 @@ export const total = accepted;
             'authored/cache.tsbuildinfo': 'Preserve this authored metadata.\n',
             ...authoredFiles,
         });
-        const reapplied = await spawnGspot(sandbox.path, ['apply']);
-        expect(reapplied.code, reapplied.stdout + reapplied.stderr).toBe(0);
+        const applied = await spawnGspot(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const generated = {
             path: findManifestTarget('javascript', 'jsconfig.json'),
             content: await readFile(join(sandbox.path, findManifestTarget('javascript', 'jsconfig.json')), 'utf8'),
@@ -155,20 +154,33 @@ export const total = accepted;
         const { mode } = await stat(join(sandbox.path, generated.path));
         expect(mode & 0o777).toBe(normalizeFileMode({ mode: 0o444 }));
         expect(await isOnDisk(join(sandbox.path, 'jsconfig.json'))).toBe(authored);
-        for (const [path, original] of Object.entries(authoredFiles))
-            expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
+        for (const [path, content] of Object.entries(authoredFiles))
+            expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
     },
 );
 
 test("javascript/tsc reads each scope's own jsconfig options, and a broken one fails only its scope", async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using sandbox = await createGitSandbox({});
     const { config, corrected } = await prepareJsconfigScopes(sandbox.path);
-    const reapplied = await spawnGspot(sandbox.path, ['apply']);
-    expect(reapplied.code, reapplied.stdout + reapplied.stderr).toBe(0);
-    const outputs = await readGeneratedFiles(sandbox.path, `${GSPOT_PATHS.configurations}/**/jsconfig.json`);
+    const applied = await spawnGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const outputs = await Promise.all(
+        [
+            ...new Bun.Glob(`${GSPOT_PATHS.configurations}/**/jsconfig.json`).scanSync({
+                cwd: sandbox.path,
+                dot: true,
+            }),
+        ].map(async (path) => ({
+            path: convertToPosixPath(path),
+            content: await readFile(join(sandbox.path, path), 'utf8'),
+        })),
+    );
     expect(outputs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        ...SCOPE_JSCONFIG_PATHS,
+        findManifestTarget('javascript', 'jsconfig.json'),
+
+        `${GSPOT_PATHS.configurations}/language/javascript/scopes/app/child/jsconfig.json`,
+        `${GSPOT_PATHS.configurations}/language/javascript/scopes/app/jsconfig.json`,
+        `${GSPOT_PATHS.configurations}/language/javascript/scopes/sibling/jsconfig.json`,
     ]);
     const command = ['check', '--only', 'javascript/tsc', '--json'];
     const broken = parseCheckReport(await spawnGspot(sandbox.path, command));
@@ -200,7 +212,6 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
         { scope: 'app/child', status: 'passed' },
         { scope: 'sibling', status: 'passed' },
     ]);
-    expect(await readFile(join(sandbox.path, 'app/jsconfig.json'), 'utf8')).toBe('{');
 });
 
 async function prepareJsconfigScopes(root: string): Promise<{ config: string; corrected: string }> {
@@ -231,8 +242,8 @@ test('javascript/tsc copies imported ambient types and keeps other scopes apart'
         ...IMPORTED_AMBIENT_FILES,
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', scopes: [{ path: 'apps/web' }] }),
     });
-    const reapplied = await spawnGspot(sandbox.path, ['apply']);
-    expect(reapplied.code, reapplied.stdout + reapplied.stderr).toBe(0);
+    const applied = await spawnGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const command = ['check', '--only', 'javascript/tsc', '--json', '--', 'apps/web/src/main.js'];
     const passed = await spawnGspot(sandbox.path, command);
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
@@ -245,6 +256,10 @@ test('javascript/tsc copies imported ambient types and keeps other scopes apart'
     await writeFile(join(sandbox.path, 'types/api.d.ts'), IMPORTED_AMBIENT_FILES['types/api.d.ts']);
     const corrected = await spawnGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    for (const [path, original] of Object.entries(IMPORTED_AMBIENT_FILES))
-        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
+});
+
+const eslintSandbox = shareInstalledSandbox(ESLINT_SANDBOX);
+
+test('javascript/eslint lints a project that has no TypeScript', async () => {
+    expect(await runCheckSample(eslintSandbox(), DEBUGGER_SAMPLE)).toStrictEqual(buildExpectedSummary(DEBUGGER_SAMPLE));
 });

@@ -1,6 +1,7 @@
-import { isWindows } from '#tests/setup/system/platform.ts';
+const CORRECTED_INDEX_PAGE =
+    '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><p class="unused">Example</p></body></html>';
 
-const FILE_URL = isWindows ? 'file:///' : 'file://';
+const UNUSED_STYLE = '.unused { color: red; }';
 
 export const TWO_SITE_TABLES = `[[ignore]]
 check = "site/html-validate"
@@ -50,7 +51,7 @@ export const OUTPUT_CASES = [
         files: {
             'pages/index.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><a href="/missing.html">Missing</a></body></html>',
-            'pages/style.css': '.unused { color: red; }',
+            'pages/style.css': UNUSED_STYLE,
         },
         findings: [
             {
@@ -58,12 +59,11 @@ export const OUTPUT_CASES = [
                 file: 'dist/index.html',
                 rule: 'ERROR',
                 line: 1,
-                message: `${FILE_URL}missing.html (at 1:104) | File not found. Check if file exists and path is correct`,
+                message: `{file-url}missing.html (at 1:104) | File not found. Check if file exists and path is correct`,
             },
         ],
         corrected: {
-            'pages/index.html':
-                '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><p class="unused">Example</p></body></html>',
+            'pages/index.html': CORRECTED_INDEX_PAGE,
         },
     },
     {
@@ -74,7 +74,7 @@ export const OUTPUT_CASES = [
         files: {
             'pages/index.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><h1 id="good">Good</h1><a href="#good">Good</a><a href="#missing">Missing</a><a name="encoded id"></a><a href="#encoded%20id">Encoded</a></body></html>',
-            'pages/style.css': '.unused { color: red; }',
+            'pages/style.css': UNUSED_STYLE,
         },
         findings: [
             {
@@ -82,12 +82,11 @@ export const OUTPUT_CASES = [
                 file: 'dist/index.html',
                 rule: 'ERROR',
                 line: 1,
-                message: `${FILE_URL}index.html#missing (at 1:151) | Cannot find fragment`,
+                message: `{file-url}index.html#missing (at 1:151) | Cannot find fragment`,
             },
         ],
         corrected: {
-            'pages/index.html':
-                '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><p class="unused">Example</p></body></html>',
+            'pages/index.html': CORRECTED_INDEX_PAGE,
         },
     },
     {
@@ -98,7 +97,7 @@ export const OUTPUT_CASES = [
         files: {
             'pages/index.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><p>Landing page</p></body></html>',
-            'pages/style.css': '.unused { color: red; }',
+            'pages/style.css': UNUSED_STYLE,
             'pages/sitemap.xml':
                 '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n    <url><loc>https://example.test/</loc></url>\n    <url><loc>https://example.test/about.html</loc></url>\n</urlset>\n',
             'pages/orphan.html':
@@ -110,12 +109,11 @@ export const OUTPUT_CASES = [
                 file: 'dist/orphan.html',
                 rule: 'ERROR',
                 line: 1,
-                message: `${FILE_URL}orphan.html#missing (at 1:126) | Cannot find fragment | Remaps: https://example.test/orphan.html#missing --> ${FILE_URL}orphan.html#missing`,
+                message: `{file-url}orphan.html#missing (at 1:126) | Cannot find fragment | Remaps: https://example.test/orphan.html#missing --> {file-url}orphan.html#missing`,
             },
         ],
         corrected: {
-            'pages/index.html':
-                '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><p class="unused">Example</p></body></html>',
+            'pages/index.html': CORRECTED_INDEX_PAGE,
             'pages/orphan.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Orphan</title></head><body><h1 id="good">Good</h1><a href="https://example.test/orphan.html#good">Missing</a><a href="https://example.test/orphan.html#good">Good</a></body></html>',
         },
@@ -128,12 +126,11 @@ export const OUTPUT_CASES = [
         files: {
             'pages/index.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><img src="image.png"></body></html>',
-            'pages/style.css': '.unused { color: red; }',
+            'pages/style.css': UNUSED_STYLE,
         },
         findings: [{ file: 'dist/index.html', rule: 'wcag/h37', line: 1 }],
         corrected: {
-            'pages/index.html':
-                '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><p class="unused">Example</p></body></html>',
+            'pages/index.html': CORRECTED_INDEX_PAGE,
         },
     },
     {
@@ -176,6 +173,3 @@ export const MISSING_ALT_PAGE = `<!doctype html>
 </body>
 </html>
 `;
-
-export const SITE_PAGE_HEAD =
-    '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>';

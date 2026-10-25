@@ -8,13 +8,13 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { SWIFT_PACKAGE } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { listSwiftlintConfigFiles } from '#cli/checks/language/swift/build.ts';
+import { SWIFT_PACKAGE, SWIFT_LANGUAGE_PACKAGE } from '#tests/config/swift.ts';
 import { prepareBuild, planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 
 import {
@@ -29,7 +29,6 @@ import {
     PRIVATE_MAIN_FINDING,
     FAILED_BUILD_FINDINGS,
     PRIVATE_OTHER_FINDING,
-    SWIFT_LANGUAGE_PACKAGE,
     NESTED_SWIFTLINT_FILES,
     SWIFT_REPLACEMENT_CASES,
 } from '#tests/config/checks/language/swift/build.ts';

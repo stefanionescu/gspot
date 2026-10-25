@@ -13,9 +13,22 @@ export const STYLESHEETS = {
 `,
 } as const;
 
-export const STYLELINT_TABLES = `[tools.stylelint.rules]\ncolor-hex-length = "short"\n[[scope]]\npath = "app"\n\nconfigurations = []\n[scope.tools.stylelint.rules]\ncolor-hex-length = "long"\n`;
+const ROOT_STYLELINT_RULES = `[tools.stylelint.rules]
+color-hex-length = "short"
+`;
 
-export const ALL_LEVEL_STYLELINT_TABLES = `[tools.stylelint.rules]\ncolor-hex-length = "short"\nnumber-max-precision = 0\n[[scope]]\npath = "app"\n\nconfigurations = []\n[scope.tools.stylelint.rules]\ncolor-hex-length = "long"\n`;
+const APP_STYLELINT_SCOPE = `[[scope]]
+path = "app"
+
+configurations = []
+[scope.tools.stylelint.rules]
+color-hex-length = "long"
+`;
+
+export const STYLELINT_TABLES = `${ROOT_STYLELINT_RULES}${APP_STYLELINT_SCOPE}`;
+
+export const ALL_LEVEL_STYLELINT_TABLES = `${ROOT_STYLELINT_RULES}number-max-precision = 0
+${APP_STYLELINT_SCOPE}`;
 
 export const CORRECTED_STYLESHEETS = {
     'build/site.css': `a {
@@ -55,7 +68,5 @@ a {
 }
 `,
 } as const;
-
-export const TAILWIND_TABLES = `[[scope]]\npath = "app"\n\nconfigurations = ["css"]\n[[scope]]\npath = "other"\n\nconfigurations = ["css"]\n`;
 
 export const STYLELINT_COMMAND = ['check', '--only', 'css/stylelint', '--json'] as const;

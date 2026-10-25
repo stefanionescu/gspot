@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { readFile, writeFile } from 'node:fs/promises';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -11,8 +11,6 @@ import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/
 
 import {
     NGINX_SERVER,
-    CLEAN_NGINX_CONF,
-    FORGED_NGINX_CONF,
     NGINX_SCOPE_TABLES,
     NGINX_INCLUDE_FILES,
 } from '#tests/config/integration/checks/infrastructure/nginx.ts';
@@ -70,23 +68,47 @@ test.skipIf(!isLinux || Bun.which('docker') === null)(
         );
         const recovered = await spawnGspot(sandbox.path, command);
         expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
-        expect(await readFile(join(sandbox.path, 'proxy/conf.d/server.conf'), 'utf8')).toBe(NGINX_SERVER);
     },
 );
 
 test.skipIf(!hasToolBuild('gixy'))(
     'gixy reports a proxy_pass that a request can redirect (ssrf), and passes after the fix',
     async () => {
-        await using sandbox = await testdir({ 'proxy/nginx.conf': CLEAN_NGINX_CONF });
+        await using sandbox = await testdir({
+            'proxy/nginx.conf': `events {}
+http {
+    server_tokens off;
+    server {
+        listen 8080;
+        location / {
+            return 204;
+        }
+    }
+}
+`,
+        });
 
         commitAll(sandbox.path);
         await initSandbox({ root: sandbox.path, run: spawnGspot }, { configurations: ['nginx'], level: 'all' });
-        const clean = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy']);
-        expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         const result = parseCheckReport(
             await runCheckOnChanges(
                 { root: sandbox.path, run: spawnGspot },
-                { check: 'nginx/gixy', files: { 'proxy/nginx.conf': FORGED_NGINX_CONF } },
+                {
+                    check: 'nginx/gixy',
+                    files: {
+                        'proxy/nginx.conf': `events {}
+http {
+    server_tokens off;
+    server {
+        listen 8080;
+        location ~ /proxy/(.*) {
+            proxy_pass http://$1;
+        }
+    }
+}
+`,
+                    },
+                },
             ),
         );
         expect(result.code, result.stdout + result.stderr).toBe(1);

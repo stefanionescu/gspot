@@ -6,6 +6,7 @@ import { generate } from '#cli/generation/generate.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { Tool } from '#cli/types/configurations.ts';
+import type { RuntimePins } from '#tests/types/runner.ts';
 import { runtimePinsSchema } from '#tests/schemas/runner.ts';
 import { TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import type { NpmToolInstall } from '#cli/types/install/npm.ts';
@@ -131,7 +132,7 @@ Read this checkout's validated Bun and Node pins.
 @returns the two pinned runtime versions.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The e2e and integration tests read the runtime pins through it.
-export async function readRuntimePins(): Promise<{ bun: string; node: string }> {
+export async function readRuntimePins(): Promise<RuntimePins['tools']> {
     const runtimeSettings: unknown = parse(await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8'));
     return runtimePinsSchema.parse(runtimeSettings).tools;
 }

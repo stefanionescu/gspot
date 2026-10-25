@@ -1,10 +1,4 @@
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-
 export const NESTED_ESLINT_FILES = {
-    'gspot.toml': buildSandboxSettings(['javascript'], {
-        level: 'all',
-        tables: '[rules]\nenabled = false\n[[scope]]\npath = "app"\ntest_files = ["app/spec/**"]\n[scope.javascript]\nscript_files = ["app/scripts/**"]\n',
-    }),
     'package.json': '{"private":true,"type":"module"}\n',
     'app/package.json':
         '{"name":"nested-app","version":"0.0.0-test","type":"module","devDependencies":{"zod":"0.0.0-test"}}\n',
@@ -37,10 +31,4 @@ export const WILDCARD_ESLINT_FILES = {
     'app/build.js': 'console.log("script");\n',
     'sibling/read.js': 'console.log("source");\n',
     'sibling/build.js': 'console.log("source");\n',
-    'gspot.toml': buildSandboxSettings(['javascript'], {
-        level: 'all',
-        rules: true,
-        scopes: [{ path: 'app' }],
-        tables: 'test_files = ["**/read.js"]\n[scope.javascript]\nscript_files = ["**/build.js"]\n',
-    }),
 } as const;

@@ -4,13 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { mkdir, unlink, symlink } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
-
-import {
-    GLOB_FILES,
-    OUTSIDE_PATTERNS,
-    LINKED_CONFIG_FILES,
-    LINKED_CONFIG_FOLDERS,
-} from '#tests/config/system/files/folders.ts';
+import { GLOB_FILES, OUTSIDE_PATTERNS } from '#tests/config/system/files/folders.ts';
 
 test.each([...OUTSIDE_PATTERNS])('a pattern that leaves the folder is refused: %s', async (pattern) => {
     await using sandbox = await testdir({ 'src/a.ts': 'export {};\n' });
@@ -18,21 +12,25 @@ test.each([...OUTSIDE_PATTERNS])('a pattern that leaves the folder is refused: %
     expect(() => listMatchingPaths(sandbox.path, ['src/**', pattern])).toThrow('cannot leave its folder');
 });
 
-test.skipIf(isWindows).each([...LINKED_CONFIG_FOLDERS])(
-    'a glob does not walk through the link $link to reach $pattern',
-    async ({ link, target, pattern }) => {
-        await using sandbox = await testdir();
-        const root = join(sandbox.path, 'project');
-        const selected = '.config/sub/tool.toml';
-        await createFileTree(sandbox.path, LINKED_CONFIG_FILES);
-        await mkdir(dirname(join(root, link)), { recursive: true });
-        await symlink(target, join(root, link), 'dir');
-        expect(listMatchingPaths(root, [pattern])).toStrictEqual([]);
-        await unlink(join(root, link));
-        await createFileTree(root, { [selected]: 'setting = "local"\n' });
-        expect(listMatchingPaths(root, [pattern])).toStrictEqual([selected]);
-    },
-);
+test.skipIf(isWindows).each([
+    { link: '.config', target: '../outside', pattern: '.config/sub/*.toml' },
+    { link: '.config/sub', target: '../../outside/sub', pattern: '.config/sub/*.toml' },
+    { link: '.config', target: '../outside', pattern: '.config/sub/tool.toml' },
+])('a glob does not walk through the link $link to reach $pattern', async ({ link, target, pattern }) => {
+    await using sandbox = await testdir();
+    const root = join(sandbox.path, 'project');
+    const selected = '.config/sub/tool.toml';
+    await createFileTree(sandbox.path, {
+        'project/source.ts': 'export {};\n',
+        'outside/sub/tool.toml': 'setting = "external"\n',
+    });
+    await mkdir(dirname(join(root, link)), { recursive: true });
+    await symlink(target, join(root, link), 'dir');
+    expect(listMatchingPaths(root, [pattern])).toStrictEqual([]);
+    await unlink(join(root, link));
+    await createFileTree(root, { [selected]: 'setting = "local"\n' });
+    expect(listMatchingPaths(root, [pattern])).toStrictEqual([selected]);
+});
 
 test('a glob includes dot files and honors exclusions and brace patterns', async () => {
     await using sandbox = await testdir(GLOB_FILES);

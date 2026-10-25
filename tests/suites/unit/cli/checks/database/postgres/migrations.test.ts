@@ -14,12 +14,17 @@ import { findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import {
     POSTGRES_CHECKS,
     MALFORMED_MIGRATION_PATH,
-    MALFORMED_MIGRATION_FILES,
     DEFAULT_MIGRATION_FOLDER_FILES,
 } from '#tests/config/checks/database/postgres/migrations.ts';
 
 test('postgres/migration-order reports a migration that does not parse at its line and column, the other postgres checks skip, and the fixed migration passes', async () => {
-    await using sandbox = await testdir(MALFORMED_MIGRATION_FILES);
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['postgres'], {
+            level: 'all',
+            tables: '[postgres]\nfrozen_through = "all"\nclient_schemas = ["public"]\n',
+        }),
+        [MALFORMED_MIGRATION_PATH]: 'CREATE TABLE ;',
+    });
     const checks = [...POSTGRES_CHECKS];
 
     const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: checks }));

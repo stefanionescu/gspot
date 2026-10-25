@@ -1,13 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
     runGspot,
@@ -19,21 +18,17 @@ import {
 import {
     MIT_ONLY,
     LICENSED_PACKAGES,
-    FONT_PACKAGE_FILES,
     LICENSES_ROOT_PACKAGE,
     PIP_LICENSES_PYPROJECT,
-    LICENSED_EXAMPLE_METADATA,
 } from '#tests/config/integration/checks/general/licenses.ts';
 
 test('licenses/allowed accepts an allowed license choice and reports a disallowed dependency', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
-    const root = sandbox.path;
-    await createFileTree(root, {
+    await using sandbox = await createGitSandbox({
         'package.json': LICENSES_ROOT_PACKAGE,
         '.gitignore': 'node_modules/\n',
         ...LICENSED_PACKAGES,
     });
+    const root = sandbox.path;
     commitAll(root);
     for (const command of [buildInitArguments(['licenses']), ['set', 'licenses.allowed', '["MIT","Apache-2.0"]']]) {
         const applied = await spawnGspot(root, command);
@@ -60,28 +55,17 @@ test('licenses/allowed accepts an allowed license choice and reports a disallowe
 });
 
 test("licenses/allowed reads installed Python packages, ignores the project's pip-licenses settings, and matches an allowed package by its normalized name", async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
-    const root = sandbox.path;
-    await createFileTree(root, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['licenses'], { tables: stringify({ licenses: MIT_ONLY }), level: 'all' }),
         'pyproject.toml': PIP_LICENSES_PYPROJECT,
     });
+    const root = sandbox.path;
     const venv = await runCommand(['uv', 'venv', '.venv'], { cwd: root });
     expect(venv.code, venv.stdout + venv.stderr).toBe(0);
     await applyThenInstall(root);
-    const location = await runCommand(
-        [
-            buildVenvExecutablePath(join(root, '.venv'), 'python'),
-            '-I',
-            '-c',
-            'import sysconfig; print(sysconfig.get_path("purelib"))',
-        ],
-        { cwd: root },
-    );
-    expect(location.code, location.stderr).toBe(0);
-    await createFileTree(location.stdout.trim(), {
-        'licensed_example-1.0.0.dist-info/METADATA': LICENSED_EXAMPLE_METADATA,
+    const [packages] = [...new Bun.Glob('**/site-packages').scanSync({ cwd: join(root, '.venv'), onlyFiles: false })];
+    await createFileTree(join(root, '.venv', packages!), {
+        'licensed_example-1.0.0.dist-info/METADATA': `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: GPL-3.0-only\n`,
     });
     const failed = parseCheckReport(await spawnGspot(root, ['check', '--only', 'licenses/allowed', '--json']));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
@@ -110,8 +94,8 @@ test("licenses/allowed reads installed Python packages, ignores the project's pi
             level: 'all',
         }),
     );
-    const corrected = await runGspot(root, ['apply', '--json']);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    const applied = await runGspot(root, ['apply', '--json']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const passed = parseCheckReport(await spawnGspot(root, ['check', '--only', 'licenses/allowed', '--json']));
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     expect(passed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
@@ -134,7 +118,10 @@ test('an allowed package at the root also covers that package in a child scope w
             }),
             scopes: [{ path: 'docs' }],
         }),
-        ...FONT_PACKAGE_FILES,
+
+        'docs/package.json': '{"name":"docs","private":true,"dependencies":{"@fontsource/inter":"5.2.8"}}',
+        'docs/node_modules/@fontsource/inter/package.json':
+            '{"name":"@fontsource/inter","version":"5.2.8","license":"OFL-1.1"}',
     });
     await applyThenInstall(sandbox.path);
     const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'licenses/allowed', '--json']));

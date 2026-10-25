@@ -1,8 +1,3 @@
-export const GITLAB_PIPELINE = `stages: [test]
-application:
-  script: echo authored-job
-`;
-
 export const GITHUB_PIPELINE = `on: push
 jobs:
   application:

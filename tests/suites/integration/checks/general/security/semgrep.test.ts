@@ -24,12 +24,9 @@ import {
     NEXT_CONFIG_CASES,
     BASH_DOWNLOAD_SAMPLE,
     PLATFORM_SOURCE_FIXES,
-    REPOSITORY_RULE_SOURCE,
     SECURITY_RULE_FINDINGS,
     PLATFORM_SOURCE_FINDINGS,
     MALFORMED_SEMGREP_RESULTS,
-    PLATFORM_ALL_SOURCE_FIXES,
-    PLATFORM_ALL_SOURCE_FINDINGS,
 } from '#tests/config/integration/checks/general/security/semgrep.ts';
 
 describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
@@ -50,7 +47,7 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
         },
     );
 
-    test('your own Semgrep rule file reports a finding through security/semgrep and passes after the fix', async () => {
+    test('an authored Semgrep rule file reports a finding through security/semgrep and passes after the fix', async () => {
         await checkAuthoredRules(installedSandbox());
     });
 
@@ -125,12 +122,28 @@ async function checkPlatformRules(sandbox: Sandbox, level: Level): Promise<void>
     const command = ['check', '--only', 'security/semgrep,xcode/app-transport-security', '--json'];
     const failed = parseCheckReport(await spawnGspot(sandbox.root, command));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const expected = [...PLATFORM_SOURCE_FINDINGS, ...(level === 'all' ? PLATFORM_ALL_SOURCE_FINDINGS : [])];
+    const expected = [
+        ...PLATFORM_SOURCE_FINDINGS,
+        ...(level === 'all'
+            ? [
+                  {
+                      file: 'supabase/functions/_shared/cors.ts',
+                      rule: 'gspot.cloudflare.wildcard-cors-origin',
+                      line: 1,
+                  },
+                  { file: 'supabase/functions/cors/index.ts', rule: 'gspot.cloudflare.wildcard-cors-origin', line: 1 },
+              ]
+            : []),
+    ];
     expect(listFindingRows(failed.report).toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
         expected.toSorted((left, right) => left.file.localeCompare(right.file)),
     );
     const corrections = { ...PLATFORM_SOURCE_FIXES };
-    if (level === 'all') Object.assign(corrections, PLATFORM_ALL_SOURCE_FIXES);
+    if (level === 'all')
+        Object.assign(corrections, {
+            'supabase/functions/_shared/cors.ts':
+                'export const headers = { "Access-Control-Allow-Origin": "https://example.com" };\n',
+        });
     for (const [path, source] of Object.entries(corrections)) await writeFile(join(sandbox.root, path), source);
     const corrected = parseCheckReport(await spawnGspot(sandbox.root, command));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -141,7 +154,10 @@ async function checkAuthoredRules(sandbox: Sandbox): Promise<void> {
         'gspot.toml': buildSandboxSettings(['typescript', 'security'], {
             tables: stringify({ tools: { semgrep: { rule_files: ['security/own.yml'] } } }),
         }),
-        'src/index.ts': REPOSITORY_RULE_SOURCE,
+        'src/index.ts': `export function double(value: number): number {
+    return value * 2;
+}
+`,
         'src/use.ts': "import { double } from './index.ts';\n\nexport const four = double(2);\n",
         'security/own.yml': REPOSITORY_RULE,
     };
@@ -174,8 +190,11 @@ async function checkNextjsOptions(
     const checked = parseCheckReport(await spawnGspot(sandbox.root, SEMGREP_CHECK));
     expect(checked.code, checked.stdout + checked.stderr).toBe(expected.length === 0 ? 0 : 1);
     expect(
-        listFindingRows(checked.report).toSorted((left, right) => (left.line ?? 0) - (right.line ?? 0)),
-    ).toStrictEqual(expected.map(({ file, line, rule }) => ({ file, line, rule })));
+        checked.report.checks
+            .flatMap(({ findings }) => findings)
+            .map(({ file, line, rule, message }) => ({ file, line, rule, message }))
+            .toSorted((left, right) => (left.line ?? 0) - (right.line ?? 0)),
+    ).toStrictEqual([...expected]);
 }
 
 async function applyStagedSandboxChanges(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {

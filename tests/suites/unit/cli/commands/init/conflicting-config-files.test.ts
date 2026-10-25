@@ -1,7 +1,10 @@
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
+import { INIT_FILES } from '#tests/config/init.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { stringify } from '@decimalturn/toml-patch';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GOOGLE_PYPROJECT } from '#tests/config/python.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
@@ -11,19 +14,15 @@ import { readSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { SQL_COMMAND_CHECK_TABLES } from '#tests/config/commands/samples.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { GOOGLE_PYPROJECT } from '#tests/config/checks/language/python/project.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { stat, chmod, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 import { INVALID_CSS, SQLFLUFF_KEPT_NOTE } from '#tests/config/commands/init/samples.ts';
+import { SQL_COMMAND_CHECK, SQL_SEARCH_ARGUMENTS } from '#tests/config/commands/samples.ts';
 import { runGspot, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
 import {
-    VALID_CSS,
-    INIT_FILES,
     HOOKS_PATH_CASES,
-    LINT_FOLDER_NOTE,
     HOOK_NAMED_SOURCE,
     SQL_PACKAGE_FILES,
     SHARED_SETUP_CONFIG,
@@ -72,7 +71,12 @@ test('the init plan deletes the conflicting config files and lists the lint fold
         path: '.markdownlint.jsonc',
         note: 'replaces your file; read the old one with git show HEAD:.markdownlint.jsonc',
     });
-    expect(plan.noLongerRuns).toStrictEqual([LINT_FOLDER_NOTE]);
+    expect(plan.noLongerRuns).toStrictEqual([
+        {
+            path: 'quality/',
+            note: 'a folder of lint scripts; check remaining references before deleting it',
+        },
+    ]);
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
     const initialized = await runGspot(sandbox.path, [
         ...buildInitArguments(['bash', 'javascript', 'spelling', 'markdown']),
@@ -94,7 +98,7 @@ test.each(['setup.cfg', 'tox.ini'])('init leaves a shared %p in place and names 
     await using sandbox = await createGitSandbox({});
     await createFileTree(sandbox.path, { [path]: SHARED_SETUP_CONFIG, 'query.sql': 'SELECT 1;\n' });
     await chmod(join(sandbox.path, path), 0o640);
-    const initialized = await runGspot(sandbox.path, buildInitArguments(['sql'], { json: true }));
+    const initialized = await runGspot(sandbox.path, [...buildInitArguments(['sql']), '--json']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const settings = readSandboxSettings(sandbox.path).ignore;
     expect(settings).toStrictEqual([]);
@@ -115,7 +119,8 @@ test('init deletes the .sqlfluffignore of the db package, and project/read-sql t
     const initialized = await runGspot(sandbox.path, commandArguments);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-    await writeFile(join(sandbox.path, 'gspot.toml'), settings + SQL_COMMAND_CHECK_TABLES);
+    const sqlCheck = { ...SQL_COMMAND_CHECK, command: buildProgramCommand('checks/search', ...SQL_SEARCH_ARGUMENTS) };
+    await writeFile(join(sandbox.path, 'gspot.toml'), settings + stringify({ command_check: [sqlCheck] }));
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
@@ -243,7 +248,13 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
             const invalid = await runCommand(command, { cwd: sandbox.path });
             expect(invalid.code, invalid.stdout + invalid.stderr).toBe(0);
             expect(invalid.stdout).toBe('[{"rule":"property-no-unknown","line":2,"column":5,"severity":"error"}]');
-            await writeFile(join(sandbox.path, stylesheet), VALID_CSS);
+            await writeFile(
+                join(sandbox.path, stylesheet),
+                `a {
+    opacity: 1;
+}
+`,
+            );
             const corrected = await runCommand(command, { cwd: sandbox.path });
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect(corrected.stdout).toBe('[]');

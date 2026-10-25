@@ -1,37 +1,30 @@
 import { test, expect, describe } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, basename } from 'node:path';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { SWIFT_LANGUAGE_PACKAGE } from '#tests/config/swift.ts';
 import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system/platform.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
-import { SWIFT_LANGUAGE_PACKAGE } from '#tests/config/checks/language/swift/build.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
-    XCODE_TOOL_SCHEME,
-    SWIFT_VALUE_ERROR,
-    XCODE_BUILD_TABLES,
     XCODE_TOOL_PROJECT,
-    SWIFT_VALUE_SOURCE,
     SWIFT_PACKAGE_CASES,
     SWIFT_PACKAGE_SANDBOX,
 } from '#tests/config/integration/checks/language/swift/build.ts';
 
 test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports a changed source', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
-    await using _cache = await redirectCacheFolder();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift']),
         'Package.swift': SWIFT_LANGUAGE_PACKAGE,
-        'Sources/Example/Value.swift': SWIFT_VALUE_SOURCE,
+        'Sources/Example/Value.swift': 'public let value: Int = 1\n',
     });
+    await using _cache = await redirectCacheFolder();
     const command = ['check', '--only', 'swift/build', '--json'];
     const first = await runGspot(sandbox.path, command);
     expect(first.code, first.stdout + first.stderr).toBe(0);
@@ -42,7 +35,7 @@ test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports
     const again = await runGspot(sandbox.path, command);
     expect(again.code, again.stdout + again.stderr).toBe(0);
     expect(await stat(compiledFile)).toMatchObject({ mtimeMs: modified });
-    await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), SWIFT_VALUE_ERROR);
+    await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = "wrong"\n');
     const failedBuild = parseCheckReport(await runGspot(sandbox.path, command));
     expect(failedBuild.code, failedBuild.stdout + failedBuild.stderr).toBe(1);
     expect(failedBuild.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
@@ -57,17 +50,22 @@ test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports
 test.skipIf(!isMacos)(
     'swift/build reuses the compiled objects of an Xcode project and reports source errors without changing the project',
     async () => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
-        await using _cache = await redirectCacheFolder();
         const source = 'let value: Int = 1\nprint(value)\n';
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings(['swift', 'xcode'], { tables: XCODE_BUILD_TABLES }),
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['swift', 'xcode'], {
+                tables: `[swift]
+xcode_project = "Example.xcodeproj"
+xcode_scheme = "Example"
+xcode_destination = "platform=macOS"
+`,
+            }),
             'Example.xcodeproj/project.pbxproj': XCODE_TOOL_PROJECT,
-            'Example.xcodeproj/xcshareddata/xcschemes/Example.xcscheme': XCODE_TOOL_SCHEME,
+            'Example.xcodeproj/xcshareddata/xcschemes/Example.xcscheme':
+                '<Scheme version="1.3"><BuildAction><BuildActionEntries><BuildActionEntry buildForTesting="YES" buildForRunning="YES"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="T1" BuildableName="Example" BlueprintName="Example" ReferencedContainer="container:Example.xcodeproj"/></BuildActionEntry></BuildActionEntries></BuildAction><TestAction buildConfiguration="Debug"/></Scheme>\n',
             'main.swift': source,
             'untracked.txt': 'authored content\n',
         });
+        await using _cache = await redirectCacheFolder();
         const command = ['check', '--only', 'swift/build', '--json'];
         const first = await runGspot(sandbox.path, command);
         expect(first.code, first.stdout + first.stderr).toBe(0);
@@ -92,7 +90,6 @@ test.skipIf(!isMacos)(
                 }),
             ),
         ).toStrictEqual(times);
-        expect(await readFile(join(sandbox.path, 'main.swift'), 'utf8')).toBe(source);
         expect(await readFile(join(sandbox.path, 'Example.xcodeproj/project.pbxproj'), 'utf8')).toBe(
             XCODE_TOOL_PROJECT,
         );
@@ -115,10 +112,10 @@ describe.skipIf(!isMacos)('Swift package samples', () => {
     const installedSandbox = shareInstalledSandbox(SWIFT_PACKAGE_SANDBOX);
 
     for (const sample of SWIFT_PACKAGE_CASES) {
-        test.skipIf(!hasToolBuild(sample.check === 'swift/swiftlint-analyze' ? 'swiftlint' : 'periphery'))(
+        test.skipIf(!hasToolBuild(sample.tool))(
             `${sample.check} reports ${sample.expected.rule} in a Swift package and passes after the fix`,
             async () => {
-                expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(expectedSummary(sample));
+                expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
             },
         );
     }

@@ -10,16 +10,17 @@ import { generate } from '#cli/generation/generate.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { writeGeneratedFiles } from '#cli/apply/generated.ts';
-import { generateFile } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildIgnoreSections } from '#cli/generation/config-files/ignore-files.ts';
+import { generateFile, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 import {
     LANGUAGE_IGNORES,
     PATH_IGNORE_CASES,
+    IGNORE_LIST_FILES,
+    IGNORE_LIST_SETTINGS,
     PRETTIER_IGNORE_CASES,
-    IGNORE_LIST_REPOSITORY,
     PRETTIER_IGNORE_SETTINGS,
 } from '#tests/config/generation/config-files/ignore-files.ts';
 
@@ -69,7 +70,8 @@ test.each([...PRETTIER_IGNORE_CASES])(
 
 test.each([...PATH_IGNORE_CASES])(
     '$check: a check-wide path ignore reaches the config file and a rule or other-check ignore does not',
-    async ({ configuration, check, path, nativePath }) => {
+    async ({ configuration, check, file, nativePath }) => {
+        const path = findManifestTarget(configuration, file);
         const settings = stringify({
             level: 'all',
             configurations: [...new Set([configuration, 'javascript'])],
@@ -99,9 +101,9 @@ test.each([...PATH_IGNORE_CASES])(
 
 test.each([...LANGUAGE_IGNORES])(
     '$name: Prettier ignores only the folders of the selected languages',
-    async ({ settings, ignored, absent }) => {
+    async ({ configurations, scopes, ignored, absent }) => {
         await using sandbox = await testdir({
-            'gspot.toml': settings,
+            'gspot.toml': buildSandboxSettings(configurations, { rules: true, scopes }),
             'source.js': 'const value = 1;\n',
             'source.py': 'value = 1\n',
             'Source.swift': 'let value = 1\n',
@@ -128,7 +130,10 @@ test.each([...LANGUAGE_IGNORES])(
 );
 
 test('the ignore lists name only the files that gspot writes, and Ruff gets only folders and Python files', async () => {
-    await using sandbox = await createGitSandbox(IGNORE_LIST_REPOSITORY);
+    await using sandbox = await createGitSandbox({
+        ...IGNORE_LIST_FILES,
+        'gspot.toml': buildSandboxSettings(['javascript', 'python', 'markdown'], IGNORE_LIST_SETTINGS),
+    });
     const session = await openSession(sandbox.path);
     const files = generate(session).files;
     const written = files

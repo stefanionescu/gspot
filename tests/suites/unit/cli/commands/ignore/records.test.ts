@@ -13,13 +13,9 @@ import { runGspot, expectRefusalWithoutWrites } from '#tests/setup/cli/commands.
 
 import {
     IGNORE_REFUSALS,
-    MERGED_IGNORE_TEXT,
-    UNIGNORE_PATH_TEXT,
-    UNIGNORE_RULE_TEXT,
     IGNORE_HOOK_TABLES,
     MERGED_EXPIRY_IGNORES,
     PATH_IGNORE_ARGUMENTS,
-    MERGED_IGNORE_SETTINGS,
     DATED_IGNORE_ARGUMENTS,
     REMAINING_EXPIRY_IGNORES,
     UNKNOWN_IGNORE_ARGUMENTS,
@@ -62,12 +58,18 @@ test('ignore merges paths into one record and prints them, and unignore removes 
     expect(first.code, first.stdout + first.stderr).toBe(0);
     const added = await runGspot(sandbox.path, [...PATH_IGNORE_ARGUMENTS, 'b.sh']);
     expect(added.code, added.stdout + added.stderr).toBe(0);
-    expect(added.stdout).toBe(MERGED_IGNORE_TEXT);
+    expect(added.stdout).toBe(
+        'Ignored bash/shellcheck for b.sh.\nwrote    1 generated file\nremoved  1 generated file\nnote     The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.\n',
+    );
     const removed = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--paths', 'b.sh']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(removed.stdout).toBe(UNIGNORE_PATH_TEXT);
+    expect(removed.stdout).toBe(
+        'Removed 1 path from 1 ignore for bash/shellcheck for b.sh.\nwrote    2 generated files\nnote     The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.\n',
+    );
     const saved = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-    expect(saved).toBe(MERGED_IGNORE_SETTINGS);
+    expect(saved).toBe(
+        '#:schema ./.gspot/gspot.schema.json\n# Comment on configurations.\n#:schema ./.gspot/gspot.schema.json\nconfigurations = ["bash"]\n\n[hooks]\n# Keep the push selection.\nenabled = false\n\n[rules]\nenabled = false\n\n[[command_check]]\nid = "project/bash-syntax"\ncommand = ["bash", "-n", "{file}"]\npaths = ["**/*.sh"]\nstage = "commit"\noutput = { format = "regex", pattern = "^.*: line (?<line>\\\\d+): (?<message>.*)$" }\n\n[[ignore]]\ncheck = "bash/shellcheck"\npaths = ["a.sh"]\nreason = "The inputs demonstrate word splitting."\n',
+    );
 });
 
 test('ignore merges records with the same --until date, keeps other dates apart, and unignore removes one path', async () => {
@@ -167,7 +169,9 @@ test('ignore merges matching paths, keeps different reasons apart, and an entry 
     ]);
     const removed = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2312']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(removed.stdout).toBe(UNIGNORE_RULE_TEXT);
+    expect(removed.stdout).toBe(
+        'Removed 2 ignores for rule SC2312 of bash/shellcheck.\nwrote    1 generated file\nnote     The tool lockfile is missing or stale. Run gspot install; until then gspot/generated-files fails on it.\n',
+    );
     expect(parse(await readFile(settingsPath, 'utf8'))).not.toHaveProperty('ignore');
 });
 

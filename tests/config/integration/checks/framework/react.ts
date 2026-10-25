@@ -1,6 +1,4 @@
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
-
-export const WEB_PACKAGES = ['@types/react', 'react', 'react-dom'] as const;
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
 
 const WEB_TSCONFIG = {
     compilerOptions: {
@@ -13,12 +11,20 @@ const WEB_TSCONFIG = {
     include: ['src'],
 } as const;
 
-const CLEAN_COMPONENT =
-    `// A test component.
+const CLEAN_COMPONENT = `// A test component.
 import type { ReactNode } from 'react';
 
-` +
-    '/**\nGreets one person.\n\n@param props display text for the visitor\n@param props.name text shown inside the paragraph\n@returns a paragraph addressed to the visitor\n*/\nexport function Greeting({ name }: Readonly<{ name: string }>): ReactNode {\n    return <p>{name}</p>;\n}\n';
+/**
+Greets one person.
+
+@param props display text for the visitor
+@param props.name text shown inside the paragraph
+@returns a paragraph addressed to the visitor
+*/
+export function Greeting({ name }: Readonly<{ name: string }>): ReactNode {
+    return <p>{name}</p>;
+}
+`;
 
 export const REACT_SANDBOX = {
     configurations: ['typescript', 'react-dom'],
@@ -26,8 +32,24 @@ export const REACT_SANDBOX = {
     files: { 'src/Greeting.tsx': CLEAN_COMPONENT },
 } as const;
 
-const COUNTER =
-    '// A test component.\nimport { useState, type ReactNode } from "react";\n\n/**\nCounts, some of the time.\n\n@param props display controls for this component\n@param props.isOn whether the counter is visible\n@returns the current total in a paragraph\n*/\nexport function Counter({ isOn }: Readonly<{ isOn: boolean }>): ReactNode {\n    if (isOn) {\n        const [count] = useState(0);\n        return <p>{count}</p>;\n    }\n    return <p>off</p>;\n}\n';
+const COUNTER = `// A test component.
+import { useState, type ReactNode } from "react";
+
+/**
+Counts, some of the time.
+
+@param props display controls for this component
+@param props.isOn whether the counter is visible
+@returns the current total in a paragraph
+*/
+export function Counter({ isOn }: Readonly<{ isOn: boolean }>): ReactNode {
+    if (isOn) {
+        const [count] = useState(0);
+        return <p>{count}</p>;
+    }
+    return <p>off</p>;
+}
+`;
 
 export const REACT_CASES = [
     {

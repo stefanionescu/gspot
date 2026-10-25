@@ -1,9 +1,3 @@
-export const XCODE_SANDBOX = {
-    install: false,
-    configurations: ['xcode'],
-    files: {},
-} as const;
-
 export const XCODE_CASES = [
     {
         check: 'xcode/plutil',

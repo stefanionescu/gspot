@@ -20,8 +20,9 @@ async function runJscpdCheck(root: string, code: number): Promise<RunReport> {
 }
 
 test('duplication/jscpd reports a copied Bash function on the second file and ignores identical JSON files', async () => {
+    const firstScript = `#!/usr/bin/env bash\nset -euo pipefail\n\ncount_first() {\n    local total=0\n${COUNT_STEPS}\n    printf '%s\\n' "$total"\n}\n\ncount_first\n`;
     await using sandbox = await testdir({
-        'scripts/first.sh': buildCountScript('count_first'),
+        'scripts/first.sh': firstScript,
         'metadata/first.json': DUPLICATED_METADATA,
         'metadata/second.json': DUPLICATED_METADATA,
     });
@@ -29,7 +30,7 @@ test('duplication/jscpd reports a copied Bash function on the second file and ig
     commitAll(sandbox.path);
     await initSandbox({ root: sandbox.path, run: spawnGspot }, { configurations: ['bash'], level: 'all' });
     await runJscpdCheck(sandbox.path, 0);
-    await writeFile(join(sandbox.path, 'scripts/second.sh'), buildCountScript('count_second'));
+    await writeFile(join(sandbox.path, 'scripts/second.sh'), firstScript.replaceAll('count_first', 'count_second'));
     const report = await runJscpdCheck(sandbox.path, 1);
     expect(report.checks).toMatchObject([
         {
@@ -61,7 +62,3 @@ test('duplication/jscpd skips an import list that two files share', async () => 
     const report = await runJscpdCheck(sandbox.path, 0);
     expect(report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'passed', findings: [] }]);
 });
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function buildCountScript(name: string): string {
-    return `#!/usr/bin/env bash\nset -euo pipefail\n\n${name}() {\n    local total=0\n${COUNT_STEPS}\n    printf '%s\\n' "$total"\n}\n\n${name}\n`;
-}

@@ -7,8 +7,9 @@ import type { Sandbox } from '#tests/types/sandbox.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGspotStep } from '#tests/setup/cli/commands.ts';
 import { writeGeneratedFiles } from '#cli/apply/generated.ts';
+import type { SandboxChanges } from '#tests/types/samples.ts';
+import type { PreviousFile, SandboxWrite } from '#tests/types/changes.ts';
 import { runGit, runGitStep, markExecutable } from '#tests/setup/system/git.ts';
-import type { PreviousFile, SandboxWrite, SandboxChanges } from '#tests/types/samples.ts';
 import { rm, chmod, lstat, mkdir, rmdir, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 
 async function readPreviousFile(path: string): Promise<PreviousFile | undefined> {
@@ -34,13 +35,13 @@ async function listAbsentParents(cwd: string, paths: readonly string[]): Promise
     return [...parents].toSorted((a, b) => b.length - a.length);
 }
 async function restoreFiles(cwd: string, previousFiles: Map<string, PreviousFile | undefined>): Promise<void> {
-    for (const [path, original] of previousFiles) {
+    for (const [path, saved] of previousFiles) {
         const absolute = join(cwd, path);
         await rm(absolute, { force: true });
-        if (original?.kind === 'symlink') await symlink(original.target, absolute);
-        else if (original?.kind === 'file') {
-            await writeFile(absolute, original.bytes);
-            await chmod(absolute, original.mode);
+        if (saved?.kind === 'symlink') await symlink(saved.target, absolute);
+        else if (saved?.kind === 'file') {
+            await writeFile(absolute, saved.bytes);
+            await chmod(absolute, saved.mode);
         }
     }
 }
@@ -85,8 +86,9 @@ export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): 
     const previous = await readFile(settingsPath, 'utf8');
     const base = changes.files['gspot.toml'] ?? previous;
     const settings = [base, changes.settings].filter((text) => text !== undefined).join('\n');
-    const { removed: gone = [], executable: executables = [] } = changes;
-    const paths = [...new Set(['gspot.toml', ...gone, ...executables, ...Object.keys(changes.files)])];
+    const removed = changes.removed ?? [];
+    const executable = changes.executable ?? [];
+    const paths = [...new Set(['gspot.toml', ...removed, ...executable, ...Object.keys(changes.files)])];
     const previousFiles = new Map<string, PreviousFile | undefined>();
     for (const path of paths) previousFiles.set(path, await readPreviousFile(join(cwd, path)));
     const parents = await listAbsentParents(cwd, paths);
@@ -104,9 +106,9 @@ export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): 
         await writeChanges(cwd, {
             files: changes.files,
             settings,
-            previousFiles: previousFiles,
-            removed: gone,
-            executable: executables,
+            previousFiles,
+            removed,
+            executable,
         });
     } catch (error) {
         await restore();
@@ -154,11 +156,11 @@ Build the changes that replace the files of a sandbox plan with these files and 
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 22 calls in 11 files share it.
 export function buildSandboxChanges(
-    previousFiles: Readonly<Record<string, string>>,
+    planFiles: Readonly<Record<string, string>>,
     files: Record<string, string>,
 ): SandboxChanges {
     return {
         files,
-        removed: Object.keys(previousFiles).filter((path) => path !== '.gitignore' && !Object.hasOwn(files, path)),
+        removed: Object.keys(planFiles).filter((path) => path !== '.gitignore' && !Object.hasOwn(files, path)),
     };
 }

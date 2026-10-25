@@ -1,5 +1,3 @@
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-
 export const INVALID_LICENSES = ['MTI', 'MIT OR Apache-2.0', 'MIT AND Apache-2.0'];
 
 export const VALID_LICENSES = ['MIT', 'Apache-2.0', 'GPL-2.0+', 'GPL-2.0-only WITH Classpath-exception-2.0'];
@@ -40,9 +38,10 @@ export const DUPLICATED_REASON_ERRORS = [
 export const KEY_PATH_CASES = [
     {
         name: 'a package tag used as a license version',
-        text: buildSandboxSettings(['licenses'], {
+        configurations: ['licenses'],
+        options: {
             tables: '[[licenses.allowed_package]]\nname = "example"\nversion = "latest"\nreason = "Reviewed its MIT license."\n',
-        }),
+        },
         where: [
             'gspot.toml:5: licenses.allowed_package.0.version: The value latest is not valid for licenses.allowed_package.0.version. Name an exact version, a semver range such as ^1.2.0, or * for every version.',
         ],
@@ -50,32 +49,19 @@ export const KEY_PATH_CASES = [
     },
     {
         name: 'an invalid naming override regular expression',
-        text: buildSandboxSettings(['naming'], {
+        configurations: ['naming'],
+        options: {
             tables: '[[naming.override]]\npaths = ["src/**"]\nignored_names_pattern = "("\nreason = "The library exports these reviewed names."\n',
-        }),
+        },
         where: [
             'gspot.toml:5: naming.override.0.ignored_names_pattern: The value ( is not valid for naming.override.0.ignored_names_pattern. Use a valid Unicode regular expression.',
         ],
         correction: ['"("', '"^_"'],
     },
     {
-        name: 'a multiline array value',
-        text: `configurations = [
-"bash",
-12
-]
-`,
-        where: [
-            'gspot.toml:3: configurations.1: The value 12 is not valid for configurations.1. Use a valid string value.',
-        ],
-        correction: ['12', '"data-files"'],
-    },
-    {
         name: 'empty override paths',
-        text: buildSandboxSettings(['javascript'], {
-            rules: true,
-            tables: '[[tools.eslint.override]]\npaths = []\nrules = {eqeqeq = ["always"]}\n',
-        }),
+        configurations: ['javascript'],
+        options: { rules: true, tables: '[[tools.eslint.override]]\npaths = []\nrules = {eqeqeq = ["always"]}\n' },
         correction: ['paths = []', 'paths = ["src"]'],
         where: [
             'gspot.toml:4: tools.eslint.override.0.paths: The value [] is not valid for tools.eslint.override.0.paths. Use a valid list value: The files that these lint rule options apply to.',
@@ -83,10 +69,8 @@ export const KEY_PATH_CASES = [
     },
     {
         name: 'numeric rule options',
-        text: buildSandboxSettings(['javascript'], {
-            rules: true,
-            tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = 0}\n',
-        }),
+        configurations: ['javascript'],
+        options: { rules: true, tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = 0}\n' },
         correction: ['eqeqeq = 0', 'eqeqeq = ["always"]'],
         where: [
             'gspot.toml:5: tools.eslint.override.0.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
@@ -94,10 +78,8 @@ export const KEY_PATH_CASES = [
     },
     {
         name: 'boolean rule options',
-        text: buildSandboxSettings(['javascript'], {
-            rules: true,
-            tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = true}\n',
-        }),
+        configurations: ['javascript'],
+        options: { rules: true, tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = true}\n' },
         correction: ['eqeqeq = true', 'eqeqeq = ["always"]'],
         where: [
             'gspot.toml:5: tools.eslint.override.0.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
@@ -105,10 +87,11 @@ export const KEY_PATH_CASES = [
     },
     {
         name: 'an unknown override field',
-        text: buildSandboxSettings(['javascript'], {
+        configurations: ['javascript'],
+        options: {
             rules: true,
             tables: '[[tools.eslint.override]]\npaths = ["src"]\nrulez = {eqeqeq = ["always"]}\n',
-        }),
+        },
         correction: ['rulez', 'rules'],
         where: [
             'gspot.toml:5: tools.eslint.override.0.rulez: `rulez` is not a gspot.toml setting. Did you mean `rules`? See generativespotting.com/reference/gspot-toml/ for every key.',

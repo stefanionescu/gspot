@@ -1,1 +1,1 @@
-export const POLL_MILLISECONDS = 10;
+export const POLL_INTERVAL_MILLISECONDS = 10;

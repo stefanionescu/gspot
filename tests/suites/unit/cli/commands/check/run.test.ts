@@ -13,7 +13,13 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
-import { QUALITY_FIX, SCOPE_FINDINGS, QUALITY_COMMAND, SCOPE_CHECK_FILES } from '#tests/config/commands/check/run.ts';
+
+import {
+    SCOPE_FINDINGS,
+    SCOPE_CHECK_FILES,
+    QUALITY_FIX_ARGUMENTS,
+    QUALITY_SEARCH_ARGUMENTS,
+} from '#tests/config/commands/check/run.ts';
 
 test('an aborted run stops its command and reports cancellation on every system', async () => {
     await using sandbox = await createGitSandbox({});
@@ -54,8 +60,8 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
             command_check: [
                 {
                     id: 'project/quality',
-                    command: QUALITY_COMMAND,
-                    fix: QUALITY_FIX,
+                    command: buildProgramCommand('checks/search', ...QUALITY_SEARCH_ARGUMENTS),
+                    fix: buildProgramCommand('fakes/tool', ...QUALITY_FIX_ARGUMENTS),
                     paths: ['inputs/**'],
                     stage: 'commit',
                 },
@@ -248,7 +254,14 @@ test('an ignore with names keeps them in the run report and in the verbose ignor
 });
 
 test.each([...SCOPE_FINDINGS])("each check in a scope reads only that scope's files: $check", async (row) => {
-    await using sandbox = await createGitSandbox(SCOPE_CHECK_FILES);
+    await using sandbox = await createGitSandbox({
+        ...SCOPE_CHECK_FILES,
+        'gspot.toml': buildSandboxSettings(['site', 'supabase', 'translations', 'cloudflare'], {
+            level: 'all',
+            scopes: [{ path: 'apps/backend' }],
+            tables: '[translations]\nmessages_folder = "messages"\nbase_locale = "en"\n[scope.translations]\nmessages_folder = "apps/backend/messages"\n',
+        }),
+    });
 
     const result = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', row.check, '--json']));
     expect(result.code, `${row.check}: ${result.stdout}${result.stderr}`).toBe(1);

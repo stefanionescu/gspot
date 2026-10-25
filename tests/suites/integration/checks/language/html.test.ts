@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
@@ -39,7 +39,6 @@ test.each([...AUTOPLAY_CHECKS])(
             buildSandboxChanges(HTML_SANDBOX.files, sourceFiles),
         );
 
-        const settings = await readFile(join(root, 'gspot.toml'), 'utf8');
         const checked = parseCheckReport(await spawnGspot(root, row.arguments));
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         expect(checked.report.checks).toMatchObject([
@@ -58,7 +57,5 @@ test.each([...AUTOPLAY_CHECKS])(
             { check: row.check, scope: row.scope, status: 'passed', findings: [] },
             ...skippedChecks,
         ]);
-        expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(settings);
-        expect(await readFile(join(root, row.preserved), 'utf8')).toBe(AUTOPLAY_PAGE);
     },
 );

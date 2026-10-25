@@ -1,6 +1,5 @@
 import { join } from 'node:path/posix';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 export const VALE_ALERT = {
     Line: 1,
@@ -10,7 +9,6 @@ export const VALE_ALERT = {
 } as const;
 
 export const VALE_SANDBOX_FILES = {
-    'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
     [GSPOT_PATHS.valeConfigFile]: 'Packages =\n',
     'example.md': '# Documentation\n',
 };

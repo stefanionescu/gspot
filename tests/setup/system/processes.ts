@@ -1,12 +1,11 @@
 import { stat } from 'node:fs/promises';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
-import { SIGNAL_EXIT_CODES } from '#cli/config/system/terminal.ts';
-import { POLL_MILLISECONDS } from '#tests/config/setup/system/processes.ts';
 import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { ChildCapture, ProcessCapture } from '#tests/types/processes.ts';
 import { TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/environment.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
+import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/system/processes.ts';
 
 /**
 Limit a child command and build the text a timeout error shows.
@@ -29,12 +28,12 @@ export function limitCommand(
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function buildTimeoutError(
-    timeoutMilliseconds: number,
-    description: string,
+    limited: ReturnType<typeof limitCommand>,
     result: Pick<SpawnResult, 'stdout' | 'stderr'>,
 ): Error {
+    const timeoutMilliseconds = limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND;
     return new Error(
-        `The test command timed out after ${String(timeoutMilliseconds)} ms.\n${description}\n${result.stdout}${result.stderr}`,
+        `The test command timed out after ${String(timeoutMilliseconds)} ms.\n${limited.context}\n${result.stdout}${result.stderr}`,
     );
 }
 
@@ -48,8 +47,7 @@ Run a command within its requested limit and the command timeout.
 export async function runCommand(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
     const limited = limitCommand(command, options);
     const result = await spawnProcess(command, limited.options);
-    if (result.timedOut)
-        throw buildTimeoutError(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND, limited.context, result);
+    if (result.timedOut) throw buildTimeoutError(limited, result);
     return result;
 }
 
@@ -63,8 +61,7 @@ Run a synchronous command within the command timeout.
 export function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptions): SpawnResult {
     const limited = limitCommand(command, options);
     const result = spawnProcessBlocking(command, limited.options);
-    if (result.timedOut)
-        throw buildTimeoutError(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND, limited.context, result);
+    if (result.timedOut) throw buildTimeoutError(limited, result);
     return result;
 }
 
@@ -83,7 +80,7 @@ export async function waitForExit(pid: number): Promise<void> {
             if (hasErrorCode(error, 'ESRCH')) return;
             throw error;
         }
-        await Bun.sleep(POLL_MILLISECONDS);
+        await Bun.sleep(POLL_INTERVAL_MILLISECONDS);
     }
     process.kill(pid, 'SIGKILL');
     throw new Error(`Owned child ${String(pid)} remained alive after supervision ended.`);
@@ -105,7 +102,7 @@ export async function waitForFile(path: string): Promise<boolean> {
         } catch (error) {
             if (!hasErrorCode(error, 'ENOENT')) throw error;
         }
-        await Bun.sleep(POLL_MILLISECONDS);
+        await Bun.sleep(POLL_INTERVAL_MILLISECONDS);
     }
     return false;
 }
@@ -128,28 +125,6 @@ export function startCommand(
         killSignal: 'SIGKILL',
     });
     return { child, ...captureChild(child) };
-}
-
-/**
-Stop a test runner for each supported termination signal.
-
-@param stop receives the signal's exit code.
-@returns a disposable that removes the registered handlers.
-*/
-export function stopOnSignals(stop: (code: number) => void): Disposable {
-    const listeners = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) => {
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: removeListener needs the same function that once registered.
-        const listener = (): void => {
-            stop(code);
-        };
-        process.once(signal, listener);
-        return [signal, listener] as const;
-    });
-    return {
-        [Symbol.dispose]() {
-            for (const [signal, listener] of listeners) process.removeListener(signal, listener);
-        },
-    };
 }
 
 /**

@@ -50,8 +50,6 @@ configurations = ["javascript"]
 tools.knip.entry = ["api/src/main.js"]
 `;
 
-export const ENTRYPOINT_FOLDERS = ['src', 'api/src'] as const;
-
 export const TRIVIAL_RULES = ['gspot/no-trivial-files', 'gspot/no-trivial-functions'] as const;
 
 export const TRIVIAL_ENTRYPOINT_FILES = ['api/src/main.js', 'api/src/task.js', 'src/main.js', 'src/task.js'] as const;

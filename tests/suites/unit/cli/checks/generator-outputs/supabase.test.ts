@@ -11,14 +11,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-
-import {
-    DATABASE_SCHEMAS,
-    DOCKER_VERSION_OUTPUT,
-    SUPABASE_TYPES_OUTPUT,
-    SUPABASE_VERSION_OUTPUT,
-    SUPABASE_PROJECT_FILE_SOURCE,
-} from '#tests/config/checks/generator-outputs.ts';
+import { DATABASE_SCHEMAS, SUPABASE_TYPES_OUTPUT } from '#tests/config/checks/generator-outputs.ts';
 
 async function prepareSupabaseCheck(
     root: string,
@@ -35,7 +28,7 @@ async function prepareSupabaseCheck(
             scopes: scope === '' ? [] : [{ path: scope, configurations: ['supabase'] }],
             tables: `[${scope === '' ? '' : 'scope.'}supabase]\ntypes_file = "${prefix}database.ts"\n${schemasLine}`,
         }),
-        [`${prefix}supabase/config.toml`]: SUPABASE_PROJECT_FILE_SOURCE,
+        [`${prefix}supabase/config.toml`]: 'project_id = "types-sample"\n',
     });
     const runStaleTypesCheck = async () => {
         const result = await runChecks(await openSession(root), buildRunOptions({ only: ['supabase/stale-types'] }));
@@ -50,7 +43,7 @@ async function prepareSupabaseCheck(
     resources.use(
         spyOn(processes, 'spawnProcessBlocking').mockImplementation((commandArguments, options) => {
             if (![supabase, docker].includes(commandArguments[0] ?? '')) return blocking(commandArguments, options);
-            const stdout = commandArguments[0] === docker ? DOCKER_VERSION_OUTPUT : SUPABASE_VERSION_OUTPUT;
+            const stdout = commandArguments[0] === docker ? 'Docker version 29.2.1\n' : '2.75.0\n';
             return buildProcessResult({ stdout });
         }),
     );

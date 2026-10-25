@@ -1,7 +1,3 @@
-export const CLEAN_NGINX_CONF = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location / {\n            return 204;\n        }\n    }\n}\n`;
-
-export const FORGED_NGINX_CONF = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location ~ /proxy/(.*) {\n            proxy_pass http://$1;\n        }\n    }\n}\n`;
-
 export const NGINX_SERVER = `server {
     listen 443 ssl;
     include /etc/nginx/tls#local.conf;

@@ -126,7 +126,7 @@ test('a copy leaves the virtual environment in the working tree and still checks
     const root = join(sandbox.path, "an author's project");
     await createFileTree(root, {
         '.gitignore': '.venv/\n',
-        'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
+        'pyproject.toml': '[project]\nname = "sample"\nversion = "0.0.0"\n',
         'source.py': 'selected = True\n',
         'uv.lock': 'version = 1\n',
         '.venv/pyvenv.cfg': `home = ${sandbox.path}\nversion_info = 3.12.2\n`,

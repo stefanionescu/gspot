@@ -10,15 +10,7 @@ import { type SpawnResult } from '#cli/types/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-
-import {
-    APP_FOLDERS,
-    EXPO_PACKAGE_JSON,
-    EXPO_DOCTOR_INSTALL,
-    EXPO_SCOPE_SETTINGS,
-    FAILED_DOCTOR_REPORT,
-    INSTALLED_EXPO_PACKAGE_JSON,
-} from '#tests/config/checks/framework/expo.ts';
+import { APP_FOLDERS, EXPO_PACKAGE_JSON, FAILED_DOCTOR_REPORT } from '#tests/config/checks/framework/expo.ts';
 
 test('Expo Doctor reports each failed check once in each app folder', async () => {
     await using apps = await prepareExpoApps({ code: 1, stdout: FAILED_DOCTOR_REPORT });
@@ -65,12 +57,15 @@ async function prepareExpoApps(
 ): Promise<AsyncDisposable & { path: string; folders: string[] }> {
     await using resources = new AsyncDisposableStack();
     const outside = await testdir({
-        'gspot.toml': EXPO_SCOPE_SETTINGS,
-        ...EXPO_DOCTOR_INSTALL,
+        'gspot.toml': buildSandboxSettings([], {
+            scopes: APP_FOLDERS.map((path) => ({ path, configurations: ['expo'] })),
+        }),
+        [`${GSPOT_PATHS.nodeModules}/.bin/expo-doctor`]: '// The process boundary supplies the Doctor report.\n',
+        [`${GSPOT_PATHS.nodeModules}/.bin/expo-doctor.cmd`]: '@echo off\r\n',
         ...Object.fromEntries(
             APP_FOLDERS.flatMap((scope) => [
                 [`${scope}/package.json`, EXPO_PACKAGE_JSON],
-                [`${scope}/node_modules/expo/package.json`, INSTALLED_EXPO_PACKAGE_JSON],
+                [`${scope}/node_modules/expo/package.json`, '{"name":"expo","version":"54.0.0"}\n'],
             ]),
         ),
     });

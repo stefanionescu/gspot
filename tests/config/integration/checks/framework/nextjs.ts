@@ -1,5 +1,5 @@
 import { NEXT_MESSAGES } from '#tests/config/translations.ts';
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
 
 export const NEXT_PACKAGE = {
     name: 'example',
@@ -32,8 +32,23 @@ export default function Page(): string {
 }
 `;
 
-const NEXT_LAYOUT =
-    '// The root layout.\nimport type { ReactNode } from \'react\';\n\n/**\nWraps every page.\n@param props content to place inside the document body\n@param props.children route content to render inside the body\n@returns the HTML wrapper shared by every route\n*/\nexport default function Layout({ children }: Readonly<{ children: ReactNode }>): ReactNode {\n    return (\n        <html lang="en">\n            <body>{children}</body>\n        </html>\n    );\n}\n';
+const NEXT_LAYOUT = `// The root layout.
+import type { ReactNode } from 'react';
+
+/**
+Wraps every page.
+@param props content to place inside the document body
+@param props.children route content to render inside the body
+@returns the HTML wrapper shared by every route
+*/
+export default function Layout({ children }: Readonly<{ children: ReactNode }>): ReactNode {
+    return (
+        <html lang="en">
+            <body>{children}</body>
+        </html>
+    );
+}
+`;
 
 export const NEXTJS_SANDBOX = {
     configurations: ['nextjs', 'translations'],
@@ -53,7 +68,9 @@ export const NEXTJS_SANDBOX = {
     },
     without: ['css'],
     files: {
-        '.gitignore': 'node_modules\n.next\n',
+        '.gitignore': `node_modules
+.next
+`,
         'next.config.mjs': NEXT_CONFIG_SOURCE,
         'app/page.tsx': NEXT_PAGE,
         'app/layout.tsx': NEXT_LAYOUT,

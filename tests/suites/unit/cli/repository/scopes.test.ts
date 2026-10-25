@@ -13,7 +13,6 @@ import { joinScope, findScopeFolders, findProjectFolder } from '#cli/repository/
 import {
     SCOPE_PATHS,
     PROJECT_SCOPES,
-    TOOL_ONLY_FOLDERS,
     TOOL_ONLY_PACKAGES,
     PROJECT_SCOPE_FILES,
     PROJECT_FILE_FOLDERS,
@@ -79,7 +78,10 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
     });
     const repository = await readTestRepository(sandbox.path);
     expect(listWorkspaceFolders(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        ...TOOL_ONLY_FOLDERS,
+        'packages/custom',
+        'packages/hooks',
+        'packages/next',
+        'packages/process',
     ]);
     const folders = findScopeFolders(
         repository.files,

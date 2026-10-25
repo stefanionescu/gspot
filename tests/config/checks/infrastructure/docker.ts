@@ -1,5 +1,3 @@
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-
 export const COMPOSE_PAIRING_CASES = [
     { base: 'compose.yaml', override: 'compose.override.yaml' },
     { base: 'compose.yml', override: 'compose.override.yml' },
@@ -24,12 +22,9 @@ export const DOCKERIGNORE_ALLOWLISTS = [
 export const DOCKERIGNORE_CASES = [
     {
         name: 'each scope lists the folders of its own configurations',
+        configurations: ['docker'],
+        options: { level: 'all', rules: true, scopes: [{ path: 'app', configurations: ['python'] }] },
         files: {
-            'gspot.toml': buildSandboxSettings(['docker'], {
-                level: 'all',
-                rules: true,
-                scopes: [{ path: 'app', configurations: ['python'] }],
-            }),
             Dockerfile: 'FROM scratch\n',
             'app/Dockerfile': 'FROM scratch\n',
         },
@@ -50,6 +45,8 @@ export const DOCKERIGNORE_CASES = [
     },
     {
         name: 'a Dockerfile-specific ignore',
+        configurations: ['docker'],
+        options: { level: 'all' },
         files: {
             Dockerfile: 'FROM scratch\n',
             'Dockerfile.dockerignore': REQUIRED_DOCKERIGNORE,
@@ -58,6 +55,8 @@ export const DOCKERIGNORE_CASES = [
     },
     {
         name: 'a suffixed Dockerfile-specific ignore',
+        configurations: ['docker'],
+        options: { level: 'all' },
         files: {
             'Dockerfile.test': 'FROM scratch\n',
             'Dockerfile.test.dockerignore': REQUIRED_DOCKERIGNORE,
@@ -66,6 +65,8 @@ export const DOCKERIGNORE_CASES = [
     },
     {
         name: 'a Compose build context with a nested Dockerfile',
+        configurations: ['docker'],
+        options: { level: 'all' },
         files: {
             'compose.yaml': 'services: {app: {build: {context: project, dockerfile: docker/Dockerfile}}}\n',
             'project/docker/Dockerfile': 'FROM scratch\n',
@@ -75,6 +76,8 @@ export const DOCKERIGNORE_CASES = [
     },
     {
         name: 'a partial override retaining the same service context',
+        configurations: ['docker'],
+        options: { level: 'all' },
         files: {
             'compose.yaml': 'services: {app: {build: {context: project}}}\n',
             'compose.override.yaml': 'services: {app: {build: {dockerfile: docker/Dockerfile}}}\n',
@@ -85,6 +88,8 @@ export const DOCKERIGNORE_CASES = [
     },
     {
         name: 'an unrelated ignored service beside a missing service ignore',
+        configurations: ['docker'],
+        options: { level: 'all' },
         files: {
             'compose.yaml': 'services: {affected: {build: {context: affected}}, other: {build: {context: other}}}\n',
             'compose.override.yaml': 'services: {affected: {build: {dockerfile: Dockerfile}}}\n',
@@ -103,6 +108,8 @@ export const DOCKERIGNORE_CASES = [
     },
     {
         name: 'a specific ignore taking precedence over the general ignore',
+        configurations: ['docker'],
+        options: { level: 'all' },
         files: {
             Dockerfile: 'FROM scratch\n',
             '.dockerignore': REQUIRED_DOCKERIGNORE,
@@ -119,6 +126,8 @@ export const DOCKERIGNORE_CASES = [
     },
     {
         name: 'a missing ignore with no alternative',
+        configurations: ['docker'],
+        options: { level: 'all' },
         files: { Dockerfile: 'FROM scratch\n' },
         findings: [
             {
@@ -131,8 +140,9 @@ export const DOCKERIGNORE_CASES = [
     },
     {
         name: 'the entries of Docker alone',
+        configurations: ['docker'],
+        options: { rules: true },
         files: {
-            'gspot.toml': buildSandboxSettings(['docker'], { rules: true }),
             Dockerfile: 'FROM scratch\n',
             '.dockerignore': REQUIRED_DOCKERIGNORE,
         },
@@ -140,8 +150,9 @@ export const DOCKERIGNORE_CASES = [
     },
     {
         name: 'the entries of JavaScript',
+        configurations: ['docker', 'javascript'],
+        options: { rules: true },
         files: {
-            'gspot.toml': buildSandboxSettings(['docker', 'javascript'], { rules: true }),
             Dockerfile: 'FROM scratch\n',
             '.dockerignore': REQUIRED_DOCKERIGNORE,
         },
@@ -155,8 +166,9 @@ export const DOCKERIGNORE_CASES = [
     },
     {
         name: 'the entries of Python',
+        configurations: ['docker', 'python'],
+        options: { rules: true },
         files: {
-            'gspot.toml': buildSandboxSettings(['docker', 'python'], { rules: true }),
             Dockerfile: 'FROM scratch\n',
             '.dockerignore': REQUIRED_DOCKERIGNORE,
         },
@@ -170,8 +182,9 @@ export const DOCKERIGNORE_CASES = [
     },
     {
         name: 'wildcard entries',
+        configurations: ['docker', 'python', 'javascript'],
+        options: { rules: true },
         files: {
-            'gspot.toml': buildSandboxSettings(['docker', 'python', 'javascript'], { rules: true }),
             Dockerfile: 'FROM scratch\n',
             '.dockerignore': `**/.git
 **/.env*

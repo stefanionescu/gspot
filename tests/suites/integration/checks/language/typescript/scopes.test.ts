@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
@@ -9,33 +8,35 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { STRICT_TSCONFIG_TEXT } from '#tests/config/checks/language/typescript.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { STRICT_TSCONFIG_TEXT, STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
-    ANCESTOR_SCOPE_TABLES,
     KEPT_DECLARATION_FILES,
     ANCESTOR_TYPESCRIPT_FILES,
     TYPESCRIPT_SCOPES_SANDBOX,
-    ANCESTOR_TYPESCRIPT_PROJECT,
-    STANDALONE_CORRECTED_SOURCE,
     STANDALONE_TYPESCRIPT_FILES,
-    STANDALONE_TYPESCRIPT_TABLES,
     STANDALONE_TYPESCRIPT_FINDINGS,
 } from '#tests/config/integration/checks/language/typescript/scopes.ts';
 
 const installedSandbox = shareInstalledSandbox(TYPESCRIPT_SCOPES_SANDBOX);
 
 test.each([...LEVELS])(
-    "typescript/tsc at level %s checks each scope alone and keeps your declarations, without gspot's own @types",
+    "typescript/tsc at level %s checks each scope alone and keeps the authored declarations, without gspot's own @types",
     async (level) => {
         const { root } = installedSandbox();
         await using _sourceChange = await changeAppliedSandbox(installedSandbox(), {
             files: {
                 ...STANDALONE_TYPESCRIPT_FILES,
                 '.gitignore': `${DOT_GSPOT}/\nnode_modules/\n`,
-                'gspot.toml': buildSandboxSettings(['typescript'], { level, tables: STANDALONE_TYPESCRIPT_TABLES }),
+                'gspot.toml': buildSandboxSettings(['typescript'], {
+                    level,
+                    tables: `[[scope]]
+path = "app"
+configurations = ["typescript"]
+`,
+                }),
             },
         });
         const broken = parseCheckReport(await spawnGspot(root, ['check', '--only', 'typescript/tsc', '--json']));
@@ -47,7 +48,13 @@ test.each([...LEVELS])(
         expect(broken.report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
             STANDALONE_TYPESCRIPT_FINDINGS[level].map((finding) => matchFields(finding)),
         );
-        await writeFile(join(root, 'app/source.ts'), STANDALONE_CORRECTED_SOURCE);
+        await writeFile(
+            join(root, 'app/source.ts'),
+            `export const value = 1;
+export const project = acceptedNumber;
+export function select(flag: boolean) { return flag ? 1 : 0; }
+`,
+        );
         const corrected = parseCheckReport(await spawnGspot(root, ['check', '--only', 'typescript/tsc', '--json']));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.report.checks).toStrictEqual([
@@ -60,25 +67,30 @@ test.each([...LEVELS])(
 );
 
 test('typescript/tsc runs a covering parent tsconfig once for nested scopes', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
-    const authored = JSON.stringify(ANCESTOR_TYPESCRIPT_PROJECT);
-    await createFileTree(sandbox.path, {
+    const authored = JSON.stringify({
+        compilerOptions: STRICT_COMPILER_OPTIONS,
+        include: ['source.ts', 'app/**/*.ts'],
+    });
+    await using sandbox = await createGitSandbox({
         ...ANCESTOR_TYPESCRIPT_FILES,
         'tsconfig.json': authored,
-        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all', tables: ANCESTOR_SCOPE_TABLES }),
+        'gspot.toml': buildSandboxSettings(['typescript'], {
+            level: 'all',
+            scopes: [
+                { path: 'app', configurations: ['typescript'] },
+                { path: 'app/deep', configurations: ['typescript'] },
+            ],
+        }),
     });
     await linkTypescript(join(sandbox.path, 'node_modules'));
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const command = ['check', '--only', 'typescript/tsconfig,typescript/tsc', '--json'];
-    const previous = parseCheckReport(await spawnGspot(sandbox.path, command));
-    expect(previous.code, previous.stdout + previous.stderr).toBe(0);
+    const clean = parseCheckReport(await spawnGspot(sandbox.path, command));
+    expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     for (const check of ['typescript/tsconfig', 'typescript/tsc'])
         expect(
-            previous.report.checks
-                .filter((each) => each.check === check)
-                .map(({ scope, status }) => ({ scope, status })),
+            clean.report.checks.filter((each) => each.check === check).map(({ scope, status }) => ({ scope, status })),
         ).toStrictEqual([
             { scope: '', status: 'passed' },
             { scope: 'app', status: 'skipped' },

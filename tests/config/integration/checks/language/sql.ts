@@ -1,5 +1,3 @@
-export const SQL_DUCKDB_SOURCE = 'FROM records SELECT id;\n';
-
 const SQL_CLEAN = `-- The accounts of the application.
 CREATE TABLE user_accounts (
     id UUID PRIMARY KEY,

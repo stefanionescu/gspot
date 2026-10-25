@@ -18,8 +18,6 @@ import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { runGspot, buildInitArguments, expectRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 import {
-    VUE_COMPONENT,
-    PYTHON_SOURCE,
     TOOL_ONLY_PACKAGE,
     STYLE_SOURCE_FILES,
     NEXTJS_LOCALE_CASES,
@@ -28,7 +26,7 @@ import {
 } from '#tests/config/commands/init/selection.ts';
 
 async function listPlannedConfigurations(root: string): Promise<string[]> {
-    const result = await runGspot(root, [...buildInitArguments([], { json: true }), '--dry-run']);
+    const result = await runGspot(root, [...buildInitArguments([]), '--json', '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const plan = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     return plan.plan.configurations.map((each) => each.configuration);
@@ -80,7 +78,7 @@ test('init leaves javascript out of a root package.json with only tool dependenc
     ).toStrictEqual(['licenses', 'javascript']);
     expect(Object.keys(parseSettings(output.settings, sandbox.path).scopes)).toStrictEqual(['app']);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
-    const written = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
+    const written = await runGspot(sandbox.path, [...buildInitArguments([]), '--json']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const session = await openSession(sandbox.path);
     expect(session.repository.scopeFolders.map(({ path }) => path)).toStrictEqual(['', 'app']);
@@ -96,9 +94,12 @@ test('init leaves javascript out of a root package.json with only tool dependenc
 });
 
 test('the JavaScript tools and the ESLint config file appear only after gspot add javascript for a new Node script, at both levels', async () => {
-    await using sandbox = await createGitSandbox({ 'package.json': TOOL_ONLY_PACKAGE, ...PYTHON_SOURCE });
+    await using sandbox = await createGitSandbox({
+        'package.json': TOOL_ONLY_PACKAGE,
+        'source.py': 'VALUE = 1\n',
+    });
 
-    const initialized = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
+    const initialized = await runGspot(sandbox.path, [...buildInitArguments([]), '--json']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     for (const level of LEVELS) {
         const levelSet = await runGspot(sandbox.path, ['set', 'level', level]);
@@ -134,7 +135,11 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
 test('init selects a recommended language only when the repository holds its files', async () => {
     await using sandbox = await testdir({
         'package.json': '{"name":"example","private":true,"type":"module","dependencies":{"vue":"3.5.22"}}\n',
-        'src/Greeting.vue': VUE_COMPONENT,
+        'src/Greeting.vue': `<script setup>
+const name = 1;
+</script>
+<template><p>{{ name }}</p></template>
+`,
     });
 
     commitAll(sandbox.path);
@@ -162,7 +167,7 @@ test('init proposes a scope for a Swift package, not for a lint-only package, an
     await using sandbox = await testdir(PLATFORM_PROJECT_FILES);
 
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, [...buildInitArguments([], { json: true }), '--dry-run']);
+    const result = await runGspot(sandbox.path, [...buildInitArguments([]), '--json', '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings' | 'plan'>>;
     const proposed = settingsSchema.parse(parse(output.settings) as TomlTable);
@@ -189,7 +194,8 @@ test.each([...NEXTJS_LOCALE_CASES])(
 
         const configurations = ['--configurations', 'nextjs', ...(named ? ['translations'] : [])];
         const result = await runGspot(sandbox.path, [
-            ...buildInitArguments([], { json: true }),
+            ...buildInitArguments([]),
+            '--json',
             '--dry-run',
             ...configurations,
         ]);

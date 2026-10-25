@@ -1,4 +1,4 @@
-import { BASE_INSTALLED_FILES } from '#tests/config/setup/sandboxes.ts';
+import { BASE_INSTALLED_FILES } from '#tests/config/integration/checks/samples.ts';
 
 export const SPELLING_IGNORE_CASES = [
     {
@@ -29,8 +29,6 @@ export const SPELLING_SANDBOX = {
     level: 'all',
     files: BASE_INSTALLED_FILES,
 } as const;
-
-export const SPELLING_CHECK_ARGUMENTS = ['check', '--only', 'spelling/typos', '--json'] as const;
 
 export const SPELLING_LOCALE_SETTINGS = {
     level: 'all',

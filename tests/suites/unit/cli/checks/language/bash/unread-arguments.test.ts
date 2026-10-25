@@ -6,7 +6,7 @@ import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareBashSandbox } from '#tests/setup/sandboxes/create.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 import { UNREAD_ARGUMENT_CASES } from '#tests/config/checks/language/bash/unread-arguments.ts';
 
 const bashSandbox = shareBashSandbox();
@@ -26,7 +26,7 @@ test.each([...UNREAD_ARGUMENT_CASES])(
     async (row) => {
         const sample = { check: 'bash/unread-arguments', ...row };
         expect(await runCheckSample(bashSandbox(), sample, BASH_SANDBOX.cleanSource)).toStrictEqual(
-            expectedSummary(sample),
+            buildExpectedSummary(sample),
         );
     },
 );

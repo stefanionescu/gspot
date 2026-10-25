@@ -1,11 +1,11 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { LinkFailure } from '#tests/types/reports.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -39,8 +39,6 @@ async function assertTextLinks(root: string, check: string, target: string): Pro
 }
 
 test('docs/lychee checks local links, and docs/lychee-external checks web links, fragments, and allowed URLs per scope', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
     const requests: string[] = [];
     using server = Bun.serve({
         hostname: '127.0.0.1',
@@ -54,11 +52,10 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
         },
     });
     const url = server.url.href;
-    const child = `# Links\n\nRead [the page](${url}page#setup).\n\n[Child endpoint](${url}child-only)\n`;
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: LINK_SCOPE_TABLES }),
         'root.md': `# Links\n\nRead [the page](${url}missing).\n\n[Root endpoint](${url}root-only)\n`,
-        'app/guide.md': child,
+        'app/guide.md': `# Links\n\nRead [the page](${url}page#setup).\n\n[Child endpoint](${url}child-only)\n`,
         'page.html': LINK_PAGE,
     });
     commitAll(sandbox.path);
@@ -81,7 +78,15 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
 });
 
 test('docs/lychee reads a root-relative link from the repository root, and leaves a site route to the site', async () => {
-    await using sandbox = await testdir(ROOT_LINK_FILES);
+    await using sandbox = await testdir({
+        ...ROOT_LINK_FILES,
+        'gspot.toml': buildSandboxSettings([], {
+            level: 'recommended',
+            rules: true,
+            scopes: [{ path: 'web', configurations: ['site'] }],
+            tables: '[scope.site]\nbuild_command = ["node", "build.mjs"]\n',
+        }),
+    });
 
     commitAll(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply']);

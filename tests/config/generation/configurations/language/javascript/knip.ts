@@ -1,11 +1,10 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 export const KNIP_COMPONENT_FILES = {
     'package.json':
         '{"name":"native-project","private":true,"type":"module","workspaces":["child"],"dependencies":{"vue":"3.5.0","svelte":"5.57.0","astro":"7.3.2","@astrojs/mdx":"4.0.0"}}',
     'main.js': 'export const used = 1;\n',
-    'native-tests/widget.js': 'export const fixture = 1;\n',
+    'native-tests/widget.js': 'export const widget = 1;\n',
     'space name.jsx': 'export const unused = <div />;\n',
     'unused.vue': '<template><div>Unused</div></template>\n',
     'unused.svelte': '<div>Unused</div>\n',
@@ -17,7 +16,7 @@ const unused = 1;
     'unused.mdx': '# Unused\n',
     'child/package.json': '{"name":"child-project","private":true,"type":"module"}',
     'child/main.js': 'export const child = 1;\n',
-    'child/verification/widget.js': 'export const fixture = 1;\n',
+    'child/verification/widget.js': 'export const widget = 1;\n',
     'child/unused.jsx': 'export const unused = <div />;\n',
 } as const;
 
@@ -44,12 +43,9 @@ export const KNIP_POINTER_FILES = {
 export const KNIP_ARGUMENTS = [
     'node',
     `${GSPOT_PATHS.nodeModules}/knip/bin/knip.js`,
-    '--config',
-    findManifestTarget('javascript', 'knip.json'),
     '--no-progress',
     '--reporter',
     'json',
-    '--include',
 ] as const;
 
 export const KNIP_WORKSPACE_FILES = {

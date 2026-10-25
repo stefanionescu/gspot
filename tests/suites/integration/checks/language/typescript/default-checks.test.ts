@@ -3,13 +3,13 @@ import { appendFile } from 'node:fs/promises';
 import { test, expect, beforeAll } from 'bun:test';
 import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
-import { TYPESCRIPT_CASES } from '#tests/config/integration/checks/language/typescript/default-checks.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
+    TYPESCRIPT_CASES,
     TYPESCRIPT_SANDBOX,
     ARCHITECTURE_SETTINGS,
-} from '#tests/config/integration/checks/language/typescript/samples.ts';
+} from '#tests/config/integration/checks/language/typescript/default-checks.ts';
 
 const installedSandbox = shareInstalledSandbox(TYPESCRIPT_SANDBOX);
 
@@ -19,7 +19,7 @@ beforeAll(async () => {
 });
 
 test.each([...TYPESCRIPT_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
-    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(expectedSummary(sample));
+    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
 });
 
 test('the sample TypeScript repository passes every check that init selects for it', async () => {

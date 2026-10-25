@@ -18,7 +18,6 @@ import { detectPackageManager, readPackageManagerVersion } from '#cli/repository
 
 import {
     NON_EXACT_PNPM_VERSIONS,
-    OUTDATED_BUN_PACKAGE_JSON,
     PACKAGE_MANAGER_PIN_CASES,
     UNSUPPORTED_PACKAGE_MANAGERS,
 } from '#tests/config/repository/npm/package-manager.ts';
@@ -69,7 +68,7 @@ test.each([...NON_EXACT_PNPM_VERSIONS])(
 );
 
 test('a refused pinned package manager keeps project files and gives no install loop', async () => {
-    const files = { 'package.json': OUTDATED_BUN_PACKAGE_JSON };
+    const files = { 'package.json': '{"packageManager":"bun@0.0.0"}\n' };
     await using sandbox = await createGitSandbox({
         ...files,
         source: 'kept\n',

@@ -52,24 +52,27 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
     if (plan.dependencies !== undefined) await pinSandboxNpm(root);
 }
 
+async function createSandboxFolder(resources: AsyncDisposableStack): Promise<string> {
+    const folder = resources.use(await testdir());
+    resources.defer(() => rm(readCheckoutCacheFolder(folder.path), { recursive: true, force: true }));
+    return folder.path;
+}
+
 /**
 Build one isolated sandbox whose commands run in the current process.
 */
 export async function createSandbox(plan: SandboxPlan): Promise<Sandbox & AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
-    const folder = resources.use(await testdir());
-    resources.defer(() => rm(readCheckoutCacheFolder(folder.path), { recursive: true, force: true }));
-    await writeSandbox(folder.path, plan);
-    await plan.before?.(folder.path);
-    commitAll(folder.path);
+    const root = await createSandboxFolder(resources);
+    await writeSandbox(root, plan);
+    commitAll(root);
     await writeFile(
-        join(folder.path, 'gspot.toml'),
+        join(root, 'gspot.toml'),
         buildSandboxSettings([...plan.configurations], { level: plan.level ?? 'all' }),
     );
-    await plan.prepare?.(folder.path);
     const owned = resources.move();
     return {
-        root: folder.path,
+        root,
         run: runGspot,
         [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned),
     };
@@ -78,7 +81,10 @@ export async function createSandbox(plan: SandboxPlan): Promise<Sandbox & AsyncD
 async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan): Promise<void> {
     await writeSandbox(root, plan);
     if (plan.dependencies !== undefined) await linkPackages(join(root, 'node_modules'), Object.keys(plan.dependencies));
-    await plan.before?.(root);
+    for (const command of plan.commands ?? []) {
+        const result = await runCommand([...command], { cwd: root });
+        if (result.code !== 0) throw new Error(`${command.join(' ')} failed: ${result.stdout}${result.stderr}`);
+    }
     commitAll(root);
     await initSandbox(
         { root, run: spawnGspot },
@@ -87,7 +93,6 @@ async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan)
             without: [...(plan.without ?? [])],
             level: plan.level ?? 'all',
             ...(plan.install === false && { install: false }),
-            prepare: plan.prepare,
         },
     );
 }
@@ -99,13 +104,9 @@ export function shareInstalledSandbox(plan: InstalledSandboxPlan): () => Sandbox
     const resources = new AsyncDisposableStack();
     let sandbox: Sandbox;
     beforeAll(async () => {
-        const folder = resources.use(await testdir());
-        resources.defer(() => rm(readCheckoutCacheFolder(folder.path), { recursive: true, force: true }));
-        await prepareInstalledSandbox(folder.path, plan);
-        sandbox = {
-            root: folder.path,
-            run: spawnGspot,
-        };
+        const root = await createSandboxFolder(resources);
+        await prepareInstalledSandbox(root, plan);
+        sandbox = { root, run: spawnGspot };
     });
     afterAll(() => resources.disposeAsync());
     return () => sandbox;
@@ -121,10 +122,9 @@ export async function initSandbox(
         level?: Level;
         without?: readonly string[];
         install?: false;
-        prepare?: SandboxPlan['prepare'];
     },
 ): Promise<ProcessOutput> {
-    const initialized = await runGspotStep(sandbox, buildInitArguments([...options.configurations], { json: true }));
+    const initialized = await runGspotStep(sandbox, [...buildInitArguments([...options.configurations]), '--json']);
     if (options.level !== undefined) await runGspotStep(sandbox, ['set', 'level', options.level]);
     const excluded = options.without ?? [];
     for (const configuration of excluded)
@@ -134,7 +134,6 @@ export async function initSandbox(
             '--reason',
             'The sandbox exercises selected checks without this configuration.',
         ]);
-    await options.prepare?.(sandbox.root);
     if (options.install !== false) await runGspotStep(sandbox, ['install']);
     return initialized;
 }

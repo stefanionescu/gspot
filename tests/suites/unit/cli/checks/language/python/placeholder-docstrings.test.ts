@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     PYTHON_MODULE_SANDBOX,
@@ -12,7 +12,7 @@ test.each([...PLACEHOLDER_DOCSTRING_CASES])(
     async (sample) => {
         await using sandbox = await createSandbox(PYTHON_MODULE_SANDBOX);
         expect(await runCheckSample(sandbox, sample, PYTHON_MODULE_SANDBOX.cleanSource)).toStrictEqual(
-            expectedSummary(sample),
+            buildExpectedSummary(sample),
         );
     },
 );

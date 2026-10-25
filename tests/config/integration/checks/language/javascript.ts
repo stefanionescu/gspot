@@ -1,6 +1,5 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { BASE_INSTALLED_FILES } from '#tests/config/setup/sandboxes.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { BASE_INSTALLED_FILES } from '#tests/config/integration/checks/samples.ts';
 
 export const JAVASCRIPT_PROJECT_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',
@@ -171,13 +170,6 @@ export const AUTHORED_JSCONFIG_CASES = [
     { name: 'with an authored jsconfig', authored: true },
 ] as const;
 
-export const SCOPE_JSCONFIG_PATHS = [
-    findManifestTarget('javascript', 'jsconfig.json'),
-    `${GSPOT_PATHS.configurations}/language/javascript/scopes/app/child/jsconfig.json`,
-    `${GSPOT_PATHS.configurations}/language/javascript/scopes/app/jsconfig.json`,
-    `${GSPOT_PATHS.configurations}/language/javascript/scopes/sibling/jsconfig.json`,
-] as const;
-
 export const IMPORTED_AMBIENT_FILES = {
     'base.json':
         '{"compilerOptions":{"strict":true,"types":[],"allowJs":true,"checkJs":true,"noEmit":true,"baseUrl":".","paths":{"shared-api":["types/api.d.ts"]}}}',
@@ -205,3 +197,35 @@ export const OWN_TYPESCRIPT_RESULTS = [
         ],
     },
 ] as const;
+
+const JAVASCRIPT_MODULE = `// Doubles numbers.
+
+/**
+Doubles a number, and returns an infinite number unchanged.
+
+@param {number} value the operand to multiply
+@returns {number} twice the value
+*/
+export function twice(value) {
+    if (Number.isNaN(value)) throw new RangeError('A missing number has no double.');
+    return Number.isFinite(value) ? value * 2 : value;
+}
+`;
+
+export const ESLINT_SANDBOX = {
+    configurations: ['javascript'],
+    files: {
+        'package.json':
+            '{"name":"example","version":"1.0.0","description":"A JavaScript repository.","private":true,"type":"module","packageManager":"bun@1.4.2"}\n',
+        'src/main.js': JAVASCRIPT_MODULE,
+    },
+} as const;
+
+export const DEBUGGER_SAMPLE = {
+    check: 'javascript/eslint',
+    files: {
+        'src/paused.js': JAVASCRIPT_MODULE.replace('    return Number', '    debugger;\n    return Number'),
+    },
+    expected: { file: 'src/paused.js', line: 11, rule: 'no-debugger' },
+    corrected: { files: { 'src/paused.js': JAVASCRIPT_MODULE } },
+};

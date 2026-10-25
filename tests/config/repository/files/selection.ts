@@ -1,9 +1,3 @@
-export const MIGRATION_PATHS = [
-    'migrations/V1_root.sql',
-    'app/migrations/V2_first.sql',
-    'other/migrations/V3_other.sql',
-] as const;
-
 export const MIGRATION_CASES = [
     ['', ['migrations/V1_root.sql']],
     ['app', ['app/migrations/V2_first.sql']],

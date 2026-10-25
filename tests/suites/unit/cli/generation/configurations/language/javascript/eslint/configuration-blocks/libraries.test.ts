@@ -12,7 +12,6 @@ import {
     TRPC_MODULES,
     TRPC_FAILURES,
     ZUSTAND_FILES,
-    ROUTER_ROLE_FILES,
     DRIZZLE_SCOPE_SETTINGS,
     UNCHECKED_ROUTER_FILES,
 } from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/libraries.ts';
@@ -158,7 +157,7 @@ test.each([...LEVELS])(
     'tRPC procedures need an input schema in router role files of each scope at %s',
     async (level) => {
         await using sandbox = await testdir();
-        const checked = new Set(ROUTER_ROLE_FILES);
+        const checked = new Set(['custom/action.ts', 'child/handlers/action.ts']);
         const unchecked = [...UNCHECKED_ROUTER_FILES];
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['trpc', 'typescript'], {

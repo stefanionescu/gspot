@@ -1,8 +1,7 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
-import { testdir, createFileTree } from 'testdirs';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -15,10 +14,8 @@ import {
 } from '#tests/config/integration/checks/general/gspot.ts';
 
 test('suppression detection agrees with Ruff on every noqa comment form and place', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
     const paths = RUFF_SUPPRESSIONS.map((_, index) => `source_${String(index)}.py`);
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], { level: 'all' }),
         ...Object.fromEntries(RUFF_SUPPRESSIONS.map(({ source }, index) => [paths[index]!, source])),
     });
@@ -52,13 +49,11 @@ async function readSuppressionResults(root: string, paths: string[], reported: S
     }));
 }
 test('suppression detection finds Vale comments and skips documented examples', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
     const documents = VALE_SUPPRESSIONS.flatMap((suppression, index) =>
         ['md', 'mdx'].map((extension) => ({ ...suppression, path: `guide-${String(index)}.${extension}` })),
     );
     const paths = documents.map(({ path }) => path);
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['prose']),
         '.vale.ini': VALE_SUPPRESSION_SETTINGS,
         'styles/Example/Concrete.yml': `extends: existence

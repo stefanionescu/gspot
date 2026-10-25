@@ -97,12 +97,7 @@ test('the init plan lists each submodule once and reads none of it', async () =>
 test('init plans no scope for an old lint folder, and --level all replaces the config files of that level', async () => {
     await using sandbox = await testdir(QUALITY_PACKAGE_FILES);
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, [
-        ...buildInitArguments([], { json: true }),
-        '--dry-run',
-        '--level',
-        'all',
-    ]);
+    const result = await runGspot(sandbox.path, [...buildInitArguments([]), '--json', '--dry-run', '--level', 'all']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan, settings } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
     expect(plan.level).toBe('all');
@@ -119,7 +114,7 @@ test('init names disable comments for rules that the new setup does not load', a
         'src/old.js':
             '// eslint-disable-next-line local-rules/no-legacy -- the old setup had this rule\nexport const value = 1;\n/* eslint-disable no-console, unicorn/no-null */\n',
     });
-    const result = await runGspot(sandbox.path, [...buildInitArguments([], { json: true }), '--dry-run']);
+    const result = await runGspot(sandbox.path, [...buildInitArguments([]), '--json', '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.retained).toStrictEqual([
@@ -132,7 +127,7 @@ test('init lists your .editorconfig under write and not under delete when the ge
     await using sandbox = await createGitSandbox({ '.editorconfig': authored });
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
-    const commandArguments = buildInitArguments(['format'], { json: true });
+    const commandArguments = [...buildInitArguments(['format']), '--json'];
 
     const preview = await runGspot(sandbox.path, [...commandArguments, '--dry-run']);
 
@@ -150,7 +145,7 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     await using sandbox = await testdir({ 'control.txt': 'preserve this source\n' });
 
     if (hasGit) commitAll(sandbox.path);
-    const commandArguments = [...buildInitArguments([], { json: true }), '--no-configurations'];
+    const commandArguments = [...buildInitArguments([]), '--json', '--no-configurations'];
     const before = await readTree(sandbox.path);
     const preview = await runGspot(sandbox.path, [...commandArguments, '--dry-run']);
     if (!hasGit) {

@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
@@ -12,8 +13,6 @@ import {
     EXAMPLE_MANIFEST_PATH,
     MINIMUM_VERSION_CASES,
     MANIFEST_INVARIANT_CASES,
-    SEMGREP_CONFIG_FILE_PATHS,
-    SEMGREP_CONFIG_FILE_TABLES,
 } from '#tests/config/configurations/manifests.ts';
 
 async function readTestManifests(
@@ -74,13 +73,17 @@ test('only declared config files are loaded and each record sets its tool and sc
     const configurations = await readTestManifests(
         {
             [EXAMPLE_MANIFEST_PATH]:
-                CONFIGURATION_TABLE + SEMGREP_CONFIG_FILE_TABLES + '[[tool]]\nname = "semgrep"\nversion = "1.0.0"\n',
+                CONFIGURATION_TABLE +
+                '\n[[config_file]]\ntarget = "other.yml"\npointer = { path = "other.yml", body = "{target}" }\n\n[[config_file]]\ntarget = "semgrep/first.yml"\ntool = "semgrep"\nper_scope = true\n\n[[config_file]]\ntarget = "semgrep/second.yml"\ntool = "semgrep"\nper_scope = true\n' +
+                '[[tool]]\nname = "semgrep"\nversion = "1.0.0"\n',
         },
         SEMGREP_ASSETS,
     );
     const configuration = configurations.get('example')!;
     expect(configuration.configFiles.map(({ source, target }) => [source, target])).toStrictEqual([
-        ...SEMGREP_CONFIG_FILE_PATHS,
+        ['config-files/other.yml', `${GSPOT_PATHS.configurations}/language/example/other.yml`],
+        ['config-files/semgrep/first.yml', `${GSPOT_PATHS.configurations}/language/example/semgrep/first.yml`],
+        ['config-files/semgrep/second.yml', `${GSPOT_PATHS.configurations}/language/example/semgrep/second.yml`],
     ]);
     expect(configuration.configFiles.slice(1, 3)).toMatchObject([
         { tool: ['semgrep'], per_scope: true },

@@ -5,7 +5,7 @@ import { afterAll, setDefaultTimeout } from 'bun:test';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { PackedPackage } from '#tests/types/packages.ts';
-import { stopOnSignals } from '#tests/setup/system/processes.ts';
+import { SIGNAL_EXIT_CODES } from '#cli/config/system/terminal.ts';
 import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { createNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
@@ -24,12 +24,17 @@ setDefaultTimeout(TEST_TIMEOUT_MILLISECONDS);
 
 const resources = new AsyncDisposableStack();
 afterAll(() => resources.disposeAsync());
-resources.use(
-    stopOnSignals((code) => {
+const signalListeners = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) => ({
+    signal,
+    listener: (): void => {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises, n/no-process-exit -- reason: The signal handler must dispose resources before exiting with the signal status.
         void resources.disposeAsync().finally(() => process.exit(code));
-    }),
-);
+    },
+}));
+for (const { signal, listener } of signalListeners) process.once(signal, listener);
+resources.defer(() => {
+    for (const { signal, listener } of signalListeners) process.removeListener(signal, listener);
+});
 
 if (!(await isOnDisk(join(TEST_RUN_FOLDER, PACKED_PACKAGES_FILE))))
     throw new Error('Run mise run test integration or mise run test e2e first.');
@@ -43,17 +48,18 @@ const toolPaths = await readFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), 'utf8')
 const toolFolders = toolPaths.split(/\r?\n/u).filter((folder) => folder !== '');
 const work = resources.use(await testdir());
 const registry = resources.use(await createNpmRegistry(work.path));
-const overrides = overrideEnvironment({
-    ...MISE_LOCK_ENVIRONMENT,
-    MISE_STATE_DIR: join(TEST_RUN_FOLDER, 'mise-state'),
-    GSPOT_TEST_NPM_REGISTRY: registry.url,
-    NPM_CONFIG_USERCONFIG: registry.npmrc,
-    PATH: [
-        dirname(join(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH)),
-        ...toolFolders,
-        join(testModules, '.bin'),
-        join(workspaceModules, '.bin'),
-        readEnvironmentVariable('PATH') ?? '',
-    ].join(delimiter),
-});
-resources.use(overrides);
+resources.use(
+    overrideEnvironment({
+        ...MISE_LOCK_ENVIRONMENT,
+        MISE_STATE_DIR: join(TEST_RUN_FOLDER, 'mise-state'),
+        GSPOT_TEST_NPM_REGISTRY: registry.url,
+        NPM_CONFIG_USERCONFIG: registry.npmrc,
+        PATH: [
+            dirname(join(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH)),
+            ...toolFolders,
+            join(testModules, '.bin'),
+            join(workspaceModules, '.bin'),
+            readEnvironmentVariable('PATH') ?? '',
+        ].join(delimiter),
+    }),
+);

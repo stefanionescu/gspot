@@ -6,7 +6,7 @@ import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
-test("deptry ignores gspot's tool folder and reads your exclude settings again after they change", async () => {
+test("deptry ignores gspot's tool folder and reads the authored exclude settings again after they change", async () => {
     await using sandbox = await createGitSandbox({});
     const project = `[project]
 name = "dependency-example"

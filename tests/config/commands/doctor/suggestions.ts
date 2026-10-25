@@ -1,13 +1,10 @@
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-
 export const REMOVED_CONFIGURATION_SUGGESTIONS = [
     {
         name: 'removed at the root',
-        project: {
-            'gspot.toml': buildSandboxSettings([], {
-                rules: true,
-                tables: 'removed_configurations = { value = ["bash"], reason = "Bash is deliberately excluded from this selection." }\n',
-            }),
+        options: {
+            tables: 'removed_configurations = { value = ["bash"], reason = "Bash is deliberately excluded from this selection." }\n',
+        },
+        files: {
             'entry.sh': 'echo ready\n',
             'source.py': 'print("ready")\n',
         },
@@ -15,12 +12,11 @@ export const REMOVED_CONFIGURATION_SUGGESTIONS = [
     },
     {
         name: 'all Bash evidence is in a scope that removed Bash',
-        project: {
-            'gspot.toml': buildSandboxSettings([], {
-                rules: true,
-                scopes: [{ path: 'api' }],
-                tables: 'removed_configurations = { value = ["bash"], reason = "Bash is deliberately excluded from this selection." }\n',
-            }),
+        options: {
+            scopes: [{ path: 'api' }],
+            tables: 'removed_configurations = { value = ["bash"], reason = "Bash is deliberately excluded from this selection." }\n',
+        },
+        files: {
             'api/entry.sh': 'echo ready\n',
             'source.py': 'print("ready")\n',
         },
@@ -28,11 +24,10 @@ export const REMOVED_CONFIGURATION_SUGGESTIONS = [
     },
     {
         name: 'an unaffected sibling supplies Bash evidence',
-        project: {
-            'gspot.toml': buildSandboxSettings([], {
-                rules: true,
-                tables: '[[scope]]\npath = "api"\nremoved_configurations = { value = ["bash"], reason = "Bash is deliberately excluded from this selection." }\n[[scope]]\npath = "worker"\n',
-            }),
+        options: {
+            tables: '[[scope]]\npath = "api"\nremoved_configurations = { value = ["bash"], reason = "Bash is deliberately excluded from this selection." }\n[[scope]]\npath = "worker"\n',
+        },
+        files: {
             'api/entry.sh': 'echo ready\n',
             'worker/entry.sh': 'echo ready\n',
             'source.py': 'print("ready")\n',

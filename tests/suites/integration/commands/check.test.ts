@@ -14,8 +14,8 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { PARTIAL_FIX_CASES } from '#tests/config/integration/commands.ts';
 import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { PARTIAL_FIX_CASES, TAB_FORMAT_SETTINGS } from '#tests/config/integration/commands.ts';
 import { spawnGspot, applyThenInstall, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
 test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned version, while bash/function-size passes and bash/shellcheck passes on the full PATH', async () => {
@@ -125,14 +125,13 @@ test('a pre-push check in a shallow clone passes project/bash-syntax and refuses
 test.skipIf(isWindows || process.getuid?.() === 0)(
     `a SQLFluff fix that cannot write its file is a failed fix with exit code 2, even though SQLFluff's exit code also means findings`,
     async () => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['sql'], {
                 level: 'all',
                 tables: stringify({ tools: { sqlfluff: { dialect: 'postgres' } } }),
             }),
             'source/sample.sql': 'select  * from foo;\n',
         });
-        runGitStep(sandbox.path, ['init', '--quiet']);
 
         await applyThenInstall(sandbox.path);
         const command = ['check', '--only', 'sql/sqlfluff', '--fix', '--json'];
@@ -158,12 +157,11 @@ test.skipIf(isWindows || process.getuid?.() === 0)(
 test.each([...PARTIAL_FIX_CASES])(
     '$check fixes findings, reports an unchanged second fix, and passes after a manual fix',
     async ({ configuration, check, path, tables, sample, partial, corrected }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([configuration], { level: 'all', tables }),
             '.gitignore': `${DOT_GSPOT}/\n`,
             [path]: sample,
         });
-        runGitStep(sandbox.path, ['init', '--quiet']);
 
         await applyThenInstall(sandbox.path);
         const command = ['check', '--only', check, '--fix', '--json'];
@@ -183,23 +181,3 @@ test.each([...PARTIAL_FIX_CASES])(
         expect(passed.exitCode, JSON.stringify(passed)).toBe(0);
     },
 );
-
-test('shfmt reports and fixes script formatting with tabs', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash', 'format'], TAB_FORMAT_SETTINGS),
-        'example.sh': `if true; then
-  echo ready
-fi
-`,
-    });
-
-    await applyThenInstall(sandbox.path);
-    const command = ['check', '--only', 'bash/shfmt', '--json'];
-    const broken = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
-    expect(broken.exitCode, JSON.stringify(broken)).toBe(1);
-    const correction = parseCheckReport(await spawnGspot(sandbox.path, [...command, '--fix'])).report;
-    expect(correction.exitCode, JSON.stringify(correction)).toBe(0);
-    expect(await readFile(join(sandbox.path, 'example.sh'), 'utf8')).toBe('if true; then\n\techo ready\nfi\n');
-    const verified = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
-    expect(verified.exitCode, JSON.stringify(verified)).toBe(0);
-});

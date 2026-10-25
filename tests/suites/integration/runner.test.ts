@@ -6,21 +6,23 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 
 test.each(['fresh', 'stale-cli', 'stale-plugin'])(
     'the integration preload validates %s packed versions before running tests',
     async (state) => {
         await using sandbox = await testdir();
-        await writePreloadFiles(sandbox.path, state);
-        const suite = join(sandbox.path, 'child.test.ts');
-        await writeFile(
-            suite,
-            `import { test, expect } from 'bun:test'; test('starts', () => expect(process.env.MISE_STATE_DIR).toBe(${JSON.stringify(join(sandbox.path, 'mise-state'))}));`,
-        );
+        await writeRunFolder(sandbox.path, state);
         const child = await runCommand(
-            [process.execPath, 'test', '--preload', join(sandbox.path, 'preload.ts'), suite],
-            { cwd: REPOSITORY_ROOT },
+            [
+                process.execPath,
+                'test',
+                '--preload',
+                ...buildProgramArguments('runner/preload'),
+                ...buildProgramArguments('runner/environment.test'),
+            ],
+            { cwd: REPOSITORY_ROOT, env: { TEST_RUN_FOLDER: sandbox.path } },
         );
         if (state === 'fresh') expect(child.code, child.stdout + child.stderr).toBe(0);
         else {
@@ -35,22 +37,23 @@ test.each(['fresh', 'stale-cli', 'stale-plugin'])(
 
 test.skipIf(isWindows)('SIGINT disposes integration resources and exits before the following test', async () => {
     await using sandbox = await testdir({ temp: {} });
-    await writePreloadFiles(sandbox.path, 'fresh');
-    const suite = join(sandbox.path, 'child.test.ts');
-    await writeFile(
-        suite,
-        "import { test } from 'bun:test'; test('interrupts', async () => { process.kill(process.pid, 'SIGINT'); await new Promise(() => {}); }); test('never starts', () => { throw new Error('Later test ran'); });",
+    await writeRunFolder(sandbox.path, 'fresh');
+    const child = await runCommand(
+        [
+            process.execPath,
+            'test',
+            '--preload',
+            ...buildProgramArguments('runner/preload'),
+            ...buildProgramArguments('runner/interrupt.test'),
+        ],
+        { cwd: REPOSITORY_ROOT, env: { TMPDIR: join(sandbox.path, 'temp'), TEST_RUN_FOLDER: sandbox.path } },
     );
-    const child = await runCommand([process.execPath, 'test', '--preload', join(sandbox.path, 'preload.ts'), suite], {
-        cwd: REPOSITORY_ROOT,
-        env: { TMPDIR: join(sandbox.path, 'temp') },
-    });
     expect(child.code, child.stdout + child.stderr).toBe(130);
     expect(child.stdout + child.stderr).not.toContain('Later test ran');
     expect(await readdir(join(sandbox.path, 'temp'))).toStrictEqual([]);
 });
 
-async function writePreloadFiles(root: string, state: string): Promise<void> {
+async function writeRunFolder(root: string, state: string): Promise<void> {
     await writeFile(
         join(root, 'packages.json'),
         JSON.stringify(
@@ -67,10 +70,4 @@ async function writePreloadFiles(root: string, state: string): Promise<void> {
         ),
     );
     await writeFile(join(root, 'tool-paths.txt'), '');
-    const runFolderModule = join(REPOSITORY_ROOT, 'tests/setup/runner/run-folder.ts');
-    const preload = join(REPOSITORY_ROOT, 'tests/setup/runner/integration.ts');
-    await writeFile(
-        join(root, 'preload.ts'),
-        `import { mock } from 'bun:test'; await mock.module(${JSON.stringify(runFolderModule)}, () => ({ TEST_RUN_FOLDER: ${JSON.stringify(root)}, REPOSITORY_ROOT: ${JSON.stringify(REPOSITORY_ROOT)} })); await import(${JSON.stringify(preload)});`,
-    );
 }

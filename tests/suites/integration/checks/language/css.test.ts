@@ -13,7 +13,6 @@ import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/
 import {
     STYLESHEETS,
     TAILWIND_FILES,
-    TAILWIND_TABLES,
     STYLELINT_TABLES,
     STYLELINT_COMMAND,
     CORRECTED_STYLESHEETS,
@@ -64,7 +63,7 @@ test.each([...LEVELS])(
     },
 );
 
-test("Stylelint run by an editor finds the scope's config file and checks your build folder", async () => {
+test("Stylelint run by an editor finds the scope's config file and checks the build folder", async () => {
     const root = installedSandbox().root;
     await using _change = await applySandboxChanges(installedSandbox(), {
         files: {
@@ -96,7 +95,13 @@ test('Stylelint accepts Tailwind syntax only in the scope that declares Tailwind
     const root = installedSandbox().root;
     await using _change = await applySandboxChanges(installedSandbox(), {
         files: {
-            'gspot.toml': buildSandboxSettings(['css', 'nextjs'], { level: 'all', tables: TAILWIND_TABLES }),
+            'gspot.toml': buildSandboxSettings(['css', 'nextjs'], {
+                level: 'all',
+                scopes: [
+                    { path: 'app', configurations: ['css'] },
+                    { path: 'other', configurations: ['css'] },
+                ],
+            }),
             ...TAILWIND_FILES,
         },
     });

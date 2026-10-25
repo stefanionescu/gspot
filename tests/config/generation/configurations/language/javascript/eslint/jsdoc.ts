@@ -1,5 +1,3 @@
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-
 export const JSDOC_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',
     'tsconfig.json':
@@ -71,15 +69,6 @@ export const JSDOC_FINDINGS = [
     { file: 'capitalized.js', findings: [{ ruleId: 'jsdoc/check-types', line: 3 }] },
     { file: 'undefined.js', findings: [{ ruleId: 'jsdoc/no-undefined-types', line: 3 }] },
     { file: 'typed.ts', findings: [] },
-] as const;
-
-export const TSC_ARGUMENTS = [
-    'node',
-    'node_modules/typescript/lib/tsc.js',
-    '--project',
-    findManifestTarget('javascript', 'jsconfig.json'),
-    '--pretty',
-    'false',
 ] as const;
 
 export const ROOT_PARAMETERS = `/**

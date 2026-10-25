@@ -22,9 +22,7 @@ import {
     UNRELATED_FILE,
     NEXT_CACHE_BYTES,
     AUTHORED_NEXT_ENV,
-    NEXT_VERSION_OUTPUT,
     ROUTE_TYPES_COMMENT,
-    TYPESCRIPT_VERSION_OUTPUT,
 } from '#tests/config/checks/framework/nextjs.ts';
 
 async function prepareNextjsBuild(sandboxRoot: string, scope: string): Promise<Session> {
@@ -61,7 +59,7 @@ function fakeNextjsCommands(fakeRun: (command: readonly string[], options: Async
     resources.use(
         spyOn(processes, 'spawnProcessBlocking').mockImplementation((command) => {
             return buildProcessResult({
-                stdout: basename(command[0] ?? '') === 'next' ? NEXT_VERSION_OUTPUT : TYPESCRIPT_VERSION_OUTPUT,
+                stdout: basename(command[0] ?? '') === 'next' ? 'Next.js v16.3.5' : 'Version 5.9.3',
             });
         }),
     );

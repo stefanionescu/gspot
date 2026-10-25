@@ -1,12 +1,12 @@
 import { spyOn } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { type Session } from '#cli/types/session.ts';
+import { SWIFT_PACKAGE } from '#tests/config/swift.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import * as environment from '#cli/system/environment.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
-import { SWIFT_PACKAGE } from '#tests/config/setup/sandboxes.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -105,10 +105,10 @@ Open the sandbox, run one built-in check, and return its findings.
 export async function runSandboxCheck(
     root: string,
     checkId: string,
-    options: { scope?: string; paths?: string[]; resources?: DisposableStack } = {},
+    options: { scope?: string; paths?: string[] } = {},
 ): Promise<readonly Finding[]> {
     using resources = new DisposableStack();
-    const session = await openSession(root, { resources: options.resources ?? resources });
+    const session = await openSession(root, { resources });
     const planned = planSandboxCheck(session, checkId, options);
     const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
     return result.findings;

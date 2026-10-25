@@ -133,7 +133,7 @@ test(`a scope's per-scope check plans every file of its scope and covers only it
             scopes: [{ path: 'apps/web' }, { path: 'apps/web/nested' }],
         }),
         'apps/web/value.test.js': 'test("value", () => expect(1).toBe(1));\n',
-        'apps/web/fixture.bin': new Uint8Array([0, 255, 0]),
+        'apps/web/image.bin': new Uint8Array([0, 255, 0]),
         'apps/web/jest.config.json': '{"testEnvironment":"node"}',
         'apps/web/nested/private.txt': 'Nested scope input\n',
         'unrelated/private.txt': 'Sibling input\n',
@@ -143,7 +143,7 @@ test(`a scope's per-scope check plans every file of its scope and covers only it
     const planned = planChecks(session, { stage: 'all', only: ['jest/coverage'] });
     const project = planned.find((each) => each.scope.folder.path === 'apps/web')!;
     expect(project.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        'apps/web/fixture.bin',
+        'apps/web/image.bin',
         'apps/web/jest.config.json',
         'apps/web/value.test.js',
     ]);

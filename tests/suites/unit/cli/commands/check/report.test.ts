@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
+import { stringify } from '@decimalturn/toml-patch';
 import { stripVTControlCharacters } from 'node:util';
 import { type RunReport } from '#cli/types/runs/run.ts';
 import { setOutputOptions } from '#cli/system/terminal.ts';
@@ -9,6 +10,7 @@ import { fakeTerminals } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PROGRESS_CLEAR } from '#cli/config/commands/check/check.ts';
 import { FINDINGS_SHOWN } from '#cli/config/commands/check/report.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { printProgress, formatRunReport } from '#cli/commands/check/report.ts';
@@ -16,17 +18,43 @@ import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git
 
 import {
     DURATION,
-    VERBOSITY_FILES,
+    FINDING_LINES,
     FINDINGS_REPORT,
     NO_COLOR_SETTINGS,
-    FAILED_REPORT_TEXT,
     VERBOSITY_ARGUMENTS,
     FAILED_CHECK_REPORT,
     SKIPPED_REPORT_CHECKS,
+    FINDINGS_TOOL_ARGUMENTS,
     COMPARISON_NOTICE_CASES,
-    VERBOSE_FINDINGS_REPORT,
     CHECK_REPORT_COMPARISONS,
 } from '#tests/config/commands/check/report.ts';
+
+async function createVerbositySandbox(
+    findingsCommand: string[],
+    passingCommand: string[],
+): Promise<Awaited<ReturnType<typeof testdir>>> {
+    const sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: stringify({
+                command_check: [
+                    {
+                        id: 'example/findings',
+                        command: findingsCommand,
+                        output: { format: 'lines' },
+                        paths: ['source.txt'],
+                        stage: 'commit',
+                    },
+                    { id: 'example/passing', command: passingCommand, paths: ['source.txt'], stage: 'commit' },
+                ],
+            }),
+        }),
+        'source.txt': 'before',
+    });
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'source.txt'), 'after');
+    return sandbox;
+}
 
 async function assertJsonFindings(root: string, commandArguments: readonly string[]): Promise<void> {
     const json = parseCheckReport(await runGspot(root, [...commandArguments, '--json']));
@@ -41,9 +69,10 @@ async function assertJsonFindings(root: string, commandArguments: readonly strin
 }
 
 test('check prints the first findings and the count of the rest, and --json keeps every finding', async () => {
-    await using sandbox = await testdir(VERBOSITY_FILES);
-    commitAll(sandbox.path);
-    await writeFile(join(sandbox.path, 'source.txt'), 'after');
+    await using sandbox = await createVerbositySandbox(
+        buildProgramCommand('fakes/tool', ...FINDINGS_TOOL_ARGUMENTS),
+        buildProgramCommand('fakes/tool'),
+    );
     const result = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS]);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(result.stderr).toBe('');
@@ -52,13 +81,29 @@ test('check prints the first findings and the count of the rest, and --json keep
 });
 
 test('check --verbose prints every finding and the command', async () => {
-    await using sandbox = await testdir(VERBOSITY_FILES);
-    commitAll(sandbox.path);
-    await writeFile(join(sandbox.path, 'source.txt'), 'after');
+    const findingsCommand = buildProgramCommand('fakes/tool', ...FINDINGS_TOOL_ARGUMENTS);
+    const passingCommand = buildProgramCommand('fakes/tool');
+    await using sandbox = await createVerbositySandbox(findingsCommand, passingCommand);
     const result = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS, '--verbose']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(result.stderr).toBe('');
-    expect(result.stdout.replaceAll(DURATION, '0.0s')).toBe(VERBOSE_FINDINGS_REPORT);
+    expect(result.stdout.replaceAll(DURATION, '0.0s')).toBe(
+        [
+            'Checked the files changed since HEAD.',
+            `example/findings  failed  ${String(FINDINGS_SHOWN + 1)} findings`,
+            `  $ ${findingsCommand.join(' ')}`,
+            ...FINDING_LINES.map((line) => `  ${line}`),
+            '  help: Read the command output; this repository declares the check.',
+            '  run again: gspot check --only example/findings --changed HEAD',
+            '',
+            'example/passing  passed  1 file  0.0s',
+            `  $ ${passingCommand.join(' ')}`,
+            '',
+            `Failed: 1 check with ${String(FINDINGS_SHOWN + 1)} findings. Passed: 1 check. Skipped: 0 checks.`,
+            'Time: 0.0s. Exit code 1.',
+            '',
+        ].join('\n'),
+    );
 });
 
 test('the summary counts skipped checks apart from passed ones, and an empty run still prints its exit code', () => {
@@ -79,7 +124,9 @@ test('the summary counts skipped checks apart from passed ones, and an empty run
     expect(text).toEndWith('Passed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 0.\n');
 });
 test('a failed report prints each check with its findings, help, and reproduce line, the ignore count, and the summary', () => {
-    expect(formatRunReport(FAILED_CHECK_REPORT, { verbose: false })).toBe(FAILED_REPORT_TEXT);
+    expect(formatRunReport(FAILED_CHECK_REPORT, { verbose: false })).toBe(
+        'bash/shellcheck  failed  1 finding\n  a.sh:4:3  SC2086  Double quote to prevent globbing.\n  help: Quote it.\n  run again: gspot check --only bash/shellcheck\n\napi  format/prettier  missing  prettier is not installed. Run: mise install\n\nignores    1 (printed with --verbose)\nFailed: 1 check with 1 finding. Could not run: 1 check (a tool is missing; run gspot install). Passed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 1.\n',
+    );
 });
 
 test('findings that share a help print it once, after the last of them', () => {

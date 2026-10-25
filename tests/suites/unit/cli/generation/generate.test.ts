@@ -7,6 +7,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
+import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
@@ -137,7 +138,7 @@ test('generated scope settings stay identical across process collations', async 
 
 test('adding the first Markdown and LFS files leaves generated output unchanged', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript'], { tables: '[hooks]\nenabled = true\n' }),
+        'gspot.toml': buildSandboxSettings(['javascript'], { tables: HOOKS_SETTINGS }),
         'package.json': '{"packageManager":"npm@11.0.0"}',
         'source.ts': 'export {};\n',
     });

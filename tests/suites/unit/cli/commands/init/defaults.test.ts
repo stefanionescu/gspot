@@ -29,8 +29,8 @@ test.each([
     const written = buildSettingsText(source, stripDefaults(authored), format);
     const after = parseSettings(written, sandbox.path);
     for (const path of ['', ...Object.keys(before.scopes)]) {
-        expect(getTable(selectScopeSettings(after, path), 'supabase')).toStrictEqual(
-            getTable(selectScopeSettings(before, path), 'supabase'),
+        expect(getTable(selectScopeSettings(after, path).scopeSettings, 'supabase')).toStrictEqual(
+            getTable(selectScopeSettings(before, path).scopeSettings, 'supabase'),
         );
     }
     expect(buildSettingsText(written, parseTomlText(written, 'gspot.toml'), format)).toBe(written);

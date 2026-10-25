@@ -5,17 +5,11 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { BASH_HEADER } from '#tests/config/samples.ts';
-import { type SizeCase } from '#tests/types/samples.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { type SizeCase } from '#tests/types/function-size.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PASSED_BASH_RESULTS } from '#tests/config/checks/language/bash/samples.ts';
-
-import {
-    COUNTED_LOOPS,
-    BASH_SIZE_CASES,
-    CORRECTED_LOOPS,
-    NESTED_CONDITION,
-} from '#tests/config/checks/language/bash/function-size.ts';
+import { COUNTED_LOOPS, BASH_SIZE_CASES, CORRECTED_LOOPS } from '#tests/config/checks/language/bash/function-size.ts';
 
 test('Bash function-size counts C-style loops as branches and nesting, not their header assignments, in each scope', async () => {
     const options = buildRunOptions({ only: ['bash/function-size'] });
@@ -84,7 +78,7 @@ test.each(buildSizeCases())(
 );
 
 function buildNestedConditions(depth: number): string {
-    const opening = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (index + 1))}${NESTED_CONDITION}`);
+    const opening = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (index + 1))}if [[ -n "$1" ]]; then`);
     const closing = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (depth - index))}fi`);
     return [...opening, `${' '.repeat(4 * (depth + 1))}echo "$1"`, ...closing].join('\n');
 }

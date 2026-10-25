@@ -1,4 +1,4 @@
-import { BASE_INSTALLED_FILES } from '#tests/config/setup/sandboxes.ts';
+import { BASE_INSTALLED_FILES } from '#tests/config/integration/checks/samples.ts';
 
 export const AUTOPLAY_PAGE = `<!doctype html>
 <html lang="en">
@@ -32,7 +32,6 @@ export const AUTOPLAY_CHECKS = [
         scope: '',
         arguments: ['check', 'index.html', '--json', '--only', 'html/html-validate'],
         source: 'index.html',
-        preserved: 'app/page.html',
         findings: [
             { file: 'index.html', line: 7, column: 24, rule: 'no-autoplay' },
             { file: 'index.html', line: 8, column: 24, rule: 'no-autoplay' },
@@ -43,7 +42,6 @@ export const AUTOPLAY_CHECKS = [
         scope: 'app',
         arguments: ['check', 'app', '--json', '--only', 'site/html-validate'],
         source: 'app/page.html',
-        preserved: 'index.html',
         findings: [
             { file: 'app/dist/index.html', line: 7, rule: 'no-autoplay' },
             { file: 'app/dist/index.html', line: 8, rule: 'no-autoplay' },

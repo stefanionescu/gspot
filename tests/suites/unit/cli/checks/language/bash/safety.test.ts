@@ -10,8 +10,8 @@ import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareBashSandbox } from '#tests/setup/sandboxes/create.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 import { BASH_SAFETY_CASES } from '#tests/config/checks/language/bash/safety.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 import { PASSED_BASH_RESULTS } from '#tests/config/checks/language/bash/samples.ts';
 
 const bashSandbox = shareBashSandbox();
@@ -65,7 +65,7 @@ test.each([...BASH_SAFETY_CASES])(
     '$check reports $expected.rule in $expected.file and passes after the fix',
     async (sample) => {
         expect(await runCheckSample(bashSandbox(), sample, BASH_SANDBOX.cleanSource)).toStrictEqual(
-            expectedSummary(sample),
+            buildExpectedSummary(sample),
         );
     },
 );

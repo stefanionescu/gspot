@@ -1,7 +1,5 @@
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 
-export const ALLOWED_PACKAGE_REASON = 'reason = "Reviewed the installed project."\n';
-
 const ABSENT_PACKAGE_LOCKFILE = `[[package]]
 name = "Absent_Package"
 version = "2.0.0"

@@ -1,18 +1,12 @@
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-
 const EXAMPLE_TARGET_LIMIT = '[[coverage.swift_target]]\nname = "Example"\nlines = 80\n';
 
-export const XCTEST_SETTINGS = buildSandboxSettings(['swift', 'xcode'], {
-    tables: `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n`,
-});
+export const XCTEST_TABLES = `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n`;
 
 export const XCTEST_FAILURES = [
     {
         failure: 'no-project',
         note: 'Set swift.xcode_project or add Package.swift in this scope.',
-        settings: buildSandboxSettings(['swift', 'xcode'], {
-            tables: `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_scheme = "Example"\n`,
-        }),
+        tables: `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_scheme = "Example"\n`,
         build: [],
         coverage: 1,
         code: 0,
@@ -22,7 +16,7 @@ export const XCTEST_FAILURES = [
     {
         failure: 'failed-test',
         note: 'The swift/coverage check failed: Cannot measure coverage because the test run exited 65: The test runner printed no error output.',
-        settings: XCTEST_SETTINGS,
+        tables: XCTEST_TABLES,
         build: ['--exit', '65'],
         coverage: 1,
         code: 2,
@@ -32,7 +26,7 @@ export const XCTEST_FAILURES = [
     {
         failure: 'malformed',
         note: 'The swift/coverage check failed: xccov printed output that gspot cannot read.',
-        settings: XCTEST_SETTINGS,
+        tables: XCTEST_TABLES,
         build: [],
         coverage: undefined,
         code: 2,
@@ -42,7 +36,7 @@ export const XCTEST_FAILURES = [
     {
         failure: 'under-minimum',
         note: undefined,
-        settings: XCTEST_SETTINGS,
+        tables: XCTEST_TABLES,
         build: [],
         coverage: 0.5,
         code: 1,

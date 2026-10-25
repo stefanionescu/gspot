@@ -1,8 +1,5 @@
-import { stringify } from '@decimalturn/toml-patch';
 import { TEST_VERSION } from '#tests/config/commands/samples.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { FINDINGS_SHOWN } from '#cli/config/commands/check/report.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 export const FAILED_CHECK_REPORT = {
     version: TEST_VERSION,
@@ -48,9 +45,6 @@ export const FAILED_CHECK_REPORT = {
     exitCode: 1,
 } as const;
 
-export const FAILED_REPORT_TEXT =
-    'bash/shellcheck  failed  1 finding\n  a.sh:4:3  SC2086  Double quote to prevent globbing.\n  help: Quote it.\n  run again: gspot check --only bash/shellcheck\n\napi  format/prettier  missing  prettier is not installed. Run: mise install\n\nignores    1 (printed with --verbose)\nFailed: 1 check with 1 finding. Could not run: 1 check (a tool is missing; run gspot install). Passed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 1.\n';
-
 export const CHECK_REPORT_COMPARISONS = [
     { content: 'working-tree', header: 'Checked the files changed since main.\n' },
     { content: 'index', header: 'Checked the staged files.\n' },
@@ -89,40 +83,9 @@ export const COMPARISON_NOTICE_CASES = [
     { count: 2, notice: '2 files have unstaged changes that were not checked.' },
 ] as const;
 
-const FINDING_LINES = Array.from({ length: FINDINGS_SHOWN + 1 }, (_, index) => `finding ${String(index + 1)}.`);
+export const FINDING_LINES = Array.from({ length: FINDINGS_SHOWN + 1 }, (_, index) => `finding ${String(index + 1)}.`);
 
-const FINDINGS_COMMAND = buildProgramCommand(
-    'fakes/tool',
-    ...FINDING_LINES.flatMap((line) => ['--line', line]),
-    '--exit',
-    '1',
-);
-
-const PASSING_COMMAND = buildProgramCommand('fakes/tool');
-
-export const VERBOSITY_FILES = {
-    'gspot.toml': buildSandboxSettings([], {
-        rules: true,
-        tables: stringify({
-            command_check: [
-                {
-                    id: 'example/findings',
-                    command: FINDINGS_COMMAND,
-                    output: { format: 'lines' },
-                    paths: ['source.txt'],
-                    stage: 'commit',
-                },
-                {
-                    id: 'example/passing',
-                    command: PASSING_COMMAND,
-                    paths: ['source.txt'],
-                    stage: 'commit',
-                },
-            ],
-        }),
-    }),
-    'source.txt': 'before',
-};
+export const FINDINGS_TOOL_ARGUMENTS = [...FINDING_LINES.flatMap((line) => ['--line', line]), '--exit', '1'];
 
 export const FINDINGS_REPORT = [
     'Checked the files changed since HEAD.',
@@ -131,22 +94,6 @@ export const FINDINGS_REPORT = [
     '  help: Read the command output; this repository declares the check.',
     '  and 1 more (--verbose prints every finding)',
     '  run again: gspot check --only example/findings --changed HEAD',
-    '',
-    `Failed: 1 check with ${String(FINDINGS_SHOWN + 1)} findings. Passed: 1 check. Skipped: 0 checks.`,
-    'Time: 0.0s. Exit code 1.',
-    '',
-].join('\n');
-
-export const VERBOSE_FINDINGS_REPORT = [
-    'Checked the files changed since HEAD.',
-    `example/findings  failed  ${String(FINDINGS_SHOWN + 1)} findings`,
-    `  $ ${FINDINGS_COMMAND.join(' ')}`,
-    ...FINDING_LINES.map((line) => `  ${line}`),
-    '  help: Read the command output; this repository declares the check.',
-    '  run again: gspot check --only example/findings --changed HEAD',
-    '',
-    'example/passing  passed  1 file  0.0s',
-    `  $ ${PASSING_COMMAND.join(' ')}`,
     '',
     `Failed: 1 check with ${String(FINDINGS_SHOWN + 1)} findings. Passed: 1 check. Skipped: 0 checks.`,
     'Time: 0.0s. Exit code 1.',

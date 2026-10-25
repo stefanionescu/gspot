@@ -22,7 +22,6 @@ import { addCommandLine, parseCommandFindings } from '#cli/runs/command/output.t
 
 import {
     CHECK_OUTPUTS,
-    FOREIGN_OUTPUT,
     LINE_ENDING_CASES,
     ESLINT_PATH_CASES,
     WINDOWS_ROOT_CASES,
@@ -54,7 +53,7 @@ test.each(
             help: 'Correct the sandbox file.',
             output: outputSchema.parse(output),
         };
-        const stdout = input === 'empty' ? '' : FOREIGN_OUTPUT;
+        const stdout = input === 'empty' ? '' : 'not the output of any tool {\n';
         expect(
             readParseResult(() => parseOutput(check, stdout, '', { root: sandbox.path, cwd: sandbox.path })),
         ).toStrictEqual(OUTPUT_PARSE_RESULTS[format][input]);

@@ -18,13 +18,10 @@ import {
     LOOSENED_SETTINGS,
     NO_CHANGE_COMMANDS,
     BANNED_WORD_SCOPES,
-    RESTRICTED_IMPORTS,
-    SCOPE_BANNED_WORDS,
     STOPPED_APPLY_FILES,
     BANNED_WORD_SETTINGS,
     KEPT_SETTING_CHANGES,
     STRING_SETTING_VALUES,
-    RESTRICTED_IMPORT_RECORDS,
 } from '#tests/config/commands/set.ts';
 
 test('set and unset work on a setting of a configuration that detection selects from package.json', async () => {
@@ -100,7 +97,7 @@ test.each([...BANNED_WORD_SCOPES])(
         });
         const key = 'naming.banned_words';
         const scopeArguments = scope === '' ? [] : ['--scope', scope];
-        const set = await runGspot(sandbox.path, ['set', key, ...SCOPE_BANNED_WORDS, ...scopeArguments]);
+        const set = await runGspot(sandbox.path, ['set', key, 'discardedword', ...scopeArguments]);
         expect(set.code, set.stdout + set.stderr).toBe(0);
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(written);
         expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
@@ -117,11 +114,15 @@ test('set writes a TOML list of tables as tables and refuses a value that is not
     });
 
     commitAll(sandbox.path);
-    const written = await runGspot(sandbox.path, ['set', 'tools.eslint.restricted_imports', RESTRICTED_IMPORTS]);
+    const written = await runGspot(sandbox.path, [
+        'set',
+        'tools.eslint.restricted_imports',
+        `[{name = "unreviewed-module", message = "Import the reviewed entrypoint for this dependency."}]`,
+    ]);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     expect(getValueAt(parse(settings) as TomlTable, ['tools', 'eslint', 'restricted_imports'])).toStrictEqual([
-        ...RESTRICTED_IMPORT_RECORDS,
+        { name: 'unreviewed-module', message: 'Import the reviewed entrypoint for this dependency.' },
     ]);
     await writeFile(
         join(sandbox.path, 'gspot.toml'),

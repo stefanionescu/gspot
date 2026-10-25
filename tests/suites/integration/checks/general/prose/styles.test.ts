@@ -7,8 +7,8 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
-import { PROSE_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PROSE_SANDBOX } from '#tests/config/integration/samples.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { VALE_INI, EXAMPLE_STYLE_FOLDER } from '#tests/config/integration/checks/general/prose/samples.ts';
@@ -20,9 +20,7 @@ import {
     VOCABULARY_SOURCE,
     HEADING_CASE_GUIDE,
     VERSION_RANGE_SOURCE,
-    SCOPE_SPELLING_CASES,
     SUPPRESSION_COMMENTS,
-    VERSION_RANGE_FINDINGS,
     CORRECTED_LINK_TEXT_GUIDE,
 } from '#tests/config/integration/checks/general/prose/styles.ts';
 
@@ -62,7 +60,13 @@ test("Vale's version-range rule accepts a minimum version and reports vague rang
 
     const result = await spawnRootCheck(sandbox.path, 'prose/vale');
     expect(result.status, result.note).toBe('failed');
-    expect(result.findings).toStrictEqual(VERSION_RANGE_FINDINGS.map((finding) => matchFields(finding)));
+    expect(result.findings).toStrictEqual(
+        [
+            { file: 'versions.md', line: 4, rule: 'Example.Versions' },
+            { file: 'versions.md', line: 5, rule: 'Example.Versions' },
+            { file: 'versions.md', line: 6, rule: 'Example.Versions' },
+        ].map((finding) => matchFields(finding)),
+    );
 });
 
 test("Vale's heading-case rule accepts a reviewed product name and reports title case", async () => {
@@ -122,7 +126,7 @@ test.each([...STYLE_CASES])(
     },
 );
 
-test.each([...SCOPE_SPELLING_CASES])(
+test.each([{ scope: '' }, { scope: 'app' }])(
     'Vale accepts the words listed in gspot.toml and reports a misspelling in scope "$scope"',
     async ({ scope }) => {
         const { root } = installedSandbox();

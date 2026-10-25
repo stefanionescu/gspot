@@ -6,13 +6,14 @@ import { stringify } from '@decimalturn/toml-patch';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
+import { buildProgramPin } from '#tests/setup/cli/tools.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
+import { FIXER_RESULTS } from '#tests/config/commands/check/fixes/results.ts';
 import { planFixer, buildRunOptions, buildFixerSettings } from '#tests/setup/cli/runs.ts';
-import { FIXER_RESULTS, FAILING_VERSION_TOOL } from '#tests/config/commands/check/fixes/results.ts';
+import { buildProgramCommand, buildProgramArguments } from '#tests/setup/system/programs.ts';
 
 test.each([0, 3])('a declared crash pattern fails a fix that exits %p', async (code) => {
     await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
@@ -43,11 +44,11 @@ test.each([0, 3])('a declared crash pattern fails a fix that exits %p', async (c
 
 test.each([...FIXER_RESULTS])(
     '$name classifies $status from the exit code and the resulting bytes',
-    async ({ fix, exit_codes: exitCodes, status, after, note }) => {
+    async ({ toolArguments, exit_codes: exitCodes, status, after, note }) => {
         await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
         const session = await openSession(sandbox.path);
-        const planned = planFixer(session, fix);
+        const planned = planFixer(session, buildProgramCommand('fakes/tool', ...toolArguments));
         if (exitCodes !== undefined) planned.check.exit_codes = [...exitCodes];
         const resultRun = await runFixers(buildCheckSession(session), [planned], { isDryRun: false });
         const result = resultRun.results[0];
@@ -141,7 +142,10 @@ test('a failed version check blocks a check and its fix without changing source 
 
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=changed'));
-    planned.tool = FAILING_VERSION_TOOL;
+    planned.tool = {
+        ...buildProgramPin('version-teller', '3.8.1'),
+        version_command: buildProgramArguments('fakes/tool', '--line', '3.8.1', '--exit', '7'),
+    };
     planned.check.fix![0] = 'version-teller';
     using _which = fakeExecutableLookup(process.execPath);
 

@@ -57,17 +57,3 @@ on:
   enabled: no
 `,
 } as const;
-
-export const YAML_SCOPE_SAMPLE = `parent:
-  enabled: yes
-on:
-  enabled: no
-`;
-
-export const UNQUOTED_UNTIL_CHANGE = {
-    check: 'data-files/v8r',
-    files: {},
-    settings: '\n[[ignore]]\ncheck = "data-files/yamllint"\nreason = "The sample holds no YAML."\nuntil = 2099-01-01\n',
-} as const;
-
-export const REJECTING_SCHEMA = '{ "not": {} }\n';

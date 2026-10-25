@@ -176,14 +176,15 @@ test('doctor suggests a remove command per scope after detection evidence goes, 
 
 test.each([...REMOVED_CONFIGURATION_SUGGESTIONS])(
     'doctor skips removed configurations and keeps detection evidence outside their scopes: $name',
-    async ({ project, expected }) => {
-        await using sandbox = await createGitSandbox(project);
+    async ({ options, files, expected }) => {
+        const settings = buildSandboxSettings([], { rules: true, ...options });
+        await using sandbox = await createGitSandbox({ ...files, 'gspot.toml': settings });
         const result = await runGspot(sandbox.path, ['doctor', '--json']);
         const { suggestions } = JSON.parse(result.stdout) as DoctorReport;
         expect(suggestions.detected.filter(({ configuration }) => configuration === 'bash')).toStrictEqual([
             ...expected,
         ]);
         expect(suggestions.detected.map(({ configuration }) => configuration)).toContain('python');
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(project['gspot.toml']);
+        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     },
 );

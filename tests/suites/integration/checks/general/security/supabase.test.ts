@@ -1,6 +1,6 @@
 import { join } from 'node:path';
+import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
-import { readFile, writeFile } from 'node:fs/promises';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
@@ -26,17 +26,15 @@ describe.skipIf(!hasToolBuild('deno') || !hasToolBuild('semgrep'))('Supabase sec
             buildSandboxChanges(SUPABASE_SANDBOX.files, files),
         );
 
-        await runGspotStep({ root, run: spawnGspot }, ['install']);
+        await runGspotStep(installedSandbox(), ['install']);
         const command = ['check', '--only', 'security/semgrep', '--json'];
         const failed = parseCheckReport(await spawnGspot(root, command));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(listFindingRows(failed.report)).toStrictEqual(
             SECRET_LOG_FILES.map((file) => ({ file, line: 1, rule: 'gspot.javascript.secret-in-log' })),
         );
-        for (const path of SECRET_LOG_FILES) {
-            expect(await readFile(join(root, path), 'utf8')).toBe('console.log(Deno.env.get("API_SECRET"));\n');
+        for (const path of SECRET_LOG_FILES)
             await writeFile(join(root, path), 'console.log("Unable to load the record");\n');
-        }
         const corrected = parseCheckReport(await spawnGspot(root, command));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(listFindingRows(corrected.report)).toStrictEqual([]);

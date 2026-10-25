@@ -1,19 +1,18 @@
 import { join, posix } from 'node:path';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { LICENSE, CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { test, expect, describe, beforeAll, beforeEach } from 'bun:test';
 import { COMMITLINT_PACKAGE } from '#tests/config/authored-config-files.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
     runGspot,
@@ -23,10 +22,9 @@ import {
     buildInitArguments,
 } from '#tests/setup/cli/commands.ts';
 import {
-    COMMITS_FILES,
     COMMIT_MESSAGES,
-    COMMITLINT_EXECUTABLE,
     COMMITLINT_LEVEL_RESULTS,
+    UNTYPED_MESSAGE_FINDINGS,
 } from '#tests/config/integration/checks/general/commits.ts';
 
 async function assertDraftCheck(root: string, draft: string, rules: string[] = []): Promise<void> {
@@ -49,25 +47,16 @@ async function assertDraftCheck(root: string, draft: string, rules: string[] = [
     expect(checked.report.checks[0]!.findings.map(({ rule }) => rule)).toStrictEqual(rules);
 }
 
-function prepareHookRepository(): void {
-    const { root } = installedSandbox();
-    runGitStep(root, ['add', '-A']);
-    runGitStep(root, ['commit', '-qm', 'chore: configure checks', '--no-verify']);
-    runGitStep(root, ['tag', 'configured']);
-}
-
 test('commitlint accepts exact folder-name scopes or no scope, reports bad messages, and runs only at level all', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
-    const settingsPath = join(sandbox.path, 'gspot.toml');
     const settings = buildSandboxSettings([], {
         level: 'all',
         scopes: [{ path: 'Packages/Core', configurations: [] }],
     });
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
         'Packages/Core/source.sh': CLEAN_BASH_SCRIPT,
     });
+    const settingsPath = join(sandbox.path, 'gspot.toml');
     commitAll(sandbox.path);
 
     await applyThenInstall(sandbox.path);
@@ -108,7 +97,22 @@ test('commitlint accepts exact folder-name scopes or no scope, reports bad messa
     }
 });
 
-const installedSandbox = shareInstalledSandbox({ configurations: ['commits'], level: 'all', files: COMMITS_FILES });
+const installedSandbox = shareInstalledSandbox({
+    configurations: ['commits'],
+    level: 'all',
+    files: {
+        'scripts/a.sh': CLEAN_BASH_SCRIPT,
+        'README.md': '# Test\n',
+        LICENSE,
+    },
+});
+
+function prepareHookRepository(): void {
+    const { root } = installedSandbox();
+    runGitStep(root, ['add', '-A']);
+    runGitStep(root, ['commit', '-qm', 'chore: configure checks', '--no-verify']);
+    runGitStep(root, ['tag', 'configured']);
+}
 
 describe('a repository with the commit hooks installed', () => {
     beforeAll(prepareHookRepository);
@@ -131,7 +135,7 @@ describe('a repository with the commit hooks installed', () => {
         const range = parseCheckReport(await spawnGspot(root, command));
         expect(range.code, range.stdout + range.stderr).toBe(1);
         expect(range.report.checks[0]!.findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual(
-            buildUntypedMessageFindings(pushed),
+            UNTYPED_MESSAGE_FINDINGS.map(({ rule, message }) => ({ rule, message: `${pushed}: ${message}` })),
         );
     });
 
@@ -158,7 +162,7 @@ describe('a repository with the commit hooks installed', () => {
         ]);
         expect(
             report.revisions[1]!.report.checks[0]!.findings.map(({ rule, message }) => ({ rule, message })),
-        ).toStrictEqual(buildUntypedMessageFindings(bad));
+        ).toStrictEqual(UNTYPED_MESSAGE_FINDINGS.map(({ rule, message }) => ({ rule, message: `${bad}: ${message}` })));
         const corrected = await spawnGspot(
             root,
             command,
@@ -173,28 +177,33 @@ describe('a repository with the commit hooks installed', () => {
 test.each(['', 'app'])(
     'commitlint reads the generated config through the package.json field gspot writes, in %s',
     async (scope) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
         const packageFile = posix.join(scope, 'package.json');
         const messageFile = posix.join(scope, 'message.txt');
-        const cwd = join(sandbox.path, scope);
-        await createFileTree(sandbox.path, {
+        await using sandbox = await createGitSandbox({
             [packageFile]: COMMITLINT_PACKAGE,
             [messageFile]: 'special: authored contract\n',
         });
         commitAll(sandbox.path);
-        const execution = { cwd, env: {} };
-        const command = [join(testModules, COMMITLINT_EXECUTABLE), '--edit', join(sandbox.path, messageFile)];
-        await replaceCommitlint(sandbox.path, command, execution);
+        const execution = { cwd: join(sandbox.path, scope), env: {} };
+        const command = [join(testModules, '.bin/commitlint'), '--edit', join(sandbox.path, messageFile)];
+        const before = await runCommand(command, execution);
+        expect(before.code, before.stdout + before.stderr).toBe(0);
+        const initialized = await runGspot(sandbox.path, [
+            ...buildInitArguments([]),
+            '--no-configurations',
+            '--level',
+            'all',
+        ]);
+        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const target = `${scope === '' ? './' : '../'}${findManifestTarget('commits', 'commitlint.json')}`;
         expect(await readFile(join(sandbox.path, packageFile), 'utf8')).toBe(
             COMMITLINT_PACKAGE.replace('{"rules":{"type-enum":[2,"always",["special"]]}}', () =>
                 JSON.stringify({ extends: target }),
             ),
         );
-        const after = await runCommand(command, execution);
-        expect(after.code, after.stdout + after.stderr).toBe(1);
-        expect(after.stdout.match(/\[type-enum\]/gu)).toStrictEqual(['[type-enum]']);
+        const mismatched = await runCommand(command, execution);
+        expect(mismatched.code, mismatched.stdout + mismatched.stderr).toBe(1);
+        expect(mismatched.stdout.match(/\[type-enum\]/gu)).toStrictEqual(['[type-enum]']);
         for (const level of ['recommended', 'all']) {
             const changed = await runGspot(sandbox.path, ['set', 'level', level]);
             expect(changed.code, changed.stdout + changed.stderr).toBe(0);
@@ -220,26 +229,3 @@ test.each(['', 'app'])(
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
 );
-
-async function replaceCommitlint(
-    root: string,
-    command: string[],
-    execution: { cwd: string; env: Record<string, string> },
-): Promise<void> {
-    const before = await runCommand(command, execution);
-    expect(before.code, before.stdout + before.stderr).toBe(0);
-    const initialized = await runGspot(
-        root,
-        [...buildInitArguments([]), '--no-configurations', '--level', 'all'],
-        execution.env,
-    );
-    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-}
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function buildUntypedMessageFindings(hash: string): { rule: string; message: string }[] {
-    return [
-        { rule: 'type-empty', message: `${hash}: type may not be empty` },
-        { rule: 'subject-empty', message: `${hash}: subject may not be empty` },
-        { rule: 'subject-full-stop', message: `${hash}: subject may not end with full stop` },
-    ];
-}

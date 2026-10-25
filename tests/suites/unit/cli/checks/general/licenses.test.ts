@@ -22,10 +22,9 @@ import {
     SAMPLE_PYPROJECT,
     SCANNER_FAILURES,
     LICENSE_PACKAGE_JSON,
-    ALLOWED_PACKAGE_CASES,
     LICENSE_PROJECT_FILES,
+    ALLOWED_PACKAGE_CASES,
     SCAN_ALLOWED_PACKAGES,
-    ALLOWED_PACKAGE_REASON,
     PYTHON_LICENSE_SOURCES,
     LICENSE_TOOL_PROJECT_FILES,
     ALLOWED_PACKAGE_SCOPE_CASES,
@@ -264,7 +263,7 @@ async function writeScopeLicenseSandbox(
             ? `[[ignore]]\ncheck = "licenses/allowed"\npaths = ["${scenario.ignore}/**"]\nreason = "Scope is intentionally outside this license run."\n`
             : '';
     const scopes = scenario.scopes.map((scope) => `[[scope]]\npath = "${scope}"\n`).join('');
-    const settings = `${LICENSE_TABLES}[[licenses.allowed_package]]\nname = "Absent_Package"\nversion = "2.0.0"\n${ALLOWED_PACKAGE_REASON}${ignore}${scopes}`;
+    const settings = `${LICENSE_TABLES}[[licenses.allowed_package]]\nname = "Absent_Package"\nversion = "2.0.0"\nreason = "Reviewed the installed project."\n${ignore}${scopes}`;
     const projects = Object.keys(scenario.reports).flatMap((scope): [string, string][] => [
         [join(scope, 'pyproject.toml'), SAMPLE_PYPROJECT],
         [join(scope, '.venv/installed'), 'installed'],

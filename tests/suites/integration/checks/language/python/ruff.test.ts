@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { RunReport } from '#cli/types/runs/run.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -10,7 +11,9 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 import { ruffRulesSchema, ruffConfigurationSchema } from '#tests/schemas/ruff.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { RUFF_SANDBOX } from '#tests/config/integration/checks/language/python/samples.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
@@ -18,54 +21,10 @@ import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes
 import {
     PYTEST_SAMPLE,
     VERSION_SOURCE,
-    RUFF_RULE_SOURCE,
     RUFF_FORMAT_CASES,
     RUFF_VERSION_CASES,
-    RUFF_RULE_ARGUMENTS,
     UNUSED_IMPORT_SOURCE,
-    RUFF_FORMAT_ARGUMENTS,
 } from '#tests/config/integration/checks/language/python/ruff.ts';
-
-async function assertPytestSelection(root: string, sample: string): Promise<void> {
-    const unselected = await spawnGspot(root, ['check', 'tests/test_example.py', '--only', 'python/ruff', '--json']);
-    expect(unselected.code, unselected.stdout + unselected.stderr).toBe(0);
-    const failed = parseCheckReport(
-        await spawnGspot(root, ['check', 'app/tests/test_example.py', '--only', 'python/ruff', '--json']),
-    );
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(listFindingRows(failed.report)).toStrictEqual([
-        { file: 'app/tests/test_example.py', line: 6, rule: 'PT001' },
-    ]);
-    await writeFile(join(root, 'app/tests/test_example.py'), sample.replace('@pytest.fixture()', '@pytest.fixture'));
-    const corrected = await spawnGspot(root, ['check', 'app/tests/test_example.py', '--only', 'python/ruff', '--json']);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-}
-
-async function assertIgnoreScope(root: string): Promise<void> {
-    for (const path of ['tests/test_example.py', 'app/tests/test_example.py'])
-        await writeFile(
-            join(root, path),
-            `"""An assertion example."""
-
-assert True
-`,
-        );
-    const rootAssertion = parseCheckReport(
-        await spawnGspot(root, ['check', 'tests/test_example.py', '--only', 'python/ruff', '--json']),
-    );
-    expect(rootAssertion.code, rootAssertion.stderr).toBe(1);
-    expect(listFindingRows(rootAssertion.report)).toStrictEqual([
-        { file: 'tests/test_example.py', line: 3, rule: 'S101' },
-    ]);
-    const testAssertion = await spawnGspot(root, [
-        'check',
-        'app/tests/test_example.py',
-        '--only',
-        'python/ruff',
-        '--json',
-    ]);
-    expect(testAssertion.code, testAssertion.stderr).toBe(0);
-}
 
 const installedSandbox = shareInstalledSandbox(RUFF_SANDBOX);
 
@@ -75,7 +34,12 @@ test('Ruff selects the pytest lint rules only in the scope that selects pytest, 
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['pytest'] }],
-            tables: '[[ignore]]\ncheck = "python/ruff"\nrule = "S101"\npaths = ["app/tests/**"]\nreason = "Test assertions deliberately verify the behavior."\n',
+            tables: `[[ignore]]
+check = "python/ruff"
+rule = "S101"
+paths = ["app/tests/**"]
+reason = "Test assertions deliberately verify the behavior."
+`,
         }),
         'tests/__init__.py': '"""Root test package."""\n',
         'app/__init__.py': '"""Application package."""\n',
@@ -88,8 +52,29 @@ test('Ruff selects the pytest lint rules only in the scope that selects pytest, 
         buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
     );
 
-    await assertPytestSelection(root, PYTEST_SAMPLE);
-    await assertIgnoreScope(root);
+    const command = ['--only', 'python/ruff', '--json'];
+    const unselected = await spawnGspot(root, ['check', 'tests/test_example.py', ...command]);
+    expect(unselected.code, unselected.stdout + unselected.stderr).toBe(0);
+    const failed = parseCheckReport(await spawnGspot(root, ['check', 'app/tests/test_example.py', ...command]));
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect(listFindingRows(failed.report)).toStrictEqual([
+        { file: 'app/tests/test_example.py', line: 6, rule: 'PT001' },
+    ]);
+    await writeFile(
+        join(root, 'app/tests/test_example.py'),
+        PYTEST_SAMPLE.replace('@pytest.fixture()', '@pytest.fixture'),
+    );
+    const corrected = await spawnGspot(root, ['check', 'app/tests/test_example.py', ...command]);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    for (const path of ['tests/test_example.py', 'app/tests/test_example.py'])
+        await writeFile(join(root, path), '"""An assertion example."""\n\nassert True\n');
+    const rootAssertion = parseCheckReport(await spawnGspot(root, ['check', 'tests/test_example.py', ...command]));
+    expect(rootAssertion.code, rootAssertion.stderr).toBe(1);
+    expect(listFindingRows(rootAssertion.report)).toStrictEqual([
+        { file: 'tests/test_example.py', line: 3, rule: 'S101' },
+    ]);
+    const testAssertion = await spawnGspot(root, ['check', 'app/tests/test_example.py', ...command]);
+    expect(testAssertion.code, testAssertion.stderr).toBe(0);
 });
 
 test.each([...LEVELS])(
@@ -98,7 +83,7 @@ test.each([...LEVELS])(
         const { root } = installedSandbox();
         const sourceFiles = {
             'gspot.toml': buildSandboxSettings(['python'], { level }),
-            'sample.py': RUFF_RULE_SOURCE,
+            'sample.py': '"""An arithmetic example."""\n\nanswer = missing_name\nprint(answer)\n',
         };
         await using _sourceChange = await applySandboxChanges(
             installedSandbox(),
@@ -106,7 +91,13 @@ test.each([...LEVELS])(
         );
 
         const resultRules = runCommandBlocking(
-            [buildVenvExecutablePath(join(root, GSPOT_PATHS.pythonEnvironment), 'ruff'), ...RUFF_RULE_ARGUMENTS],
+            [
+                buildVenvExecutablePath(join(root, GSPOT_PATHS.pythonEnvironment), 'ruff'),
+                'rule',
+                '--all',
+                '--output-format',
+                'json',
+            ],
             { cwd: root },
         );
         expect(resultRules.code, resultRules.stdout + resultRules.stderr).toBe(0);
@@ -140,7 +131,14 @@ test('Ruff run by an editor and through gspot formats each scope the same way', 
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['python'], {
             scopes: [{ path: 'app' }],
-            tables: '[format]\nquotes = "single"\nline_ending = "crlf"\n\n[scope.format]\nquotes = "double"\nline_ending = "lf"\n',
+            tables: `[format]
+quotes = "single"
+line_ending = "crlf"
+
+[scope.format]
+quotes = "double"
+line_ending = "lf"
+`,
         }),
         'sample.py': 'VALUE = "example"\n',
         'app/sample.py': 'VALUE = "example"\n',
@@ -157,7 +155,9 @@ test('Ruff run by an editor and through gspot formats each scope the same way', 
         const editor = runCommandBlocking(
             [
                 buildVenvExecutablePath(join(root, GSPOT_PATHS.pythonEnvironment), 'ruff'),
-                ...RUFF_FORMAT_ARGUMENTS,
+                'format',
+                '--check',
+                '--no-cache',
                 file,
             ],
             { cwd: root, env: {} },
@@ -240,6 +240,33 @@ requires-python = "${requires}"
         RUFF_VERSION_CASES.map(async ({ scope }) => await readFile(join(root, scope, 'sample.py'), 'utf8')),
     );
     expect(sources).toStrictEqual(RUFF_VERSION_CASES.map(({ fixed: source }) => source));
+});
+
+test('Ruff from the installed environment reports a staged Python finding while the working tree differs', async () => {
+    await using sandbox = await createGitSandbox({});
+    await using _project = await createPythonProject(sandbox.path, { indexFile: 'pyproject.toml' });
+    const installed = await spawnGspot(sandbox.path, ['install']);
+    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'source.py'), 'import os\nimport sys\n');
+    runGitStep(sandbox.path, ['add', 'source.py']);
+    await writeFile(join(sandbox.path, 'source.py'), 'VALUE = 1\n');
+    const command = ['check', '--only', 'python/ruff', '--json'];
+    const staged = parseCheckReport(await spawnGspot(sandbox.path, [...command, '--staged']));
+    expect(staged.code, staged.stdout + staged.stderr).toBe(1);
+    expect(staged.report.checks).toMatchObject([
+        {
+            check: 'python/ruff',
+            status: 'failed',
+            findings: [
+                matchFields({ file: 'source.py', line: 1, rule: 'F401' }),
+                matchFields({ file: 'source.py', line: 2, rule: 'F401' }),
+            ],
+        },
+    ]);
+    const working = parseCheckReport(await spawnGspot(sandbox.path, command));
+    expect(working.code, working.stdout + working.stderr).toBe(0);
+    expect(working.report.checks).toMatchObject([{ check: 'python/ruff', status: 'passed' }]);
 });
 
 function listScopeRules(report: RunReport): Record<string, { status: string; rules: readonly (string | undefined)[] }> {

@@ -9,18 +9,17 @@ import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system/platform.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
-
-import {
-    XCODE_CASES,
-    XCODE_SANDBOX,
-    PLUTIL_UNREADABLE_FILES,
-} from '#tests/config/integration/checks/infrastructure/xcode.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
+import { XCODE_CASES, PLUTIL_UNREADABLE_FILES } from '#tests/config/integration/checks/infrastructure/xcode.ts';
 
 describe.skipIf(!isMacos)('Xcode samples', () => {
-    const installedSandbox = shareInstalledSandbox(XCODE_SANDBOX);
+    const installedSandbox = shareInstalledSandbox({
+        install: false,
+        configurations: ['xcode'],
+        files: {},
+    });
     test.each([...XCODE_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
-        expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(expectedSummary(sample));
+        expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
     });
 });
 

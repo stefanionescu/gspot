@@ -1,8 +1,4 @@
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-
-export const QUALITY_COMMAND = buildProgramCommand(
-    'checks/search',
+export const QUALITY_SEARCH_ARGUMENTS = [
     '--text',
     'corrected\n',
     '--match',
@@ -11,17 +7,9 @@ export const QUALITY_COMMAND = buildProgramCommand(
     'checked.txt',
     '--',
     '{files}',
-);
+];
 
-export const QUALITY_FIX = buildProgramCommand(
-    'fakes/tool',
-    '--log-arguments',
-    'fixed.txt',
-    '--text',
-    'corrected\n',
-    '--',
-    '{files}',
-);
+export const QUALITY_FIX_ARGUMENTS = ['--log-arguments', 'fixed.txt', '--text', 'corrected\n', '--', '{files}'];
 
 const HEADERS_FILE = `/*
     X-Content-Type-Options: nosniff
@@ -56,11 +44,6 @@ export const SCOPE_FINDINGS = [
 ] as const;
 
 export const SCOPE_CHECK_FILES = {
-    'gspot.toml': buildSandboxSettings(['site', 'supabase', 'translations', 'cloudflare'], {
-        level: 'all',
-        scopes: [{ path: 'apps/backend' }],
-        tables: '[translations]\nmessages_folder = "messages"\nbase_locale = "en"\n[scope.translations]\nmessages_folder = "apps/backend/messages"\n',
-    }),
     'package.json': '{"private":true,"dependencies":{"next-intl":"4.8.3"}}',
     _headers: HEADERS_FILE,
     'messages/en.json': '{"title":"Home"}',
@@ -68,7 +51,7 @@ export const SCOPE_CHECK_FILES = {
     'supabase/config.toml': '[functions.root]\nverify_jwt = true\n',
     'supabase/functions/root/index.ts': 'export {};\n',
     'assets/unused.png': new Uint8Array([0, 1, 2, 3]),
-    'apps/backend/index.html': '<img alt="Fixture diagram" src="/assets/unused.png">',
+    'apps/backend/index.html': '<img alt="Backend diagram" src="/assets/unused.png">',
     'apps/backend/_headers': '/*\n    X-Content-Type-Options: nosniff\n',
     'apps/backend/messages/en.json': '{"heading":"Backend"}',
     'apps/backend/messages/de.json': '{}',

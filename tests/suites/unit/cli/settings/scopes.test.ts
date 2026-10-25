@@ -119,7 +119,7 @@ test('ignore expiry does not change the scope view or gspot.toml', () => {
             buildSettingsText('', { configurations: [], ignore: IGNORE_EXPIRY_CASES }, formatSchema.parse({})),
             sandbox.path,
         );
-        const rootSettings = selectScopeSettings(settings);
+        const rootSettings = selectScopeSettings(settings).scopeSettings;
         const configurations = selectForScope(settings, '', readConfigurations());
         const availableSettings = buildAvailableSettings(configurations, settings.level);
         const scope: Scope = {
@@ -147,7 +147,7 @@ test('ignore expiry does not change the scope view or gspot.toml', () => {
             IGNORE_EXPIRY_CASES[2],
         ]);
         setSystemTime(new Date('2030-05-21T00:00:00.000Z'));
-        const next = selectScopeSettings(settings);
+        const next = selectScopeSettings(settings).scopeSettings;
         expect(listIgnoredRules({ ...scope, settings: next }, 'dependencies/osv-scanner')).toStrictEqual([
             'future',
             'past',
@@ -223,6 +223,6 @@ test('a rule option named reason is passed on and is not a gspot reason', () => 
         'configurations = ["css"]\n[tools.stylelint.rules]\nselector-class-pattern = ["^[a-z]+$", { reason = false }]\n',
         sandbox.path,
     );
-    const rules: unknown = getTable(selectScopeSettings(settings), 'tools.stylelint').rules;
+    const rules: unknown = getTable(selectScopeSettings(settings).scopeSettings, 'tools.stylelint').rules;
     expect(rules).toStrictEqual({ 'selector-class-pattern': ['^[a-z]+$', { reason: false }] });
 });

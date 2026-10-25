@@ -10,7 +10,7 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     HOST_LOCKFILE,
@@ -91,7 +91,7 @@ test.each([...LOCKFILE_HOST_CASES])(
     async (row) => {
         const sample = { check: 'dependencies/lockfiles', ...row };
         await using sandbox = await createSandbox(DEPENDENCIES_SANDBOX);
-        expect(await runCheckSample(sandbox, sample)).toStrictEqual(expectedSummary(sample));
+        expect(await runCheckSample(sandbox, sample)).toStrictEqual(buildExpectedSummary(sample));
     },
 );
 

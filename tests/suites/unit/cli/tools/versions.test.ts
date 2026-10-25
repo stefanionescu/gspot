@@ -51,10 +51,13 @@ test('a shim that no configuration gives a version is missing, not broken', asyn
 
 test.each([...VERSION_OUTPUTS])(
     'version output with $name gives the state $state',
-    async ({ versionCommand, state, found, note }) => {
+    async ({ toolArguments, state, found, note }) => {
         await using sandbox = await testdir();
         using _which = fakeExecutableLookup(process.execPath);
-        const tool = { ...buildProgramPin('version-teller', '3.8.1'), version_command: [...versionCommand] };
+        const tool = {
+            ...buildProgramPin('version-teller', '3.8.1'),
+            version_command: buildProgramArguments('fakes/tool', ...toolArguments),
+        };
         const inspection = inspectTool(buildToolSearch(sandbox.path), tool);
         expect({ state: inspection.state, found: inspection.found, note: inspection.note }).toStrictEqual({
             state,

@@ -4,9 +4,11 @@ import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { GUIDE, README, LICENSE } from '#tests/config/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -17,12 +19,13 @@ import {
     MDX_FILES,
     MARKDOWN_FILES,
     TITLED_DOCUMENT,
-    MARKDOWN_SANDBOX,
     MARKDOWNLINT_TABLES,
-    MARKDOWNLINT_EXECUTABLE,
 } from '#tests/config/integration/checks/language/markdown.ts';
 
-const installedSandbox = shareInstalledSandbox(MARKDOWN_SANDBOX);
+const installedSandbox = shareInstalledSandbox({
+    configurations: ['markdown'],
+    files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },
+});
 
 test.each([...LEVELS])(
     `markdownlint at level %s adds MD041 only at level all and applies each scope's lint rule options`,
@@ -85,7 +88,7 @@ test("markdownlint run by an editor reads the pointer files with each scope's op
     for (const folder of ['', 'app']) {
         const toolResult = await runCommand(
             [
-                join(root, MARKDOWNLINT_EXECUTABLE),
+                join(root, `${GSPOT_PATHS.nodeModules}/.bin/markdownlint-cli2`),
                 '--no-globs',
                 ...(folder === '' ? [':root.md', ':title.md', ':long.md'] : [':guide.md']),
             ],

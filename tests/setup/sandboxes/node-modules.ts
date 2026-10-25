@@ -43,8 +43,7 @@ export async function linkInstalledModules(modulesFolder: string): Promise<void>
         const destination = join(modulesFolder, name);
         if (await isOnDisk(destination)) continue;
         await mkdir(dirname(destination), { recursive: true });
-        const previous = await realpath(join(store, name));
-        await symlink(previous, destination, FOLDER_LINK_TYPE);
+        await symlink(await realpath(join(store, name)), destination, FOLDER_LINK_TYPE);
     }
     await writeFile(join(modulesFolder, '.gitignore'), '*\n');
 }
@@ -78,10 +77,10 @@ export async function linkPackages(modulesFolder: string, names: readonly string
         };
         for (const dependency of Object.keys(dependencies)) pending.push([dependency, join(folder, dependency)]);
     }
-    for (const [name, real] of found) {
+    for (const [name, target] of found) {
         const destination = join(modulesFolder, name);
         await mkdir(dirname(destination), { recursive: true });
-        await symlink(real, destination, FOLDER_LINK_TYPE);
+        await symlink(target, destination, FOLDER_LINK_TYPE);
     }
 }
 

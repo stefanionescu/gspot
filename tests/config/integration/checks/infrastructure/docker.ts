@@ -1,7 +1,4 @@
-import type { CheckResult } from '#cli/types/runs/check.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-
-export const TRIVY_CONFIG_PATH = findManifestTarget('docker', 'trivy.yml');
+import type { ScopeFindingFiles } from '#tests/types/reports.ts';
 
 export const DOCKER_SANDBOX = {
     install: false,
@@ -42,7 +39,7 @@ export const DOCKER_CASES = [
         },
         expected: { file: 'api/compose.yml', message: 'bogus' },
     },
-] as const;
+];
 
 export const ROOT_USER_DOCKERFILE = `FROM node:22.11.0-bookworm-slim
 WORKDIR /app
@@ -77,7 +74,7 @@ paths = ["app/**"]
 reason = "This test exercises scoped advisory exceptions."
 `;
 
-export const TRIVY_SCOPE_RESULTS: { scope: string; status: CheckResult['status']; files: string[] }[] = [
+export const TRIVY_SCOPE_RESULTS: ScopeFindingFiles[] = [
     { scope: '', status: 'failed', files: ['Dockerfile'] },
     { scope: 'app', status: 'passed', files: [] },
     { scope: 'app/child', status: 'passed', files: [] },

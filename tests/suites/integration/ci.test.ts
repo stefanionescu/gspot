@@ -8,17 +8,23 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { CLI_BIN, applyThenInstall } from '#tests/setup/cli/commands.ts';
 import { type CiDocument, type GithubWorkflow } from '#tests/types/ci.ts';
-import { CI_CHECKS, GITHUB_PIPELINE, GITLAB_PIPELINE } from '#tests/config/integration/generation/ci.ts';
+import { CI_CHECKS, GITHUB_PIPELINE } from '#tests/config/integration/ci.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
     runGitStep(root, ['init', '-q']);
     const pipelinePath = provider === 'gitlab' ? '.gitlab-ci.yml' : '.github/workflows/application.yml';
-    const pipeline = provider === 'gitlab' ? GITLAB_PIPELINE : GITHUB_PIPELINE;
+    const pipeline =
+        provider === 'gitlab'
+            ? `stages: [test]
+application:
+  script: echo authored-job
+`
+            : GITHUB_PIPELINE;
     const settings = stringify({
         configurations: [],
         rules: { enabled: false },
@@ -96,7 +102,6 @@ async function runCiJob(
 
 test('the generated GitHub command installs gspot with empty mise state', async () => {
     await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
     await prepareCiProject(sandbox.path, 'github');
     const workflow = Bun.YAML.parse(
         await readFile(join(sandbox.path, '.github/workflows/gspot.yml'), 'utf8'),
@@ -120,10 +125,8 @@ test('the generated GitHub command installs gspot with empty mise state', async 
 describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
     test('the jobs check the changed files, pass after the fix, and check every file of a first push', async () => {
         await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
         await prepareCiProject(sandbox.path, provider);
-        await using executables = await testdir();
-        runGitStep(executables.path, ['init', '--quiet']);
+        await using executables = await createGitSandbox({});
         const { base, generated } = await commitCiChanges(sandbox.path, provider);
         await fakeCiMise(executables.path);
         const invalid = await runCiJob(sandbox.path, generated, executables.path, base);
@@ -150,10 +153,8 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
 
     test('a malformed or unknown base revision exits 2 without running it, and a failed install fails the job', async () => {
         await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
         await prepareCiProject(sandbox.path, provider);
-        await using executables = await testdir();
-        runGitStep(executables.path, ['init', '--quiet']);
+        await using executables = await createGitSandbox({});
         const { base, generated } = await commitCiChanges(sandbox.path, provider);
         const failurePath = await fakeCiMise(executables.path);
         const malformed = await runCiJob(sandbox.path, generated, executables.path, '$(touch injected)');

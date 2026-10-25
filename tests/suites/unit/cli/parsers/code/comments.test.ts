@@ -1,12 +1,12 @@
 import { test, expect } from 'bun:test';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
 import { QUOTED_ESLINT_COMMENTS } from '#tests/config/checks/general/gspot/suppressions/syntax.ts';
-import { MARKER_COMMENT, COMMENT_BOUNDARIES, COMPONENT_SCRIPT_COMMENTS } from '#tests/config/parsers/code/comments.ts';
+import { COMMENT_BOUNDARIES, COMPONENT_SCRIPT_COMMENTS } from '#tests/config/parsers/code/comments.ts';
 
 async function listMarkedLines(path: string, source: string, tags: readonly string[]): Promise<number[]> {
     const comments = await parseComments(path, source, tags);
     return comments
-        .filter((comment) => MARKER_COMMENT.test(stripCommentEnd(comment.text)))
+        .filter((comment) => /^(?:\/\/|#|--|<!--) ?marker:/u.test(stripCommentEnd(comment.text)))
         .map((comment) => comment.line);
 }
 

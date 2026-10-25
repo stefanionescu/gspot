@@ -7,20 +7,26 @@ import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { VALE_PACKAGES_INI } from '#tests/config/vale.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
-import { PROSE_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PROSE_SANDBOX } from '#tests/config/integration/samples.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { hasValePackages, installValePackages } from '#cli/install/vale.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { VALE_PACKAGES_INI, VALE_INSTALL_FAILURES } from '#tests/config/install/vale.ts';
-import { GOOGLE_RULE_PATH, AUTHORED_STYLE_PATH, AUTHORED_VALE_FILES } from '#tests/config/integration/install/vale.ts';
+
+import {
+    GOOGLE_RULE_PATH,
+    AUTHORED_STYLE_PATH,
+    AUTHORED_VALE_FILES,
+    VALE_INSTALL_FAILURES,
+} from '#tests/config/integration/install/vale.ts';
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 
@@ -51,7 +57,7 @@ test('Vale package install deletes a package gspot no longer ships', async () =>
     }).toStrictEqual({ authored: 'keep\n', style: 'authored legacy bytes\n' });
 });
 
-test('Vale package install replaces an edited package and keeps your files', async () => {
+test('Vale package install replaces an edited package and keeps the authored files', async () => {
     const sandbox = installedSandbox();
     await using _change = await changeAppliedSandbox(sandbox, AUTHORED_VALE_FILES);
     const previous = await readFile(join(sandbox.root, GOOGLE_RULE_PATH));

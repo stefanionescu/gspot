@@ -1,12 +1,9 @@
 import { parseArgs } from 'node:util';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { rmSync, mkdirSync, existsSync, renameSync, appendFileSync } from 'node:fs';
-
-import {
-    FAKE_TOOL_OPTIONS,
-    POLL_INTERVAL_MILLISECONDS,
-    WAIT_INTERVAL_MILLISECONDS,
-} from '#tests/config/setup/programs.ts';
+import { rmSync, mkdirSync, existsSync, appendFileSync } from 'node:fs';
+import { splitPair, writeMarker } from '#tests/setup/system/programs.ts';
+import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/system/processes.ts';
+import { FAKE_TOOL_OPTIONS, WAIT_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
 
 const { values, positionals } = parseArgs({ options: FAKE_TOOL_OPTIONS, allowPositionals: true, strict: false });
 const option = Object.fromEntries(
@@ -15,11 +12,6 @@ const option = Object.fromEntries(
         [values[name]].flat().filter((value) => typeof value === 'string'),
     ]),
 ) as Record<keyof typeof FAKE_TOOL_OPTIONS, string[]>;
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function splitPair(pair: string): [string, string] {
-    return [pair.slice(0, pair.indexOf('=')), pair.slice(pair.indexOf('=') + 1)];
-}
 
 function findStopCode(): string | undefined {
     const [versionLine] = option['version-line'];
@@ -57,10 +49,7 @@ const steps: Partial<Record<keyof typeof FAKE_TOOL_OPTIONS, (value: string) => u
     },
     text: (text) => Promise.all(positionals.map((path) => Bun.write(path, text))),
     'record-cwd': (record) => Bun.write(record, process.cwd()),
-    mark: async (mark) => {
-        await Bun.write(`${mark}.prepared`, String(process.pid));
-        renameSync(`${mark}.prepared`, mark);
-    },
+    mark: (mark) => writeMarker(mark, String(process.pid)),
     line: (line) => process.stdout.write(`${line}\n`),
     'print-environment': (name) => process.stdout.write(readEnvironmentVariable(name) ?? ''),
     stdout: (text) => process.stdout.write(text),

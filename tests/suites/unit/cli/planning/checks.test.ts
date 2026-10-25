@@ -14,13 +14,7 @@ import { listAlwaysSelected } from '#tests/setup/cli/configurations.ts';
 import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { isActive, planChecks, stripCoverageArguments } from '#cli/planning/checks.ts';
-
-import {
-    TSC_REPLACEMENTS,
-    CONFIGURED_CHECK_CASES,
-    SCOPE_WIDE_IGNORE_CASES,
-    STRIPPED_COVERAGE_COMMANDS,
-} from '#tests/config/planning/checks.ts';
+import { TSC_REPLACEMENTS, CONFIGURED_CHECK_CASES, SCOPE_WIDE_IGNORE_CASES } from '#tests/config/planning/checks.ts';
 
 test('coverage arguments leave other commands, your own checks, and given arguments unchanged', async () => {
     await using sandbox = await testdir();
@@ -182,8 +176,8 @@ test.each([...LEVELS])('%s plans history checks once at the root and only for pu
 });
 test.each([...CONFIGURED_CHECK_CASES])(
     'planning $check keeps its declared config-file selection $selected: $name',
-    async ({ files, check, selected }) => {
-        await using sandbox = await testdir(files);
+    async ({ configurations, options, files, check, selected }) => {
+        await using sandbox = await testdir({ ...files, 'gspot.toml': buildSandboxSettings(configurations, options) });
         const session = await openSession(sandbox.path);
         expect(session.configuredChecks.some((configuredCheck) => configuredCheck.check.id === check)).toBe(selected);
     },
@@ -252,5 +246,17 @@ test('the jest, vitest, and pytest coverage checks drop exactly their coverage a
         Object.fromEntries(
             planned.map((plannedCheck) => [plannedCheck.check.id, stripCoverageArguments(plannedCheck, {})]),
         ),
-    ).toStrictEqual(STRIPPED_COVERAGE_COMMANDS);
+    ).toStrictEqual({
+        'jest/coverage': ['jest', '--ci', '--rootDir={root}/{scope}'],
+        'vitest/coverage': ['vitest', 'run'],
+        'pytest/coverage': [
+            'pytest',
+            '-q',
+            '--strict-markers',
+            '--strict-config',
+            '--no-header',
+            '-p',
+            'no:cacheprovider',
+        ],
+    });
 });

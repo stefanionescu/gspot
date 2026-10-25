@@ -1,18 +1,7 @@
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-
 export const PARAMETER_LIMIT_TOOLS = [
     {
         language: 'python',
         file: 'example.py',
-        command: [
-            'ruff',
-            'check',
-            '--config',
-            findManifestTarget('python', 'ruff.toml'),
-            '--output-format',
-            'json',
-            'example.py',
-        ],
         source: `"""Parameter-limit samples."""
 
 
@@ -38,17 +27,6 @@ def _eight(
     {
         language: 'swift',
         file: 'example.swift',
-        command: [
-            'swiftlint',
-            'lint',
-            '--config',
-            findManifestTarget('swift', 'swiftlint.yml'),
-            '--reporter',
-            'json',
-            '--quiet',
-            '--no-cache',
-            'example.swift',
-        ],
         source: `internal func seven(
     value0: Int = 0,
     value1: Int = 0,

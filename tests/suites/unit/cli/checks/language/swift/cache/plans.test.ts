@@ -8,12 +8,11 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { SWIFT_PACKAGE } from '#tests/config/setup/sandboxes.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { simulateOperatingSystem } from '#tests/setup/system/platform.ts';
+import { SWIFT_PACKAGE, SWIFT_PACKAGE_HEADER } from '#tests/config/swift.ts';
 import { SWIFT_BUILD_COMMANDS } from '#cli/config/checks/language/swift/cache.ts';
-import { SWIFT_PACKAGE_HEADER } from '#tests/config/checks/language/swift/samples.ts';
 import { planSwiftBuild, getScopeBuildFolder } from '#cli/checks/language/swift/cache.ts';
 import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/checks/language/swift/cache.ts';
 

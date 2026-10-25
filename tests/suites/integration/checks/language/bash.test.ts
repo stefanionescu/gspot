@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/session.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, runGspotStep, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     SYNTAX_FILES,
@@ -34,9 +34,7 @@ test('ShellCheck reports a finding in a filename that starts with a dash', async
 });
 
 test('ShellCheck reports dialect findings by shebang and an unchecked cd, bash/safety accepts a trap that removes a temporary folder, and no file changes', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', scopes: [{ path: 'app' }] }),
         ...DIALECT_SOURCES,
     });
@@ -74,12 +72,9 @@ test('ShellCheck reports dialect findings by shebang and an unchecked cd, bash/s
 });
 
 test('partial ShellCheck output beside an unreadable file is an execution error', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
-    const source = '#!/usr/bin/env bash\necho $unquoted\n';
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
-        'sample.sh': source,
+        'sample.sh': '#!/usr/bin/env bash\necho $unquoted\n',
     });
     const session = await openSession(sandbox.path);
     const plans = planChecks(session, { stage: 'commit', only: ['bash/shellcheck'] });
@@ -157,4 +152,26 @@ test('shfmt reports a syntax error as a finding and passes after the script is r
     const correction = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
     expect(correction.exitCode, JSON.stringify(correction)).toBe(0);
     expect(correction.checks).toMatchObject([{ status: 'passed', findings: [] }]);
+});
+
+test('shfmt reports and fixes script formatting with tabs', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash', 'format'], {
+            tables: '[format]\nindent_style = "tab"\nindent_width = 4\n',
+        }),
+        'example.sh': `if true; then
+  echo ready
+fi
+`,
+    });
+
+    await applyThenInstall(sandbox.path);
+    const command = ['check', '--only', 'bash/shfmt', '--json'];
+    const broken = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
+    expect(broken.exitCode, JSON.stringify(broken)).toBe(1);
+    const correction = parseCheckReport(await spawnGspot(sandbox.path, [...command, '--fix'])).report;
+    expect(correction.exitCode, JSON.stringify(correction)).toBe(0);
+    expect(await readFile(join(sandbox.path, 'example.sh'), 'utf8')).toBe('if true; then\n\techo ready\nfi\n');
+    const verified = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
+    expect(verified.exitCode, JSON.stringify(verified)).toBe(0);
 });

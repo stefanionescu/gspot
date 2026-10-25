@@ -11,7 +11,6 @@ import {
     SPELLING_SANDBOX,
     SPELLING_IGNORE_CASES,
     SPELLING_LOCALE_SETTINGS,
-    SPELLING_CHECK_ARGUMENTS,
 } from '#tests/config/integration/checks/general/spelling.ts';
 
 const installedSandbox = shareInstalledSandbox(SPELLING_SANDBOX);
@@ -68,14 +67,15 @@ test('typos reports Unicode columns in files whose names hold a space, a typo, o
         ...Object.fromEntries(paths.map((path) => [`nested/${path}`, `café ${TYPO.the}\n`])),
     };
     const checked = await runTyposCheck(sourceFiles);
+    const typoFinding = { line: 1, column: 6, fixable: true, message: `\`${TYPO.the}\` should be \`the\`` };
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(
         checked.report.checks.flatMap(({ findings }) =>
             findings.map(({ file, line, column, fixable, message }) => ({ file, line, column, fixable, message })),
         ),
     ).toStrictEqual([
-        ...(isWindows ? [] : [buildTypoFinding('name:part.txt')]),
-        buildTypoFinding('space name.txt'),
+        ...(isWindows ? [] : [{ file: 'nested/name:part.txt', ...typoFinding }]),
+        { file: 'nested/space name.txt', ...typoFinding },
         {
             file: `nested/${TYPO.the}.txt`,
             line: undefined,
@@ -83,7 +83,7 @@ test('typos reports Unicode columns in files whose names hold a space, a typo, o
             fixable: false,
             message: `Filename: \`${TYPO.the}\` should be \`the\``,
         },
-        buildTypoFinding(`${TYPO.the}.txt`),
+        { file: `nested/${TYPO.the}.txt`, ...typoFinding },
     ]);
     const corrected = await runTyposCheck({
         'gspot.toml': sourceFiles['gspot.toml'],
@@ -92,18 +92,13 @@ test('typos reports Unicode columns in files whose names hold a space, a typo, o
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function buildTypoFinding(path: string) {
-    return { file: `nested/${path}`, line: 1, column: 6, fixable: true, message: `\`${TYPO.the}\` should be \`the\`` };
-}
-
 async function runTyposCheck(sourceFiles: Record<string, string>) {
     const sandbox = installedSandbox();
     await using _sourceChange = await applySandboxChanges(
         sandbox,
         buildSandboxChanges(SPELLING_SANDBOX.files, sourceFiles),
     );
-    const checked = parseCheckReport(await spawnGspot(sandbox.root, SPELLING_CHECK_ARGUMENTS));
+    const checked = parseCheckReport(await spawnGspot(sandbox.root, ['check', '--only', 'spelling/typos', '--json']));
     return {
         ...checked,
         files: checked.report.checks

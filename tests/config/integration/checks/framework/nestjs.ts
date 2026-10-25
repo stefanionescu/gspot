@@ -18,7 +18,6 @@ const NESTJS_DIRECTIVE_FINDINGS = [
 export const NESTJS_CASES = [
     {
         name: 'a route parameter decorator names its route parameter',
-        rules: ['@darraghor/nestjs-typed/param-decorator-name-matches-route-param'],
         check: 'javascript/eslint',
         files: {
             'src/greeting.controller.ts': NESTJS_CONTROLLER_UNSUPPRESSED.replace("@Param('name')", "@Param('other')"),
@@ -32,7 +31,6 @@ export const NESTJS_CASES = [
     },
     {
         name: 'class constructors and methods need no trivial-function suppression',
-        rules: [undefined, undefined],
         check: 'javascript/eslint',
         files: { 'src/greeting.controller.ts': NESTJS_CONTROLLER },
         corrected: { files: { 'src/greeting.controller.ts': NESTJS_CONTROLLER_UNSUPPRESSED } },

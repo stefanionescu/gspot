@@ -188,12 +188,20 @@ test.each([...EMPTY_REASONS])('a word with the reason "$reason" is refused', ({ 
 
 test.each([...KEY_PATH_CASES])(
     'an error names the key path of $name, and the fix clears it',
-    ({ text, where, correction }) => {
-        const found = validateSettingsText(text);
-        expect(found).toStrictEqual([...where]);
+    ({ configurations, options, where, correction }) => {
+        const text = buildSandboxSettings(configurations, options);
+        expect(validateSettingsText(text)).toStrictEqual([...where]);
         expect(validateSettingsText(text.replace(correction[0], () => correction[1]))).toStrictEqual([]);
     },
 );
+
+test('an error names the line of a value inside a multiline array, and the fix clears it', () => {
+    const text = 'configurations = [\n"bash",\n12\n]\n';
+    expect(validateSettingsText(text)).toStrictEqual([
+        'gspot.toml:3: configurations.1: The value 12 is not valid for configurations.1. Use a valid string value.',
+    ]);
+    expect(validateSettingsText(text.replace('12', '"data-files"'))).toStrictEqual([]);
+});
 
 test.each(['\n', '\r\n'])(
     'a TOML syntax error names its line and does not copy the source: %j line endings',

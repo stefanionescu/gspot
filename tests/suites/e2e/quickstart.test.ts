@@ -22,9 +22,9 @@ test.skipIf(!hasToolBuild('swiftlint') || Bun.which('swift') === null)(
     },
 );
 
-async function runQuickstart(row: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL): Promise<void> {
+async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL): Promise<void> {
     await using sandbox = await testdir();
-    const root = join(sandbox.path, row.folder);
+    const root = join(sandbox.path, tutorial.folder);
     await mkdir(root);
     const environment = {
         ...GIT_ISOLATION_ENVIRONMENT,
@@ -37,36 +37,38 @@ async function runQuickstart(row: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL
     const runtimePins = await readRuntimePins();
     for (const command of [
         ['mise', 'use', `node@${runtimePins.node}`, `npm:@gspothq/cli@${cliPackage.version}`],
-        ...row.projectCommands,
+        ...tutorial.projectCommands,
     ]) {
         const created = await runCommand([...command], { cwd: root, env: environment });
         expect(created.code, created.stdout + created.stderr).toBe(0);
     }
-    await createFileTree(root, row.files);
+    await createFileTree(root, tutorial.files);
     commitAll(root);
-    for (const { command, code } of [
-        { command: ['mise', 'exec', '--', 'gspot', 'init', '--yes'], code: 0 },
-        { command: ['mise', 'exec', '--', 'gspot', 'install'], code: 0 },
-        { command: ['mise', 'exec', '--', 'gspot', 'check'], code: row.firstCheckCode },
-        { command: ['mise', 'exec', '--', 'gspot', 'check', '--fix'], code: 0 },
-        { command: ['mise', 'exec', '--', 'gspot', 'check'], code: 0 },
+    const gspotCommand = ['mise', 'exec', '--', 'gspot'];
+    for (const { gspotArguments, code } of [
+        { gspotArguments: ['init', '--yes'], code: 0 },
+        { gspotArguments: ['install'], code: 0 },
+        { gspotArguments: ['check'], code: tutorial.firstCheckCode },
+        { gspotArguments: ['check', '--fix'], code: 0 },
+        { gspotArguments: ['check'], code: 0 },
     ]) {
-        const result = await runCommand([...command], { cwd: root, env: environment });
+        const command = [...gspotCommand, ...gspotArguments];
+        const result = await runCommand(command, { cwd: root, env: environment });
         expect(result.code, `${command.join(' ')}\n${result.stdout}${result.stderr}`).toBe(code);
     }
-    const source = join(root, row.sourcePath);
+    const source = join(root, tutorial.sourcePath);
     runGitStep(root, ['add', '-A']);
     const committed = runGit(root, ['commit', '-qm', 'chore: Set up gspot'], environment);
     expect(committed.code, committed.stdout + committed.stderr).toBe(0);
-    await writeFile(source, row.invalidSource);
-    const command = ['mise', 'exec', '--', 'gspot', 'check', '--only', row.check, '--json'];
+    await writeFile(source, tutorial.invalidSource);
+    const command = [...gspotCommand, 'check', '--only', tutorial.check, '--json'];
     const rejected = await runCommand(command, { cwd: root, env: environment });
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
     expect(listFindingRows(parseCheckReport(rejected).report)).toStrictEqual([
-        { file: row.sourcePath, line: row.line, rule: row.rule },
+        { file: tutorial.sourcePath, line: tutorial.line, rule: tutorial.rule },
     ]);
-    assertCommitRejected(root, row.rule, environment);
-    runGitStep(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', row.sourcePath]);
+    assertCommitRejected(root, tutorial.rule, environment);
+    runGitStep(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', tutorial.sourcePath]);
     const corrected = await runCommand(command, { cwd: root, env: environment });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 }

@@ -1,5 +1,4 @@
-import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { TOOL_PLAN_CHANGES, MANAGED_PLAN_CHANGES } from '#tests/config/commands/init/plan.ts';
 import { COMMITLINT_PACKAGE, STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
 
@@ -29,7 +28,7 @@ export const REPLACED_PYPROJECT_TABLES = [
         text: '[tool.sqlfluff.core]\ndialect = "postgres"\n',
         source: { file: 'query.sql', text: 'SELECT 1;\n' },
         tool: 'sqlfluff',
-        generated: findManifestTarget('sql', 'sqlfluff.cfg'),
+        generated: `${GSPOT_PATHS.configurations}/language/sql/sqlfluff.cfg`,
     },
 ] as const;
 
@@ -39,25 +38,6 @@ export const INACTIVE_CONFIGURATIONS = {
     '.syncpackrc.json': '{"versionGroups":[]}\n',
     '.syncpackrc.yaml': 'versionGroups: []\n',
     'package.json': COMMITLINT_PACKAGE,
-} as const;
-
-const REPLACED_CONFIG_FILES = {
-    'typos.toml': `[default.extend-words]
-# The device identifier API name.
-udid = "udid"
-`,
-    '.shellcheckrc': 'disable=SC2086,SC2034\n',
-    '.markdownlint.jsonc': '// Keep long prose lines.\n{ "MD013": false, "MD033": true, }\n',
-    '.eslintrc.json': '{ "rules": { "eqeqeq": "error" } }\n',
-    '.prettierrc': '{ "semi": false }\n',
-} as const;
-
-export const INIT_FILES = {
-    ...REPLACED_CONFIG_FILES,
-    'scripts/a.sh': CLEAN_BASH_SCRIPT,
-    'src/a.js': 'export const a = 1;\n',
-    'README.md': '# test\n',
-    'quality/lint.sh': CLEAN_BASH_SCRIPT,
 } as const;
 
 export const STYLELINT_REPLACEMENT_CASES = [
@@ -108,22 +88,12 @@ ignore = E501
 exclude_rules = LT01, RF01
 `;
 
-export const VALID_CSS = `a {
-    opacity: 1;
-}
-`;
-
 export const REPLACED_CONFIG_DELETIONS = [
     { path: '.shellcheckrc', note: 'replaced by the generated shellcheck config file' },
     { path: '.prettierrc', note: 'replaced by the generated prettier config file' },
     { path: '.eslintrc.json', note: 'replaced by the generated eslint config file' },
     { path: 'typos.toml', note: 'replaced by the generated typos config file' },
 ] as const;
-
-export const LINT_FOLDER_NOTE = {
-    path: 'quality/',
-    note: 'a folder of lint scripts; check remaining references before deleting it',
-} as const;
 
 export const HOOKS_PATH_CASES = [
     { hooksPath: '', line: 'existing hooks       none' },

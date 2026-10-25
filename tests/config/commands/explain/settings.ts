@@ -32,11 +32,6 @@ export const REASON_VALUES = [
     },
 ] as const;
 
-export const NAMING_SCOPE_LIMITS = [
-    { key: 'naming.swift.max_characters', shipped: 40, child: 38 },
-    { key: 'naming.sql.max_words', shipped: 7, child: 7 },
-] as const;
-
 export const SCOPE_SETTING_EXPLANATION = {
     scopes: [
         { scope: 'api', value: 90, source: '[scope "api"]' },
@@ -172,6 +167,3 @@ export const REASON_EXPLANATIONS = {
         },
     },
 } as const;
-
-export const NEUTRAL_SETTING_TEXT =
-    'format.indent_style\n\nThe character of one indent level: space or tab.\n\nScope: root\nShipped default: "space"\nCurrent value: "space" (from configuration format)\nChange it: gspot set format.indent_style <value> [--reason "<why>"]\nBack to the default: gspot unset format.indent_style\n\nScope: app\nShipped default: "space"\nCurrent value: "tab" (from [scope "app"])\nChange it: gspot set format.indent_style <value> --scope app [--reason "<why>"]\nBack to the default: gspot unset format.indent_style --scope app\n';

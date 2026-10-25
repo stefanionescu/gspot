@@ -1,17 +1,5 @@
 import testsPackage from '#tests/package.json';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
-
-export const SERVER_FILES = {
-    'gspot.toml': buildSandboxSettings(['javascript'], {
-        level: 'all',
-        rules: true,
-        scopes: [{ path: 'app', configurations: ['nextjs'] }],
-    }),
-    'app/lib/widget/server.js': 'export const value = 1;\n',
-    'app/lib/widget/data.server.js': 'export const value = 1;\n',
-    'app/server/data.js': 'export const value = 1;\n',
-} as const;
 
 export const COMPONENT_FILES = {
     'Card.vue': '<template><p>{{ count }}</p></template>\n<script setup lang="ts">const count: number = 1;</script>\n',
@@ -84,15 +72,7 @@ export const MOBILE_FILES: Record<string, string> = {
     }),
 };
 
-export const NEXTJS_ROUTE_PROJECTS = {
-    'gspot.toml': buildSandboxSettings(['javascript'], {
-        level: 'all',
-        scopes: [
-            { path: 'apps/first', configurations: ['nextjs'] },
-            { path: 'apps/second', configurations: ['nextjs'] },
-            { path: 'apps/empty', configurations: ['nextjs'] },
-        ],
-    }),
+export const NEXTJS_ROUTE_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',
     'apps/first/pages/about.jsx': 'export default function About() { return <p>About</p>; }\n',
     'apps/first/pages/index.jsx': 'export default function Home() { return <a href="/about">About</a>; }\n',

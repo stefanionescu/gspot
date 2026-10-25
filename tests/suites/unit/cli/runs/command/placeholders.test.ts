@@ -12,44 +12,40 @@ import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { prepareCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
 import { expandCommand, listCopyFiles, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
+import { SHFMT_INDENT_CASES, GENERATE_ARGUMENTS, WORKSPACE_SCOPE_CASES } from '#tests/config/runs/command.ts';
 
-import {
-    ARGUMENT_RUNNER,
-    SHFMT_INDENT_CASES,
-    GENERATE_ARGUMENTS,
-    WORKSPACE_SCOPE_CASES,
-} from '#tests/config/runs/command.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
-async function writeListSetting(root: string, command: readonly string[], generate: readonly string[]): Promise<void> {
+async function writeListSetting(root: string, placeholder: string, generate: readonly string[]): Promise<void> {
+    const command = [
+        ...buildProgramCommand('checks/arguments', '--equals', JSON.stringify(GENERATE_ARGUMENTS), '--'),
+        placeholder,
+    ];
     const tables = stringify({
         openapi: { document: 'openapi.json', generate_command: [...generate] },
-        command_check: [{ id: 'sandbox/arguments', command: [...command], paths: ['openapi.json'], stage: 'push' }],
+        command_check: [{ id: 'sandbox/arguments', command, paths: ['openapi.json'], stage: 'push' }],
     });
     await createFileTree(root, { 'gspot.toml': buildSandboxSettings(['openapi'], { tables }), 'openapi.json': '{}\n' });
 }
 
 test('a whole list setting expands into separate command arguments, keeping empty and multiword ones', async () => {
     await using sandbox = await createGitSandbox({});
-    await writeListSetting(
-        sandbox.path,
-        [...ARGUMENT_RUNNER, '{setting:openapi.generate_command}'],
-        GENERATE_ARGUMENTS,
-    );
+    await writeListSetting(sandbox.path, '{setting:openapi.generate_command}', GENERATE_ARGUMENTS);
     const result = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json']));
     expect(result.code, result.stderr).toBe(0);
     expect(result.report.checks).toMatchObject([
-        { check: 'sandbox/arguments', status: 'passed', command: [...ARGUMENT_RUNNER, ...GENERATE_ARGUMENTS] },
+        {
+            check: 'sandbox/arguments',
+            status: 'passed',
+            command: [
+                ...buildProgramCommand('checks/arguments', '--equals', JSON.stringify(GENERATE_ARGUMENTS), '--'),
+                ...GENERATE_ARGUMENTS,
+            ],
+        },
     ]);
 });
 
 test('a list setting inside one command argument is refused', async () => {
     await using sandbox = await createGitSandbox({});
-    await writeListSetting(
-        sandbox.path,
-        [...ARGUMENT_RUNNER, 'prefix{setting:openapi.generate_command}'],
-        GENERATE_ARGUMENTS,
-    );
+    await writeListSetting(sandbox.path, 'prefix{setting:openapi.generate_command}', GENERATE_ARGUMENTS);
     const inline = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json']));
     expect(inline.code).toBe(2);
     expect(inline.report.checks.map(({ check, status, note }) => ({ check, status, note }))).toStrictEqual([
@@ -63,7 +59,7 @@ test('a list setting inside one command argument is refused', async () => {
 
 test('an empty list setting is refused as a settings error', async () => {
     await using sandbox = await createGitSandbox({});
-    await writeListSetting(sandbox.path, [...ARGUMENT_RUNNER, '{setting:openapi.generate_command}'], []);
+    await writeListSetting(sandbox.path, '{setting:openapi.generate_command}', []);
     const empty = await runGspot(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json']);
     expect(empty.code).toBe(2);
     expect(JSON.parse(empty.stdout)).toStrictEqual({

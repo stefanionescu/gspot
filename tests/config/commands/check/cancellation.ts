@@ -1,8 +1,7 @@
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-
 export const SLOW_COMMAND_CHECK = {
     id: 'project/slow',
     stage: 'commit',
     paths: ['source.txt'],
-    command: buildProgramCommand('fakes/tool', '--mark', 'started.pid', '--wait'),
 };
+
+export const SLOW_TOOL_ARGUMENTS = ['--mark', 'started.pid', '--wait'];

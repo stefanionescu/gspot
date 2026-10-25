@@ -7,8 +7,8 @@ export const CRLF_PACKAGE_FILES = {
 
 export const LOCKED_NPM_PROJECT_FILES = {
     '.gitignore': 'node_modules/\n',
-    'package.json': '{"name":"fixture","version":"1.0.0"}\n',
-    'package-lock.json': '{"name":"fixture","lockfileVersion":3,"packages":{}}\n',
+    'package.json': '{"name":"sample","version":"1.0.0"}\n',
+    'package-lock.json': '{"name":"sample","lockfileVersion":3,"packages":{}}\n',
     'source.js': 'export const value = 1;\n',
     'node_modules/item-0/value.js': 'export const value = 2;\n',
 } as const;

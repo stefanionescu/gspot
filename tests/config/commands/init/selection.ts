@@ -1,5 +1,3 @@
-export const PYTHON_SOURCE = { 'source.py': 'VALUE = 1\n' };
-
 export const TOOL_ONLY_PACKAGE = '{"private":true,"devDependencies":{"prettier":"3.8.1"}}\n';
 
 export const CONFIGURATION_CHOICES = [
@@ -70,12 +68,6 @@ export const CONFIGURATION_CHOICES = [
         ],
     },
 ] as const;
-
-export const VUE_COMPONENT = `<script setup>
-const name = 1;
-</script>
-<template><p>{{ name }}</p></template>
-`;
 
 export const PLATFORM_PROJECT_FILES = {
     'package.json': '{"name":"app","private":true,"type":"module"}\n',

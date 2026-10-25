@@ -6,10 +6,10 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { spawnProcess, streamProcess } from '#cli/system/processes.ts';
+import { DESCENDANT_TIMEOUT_MILLISECONDS } from '#tests/config/system/processes.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { isWindows, simulateOperatingSystem } from '#tests/setup/system/platform.ts';
 import { waitForExit, waitForFile, startCommand, limitCommand } from '#tests/setup/system/processes.ts';
-import { CHILD_TIMEOUT_SECONDS, DESCENDANT_TIMEOUT_MILLISECONDS } from '#tests/config/system/processes.ts';
 
 function isStopped(child: childProcess.ChildProcess | undefined): boolean {
     if (child === undefined) return false;
@@ -67,7 +67,7 @@ test.each([
         const controller = new AbortController();
         const running = captureProcess(capture, parent, {
             cwd: sandbox.path,
-            ...(termination === 'timeout' && { timeoutSeconds: CHILD_TIMEOUT_SECONDS }),
+            ...(termination === 'timeout' && { timeoutSeconds: 1 }),
             ...(termination === 'canceled' && { cancelSignal: controller.signal }),
         });
         if (termination === 'canceled') {

@@ -5,11 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-
-import {
-    COMPOSITE_INDEX_CASES,
-    COMPOSITE_FOREIGN_KEY_SQL,
-} from '#tests/config/checks/database/postgres/foreign-key-indexes.ts';
+import { COMPOSITE_INDEX_CASES } from '#tests/config/checks/database/postgres/foreign-key-indexes.ts';
 
 test.each([...COMPOSITE_INDEX_CASES])(
     'a composite foreign key with index ($columns) produces $count findings',
@@ -17,7 +13,8 @@ test.each([...COMPOSITE_INDEX_CASES])(
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
             'migrations/1_orders.sql':
-                COMPOSITE_FOREIGN_KEY_SQL + `CREATE INDEX orders_lookup ON orders (${columns});\n`,
+                'CREATE TABLE orders (tenant_id int, user_id int, id int, FOREIGN KEY (tenant_id, user_id) REFERENCES users (tenant_id, user_id));\n' +
+                `CREATE INDEX orders_lookup ON orders (${columns});\n`,
         });
         const findings = await runSandboxCheck(sandbox.path, 'postgres/foreign-key-indexes');
         expect(findings).toHaveLength(count);

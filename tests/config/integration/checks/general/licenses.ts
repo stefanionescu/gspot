@@ -28,12 +28,4 @@ version = "0.0.0"
 ignore-packages = ["licensed-example"]
 `;
 
-export const LICENSED_EXAMPLE_METADATA = `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: GPL-3.0-only\n`;
-
-export const FONT_PACKAGE_FILES = {
-    'docs/package.json': '{"name":"docs","private":true,"dependencies":{"@fontsource/inter":"5.2.8"}}',
-    'docs/node_modules/@fontsource/inter/package.json':
-        '{"name":"@fontsource/inter","version":"5.2.8","license":"OFL-1.1"}',
-} as const;
-
 export const MIT_ONLY = { allowed: ['MIT'] } as const;

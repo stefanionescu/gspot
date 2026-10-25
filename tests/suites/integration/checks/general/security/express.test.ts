@@ -13,7 +13,6 @@ import { spawnGspot, listFindingRows, parseCheckReport, listScopeFindingRows } f
 import {
     EXPRESS_SOURCES,
     EXPRESS_SCOPE_FILES,
-    EXPRESS_SCOPE_FINDINGS,
     EXPRESS_SCOPE_SETTINGS,
     EXPRESS_SOURCE_FINDINGS,
 } from '#tests/config/integration/checks/general/security/express.ts';
@@ -33,7 +32,10 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
         );
         const broken = parseCheckReport(await spawnGspot(root, SEMGREP_CHECK));
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-        expect(listScopeFindingRows(broken.report)).toStrictEqual([...EXPRESS_SCOPE_FINDINGS]);
+        expect(listScopeFindingRows(broken.report)).toStrictEqual([
+            { scope: 'app', file: 'app/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },
+            { scope: 'app/child', file: 'app/child/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },
+        ]);
         for (const path of ['app/source.js', 'app/child/source.js'])
             await writeFile(join(root, path), 'res.json({ message: "Accepted" });\n');
         const corrected = await spawnGspot(root, SEMGREP_CHECK);

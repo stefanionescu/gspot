@@ -6,7 +6,7 @@ import { type Finding } from '#cli/types/runs/check.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     MESSAGE_LAYOUTS,
@@ -48,7 +48,7 @@ test.each([...TRANSLATION_CASES])(
     '$check reports $expected.rule in $expected.file and passes after the fix',
     async (sample) => {
         await using repository = await createSandbox(TRANSLATION_SANDBOX);
-        expect(await runCheckSample(repository, sample)).toStrictEqual(expectedSummary(sample));
+        expect(await runCheckSample(repository, sample)).toStrictEqual(buildExpectedSummary(sample));
     },
 );
 

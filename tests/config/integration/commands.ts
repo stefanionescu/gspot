@@ -20,10 +20,3 @@ export const PARTIAL_FIX_CASES = [
         corrected: 'the whether\n',
     },
 ] as const;
-
-export const TAB_FORMAT_SETTINGS = {
-    tables: `[format]
-indent_style = "tab"
-indent_width = 4
-`,
-} as const;

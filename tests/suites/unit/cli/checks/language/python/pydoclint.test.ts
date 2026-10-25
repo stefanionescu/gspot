@@ -3,6 +3,7 @@ import { chmod } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { PYPROJECT } from '#tests/config/python.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import { type Session } from '#cli/types/session.ts';
 import * as processes from '#cli/system/processes.ts';
@@ -15,7 +16,6 @@ import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { PYPROJECT } from '#tests/config/checks/language/python/project.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 
 import {

@@ -6,10 +6,17 @@ import { CLEAN_SWIFT } from '#tests/config/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/checks/infrastructure/xcode.ts';
-import { SWIFT_VERSION_FILES, SWIFT_PROJECT_SETTINGS } from '#tests/config/generation/configurations/language/swift.ts';
+import { SWIFT_PROJECT_SETTINGS } from '#tests/config/generation/configurations/language/swift.ts';
 
 test("SwiftFormat reads each scope's Swift version from Package.swift", async () => {
-    await using sandbox = await testdir(SWIFT_VERSION_FILES);
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['swift'], {
+            rules: true,
+            scopes: [{ path: 'nested', configurations: ['swift'] }],
+        }),
+        'Package.swift': '// swift-tools-version:5.9\nimport PackageDescription\n',
+        'nested/Package.swift': '// swift-tools-version:6.3.2\nimport PackageDescription\n',
+    });
     const session = await openSession(sandbox.path);
     const outputs = generate(session).files;
     expect(outputs.find((file) => file.path === findConfigFilePath(session, 'swiftformat'))?.content).toContain(

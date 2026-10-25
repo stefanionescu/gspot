@@ -32,9 +32,9 @@ async function runSvelteCheck(stdout: string, options: { scope?: string } = {}):
 
 test.each([...SVELTE_PROJECTS])(
     'svelte-check reads a temporary tsconfig that extends the scope tsconfig or lists the scope files: $name',
-    async ({ scope, settings, files, extends: extended, include, typeRoots }) => {
+    async ({ scope, configurations, files, extends: extended, include, typeRoots }) => {
         await using sandbox = await testdir({
-            'gspot.toml': settings,
+            'gspot.toml': buildSandboxSettings(configurations, { scopes: [{ path: 'app' }] }),
             'Component.svelte': '<p>Root</p>\n',
             'app/Component.svelte': '<p>Nested</p>\n',
             ...files,

@@ -1,35 +1,31 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+import { test, expect, beforeAll } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     SQL_CASES,
     SQL_SANDBOX,
-    SQL_DUCKDB_SOURCE,
     SQL_FUNCTION_SOURCE,
     SQLFLUFF_DIALECT_SETTINGS,
 } from '#tests/config/integration/checks/language/sql.ts';
 
-const installedSandbox = shareInstalledSandbox({
-    ...SQL_SANDBOX,
+const installedSandbox = shareInstalledSandbox(SQL_SANDBOX);
 
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: shareInstalledSandbox calls it after the install.
-    async prepare(root) {
-        const ignored = await spawnGspot(root, [
-            'ignore',
-            'sql/sqlfluff',
-            '--paths',
-            'db/report.sql',
-            '--reason',
-            'A script for psql, which the linter cannot read.',
-        ]);
-        expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    },
+beforeAll(async () => {
+    const ignored = await spawnGspot(installedSandbox().root, [
+        'ignore',
+        'sql/sqlfluff',
+        '--paths',
+        'db/report.sql',
+        '--reason',
+        'A script for psql, which the linter cannot read.',
+    ]);
+    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
 });
 
 test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL default", async () => {
@@ -39,7 +35,7 @@ test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL defau
             'gspot.toml': buildSandboxSettings(['sql'], SQLFLUFF_DIALECT_SETTINGS),
             'query.sql': 'PRAGMA table_info (users);\n',
             'warehouse/query.sql': 'SELECT 1;\n',
-            'warehouse/child/query.sql': SQL_DUCKDB_SOURCE,
+            'warehouse/child/query.sql': 'FROM records SELECT id;\n',
         },
     });
     const wrong = await spawnGspot(root, ['check', 'query.sql', '--only', 'sql/sqlfluff', '--json']);
@@ -53,8 +49,14 @@ test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL defau
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const nested = await spawnGspot(root, ['check', 'warehouse/child/query.sql', '--only', 'sql/sqlfluff', '--json']);
     expect(nested.code, nested.stdout + nested.stderr).toBe(0);
-    const rootDialect = await spawnGspot(root, ['set', 'tools.sqlfluff.dialect', 'postgres', '--scope', 'warehouse']);
-    expect(rootDialect.code, rootDialect.stdout + rootDialect.stderr).toBe(0);
+    const warehouseDialect = await spawnGspot(root, [
+        'set',
+        'tools.sqlfluff.dialect',
+        'postgres',
+        '--scope',
+        'warehouse',
+    ]);
+    expect(warehouseDialect.code, warehouseDialect.stdout + warehouseDialect.stderr).toBe(0);
     const wrongChild = await spawnGspot(root, [
         'check',
         'warehouse/child/query.sql',
@@ -80,8 +82,8 @@ test('SQLFluff reports and fixes uppercase function names', async () => {
         },
     });
     const command = ['check', 'functions.sql', '--only', 'sql/sqlfluff', '--json'];
-    const positive = await spawnGspot(root, command);
-    expect(positive.code, positive.stdout + positive.stderr).toBe(0);
+    const clean = await spawnGspot(root, command);
+    expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     await writeFile(join(root, 'functions.sql'), SQL_FUNCTION_SOURCE.replaceAll('get_user_name', 'GET_USER_NAME'));
     const failed = parseCheckReport(await spawnGspot(root, command));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
@@ -97,5 +99,5 @@ test('SQLFluff reports and fixes uppercase function names', async () => {
 });
 
 test.each([...SQL_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
-    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(expectedSummary(sample));
+    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
 });

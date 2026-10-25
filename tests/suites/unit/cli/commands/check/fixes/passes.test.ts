@@ -11,9 +11,9 @@ import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { SQL_COMMAND_CHECK_TABLES } from '#tests/config/commands/samples.ts';
 import { FIX_LINTER_CASES } from '#tests/config/commands/check/fixes/passes.ts';
 import { runGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { SQL_COMMAND_CHECK, SQL_SEARCH_ARGUMENTS } from '#tests/config/commands/samples.ts';
 
 test.each([...FIX_LINTER_CASES])(
     'after --fix, the $configuration check status matches what the linter still reports',
@@ -81,11 +81,12 @@ test('after --fix, the checks read the fixed file and other files stay as they w
                     fix: buildProgramCommand('fakes/tool', '--text', 'select 1;\n', '{files}'),
                     output: { format: 'none' },
                 },
+                { ...SQL_COMMAND_CHECK, command: buildProgramCommand('checks/search', ...SQL_SEARCH_ARGUMENTS) },
             ],
         })}`,
     });
     await createFileTree(sandbox.path, {
-        'gspot.toml': settings + SQL_COMMAND_CHECK_TABLES,
+        'gspot.toml': settings,
         'query.sql': 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n',
         'notes.txt': 'Authored notes.\n',
     });
@@ -101,7 +102,7 @@ test('after --fix, the checks read the fixed file and other files stay as they w
         { check: 'project/read-sql', status: 'passed', findings: [] },
     ]);
     expect(await readFile(join(sandbox.path, 'query.sql'), 'utf8')).toBe('select 1;\n');
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings + SQL_COMMAND_CHECK_TABLES);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     expect(await readFile(join(sandbox.path, 'notes.txt'), 'utf8')).toBe('Authored notes.\n');
 });
 

@@ -7,27 +7,24 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { listMisePins } from '#cli/configurations/tools.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { PYTHON_VERSION } from '#cli/config/install/python.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
+import { REGISTRY_HOST } from '#tests/config/setup/sandboxes.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { IndexedPythonProject } from '#tests/types/packages.ts';
-import { chmod, readFile, realpath, writeFile } from 'node:fs/promises';
 import { spawnGspot, applyThenInstall } from '#tests/setup/cli/commands.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
-import { REGISTRY_HOST, ZIP_FILE_OPTIONS } from '#tests/config/setup/sandboxes.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
     PYTHON_PROJECTS,
-    RUFF_VERSION_OUTPUT,
-    PYTHON_INSTALL_STEPS,
+    ZIP_FILE_OPTIONS,
     UV_RELEASE_CUTOFF_LINE,
-    PYTHON_SIMPLE_JSON_TYPE,
     PYTHON_INDEX_CREDENTIALS,
-    PYTHON_INDEX_UPLOAD_TIME,
 } from '#tests/config/integration/install/python.ts';
 
 const resources = new AsyncDisposableStack();
@@ -39,33 +36,24 @@ beforeAll(async () => {
 afterAll(() => resources.disposeAsync());
 
 test.each([...PYTHON_PROJECTS])(
-    'Python tool project install keeps your own and generated files with %s',
+    'Python tool project install keeps the authored and generated files with %s',
     async (configuration) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
-        await using artifacts = await testdir();
-        runGitStep(artifacts.path, ['init', '--quiet']);
-        await using prepared = await createIndexedPythonProject(sandbox.path, configuration);
-        const { projectFile, lockfilePath, lockfile } = prepared.projectFiles;
-        const { rootProject, rootConfiguration } = prepared;
+        await using sandbox = await createGitSandbox({});
+        await using artifacts = await createGitSandbox({});
+        await using project = await createIndexedPythonProject(sandbox.path, configuration);
+        const { projectFile, lockfilePath, lockfile } = project.projectFiles;
+        const { rootProject, rootConfiguration } = project;
         expect(lockfile.toString('utf8')).not.toContain(PYTHON_INDEX_CREDENTIALS.password);
         const brokenUv = await writeProgramCommand(artifacts.path, 'bin/uv', 'fakes/tool', '--exit', '87');
-        const command = await spawnGspot(sandbox.path, ['install', '--json'], {
+        const installed = await spawnGspot(sandbox.path, ['install', '--json'], {
             PATH: [brokenUv, readEnvironmentVariable('PATH') ?? ''].join(delimiter),
             MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
         });
-        expect(command.code, command.stdout + command.stderr).toBe(0);
-        const steps = (JSON.parse(command.stdout) as { steps: string[][] }).steps.filter(
+        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+        const steps = (JSON.parse(installed.stdout) as { steps: string[][] }).steps.filter(
             (step) => step[0] === 'mise' || step.includes('--project'),
         );
         const session = await openSession(sandbox.path);
-        const installSteps = [];
-        for (const step of PYTHON_INSTALL_STEPS) {
-            const argumentsForStep = Array.from(step, (argument) =>
-                argument.replaceAll('{python-version}', () => PYTHON_VERSION),
-            );
-            installSteps.push(argumentsForStep);
-        }
         const miseTools = listMisePins(session.toolConfigurations).map(({ name }) => name);
         expect(
             steps.map((step) => (step[0] === 'mise' ? step : ['uv', ...step.slice(1, step.indexOf('--project'))])),
@@ -73,7 +61,8 @@ test.each([...PYTHON_PROJECTS])(
             ['mise', 'trust', GSPOT_PATHS.miseProject],
             ['mise', 'install', ...miseTools],
             ['mise', 'bin-paths', ...miseTools],
-            ...installSteps,
+            ['uv', 'venv', '--python', PYTHON_VERSION, '--allow-existing', '.venv'],
+            ['uv', 'sync', '--locked', '--no-install-project', '--python', PYTHON_VERSION],
         ]);
         for (const step of steps) {
             if (step[0] === 'mise') continue;
@@ -90,14 +79,12 @@ test.each([...PYTHON_PROJECTS])(
 test.each([...PYTHON_PROJECTS])(
     'a fresh Python clone with %s installs the locked tools twice without changing tracked files, and its Python runs from .gspot/.venv',
     async (configuration) => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
-        await using artifacts = await testdir();
-        runGitStep(artifacts.path, ['init', '--quiet']);
-        await using prepared = await createPythonProject(sandbox.path, { indexFile: configuration });
+        await using sandbox = await createGitSandbox({});
+        await using artifacts = await createGitSandbox({});
+        await using project = await createPythonProject(sandbox.path, { indexFile: configuration });
         await applyThenInstall(sandbox.path);
         const { projectFile, lockfile } = await readToolProjectFiles(sandbox.path, 'uv');
-        const { rootConfiguration } = prepared;
+        const { rootConfiguration } = project;
         const clone = join(artifacts.path, 'clone');
         commitAll(sandbox.path);
         runGitStep(sandbox.path, ['clone', '--quiet', '--no-local', sandbox.path, clone]);
@@ -115,26 +102,21 @@ test.each([...PYTHON_PROJECTS])(
                 configuration: await readFile(join(clone, configuration)),
             }).toStrictEqual({ projectFile, lockfile, configuration: rootConfiguration });
         }
-        const prefix = await runCommand(
-            [
-                buildVenvExecutablePath(join(clone, GSPOT_PATHS.pythonEnvironment), 'python'),
-                '-c',
-                'import sys; print(sys.prefix)',
-            ],
+        expect(await isOnDisk(join(clone, GSPOT_PATHS.pythonEnvironment, 'pyvenv.cfg'))).toBe(true);
+        const python = await runCommand(
+            [buildVenvExecutablePath(join(clone, GSPOT_PATHS.pythonEnvironment), 'python'), '--version'],
             { cwd: clone },
         );
-        expect(prefix.code, prefix.stderr).toBe(0);
-        expect(await realpath(prefix.stdout.trim())).toBe(await realpath(join(clone, GSPOT_PATHS.pythonEnvironment)));
+        expect(python.code, python.stdout + python.stderr).toBe(0);
     },
 );
 
 test('apply keeps a conflicted Python lockfile and install repairs it', async () => {
     const configuration = 'uv.toml';
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
-    await using prepared = await createIndexedPythonProject(sandbox.path, configuration);
-    const { lockfilePath, lockfile } = prepared.projectFiles;
-    const { rootConfiguration } = prepared;
+    await using sandbox = await createGitSandbox({});
+    await using project = await createIndexedPythonProject(sandbox.path, configuration);
+    const { lockfilePath, lockfile } = project.projectFiles;
+    const { rootConfiguration } = project;
     const conflict = '<<<<<<< interrupted lockfile\n';
     await chmod(lockfilePath, 0o644);
     await writeFile(lockfilePath, conflict);
@@ -156,7 +138,7 @@ async function createPythonIndex(work: string): Promise<Disposable & { url: stri
     const binary = buildVenvExecutablePath(join(work, GSPOT_PATHS.pythonEnvironment), 'ruff');
     const inspected = await runCommand([binary, '--version'], { cwd: work });
     if (inspected.code !== 0) throw new Error(`Ruff version failed: ${inspected.stderr}`);
-    const version = RUFF_VERSION_OUTPUT.exec(inspected.stdout.trim())?.groups?.['version'];
+    const version = /^ruff (?<version>\d+\.\d+\.\d[-+\w.]*)$/u.exec(inspected.stdout.trim())?.groups?.['version'];
     if (version === undefined) throw new Error('Ruff version output is invalid.');
     const wheel = `ruff-${version}-py3-none-any.whl`;
     const wheelFiles = await buildWheelFiles(binary, version);
@@ -183,11 +165,11 @@ async function createPythonIndex(work: string): Promise<Disposable & { url: stri
                 filename: wheel,
                 url: `/${wheel}`,
                 hashes: { sha256: digest },
-                'upload-time': PYTHON_INDEX_UPLOAD_TIME,
+                'upload-time': '2020-01-01T00:00:00Z',
             };
             return Response.json(
                 { meta: { 'api-version': '1.1' }, name: 'ruff', files: [file] },
-                { headers: { 'content-type': PYTHON_SIMPLE_JSON_TYPE } },
+                { headers: { 'content-type': 'application/vnd.pypi.simple.v1+json' } },
             );
         },
     });

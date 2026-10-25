@@ -9,9 +9,9 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import type { ProgramName } from '#tests/types/programs.ts';
+import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import { type spawnProcess } from '#cli/system/processes.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { EXECUTABLE_MODE } from '#tests/config/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
@@ -32,16 +32,16 @@ export function fakeCommand(name: string, result: typeof spawnProcess): Mock<typ
 /**
 Record each npm command that gspot starts, other than npm --version, and run it as usual.
 
-@returns a spy whose installations list the recorded commands, and whose disposal restores command execution.
+@returns a spy whose commands list holds the recorded npm commands, and whose disposal restores command execution.
 */
-export function recordNpmCommands(): Mock<typeof spawnProcess> & { installations: string[][] } {
+export function recordNpmCommands(): Mock<typeof spawnProcess> & { commands: string[][] } {
     const runProcess = processes.spawnProcess;
-    const installations: string[][] = [];
+    const commands: string[][] = [];
     const spy = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
-        if (command[0] === 'npm' && command[1] !== '--version') installations.push([...command]);
+        if (command[0] === 'npm' && command[1] !== '--version') commands.push([...command]);
         return runProcess(command, options);
     });
-    return Object.assign(spy, { installations });
+    return Object.assign(spy, { commands });
 }
 
 /**
@@ -93,7 +93,7 @@ export async function writeProgramCommand(
     await writeFile(target, `#!/bin/sh\nexec ${command.map((word) => quoteArgument(word)).join(' ')} "$@"\n`);
     const windowsCommand = command.map((word) => '"' + word.replaceAll('"', '""').replaceAll('%', '%%') + '"');
     await writeFile(`${target}.cmd`, `@echo off\r\n${windowsCommand.join(' ')} %*\r\n`);
-    await chmod(target, EXECUTABLE_MODE);
+    await chmod(target, EXECUTABLE_FILE);
     return dirname(target);
 }
 

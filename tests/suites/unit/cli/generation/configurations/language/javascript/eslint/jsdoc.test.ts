@@ -5,12 +5,12 @@ import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createEslint, compareFindings, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     JSDOC_FILES,
     JSDOC_RULES,
-    TSC_ARGUMENTS,
     JSDOC_FINDINGS,
     CORRECTED_JSDOC,
     ROOT_PARAMETERS,
@@ -55,7 +55,15 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
             findings.map(({ ruleId, line }) => ({ file, rule: ruleId, line })),
         ).toSorted(compareFindings),
     );
-    const failed = await runCommand(TSC_ARGUMENTS, { cwd: sandbox.path });
+    const tscArguments = [
+        'node',
+        'node_modules/typescript/lib/tsc.js',
+        '--project',
+        findManifestTarget('javascript', 'jsconfig.json'),
+        '--pretty',
+        'false',
+    ];
+    const failed = await runCommand(tscArguments, { cwd: sandbox.path });
     expect(failed.code, failed.stdout + failed.stderr).toBe(2);
     const output = failed.stdout + failed.stderr;
     expect(
@@ -70,7 +78,7 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
         await writeFile(join(sandbox.path, file), CORRECTED_JSDOC);
     }
     expect(await listLintFindings(eslint, sandbox.path, files, JSDOC_RULES)).toStrictEqual([]);
-    const compiled = await runCommand(TSC_ARGUMENTS, { cwd: sandbox.path });
+    const compiled = await runCommand(tscArguments, { cwd: sandbox.path });
     expect(compiled.code, compiled.stdout + compiled.stderr).toBe(0);
 });
 

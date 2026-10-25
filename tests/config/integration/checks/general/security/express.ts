@@ -35,8 +35,3 @@ export const EXPRESS_SOURCE_FINDINGS = [
     { file: 'query-template.js', rule: 'gspot.express.raw-query-interpolation', line: 1 },
     { file: 'response-template.js', rule: 'gspot.express.res-send-raw-input', line: 1 },
 ] as const;
-
-export const EXPRESS_SCOPE_FINDINGS = [
-    { scope: 'app', file: 'app/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },
-    { scope: 'app/child', file: 'app/child/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },
-] as const;

@@ -1,7 +1,3 @@
-export const SWIFT_VALUE_SOURCE = 'public let value: Int = 1\n';
-
-export const SWIFT_VALUE_ERROR = 'public let value: Int = "wrong"\n';
-
 export const SWIFT_PACKAGE_SANDBOX = {
     install: false,
     configurations: ['swift', 'naming'],
@@ -33,12 +29,14 @@ public func pairSize(of count: Int) -> Int {
 export const SWIFT_PACKAGE_CASES = [
     {
         check: 'swift/swiftlint-analyze',
+        tool: 'swiftlint',
         files: { 'Sources/App/Pair.swift': `import Foundation\n\n${PAIR_SIZE_SOURCE}` },
         expected: { file: 'Sources/App/Pair.swift', rule: 'unused_import', line: 1 },
         corrected: { files: { 'Sources/App/Pair.swift': PAIR_SIZE_SOURCE } },
     },
     {
         check: 'swift/periphery',
+        tool: 'periphery',
         files: {
             'Sources/App/Pair.swift': `${PAIR_SIZE_SOURCE}
 private func neverCalled() -> Int {
@@ -69,13 +67,4 @@ export const XCODE_TOOL_PROJECT = `// !$*UTF8*$!
  D2 = { isa = XCBuildConfiguration; name = Debug; buildSettings = { PRODUCT_NAME = Example; SWIFT_VERSION = 6.0; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }; };
  };
 }
-`;
-
-export const XCODE_TOOL_SCHEME =
-    '<Scheme version="1.3"><BuildAction><BuildActionEntries><BuildActionEntry buildForTesting="YES" buildForRunning="YES"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="T1" BuildableName="Example" BlueprintName="Example" ReferencedContainer="container:Example.xcodeproj"/></BuildActionEntry></BuildActionEntries></BuildAction><TestAction buildConfiguration="Debug"/></Scheme>\n';
-
-export const XCODE_BUILD_TABLES = `[swift]
-xcode_project = "Example.xcodeproj"
-xcode_scheme = "Example"
-xcode_destination = "platform=macOS"
 `;

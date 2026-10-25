@@ -86,8 +86,6 @@ export const UNCHECKED_ROUTER_FILES: string[] = [
     'plain/routers/action.ts',
 ];
 
-export const ROUTER_ROLE_FILES: string[] = ['custom/action.ts', 'child/handlers/action.ts'];
-
 export const DRIZZLE_SCOPE_SETTINGS = {
     level: 'all',
     rules: true,

@@ -3,11 +3,11 @@ import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
 import type { Sandbox } from '#tests/types/sandbox.ts';
 import type { Level } from '#cli/types/configurations.ts';
+import { COMMAND_PLAYBOOK } from '#tests/config/ansible.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { COMMAND_PLAYBOOK } from '#tests/config/checks/infrastructure/ansible.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { spawnGspot, listFindingRows, parseCheckReport, listScopeFindingRows } from '#tests/setup/cli/commands.ts';
 

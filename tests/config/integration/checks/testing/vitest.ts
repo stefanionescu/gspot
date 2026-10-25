@@ -14,8 +14,6 @@ export function positiveTotal(values: number[]): number {
 }
 `;
 
-export const VITEST_PACKAGE = { name: 'example', version: '1.0.0', private: true, type: 'module' } as const;
-
 export const UNTESTED_SOURCE = `${VITEST_SOURCE}
 /**
 Triples a number.

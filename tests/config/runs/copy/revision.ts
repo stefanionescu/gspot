@@ -23,7 +23,7 @@ export const GIT_HOOK_REPORT = {
             cancelled: true,
         },
     ],
-    headRetained: true,
-    indexRetained: true,
+    headKept: true,
+    indexKept: true,
     workingBytes: 'working\n',
 } as const;

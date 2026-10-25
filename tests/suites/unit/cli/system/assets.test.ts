@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { cp, symlink, readFile } from 'node:fs/promises';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
-import { BASH_MANIFEST, PACKAGE_FOLDER, PACKAGE_FOLDER_FILES } from '#tests/config/system/assets.ts';
+import { BASH_MANIFEST, PACKAGE_FOLDER } from '#tests/config/system/assets.ts';
 
 async function writePackageFolder(folder: string): Promise<string> {
     const root = join(import.meta.dir, '../../../../..');
@@ -18,7 +18,10 @@ async function writePackageFolder(folder: string): Promise<string> {
         ),
         [`${PACKAGE_FOLDER}/packages/cli/configurations/language/bash/manifest.toml`]: BASH_MANIFEST,
         ...Object.fromEntries(
-            Object.entries(PACKAGE_FOLDER_FILES).map(([path, text]) => [`${PACKAGE_FOLDER}/${path}`, text]),
+            Object.entries({
+                'packages/cli/configurations/.index.json': '{}',
+                'packages/cli/configurations/language/bash/.meta/state.json': '{}',
+            }).map(([path, text]) => [`${PACKAGE_FOLDER}/${path}`, text]),
         ),
     });
     const cwd = join(folder, PACKAGE_FOLDER);

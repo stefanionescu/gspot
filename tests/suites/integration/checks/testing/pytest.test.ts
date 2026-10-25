@@ -6,7 +6,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     PYTEST_CASES,
@@ -15,19 +15,10 @@ import {
     COVERAGE_LIMIT_CASES,
 } from '#tests/config/integration/checks/testing/pytest.ts';
 
-const installedSandbox = shareInstalledSandbox({
-    install: false,
-    ...PYTEST_SANDBOX,
-
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: shareInstalledSandbox calls it before the install.
-    async before(root) {
-        const installed = await runCommand(['uv', 'sync'], { cwd: root });
-        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    },
-});
+const installedSandbox = shareInstalledSandbox({ install: false, ...PYTEST_SANDBOX, commands: [['uv', 'sync']] });
 
 test.each([...PYTEST_CASES])('$check reports the required coverage and passes after the fix', async (sample) => {
-    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(expectedSummary(sample));
+    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
 });
 
 test.each([...COVERAGE_LIMIT_CASES])(

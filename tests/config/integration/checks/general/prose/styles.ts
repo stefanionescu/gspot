@@ -210,8 +210,6 @@ export const SUPPRESSION_COMMENTS = [
     '',
 ] as const;
 
-export const SCOPE_SPELLING_CASES = [{ scope: '' }, { scope: 'app' }] as const;
-
 export const VOCABULARY_SOURCE = `# Guide
 
 Use sqlfluff and NebulaProduct.
@@ -233,9 +231,3 @@ export const VERSION_RANGE_SOURCE = [
     'Use version 3.2.0\nor later.',
     '',
 ].join('\n');
-
-export const VERSION_RANGE_FINDINGS = [
-    { file: 'versions.md', line: 4, rule: 'Example.Versions' },
-    { file: 'versions.md', line: 5, rule: 'Example.Versions' },
-    { file: 'versions.md', line: 6, rule: 'Example.Versions' },
-] as const;

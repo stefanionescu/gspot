@@ -5,12 +5,9 @@ import { stringify } from '@decimalturn/toml-patch';
 import { generate } from '#cli/generation/generate.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-
-import {
-    ESLINT_FILE,
-    ESCAPED_SCOPE_CONFIGURATIONS,
-} from '#tests/config/generation/configurations/language/javascript/eslint/escaping.ts';
+import { ESCAPED_SCOPE_CONFIGURATIONS } from '#tests/config/generation/configurations/language/javascript/eslint/escaping.ts';
 
 async function parseScopeShape(scope: string): Promise<string> {
     let shape: string;
@@ -31,7 +28,7 @@ async function parseScopeShape(scope: string): Promise<string> {
     });
     const session = await openSession(sandbox.path);
     const output = generate(session);
-    const file = output.files.find((each) => each.path === ESLINT_FILE)!;
+    const file = output.files.find((each) => each.path === findManifestTarget('javascript', 'eslint/eslint.mjs'))!;
     const tree = await parseSource('javascript', file.content);
     try {
         expect(tree.rootNode.hasError).toBe(false);

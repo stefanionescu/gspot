@@ -1,5 +1,3 @@
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-
 const INVALID_UTF8_BYTE = 0xff;
 
 const UTF16_MARKER_BYTE = 0xfe;
@@ -43,11 +41,3 @@ export const ARGUMENT_REFUSALS = [
         "Option '--only <checks>' argument ',' is invalid. Name a check, such as --only python/ruff.",
     ],
 ] as const;
-
-export const OUTSIDE_GIT_SETTINGS = `configurations = []
-[[command_check]]
-id = "sandbox/paths"
-command = ${JSON.stringify(buildProgramCommand('fakes/tool'))}
-paths = ["api/**"]
-stage = "commit"
-`;

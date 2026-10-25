@@ -7,11 +7,18 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { parse, LocalDate, stringify } from '@decimalturn/toml-patch';
-import { SHELLCHECK_IGNORE, SHELLCHECK_RULE_IGNORE } from '#tests/config/commands/unignore.ts';
+import { SHELLCHECK_RULE_IGNORE } from '#tests/config/commands/unignore.ts';
 
 test('unignore removes a matching ignore, and a second run reports no change', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash'], { rules: true, tables: SHELLCHECK_IGNORE }),
+        'gspot.toml': buildSandboxSettings(['bash'], {
+            rules: true,
+            tables: `[[ignore]]
+check = "bash/shellcheck"
+rule = "SC2086"
+reason = "Word splitting is intentional in this sandbox."
+`,
+        }),
     });
     const commandArguments = ['unignore', 'bash/shellcheck', '--rule', 'SC2086'];
     const removed = await runGspot(sandbox.path, commandArguments);

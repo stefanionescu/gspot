@@ -204,8 +204,6 @@ const value = "<!-- marker: Literal sample text. -->";
     ],
 ] as const;
 
-export const MARKER_COMMENT = /^(?:\/\/|#|--|<!--) ?marker:/u;
-
 export const COMPONENT_SCRIPT_COMMENTS = [
     {
         path: 'App.vue',

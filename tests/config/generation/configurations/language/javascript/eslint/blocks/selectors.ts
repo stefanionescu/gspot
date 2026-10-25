@@ -7,9 +7,6 @@ const text = <input type="text" value="a" {...register("choice")} />;
 `,
 } as const;
 
-export const SELECTOR_VALIDATION_SOURCE =
-    'useStore(cartStore);\nuseForm(options);\nuseForm({ ...options });\nuseForm({ defaultValues: { nested: { resolver: 1 } } });\npublicProcedure.query(resolve);\nprotectedProcedure.use(logger).query(resolve);\nt.procedure.query(resolve);\npool.query(sql);\nbyId.query(resolve);\ngetClient().query(sql);\npublicProcedure.input(schema).use(logger).mutation(resolve);\n';
-
 export const SELECTOR_LIBRARY_FILES = {
     'cart.js':
         "import { useStore } from 'zustand';\nimport { cartStore, useCartStore } from './store.js';\nexport function readCart() {\n    const whole = useCartStore();\n    const all = useStore(cartStore);\n    return [whole, all];\n}\n",

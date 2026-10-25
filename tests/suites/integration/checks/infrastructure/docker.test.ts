@@ -1,16 +1,17 @@
 import { promisify } from 'node:util';
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isLinux } from '#tests/setup/system/platform.ts';
 import { randomUUID, generateKeyPair } from 'node:crypto';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -18,7 +19,6 @@ import {
     DOCKER_SANDBOX,
     ALPINE_DOCKERFILE,
     DEBIAN_DOCKERFILE,
-    TRIVY_CONFIG_PATH,
     TRIVY_SCOPE_TABLES,
     TRIVY_SCOPE_RESULTS,
     ROOT_USER_DOCKERFILE,
@@ -33,12 +33,9 @@ async function importImage(root: string, tag: string, contents: string | Buffer)
 }
 
 test('Trivy checks each Dockerfile in its deepest scope and honors an ignore limited to a scope path', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
     const paths = ['Dockerfile', 'app/Dockerfile', 'app/child/Dockerfile', 'sibling/Dockerfile'];
-    const settings = buildSandboxSettings(['docker'], { tables: TRIVY_SCOPE_TABLES });
-    await createFileTree(sandbox.path, {
-        'gspot.toml': settings,
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docker'], { tables: TRIVY_SCOPE_TABLES }),
         '.gitignore': 'untracked/\n',
         ...Object.fromEntries(paths.map((path) => [path, ROOT_USER_DOCKERFILE])),
     });
@@ -119,8 +116,6 @@ test.each([...LEVELS])(
 test.skipIf(!isLinux || Bun.which('docker') === null)(
     'docker/trivy-image reports a private key in an image, errors on a broken config file, and passes a clean image',
     async () => {
-        await using sandbox = await testdir();
-        runGitStep(sandbox.path, ['init', '--quiet']);
         const prefix = `gspot-tools-image-${randomUUID()}`;
         const tags = [`${prefix}:defect`, `${prefix}:corrected`] as const;
         const { privateKey: key } = await promisify(generateKeyPair)('rsa', { modulusLength: 2048 });
@@ -128,14 +123,14 @@ test.skipIf(!isLinux || Bun.which('docker') === null)(
             type: 'pkcs1',
             format: 'pem',
         });
-        await createFileTree(sandbox.path, {
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['docker']),
             'compose.yaml': `services: {app: {image: "${tags[0]}"}}\n`,
             'payload.pem': privateKey,
         });
         const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const configPath = join(sandbox.path, TRIVY_CONFIG_PATH);
+        const configPath = join(sandbox.path, findManifestTarget('docker', 'trivy.yml'));
         const configuration = await readFile(configPath, 'utf8');
         const command = ['check', '--only', 'docker/trivy-image', '--json'];
         try {
@@ -178,6 +173,6 @@ test.each([...DOCKER_CASES])('$check reports $expected.file and passes after the
             ? { ...sample.expected, message: expect.stringContaining(sample.expected.message) as string }
             : sample.expected;
     expect(await runCheckSample(installedSandbox(), { ...sample, expected })).toStrictEqual(
-        expectedSummary({ ...sample, expected }),
+        buildExpectedSummary({ ...sample, expected }),
     );
 });

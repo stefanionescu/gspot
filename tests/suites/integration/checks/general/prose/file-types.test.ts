@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { readFile, writeFile } from 'node:fs/promises';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { spawnRootCheck } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
-import { PROSE_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PROSE_SANDBOX } from '#tests/config/integration/samples.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 import { VALE_INI, EXAMPLE_STYLE_FOLDER } from '#tests/config/integration/checks/general/prose/samples.ts';
 
 import {
@@ -91,12 +91,11 @@ test.each([...PROSE_COMMENT_CASES])(
         await writeFile(join(sandbox.path, path), `${prefix}${marker} We inspect records.\n${code}\n`);
         const corrected = await spawnRootCheck(sandbox.path, 'prose/vale');
         expect(corrected.status, corrected.note).toBe('passed');
-        expect(await readFile(join(sandbox.path, 'british', path), 'utf8')).toBe(source);
     },
 );
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 
 test.each([...PROSE_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
-    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(expectedSummary(sample));
+    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
 });

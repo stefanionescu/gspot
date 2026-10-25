@@ -19,7 +19,6 @@ import {
     REEXPORT_CASES,
     ENTRYPOINT_TABLES,
     ENTRYPOINT_SOURCE,
-    ENTRYPOINT_FOLDERS,
     LEVEL_REEXPORT_CASES,
     TRIVIAL_ENTRYPOINT_FILES,
 } from '#tests/config/generation/configurations/language/javascript/eslint/structure.ts';
@@ -27,7 +26,7 @@ import {
 async function listTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
     await writeFile(join(root, 'gspot.toml'), settings);
     const eslint = await createEslint(root);
-    const findings = await listLintFindings(eslint, root, ENTRYPOINT_FOLDERS, TRIVIAL_RULES);
+    const findings = await listLintFindings(eslint, root, ['src', 'api/src'], TRIVIAL_RULES);
     return findings.map(({ file, rule }) => ({ file, rule }));
 }
 

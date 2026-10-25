@@ -1,4 +1,4 @@
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
 
 export const NESTJS_CONTROLLER = `// The routes that greet.
 import { GreetingService } from './greeting.service.js';

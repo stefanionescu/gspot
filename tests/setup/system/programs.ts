@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { renameSync } from 'node:fs';
 import type { ProgramName } from '#tests/types/programs.ts';
 
 /**
@@ -34,4 +35,29 @@ export function splitProgramArguments(): { own: string[]; call: string[] } {
     const all = process.argv.slice(2);
     const separator = all.indexOf('--');
     return separator === -1 ? { own: all, call: [] } : { own: all.slice(0, separator), call: all.slice(separator + 1) };
+}
+
+/**
+Split a `path=text` option of a test program at its first equals sign, so the text may hold more of them.
+
+@param pair the option value.
+@returns the part before the sign and the part after it.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 3 files share it.
+export function splitPair(pair: string): [string, string] {
+    const separator = pair.indexOf('=');
+    return [pair.slice(0, separator), pair.slice(separator + 1)];
+}
+
+/**
+Write a marker file that a test polls for: write it beside its path, then rename it, so the test never reads it half
+written.
+
+@param path the marker file.
+@param text what the marker holds.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
+export async function writeMarker(path: string, text: string): Promise<void> {
+    await Bun.write(`${path}.partial`, text);
+    renameSync(`${path}.partial`, path);
 }

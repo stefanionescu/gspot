@@ -3,15 +3,16 @@ import { readFileSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { type Level } from '#cli/types/configurations.ts';
+import type { ScopeSelection } from '#tests/types/settings.ts';
 import { SCHEMA_DIRECTIVE } from '#cli/config/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { type Settings, type WrittenSettings } from '#cli/types/settings/file.ts';
-import type { ScopeSettings, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 
 /**
 Build the gspot.toml text of a sandbox, with rules off unless the options turn them on.
@@ -114,35 +115,34 @@ export function validateSettingsText(text: string, repositoryRoot?: string): str
 /**
 Build a command check that prints each path it gets and fails.
 
-@param options which files and stage the check covers.
+@param options the ID of the check and which files and stage it covers.
 @returns the command check record.
 */
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 4 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in 4 files share it.
 export function buildReportingCheck(
-    options: Pick<NonNullable<WrittenSettings['command_check']>[number], 'paths' | 'stage'> & { id?: string },
+    options: Pick<NonNullable<WrittenSettings['command_check']>[number], 'id' | 'paths' | 'stage'>,
 ): NonNullable<WrittenSettings['command_check']>[number] {
     return {
-        id: options.id ?? 'sandbox/report',
+        id: options.id,
         command: buildProgramCommand('fakes/tool', '--print-arguments', '--exit', '1', '--', '{files}'),
-        ...options,
+        paths: options.paths,
+        stage: options.stage,
         output: { format: 'lines' },
     };
 }
 
 /**
 Resolve the settings and configuration defaults that apply in one scope.
-*/
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function selectScopeSettings(settings: Settings, scopePath = ''): ScopeSettings {
+@param settings the parsed gspot.toml.
+@param scopePath the scope folder, the root by default.
+@returns the scope settings together with their source configurations and available settings.
+*/
+export function selectScopeSettings(settings: Settings, scopePath = ''): ScopeSelection {
     const configurations = selectForScope(settings, scopePath, readConfigurations());
-    return buildScopeSettings(
-        buildAvailableSettings(configurations, 'recommended'),
-        settings,
-        configurations,
-        scopePath,
-    );
+    const availableSettings = buildAvailableSettings(configurations, 'recommended');
+    const scopeSettings = buildScopeSettings(availableSettings, settings, configurations, scopePath);
+    return { scopeSettings, configurations, availableSettings };
 }
 
 /**

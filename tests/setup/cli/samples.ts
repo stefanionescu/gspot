@@ -92,9 +92,8 @@ function listReportedChecks(report: RunReport): CheckResult[] {
 /**
 Describe the one failed check result of the sample, with its findings, and its clean rerun.
 */
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 31 calls in 31 files share it.
-export function expectedSummary(sample: CheckSample): SampleSummary {
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 32 calls in 31 files share it.
+export function buildExpectedSummary(sample: CheckSample): SampleSummary {
     return {
         failed: {
             code: 1,

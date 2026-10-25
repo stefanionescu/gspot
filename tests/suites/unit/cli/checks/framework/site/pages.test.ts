@@ -6,14 +6,9 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSiteSettings } from '#tests/setup/cli/settings.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
-
-import {
-    SITE_SANDBOX,
-    BUILT_PAGE_CASES,
-    SITE_BUILD_ARGUMENTS,
-    INVALID_SITEMAP_URLS,
-} from '#tests/config/checks/framework/site/pages.ts';
+import { SITE_SANDBOX, SITE_BUILD_ARGUMENTS } from '#tests/config/site.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
+import { BUILT_PAGE_CASES, INVALID_SITEMAP_URLS } from '#tests/config/checks/framework/site/pages.ts';
 
 test.each(INVALID_SITEMAP_URLS)('site/sitemap reports %s as an invalid URL and site/lychee skips it', async (url) => {
     await using sandbox = await testdir({
@@ -45,6 +40,6 @@ test.each([...BUILT_PAGE_CASES])(
             join(repository.root, 'gspot.toml'),
             buildSiteSettings(buildProgramCommand('fakes/site-build', ...SITE_BUILD_ARGUMENTS)),
         );
-        expect(await runCheckSample(repository, sample)).toStrictEqual(expectedSummary(sample));
+        expect(await runCheckSample(repository, sample)).toStrictEqual(buildExpectedSummary(sample));
     },
 );

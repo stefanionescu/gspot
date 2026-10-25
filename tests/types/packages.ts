@@ -1,10 +1,10 @@
 import type { Sandbox } from '#tests/types/sandbox.ts';
+import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 
 export type GspotProject = AsyncDisposable & {
     root: string;
     workspace: string;
     environment: Record<string, string>;
-    buildSandbox: (changes: Readonly<Record<string, string | undefined>>) => Sandbox;
     online: Sandbox;
     offline: Sandbox;
 };
@@ -28,6 +28,7 @@ export type NpmProject = {
     registry: NpmRegistry;
     rootPackage: string;
     yarnConfiguration: string | undefined;
+    toolPackageManager: PackageManager['name'];
     [Symbol.asyncDispose](): Promise<void>;
 };
 
@@ -38,13 +39,9 @@ export type ToolProjectFiles = {
     mode: number;
 };
 
-export type IndexedPythonProject = AsyncDisposable & {
-    rootProject: Buffer<ArrayBuffer>;
-    rootConfiguration: Buffer<ArrayBuffer>;
-    projectFiles: ToolProjectFiles;
-};
-
 export type PythonProject = AsyncDisposable & {
     rootProject: Buffer<ArrayBuffer>;
     rootConfiguration: Buffer<ArrayBuffer>;
 };
+
+export type IndexedPythonProject = PythonProject & { projectFiles: ToolProjectFiles };

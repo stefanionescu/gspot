@@ -1,4 +1,4 @@
-import { NPM_CHECK_IGNORES } from '#tests/config/setup/sandboxes.ts';
+import { NPM_CHECK_IGNORES } from '#tests/config/ignores.ts';
 
 const PYTHON_APP_FILES = {
     'app.py': 'value = 1\n',

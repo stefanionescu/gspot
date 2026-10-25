@@ -1,5 +1,13 @@
 import type { PlanOptions } from '#cli/types/planning.ts';
-import { TWO_SCOPES_SETTINGS } from '#tests/config/planning/samples.ts';
+
+export const TWO_SCOPES_SETTINGS = `configurations = []
+[[scope]]
+path = "api"
+configurations = []
+[[scope]]
+path = "web"
+configurations = []
+`;
 
 export const TSC_PUSH_OPTIONS = { stage: 'push', only: ['typescript/tsc'] } satisfies Pick<
     PlanOptions,
@@ -83,13 +91,6 @@ configurations = ["sql"]
 limits.sql.file_lines = 30
 tools.sqlfluff.dialect = "postgres"
 `;
-
-export const DOCS_SETTINGS = `configurations = ["docs"]\n[[scope]]\npath = "api"\n\nconfigurations = ["docs"]\n[[ignore]]\ncheck = "docs/lychee"\npaths = ["api/ignored/**"]\nreason = "These pages are evaluated only after the documentation build."\n`;
-
-export const PROJECT_TRIGGERS = [
-    ['delete', 'staged'],
-    ['rename', 'changed'],
-] as const;
 
 export const LOCKFILE_TRIGGER_NAMES = [
     'bun.lock',

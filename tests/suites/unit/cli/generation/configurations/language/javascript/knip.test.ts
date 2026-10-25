@@ -24,6 +24,8 @@ import {
     KNIP_COMPONENT_FILES,
 } from '#tests/config/generation/configurations/language/javascript/knip.ts';
 
+const knipArguments = [...KNIP_ARGUMENTS, '--config', findManifestTarget('javascript', 'knip.json'), '--include'];
+
 const check = readConfigurations()
     .get('javascript')!
     .checks.find(({ id: name }) => name === 'javascript/knip')!;
@@ -44,7 +46,7 @@ test('Knip finds unused framework component files and uses the entry points of e
         [findManifestTarget('javascript', 'knip.json')]: configuration,
     });
     await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
-    const result = await runCommand([...KNIP_ARGUMENTS, 'files'], { cwd: sandbox.path });
+    const result = await runCommand([...knipArguments, 'files'], { cwd: sandbox.path });
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const findings = parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path });
     expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
@@ -58,7 +60,7 @@ test('Knip finds unused framework component files and uses the entry points of e
         })),
     );
     for (const file of KNIP_UNUSED_FILES) await rm(join(sandbox.path, file));
-    const corrected = await runCommand([...KNIP_ARGUMENTS, 'files'], { cwd: sandbox.path });
+    const corrected = await runCommand([...knipArguments, 'files'], { cwd: sandbox.path });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(
         parseOutput(check, corrected.stdout, corrected.stderr, { root: sandbox.path, cwd: sandbox.path }),
@@ -69,7 +71,7 @@ test("Knip ignores gspot's tool packages and reports your unused dependencies", 
     await using sandbox = await testdir();
     const files = {
         'package.json':
-            '{"name":"native-project","private":true,"type":"module","dependencies":{"vale":"0.0.0","fixture-unused-package":"1.0.0","prettier":"3.8.4","eslint-config-prettier":"10.1.8","@gspothq/eslint-plugin":"0.0.0"}}',
+            '{"name":"native-project","private":true,"type":"module","dependencies":{"vale":"0.0.0","sample-unused-package":"1.0.0","prettier":"3.8.4","eslint-config-prettier":"10.1.8","@gspothq/eslint-plugin":"0.0.0"}}',
         'main.js': 'export const value = 1;\n',
     };
     const configuration = await generateFile(
@@ -82,7 +84,7 @@ test("Knip ignores gspot's tool packages and reports your unused dependencies", 
         [findManifestTarget('javascript', 'knip.json')]: configuration,
     });
     await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
-    const result = await runCommand([...KNIP_ARGUMENTS, 'dependencies'], { cwd: sandbox.path });
+    const result = await runCommand([...knipArguments, 'dependencies'], { cwd: sandbox.path });
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const findings = parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path });
     expect(findings.toSorted((left, right) => left.message.localeCompare(right.message))).toStrictEqual([
@@ -90,7 +92,7 @@ test("Knip ignores gspot's tool packages and reports your unused dependencies", 
             check: check.id,
             file: 'package.json',
             rule: 'dependencies',
-            message: 'Unused dependency: fixture-unused-package',
+            message: 'Unused dependency: sample-unused-package',
             help: check.help,
             fixable: false,
         },
@@ -104,7 +106,7 @@ test("Knip ignores gspot's tool packages and reports your unused dependencies", 
         },
     ]);
     await writeFile(join(sandbox.path, 'package.json'), '{"name":"native-project","private":true,"type":"module"}');
-    const corrected = await runCommand([...KNIP_ARGUMENTS, 'dependencies'], { cwd: sandbox.path });
+    const corrected = await runCommand([...knipArguments, 'dependencies'], { cwd: sandbox.path });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(
         parseOutput(check, corrected.stdout, corrected.stderr, { root: sandbox.path, cwd: sandbox.path }),
@@ -131,7 +133,7 @@ test('Knip treats script configuration files as entries and ignores pointer file
         Object.fromEntries([configuration, ...pointers].map(({ path, content }) => [path, content])),
     );
     await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
-    const result = await runCommand([...KNIP_ARGUMENTS, 'files'], { cwd: sandbox.path });
+    const result = await runCommand([...knipArguments, 'files'], { cwd: sandbox.path });
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path })).toStrictEqual(
         [],
@@ -233,6 +235,6 @@ test('Knip treats script patterns and the ESLint import chain as used entries', 
     )!;
     await createFileTree(sandbox.path, { [content.path]: content.content });
     await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
-    const result = await runCommand([...KNIP_ARGUMENTS, 'files'], { cwd: sandbox.path });
+    const result = await runCommand([...knipArguments, 'files'], { cwd: sandbox.path });
     expect(result.code, result.stdout + result.stderr).toBe(0);
 });

@@ -4,7 +4,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { UNMATCHED_PATH_CASES, UNMATCHED_PATH_FINDING } from '#tests/config/checks/general/gspot/unmatched-paths.ts';
+import { UNMATCHED_PATH_CASES } from '#tests/config/checks/general/gspot/unmatched-paths.ts';
 
 test.each([...UNMATCHED_PATH_CASES])(
     'gspot/unmatched-paths reports each setting path without a tracked match: $name',
@@ -22,7 +22,9 @@ test.each([...UNMATCHED_PATH_CASES])(
         commitAll(sandbox.path);
         const findings = await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths');
         expect(findings.map((finding) => finding.message)).toStrictEqual([...messages]);
-        expect(findings).toMatchObject(messages.map(() => UNMATCHED_PATH_FINDING));
+        expect(findings).toMatchObject(
+            messages.map(() => ({ check: 'gspot/unmatched-paths', file: 'gspot.toml', rule: 'unmatched-path' })),
+        );
     },
 );
 

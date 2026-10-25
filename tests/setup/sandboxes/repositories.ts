@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { HOOKS_SETTINGS } from '#tests/config/setup/cli.ts';
+import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
@@ -39,7 +39,7 @@ export async function prepareNestedRepository(
 ): Promise<{ project: string; base: string; commitId: string }> {
     await createFileTree(root, NESTED_SCOPE_FILES);
     const project = join(root, 'nested settings');
-    const base = commitAll(root, 'Fixture');
+    const base = commitAll(root, 'Base');
     await writeFile(join(project, 'source.txt'), 'pushed');
     await writeFile(join(root, 'outside.txt'), 'changed context');
     const commitId = commitAll(root, 'Change');

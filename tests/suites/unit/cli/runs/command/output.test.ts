@@ -20,11 +20,9 @@ import {
     ESLINT_CRASH,
     LOCATED_CHECK,
     FILELESS_CHECKS,
-    SCOPE_PATH_CHECK,
     REGEX_OUTPUT_CASES,
     MISSING_LOCATED_FILE,
     ESLINT_MANIFEST_TOOL,
-    BANNER_FAILURE_COMMAND,
 } from '#tests/config/runs/command.ts';
 
 test('a shortened failure output keeps the last line of stdout and of stderr', () => {
@@ -159,7 +157,14 @@ test('per-file failures drop only the header lines the tool declares', async () 
                         id: 'project/native',
                         stage: 'commit',
                         paths: ['source.txt'],
-                        command: BANNER_FAILURE_COMMAND,
+                        command: buildProgramCommand(
+                            'fakes/tool',
+                            '--stderr',
+                            'Banner: scanner 1\nNative input failed.\n',
+                            '--exit',
+                            '1',
+                            '{file}',
+                        ),
                     },
                 ],
             }),
@@ -218,14 +223,27 @@ test('a tool that runs out of memory gets a cause instead of the garbage collect
 });
 
 test('a finding in a folder outside the scope keeps its repository path when the check runs in the scope folder', async () => {
-    await using sandbox = await testdir(SCOPE_PATH_CHECK.files);
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: 'app' }] }),
+        'app/src/a.swift': 'let value = 1\n',
+        'lib/x.ts': 'export const value = 1;\n',
+    });
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] }).find(
         (check) => check.scope.folder.path === 'app',
     )!;
     planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
-    planned.check.command = [...SCOPE_PATH_CHECK.command];
-    planned.check.output = SCOPE_PATH_CHECK.output;
+    planned.check.command = buildProgramCommand(
+        'fakes/tool',
+        '--line',
+        '../lib/x.ts:1: outside',
+        '--line',
+        'src/a.swift:2: inside',
+    );
+    planned.check.output = {
+        ...LOCATED_CHECK.output,
+        pattern: String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$`,
+    };
 
     const checked = await runCheckCommand(buildCheckSession(session), planned);
 

@@ -55,8 +55,6 @@ export const SECRET_KEY_READS = [
     '"sb_secret_example"',
 ] as const;
 
-export const HELLO_EDGE_FUNCTION = 'Deno.serve(() => new Response("hello"));\n';
-
 export const SERVICE_ROLE_CLIENT_FILES = [
     'client.astro',
     'client.cjs',

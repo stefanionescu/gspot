@@ -9,7 +9,6 @@ import {
     JEST_CASES,
     JEST_PATHS,
     MIGRATION_CASES,
-    MIGRATION_PATHS,
     PRETTIER_PLUGIN_CASES,
 } from '#tests/config/repository/files/selection.ts';
 
@@ -67,7 +66,9 @@ test.each(MIGRATION_CASES)(
     (scope, expected) => {
         const configurations = readConfigurations();
 
-        const files = MIGRATION_PATHS.map((path) => buildTrackedFile(path));
+        const files = ['migrations/V1_root.sql', 'app/migrations/V2_first.sql', 'other/migrations/V3_other.sql'].map(
+            (path) => buildTrackedFile(path),
+        );
         const table = configurations.get('postgres')!.files;
         const options = {
             configurations: selectConfigurations(['postgres'], configurations),

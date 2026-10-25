@@ -53,7 +53,7 @@ test('a staged check reads index bytes and file modes, converts no line endings,
     await using sandbox = await createGitSandbox({});
     const command = buildProgramCommand(
         'checks/staged',
-        '--payload',
+        '--file',
         'payload.dat',
         '--bytes',
         'ff0a00',

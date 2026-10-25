@@ -1,5 +1,5 @@
-import type { GspotCall } from '#tests/types/samples.ts';
 import type { Level } from '#cli/types/configurations.ts';
+import type { ProcessOutput } from '#tests/types/processes.ts';
 
 export type SandboxPlan = {
     configurations: readonly string[];
@@ -7,17 +7,18 @@ export type SandboxPlan = {
     files: Readonly<Record<string, string>>;
     json?: Readonly<Record<string, unknown>>;
     level?: Level;
-    before?: (root: string) => void | Promise<void>;
-    prepare?: (root: string) => void | Promise<void>;
     cleanSource?: string;
 };
 
 export type InstalledSandboxPlan = SandboxPlan & {
     without?: readonly string[];
     install?: false;
+    commands?: readonly (readonly string[])[];
 };
 
 export type Sandbox = {
     root: string;
     run: GspotCall;
 };
+
+type GspotCall = (cwd: string, commandArguments: readonly string[]) => Promise<ProcessOutput>;

@@ -2,16 +2,15 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PYPROJECT, GOOGLE_PYPROJECT } from '#tests/config/python.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { ARITHMETIC_MODULE } from '#tests/config/integration/checks/samples.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { PYPROJECT, GOOGLE_PYPROJECT } from '#tests/config/checks/language/python/project.ts';
 import { PYTHON_SANDBOX, ARITHMETIC_MODULE_PATH } from '#tests/config/integration/checks/language/python/samples.ts';
 
 import {
     DOCSTRING_MODULES,
-    TYPED_DOCSTRING_RULES,
     PYDOCLINT_CHECK_ARGUMENTS,
 } from '#tests/config/integration/checks/language/python/pydoclint.ts';
 
@@ -55,7 +54,7 @@ test('pydoclint finds the docstring style of each file and does not ask for type
     ]);
 });
 
-test('pydoclint keeps your settings that ask for types in docstrings', async () => {
+test('pydoclint keeps the authored settings that ask for types in docstrings', async () => {
     const { root } = installedSandbox();
     const project =
         GOOGLE_PYPROJECT +
@@ -74,7 +73,9 @@ check-yield-types = true
     const failed = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(listFindingRows(failed.report)).toStrictEqual(
-        [3, 15].flatMap((line) => TYPED_DOCSTRING_RULES.map((rule) => ({ file: ARITHMETIC_MODULE_PATH, line, rule }))),
+        [3, 15].flatMap((line) =>
+            ['DOC109', 'DOC110', 'DOC105', 'DOC203'].map((rule) => ({ file: ARITHMETIC_MODULE_PATH, line, rule })),
+        ),
     );
     await writeFile(
         join(root, ARITHMETIC_MODULE_PATH),

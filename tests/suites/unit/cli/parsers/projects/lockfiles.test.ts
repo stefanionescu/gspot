@@ -4,18 +4,13 @@ import { test, expect } from 'bun:test';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readLockedPackages, readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
 import { PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
-
-import {
-    LOCKED_PACKAGE_CASES,
-    LOCKED_VERSION_CASES,
-    LOCKED_VERSIONS_MANIFEST,
-} from '#tests/config/parsers/projects/lockfiles.ts';
+import { LOCKED_PACKAGE_CASES, LOCKED_VERSION_CASES } from '#tests/config/parsers/projects/lockfiles.ts';
 
 test.each([...LOCKED_VERSION_CASES])(
     '$name reads the direct dependency versions of its importer',
     async ({ file, folder, text }) => {
         await using sandbox = await testdir({
-            [posix.join(folder, 'package.json')]: LOCKED_VERSIONS_MANIFEST,
+            [posix.join(folder, 'package.json')]: '{"dependencies":{"react":"^18.3.0","react-dom":"18.3.1"}}',
             [file]: text,
         });
         expect(readLockedVersions(createReadCache(sandbox.path), folder, JAVASCRIPT_LOCKFILES)).toStrictEqual(

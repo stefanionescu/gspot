@@ -10,35 +10,33 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import {
     REASON_VALUES,
     REASON_EXPLANATIONS,
-    NAMING_SCOPE_LIMITS,
-    NEUTRAL_SETTING_TEXT,
     SCOPE_SETTING_EXPLANATION,
 } from '#tests/config/commands/explain/settings.ts';
 
-test.each([...NAMING_SCOPE_LIMITS])(
-    "explain shows each scope's default and value naming limit: $key",
-    async ({ key, shipped, child }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['naming'], {
-                level: 'all',
-                scopes: [{ path: 'app' }],
-                tables: '[scope.naming.swift]\nmax_characters = 38\n',
-            }),
-            'entry.sh': 'echo example\n',
-            'app/entry.sh': 'echo example\n',
-        });
+test.each([
+    { key: 'naming.swift.max_characters', shipped: 40, child: 38 },
+    { key: 'naming.sql.max_words', shipped: 7, child: 7 },
+])("explain shows each scope's default and value naming limit: $key", async ({ key, shipped, child }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['naming'], {
+            level: 'all',
+            scopes: [{ path: 'app' }],
+            tables: '[scope.naming.swift]\nmax_characters = 38\n',
+        }),
+        'entry.sh': 'echo example\n',
+        'app/entry.sh': 'echo example\n',
+    });
 
-        const explained = await runGspot(sandbox.path, ['explain', key, '--json']);
-        expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-        expect(JSON.parse(explained.stdout)).toMatchObject({
-            kind: 'setting',
-            scopes: [
-                { scope: '', default: shipped, value: shipped },
-                { scope: 'app', default: shipped, value: child },
-            ],
-        });
-    },
-);
+    const explained = await runGspot(sandbox.path, ['explain', key, '--json']);
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    expect(JSON.parse(explained.stdout)).toMatchObject({
+        kind: 'setting',
+        scopes: [
+            { scope: '', default: shipped, value: shipped },
+            { scope: 'app', default: shipped, value: child },
+        ],
+    });
+});
 test('a setting explanation lists settings set only in scopes and each inherited value', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
@@ -109,7 +107,9 @@ test('a neutral format setting stays settable without a reason', async () => {
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
     const human = await runGspot(sandbox.path, ['explain', key]);
     expect(human.code, human.stdout + human.stderr).toBe(0);
-    expect(human.stdout).toBe(NEUTRAL_SETTING_TEXT);
+    expect(human.stdout).toBe(
+        'format.indent_style\n\nThe character of one indent level: space or tab.\n\nScope: root\nShipped default: "space"\nCurrent value: "space" (from configuration format)\nChange it: gspot set format.indent_style <value> [--reason "<why>"]\nBack to the default: gspot unset format.indent_style\n\nScope: app\nShipped default: "space"\nCurrent value: "tab" (from [scope "app"])\nChange it: gspot set format.indent_style <value> --scope app [--reason "<why>"]\nBack to the default: gspot unset format.indent_style --scope app\n',
+    );
     const structured = await runGspot(sandbox.path, ['explain', key, '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(JSON.parse(structured.stdout)).not.toHaveProperty('reason_when');

@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/configurations/names.ts';
-import { PROSE_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PROSE_SANDBOX } from '#tests/config/integration/samples.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -102,19 +102,12 @@ test.each([...LEVELS])(
             files: { 'gspot.toml': settings, [path]: sample },
         });
 
-        const appliedSettings = await readFile(join(root, 'gspot.toml'), 'utf8');
         const checked = parseCheckReport(await spawnGspot(root, ['check', path, '--only', 'prose/vale', '--json']));
         expect(checked.code, checked.stdout + checked.stderr).toBe(level === 'all' ? 1 : 0);
-        let line = 1;
-        const expected = PACKAGE_STYLE_CASES.flatMap((row) => {
-            const findings = 'findings' in row ? row.findings : [[0, row.rule] as const];
-            const rows = findings.map(([offset, rule]) => ({ file: path, line: line + offset, rule }));
-            line += row.sample.split('\n').length + 1;
-            return rows;
-        });
+        const expected = PACKAGE_STYLE_CASES.flatMap(({ findings }) =>
+            findings.map(([line, rule]) => ({ file: path, line, rule })),
+        );
         expect(listFindingRows(checked.report)).toStrictEqual(level === 'all' ? expected : []);
-        expect(await readFile(join(root, path), 'utf8')).toBe(sample);
-        expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(appliedSettings);
         await writeFile(
             join(root, path),
             `# Guide

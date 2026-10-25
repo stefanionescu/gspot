@@ -1,4 +1,4 @@
-import { BASE_INSTALLED_FILES } from '#tests/config/setup/sandboxes.ts';
+import { BASE_INSTALLED_FILES } from '#tests/config/integration/checks/samples.ts';
 
 export const SEMGREP_PROJECT_FILES = {
     'package.json': '{"name":"example","private":true,"type":"module","dependencies":{"express":"0.0.0-test"}}\n',

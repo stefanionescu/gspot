@@ -1,7 +1,6 @@
 import { testdir } from 'testdirs';
 import { isInside } from '#cli/system/paths.ts';
 import { mkdir, writeFile } from 'node:fs/promises';
-import type { Sandbox } from '#tests/types/sandbox.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { GspotProject } from '#tests/types/packages.ts';
@@ -10,7 +9,6 @@ import { join, resolve, relative, delimiter } from 'node:path';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
-import { applyEnvironment } from '#tests/setup/system/environment.ts';
 import { GSPOT_ENVIRONMENT, OFFLINE_ENVIRONMENT } from '#tests/config/setup/environment.ts';
 
 export const isolatedEnvironment: Record<string, string | undefined> = {
@@ -42,26 +40,24 @@ export async function createGspotProject(): Promise<GspotProject> {
     );
     if (installed.code !== 0) throw new Error(`Installing gspot failed: ${installed.stdout}${installed.stderr}`);
     const command = ['node', join(root, 'node_modules', cliPackage.name, cliPackage.bin.gspot)];
-    const buildSandbox = (changes: Readonly<Record<string, string | undefined>>): Sandbox => {
-        const sandboxEnvironment = { ...environment };
-        applyEnvironment(sandboxEnvironment, changes);
-        return {
-            root,
-            run: (cwd, commandArguments) =>
-                runCommand([...command, ...commandArguments], {
-                    cwd,
-                    env: { ...isolatedEnvironment, ...changes, ...sandboxEnvironment },
-                }),
-        };
-    };
     const owned = resources.move();
     return {
         root,
         workspace: folder.path,
         environment,
-        buildSandbox,
-        online: buildSandbox({}),
-        offline: buildSandbox(OFFLINE_ENVIRONMENT),
+        online: {
+            root,
+            run: (cwd, commandArguments) =>
+                runCommand([...command, ...commandArguments], { cwd, env: { ...isolatedEnvironment, ...environment } }),
+        },
+        offline: {
+            root,
+            run: (cwd, commandArguments) =>
+                runCommand([...command, ...commandArguments], {
+                    cwd,
+                    env: { ...isolatedEnvironment, ...environment, ...OFFLINE_ENVIRONMENT },
+                }),
+        },
         [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned),
     };
 }

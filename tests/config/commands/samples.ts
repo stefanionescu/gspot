@@ -1,6 +1,3 @@
-import { SQL_CHECK_COMMAND } from '#tests/config/runs/command.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-
 const ALWAYS_SELECTED_REFUSAL =
     'gspot selects security by itself when the repository needs it, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To turn one check off, run gspot ignore.';
 
@@ -30,14 +27,20 @@ export const UNKNOWN_CONFIGURATION_REFUSALS = ['not-a-real-config-a', 'not-a-rea
     )
     .join('');
 
-export const API_BASH_FILES = [findManifestTarget('bash', 'semgrep.yml'), findManifestTarget('bash', 'shellcheckrc')];
+export const BASH_CONFIG_FILE_NAMES = ['semgrep.yml', 'shellcheckrc'];
 
-export const SQL_COMMAND_CHECK_TABLES = `[[command_check]]
-id = "project/read-sql"
-paths = ["**/*.sql"]
-stage = "commit"
-command = ${JSON.stringify(SQL_CHECK_COMMAND)}
-`;
+export const SQL_COMMAND_CHECK = { id: 'project/read-sql', paths: ['**/*.sql'], stage: 'commit' };
+
+export const SQL_SEARCH_ARGUMENTS = [
+    '--text',
+    'CREATE FUNCTION',
+    '--report',
+    'message',
+    '--message',
+    'Replace the sample function.',
+    '--',
+    '{files}',
+];
 
 export const TEST_VERSION = '0.0.0-test';
 

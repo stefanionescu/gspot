@@ -53,5 +53,3 @@ export const CORRECTED_LOOPS = `main() {
     done
 }
 `;
-
-export const NESTED_CONDITION = 'if [[ -n "$1" ]]; then';

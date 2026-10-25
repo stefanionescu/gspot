@@ -1,4 +1,4 @@
-import { GOOGLE_PYPROJECT } from '#tests/config/checks/language/python/project.ts';
+import { GOOGLE_PYPROJECT } from '#tests/config/python.ts';
 
 const CLEAN_PYTHON_MODULE = `"""Prices."""
 

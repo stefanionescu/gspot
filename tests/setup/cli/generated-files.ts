@@ -1,11 +1,9 @@
+import { posix } from 'node:path';
 import { testdir } from 'testdirs';
-import { join, posix } from 'node:path';
-import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import type { Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
@@ -52,20 +50,6 @@ export function findRuleFilePath(configuration: string, file: string): string {
         shipped === undefined ? undefined : listRuleFiles(shipped).find(({ path }) => posix.basename(path) === file);
     if (rule === undefined) throw new Error(`The ${configuration} configuration ships no rule file ${file}.`);
     return posix.join(GSPOT_PATHS.configurations, rule.path);
-}
-
-/**
-Read each generated config file matched by a repository-relative glob.
-*/
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
-export async function readGeneratedFiles(root: string, pattern: string): Promise<{ path: string; content: string }[]> {
-    return Promise.all(
-        [...new Bun.Glob(pattern).scanSync({ cwd: root, dot: true })].map(async (path) => ({
-            path: convertToPosixPath(path),
-            content: await readFile(join(root, path), 'utf8'),
-        })),
-    );
 }
 
 /**

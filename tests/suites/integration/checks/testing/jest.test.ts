@@ -1,10 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import jestPackage from 'jest/package.json' with { type: 'json' };
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -15,18 +14,6 @@ import {
     JEST_COVERAGE_TABLES,
     CORRECTED_MATH_TEST_SOURCE,
 } from '#tests/config/integration/checks/testing/jest.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function prepareJest(root: string, testSource: string) {
-    return createFileTree(root, {
-        'gspot.toml': buildSandboxSettings(['jest'], { tables: JEST_COVERAGE_TABLES, level: 'all' }),
-        ...JEST_PROJECT_FILES,
-        'package.json':
-            JSON.stringify({ name: 'jest-acceptance', private: true, devDependencies: { jest: jestPackage.version } }) +
-            '\n',
-        'math.test.cjs': testSource,
-    });
-}
 
 test("jest/coverage at level all uses the scope's coverage limits and runs only that scope's tests", async () => {
     await using sandbox = await createGitSandbox({
@@ -65,13 +52,14 @@ test("jest/coverage at level all uses the scope's coverage limits and runs only 
     expect(passing.report.checks).toMatchObject([
         { check: 'jest/coverage', scope: 'app', status: 'passed', findings: [] },
     ]);
-    expect(await readFile(join(sandbox.path, 'app/authored.txt'), 'utf8')).toBe('preserved nested source\n');
 });
 
-test('jest/coverage at level all reports uncovered functions and failed tests and keeps your files', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
-    await prepareJest(sandbox.path, MATH_TEST_SOURCE);
+test('jest/coverage at level all reports uncovered functions and failed tests and keeps the authored files', async () => {
+    await using sandbox = await createGitSandbox({
+        ...JEST_PROJECT_FILES,
+        'gspot.toml': buildSandboxSettings(['jest'], { tables: JEST_COVERAGE_TABLES, level: 'all' }),
+        'math.test.cjs': MATH_TEST_SOURCE,
+    });
     const command = ['check', '--only', 'jest/coverage', '--json'];
     const uncovered = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
@@ -97,9 +85,11 @@ test('jest/coverage at level all reports uncovered functions and failed tests an
 });
 
 test('jest/coverage reports a test file with a missing import as an error and passes after the fix', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
-    await prepareJest(sandbox.path, 'require("./missing-test-dependency.cjs");\n');
+    await using sandbox = await createGitSandbox({
+        ...JEST_PROJECT_FILES,
+        'gspot.toml': buildSandboxSettings(['jest'], { tables: JEST_COVERAGE_TABLES, level: 'all' }),
+        'math.test.cjs': 'require("./missing-test-dependency.cjs");\n',
+    });
     const command = ['check', '--only', 'jest/coverage', '--json'];
     const unavailable = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);

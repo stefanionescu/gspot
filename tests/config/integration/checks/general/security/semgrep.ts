@@ -1,67 +1,75 @@
 export const NEXT_CONFIG_CASES = [
     {
         name: 'keys after a nested env value',
-        source: `export default {\n  env: {\n    NESTED: { API_TOKEN: "nested text" },\n    "API_SECRET": process.env.API_SECRET,\n    ["PASSWORD"]: process.env.PASSWORD,\n    TOKEN,\n  },\n  typescript: { ["ignoreBuildErrors"]: (true as const) },\n};\n`,
+        source: `export default {
+  env: {
+    NESTED: { API_TOKEN: "nested text" },
+    "API_SECRET": process.env.API_SECRET,
+    ["PASSWORD"]: process.env.PASSWORD,
+    TOKEN,
+  },
+  typescript: { ["ignoreBuildErrors"]: (true as const) },
+};
+`,
         expected: [
             {
-                check: 'security/semgrep',
                 file: 'next.config.ts',
                 line: 4,
                 rule: 'gspot.nextjs.env-secret',
                 message: 'API_SECRET under env is written into the client bundle. Read it on the server.',
-                fixable: false,
             },
             {
-                check: 'security/semgrep',
                 file: 'next.config.ts',
                 line: 5,
                 rule: 'gspot.nextjs.env-secret',
                 message: 'PASSWORD under env is written into the client bundle. Read it on the server.',
-                fixable: false,
             },
             {
-                check: 'security/semgrep',
                 file: 'next.config.ts',
                 line: 6,
                 rule: 'gspot.nextjs.env-secret',
                 message: 'TOKEN under env is written into the client bundle. Read it on the server.',
-                fixable: false,
             },
             {
-                check: 'security/semgrep',
                 file: 'next.config.ts',
                 line: 8,
                 rule: 'gspot.nextjs.checks-off',
                 message: 'ignoreBuildErrors: true lets next build pass with errors. Remove it.',
-                fixable: false,
             },
         ],
     },
     {
         name: 'quoted and asserted literal disabled checks',
-        source: `export default {\n  eslint: { "ignoreDuringBuilds": true satisfies boolean },\n  typescript: { ignoreBuildErrors: <boolean>true },\n};\n`,
+        source: `export default {
+  eslint: { "ignoreDuringBuilds": true satisfies boolean },
+  typescript: { ignoreBuildErrors: <boolean>true },
+};
+`,
         expected: [
             {
-                check: 'security/semgrep',
                 file: 'next.config.ts',
                 line: 2,
                 rule: 'gspot.nextjs.checks-off',
                 message: 'ignoreDuringBuilds: true lets next build pass with errors. Remove it.',
-                fixable: false,
             },
             {
-                check: 'security/semgrep',
                 file: 'next.config.ts',
                 line: 3,
                 rule: 'gspot.nextjs.checks-off',
                 message: 'ignoreBuildErrors: true lets next build pass with errors. Remove it.',
-                fixable: false,
             },
         ],
     },
     {
         name: 'comments, strings, false flags, and nested env values',
-        source: `// env: { API_SECRET: "comment" }\nconst text = "ignoreBuildErrors: true";\nexport default {\n  env: { SETTINGS: { API_TOKEN: text }, PUBLIC_ENDPOINT: "https://example.com" },\n  eslint: { ignoreDuringBuilds: false },\n  typescript: { ignoreBuildErrors: enabled },\n};\n`,
+        source: `// env: { API_SECRET: "comment" }
+const text = "ignoreBuildErrors: true";
+export default {
+  env: { SETTINGS: { API_TOKEN: text }, PUBLIC_ENDPOINT: "https://example.com" },
+  eslint: { ignoreDuringBuilds: false },
+  typescript: { ignoreBuildErrors: enabled },
+};
+`,
         expected: [],
     },
 ] as const;
@@ -84,10 +92,18 @@ curl -o setup.sh https://example.com/setup.sh
 `;
 
 export const PLATFORM_SOURCES = {
-    'supabase/functions/body/index.ts':
-        'schema.parse(await req.json());\nschema.safeParse(await req.json());\nconst body = await req.json();\nconst second = await req.json();\nschema.parseAsync(await req.json());\nschema.safeParseAsync(await req.json());\n',
-    'src/html.js':
-        'list.innerHTML = "";\nlist.innerHTML = "<li>None</li>";\nlist.innerHTML = name;\nlist.outerHTML = markup;\n',
+    'supabase/functions/body/index.ts': `schema.parse(await req.json());
+schema.safeParse(await req.json());
+const body = await req.json();
+const second = await req.json();
+schema.parseAsync(await req.json());
+schema.safeParseAsync(await req.json());
+`,
+    'src/html.js': `list.innerHTML = "";
+list.innerHTML = "<li>None</li>";
+list.innerHTML = name;
+list.outerHTML = markup;
+`,
     'scripts/inject.js': 'execSync(`printf ${input}`);\n',
     'Info.plist': '<plist><dict><key>NSAllowsArbitraryLoads</key><true/></dict></plist>\n',
     'Allowed.plist':
@@ -121,21 +137,19 @@ export const PLATFORM_SOURCE_FINDINGS = [
     { file: 'supabase/functions/cors/index.ts', rule: 'gspot.supabase.edge-cors-wildcard-with-credentials', line: 1 },
 ] as const;
 
-export const PLATFORM_ALL_SOURCE_FINDINGS = [
-    { file: 'supabase/functions/_shared/cors.ts', rule: 'gspot.cloudflare.wildcard-cors-origin', line: 1 },
-    { file: 'supabase/functions/cors/index.ts', rule: 'gspot.cloudflare.wildcard-cors-origin', line: 1 },
-] as const;
-
-export const PLATFORM_ALL_SOURCE_FIXES = {
-    'supabase/functions/_shared/cors.ts':
-        'export const headers = { "Access-Control-Allow-Origin": "https://example.com" };\n',
-} as const;
-
 export const PLATFORM_SOURCE_FIXES = {
-    'supabase/functions/body/index.ts':
-        'schema.parse(await req.json());\nschema.safeParse(await req.json());\nconst body = schema.parse(await req.json());\nconst second = schema.safeParse(await req.json());\nschema.parseAsync(await req.json());\nschema.safeParseAsync(await req.json());\n',
-    'src/html.js':
-        'list.innerHTML = "";\nlist.innerHTML = "<li>None</li>";\nlist.textContent = name;\nlist.textContent = markup;\n',
+    'supabase/functions/body/index.ts': `schema.parse(await req.json());
+schema.safeParse(await req.json());
+const body = schema.parse(await req.json());
+const second = schema.safeParse(await req.json());
+schema.parseAsync(await req.json());
+schema.safeParseAsync(await req.json());
+`,
+    'src/html.js': `list.innerHTML = "";
+list.innerHTML = "<li>None</li>";
+list.textContent = name;
+list.textContent = markup;
+`,
     'Info.plist': '<plist><dict/></plist>\n',
     'scripts/inject.js': 'execFileSync("printf", [input]);\n',
     'functions/input.js': 'fetch("https://example.com/api");\n',
@@ -145,11 +159,6 @@ export const PLATFORM_SOURCE_FIXES = {
     'supabase/functions/cors/index.ts':
         'export const headers = { "Access-Control-Allow-Origin": "https://example.com", "Access-Control-Allow-Credentials": "true" };\n',
 } as const;
-
-export const REPOSITORY_RULE_SOURCE = `export function double(value: number): number {
-    return value * 2;
-}
-`;
 
 export const REPOSITORY_RULE = `rules:
     - id: test-no-double

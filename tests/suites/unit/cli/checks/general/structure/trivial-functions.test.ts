@@ -8,7 +8,7 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareBashSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     TRIVIAL_FILES,
@@ -119,7 +119,7 @@ test.each([...BASH_TRIVIAL_FUNCTION_CASES])(
     async (row) => {
         const sample = { check: 'structure/trivial-functions', ...row };
         expect(await runCheckSample(bashSandbox(), sample, BASH_SANDBOX.cleanSource)).toStrictEqual(
-            expectedSummary(sample),
+            buildExpectedSummary(sample),
         );
     },
 );

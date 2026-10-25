@@ -1,8 +1,3 @@
-export const SWIFT_LANGUAGE_PACKAGE = `// swift-tools-version: 6.0
-import PackageDescription
-let package = Package(name: "Example", targets: [.target(name: "Example")])
-`;
-
 export const PRIVATE_OTHER_FINDING = {
     file: '/var/folders/project/Other.swift',
     line: 5,

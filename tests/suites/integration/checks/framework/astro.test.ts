@@ -5,8 +5,8 @@ import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import astroPackage from 'astro/package.json' with { type: 'json' };
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { ASTRO_PAGE, ASTRO_PAGE_PATH } from '#tests/config/integration/checks/framework/astro.ts';
 import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/integration/checks/component-samples.ts';
-import { ASTRO_PAGE, ASTRO_PAGE_PATH, BUNDLED_ASTRO_FILES } from '#tests/config/integration/checks/framework/astro.ts';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['typescript', 'astro', 'format'],
@@ -18,7 +18,20 @@ const installedSandbox = shareInstalledSandbox({
 test('ESLint, astro check, and Prettier each report a finding in one Astro project and pass after each fix', async () => {
     const { root } = installedSandbox();
     const linted = parseCheckReport(
-        await runCheckOnChanges(installedSandbox(), { check: 'javascript/eslint', files: BUNDLED_ASTRO_FILES }),
+        await runCheckOnChanges(installedSandbox(), {
+            check: 'javascript/eslint',
+            files: {
+                [ASTRO_PAGE_PATH]:
+                    ASTRO_PAGE +
+                    `{[title].map((text) => <b>{text}</b>)}
+<div set:html={title} />
+<script>
+    import './answer';
+</script>
+`,
+                'src/pages/answer.ts': ANSWER_MODULE,
+            },
+        }),
     );
     expect(linted.code, linted.stdout + linted.stderr).toBe(1);
     expect(listFindingRows(linted.report)).toStrictEqual([

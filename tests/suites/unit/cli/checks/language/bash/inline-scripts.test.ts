@@ -4,7 +4,7 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareBashSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 import { INLINE_SCRIPT_CASES } from '#tests/config/checks/language/bash/inline-scripts.ts';
 
 const bashSandbox = shareBashSandbox();
@@ -21,7 +21,7 @@ test.each([...INLINE_SCRIPT_CASES])(
     async (row) => {
         const sample = { check: 'bash/inline-scripts', ...row };
         expect(await runCheckSample(bashSandbox(), sample, BASH_SANDBOX.cleanSource)).toStrictEqual(
-            expectedSummary(sample),
+            buildExpectedSummary(sample),
         );
     },
 );

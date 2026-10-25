@@ -17,13 +17,7 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runGit, commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-
-import {
-    FIX_REFUSALS,
-    ARGUMENT_REFUSALS,
-    PUSH_INPUT_REFUSALS,
-    OUTSIDE_GIT_SETTINGS,
-} from '#tests/config/commands/check/refusals.ts';
+import { FIX_REFUSALS, ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/commands/check/refusals.ts';
 
 async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const fix = buildProgramCommand('fakes/tool', '--text', 'fixed\n', 'source.txt');
@@ -77,7 +71,13 @@ test.each(['--changed', '--staged', '--hook'])(
     'check %s outside Git exits 2 with a git error and changes nothing',
     async (flag) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': OUTSIDE_GIT_SETTINGS, 'api/source.txt': 'before' });
+        const settings = stringify({
+            configurations: [],
+            command_check: [
+                { id: 'sandbox/paths', command: buildProgramCommand('fakes/tool'), paths: ['api/**'], stage: 'commit' },
+            ],
+        });
+        await createFileTree(sandbox.path, { 'gspot.toml': settings, 'api/source.txt': 'before' });
         const result = await runGspot(sandbox.path, [
             'check',
             flag,
@@ -89,7 +89,7 @@ test.each(['--changed', '--staged', '--hook'])(
             error: 'git',
             message: 'gspot needs a Git repository. Run git init, then gspot init.',
         });
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(OUTSIDE_GIT_SETTINGS);
+        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
         expect(await readFile(join(sandbox.path, 'api/source.txt'), 'utf8')).toBe('before');
     },
 );

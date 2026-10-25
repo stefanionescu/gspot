@@ -1,5 +1,3 @@
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
-
 export const KEPT_DECLARATION_FILES = [
     'app/ambient.d.ts',
     'app/emitted/generated.ts',
@@ -28,16 +26,6 @@ export function select(flag: boolean) { if (flag) return 1; }
     '.gspot/node_modules/@types/private/index.d.ts': 'export {};\ndeclare global { const privateValue: number; }\n',
 } as const;
 
-export const STANDALONE_TYPESCRIPT_TABLES = `[[scope]]
-path = "app"
-configurations = ["typescript"]
-`;
-
-export const STANDALONE_CORRECTED_SOURCE = `export const value = 1;
-export const project = acceptedNumber;
-export function select(flag: boolean) { return flag ? 1 : 0; }
-`;
-
 const PRIVATE_GLOBAL_FINDING = {
     file: 'app/source.ts',
     line: 1,
@@ -65,11 +53,4 @@ export const ANCESTOR_TYPESCRIPT_FILES = {
     'source.ts': 'export const rootValue = 1;\n',
     'app/source.ts': 'export const appValue: number = 1;\n',
     'app/deep/source.ts': 'export const deepValue: number = 1;\n',
-} as const;
-
-export const ANCESTOR_SCOPE_TABLES = `[[scope]]\npath = "app"\nconfigurations = ["typescript"]\n[[scope]]\npath = "app/deep"\n\nconfigurations = ["typescript"]\n`;
-
-export const ANCESTOR_TYPESCRIPT_PROJECT = {
-    compilerOptions: STRICT_COMPILER_OPTIONS,
-    include: ['source.ts', 'app/**/*.ts'],
 } as const;

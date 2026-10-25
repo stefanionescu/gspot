@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { JSON_INDENT } from '#cli/config/text.ts';
+import type { Sandbox } from '#tests/types/sandbox.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { RunReport } from '#cli/types/runs/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
@@ -15,7 +16,6 @@ import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import reactDomPackage from 'react-dom/package.json' with { type: 'json' };
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import type { Sandbox, InstalledSandboxPlan } from '#tests/types/sandbox.ts';
 
 import {
     NEXT_PACKAGE,
@@ -30,29 +30,26 @@ async function readCheckReport(repository: Sandbox, checks: string[], code: numb
     return result.report;
 }
 
-const installedSandbox = shareInstalledSandbox(buildNextjsPlan());
+const dependencies = Object.fromEntries(
+    Object.entries({
+        next: nextPackage.version,
+        ...NEXT_PACKAGE.dependencies,
+        react: reactPackage.version,
+        'react-dom': reactDomPackage.version,
+        typescript: testsPackage.devDependencies.typescript,
+        '@types/react': testsPackage.devDependencies['@types/react'],
+        '@types/node': workspacePackage.devDependencies['@types/node'],
+    }).toSorted(([left], [right]) => left.localeCompare(right)),
+);
 
-function buildNextjsPlan(): InstalledSandboxPlan {
-    const dependencies = Object.fromEntries(
-        Object.entries({
-            next: nextPackage.version,
-            ...NEXT_PACKAGE.dependencies,
-            react: reactPackage.version,
-            'react-dom': reactDomPackage.version,
-            typescript: testsPackage.devDependencies.typescript,
-            '@types/react': testsPackage.devDependencies['@types/react'],
-            '@types/node': workspacePackage.devDependencies['@types/node'],
-        }).toSorted(([left], [right]) => left.localeCompare(right)),
-    );
-    return {
-        ...NEXTJS_SANDBOX,
-        dependencies,
-        files: {
-            ...NEXTJS_SANDBOX.files,
-            'package.json': JSON.stringify({ ...NEXT_PACKAGE, dependencies }, null, JSON_INDENT) + '\n',
-        },
-    };
-}
+const installedSandbox = shareInstalledSandbox({
+    ...NEXTJS_SANDBOX,
+    dependencies,
+    files: {
+        ...NEXTJS_SANDBOX.files,
+        'package.json': JSON.stringify({ ...NEXT_PACKAGE, dependencies }, null, JSON_INDENT) + '\n',
+    },
+});
 
 test('nextjs/tsc generates types and checks a referenced project without writing build output', async () => {
     const { root } = installedSandbox();

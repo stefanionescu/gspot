@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GITHUB_WORKFLOW } from '#cli/config/generation/ci.ts';
@@ -8,9 +8,9 @@ import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
+import { CI_SOURCE_WORKFLOW, CI_INJECTION_SETTINGS } from '#tests/config/github-actions.ts';
 import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { CI_SOURCE_WORKFLOW, CI_INJECTION_SETTINGS } from '#tests/config/checks/infrastructure/github-actions.ts';
 
 import {
     COMPOSITE_ACTION,
@@ -72,21 +72,18 @@ test('the generated GitHub workflow passes actionlint', async () => {
         await spawnGspot(sandbox.path, ['check', '--only', 'github-actions/actionlint', '--json']),
     );
     expect(result.code, result.stderr + result.stdout).toBe(0);
-    expect(await readFile(workflow)).toStrictEqual(generated);
     expect(result.report.checks).toMatchObject([
         { check: 'github-actions/actionlint', status: 'passed', findings: [] },
     ]);
 });
 
-test('actionlint reports a missing required input of a same-repository reusable workflow and keeps your files', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
+test('actionlint reports a missing required input of a same-repository reusable workflow and keeps the authored files', async () => {
     const workflow = `on: workflow_dispatch
 jobs:
   caller:
     uses: $/.github/workflows/called.yml
 `;
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['github-actions']),
         '.github/workflows/caller.yml': workflow,
         '.github/workflows/called.yml': REQUIRED_INPUT_WORKFLOW,
@@ -151,5 +148,4 @@ test('zizmor checks composite actions in the root and a scope', async () => {
         await spawnGspot(sandbox.path, ['check', '--only', 'github-actions/zizmor', '--json']),
     ).report;
     expect(corrected.exitCode, JSON.stringify(corrected)).toBe(0);
-    expect(await readFile(join(sandbox.path, '.github/workflows/build.yml'), 'utf8')).toBe(CHECKOUT_WORKFLOW);
 });

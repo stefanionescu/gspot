@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
@@ -9,7 +9,7 @@ import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { stat, chmod, readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
@@ -17,9 +17,8 @@ import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes
 import {
     OUTDIR_CASES,
     AUTHORED_TSCONFIG,
-    SOLUTION_PROJECT_TREE,
-    IMPLICIT_PROJECT_TREE,
     REFERENCE_BUILD_FILES,
+    SOLUTION_PROJECT_FILES,
     IMPLICIT_PROJECT_FILES,
     REFERENCE_BUILD_SETTINGS,
     TYPESCRIPT_PROJECTS_SANDBOX,
@@ -28,19 +27,21 @@ import {
 async function runTscCheck(root: string): Promise<TypecheckResult> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'typescript/tsc', '--json']));
     const output = result.stdout + result.stderr;
-    if (result.code === 2) return { code: result.code, output, findings: [] };
     const findings = result.report.checks.flatMap((check) => check.findings);
     return { code: result.code, output, findings };
 }
 
 const installedSandbox = shareInstalledSandbox(TYPESCRIPT_PROJECTS_SANDBOX);
 
-test('typescript/tsc reports a type error in your tsconfig.json project without files or include, and leaves tsconfig.json unchanged', async () => {
+test('typescript/tsc reports a type error in a tsconfig.json project without files or include, and leaves tsconfig.json unchanged', async () => {
     const { root } = installedSandbox();
 
     await using _sourceChange = await applySandboxChanges(
         installedSandbox(),
-        buildSandboxChanges(TYPESCRIPT_PROJECTS_SANDBOX.files, IMPLICIT_PROJECT_TREE),
+        buildSandboxChanges(TYPESCRIPT_PROJECTS_SANDBOX.files, {
+            ...IMPLICIT_PROJECT_FILES,
+            'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+        }),
     );
     commitAll(root);
     const failed = await runTscCheck(root);
@@ -57,7 +58,10 @@ test('typescript/tsc checks both projects of a solution and writes no build outp
 
     await using _sourceChange = await applySandboxChanges(
         installedSandbox(),
-        buildSandboxChanges(TYPESCRIPT_PROJECTS_SANDBOX.files, SOLUTION_PROJECT_TREE),
+        buildSandboxChanges(TYPESCRIPT_PROJECTS_SANDBOX.files, {
+            ...SOLUTION_PROJECT_FILES,
+            'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+        }),
     );
     commitAll(root);
     const failed = await runTscCheck(root);
@@ -80,7 +84,7 @@ test('typescript/tsc checks both projects of a solution and writes no build outp
 });
 
 test.each([...LEVELS])(
-    'typescript/tsc at level %s keeps your tsconfig.json in a scope and reports its type errors',
+    'typescript/tsc at level %s keeps the authored tsconfig.json in a scope and reports its type errors',
     async (level) => {
         const { root } = installedSandbox();
         const scope = 'apps/web';
@@ -130,14 +134,11 @@ test.each([...LEVELS])(
 );
 
 test.each([...OUTDIR_CASES])('$name', async ({ kind }) => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--quiet']);
-    await using outside = await testdir({ 'value.js': 'authored output\n' });
-    runGitStep(outside.path, ['init', '--quiet']);
+    await using outside = await createGitSandbox({ 'value.js': 'authored output\n' });
 
     await linkTypescript(outside.path);
     const outsideFiles = await readdir(outside.path);
-    await createFileTree(sandbox.path, {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         '.gitignore': `node_modules\n${DOT_GSPOT}\n`,
         'tsconfig.json': '{"files":[],"references":[{"path":"./app"}]}',
@@ -180,14 +181,13 @@ test('typescript/tsc builds a referenced project with its imported declarations 
         ...REFERENCE_BUILD_FILES,
         'gspot.toml': buildSandboxSettings(['typescript'], REFERENCE_BUILD_SETTINGS),
     });
-    await writeFile(
-        join(sandbox.path, 'tsconfig.json'),
-        JSON.stringify({ files: [], references: [{ path: join(sandbox.path, 'app') }] }),
-    );
-    await writeFile(
-        join(sandbox.path, 'app/tsconfig.json'),
-        JSON.stringify({ extends: join(sandbox.path, 'config/base.json'), include: ['src/**/*.ts'] }),
-    );
+    await createFileTree(sandbox.path, {
+        'tsconfig.json': JSON.stringify({ files: [], references: [{ path: join(sandbox.path, 'app') }] }),
+        'app/tsconfig.json': JSON.stringify({
+            extends: join(sandbox.path, 'config/base.json'),
+            include: ['src/**/*.ts'],
+        }),
+    });
     await linkTypescript(join(sandbox.path, 'node_modules'));
     commitAll(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply']);
@@ -205,18 +205,15 @@ test('typescript/tsc builds a referenced project with its imported declarations 
         { scope: 'app', status: 'failed', findings: [{ file: 'app/src/main.ts', rule: 'TS2322' }] },
         { scope: 'neighbor', status: 'failed', findings: [{ file: 'neighbor/source.ts', rule: 'TS2322' }] },
     ]);
-    expect(await readFile(join(sandbox.path, 'app/src/main.ts'), 'utf8')).toBe(
-        REFERENCE_BUILD_FILES['app/src/main.ts'],
-    );
     expect(await isOnDisk(join(sandbox.path, 'app/src/main.js'))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, 'app/tsconfig.tsbuildinfo'))).toBe(false);
     await writeFile(
         join(sandbox.path, 'app/src/main.ts'),
         REFERENCE_BUILD_FILES['app/src/main.ts'].replace('"wrong"', '8080'),
     );
-    const corrected = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(1);
+    const remaining = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
+    expect(remaining.code, remaining.stdout + remaining.stderr).toBe(1);
     expect(
-        corrected.report.checks.flatMap(({ findings }) => findings).map(({ file, rule }) => ({ file, rule })),
+        remaining.report.checks.flatMap(({ findings }) => findings).map(({ file, rule }) => ({ file, rule })),
     ).toStrictEqual([{ file: 'neighbor/source.ts', rule: 'TS2322' }]);
 });

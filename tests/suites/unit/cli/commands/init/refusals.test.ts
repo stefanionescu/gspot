@@ -51,7 +51,7 @@ test('init in a repository that already has gspot.toml exits 2 and changes nothi
 
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
+    const result = await runGspot(sandbox.path, [...buildInitArguments([]), '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
         error: 'settings',

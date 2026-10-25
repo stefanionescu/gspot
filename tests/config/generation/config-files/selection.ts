@@ -1,15 +1,13 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { NPM_CHECK_IGNORES } from '#tests/config/setup/sandboxes.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { NPM_CHECK_IGNORES } from '#tests/config/ignores.ts';
 
-export const NESTED_PYTHON_GSPOT_TOML = buildSandboxSettings([], {
+export const NESTED_PYTHON_SETTINGS = {
     scopes: [
         { path: 'linted', configurations: ['python'] },
         { path: 'typed', configurations: ['python'] },
     ],
     tables: '[[ignore]]\ncheck = "python/basedpyright"\npaths = ["linted/**"]\nreason = "This project uses Ruff without a type checker."\n',
-});
+} as const;
 
 export const CONFIG_FILE_PROJECT = {
     '.github/workflows/check.yml': `name: Check
@@ -72,10 +70,10 @@ export const IGNORED_CHECK_FILES = [
         name: 'ignoring SwiftLint and Periphery keeps SwiftFormat',
         settings: SWIFT_FORMAT_SETTINGS,
         files: { 'main.swift': 'let value = 1\n' },
-        kept: [findManifestTarget('swift', 'swiftformat')],
+        kept: [`${GSPOT_PATHS.configurations}/language/swift/swiftformat`],
         dropped: [
-            findManifestTarget('swift', 'swiftlint.yml'),
-            findManifestTarget('swift', 'periphery.yml'),
+            `${GSPOT_PATHS.configurations}/language/swift/swiftlint.yml`,
+            `${GSPOT_PATHS.configurations}/language/swift/periphery.yml`,
             GSPOT_PATHS.npmProject,
         ],
     },
@@ -84,16 +82,6 @@ export const IGNORED_CHECK_FILES = [
         settings: EDITORCONFIG_SETTINGS,
         files: { 'sample.json': '{"value":1}\n' },
         kept: ['.editorconfig'],
-        dropped: [findManifestTarget('format', 'prettier.json'), '.prettierignore'],
+        dropped: [`${GSPOT_PATHS.configurations}/general/format/prettier.json`, '.prettierignore'],
     },
 ] as const;
-
-export const JSCONFIG_TITLE_IGNORE_PROJECT = {
-    'gspot.toml': buildSandboxSettings(['javascript'], {
-        level: 'all',
-        rules: true,
-        tables: '[[ignore]]\npaths = ["legacy/**"]\nreason = "Build output"\n',
-    }),
-    'source.js': 'export const value = 1;\n',
-    'legacy/source.js': 'export const legacy = 1;\n',
-} as const;
