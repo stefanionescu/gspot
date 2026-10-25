@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { openWriter } from '#cli/write.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { openWriter } from '#cli/apply/write/writer.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { readSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { COMMENTED_SETTINGS } from '#tests/config/settings/file.ts';

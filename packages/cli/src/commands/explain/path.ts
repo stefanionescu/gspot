@@ -2,9 +2,9 @@ import { GspotError } from '#cli/system/errors.ts';
 import { type Session } from '#cli/types/session.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
-import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { findScopeFolder, buildRepositoryPath } from '#cli/repository/scopes.ts';
 import { type Explanation, type PathExplanation } from '#cli/types/commands/explain.ts';
 

@@ -1,11 +1,11 @@
 import { splitByCase } from 'scule';
 import { getTable } from '#cli/settings/scopes.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { type Settings } from '#cli/types/settings/file.ts';
 import { findParentCategory } from '#cli/settings/naming.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
-import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { type Scope, type ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/naming.ts';
 import type { NamingCase, ParsedNamingLanguageFields } from '#cli/types/settings/naming.ts';

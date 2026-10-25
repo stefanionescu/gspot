@@ -5,10 +5,8 @@ import { GspotError } from '#cli/system/errors.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { openWriter, writePlans } from '#cli/apply/write/writer.ts';
-import { planSettingsWrite } from '#cli/apply/write/managed-keys.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
-import { planBlock, planReplacement } from '#cli/apply/write/plans.ts';
+import { planBlock, openWriter, writePlans, planReplacement, planSettingsWrite } from '#cli/write.ts';
 
 test('a batch writes binary bytes, and a removal plan deletes one file and keeps the other', async () => {
     await using sandbox = await testdir();

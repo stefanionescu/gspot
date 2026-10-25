@@ -2,16 +2,16 @@ import prettier from 'prettier';
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { openWriter } from '#cli/write.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { getValueAt } from '#cli/system/tables.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { openWriter } from '#cli/apply/write/writer.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
+import { writeGeneratedFiles } from '#cli/apply/generated.ts';
 import { generateFile } from '#tests/setup/cli/generated-files.ts';
-import { writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildIgnoreSections } from '#cli/generation/config-files/ignore-files.ts';
 

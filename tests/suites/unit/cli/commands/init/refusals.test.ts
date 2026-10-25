@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { WRITER_LOCK_FILE } from '#cli/config/write.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { WRITER_LOCK_FILE } from '#cli/config/apply/write/writer.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';

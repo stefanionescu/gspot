@@ -2,9 +2,9 @@ import { buildFinding } from '#cli/runs/finding.ts';
 import { type Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
+import { listOutdatedFiles } from '#cli/apply/outdated.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
-import { listOutdatedFiles } from '#cli/apply/files/outdated.ts';
 import { GENERATED_FILE_FINDINGS } from '#cli/config/checks/general/gspot/generated-files.ts';
 
 /**

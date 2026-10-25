@@ -1,9 +1,9 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 import { listCodeFiles, buildFolderTree, listSourceExtensions } from '#cli/checks/general/structure/folder-tree.ts';
 

@@ -2,11 +2,11 @@ import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { SQL_EXTENSION } from '#cli/config/files/names.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findParentCategory } from '#cli/settings/naming.ts';
 import type { NamingCase } from '#cli/types/settings/naming.ts';
 import { splitWords } from '#cli/checks/general/naming/settings.ts';
-import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { NUMERIC_WORDS } from '#cli/config/checks/general/naming/settings.ts';
 
 import type {

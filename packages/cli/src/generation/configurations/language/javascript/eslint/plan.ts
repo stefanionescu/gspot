@@ -1,8 +1,8 @@
 import { basename } from 'node:path/posix';
 import { listAssets } from '#cli/system/assets.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { MISE_SCRIPT_PATH } from '#cli/config/files/names.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations/names.ts';

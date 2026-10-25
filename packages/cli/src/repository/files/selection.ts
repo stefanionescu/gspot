@@ -6,9 +6,9 @@ import type { Configuration } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
+import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
 import { TEST_FILES_PLACEHOLDER } from '#cli/config/repository/files/selection.ts';
 import type { FileMatch, CoveredFilesOptions } from '#cli/types/repository/detect.ts';
-import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/files/matchers.ts';
 
 function addPluginExtensions(owners: FileMatch, configurations: Configuration[]): FileMatch {
     if (!owners.prettier_plugins && !owners.eslint_plugins) return owners;

@@ -4,9 +4,9 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listPrettierPlugins } from '#cli/planning/tools.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
+import { includeFolderContents } from '#cli/system/matchers.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { includeFolderContents } from '#cli/repository/files/matchers.ts';
 import type { Settings, WrittenFormat, FormatSettings } from '#cli/types/settings/file.ts';
 import type { ScopeFormat, FormatOverride, PrettierPlugin } from '#cli/types/generation/formatting.ts';
 

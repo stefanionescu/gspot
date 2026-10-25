@@ -338,7 +338,7 @@ paths = ["packages/cli/src/types/**"]
 [[import_rule]]
 name = "system"
 paths = ["packages/cli/src/system/**"]
-can_import = ["cli-config", "cli-types", "repository"]
+can_import = ["cli-config", "cli-types"]
 
 [[import_rule]]
 name = "parsers"
@@ -347,7 +347,7 @@ paths = ["packages/cli/src/parsers/**", "packages/cli/src/schemas/parsers/**"]
 [[import_rule]]
 name = "configurations"
 paths = ["packages/cli/src/configurations/**", "packages/cli/src/schemas/configurations/**"]
-can_import = ["cli-config", "cli-types", "system", "parsers", "repository"]
+can_import = ["cli-config", "cli-types", "system", "parsers"]
 
 [[import_rule]]
 name = "repository"
@@ -355,7 +355,7 @@ paths = ["packages/cli/src/repository/**", "packages/cli/src/schemas/repository/
 
 [[import_rule]]
 name = "write"
-paths = ["packages/cli/src/apply/write/**"]
+paths = ["packages/cli/src/write.ts"]
 
 [[import_rule]]
 name = "settings"
@@ -383,7 +383,7 @@ paths = ["packages/cli/src/install/**", "packages/cli/src/schemas/install/**"]
 
 [[import_rule]]
 name = "apply"
-paths = ["packages/cli/src/apply/*.ts", "packages/cli/src/apply/files/**"]
+paths = ["packages/cli/src/apply/**"]
 
 [[import_rule]]
 name = "runs"

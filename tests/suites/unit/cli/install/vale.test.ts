@@ -1,10 +1,10 @@
 import { join } from 'node:path';
+import { openWriter } from '#cli/write.ts';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { getTool } from '#cli/configurations/tools.ts';
-import { openWriter } from '#cli/apply/write/writer.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';

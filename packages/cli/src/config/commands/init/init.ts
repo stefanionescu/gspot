@@ -1,4 +1,4 @@
-import { HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE } from '#cli/config/apply/files/generated.ts';
+import { HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE } from '#cli/config/apply/generated.ts';
 
 export const INIT_INSTALL_NOTES: ReadonlySet<string> = new Set([HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE]);
 

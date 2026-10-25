@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { openWriter } from '#cli/write.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
-import { openWriter } from '#cli/apply/write/writer.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
+import { writeGeneratedFiles } from '#cli/apply/generated.ts';
 import type { EslintConfiguration } from '#tests/types/tools.ts';
-import { writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';

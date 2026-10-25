@@ -5,10 +5,10 @@ import { extractExtension } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/files.ts';
+import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
 import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/files/classify.ts';
 import { isInScope, joinScope, findProjectFolder } from '#cli/repository/scopes.ts';
-import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/files/matchers.ts';
 
 import {
     type ScopeContents,
@@ -205,4 +205,35 @@ export function detectConditions(
                 EVIDENCE_FINDERS.some((source) => source(condition, contents) !== undefined),
         ),
     );
+}
+
+/**
+List the general configurations that gspot adds without an explicit selection.
+
+@param configurations every shipped configuration
+@param repository the available inventory, if any
+@returns the automatic configurations, each once
+*/
+export function listAutomaticConfigurations(
+    configurations: Map<string, Configuration>,
+    repository?: Pick<Repository, 'root' | 'files' | 'hasGit'>,
+): string[] {
+    const general = new Map([...configurations].filter(([, configuration]) => configuration.group === 'general'));
+    const automatic = new Set(
+        general
+            .values()
+            .filter((configuration) => configuration.always_selected && configuration.when === undefined)
+            .map((configuration) => configuration.name),
+    );
+    if (repository === undefined) return [...automatic];
+    const detected = new Set(
+        detectConfigurations({ ...repository, dependencyFiles: [] }, general).map(({ configuration }) => configuration),
+    );
+    for (const configuration of general.values())
+        if (detected.has(configuration.name) && (configuration.when?.git !== true || repository.hasGit))
+            automatic.add(configuration.name);
+    return general
+        .keys()
+        .filter((name) => automatic.has(name))
+        .toArray();
 }

@@ -1,12 +1,12 @@
 import { join, dirname } from 'node:path';
+import { openWriter } from '#cli/write.ts';
 import { openSession } from '#cli/session.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { generate } from '#cli/generation/generate.ts';
 import type { Sandbox } from '#tests/types/sandbox.ts';
-import { openWriter } from '#cli/apply/write/writer.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGspotStep } from '#tests/setup/cli/commands.ts';
-import { writeGeneratedFiles } from '#cli/apply/files/generated.ts';
+import { writeGeneratedFiles } from '#cli/apply/generated.ts';
 import { runGit, runGitStep, markExecutable } from '#tests/setup/system/git.ts';
 import type { OriginalFile, SandboxWrite, SandboxChanges } from '#tests/types/samples.ts';
 import { rm, chmod, lstat, mkdir, rmdir, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';

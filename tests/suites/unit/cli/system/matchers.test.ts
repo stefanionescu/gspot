@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 
 test('a path selector crosses folders with ** and negates with !', () => {
     const isMatcher = buildPathMatcher(['scripts/**', '!scripts/vendor/**']);

@@ -1,12 +1,12 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
-import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import type { FileNames } from '#cli/types/checks/general/naming.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/checks/general/naming/source-names.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/general/naming/paths.ts';

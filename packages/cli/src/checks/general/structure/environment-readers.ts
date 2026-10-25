@@ -3,10 +3,10 @@ import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findFunctionNode } from '#cli/parsers/code/bash.ts';
 import { ENV_NAME } from '#cli/config/parsers/code/environment.ts';
-import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/code/environment.ts';
 import { PARSED_SOURCES } from '#cli/checks/general/structure/parsed-sources.ts';
 

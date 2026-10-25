@@ -1,6 +1,7 @@
 import { isUtf8 } from 'node:buffer';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
@@ -8,7 +9,6 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
-import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
 import { isInScope, joinScope, findScopeFolder } from '#cli/repository/scopes.ts';

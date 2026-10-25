@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/system/git.ts';
-import { MANAGED_KEYS_NOTE } from '#cli/config/apply/files/generated.ts';
+import { MANAGED_KEYS_NOTE } from '#cli/config/apply/generated.ts';
 import { readSandboxSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test.each(['api', './api'])('settings commands resolve scope %s from the calling folder', async (scope) => {

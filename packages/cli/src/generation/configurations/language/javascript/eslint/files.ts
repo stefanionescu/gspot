@@ -1,7 +1,7 @@
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { buildPathMatcher, includeFolderContents } from '#cli/system/matchers.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { buildPathMatcher, includeFolderContents } from '#cli/repository/files/matchers.ts';
 
 import {
     CODE_LANGUAGES,

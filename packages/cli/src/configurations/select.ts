@@ -1,8 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { detectConfigurations } from '#cli/repository/detect.ts';
-import type { Repository } from '#cli/types/repository/files.ts';
 import { SOURCE_FILE_GROUPS } from '#cli/config/configurations/select.ts';
 import { type Configuration, type RequirementWalk, type WrittenConfiguration } from '#cli/types/configurations.ts';
 
@@ -110,37 +108,6 @@ export function assertConfigurationsEditable(names: string[], configurations: Ma
             'arguments',
             `gspot selects ${name} by itself when the repository needs it, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To turn one check off, run gspot ignore.`,
         );
-}
-
-/**
-List the general configurations that gspot adds without an explicit selection.
-
-@param configurations every shipped configuration
-@param repository the available inventory, if any
-@returns the automatic configurations, each once
-*/
-export function listAutomaticConfigurations(
-    configurations: Map<string, Configuration>,
-    repository?: Pick<Repository, 'root' | 'files' | 'hasGit'>,
-): string[] {
-    const general = new Map([...configurations].filter(([, configuration]) => configuration.group === 'general'));
-    const automatic = new Set(
-        general
-            .values()
-            .filter((configuration) => configuration.always_selected && configuration.when === undefined)
-            .map((configuration) => configuration.name),
-    );
-    if (repository === undefined) return [...automatic];
-    const detected = new Set(
-        detectConfigurations({ ...repository, dependencyFiles: [] }, general).map(({ configuration }) => configuration),
-    );
-    for (const configuration of general.values())
-        if (detected.has(configuration.name) && (configuration.when?.git !== true || repository.hasGit))
-            automatic.add(configuration.name);
-    return general
-        .keys()
-        .filter((name) => automatic.has(name))
-        .toArray();
 }
 
 /**

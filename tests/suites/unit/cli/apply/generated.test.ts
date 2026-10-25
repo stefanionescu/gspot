@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { unlinkSync } from 'node:fs';
+import { openWriter } from '#cli/write.ts';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { generate } from '#cli/generation/generate.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { openWriter } from '#cli/apply/write/writer.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { writeGeneratedFiles } from '#cli/apply/generated.ts';
 import type { PackageFieldScenario } from '#tests/types/apply.ts';
-import { writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
@@ -18,7 +18,7 @@ import {
     STYLELINT_PACKAGE_FIELDS,
     COMMITLINT_PACKAGE_FIELDS,
     EDITED_COMMITLINT_PACKAGE,
-} from '#tests/config/apply/files.ts';
+} from '#tests/config/apply.ts';
 
 async function applyPackageFields(root: string, scenario: PackageFieldScenario): Promise<Map<string, string>> {
     const session = await openSession(root);

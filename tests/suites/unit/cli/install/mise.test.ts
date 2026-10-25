@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { createHash } from 'node:crypto';
+import { openWriter } from '#cli/write.ts';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { openWriter } from '#cli/apply/write/writer.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';

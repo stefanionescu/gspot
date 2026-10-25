@@ -1,7 +1,7 @@
 import { escapeGlob } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { includeFolderContents } from '#cli/system/matchers.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { includeFolderContents } from '#cli/repository/files/matchers.ts';
 import { listScopeFormats } from '#cli/generation/configurations/general/format/prettier.ts';
 
 import {

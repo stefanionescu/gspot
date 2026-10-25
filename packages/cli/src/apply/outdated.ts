@@ -6,16 +6,15 @@ import type { OutdatedFile } from '#cli/types/apply.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { listStrayPaths } from '#cli/apply/write/plans.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
-import { hasManagedKeys } from '#cli/apply/write/managed-keys.ts';
+import { listStrayPaths, hasManagedKeys } from '#cli/write.ts';
 import { listStaleLockfiles } from '#cli/install/tool-projects.ts';
 import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
+import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/apply/outdated.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { selectToolPackageManager } from '#cli/repository/npm/package-manager.ts';
-import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/apply/files/outdated.ts';
 
 /**
 Build a source diff with the shared Git context.

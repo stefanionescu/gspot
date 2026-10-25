@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { openWriter } from '#cli/write.ts';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { readFile, writeFile } from 'node:fs/promises';
-import { openWriter } from '#cli/apply/write/writer.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';

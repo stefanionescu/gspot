@@ -1,16 +1,14 @@
 import { formatCount } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
-import { writePlans } from '#cli/apply/write/writer.ts';
-import { listExpectedPaths } from '#cli/apply/files/outdated.ts';
+import { listExpectedPaths } from '#cli/apply/outdated.ts';
 import { listStaleLockfiles } from '#cli/install/tool-projects.ts';
-import { planSettingsWrite } from '#cli/apply/write/managed-keys.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { type WritePlan, type ApplyReport } from '#cli/types/apply.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
-import { planBlock, planRemoval, listStrayPaths, planReplacement } from '#cli/apply/write/plans.ts';
-import { HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/apply/files/generated.ts';
+import { HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/apply/generated.ts';
+import { planBlock, writePlans, planRemoval, listStrayPaths, planReplacement, planSettingsWrite } from '#cli/write.ts';
 
 /**
 Say that the generated files need no change.

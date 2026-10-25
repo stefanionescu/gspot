@@ -5,16 +5,15 @@ import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
 import { type ApplyReport } from '#cli/types/apply.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { planReplacement } from '#cli/apply/write/plans.ts';
-import { openWriter, writePlans } from '#cli/apply/write/writer.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { openWriter, writePlans, planReplacement } from '#cli/write.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { SETTINGS_FILE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
+import { INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/apply/generated.ts';
 import { findRuleFilePath, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGit, commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { runGspot, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
-import { INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/apply/files/generated.ts';
 import { FORMAT_SETTINGS, RULES_WRITTEN_FILES, PRETTIER_PATH_IGNORE } from '#tests/config/commands/apply/writes.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.

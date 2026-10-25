@@ -1027,7 +1027,7 @@ export default [
                     {
                         "category": "import-rule:write",
                         "pattern": [
-                            "packages/cli/src/apply/write/**"
+                            "packages/cli/src/write.ts"
                         ]
                     },
                     {
@@ -1071,8 +1071,7 @@ export default [
                     {
                         "category": "import-rule:apply",
                         "pattern": [
-                            "packages/cli/src/apply/*.ts",
-                            "packages/cli/src/apply/files/**"
+                            "packages/cli/src/apply/**"
                         ]
                     },
                     {
@@ -1316,7 +1315,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"system\" may import its own files and \"cli-config\", \"cli-types\", \"repository\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"system\" may import its own files and \"cli-config\", \"cli-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1331,8 +1330,7 @@ export default [
                                             "anyOf": [
                                                 "import-rule:system",
                                                 "import-rule:cli-config",
-                                                "import-rule:cli-types",
-                                                "import-rule:repository"
+                                                "import-rule:cli-types"
                                             ]
                                         }
                                     }
@@ -1388,7 +1386,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"configurations\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"repository\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"configurations\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1405,8 +1403,7 @@ export default [
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
                                                 "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:repository"
+                                                "import-rule:parsers"
                                             ]
                                         }
                                     }

@@ -4,9 +4,8 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { openWriter, writePlans } from '#cli/apply/write/writer.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { planSettingsWrite } from '#cli/apply/write/managed-keys.ts';
+import { openWriter, writePlans, planSettingsWrite } from '#cli/write.ts';
 import { BUN_SCANNER_KEYS } from '#tests/config/generation/configurations/general/dependencies.ts';
 
 test('a scope that uses Bun gets the scanner that gspot.toml names in its bunfig.toml', async () => {

@@ -1,8 +1,8 @@
 import { testdir } from 'testdirs';
+import { openWriter } from '#cli/write.ts';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
-import { openWriter } from '#cli/apply/write/writer.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
