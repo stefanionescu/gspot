@@ -235,12 +235,12 @@ function writeBatch(writer: Files, plans: WritePlan[]): void {
 /**
 Take the repository writer lock until disposal.
 
-@param repositoryRoot the boundary for confined writes and the writer lock.
+@param root the boundary for confined writes and the writer lock.
 @returns the locked file writer.
 */
-export function openWriter(repositoryRoot: string): Files {
+export function openWriter(root: string): Files {
     using resources = new DisposableStack();
-    const files = resources.use(openFiles(repositoryRoot));
+    const files = resources.use(openFiles(root));
     files.createLock(WRITER_LOCK_FILE);
     resources.move();
     return files;

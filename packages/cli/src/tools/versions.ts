@@ -30,16 +30,14 @@ function findVersionAbove(files: Files | undefined, root: string, start: string,
     return undefined;
 }
 
-function readPackageVersion(repositoryRoot: string, path: string, name: string | undefined): string | undefined {
+function readPackageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
-    using files = isToolProjectPath(repositoryRoot, path) ? openFiles(repositoryRoot) : undefined;
+    using files = isToolProjectPath(root, path) ? openFiles(root) : undefined;
     const folder = dirname(
-        files === undefined
-            ? realpathSync(path)
-            : files.readCanonicalPath(convertToPosixPath(relative(repositoryRoot, path))),
+        files === undefined ? realpathSync(path) : files.readCanonicalPath(convertToPosixPath(relative(root, path))),
     );
     const start = basename(folder) === basename(NPM_BIN_FOLDER) ? join(dirname(folder), name) : folder;
-    return findVersionAbove(files, repositoryRoot, start, name);
+    return findVersionAbove(files, root, start, name);
 }
 
 function extractVersion(text: string, tool: Tool): string | undefined {

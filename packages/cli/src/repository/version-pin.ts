@@ -7,12 +7,12 @@ import { selectStartRunner } from '#cli/repository/npm/package-manager.ts';
 /**
 Read the pinned gspot version.
 
-@param repositoryRoot the folder that holds .gspot/version.
+@param root the folder that holds .gspot/version.
 
 @returns the version, or undefined when the repository has no pin.
 */
-export function readVersionPin(repositoryRoot: string): string | undefined {
-    using files = openFiles(repositoryRoot);
+export function readVersionPin(root: string): string | undefined {
+    using files = openFiles(root);
     const onDisk = files.read(GSPOT_PATHS.versionPin);
     if (onDisk === undefined) return undefined;
     const line = onDisk.bytes.toString('utf8').trim();
@@ -22,12 +22,12 @@ export function readVersionPin(repositoryRoot: string): string | undefined {
 /**
 Throw when the repository pins a different gspot version.
 
-@param repositoryRoot the folder with the pin and the start command.
+@param root the folder with the pin and the start command.
 */
-export function assertVersionPin(repositoryRoot: string): void {
-    const versionPin = readVersionPin(repositoryRoot);
+export function assertVersionPin(root: string): void {
+    const versionPin = readVersionPin(root);
     if (versionPin === undefined || versionPin === cliPackage.version) return;
-    const runner = selectStartRunner(repositoryRoot);
+    const runner = selectStartRunner(root);
     const command = runner.installCommand.replace('<version>', () => versionPin);
     throw new GspotError(
         'pin',

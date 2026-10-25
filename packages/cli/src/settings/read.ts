@@ -13,10 +13,10 @@ import { type Settings, type TomlTable, type ParsedSettings } from '#cli/types/s
 Parse and validate gspot.toml. Throw a GspotError with every settings error.
 
 @param text the gspot.toml contents.
-@param repositoryRoot the folder for validating declared scope paths.
+@param root the folder for validating declared scope paths.
 @returns the normalized settings.
 */
-export function parseSettings(text: string, repositoryRoot: string): Settings {
+export function parseSettings(text: string, root: string): Settings {
     const written = parseTomlText(text, SETTINGS_FILE);
     const syntax = parseTomlSyntax(text, written);
     const result = settingsSchema.safeParse(written);
@@ -26,7 +26,7 @@ export function parseSettings(text: string, repositoryRoot: string): Settings {
             result.error.issues.flatMap((issue) => formatSettingsIssue(issue, syntax)).join('\n'),
         );
     const settings = buildSettings(result.data, written);
-    validateSettings(settings, repositoryRoot, syntax);
+    validateSettings(settings, root, syntax);
     return settings;
 }
 

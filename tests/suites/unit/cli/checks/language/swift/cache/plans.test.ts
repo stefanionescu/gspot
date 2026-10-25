@@ -30,7 +30,7 @@ test.each(['default', 'platform=macOS'])(
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, 'swift/build');
         for (const purpose of ['compile', 'analyze', 'coverage'] as const) {
-            const folder = getScopeBuildFolder(session.installedRoot, '', purpose);
+            const folder = getScopeBuildFolder(session.toolsRoot, '', purpose);
             expect(planSwiftBuild(session, input, purpose)).toStrictEqual({
                 kind: 'xcode',
                 purpose,
@@ -97,16 +97,14 @@ test.each([...SWIFT_BUILD_PURPOSES])(
                 note: 'Set swift.xcode_project or add Package.swift in this scope.',
             },
         ]);
-        expect(await isOnDisk(getScopeBuildFolder(session.installedRoot, input.scope.folder.path, purpose))).toBe(
-            false,
-        );
+        expect(await isOnDisk(getScopeBuildFolder(session.toolsRoot, input.scope.folder.path, purpose))).toBe(false);
         await createFileTree(sandbox.path, {
             'Package.swift': SWIFT_PACKAGE_HEADER,
         });
         const checkedSession = await openSession(sandbox.path);
         const packageInput = planSandboxCheck(checkedSession, 'swift/build');
         const plan = planSwiftBuild(checkedSession, packageInput, purpose);
-        const folder = getScopeBuildFolder(checkedSession.installedRoot, '', purpose);
+        const folder = getScopeBuildFolder(checkedSession.toolsRoot, '', purpose);
         const scratch = join(folder, 'package');
         expect(plan).toStrictEqual({
             kind: 'package',

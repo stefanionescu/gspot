@@ -15,7 +15,7 @@ export type Session = {
     root: string;
     inspections: Map<string, ToolInspection>;
     startRunner: StartRunner;
-    installedRoot: string;
+    toolsRoot: string;
     reads: ReadCache;
     resources: DisposableStack;
     packageManager: PackageManagerPin | undefined;
@@ -29,7 +29,7 @@ export type Session = {
 export type CheckSession = Session & { readMiseBinPaths: () => string[] };
 
 export type SessionOptions = {
-    installedRoot?: string;
+    toolsRoot?: string;
     reads?: ReadCache;
     listing?: RepositoryListing;
     settingsFile?: SettingsFile;

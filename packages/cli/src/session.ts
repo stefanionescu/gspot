@@ -80,9 +80,9 @@ export async function readSessionRepository({
 /**
 Open a repository session. Refuse invalid settings or configuration choices.
 
-@param rootPath the repository root.
+@param root the repository root.
 @param options where the tools sit, and what the run already read.
-@param options.installedRoot the working repository with the installed tools.
+@param options.toolsRoot the working repository with the installed tools.
 @param options.reads the run cache.
 @param options.listing the files of the repository, or none to list them.
 @param options.settingsFile the settings to use, or none to read them from the repository.
@@ -91,10 +91,10 @@ Open a repository session. Refuse invalid settings or configuration choices.
 @returns the validated session.
 */
 export async function openSession(
-    rootPath: string,
+    root: string,
     {
-        installedRoot = rootPath,
-        reads = createReadCache(rootPath),
+        toolsRoot = root,
+        reads = createReadCache(root),
         listing,
         settingsFile: requestedSettings,
         resources = new DisposableStack(),
@@ -103,10 +103,9 @@ export async function openSession(
 ): Promise<Session> {
     let settingsFile = requestedSettings;
     if (settingsFile === undefined) {
-        const { text } = readSettingsFile(rootPath);
-        settingsFile = { text, settings: parseSettings(text, rootPath) };
+        const { text } = readSettingsFile(root);
+        settingsFile = { text, settings: parseSettings(text, root) };
     }
-    const root = reads.root;
     const configurations = readConfigurations();
     const settings = settingsFile.settings;
     const repository = await readSessionRepository({
@@ -130,7 +129,7 @@ export async function openSession(
         timeoutSeconds: settings.tool_timeout_seconds,
         packageManager: undefined,
         root,
-        installedRoot,
+        toolsRoot,
         startRunner: selectStartRunner(root),
         settingsFile,
         configurations,

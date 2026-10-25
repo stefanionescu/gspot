@@ -4,15 +4,15 @@ import { open, lstat, access, readdir, readlink } from 'node:fs/promises';
 /**
 Read every path in a repository with its mode and contents, to check that a write kept them.
 
-@param repositoryRoot folder to read.
+@param root folder to read.
 @returns each path and its mode and contents.
 */
-export async function readTree(repositoryRoot: string): Promise<Record<string, string>> {
-    const paths = await readdir(repositoryRoot, { recursive: true });
+export async function readTree(root: string): Promise<Record<string, string>> {
+    const paths = await readdir(root, { recursive: true });
     return Object.fromEntries(
         await Promise.all(
             paths.map(async (path) => {
-                const absolute = join(repositoryRoot, path);
+                const absolute = join(root, path);
                 const attributes = await lstat(absolute);
                 if (attributes.isSymbolicLink())
                     return [path, `${String(attributes.mode)}:symlink:${await readlink(absolute)}`] as const;

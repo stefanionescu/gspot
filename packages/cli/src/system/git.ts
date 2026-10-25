@@ -81,13 +81,13 @@ function readFolderGitEnvironment(root: string, source: GitRepository, environme
 Build the environment for one Git command. Git lists the repository-local variables and the worktree settings; the
 caller overrides apply last.
 
-@param workingFolder the repository folder.
+@param cwd the repository folder.
 @param command the executable and its arguments, literally.
 @param explicit the environment overrides for this command.
 @returns the environment for the requested Git command.
 */
 export function readGitEnvironment(
-    workingFolder: string,
+    cwd: string,
     command: readonly string[],
     explicit: Record<string, string | undefined>,
 ): GitEnvironment {
@@ -122,83 +122,83 @@ export function readGitEnvironment(
     const repository = (inheritedGit.repository ??= readInheritedGitEnvironment(origin));
     return 'failure' in repository
         ? repository
-        : readFolderGitEnvironment(workingFolder, repository, { isolated, overrides, explicit });
+        : readFolderGitEnvironment(cwd, repository, { isolated, overrides, explicit });
 }
 
 /**
 Run Git without a time limit and wait for its result.
 
-@param workingFolder where Git runs.
+@param cwd where Git runs.
 @param commandArguments the arguments after git.
 @param options the other spawn settings, such as the environment.
 @returns what Git printed and how it exited.
 */
 export function runGitBlocking(
-    workingFolder: string,
+    cwd: string,
     commandArguments: readonly string[],
     options: Omit<SpawnOptions, 'cwd' | 'timeoutSeconds'> = {},
 ): SpawnResult {
     const command = [GIT_PROGRAM, ...commandArguments];
-    const selected = readGitEnvironment(workingFolder, command, { ...options.env });
+    const selected = readGitEnvironment(cwd, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
-    return spawnProcessBlocking(command, { ...options, env: selected.env, cwd: workingFolder });
+    return spawnProcessBlocking(command, { ...options, env: selected.env, cwd: cwd });
 }
 
 /**
 Run one Git command and wait for it; the cancel signal in the options stops it.
 
-@param workingFolder where Git runs.
+@param cwd where Git runs.
 @param commandArguments the arguments after git.
 @param options spawn settings for standard input and optional cancellation.
 @returns what Git printed and how it exited.
 */
 export async function runGit(
-    workingFolder: string,
+    cwd: string,
     commandArguments: readonly string[],
     options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<SpawnResult> {
     const command = [GIT_PROGRAM, ...commandArguments];
-    const selected = readGitEnvironment(workingFolder, command, { ...options.env });
+    const selected = readGitEnvironment(cwd, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
-    return spawnProcess(command, { ...options, env: selected.env, cwd: workingFolder });
+    return spawnProcess(command, { ...options, env: selected.env, cwd: cwd });
 }
 
 /**
 Stream Git output with repository isolation and optional cancellation.
 
-@param workingFolder where Git runs.
+@param cwd where Git runs.
 @param commandArguments the arguments after git.
 @param options spawn settings for standard input and optional cancellation.
 @param read consumes stdout while Git runs.
 @returns the captured stderr and exit status.
 */
 export async function runGitStream(
-    workingFolder: string,
+    cwd: string,
     commandArguments: readonly string[],
     options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
     read: StdoutReader,
 ): Promise<SpawnResult> {
     const command = [GIT_PROGRAM, ...commandArguments];
-    const selected = readGitEnvironment(workingFolder, command, { ...options.env });
+    const selected = readGitEnvironment(cwd, command, { ...options.env });
     if ('failure' in selected) return selected.failure;
-    return streamProcess(command, { ...options, env: selected.env, cwd: workingFolder }, read);
+    return streamProcess(command, { ...options, env: selected.env, cwd: cwd }, read);
 }
 
 /**
 Run Git with cancellation, and keep the output bytes for paths and objects.
 
-@param workingFolder where Git runs.
+@param cwd where Git runs.
 @param commandArguments the arguments after git.
 @param options spawn settings for standard input and optional cancellation.
 @returns the bytes Git printed and how it exited.
 */
 export async function runGitForBytes(
-    workingFolder: string,
+    cwd: string,
     commandArguments: readonly string[],
     options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<Omit<SpawnResult, 'stdout'> & { stdout: Uint8Array }> {
     const chunks: Buffer[] = [];
-    const result = await runGitStream(workingFolder, commandArguments, options, async (output) => {
+    const result = await runGitStream(cwd, commandArguments, options, async (output) => {
         for await (const chunk of output) chunks.push(chunk);
     });
     return { ...result, stdout: Buffer.concat(chunks) };
@@ -207,115 +207,115 @@ export async function runGitForBytes(
 /**
 Read a Git setting, and tell an unset key from a failed command.
 
-@param workingFolder where Git runs.
+@param cwd where Git runs.
 @param key the Git setting name.
 @returns the exact value, or undefined for an unset key.
 */
-export function readGitSetting(workingFolder: string, key: string): string | undefined {
-    const result = runGitBlocking(workingFolder, [...GIT_SETTING_ARGUMENTS, key]);
+export function readGitSetting(cwd: string, key: string): string | undefined {
+    const result = runGitBlocking(cwd, [...GIT_SETTING_ARGUMENTS, key]);
     if (result.code === 0) return result.stdout.slice(0, -1);
     if (result.code === 1 && result.stdout === '' && result.stderr === '') return undefined;
-    throw buildGitError(workingFolder, GIT_SETTING_ARGUMENTS, result);
+    throw buildGitError(cwd, GIT_SETTING_ARGUMENTS, result);
 }
 
 /**
 Find the folder that Git runs hooks from: core.hooksPath when set, else the hooks folder of the Git folder.
 
-@param workingFolder the repository root.
+@param cwd the repository root.
 @returns the absolute path.
 */
-export function readHooksFolder(workingFolder: string): string {
-    const result = runGitBlocking(workingFolder, GIT_HOOKS_ARGUMENTS);
-    if (result.code !== 0) throw buildGitError(workingFolder, GIT_HOOKS_ARGUMENTS, result);
-    return resolve(workingFolder, result.stdout.replace(TRAILING_NEWLINE, ''));
+export function readHooksFolder(cwd: string): string {
+    const result = runGitBlocking(cwd, GIT_HOOKS_ARGUMENTS);
+    if (result.code !== 0) throw buildGitError(cwd, GIT_HOOKS_ARGUMENTS, result);
+    return resolve(cwd, result.stdout.replace(TRAILING_NEWLINE, ''));
 }
 
 /**
 Read what a Git command prints, and throw a GspotError when it fails.
 
-@param workingFolder the repository root.
+@param cwd the repository root.
 @param commandArguments the arguments after git.
 @param options cancellation and input.
 @returns the standard output as printed.
 */
 export async function readGitText(
-    workingFolder: string,
+    cwd: string,
     commandArguments: readonly string[],
     options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<string> {
-    const result = await runGit(workingFolder, commandArguments, options);
-    if (result.code !== 0) throw buildGitError(workingFolder, commandArguments, result);
+    const result = await runGit(cwd, commandArguments, options);
+    if (result.code !== 0) throw buildGitError(cwd, commandArguments, result);
     return result.stdout;
 }
 
 /**
 Read the non-empty output lines of a Git command.
 
-@param workingFolder the repository root.
+@param cwd the repository root.
 @param commandArguments the arguments after git.
 @param options cancellation and input.
 @returns the lines, in order.
 */
 export async function readGitLines(
-    workingFolder: string,
+    cwd: string,
     commandArguments: readonly string[],
     options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<string[]> {
-    const text = await readGitText(workingFolder, commandArguments, options);
+    const text = await readGitText(cwd, commandArguments, options);
     return text.split('\n').filter((line) => line !== '');
 }
 
 /**
 Read the paths that a null-separated Git listing names.
 
-@param workingFolder the repository root.
+@param cwd the repository root.
 @param commandArguments the arguments after git, which must include -z.
 @param options cancellation and input.
 @returns the paths, in order.
 */
 export async function readGitPaths(
-    workingFolder: string,
+    cwd: string,
     commandArguments: readonly string[],
     options: Omit<AsyncSpawnOptions, 'cwd' | 'timeoutSeconds'>,
 ): Promise<string[]> {
-    const text = await readGitText(workingFolder, commandArguments, options);
+    const text = await readGitText(cwd, commandArguments, options);
     return text.split('\0').filter((path) => path !== '');
 }
 
 /**
 Check whether a Git work tree contains the folder.
 
-@param workingFolder the folder to test.
+@param cwd the folder to test.
 @returns whether Git confirms a work tree.
 @throws when Git cannot tell whether the folder holds a repository.
 */
-export function isGitRepository(workingFolder: string): boolean {
-    const inspection = runGitBlocking(workingFolder, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
+export function isGitRepository(cwd: string): boolean {
+    const inspection = runGitBlocking(cwd, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
     if (inspection.code === 0 && inspection.stdout.trim() === 'true') return true;
     if (isNotRepository(inspection)) return false;
     throw new GspotError(
         'git',
-        `Git could not tell whether ${workingFolder} is a work tree (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
+        `Git could not tell whether ${cwd} is a work tree (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
     );
 }
 
 /**
 Build the error for a Git command that exited with a failure.
 
-@param workingFolder where Git ran.
+@param cwd where Git ran.
 @param commandArguments the arguments after git.
 @param result how Git exited.
 @returns the error to throw.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
 export function buildGitError(
-    workingFolder: string,
+    cwd: string,
     commandArguments: readonly string[],
     result: Pick<SpawnResult, 'code' | 'stderr'>,
 ): GspotError {
     return new GspotError(
         'git',
-        `Git ${commandArguments[0] ?? ''} failed in ${workingFolder} (exit ${String(result.code)}): ${result.stderr.trim()}`,
+        `Git ${commandArguments[0] ?? ''} failed in ${cwd} (exit ${String(result.code)}): ${result.stderr.trim()}`,
     );
 }
 

@@ -73,9 +73,9 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 }
 
-function assertCommitRejected(repositoryRoot: string, rule: string, environment: Record<string, string>): void {
-    runGitStep(repositoryRoot, ['add', '-A']);
-    const refused = runGit(repositoryRoot, ['commit', '-qm', 'feat: Add invalid source'], environment);
+function assertCommitRejected(root: string, rule: string, environment: Record<string, string>): void {
+    runGitStep(root, ['add', '-A']);
+    const refused = runGit(root, ['commit', '-qm', 'feat: Add invalid source'], environment);
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     expect(refused.stdout + refused.stderr).toContain(rule);
 }

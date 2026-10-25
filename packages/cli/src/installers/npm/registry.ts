@@ -115,12 +115,12 @@ export function writeNpmrc(settingsFolder: string, env: Record<string, string>):
 /**
 Read npm-compatible connection settings through the npm settings file, and keep credentials in memory.
 
-@param repositoryRoot the working folder for npm settings and relative certificate paths.
+@param root the working folder for npm settings and relative certificate paths.
 
 @returns the environment variables that carry the registry settings.
 */
-export async function readRegistryEnvironment(repositoryRoot: string): Promise<Record<string, string>> {
-    const merged = await readRegistrySettings(repositoryRoot);
+export async function readRegistryEnvironment(root: string): Promise<Record<string, string>> {
+    const merged = await readRegistrySettings(root);
     const env: Record<string, string> = Object.fromEntries(
         Object.entries(merged)
             .filter(
@@ -131,7 +131,7 @@ export async function readRegistryEnvironment(repositoryRoot: string): Promise<R
                 let text: string;
                 if (Array.isArray(value)) text = value.join('\n\n');
                 else text = typeof value === 'string' ? value : JSON.stringify(value);
-                if (CERTIFICATE_KEYS.some((suffix) => key.endsWith(suffix))) text = resolve(repositoryRoot, text);
+                if (CERTIFICATE_KEYS.some((suffix) => key.endsWith(suffix))) text = resolve(root, text);
                 return [[`${NPM_SETTING_PREFIX}${key}`, text]];
             }),
     );

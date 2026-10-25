@@ -44,13 +44,13 @@ export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]
 /**
 Read and validate the package.json fields that gspot uses.
 
-@param repositoryRoot the base folder of the path.
+@param root the base folder of the path.
 @param path the repository-relative package.json.
 @returns the validated package fields, or undefined when the file does not exist.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function readPackageJson(repositoryRoot: string, path: string): PackageJson | undefined {
-    const text = findText(repositoryRoot, path);
+export function readPackageJson(root: string, path: string): PackageJson | undefined {
+    const text = findText(root, path);
     return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
 }
 

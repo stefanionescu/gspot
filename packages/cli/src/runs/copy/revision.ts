@@ -101,12 +101,12 @@ function listInstalledDependencies(copyRoot: string, folders: string[]): Depende
 }
 
 async function selectRevisionDependencies(
-    repositoryRoot: string,
+    root: string,
     copyRoot: string,
     indexFiles: GitFile[],
     cancelSignal?: AbortSignal,
 ): Promise<RevisionDependencies> {
-    using installed = openFiles(repositoryRoot);
+    using installed = openFiles(root);
     const dependencyFiles = indexFiles.filter((indexFile) => {
         const name = basename(indexFile.path);
         const lockfile = LOCKFILES.find((each) => each.file === name);
@@ -121,11 +121,11 @@ async function selectRevisionDependencies(
                 installed.readStats(posix.join(dirname(path), PYTHON_ENVIRONMENT_FOLDER))?.isDirectory() === true,
         )
         .map((path) => dirname(path));
-    const declarations = await readDeclarationDependencies(repositoryRoot, indexFiles, cancelSignal);
+    const declarations = await readDeclarationDependencies(root, indexFiles, cancelSignal);
     const artifacts = await readIgnoredPaths(
-        repositoryRoot,
+        root,
         listPackageFiles(
-            repositoryRoot,
+            root,
             projects.filter((path) => basename(path) === PACKAGE_JSON),
         ),
         cancelSignal,
@@ -136,7 +136,7 @@ async function selectRevisionDependencies(
         return { dependencies: [] };
     for (const folder of folders) assertDependencyReady(copyRoot, folder);
     const matches = await areDependencyFilesUnchanged(
-        repositoryRoot,
+        root,
         installed,
         [
             ...new Set([
@@ -240,19 +240,15 @@ async function initializeRevisionCopy(
 /**
 Writes a Git revision into a copy without checkout filters, stashing, or working-tree writes.
 
-@param repositoryRoot the checkout with the Git objects and installed dependencies.
+@param root the checkout with the Git objects and installed dependencies.
 @param source the revision to copy.
 @param cancelSignal stops the copy.
 @returns the temporary copy, the folder of the repository inside it, and the tree hash of the copied index.
 */
-export async function copyRevision(
-    repositoryRoot: string,
-    source: Revision,
-    cancelSignal?: AbortSignal,
-): Promise<RevisionCopy> {
-    const toplevelLine = await readGitText(repositoryRoot, GIT_TOP_LEVEL_ARGUMENTS, { cancelSignal });
+export async function copyRevision(root: string, source: Revision, cancelSignal?: AbortSignal): Promise<RevisionCopy> {
+    const toplevelLine = await readGitText(root, GIT_TOP_LEVEL_ARGUMENTS, { cancelSignal });
     const toplevel = toplevelLine.replace(TRAILING_NEWLINE, '');
-    const folder = relative(realpathSync(toplevel), realpathSync(repositoryRoot));
+    const folder = relative(realpathSync(toplevel), realpathSync(root));
     const indexFiles = await listRevisionFiles(toplevel, source, cancelSignal);
     const index = indexFiles.map((indexFile) => `${indexFile.mode} ${indexFile.hash} 0\t${indexFile.path}\0`).join('');
     const copy = createTemporaryFolder();

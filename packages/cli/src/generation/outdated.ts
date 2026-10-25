@@ -93,7 +93,7 @@ Find changed, missing, or stray generated files. Managed blocks and file edits c
 export async function listOutdatedFiles(
     session: Pick<
         Session,
-        'root' | 'packageManager' | 'repository' | 'installedRoot' | 'reads' | 'timeoutSeconds' | 'toolConfigurations'
+        'root' | 'packageManager' | 'repository' | 'toolsRoot' | 'reads' | 'timeoutSeconds' | 'toolConfigurations'
     >,
     generated: GenerationResult,
 ): Promise<OutdatedFile[]> {
@@ -118,14 +118,14 @@ List every managed path, with the lockfiles of the tool projects in use.
 @returns every path that this run writes or keeps.
 */
 export function listExpectedPaths(
-    session: Pick<Session, 'packageManager' | 'installedRoot' | 'timeoutSeconds' | 'reads'>,
+    session: Pick<Session, 'packageManager' | 'toolsRoot' | 'timeoutSeconds' | 'reads'>,
     generated: GenerationResult,
 ): Set<string> {
     const paths = new Set([...generated.files, ...generated.blocks, ...generated.managedKeys].map((file) => file.path));
-    const { packageManager, installedRoot, timeoutSeconds, reads } = session;
+    const { packageManager, toolsRoot, timeoutSeconds, reads } = session;
     const project = generated.files.find((file) => file.path === GSPOT_PATHS.npmProject);
     if (packageManager !== undefined && project !== undefined) {
-        const name = selectToolPackageManager(installedRoot, packageManager, timeoutSeconds, reads);
+        const name = selectToolPackageManager(toolsRoot, packageManager, timeoutSeconds, reads);
         paths.add(`${DOT_GSPOT}/${selectLockfileName(name)}`);
     }
     for (const file of generated.files) {

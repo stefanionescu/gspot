@@ -20,7 +20,7 @@ async function checkRevision(
             commits: revision.commits,
             shallow: revision.shallow,
             content: 'commit',
-            installedRoot: root,
+            toolsRoot: root,
             reference: revision.hash,
             ...(revision.paths !== undefined && { changed: revision.paths }),
         });

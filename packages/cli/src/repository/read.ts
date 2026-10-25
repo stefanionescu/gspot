@@ -22,9 +22,9 @@ import { FILE_PREFIX_BYTES, GIT_CHECK_ATTRIBUTES_ARGUMENTS } from '#cli/config/r
 import { mergeAttributes, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
 import { SET_VALUES, VENDORED_ATTRIBUTE, GENERATED_ATTRIBUTE } from '#cli/config/repository/files/classify.ts';
 
-function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Record<string, string>> {
+function readAttributes(root: string, paths: string[]): Map<string, Record<string, string>> {
     if (paths.length === 0) return new Map();
-    const result = runGitBlocking(repositoryRoot, GIT_CHECK_ATTRIBUTES_ARGUMENTS, {
+    const result = runGitBlocking(root, GIT_CHECK_ATTRIBUTES_ARGUMENTS, {
         stdin: paths.join('\0') + '\0',
     });
     if (result.code !== 0) throw new GspotError('git', `Git could not read the attributes: ${result.stderr.trim()}`);

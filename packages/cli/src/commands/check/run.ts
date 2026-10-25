@@ -141,7 +141,7 @@ function finishResult(run: Run, result: CheckResult): void {
     const scopeArgument =
         result.scope === ''
             ? undefined
-            : convertToPosixPath(relative(run.options.cwd, join(run.session.installedRoot, result.scope))) || '.';
+            : convertToPosixPath(relative(run.options.cwd, join(run.session.toolsRoot, result.scope))) || '.';
     result.reproduce = formatReproduceCommand(result.check, scopeArgument, buildReproduceOptions(run.options));
 }
 

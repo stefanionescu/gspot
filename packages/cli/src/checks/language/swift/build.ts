@@ -178,7 +178,7 @@ Runs Periphery over the project and reports every declaration nothing uses.
 @returns the findings.
 */
 export async function checkSwiftPeriphery(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
-    const folder = getScopeBuildFolder(session.installedRoot, planned.scope.folder.path, 'periphery');
+    const folder = getScopeBuildFolder(session.toolsRoot, planned.scope.folder.path, 'periphery');
     const configFile = join(session.root, getConfigFilePath(session, planned, PERIPHERY_TOOL));
     const commandArguments = [...PERIPHERY_COMMAND, configFile];
     const setup = prepareBuild(session.root, planned.files, folder);

@@ -182,20 +182,15 @@ function parseShebang(firstLine: string): string | undefined {
 /**
 Build the inventory entry of a tracked file: its kind, where the kind comes from, and its tags.
 
-@param repositoryRoot the base folder for resolving tracked entries.
+@param root the base folder for resolving tracked entries.
 @param file the tracked listing item.
 @param prefix the first bytes of the file.
 @param rules the generated and vendored paths to match.
 @returns the tracked file.
 */
-export function classifyFile(
-    repositoryRoot: string,
-    file: ListedFile,
-    prefix: Buffer,
-    rules: FileKindRules,
-): TrackedFile {
+export function classifyFile(root: string, file: ListedFile, prefix: Buffer, rules: FileKindRules): TrackedFile {
     const tagged = tagFile(file, prefix);
-    const kind = classifyKind({ root: repositoryRoot, listed: file, prefix, isBinary: tagged.isBinary }, rules);
+    const kind = classifyKind({ root: root, listed: file, prefix, isBinary: tagged.isBinary }, rules);
     return {
         path: file.path,
         kind: kind.kind,

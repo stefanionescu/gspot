@@ -15,18 +15,18 @@ import {
 /**
 Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.
 
-@param repositoryRoot the folder where Git runs.
+@param root the folder where Git runs.
 @param source index or commit to inspect.
 @param cancelSignal stops the command.
 @returns validated entries.
 */
 export async function listRevisionFiles(
-    repositoryRoot: string,
+    root: string,
     source: Revision,
     cancelSignal?: AbortSignal,
 ): Promise<GitFile[]> {
-    if (source.kind === 'index') return stripIndexStages(await readIndexFiles(repositoryRoot, cancelSignal));
-    const read = await runGitForBytes(repositoryRoot, [...GIT_LS_TREE_ARGUMENTS, source.hash], { cancelSignal });
+    if (source.kind === 'index') return stripIndexStages(await readIndexFiles(root, cancelSignal));
+    const read = await runGitForBytes(root, [...GIT_LS_TREE_ARGUMENTS, source.hash], { cancelSignal });
     if (read.code !== 0)
         throw new GspotError(
             'git',
@@ -38,13 +38,13 @@ export async function listRevisionFiles(
 /**
 Read each raw blob once, and visit it before the next blob loads.
 
-@param repositoryRoot the folder where Git runs.
+@param root the folder where Git runs.
 @param requested full blob object IDs.
 @param visit reads one validated object.
 @param cancelSignal stops the command.
 */
 export async function visitGitBlobs(
-    repositoryRoot: string,
+    root: string,
     requested: string[],
     visit: (blobs: AsyncIterable<readonly [string, Buffer]>) => Promise<void>,
     cancelSignal?: AbortSignal,
@@ -52,7 +52,7 @@ export async function visitGitBlobs(
     const blobs = [...new Set(requested)];
     if (blobs.length === 0) return;
     const result = await runGitStream(
-        repositoryRoot,
+        root,
         GIT_BLOBS_ARGUMENTS,
         {
             stdin: blobs.join('\n') + '\n',
@@ -69,19 +69,15 @@ export async function visitGitBlobs(
 /**
 Collect the validated blobs for a caller that compares several objects.
 
-@param repositoryRoot the folder where Git runs.
+@param root the folder where Git runs.
 @param requested full blob object IDs.
 @param cancelSignal stops the command.
 @returns validated object bytes.
 */
-export async function readBlobs(
-    repositoryRoot: string,
-    requested: string[],
-    cancelSignal?: AbortSignal,
-): Promise<Buffer[]> {
+export async function readBlobs(root: string, requested: string[], cancelSignal?: AbortSignal): Promise<Buffer[]> {
     const blobs = new Map<string, Buffer>();
     await visitGitBlobs(
-        repositoryRoot,
+        root,
         requested,
         async (stream) => {
             for await (const [hash, bytes] of stream) blobs.set(hash, bytes);
@@ -94,17 +90,17 @@ export async function readBlobs(
 /**
 Read the current commit, distinguishing an unborn branch from failed Git reads.
 
-@param repositoryRoot the folder where Git runs.
+@param root the folder where Git runs.
 @param cancelSignal stops the command.
 @returns current commit hash, or undefined for an unborn branch.
 */
-export async function readHead(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string | undefined> {
+export async function readHead(root: string, cancelSignal?: AbortSignal): Promise<string | undefined> {
     const options = { cancelSignal };
-    const head = await runGit(repositoryRoot, GIT_HEAD_ARGUMENTS, options);
+    const head = await runGit(root, GIT_HEAD_ARGUMENTS, options);
     if (head.code === 0) return head.stdout.trim();
     const failure = new GspotError('git', 'Cannot read committed Git history. Restore HEAD and check again.');
     if (head.code !== 1) throw failure;
-    const symbolic = await runGit(repositoryRoot, GIT_SYMBOLIC_HEAD_ARGUMENTS, options);
+    const symbolic = await runGit(root, GIT_SYMBOLIC_HEAD_ARGUMENTS, options);
     if (symbolic.code !== 0) throw failure;
     return undefined;
 }

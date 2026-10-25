@@ -95,10 +95,10 @@ function formatUnknownKey(segments: KeyPath, key: string): string {
 Validate the written configuration lists, tool options, ignores, and paths before a command uses them.
 
 @param settings the parsed gspot.toml.
-@param repositoryRoot the folder for checking declared scope paths.
+@param root the folder for checking declared scope paths.
 @param syntax the written keys and source locations.
 */
-export function validateSettings(settings: Settings, repositoryRoot: string, syntax: TomlSyntax): void {
+export function validateSettings(settings: Settings, root: string, syntax: TomlSyntax): void {
     const configurations = readConfigurations();
     const written: WrittenConfiguration[] = [
         ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
@@ -143,8 +143,8 @@ export function validateSettings(settings: Settings, repositoryRoot: string, syn
                   },
         ),
         ...validateRuleExcludes(settings.rules.exclude, configurations),
-        ...validateScopePaths(repositoryRoot, settings),
-        ...validateRuleFilePaths(repositoryRoot, settings),
+        ...validateScopePaths(root, settings),
+        ...validateRuleFilePaths(root, settings),
         ...validateKeys(rootKeys, settings, scopes, buildAvailableSettings(general, settings.level)),
     ];
     if (errors.length > 0)

@@ -31,39 +31,35 @@ async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promis
 /**
 Read the upstream or remote default branch.
 
-@param repositoryRoot the folder where Git runs.
+@param root the folder where Git runs.
 @param cancelSignal stops the Git reads.
 @returns the branch, or an empty string without one.
 */
-export async function readDefaultRef(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string> {
-    const head = await readGitText(repositoryRoot, GIT_HEAD_NAME_ARGUMENTS, { cancelSignal });
-    const upstreamText = await readGitText(repositoryRoot, [...GIT_UPSTREAM_ARGUMENTS, head.trim()], {
+export async function readDefaultRef(root: string, cancelSignal?: AbortSignal): Promise<string> {
+    const head = await readGitText(root, GIT_HEAD_NAME_ARGUMENTS, { cancelSignal });
+    const upstreamText = await readGitText(root, [...GIT_UPSTREAM_ARGUMENTS, head.trim()], {
         cancelSignal,
     });
     const upstream = upstreamText.trim();
     if (upstream !== '') return upstream;
-    const heads = await listRemoteHeads(repositoryRoot, cancelSignal);
+    const heads = await listRemoteHeads(root, cancelSignal);
     const preferred = heads.find(([name]) => name === ORIGIN_HEAD) ?? (heads.length === 1 ? heads[0] : undefined);
     return preferred?.[1] ?? '';
 }
 /**
 Read the merge base between a comparison branch and `HEAD`.
 
-@param repositoryRoot the folder where Git runs.
+@param root the folder where Git runs.
 @param compared the comparison branch.
 @param cancelSignal stops the Git reads.
 @returns the shared base commit.
 */
-export async function readMergeBase(
-    repositoryRoot: string,
-    compared: string,
-    cancelSignal?: AbortSignal,
-): Promise<string> {
-    const base = await runGit(repositoryRoot, [...GIT_MERGE_BASE_ARGUMENTS, compared, 'HEAD'], {
+export async function readMergeBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<string> {
+    const base = await runGit(root, [...GIT_MERGE_BASE_ARGUMENTS, compared, 'HEAD'], {
         cancelSignal,
     });
     if (base.code === 0) return base.stdout.trim();
-    const shallow = await readGitText(repositoryRoot, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
+    const shallow = await readGitText(root, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
     const help = shallow.trim() === 'true' ? ' History is cut; run git fetch --unshallow.' : '';
     throw new GspotError('git', `Git merge-base failed for ${compared}: ${base.stderr.trim()}.${help}`);
 }
@@ -71,44 +67,44 @@ export async function readMergeBase(
 /**
 Read the staged paths, with deletions and both sides of renames, and count paths with unstaged changes.
 
-@param repositoryRoot the folder where Git runs.
+@param root the folder where Git runs.
 @param cancelSignal stops the Git commands.
 @returns the staged paths, sorted, and the unstaged count.
 */
-export async function readStagedPaths(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<StagedPaths> {
-    const cached = await readGitPaths(repositoryRoot, GIT_STAGED_DIFF_ARGUMENTS, {
+export async function readStagedPaths(root: string, cancelSignal?: AbortSignal): Promise<StagedPaths> {
+    const cached = await readGitPaths(root, GIT_STAGED_DIFF_ARGUMENTS, {
         cancelSignal,
     });
     const staged = cached.toSorted((a, b) => compareText(a, b));
-    const dirty = new Set(await readGitPaths(repositoryRoot, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal }));
+    const dirty = new Set(await readGitPaths(root, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal }));
     return { staged, unstaged: staged.filter((path) => dirty.has(path)).length };
 }
 
 /**
 Read the files and commits that changed after a ref, for `gspot check --changed`.
 
-@param repositoryRoot the folder where Git runs.
+@param root the folder where Git runs.
 @param reference the git ref to compare against.
 @param cancelSignal stops the Git commands.
 @returns the changed paths, and the commits after the merge base.
 */
 export async function readChangedPaths(
-    repositoryRoot: string,
+    root: string,
     reference: string,
     cancelSignal?: AbortSignal,
 ): Promise<ChangedPaths> {
-    const compared = reference === '' ? await readDefaultRef(repositoryRoot, cancelSignal) : reference;
+    const compared = reference === '' ? await readDefaultRef(root, cancelSignal) : reference;
     if (compared === '') {
         throw new GspotError(
             'git',
             'No upstream or default branch is available. Run git remote set-head origin --auto once, or pass --changed <ref>.',
         );
     }
-    const merged = await readMergeBase(repositoryRoot, compared, cancelSignal);
-    const committed = await readGitPaths(repositoryRoot, [...GIT_DIFF_NAMES_ARGUMENTS, merged, '--'], { cancelSignal });
-    const working = await readGitPaths(repositoryRoot, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal });
-    const untracked = await readGitPaths(repositoryRoot, GIT_UNTRACKED_FILES_ARGUMENTS, { cancelSignal });
-    const commits = await readGitLines(repositoryRoot, [...GIT_CHANGED_COMMITS_ARGUMENTS, `${merged}..HEAD`, '--'], {
+    const merged = await readMergeBase(root, compared, cancelSignal);
+    const committed = await readGitPaths(root, [...GIT_DIFF_NAMES_ARGUMENTS, merged, '--'], { cancelSignal });
+    const working = await readGitPaths(root, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal });
+    const untracked = await readGitPaths(root, GIT_UNTRACKED_FILES_ARGUMENTS, { cancelSignal });
+    const commits = await readGitLines(root, [...GIT_CHANGED_COMMITS_ARGUMENTS, `${merged}..HEAD`, '--'], {
         cancelSignal,
     });
     return {

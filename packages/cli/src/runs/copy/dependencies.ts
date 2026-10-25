@@ -99,18 +99,14 @@ async function replaceLink(copy: DependencyTreeCopy, { source, target }: Pending
 /**
 Selects the paths that Git ignores.
 
-@param repositoryRoot the repository folder.
+@param root the repository folder.
 @param paths the prerequisites to test.
 @param cancelSignal stops the Git query.
 @returns the ones that Git ignores.
 */
-export async function readIgnoredPaths(
-    repositoryRoot: string,
-    paths: string[],
-    cancelSignal?: AbortSignal,
-): Promise<string[]> {
+export async function readIgnoredPaths(root: string, paths: string[], cancelSignal?: AbortSignal): Promise<string[]> {
     if (paths.length === 0) return [];
-    const result = await runGit(repositoryRoot, GIT_CHECK_IGNORE_ARGUMENTS, {
+    const result = await runGit(root, GIT_CHECK_IGNORE_ARGUMENTS, {
         stdin: paths.join('\0') + '\0',
         cancelSignal,
     });

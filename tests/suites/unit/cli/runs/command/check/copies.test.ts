@@ -25,7 +25,7 @@ test('a Python check that runs in a copy uses the environment that the working t
     };
     await createFileTree(working.path, { ...files, '.venv/pyvenv.cfg': 'home = /usr/bin\n' });
     await createFileTree(sandbox.path, files);
-    const session = await openSession(sandbox.path, { installedRoot: working.path });
+    const session = await openSession(sandbox.path, { toolsRoot: working.path });
     const planned = planChecks(session, buildRunOptions({ only: ['python/basedpyright'] })).find(
         ({ check }) => check.id === 'python/basedpyright',
     )!;

@@ -53,7 +53,7 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
                 session.packageManager === undefined
                     ? undefined
                     : readPackageManagerVersion(
-                          session.installedRoot,
+                          session.toolsRoot,
                           session.packageManager,
                           session.timeoutSeconds,
                           session.reads,
@@ -148,7 +148,7 @@ export function generate(session: Session): GenerationResult {
         settingsFile: { settings },
         scopes,
     } = session;
-    const { installedRoot, timeoutSeconds, reads, packageManager, toolConfigurations } = session;
+    const { toolsRoot, timeoutSeconds, reads, packageManager, toolConfigurations } = session;
     const generated: GenerationResult = {
         files: [
             { path: GSPOT_PATHS.versionPin, content: cliPackage.version + '\n' },
@@ -174,7 +174,7 @@ export function generate(session: Session): GenerationResult {
             ? []
             : buildNpmProject(
                   toolConfigurations,
-                  selectToolPackageManager(installedRoot, packageManager, timeoutSeconds, reads),
+                  selectToolPackageManager(toolsRoot, packageManager, timeoutSeconds, reads),
               )),
         ...buildPythonProject(toolConfigurations, minimumAge),
         buildMiseProject(toolConfigurations),

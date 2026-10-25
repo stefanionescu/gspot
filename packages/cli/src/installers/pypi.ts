@@ -248,13 +248,13 @@ function normalizeIndexLocation(root: string, location: string): string {
 Copy repository uv index settings into the temporary folder, make relative paths absolute, and collect registry
 credentials.
 
-@param repositoryRoot the base folder for reading uv settings and resolving local index paths.
+@param root the base folder for reading uv settings and resolving local index paths.
 @param settingsFolder the folder where the resolution runs.
 @param days the minimum age of a release, in days.
 @returns index credentials that must stay out of generated lockfiles.
 */
-export function writePythonSettings(repositoryRoot: string, settingsFolder: string, days: number): string[] {
-    const { settings, credentials } = readPythonSettings(repositoryRoot);
+export function writePythonSettings(root: string, settingsFolder: string, days: number): string[] {
+    const { settings, credentials } = readPythonSettings(root);
     settings['exclude-newer'] = new Date(Date.now() - days * MILLISECONDS_PER_DAY).toISOString();
     writeFileSync(join(settingsFolder, UV_SETTINGS_FILE), stringify(settings), { mode: PRIVATE_FILE });
     return credentials;
@@ -263,22 +263,22 @@ export function writePythonSettings(repositoryRoot: string, settingsFolder: stri
 /**
 Read repository index settings and resolve their local paths for a temporary uv project.
 
-@param repositoryRoot the base for local index paths.
+@param root the base for local index paths.
 @returns the index settings, and the passwords to keep out of generated lockfiles and messages.
 */
-export function readPythonSettings(repositoryRoot: string): PythonIndexSettings {
-    const uv = findText(repositoryRoot, UV_SETTINGS_FILE);
-    const project = findText(repositoryRoot, PYPROJECT_TOML);
+export function readPythonSettings(root: string): PythonIndexSettings {
+    const uv = findText(root, UV_SETTINGS_FILE);
+    const project = findText(root, PYPROJECT_TOML);
     const table =
         uv === undefined
             ? parseTomlFile(PYPROJECT_TOML, project ?? '', uvProjectSettingsSchema).tool.uv
             : parseTomlFile(UV_SETTINGS_FILE, uv, uvSettingsSchema);
     const selected = Object.fromEntries(Object.entries(table).filter(([key]) => INDEX_SETTINGS.has(key)));
     if (table['find-links'] !== undefined)
-        selected['find-links'] = table['find-links'].map((value) => normalizeIndexLocation(repositoryRoot, value));
+        selected['find-links'] = table['find-links'].map((value) => normalizeIndexLocation(root, value));
     const indexes = (table.index ?? []).map((index) => ({
         ...index,
-        url: normalizeIndexLocation(repositoryRoot, index.url),
+        url: normalizeIndexLocation(root, index.url),
     }));
     if (table.index !== undefined) selected['index'] = indexes;
     const credentials = Object.entries(selected).flatMap(([key, value]) => {

@@ -35,15 +35,15 @@ function listStyleFiles(files: Files, folder: string): string[] {
 /**
 Copies the installed Vale packages when the copy keeps the Vale configuration they came from.
 
-@param repositoryRoot the repository with the installed packages.
+@param root the repository with the installed packages.
 @param copyRoot where to copy the packages.
 @param paths the files of the copy.
 */
-export function copyValePackages(repositoryRoot: string, copyRoot: string, paths: string[]): void {
+export function copyValePackages(root: string, copyRoot: string, paths: string[]): void {
     const configurations = paths.filter(
         (path) => path === GSPOT_PATHS.valeConfigFile || path.endsWith(`/${GSPOT_PATHS.valeConfigFile}`),
     );
-    using installed = openFiles(repositoryRoot);
+    using installed = openFiles(root);
     using destination = openFiles(resolve(copyRoot));
     const packages = listStyleFiles(installed, GSPOT_PATHS.valePackages);
     if (packages.length === 0) return;

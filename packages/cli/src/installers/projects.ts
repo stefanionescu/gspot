@@ -80,10 +80,7 @@ List the state of each tool project lockfile. It resolves and writes nothing.
 @returns each lockfile with its state: missing, mismatched, or current.
 */
 export async function listStaleLockfiles(
-    session: Pick<
-        Session,
-        'root' | 'installedRoot' | 'packageManager' | 'timeoutSeconds' | 'reads' | 'toolConfigurations'
-    >,
+    session: Pick<Session, 'root' | 'toolsRoot' | 'packageManager' | 'timeoutSeconds' | 'reads' | 'toolConfigurations'>,
     generated: GeneratedFile[],
 ): Promise<StaleLockfile[]> {
     const { root, packageManager, toolConfigurations } = session;
@@ -92,12 +89,7 @@ export async function listStaleLockfiles(
     const lockfiles: StaleLockfile[] = [];
     if (projects.has(GSPOT_PATHS.miseProject)) lockfiles.push(readMiseLockfileState(files, toolConfigurations));
     if (projects.has(GSPOT_PATHS.npmProject) && packageManager !== undefined) {
-        const name = selectToolPackageManager(
-            session.installedRoot,
-            packageManager,
-            session.timeoutSeconds,
-            session.reads,
-        );
+        const name = selectToolPackageManager(session.toolsRoot, packageManager, session.timeoutSeconds, session.reads);
         lockfiles.push(readNpmLockfileState(files, name, toolConfigurations, await readRegistryEnvironment(root)));
     }
     if (projects.has(GSPOT_PATHS.pythonProject))
@@ -132,7 +124,7 @@ export async function installToolProjects(install: ToolInstall, miseBinPaths: st
     const notes: string[] = [];
     const uvPath =
         mise !== null || which.sync(UV_TOOL, { nothrow: true }) !== null
-            ? (listExecutablePaths(session.installedRoot, UV_TOOL, {
+            ? (listExecutablePaths(session.toolsRoot, UV_TOOL, {
                   searchFolders: [],
                   miseBinPaths,
                   timeoutSeconds: session.timeoutSeconds,

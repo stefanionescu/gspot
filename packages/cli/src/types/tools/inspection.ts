@@ -23,7 +23,7 @@ export type ToolInspection = {
 export type ToolSearch = {
     timeoutSeconds: number;
     root: string;
-    installedRoot?: string;
+    toolsRoot?: string;
     cwd?: string;
     inspections: Map<string, ToolInspection>;
     miseBinPaths?: string[];

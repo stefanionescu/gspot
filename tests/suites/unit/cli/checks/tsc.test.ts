@@ -42,8 +42,8 @@ test('projects without tsconfig.json get required options and framework options 
         'source.ts': 'export const port = 8080;\n',
         'service/source.ts': 'export const port = 3000;\n',
     });
-    const installedRoot = parse(sandbox.path).root;
-    const session = await openSession(sandbox.path, { installedRoot });
+    const toolsRoot = parse(sandbox.path).root;
+    const session = await openSession(sandbox.path, { toolsRoot: toolsRoot });
     const projects = await Promise.all(
         session.scopes.map(async (scope) => {
             const path = join(sandbox.path, GSPOT_PATHS.state, scope.folder.path, 'tsconfig.json');
@@ -51,7 +51,7 @@ test('projects without tsconfig.json get required options and framework options 
             const config = parseJsonFile(path, await readFile(path, 'utf8'));
             const compilerOptions = config['compilerOptions'] as Record<string, unknown>;
             compilerOptions['typeRoots'] = (compilerOptions['typeRoots'] as string[]).map((root) => {
-                const found = relative(installedRoot, resolve(dirname(path), root));
+                const found = relative(toolsRoot, resolve(dirname(path), root));
                 return convertToPosixPath(found);
             });
             return { scope: scope.folder.path, config };

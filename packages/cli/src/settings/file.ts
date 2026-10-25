@@ -47,11 +47,11 @@ export function parseTomlText(text: string, path: string): TomlTable {
 /**
 Read gspot.toml without following a link out of the repository.
 
-@param repositoryRoot the folder that contains gspot.toml.
+@param root the folder that contains gspot.toml.
 @returns the text, and the bytes and mode as read, which writeSettings compares before it writes.
 */
-export function readSettingsFile(repositoryRoot: string): SettingsFileContents {
-    using files = openFiles(repositoryRoot);
+export function readSettingsFile(root: string): SettingsFileContents {
+    using files = openFiles(root);
     const previous = files.read(SETTINGS_FILE);
     if (previous === undefined)
         throw new GspotError('settings', 'There is no gspot.toml here. Run `gspot init` to create one.');

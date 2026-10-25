@@ -150,7 +150,7 @@ async function scanProject(
               }
             : {
                   scan: scanPythonLicenses,
-                  start: join(session.installedRoot, folder),
+                  start: join(session.toolsRoot, folder),
                   lockfiles: PYTHON_LOCKFILES,
                   ecosystem: 'python' as const,
               };

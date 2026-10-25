@@ -24,7 +24,7 @@ repository uses the same manager.
 export function readInstallPackageManager(session: Session): ToolPackageManager | undefined {
     const pin = session.packageManager;
     if (pin === undefined) return undefined;
-    const packageManager = readToolPackageManager(session.installedRoot, pin, session.timeoutSeconds, session.reads);
+    const packageManager = readToolPackageManager(session.toolsRoot, pin, session.timeoutSeconds, session.reads);
     return { ...packageManager, command: pin.name === packageManager.name ? pin : { name: packageManager.name } };
 }
 

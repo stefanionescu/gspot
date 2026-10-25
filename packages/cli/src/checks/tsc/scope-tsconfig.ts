@@ -21,7 +21,7 @@ import {
 } from '#cli/config/checks/tsc/scope-tsconfig.ts';
 
 function buildTsconfig(session: Session, scope: Scope, file: string): Record<string, unknown> {
-    const { root, installedRoot, reads } = session;
+    const { root, toolsRoot, reads } = session;
     const ownFiles =
         groupFilesByScope(session.repository.files, session.repository.scopeFolders).get(scope.folder.path) ?? [];
     const scopeFiles = ownFiles.filter(
@@ -40,7 +40,7 @@ function buildTsconfig(session: Session, scope: Scope, file: string): Record<str
             {
                 getCurrentDirectory: () =>
                     join(
-                        installedRoot,
+                        toolsRoot,
                         authored === undefined ? scope.folder.path : relative(root, dirname(authored.path)),
                     ),
             },

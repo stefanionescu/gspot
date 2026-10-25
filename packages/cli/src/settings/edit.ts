@@ -20,18 +20,18 @@ function splitKey(key: string): SettingKey {
 Apply a settings change to the parsed table, check the result, and build the new gspot.toml text. The change edits
 input.table in place.
 
-@param repositoryRoot the folder against which the edited scope paths resolve.
+@param root the folder against which the edited scope paths resolve.
 @param edit the settings read before the edit.
 @returns the new gspot.toml text, the settings that it holds, and whether the text changed.
 */
-export function buildEditedSettings(repositoryRoot: string, edit: SettingsEdit): EditedSettings {
+export function buildEditedSettings(root: string, edit: SettingsEdit): EditedSettings {
     const { text, table } = edit;
     if (Array.isArray(table['ignore'])) table['ignore'] = mergeIgnores(table['ignore'] as TomlTable[]);
     const format = formatSchema.safeParse(table['format']).data ?? formatSchema.parse({});
     const next = isDeepStrictEqual(table, parseTomlText(text, SETTINGS_FILE))
         ? text
         : buildSettingsText(text, table, format);
-    return { text: next, settings: parseSettings(next, repositoryRoot), changed: next !== text };
+    return { text: next, settings: parseSettings(next, root), changed: next !== text };
 }
 
 /**
@@ -138,11 +138,11 @@ export function getScopeTable(table: TomlTable, scope: string | undefined): Toml
 /**
 Read the bytes and mode of gspot.toml before an edit.
 
-@param repositoryRoot the folder that holds gspot.toml.
+@param root the folder that holds gspot.toml.
 @returns the settings before the edit, with the file contents.
 */
-export function readSettingsEdit(repositoryRoot: string): SettingsEdit {
-    const { text, previous } = readSettingsFile(repositoryRoot);
+export function readSettingsEdit(root: string): SettingsEdit {
+    const { text, previous } = readSettingsFile(root);
     const table = parseTomlText(text, SETTINGS_FILE);
     return { text, table, previous };
 }

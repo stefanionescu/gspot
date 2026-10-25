@@ -97,14 +97,13 @@ export function buildSelectedAvailableSettings(configurations: string[]): Availa
 Parse settings text and return its errors, or none when it parses.
 
 @param text gspot.toml content to parse.
-@param repositoryRoot folder the settings describe, for errors that depend on its files.
+@param root folder the settings describe, for errors that depend on its files.
 @returns the error messages.
 */
-export function validateSettingsText(text: string, repositoryRoot?: string): string[] {
+export function validateSettingsText(text: string, root?: string): string[] {
     using resources = new DisposableStack();
-    const root = repositoryRoot ?? resources.use(createTemporaryFolder()).path;
     try {
-        parseSettings(text, root);
+        parseSettings(text, root ?? resources.use(createTemporaryFolder()).path);
         return [];
     } catch (error) {
         if (error instanceof GspotError && error.code === 'settings') return error.message.split('\n');

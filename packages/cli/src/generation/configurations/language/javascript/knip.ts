@@ -52,11 +52,11 @@ function selectEntryFiles(settings: Settings, scopes: Scope[], scope: string): s
     return entries;
 }
 
-function buildWorkspaces(repositoryRoot: string, settings: Settings, scopes: Scope[]) {
+function buildWorkspaces(root: string, settings: Settings, scopes: Scope[]) {
     const selected = scopes.filter(({ settings: scopeSettings }) =>
         scopeSettings.configurations.includes(JAVASCRIPT_CONFIGURATION),
     );
-    const paths = [...new Set(['', ...listWorkspaceFolders(repositoryRoot)])];
+    const paths = [...new Set(['', ...listWorkspaceFolders(root)])];
     return Object.fromEntries(
         paths.map((path) => {
             const workspace = selected.find((each) => each.folder.path === path);

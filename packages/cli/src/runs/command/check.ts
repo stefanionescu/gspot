@@ -246,7 +246,7 @@ export function buildCommandSetup(
               );
     const python =
         planned.configuration?.name === PYTHON_CONFIGURATION
-            ? buildCopyPythonEnvironment({ root, installedRoot: session.installedRoot }, scope.folder.path)
+            ? buildCopyPythonEnvironment({ root, toolsRoot: session.toolsRoot }, scope.folder.path)
             : {};
     return { root, cwd, files, substitutions, env: { ...env, ...python } };
 }
@@ -311,7 +311,7 @@ function findMissingProjectEnvironment(session: Session, planned: PlannedCheck):
     const scope = planned.scope.folder.path;
     const project = joinScope(scope, PYPROJECT_TOML);
     if (session.repository.files.every((file) => file.path !== project)) return undefined;
-    using files = openFiles(session.installedRoot);
+    using files = openFiles(session.toolsRoot);
     return files.readStats(joinScope(scope, PYTHON_ENVIRONMENT_FOLDER))?.isDirectory() === true
         ? undefined
         : { status: 'missing', note: 'The project environment .venv is missing. Run uv sync, then check again.' };

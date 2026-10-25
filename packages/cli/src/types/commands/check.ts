@@ -45,14 +45,14 @@ export type RevisionSource = (
           content: 'index';
           cwd: string;
           paths: string[];
-          installedRoot: string;
+          toolsRoot: string;
           reference: string;
           reportRoot: string;
           staged: StagedPaths;
       }
     | {
           content: 'commit';
-          installedRoot: string;
+          toolsRoot: string;
           reference: string;
           base?: string;
           commits: string[];

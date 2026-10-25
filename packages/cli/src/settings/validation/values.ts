@@ -27,13 +27,13 @@ function readPathStats(files: Files, value: string): ReturnType<Files['readStats
 /**
 Refuse scope paths that name a file, and keep written scopes whose folder does not exist yet.
 
-@param repositoryRoot the base folder for each written scope path.
+@param root the base folder for each written scope path.
 @param settings the normalized gspot.toml.
 @returns the errors in plain English.
 */
-export function validateScopePaths(repositoryRoot: string, settings: Settings): SettingsError[] {
+export function validateScopePaths(root: string, settings: Settings): SettingsError[] {
     const paths = Object.values(settings.scopes).map((table) => table.written['path'] as string);
-    using files = openFiles(repositoryRoot);
+    using files = openFiles(root);
     return paths.flatMap((path, index) => {
         const location: KeyPath = ['scope', index, 'path'];
         const stats = readPathStats(files, trimTrailingSlashes(path));
@@ -51,12 +51,12 @@ export function validateScopePaths(repositoryRoot: string, settings: Settings): 
 /**
 Check the rule file paths of the root and every scope against the repository files.
 
-@param repositoryRoot the folder the paths start from.
+@param root the folder the paths start from.
 @param settings the parsed gspot.toml.
 @returns an error at each key that names no file.
 */
-export function validateRuleFilePaths(repositoryRoot: string, settings: Settings): SettingsError[] {
-    using files = openFiles(repositoryRoot);
+export function validateRuleFilePaths(root: string, settings: Settings): SettingsError[] {
+    using files = openFiles(root);
     return listSettingsTables(settings).flatMap(({ table, path }) => {
         const plugins = table.tools?.['eslint']?.['plugins'];
         const ruleFiles = table.tools?.['semgrep']?.['rule_files'];

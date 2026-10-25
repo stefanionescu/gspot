@@ -31,18 +31,18 @@ import type {
 /**
 Edit settings, check them, and write them and their generated files. Installs nothing.
 
-@param repositoryRoot the folder where gspot writes settings and generated files.
+@param root the folder where gspot writes settings and generated files.
 @param options the settings edit, its summary, and the notes that the report adds after its own.
 @returns the apply report and whether the written settings changed.
 */
 export async function applySettingsEdit(
-    repositoryRoot: string,
+    root: string,
     options: SaveSettingsOptions,
 ): Promise<CommandResult<ApplyReport & { changed: boolean }>> {
     const { edit, summary } = options;
-    using writer = openWriter(repositoryRoot);
-    const result = buildEditedSettings(repositoryRoot, edit);
-    const session = await openSession(repositoryRoot, {
+    using writer = openWriter(root);
+    const result = buildEditedSettings(root, edit);
+    const session = await openSession(root, {
         settingsFile: { settings: result.settings, text: result.text },
     });
     const generated = generate(session);

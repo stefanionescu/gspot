@@ -20,7 +20,7 @@ import {
     GROUPS,
     CHECK_RUNS,
     CHECK_NEEDS,
-    CHECK_WORKING_FOLDERS,
+    CHECK_CWD_VALUES,
     SHIPPED_CONFIG_FILES_FOLDER,
 } from '#cli/config/configurations/names.ts';
 import {
@@ -132,7 +132,7 @@ const checkFields = z.strictObject({
     operating_systems: operatingSystemSchema.array().optional(),
     tool: z.union([z.string().min(1), z.string().min(1).array().min(1)]).optional(),
     files: filesSchema.optional(),
-    cwd: z.enum(CHECK_WORKING_FOLDERS).optional(),
+    cwd: z.enum(CHECK_CWD_VALUES).optional(),
     summary: nonemptyString,
     example: z.string().trim().min(1),
     why: nonemptyString,

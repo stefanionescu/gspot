@@ -182,7 +182,7 @@ async function checkStaged(
         content: 'index',
         cwd: options.cwd,
         paths: options.paths,
-        installedRoot: root,
+        toolsRoot: root,
         reference: copy.tree,
         staged,
         reportRoot: root,

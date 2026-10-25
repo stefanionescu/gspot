@@ -163,7 +163,7 @@ export async function checkTree(
 ): Promise<CommandResult<RunReport>> {
     using resources = new DisposableStack();
     const session = await openSession(treeFolder, {
-        installedRoot: revision?.installedRoot ?? treeFolder,
+        toolsRoot: revision?.toolsRoot ?? treeFolder,
         resources,
         cancelSignal,
     });

@@ -117,13 +117,13 @@ export function listWorkspaceDependencySources(reads: ReadCache, scope: string, 
 /**
 List the folders of the npm workspaces that the repository declares, without the root.
 
-@param repositoryRoot the boundary that declared workspace packages must remain inside.
+@param root the boundary that declared workspace packages must remain inside.
 @returns the root-relative folders.
 */
-export function listWorkspaceFolders(repositoryRoot: string): string[] {
-    const packages = listWorkspacePackages(repositoryRoot);
+export function listWorkspaceFolders(root: string): string[] {
+    const packages = listWorkspacePackages(root);
     for (const found of packages)
-        if (!isInside(relative(realpathSync(repositoryRoot), realpathSync(found.dir))))
+        if (!isInside(relative(realpathSync(root), realpathSync(found.dir))))
             throw new GspotError('filesystem', `Workspace package leaves the repository: ${found.relativeDir}`);
     return packages.map((found) => convertToPosixPath(found.relativeDir)).filter((path) => path !== '' && path !== '.');
 }
@@ -131,19 +131,17 @@ export function listWorkspaceFolders(repositoryRoot: string): string[] {
 /**
 Select the existing files that package.json files declare for publication.
 
-@param repositoryRoot the base folder for the package.json files and their patterns.
+@param root the base folder for the package.json files and their patterns.
 @param packageJsonPaths the repository-relative package.json files to read.
 @returns the repository-relative package files.
 */
-export function listPackageFiles(repositoryRoot: string, packageJsonPaths: string[]): string[] {
+export function listPackageFiles(root: string, packageJsonPaths: string[]): string[] {
     return packageJsonPaths.flatMap((path) => {
         const folder = dirname(path);
-        const patterns = (readPackageJson(repositoryRoot, path)?.files ?? []).flatMap((pattern) => [
+        const patterns = (readPackageJson(root, path)?.files ?? []).flatMap((pattern) => [
             pattern,
             pattern + FOLDER_CONTENTS,
         ]);
-        return listMatchingPaths(join(repositoryRoot, folder), patterns).map((file) =>
-            convertToPosixPath(join(folder, file)),
-        );
+        return listMatchingPaths(join(root, folder), patterns).map((file) => convertToPosixPath(join(folder, file)));
     });
 }

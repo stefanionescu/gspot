@@ -71,7 +71,7 @@ Read the findings in the tool output, with every path relative to the root.
 */
 export function parseOutput(check: ParsingCheck, stdout: string, stderr: string, paths: OutputPaths): Finding[] {
     const { root, cwd } = paths;
-    const rootPath = convertToPosixPath(root);
+    const posixRoot = convertToPosixPath(root);
     const output = check.output;
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`);
     const findings = outputFormats[output.format].parse({
@@ -83,7 +83,7 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
         root,
         cwd,
     });
-    const prefixes = listRootPrefixes(rootPath);
+    const prefixes = listRootPrefixes(posixRoot);
     return findings.map((finding) => {
         let message = finding.message;
         for (const prefix of prefixes) message = message.replaceAll(prefix, '');
@@ -91,7 +91,7 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
         if (check.runs === 'history' || finding.file === '') return formatted;
         const file = convertToPosixPath(finding.file);
         const absolute = isAbsolute(file) || DRIVE_LETTER.test(file) ? file : posix.join(convertToPosixPath(cwd), file);
-        formatted.file = stripRoot(rootPath, absolute);
+        formatted.file = stripRoot(posixRoot, absolute);
         return formatted;
     });
 }

@@ -128,25 +128,25 @@ function readHooksPathSetup(root: string, hooksPath: string): RepositorySetup['h
 /**
 Read core.hooksPath as a path from the repository root, without a leading ./ or a trailing slash.
 
-@param repositoryRoot the repository to read.
+@param root the repository to read.
 @returns the hooks folder that Git uses, or an empty string when Git has no such setting.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 2 files share it.
-export function readHooksPath(repositoryRoot: string): string {
-    const written = readGitSetting(repositoryRoot, HOOKS_PATH_SETTING) ?? '';
-    return convertToPosixPath(relative(repositoryRoot, resolve(repositoryRoot, written))).replace(TRAILING_SLASH, '');
+export function readHooksPath(root: string): string {
+    const written = readGitSetting(root, HOOKS_PATH_SETTING) ?? '';
+    return convertToPosixPath(relative(root, resolve(root, written))).replace(TRAILING_SLASH, '');
 }
 
 /**
 Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings.
 
-@param repositoryRoot the repository to read.
+@param root the repository to read.
 @returns each hook setup and its location.
 */
-export function readHooks(repositoryRoot: string): RepositorySetup['hooks'] {
-    const packageJson = readPackageJson(repositoryRoot, PACKAGE_JSON);
+export function readHooks(root: string): RepositorySetup['hooks'] {
+    const packageJson = readPackageJson(root, PACKAGE_JSON);
     const isPackageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
-    const hooksPath = readHooksPath(repositoryRoot);
+    const hooksPath = readHooksPath(root);
     const isHuskyPath = hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
     const foreignHooksPath = isHuskyPath ? '' : hooksPath;
     const hookNames = [
@@ -157,13 +157,11 @@ export function readHooks(repositoryRoot: string): RepositorySetup['hooks'] {
         ),
         PRE_COMMIT_FILE,
     ];
-    const present = hookNames.filter(
-        (name) => lstatSync(join(repositoryRoot, name), { throwIfNoEntry: false }) !== undefined,
-    );
+    const present = hookNames.filter((name) => lstatSync(join(root, name), { throwIfNoEntry: false }) !== undefined);
     const lefthook = present.find((name) => name !== PRE_COMMIT_FILE);
     return [
-        ...readHooksPathSetup(repositoryRoot, foreignHooksPath),
-        ...FOREIGN_HOOK_FOLDERS.map((folder) => detectHookFolder(repositoryRoot, folder, foreignHooksPath)).filter(
+        ...readHooksPathSetup(root, foreignHooksPath),
+        ...FOREIGN_HOOK_FOLDERS.map((folder) => detectHookFolder(root, folder, foreignHooksPath)).filter(
             (hook) => hook !== undefined,
         ),
         ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
@@ -177,15 +175,15 @@ export function readHooks(repositoryRoot: string): RepositorySetup['hooks'] {
 /**
 Find the existing lint jobs before init proposes a CI job.
 
-@param repositoryRoot the repository to read.
+@param root the repository to read.
 @param paths the CI files to read.
 @returns the names of the jobs that already run a linter.
 */
-export function readLintJobs(repositoryRoot: string, paths: string[]): string[] {
+export function readLintJobs(root: string, paths: string[]): string[] {
     return paths
         .filter((path) => !FOREIGN_CI_FILES.has(path))
         .flatMap((path) => {
-            const source = findText(repositoryRoot, path);
+            const source = findText(root, path);
             if (source === undefined) return [];
             const document = parseYamlFile(path, source);
             return listLintJobs(path, document);
@@ -203,7 +201,7 @@ export function readRepositorySetup(
     reads: ReadCache,
     repository: Pick<Repository, 'files' | 'dependencyFiles'>,
 ): RepositorySetup {
-    const repositoryRoot = reads.root;
+    const root = reads.root;
     const { files, dependencyFiles } = repository;
     const paths = new Set(files.map((file) => file.path));
     const configurations = readConfigurations();
@@ -211,7 +209,7 @@ export function readRepositorySetup(
         (a, b) => Number(a === PACKAGE_JSON) - Number(b === PACKAGE_JSON),
     );
 
-    const conflictingConfigFiles = listConflictingConfigFiles(repositoryRoot, files, configurations.values());
+    const conflictingConfigFiles = listConflictingConfigFiles(root, files, configurations.values());
     return {
         conflictingConfigFiles: new Map(
             conflictingConfigFiles.map((conflictingConfigFile) => [
@@ -226,7 +224,7 @@ export function readRepositorySetup(
         )
             .values()
             .toArray(),
-        hooks: readHooks(repositoryRoot),
+        hooks: readHooks(root),
         ci: [...paths]
             .filter(
                 (path) =>
@@ -239,10 +237,10 @@ export function readRepositorySetup(
         agentFiles: AGENT_FILES.filter((name) => paths.has(name)),
         ruleFolders: RULE_FOLDERS.filter(
             (name) =>
-                lstatSync(join(repositoryRoot, name), { throwIfNoEntry: false })?.isSymbolicLink() === true ||
-                listFolder(repositoryRoot, name).some((child) => child.endsWith(MARKDOWN_EXTENSION)),
+                lstatSync(join(root, name), { throwIfNoEntry: false })?.isSymbolicLink() === true ||
+                listFolder(root, name).some((child) => child.endsWith(MARKDOWN_EXTENSION)),
         ),
-        lintFolders: LINT_FOLDERS.filter((name) => listFolder(repositoryRoot, name).length > 0),
+        lintFolders: LINT_FOLDERS.filter((name) => listFolder(root, name).length > 0),
         toolOnlyPackages,
     };
 }

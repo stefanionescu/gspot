@@ -115,7 +115,7 @@ Runs Vale on the scope files, by path where Vale has a grammar and through stdin
 @returns the findings.
 */
 export async function checkProseVale(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
-    if (!hasValePackages(session.installedRoot, session.settingsFile.settings.level))
+    if (!hasValePackages(session.toolsRoot, session.settingsFile.settings.level))
         throw new GspotError('tool', 'The Vale packages are not installed. Run gspot install.');
     const command = [VALE_TOOL, '--config', join(session.root, GSPOT_PATHS.valeConfigFile), ...VALE_ARGUMENTS];
     const folder = dirname(join(session.root, GSPOT_PATHS.valeConfigFile));

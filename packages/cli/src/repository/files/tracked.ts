@@ -101,13 +101,13 @@ async function listGitFiles(
 /**
 Read a Git index once for paths, executable bits, and gitlinks.
 
-@param repositoryRoot the folder where Git runs.
+@param root the folder where Git runs.
 @param cancelSignal stops the command.
 @returns validated entries, retaining stages of conflicted working files.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 12 calls in 4 files share it.
-export async function readIndexFiles(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<GitIndexFile[]> {
-    const listed = await listGitFiles(repositoryRoot, GIT_INDEX_FILES_ARGUMENTS, cancelSignal);
+export async function readIndexFiles(root: string, cancelSignal?: AbortSignal): Promise<GitIndexFile[]> {
+    const listed = await listGitFiles(root, GIT_INDEX_FILES_ARGUMENTS, cancelSignal);
     return parseIndexFiles(listed);
 }
 
@@ -128,21 +128,21 @@ export function listSubmodulePaths(indexFiles: GitIndexFile[]): string[] {
 /**
 List tracked and new files as sorted, root-relative paths. Outside Git, walk files according to the ignore rules.
 
-@param repositoryRoot the folder where Git runs.
+@param root the folder where Git runs.
 @param index the parsed staging area entries.
 @param options what the walk knows about the repository.
 @param options.hasGit whether the folder belongs to a Git repository.
 @returns the entries with size, executable bit, and symlink flag.
 */
 export async function listTrackedFiles(
-    repositoryRoot: string,
+    root: string,
     index: GitIndexFile[],
     { hasGit }: { hasGit: boolean },
 ): Promise<ListedFile[]> {
-    const listed = hasGit ? await listGitFiles(repositoryRoot, GIT_UNTRACKED_FILES_ARGUMENTS) : undefined;
+    const listed = hasGit ? await listGitFiles(root, GIT_UNTRACKED_FILES_ARGUMENTS) : undefined;
     const paths =
         listed === undefined
-            ? walkPaths(repositoryRoot)
+            ? walkPaths(root)
             : [...index.map((indexFile) => indexFile.path), ...listed.split('\0').filter(Boolean)];
     const submodules = listSubmodulePaths(index);
     const executables =
@@ -163,6 +163,6 @@ export async function listTrackedFiles(
                 submodules.every((module) => !isInScope(path, module)),
         )
         .toSorted((a, b) => compareText(a, b))
-        .map((path) => readListedFile(repositoryRoot, path, executables))
+        .map((path) => readListedFile(root, path, executables))
         .filter((file) => file !== undefined);
 }

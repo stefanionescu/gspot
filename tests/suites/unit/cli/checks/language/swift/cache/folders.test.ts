@@ -72,9 +72,9 @@ test('two copies of one repository with the same installed root share one build 
     await using _cache = await redirectCacheFolder();
     const session = await openSession(installed.path);
     const installedInput = planSandboxCheck(session, 'swift/build');
-    const firstSession = await openSession(first.path, { installedRoot: installed.path });
+    const firstSession = await openSession(first.path, { toolsRoot: installed.path });
     const firstInput = planSandboxCheck(firstSession, 'swift/build');
-    const secondSession = await openSession(second.path, { installedRoot: installed.path });
+    const secondSession = await openSession(second.path, { toolsRoot: installed.path });
     const secondInput = planSandboxCheck(secondSession, 'swift/build');
     const firstFolder = planSwiftBuild(firstSession, firstInput).folder;
     const secondFolder = planSwiftBuild(secondSession, secondInput).folder;

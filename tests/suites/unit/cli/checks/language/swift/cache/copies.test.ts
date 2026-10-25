@@ -108,7 +108,7 @@ test('concurrent Swift compilation and Periphery keep separate source and build 
         ).toStrictEqual([[], []]);
         expect(new Set(folders).size).toBe(2);
         const compilePlan = planSwiftBuild(prepared.session, compile);
-        const peripheryFolder = getScopeBuildFolder(session.installedRoot, periphery.scope.folder.path, 'periphery');
+        const peripheryFolder = getScopeBuildFolder(session.toolsRoot, periphery.scope.folder.path, 'periphery');
         expect(compilePlan.folder).not.toBe(peripheryFolder);
         if (compilePlan.kind !== 'package') throw new Error('Expected a Swift package build.');
         expect(compilePlan.scratch).not.toBe(peripheryFolder);

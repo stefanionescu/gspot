@@ -35,7 +35,7 @@ export const CHECK_RUNS = ['files', 'scope', 'once', 'history'] as const;
 
 export const CHECK_NEEDS = ['build', 'docker', 'network'] as const;
 
-export const CHECK_WORKING_FOLDERS = ['root', 'scope'] as const;
+export const CHECK_CWD_VALUES = ['root', 'scope'] as const;
 
 export const TOOL_KINDS = ['program', 'library'] as const;
 

@@ -105,12 +105,12 @@ export async function createCopy(source: CopyPaths): Promise<TemporaryFolder> {
 /**
 Selects the paths and installed dependency trees for a copy of the working tree.
 
-@param repositoryRoot the repository folder.
+@param root the repository folder.
 @param paths the tracked files to copy.
 @param scopes the folders that hold installed dependencies.
 @returns the paths and dependency trees to copy.
 */
-export function selectCopyPaths(repositoryRoot: string, paths: string[], scopes: string[]): CopyPaths {
+export function selectCopyPaths(root: string, paths: string[], scopes: string[]): CopyPaths {
     const projects = paths.flatMap((path) =>
         DEPENDENCY_FILES.has(posix.basename(path)) && posix.basename(posix.dirname(path)) !== DOT_GSPOT
             ? [posix.dirname(path)]
@@ -119,7 +119,7 @@ export function selectCopyPaths(repositoryRoot: string, paths: string[], scopes:
     const dependencies = [
         ...new Set([DOT_GSPOT, ...scopes, ...projects].map((project) => posix.join(project, NODE_MODULES))),
     ]
-        .filter((path) => statSync(join(repositoryRoot, path), { throwIfNoEntry: false }) !== undefined)
+        .filter((path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined)
         .map(
             (path): DependencyCopy => ({
                 path,
@@ -127,9 +127,9 @@ export function selectCopyPaths(repositoryRoot: string, paths: string[], scopes:
             }),
         );
     return {
-        root: repositoryRoot,
+        root: root,
         paths: [...new Set([...paths, ...COPY_ROOT_FILES])].filter(
-            (path) => statSync(join(repositoryRoot, path), { throwIfNoEntry: false }) !== undefined,
+            (path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined,
         ),
         dependencies,
     };

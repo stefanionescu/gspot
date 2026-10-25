@@ -37,7 +37,7 @@ test('tool inspection finds the project compiler, and the repository compiler fr
         found: project.version,
         path: join(work, 'node_modules/.bin', isWindows ? 'tsc.exe' : 'tsc'),
     });
-    expect(inspectTool(buildToolSearch(snapshot, { installedRoot: work }), compiler)).toMatchObject({
+    expect(inspectTool(buildToolSearch(snapshot, { toolsRoot: work }), compiler)).toMatchObject({
         state: 'system',
         found: project.version,
         path: join(work, 'node_modules/.bin', isWindows ? 'tsc.exe' : 'tsc'),

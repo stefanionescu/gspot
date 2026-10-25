@@ -135,7 +135,7 @@ export function planSwiftBuild(
     planned: PlannedCheck,
     purpose: Exclude<SwiftBuildPurpose, 'periphery'> = 'compile',
 ): SwiftBuildPlan {
-    const folder = getScopeBuildFolder(session.installedRoot, planned.scope.folder.path, purpose);
+    const folder = getScopeBuildFolder(session.toolsRoot, planned.scope.folder.path, purpose);
     const log = join(folder, BUILD_LOG);
     const {
         xcode_project: project,

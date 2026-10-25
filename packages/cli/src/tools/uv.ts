@@ -58,16 +58,16 @@ pushed revision in a copy that holds no environment, after it verifies that the 
 
 @param roots the folder the tools check, and the working tree.
 @param roots.root the folder the tools check.
-@param roots.installedRoot the working tree that holds the installed environments.
+@param roots.toolsRoot the working tree that holds the installed environments.
 @param scope the project folder.
 @returns UV_PROJECT_ENVIRONMENT, or nothing in the working tree or for a project without an environment.
 */
 export function buildCopyPythonEnvironment(
-    roots: { root: string; installedRoot: string },
+    roots: { root: string; toolsRoot: string },
     scope: string,
 ): Record<string, string> {
-    if (roots.root === roots.installedRoot) return {};
-    const environment = join(roots.installedRoot, scope, PYTHON_ENVIRONMENT_FOLDER);
+    if (roots.root === roots.toolsRoot) return {};
+    const environment = join(roots.toolsRoot, scope, PYTHON_ENVIRONMENT_FOLDER);
     return statSync(environment, { throwIfNoEntry: false })?.isDirectory() === true
         ? { [UV_PROJECT_ENVIRONMENT]: environment }
         : {};

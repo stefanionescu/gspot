@@ -144,24 +144,24 @@ async function selectLine(search: PushSearch, pushed: PushedRevisions, line: Pus
     addRevision(pushed, await buildRevision(search, line, commit));
 }
 
-async function readPushBase(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string> {
-    const compared = await readDefaultRef(repositoryRoot, cancelSignal);
-    if (compared !== '') return readMergeBase(repositoryRoot, compared, cancelSignal);
-    const roots = await readGitLines(repositoryRoot, GIT_ROOT_COMMITS_ARGUMENTS, { cancelSignal });
+async function readPushBase(root: string, cancelSignal?: AbortSignal): Promise<string> {
+    const compared = await readDefaultRef(root, cancelSignal);
+    if (compared !== '') return readMergeBase(root, compared, cancelSignal);
+    const roots = await readGitLines(root, GIT_ROOT_COMMITS_ARGUMENTS, { cancelSignal });
     return roots.at(-1) as string;
 }
 
 /**
 Resolve the exact objects that the Git pre-push input names, before source checks run.
 
-@param repositoryRoot the folder where Git runs.
+@param root the folder where Git runs.
 @param input the lines that Git writes to the pre-push hook.
 @param remote the name or address that the hook gets.
 @param cancelSignal stops the Git commands.
 @returns the pushed revisions with their commits, and the updates no check applies to.
 */
 export async function selectPush(
-    repositoryRoot: string,
+    root: string,
     input: string,
     remote?: string,
     cancelSignal?: AbortSignal,
@@ -170,16 +170,15 @@ export async function selectPush(
         .split('\n')
         .filter((row) => row.trim() !== '')
         .map((line) => parsePushLine(line));
-    const shallowAnswer = await readGitText(repositoryRoot, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
+    const shallowAnswer = await readGitText(root, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
     const isShallow = shallowAnswer.trim() === 'true';
-    const remotes =
-        remote === undefined ? [] : await readGitLines(repositoryRoot, GIT_REMOTE_ARGUMENTS, { cancelSignal });
+    const remotes = remote === undefined ? [] : await readGitLines(root, GIT_REMOTE_ARGUMENTS, { cancelSignal });
     const context: PushSearch = {
-        root: repositoryRoot,
+        root: root,
         cancelSignal,
-        commits: await readPeeledCommits(repositoryRoot, lines, cancelSignal),
+        commits: await readPeeledCommits(root, lines, cancelSignal),
         remote: remotes.find((name) => name === remote),
-        boundaries: isShallow ? await readShallowBoundaries(repositoryRoot, cancelSignal) : new Set<string>(),
+        boundaries: isShallow ? await readShallowBoundaries(root, cancelSignal) : new Set<string>(),
     };
     const result: PushedRevisions = { revisions: [], skipped: [] };
     for (const line of lines) await selectLine(context, result, line);
@@ -189,17 +188,17 @@ export async function selectPush(
 /**
 Read the commits after the push base.
 
-@param repositoryRoot the folder where Git runs.
+@param root the folder where Git runs.
 @param cancelSignal stops the Git commands.
 @returns the commits, or the Git error.
 */
 export async function readPushedCommits(
-    repositoryRoot: string,
+    root: string,
     cancelSignal?: AbortSignal,
 ): Promise<string[] | { error: string }> {
-    if ((await readHead(repositoryRoot, cancelSignal)) === undefined) return [];
-    const base = await readPushBase(repositoryRoot, cancelSignal);
-    const listed = await runGit(repositoryRoot, [...GIT_REV_LIST_ARGUMENTS, `${base}..HEAD`, '--'], {
+    if ((await readHead(root, cancelSignal)) === undefined) return [];
+    const base = await readPushBase(root, cancelSignal);
+    const listed = await runGit(root, [...GIT_REV_LIST_ARGUMENTS, `${base}..HEAD`, '--'], {
         cancelSignal,
     });
     return listed.code === 0

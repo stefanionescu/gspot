@@ -151,10 +151,10 @@ export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
     const key = JSON.stringify([root, cwd, tool]);
     const cached = inspections.get(key);
     if (cached) return cached;
-    const installedRoot = search.installedRoot ?? root;
+    const toolsRoot = search.toolsRoot ?? root;
     const inspected: InspectedTool = {
-        root: installedRoot,
-        cwd: isInside(relative(root, cwd)) ? join(installedRoot, relative(root, cwd)) : cwd,
+        root: toolsRoot,
+        cwd: isInside(relative(root, cwd)) ? join(toolsRoot, relative(root, cwd)) : cwd,
         tool,
         help: buildInstallHelp(tool),
         timeoutSeconds: search.timeoutSeconds,

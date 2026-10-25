@@ -14,8 +14,8 @@ import {
     type CHECK_RUNS,
     type TOOL_BUILDS,
     type CHECK_NEEDS,
+    type CHECK_CWD_VALUES,
     type TOOL_FOLDER_KINDS,
-    type CHECK_WORKING_FOLDERS,
 } from '#cli/config/configurations/names.ts';
 
 type ConfigFilePointer = {
@@ -130,7 +130,7 @@ export type ParsedCheck = {
     other_tools?: string[];
     files?: ParsedManifest['files'] | undefined;
     output: CheckOutput;
-    cwd?: (typeof CHECK_WORKING_FOLDERS)[number] | undefined;
+    cwd?: (typeof CHECK_CWD_VALUES)[number] | undefined;
     summary: string;
     example: string;
     why: string;

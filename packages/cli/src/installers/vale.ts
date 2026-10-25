@@ -56,12 +56,12 @@ async function downloadValePackages(install: ToolInstall, folder: string): Promi
 /**
 Check that the Vale packages exist before prose checks run.
 
-@param repositoryRoot the root with the generated Vale files and package folders.
+@param root the root with the generated Vale files and package folders.
 @param level recommended or all, which decides the packages.
 @returns whether the Vale settings and the package folders exist.
 */
-export function hasValePackages(repositoryRoot: string, level: Settings['level']): boolean {
-    using files = openFiles(repositoryRoot);
+export function hasValePackages(root: string, level: Settings['level']): boolean {
+    using files = openFiles(root);
     if (files.read(GSPOT_PATHS.valeConfigFile) === undefined) return false;
     if (level === 'recommended') return true;
     return VALE_PACKAGE_FOLDERS.every(
