@@ -5,8 +5,8 @@ import { type TomlTable } from '#cli/types/settings/file.ts';
 import { encodeValue } from '#cli/settings/text/inline-values.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
 import { type KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { type LayoutSection, type TomlCommentAnchor } from '#cli/types/settings/text.ts';
 import { isTable, getValueAt, createTable, normalizeTables } from '#cli/system/tables.ts';
+import { type LayoutSection, type LayoutAssignment, type TomlCommentAnchor } from '#cli/types/settings/text.ts';
 
 import {
     TOML_HEADER_FORMAT,
@@ -50,15 +50,19 @@ function encodeHeader(path: KeyPath): string {
     return typeof path.at(-1) === 'number' ? `[${header}]` : header;
 }
 
-function listScopeAssignments(key: string, value: unknown): [string, unknown][] {
-    const assignments: [string, unknown][] = [];
-    const pending: (readonly [string, unknown])[] = [[key, value]];
+function listScopeAssignments(key: string, value: unknown): LayoutAssignment[] {
+    const assignments: LayoutAssignment[] = [];
+    const pending: LayoutAssignment[] = [{ key, value, keys: [key] }];
     while (pending.length > 0) {
-        const [name, pendingValue] = pending.shift() as [string, unknown];
-        if (isTable(pendingValue) && !isReasonedValue(pendingValue)) {
-            const nested = Object.entries(pendingValue).map(([key, value]) => [`${name}.${key}`, value] as const);
+        const assignment = pending.shift() as LayoutAssignment;
+        if (isTable(assignment.value) && !isReasonedValue(assignment.value)) {
+            const nested = Object.entries(assignment.value).map(([key, value]) => ({
+                key: `${assignment.key}.${key}`,
+                value,
+                keys: [...assignment.keys, key],
+            }));
             pending.unshift(...nested);
-        } else assignments.push([name, pendingValue]);
+        } else assignments.push(assignment);
     }
     return assignments;
 }
@@ -67,7 +71,7 @@ function splitSection(
     value: TomlTable,
     path: KeyPath,
     comments: TomlComments,
-): { assignments: [string, unknown][]; children: LayoutSection[] } {
+): { assignments: LayoutAssignment[]; children: LayoutSection[] } {
     const isScope = path[0] === 'scope' && typeof path[1] === 'number';
     const isToolRule = (path[0] === 'tools' || path[2] === 'tools') && path.at(-1) === 'rules';
     const childRows = Object.entries(value).map(([key, child]) => {
@@ -90,10 +94,11 @@ function splitSection(
     });
     const sections = childRows.map(
         ({ key, child, isChildTable, isScopeTable, isRecordList, isInline, isCommentedReasonedValue, childPath }) => {
-            const assignments: [string, unknown][] = [];
+            const assignments: LayoutAssignment[] = [];
             const children: LayoutSection[] = [];
             if (isScopeTable) return { assignments: listScopeAssignments(key, child), children };
-            if (isChildTable && isInline && !isCommentedReasonedValue) assignments.push([key, child]);
+            if (isChildTable && isInline && !isCommentedReasonedValue)
+                assignments.push({ key, value: child, keys: [key] });
             else if (isChildTable) children.push({ path: childPath, table: child as TomlTable });
             else if (isRecordList)
                 children.push(
@@ -102,7 +107,7 @@ function splitSection(
                         table: record,
                     })),
                 );
-            else assignments.push([key, child]);
+            else assignments.push({ key, value: child, keys: [key] });
             return { assignments, children };
         },
     );
@@ -125,15 +130,18 @@ export function encodeSettings(table: TomlTable, indent: string, comments: TomlC
     const root: string[] = [];
     function encodeTable(value: TomlTable, path: KeyPath): void {
         const { assignments, children } = splitSection(value, path, comments);
-        const lines = assignments.map(([key, child]) => {
+        const lines = assignments.map(({ key, value: child, keys }) => {
             const { text, pair } = encodeAssignment(key, child, path);
-            return insertTomlComments(
+            let line = insertTomlComments(
                 comments,
                 'key',
-                [...path, key],
+                [...path, ...keys],
                 text.slice(getTomlRange(pair.key)[0], getTomlRange(pair.value)[0]) +
-                    encodeValue(pair.value, text, [...path, key], comments, indent),
+                    encodeValue(pair.value, text, [...path, ...keys], comments, indent),
             );
+            const tables = keys.slice(1).map((_, index) => [...path, ...keys.slice(0, index + 1)]);
+            for (const table of tables.toReversed()) line = insertTomlComments(comments, 'header', table, line);
+            return line;
         });
         if (path.length === 0) root.push(...lines);
         else if (lines.length > 0 || children.length === 0 || comments.has(JSON.stringify(['header', ...path])))

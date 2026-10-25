@@ -194,4 +194,29 @@ paths = ["src/**"]
 can_import = ["core"]
 `,
     },
+    {
+        name: `comments in a scope table`,
+        source: `[[scope]]
+path="docs"
+# Docs format
+[scope.format]
+# Narrower
+print_width=90
+[[scope]]
+path="web"
+[scope.format]
+print_width=120 # Wider
+`,
+        expected: `[[scope]]
+path = "docs"
+# Docs format
+# Narrower
+format.print_width = 90
+
+[[scope]]
+path = "web"
+# Wider
+format.print_width = 120
+`,
+    },
 ] as const;
