@@ -3,13 +3,7 @@ import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescr
 
 const isUnwrappable = ASTUtils.isNodeOfTypes(UNWRAPPABLE_NODES.map((type) => AST_NODE_TYPES[type]));
 
-/**
-Strip the wrappers that keep the runtime value: type assertions and optional chains.
-
-@param node the expression, or null
-@returns the inner expression
-*/
-export function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
+function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
     let value = node;
     while (value !== null && isUnwrappable(value)) value = value.expression;
     return value;

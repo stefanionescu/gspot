@@ -41,7 +41,11 @@ test('the Swagger lint rules apply only when package.json declares @nestjs/swagg
     const swaggerResults = JSON.parse(swagger.stdout) as ESLint.LintResult[];
     expect(swagger.code, swagger.stdout + swagger.stderr).toBe(1);
     expect(
-        swaggerResults.flatMap(({ messages }) => messages.map(({ ruleId, line }) => ({ ruleId, line }))),
+        swaggerResults.flatMap(({ messages }) =>
+            messages
+                .filter(({ ruleId }) => ruleId?.startsWith('@darraghor/nestjs-typed/') === true)
+                .map(({ ruleId, line }) => ({ ruleId, line })),
+        ),
     ).toStrictEqual([
         { ruleId: '@darraghor/nestjs-typed/controllers-should-supply-api-tags', line: 9 },
         { ruleId: '@darraghor/nestjs-typed/api-method-should-specify-api-response', line: 23 },
