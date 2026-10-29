@@ -83,6 +83,7 @@ export const RUFF_ALWAYS_OFF = [
     'D206',
     'D213',
     'D300',
+    'D417',
     'I002',
     'N806',
     'N815',
