@@ -48,6 +48,7 @@ export type RevisionSource = (
           reference: string;
           reportRoot: string;
           staged: StagedPaths;
+          started: Date;
       }
     | {
           content: 'commit';
@@ -114,6 +115,7 @@ export type Run = {
 };
 
 export type RunOptions = PlanOptions & {
+    started?: Date;
     stage: StageFilter;
     onProgress?: (progress: CheckProgress) => void;
     dryRun: boolean;

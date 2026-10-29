@@ -45,6 +45,7 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
         cwd: revision?.content === 'index' ? revision.cwd : options.cwd,
         pathArguments: revision?.content === 'index' ? revision.paths : options.paths,
         ...stripUndefined({
+            started: revision?.content === 'index' ? revision.started : undefined,
             stage,
             fix: options.fix,
             verbose: options.verbose,

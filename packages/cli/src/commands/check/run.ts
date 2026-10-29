@@ -221,7 +221,7 @@ Plan and run the checks, after the fixers when --fix asks, then drop ignored fin
 @returns the report, the plan, and the fix report when --fix ran.
 */
 export async function runChecks(session: Session, options: RunOptions): Promise<RunResult> {
-    const started = new Date();
+    const started = options.started ?? new Date();
     const { session: checked, planned, fixes } = await planAfterFixes(buildCheckSession(session), options);
     const active = planned.filter((check) => isActive(check) && check.skip === undefined);
     const ran = await runActiveChecks({ session: checked, options }, active);
