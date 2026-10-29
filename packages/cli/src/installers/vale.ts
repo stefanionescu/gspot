@@ -92,8 +92,7 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     const usesVale = session.toolConfigurations.some(({ tools }) => tools.some((tool) => tool.name === VALE_TOOL));
     if (level === 'basic' || !usesVale) return '';
     const key = buildInstallKey([level, JSON.stringify(VALE_PACKAGE_RELEASES)]);
-    if (install.record.vale === key && install.writer.readStats(GSPOT_PATHS.valePackages)?.isDirectory() === true)
-        return '';
+    if (install.record.vale === key && hasValePackages(root, level)) return '';
     const tool = getTool(session.toolConfigurations, VALE_TOOL);
     const available = buildToolAvailability(tool, inspectTool({ ...session, miseBinPaths }, tool));
     if ('status' in available) throw new GspotError('tool', available.note);

@@ -77,21 +77,33 @@ test('a changed Vale archive is refused before sync and preserves installed pack
     );
 });
 
-test('a matching Vale record and installed folder skip downloads', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
-        [GSPOT_PATHS.installRecord]: JSON.stringify({
-            vale: buildInstallKey(['all', JSON.stringify(VALE_PACKAGE_RELEASES)]),
-        }),
-        [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: 'installed bytes',
-    });
-    using writer = openWriter(sandbox.path);
-    using request = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected download'));
-    const install = buildToolInstall(await openSession(sandbox.path), writer);
-    expect(await installValePackages(install, [])).toBe('');
-    expect(request).not.toHaveBeenCalled();
-    expect(install.steps).toStrictEqual([]);
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.valePackages, 'Google/terms.yml'), 'utf8')).toBe(
-        'installed bytes',
-    );
-});
+test.each([false, true])(
+    'a matching Vale record skips downloads only while every package folder exists (one folder deleted: %s)',
+    async (deleted) => {
+        const [first, ...kept] = VALE_PACKAGE_FOLDERS;
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
+            [GSPOT_PATHS.installRecord]: JSON.stringify({
+                vale: buildInstallKey(['all', JSON.stringify(VALE_PACKAGE_RELEASES)]),
+            }),
+            [GSPOT_PATHS.valeConfigFile]: VALE_PACKAGES_INI,
+            ...Object.fromEntries(
+                (deleted ? kept : [first, ...kept]).map((folder) => [
+                    `${GSPOT_PATHS.valePackages}/${folder}/terms.yml`,
+                    'installed bytes',
+                ]),
+            ),
+        });
+        using writer = openWriter(sandbox.path);
+        using request = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected download'));
+        const install = buildToolInstall(await openSession(sandbox.path), writer);
+        if (deleted) {
+            const failure = await captureRejection(installValePackages(install, []));
+            expect(failure.message).toContain('vale');
+            return;
+        }
+        expect(await installValePackages(install, [])).toBe('');
+        expect(request).not.toHaveBeenCalled();
+        expect(install.steps).toStrictEqual([]);
+    },
+);
