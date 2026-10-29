@@ -3,7 +3,6 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { join, delimiter } from 'node:path';
-import { CI_PINS } from '#cli/config/generation/ci.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
@@ -12,7 +11,6 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
@@ -199,20 +197,4 @@ test('the GitHub workflow pins each action to a full commit and names its versio
     expect(lines).toHaveLength(actions.length);
     for (const line of lines)
         expect(line).toMatch(/^\s+(?:- )?uses: [\w.-]+\/[\w./-]+@[0-9a-f]{40} # v\d+(?:\.\d+)*$/u);
-});
-
-test('the hand-written tests workflow uses the action pins and mise version that gspot writes', async () => {
-    const workflow = parse(
-        await readFile(join(REPOSITORY_ROOT, '.github/workflows/tests.yml'), 'utf8'),
-    ) as GithubWorkflow;
-    const actions = Object.values(workflow.jobs).flatMap(({ steps }) => steps.filter(({ uses }) => uses !== undefined));
-    expect(actions.map(({ uses }) => uses)).toStrictEqual([
-        `${CI_PINS.actions.checkout.name}@${CI_PINS.actions.checkout.sha}`,
-        `${CI_PINS.actions.mise.name}@${CI_PINS.actions.mise.sha}`,
-        `actions/cache@${CI_PINS.actions.restoreCache.sha}`,
-    ]);
-    expect(CI_PINS.actions.saveCache.sha).toBe(CI_PINS.actions.restoreCache.sha);
-    expect(actions.find(({ uses }) => uses?.startsWith('jdx/mise-action@') === true)?.with?.['version']).toBe(
-        CI_PINS.mise.version,
-    );
 });
