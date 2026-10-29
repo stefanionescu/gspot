@@ -1,5 +1,3 @@
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
-
 export const PRISMA_SCHEMA_CASES = [
     {
         name: 'Postgres provider',
@@ -39,7 +37,7 @@ export const PRISMA_SCHEMA_CASES = [
 ] as const;
 
 export const RUNTIME_DETECTION_CASES = [
-    ...JAVASCRIPT_RUNTIMES.flatMap((runtime) =>
+    ...(['node', 'bun', 'deno'] as const).flatMap((runtime) =>
         [
             { name: `${runtime} engine`, package: { engines: { [runtime]: '>=1' } }, source: '', detected: true },
             {

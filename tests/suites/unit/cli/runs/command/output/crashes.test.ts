@@ -1,6 +1,5 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { TAIL_LINES } from '#cli/config/runs/command/output.ts';
 import { TYPE_ERROR_MESSAGE } from '#tests/config/typescript.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -24,10 +23,7 @@ test('a shortened failure output keeps the last line of stdout and of stderr', (
         },
         'empty',
     );
-    const tail = Array.from(
-        { length: TAIL_LINES - 1 },
-        (_, index) => `progress ${String(30 - TAIL_LINES + 1 + index)}`,
-    );
+    const tail = Array.from({ length: 19 }, (_, index) => `progress ${String(11 + index)}`);
     expect(detail).toBe([...tail, 'stderr failure', ...tail, 'stdout failure'].join('\n'));
 });
 

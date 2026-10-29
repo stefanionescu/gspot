@@ -9,7 +9,6 @@ import { listCopyPythonArguments } from '#cli/tools/uv.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildCheckSession } from '#cli/commands/check/run.ts';
-import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/uv.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
@@ -40,7 +39,7 @@ test('a Python check that runs in a copy uses the environment that the working t
             planned.tool!,
             buildCommandSetup(session, planned, { options: {}, root: session.root }).env,
         ),
-    ).toStrictEqual(['--pythonpath', buildVenvExecutablePath(join(working.path, '.venv'), 'python')]);
+    ).toStrictEqual(['--pythonpath', join(working.path, isWindows ? '.venv/Scripts/python.exe' : '.venv/bin/python')]);
     const inPlace = await openSession(working.path);
     const local = planChecks(inPlace, buildRunOptions({ only: ['python/basedpyright'] })).find(
         ({ check }) => check.id === 'python/basedpyright',

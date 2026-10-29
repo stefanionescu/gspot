@@ -56,7 +56,7 @@ test('the conflict is reported at the scope that selects both configurations', (
             new Map([['db', conflictingSettings]]),
             buildSelectedAvailableSettings([]),
         ),
-    ).toStrictEqual([{ path: ['scope', 0, 'configurations'], message: conflictingSettings.errors[0]!.message }]);
+    ).toStrictEqual([{ path: ['scope', 0, 'configurations'], message: CONFLICTING_DEFAULT_ERRORS[0].message }]);
 });
 
 test('a scope value settles the scopes below it, and a sibling scope still reports the conflict', () => {
@@ -72,7 +72,7 @@ test('a scope value settles the scopes below it, and a sibling scope still repor
     const scopes = new Map([...settings.scopes.keys()].map((path) => [path, conflictingSettings]));
     expect(
         validateKeys(buildSelectedAvailableSettings([]), settings, scopes, buildSelectedAvailableSettings([])),
-    ).toStrictEqual([{ path: ['scope', 2, 'configurations'], message: conflictingSettings.errors[0]!.message }]);
+    ).toStrictEqual([{ path: ['scope', 2, 'configurations'], message: CONFLICTING_DEFAULT_ERRORS[0].message }]);
     expect(getSettingValue(conflictingSettings, settings, 'tools.sqlfluff.dialect', 'app/db')).toMatchObject({
         value: 'sqlite',
         source: '[scope "app"]',

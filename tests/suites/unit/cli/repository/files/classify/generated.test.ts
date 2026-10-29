@@ -9,7 +9,6 @@ import { detectConfigurations } from '#cli/repository/detect.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
-import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -22,7 +21,7 @@ import {
 } from '#tests/config/repository/files/classify.ts';
 
 test.each([...GENERATED_HEADERS])('the generated header is found in each comment form: %j', (text) => {
-    expect(hasGeneratedHeader(text.replaceAll('{generated-header}', () => GENERATED_HEADER_TEXT))).toBe(true);
+    expect(hasGeneratedHeader(text)).toBe(true);
 });
 
 test.each([...NOT_GENERATED])('your own comment is not a generated header: %j', (text) => {

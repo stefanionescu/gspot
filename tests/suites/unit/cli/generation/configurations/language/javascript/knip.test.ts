@@ -52,11 +52,11 @@ test('Knip finds unused framework component files and uses the entry points of e
     const findings = parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path });
     expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
         KNIP_UNUSED_FILES.map((file) => ({
-            check: check.id,
+            check: 'javascript/knip',
             file,
             rule: 'files',
             message: `Unused file: ${file}`,
-            help: check.help,
+            help: 'Delete what knip names. For a file loaded in a way that knip cannot trace, add an entry point in `tools.knip.entry`.',
             fixable: false,
         })),
     );
@@ -90,19 +90,19 @@ test("Knip ignores gspot's tool packages and reports your unused dependencies", 
     const findings = parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path });
     expect(findings.toSorted((left, right) => left.message.localeCompare(right.message))).toStrictEqual([
         {
-            check: check.id,
+            check: 'javascript/knip',
             file: 'package.json',
             rule: 'dependencies',
             message: 'Unused dependency: sample-unused-package',
-            help: check.help,
+            help: 'Delete what knip names. For a file loaded in a way that knip cannot trace, add an entry point in `tools.knip.entry`.',
             fixable: false,
         },
         {
-            check: check.id,
+            check: 'javascript/knip',
             file: 'package.json',
             rule: 'dependencies',
             message: 'Unused dependency: vale',
-            help: check.help,
+            help: 'Delete what knip names. For a file loaded in a way that knip cannot trace, add an entry point in `tools.knip.entry`.',
             fixable: false,
         },
     ]);
@@ -139,11 +139,11 @@ test('Knip treats script configuration files as entries and ignores pointer file
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path })).toStrictEqual([
         {
-            check: check.id,
+            check: 'javascript/knip',
             file: 'unused.js',
             rule: 'files',
             message: 'Unused file: unused.js',
-            help: check.help,
+            help: 'Delete what knip names. For a file loaded in a way that knip cannot trace, add an entry point in `tools.knip.entry`.',
             fixable: false,
         },
     ]);

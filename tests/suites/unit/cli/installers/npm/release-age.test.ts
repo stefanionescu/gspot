@@ -2,7 +2,6 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readdir, readFile } from 'node:fs/promises';
-import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/installers/npm/project.ts';
 import { MINIMUM_RELEASE_AGE } from '#tests/config/installers/npm/release-age.ts';
 import { prepareReleaseAge, writeBunReleaseAge } from '#cli/installers/npm/release-age.ts';
 
@@ -10,14 +9,17 @@ test('an npm tool lockfile gets the minimum release age as flags and writes no f
     await using sandbox = await testdir();
     const hold = prepareReleaseAge(
         sandbox.path,
-        PACKAGE_MANAGER_ARGUMENTS.npm.lockfile,
+        ['install', '--package-lock-only'],
         { name: 'npm', version: '11.19.0' },
         MINIMUM_RELEASE_AGE,
     );
     expect(hold).toStrictEqual([
-        ...PACKAGE_MANAGER_ARGUMENTS.npm.lockfile,
+        'install',
+        '--package-lock-only',
         '--min-release-age=7',
-        ...MINIMUM_RELEASE_AGE.npmExclusions.map((name) => `--min-release-age-exclude=${name}`),
+        '--min-release-age-exclude=@gspothq/eslint-plugin',
+        '--min-release-age-exclude=eslint',
+        '--min-release-age-exclude=prettier',
     ]);
 });
 
@@ -25,11 +27,11 @@ test('a Bun run reads the release age from the bunfig.toml that it gets with --c
     await using sandbox = await testdir();
     const hold = prepareReleaseAge(
         sandbox.path,
-        PACKAGE_MANAGER_ARGUMENTS.bun.lockfile,
+        ['install', '--lockfile-only'],
         { name: 'bun', version: '1.4.3' },
         MINIMUM_RELEASE_AGE,
     );
-    expect(hold).toStrictEqual([...PACKAGE_MANAGER_ARGUMENTS.bun.lockfile]);
+    expect(hold).toStrictEqual(['install', '--lockfile-only']);
     expect(await readdir(sandbox.path)).toStrictEqual([]);
     const path = writeBunReleaseAge(sandbox.path, MINIMUM_RELEASE_AGE);
     expect(path).toBe(join(sandbox.path, 'bunfig.toml'));
@@ -38,7 +40,7 @@ test('a Bun run reads the release age from the bunfig.toml that it gets with --c
         install: {
             peer: false,
             minimumReleaseAge: 604_800,
-            minimumReleaseAgeExcludes: MINIMUM_RELEASE_AGE.npmExclusions,
+            minimumReleaseAgeExcludes: ['@gspothq/eslint-plugin', 'eslint', 'prettier'],
         },
     });
 });
@@ -47,14 +49,14 @@ test('a pnpm tool lockfile reads the minimum release age from pnpm-workspace.yam
     await using sandbox = await testdir();
     const hold = prepareReleaseAge(
         sandbox.path,
-        PACKAGE_MANAGER_ARGUMENTS.pnpm.lockfile,
+        ['install', '--lockfile-only'],
         { name: 'pnpm', version: '10.30.0' },
         MINIMUM_RELEASE_AGE,
     );
-    expect(hold).toStrictEqual([...PACKAGE_MANAGER_ARGUMENTS.pnpm.lockfile]);
+    expect(hold).toStrictEqual(['install', '--lockfile-only']);
     const contents = Bun.YAML.parse(await readFile(join(sandbox.path, 'pnpm-workspace.yaml'), 'utf8'));
     expect(contents).toStrictEqual({
         minimumReleaseAge: 10_080,
-        minimumReleaseAgeExclude: MINIMUM_RELEASE_AGE.npmExclusions,
+        minimumReleaseAgeExclude: ['@gspothq/eslint-plugin', 'eslint', 'prettier'],
     });
 });

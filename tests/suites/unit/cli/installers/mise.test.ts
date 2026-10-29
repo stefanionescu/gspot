@@ -14,7 +14,6 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import type { MiseProject } from '#cli/types/installers/mise.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { MISE_LOCK_ARGUMENTS } from '#cli/config/installers/mise.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { installMiseTools, isMiseLockfileFresh } from '#cli/installers/mise.ts';
@@ -75,7 +74,12 @@ test.each(['commit', 'manual'] as const)(
             return buildProcessResult();
         });
         await installMiseTools(install);
-        expect(install.steps[0]).toStrictEqual([...MISE_LOCK_ARGUMENTS]);
+        expect(install.steps[0]).toStrictEqual([
+            'mise',
+            'lock',
+            '--platform',
+            'linux-x64,linux-arm64,macos-x64,macos-arm64,windows-x64',
+        ]);
         expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual([
             ['mise', 'install', ...listMisePins(session.toolConfigurations).map((pin) => pin.name)],
         ]);

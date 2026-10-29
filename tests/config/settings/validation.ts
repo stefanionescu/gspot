@@ -1,5 +1,3 @@
-import { SCOPE_PATH_MESSAGES } from '#cli/config/settings/file.ts';
-
 export const INVALID_SETTING_MESSAGES = [
     {
         name: 'an unknown root key',
@@ -62,17 +60,21 @@ export const UNSAFE_SCOPE_PATHS = [
     '',
 ] as const;
 
+const GSPOT_FOLDER_REFUSAL = 'gspot writes its own files in .gspot. Choose a scope folder outside it.';
+
+const PORTABLE_PATH_REFUSAL = String.raw`Use folder names that work on every system: no empty or dot segment, no \ : < > " | ? * or control character, no name that ends in a dot or a space, and no device name such as nul.`;
+
 export const REFUSED_SCOPE_FOLDERS = [
-    { path: '.gspot/tools', message: SCOPE_PATH_MESSAGES.gspot },
-    { path: '.GSPOT', message: SCOPE_PATH_MESSAGES.gspot },
-    { path: 'apps/.gspot/state', message: SCOPE_PATH_MESSAGES.gspot },
-    { path: 'nul.txt', message: SCOPE_PATH_MESSAGES.portable },
-    { path: 'a ', message: SCOPE_PATH_MESSAGES.portable },
-    { path: 'apps/COM1', message: SCOPE_PATH_MESSAGES.portable },
-    { path: 'apps/web.', message: SCOPE_PATH_MESSAGES.portable },
-    { path: 'apps//web', message: SCOPE_PATH_MESSAGES.portable },
-    { path: 'apps/./web', message: SCOPE_PATH_MESSAGES.portable },
-    { path: 'apps/a<b', message: SCOPE_PATH_MESSAGES.portable },
+    { path: '.gspot/tools', message: GSPOT_FOLDER_REFUSAL },
+    { path: '.GSPOT', message: GSPOT_FOLDER_REFUSAL },
+    { path: 'apps/.gspot/state', message: GSPOT_FOLDER_REFUSAL },
+    { path: 'nul.txt', message: PORTABLE_PATH_REFUSAL },
+    { path: 'a ', message: PORTABLE_PATH_REFUSAL },
+    { path: 'apps/COM1', message: PORTABLE_PATH_REFUSAL },
+    { path: 'apps/web.', message: PORTABLE_PATH_REFUSAL },
+    { path: 'apps//web', message: PORTABLE_PATH_REFUSAL },
+    { path: 'apps/./web', message: PORTABLE_PATH_REFUSAL },
+    { path: 'apps/a<b', message: PORTABLE_PATH_REFUSAL },
 ] as const;
 
 export const UNTIL_DATE_CASES = [

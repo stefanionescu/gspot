@@ -5,7 +5,6 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import { planBlock, openWriter, writePlans, planManagedKeys, planReplacements } from '#cli/repository/writer.ts';
 
@@ -53,7 +52,7 @@ test.each(['replacement', 'block', 'keys'] as const)(
         const plan = plans[kind]();
         expect(writer.read('config.toml')).toStrictEqual({
             bytes: Buffer.from('strict = true\n'),
-            mode: normalizeFileMode({ mode: 0o640 }),
+            mode: isWindows ? 0o666 : 0o640,
         });
         await writeFile(join(sandbox.path, 'config.toml'), 'edited = true\n');
         expect(() => {
@@ -67,7 +66,7 @@ test.each(['replacement', 'block', 'keys'] as const)(
         );
         expect(writer.read('config.toml')).toStrictEqual({
             bytes: Buffer.from('edited = true\n'),
-            mode: normalizeFileMode({ mode: 0o640 }),
+            mode: isWindows ? 0o666 : 0o640,
         });
     },
 );

@@ -16,7 +16,10 @@ test.each(COVERAGE_PROJECT_FILES)(
     'pytest respects $name and only adds its generated omissions as a fallback',
     async ({ files, generated }) => {
         await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['pytest', 'python'], { level: 'all' }),
+            'gspot.toml': buildSandboxSettings(['pytest', 'python'], {
+                level: 'all',
+                tables: 'test_files = ["tests/test_*.py"]\n',
+            }),
             'tests/test_example.py': 'def test_example():\n    assert True\n',
             '.venv/.keep': '',
             ...files,
@@ -38,10 +41,7 @@ test.each(COVERAGE_PROJECT_FILES)(
         expect(coverage !== undefined).toBe(generated);
         if (coverage !== undefined) {
             const text = await readFile(resolve(sandbox.path, coverage.slice('--cov-config='.length)), 'utf8');
-            expect(text).toBe(
-                ['[run]', 'omit =', ...planned.scope.settings.test_files.map((path) => `    ${path}`), ''].join('\n'),
-            );
-            expect(planned.scope.settings.test_files).toContain('**/test_*.py');
+            expect(text).toBe('[run]\nomit =\n    tests/test_*.py\n');
         }
         for (const [path, content] of Object.entries(files))
             expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);

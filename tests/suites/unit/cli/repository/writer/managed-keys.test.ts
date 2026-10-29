@@ -4,8 +4,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { CHECK_COMMAND } from '#tests/config/hooks.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
-import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
 import { INVALID_PACKAGE_JSON_TEXTS } from '#tests/config/repository/writer.ts';
@@ -36,7 +36,7 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
             .replace('{"rules":{"property-no-unknown":null}}', '{"extends":"./next.json"}'),
     );
     const metadata = await stat(join(sandbox.path, path));
-    expect(metadata.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
+    expect(metadata.mode & 0o777).toBe(isWindows ? 0o666 : 0o640);
 });
 
 test.each(['tool.jsonc', 'package.json'])('%s key edits keep comments, containers and array order', async (path) => {
@@ -144,5 +144,5 @@ test('setting a TOML key to the value it holds keeps the bytes and mode', async 
     ]);
     expect(await readFile(join(sandbox.path, 'package.toml'), 'utf8')).toBe(content);
     const metadata = await stat(join(sandbox.path, 'package.toml'));
-    expect(metadata.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
+    expect(metadata.mode & 0o777).toBe(isWindows ? 0o666 : 0o640);
 });

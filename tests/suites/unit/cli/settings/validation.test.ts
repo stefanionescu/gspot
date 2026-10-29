@@ -28,7 +28,7 @@ import {
 test.each([...INVALID_SETTING_MESSAGES])('settings errors locate $name', ({ text, message }) => {
     using sandbox = createTemporaryFolder();
     expect(() => readSettings(text, sandbox.path)).toThrow(
-        matchFields<GspotError>({ name: 'GspotError', code: 'settings', message: message }),
+        matchFields<GspotError>({ name: 'GspotError', code: 'settings', message }),
     );
 });
 

@@ -6,9 +6,8 @@ import { openSession } from '#cli/planning/session.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
-import { LIMIT_READERS } from '#cli/config/planning/readers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { BUILT_IN_LIMIT_CASES, GENERATOR_LIMIT_FILES } from '#tests/config/planning/readers.ts';
+import { GENERATOR_LIMITS, BUILT_IN_LIMIT_CASES } from '#tests/config/planning/readers.ts';
 
 test('limit readers belong to the requested language', async () => {
     await using sandbox = await testdir({
@@ -35,12 +34,10 @@ test('limit readers report their enabled state and exact level note', async () =
 });
 
 test.each(
-    LIMIT_READERS.filter(({ check }) => check in GENERATOR_LIMIT_FILES).flatMap((reader) =>
-        reader.languages.flatMap((language) =>
-            reader.limits.map((limit) => ({ check: reader.check, language, limit })),
-        ),
+    GENERATOR_LIMITS.flatMap(({ check, file, languages, limits }) =>
+        languages.flatMap((language) => limits.map((limit) => ({ check, file, language, limit }))),
     ),
-)('$check writes the configured $language.$limit into its generated file', async ({ check, language, limit }) => {
+)('$check writes the configured $language.$limit into its generated file', async ({ check, file, language, limit }) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([language], {
             level: 'all',
@@ -48,10 +45,9 @@ test.each(
         }),
     });
     const session = await openSession(sandbox.path);
-    const suffix = GENERATOR_LIMIT_FILES[check as keyof typeof GENERATOR_LIMIT_FILES];
-    const file = generateFiles(session).files.find(({ path }) => path.endsWith(suffix));
-    expect(file, `${check} generates ${suffix}`).toBeDefined();
-    expect(file!.content).toMatch(/\b1001\b/u);
+    const generated = generateFiles(session).files.find(({ path }) => path.endsWith(file));
+    expect(generated, `${check} generates ${file}`).toBeDefined();
+    expect(generated!.content).toMatch(/\b1001\b/u);
 });
 
 test.each([...BUILT_IN_LIMIT_CASES])('$check reads $language.$limit', async (sample) => {

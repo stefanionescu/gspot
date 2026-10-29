@@ -1,8 +1,47 @@
-export const GENERATOR_LIMIT_FILES = {
-    'javascript/eslint': 'eslint.mjs',
-    'swift/swiftlint': 'swiftlint.yml',
-    'python/ruff': 'ruff.toml',
-} as const;
+export const GENERATOR_LIMITS = [
+    {
+        check: 'javascript/eslint',
+        file: 'eslint.mjs',
+        languages: ['javascript', 'typescript'],
+        limits: [
+            'file_lines',
+            'function_lines',
+            'function_parameters',
+            'function_statements',
+            'block_nesting',
+            'callback_nesting',
+            'cognitive_complexity',
+            'cyclomatic_complexity',
+            'index_exports',
+            'trivial_function_statements',
+        ],
+    },
+    {
+        check: 'swift/swiftlint',
+        file: 'swiftlint.yml',
+        languages: ['swift'],
+        limits: [
+            'file_lines',
+            'function_parameters',
+            'function_lines',
+            'type_lines',
+            'closure_lines',
+            'cyclomatic_complexity',
+        ],
+    },
+    {
+        check: 'python/ruff',
+        file: 'ruff.toml',
+        languages: ['python'],
+        limits: [
+            'cyclomatic_complexity',
+            'function_statements',
+            'function_parameters',
+            'function_branches',
+            'function_returns',
+        ],
+    },
+] as const;
 
 export const BUILT_IN_LIMIT_CASES = [
     {

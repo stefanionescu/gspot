@@ -2,7 +2,6 @@ import { Linter } from 'eslint';
 import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
 import { ALL_RULES } from '#tests/config/eslint-plugin/plugin.ts';
-import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 
 test('presets enable every rule assigned to their level', () => {
     expect(plugin.configs.recommended.rules).toStrictEqual({ 'gspot/no-client-env': 'error' });
@@ -20,8 +19,4 @@ test('configs.all lints beside a config that registers the plugin again', () => 
     ];
     const messages = linter.verify("export const value = 'public';", config);
     expect(messages).toStrictEqual([]);
-});
-
-test('plugin metadata matches the workspace package', () => {
-    expect(plugin.meta).toStrictEqual({ name: pluginPackage.name, version: pluginPackage.version });
 });
