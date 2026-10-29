@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
 import { readSettings } from '#cli/settings/read.ts';
@@ -9,7 +10,6 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { listNpmInstallFiles } from '#tests/setup/cli/tools.ts';
 import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
@@ -18,6 +18,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
+import { buildToolLockfiles, listNpmInstallFiles } from '#tests/setup/cli/tools.ts';
 import { API_SCOPE_FILES, TOOLS_CHANGED_NOTE, BASH_CONFIG_FILE_NAMES } from '#tests/config/commands/samples.ts';
 
 import {
@@ -255,4 +256,27 @@ test('removing automatically selected licenses records the choice for the next s
     expect(
         session.scopes.flatMap((scope) => scope.configurations.map((configuration) => configuration.name)),
     ).not.toContain('licenses');
+});
+
+test('remove after add says nothing about tools once the tool lockfiles match again', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
+    });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const session = await openSession(sandbox.path);
+    await createFileTree(sandbox.path, buildToolLockfiles(session.toolConfigurations));
+    const added = await runGspot(sandbox.path, ['add', 'bash', '--json']);
+    expect(added.code, added.stdout + added.stderr).toBe(0);
+    expect((JSON.parse(added.stdout) as ApplyReport).notes).toStrictEqual([TOOLS_CHANGED_NOTE]);
+    const removed = await runGspot(sandbox.path, [
+        'remove',
+        'bash',
+        '--reason',
+        'The scripts moved to another repository.',
+        '--json',
+    ]);
+    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    expect((JSON.parse(removed.stdout) as ApplyReport).notes).toStrictEqual([]);
 });

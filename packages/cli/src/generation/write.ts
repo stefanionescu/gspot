@@ -74,15 +74,10 @@ function deleteUnusedToolFolders(writer: Files, paths: ReadonlySet<string>, gene
 }
 
 async function addInstallationNote(session: Session, generated: Generation, report: ApplyReport): Promise<void> {
-    const dependenciesChanged = generated.files.some(
-        (file) => report.written.includes(file.path) && TOOL_PROJECT_FILES.includes(file.path),
-    );
-    if (dependenciesChanged) {
-        report.notes.push(TOOLS_CHANGED_NOTE);
-        return;
-    }
     const lockfiles = await listStaleLockfiles(session, generated.files);
-    if (lockfiles.length > 0) report.notes.push(STALE_LOCKFILE_NOTE);
+    if (lockfiles.length === 0) return;
+    const toolsChanged = report.written.some((path) => TOOL_PROJECT_FILES.includes(path));
+    report.notes.push(toolsChanged ? TOOLS_CHANGED_NOTE : STALE_LOCKFILE_NOTE);
 }
 
 function hasUnmanagedScanner(session: Session, writer: Files): boolean {
