@@ -173,3 +173,21 @@ test.each([...DOCKER_CASES])('$check reports $expected.file and passes after the
         buildExpectedSummary({ ...sample, expected }),
     );
 });
+
+test('Trivy skips a package without a Dockerfile beside a root Dockerfile', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docker'], { scopes: [{ path: 'app', configurations: [] }] }),
+        Dockerfile: ROOT_USER_DOCKERFILE.replace('USER root', 'USER node'),
+        'app/package.json': '{"name":"app","private":true}',
+    });
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
+    const result = parseCheckReport(
+        await spawnGspot(sandbox.path, ['check', '--only', 'docker/trivy-config', '--json']),
+    );
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+        { scope: '', status: 'passed' },
+        { scope: 'app', status: 'skipped' },
+    ]);
+    expect(result.report.checks[1]).toMatchObject({ note: 'No matching files.', cause: 'no-files' });
+});
