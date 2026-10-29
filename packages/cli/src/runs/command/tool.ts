@@ -8,7 +8,7 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import type { ProcessFailure, ToolRunOptions } from '#cli/types/tools/run.ts';
-import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
+import { foldVariableName, readWithheldVariables, readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { CheckTool, CheckToolOptions, CheckToolProgram, ToolProcessResult } from '#cli/types/runs/command.ts';
 
 function getCheckTool(
@@ -47,7 +47,8 @@ function findProcessFailure(result: SpawnResult, name: string, timeoutSeconds: n
 }
 
 /**
-Run a tool process and classify a failure.
+Run a tool process and classify a failure. The tool can run repository code, so it gets only the inherited variables
+that tools need, without credentials.
 
 @param commandArguments the executable and expanded arguments.
 @param options the process options and tool name for a failure note.
@@ -57,7 +58,10 @@ export async function runToolProcess(
     options: ToolRunOptions & { name: string },
 ): Promise<ToolProcessResult> {
     const { name, ...processOptions } = options;
-    const result = await runTool(commandArguments, processOptions);
+    const result = await runTool(commandArguments, {
+        ...processOptions,
+        env: { ...readWithheldVariables(), ...processOptions.env },
+    });
     return { result, failure: findProcessFailure(result, name, options.timeoutSeconds) };
 }
 
