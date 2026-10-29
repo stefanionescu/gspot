@@ -3,15 +3,18 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { join, delimiter } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
+import type { Pipeline } from '#cli/types/generation/ci.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation/ci.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
@@ -42,6 +45,15 @@ mise bin-paths node@24 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3' >> "$G
     expect(
         steps.filter((step) => step.env?.['MISE_GITHUB_TOKEN'] !== undefined).map((step) => step.name),
     ).toStrictEqual(['Install gspot', 'Install gspot tools']);
+});
+
+test.each<Partial<Pipeline>>([
+    { setupCommand: ['echo', '${{ secrets.DEPLOY_KEY }}'] },
+    { projectInstall: ['(cd ${{ github.head_ref }} && npm ci)'] },
+])('the GitHub workflow refuses a command that holds a GitHub expression', (fields) => {
+    expect(() => buildGithubWorkflow({ ...LINUX_PIPELINE, ...fields })).toThrow(
+        new GspotError('settings', GITHUB_EXPRESSION_MESSAGE),
+    );
 });
 
 test('GitLab installs gspot once, adds its bins to PATH, and checks the comparison revision', () => {

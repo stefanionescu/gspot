@@ -1,3 +1,4 @@
+import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { getUvPin } from '#cli/configurations/tools.ts';
@@ -48,7 +49,9 @@ import {
     GITHUB_PUSH_CONDITION,
     MISE_TOKEN_ENVIRONMENT,
     GITHUB_BASE_EXPRESSION,
+    GITHUB_EXPRESSION_START,
     CI_CACHE_MISS_CONDITION,
+    GITHUB_EXPRESSION_MESSAGE,
 } from '#cli/config/generation/ci.ts';
 
 function buildActionPin({ name, sha, version }: ActionPin): Scalar {
@@ -136,11 +139,15 @@ function spaceWorkflowGroups(workflow: Document): void {
 }
 
 /**
-Build one lint job for each system, each with one mise setup.
+Build one lint job for each system, each with one mise setup. Refuse a command from the repository that holds a
+GitHub expression: GitHub expands it before the shell runs.
 
 @param pipeline what the workflow runs.
 */
 export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
+    const commands = [...(pipeline.setupCommand ?? []), ...pipeline.projectInstall, buildGspotTools(pipeline)];
+    if (commands.some((command) => command.includes(GITHUB_EXPRESSION_START)))
+        throw new GspotError('settings', GITHUB_EXPRESSION_MESSAGE);
     const platforms = [...new Set([...pipeline.operatingSystems, ...(pipeline.hasSwift ? (['macos'] as const) : [])])];
     const jobs = platforms.map((platform): [string, Record<string, unknown>] =>
         platforms.length === 1

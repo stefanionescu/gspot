@@ -139,3 +139,8 @@ export const CI_DIFF_LINES = ['git add --intent-to-add -- .gspot', 'git diff --e
 export const CI_INSTALL_COMMAND = 'gspot install';
 
 export const CI_CHECK_COMMAND = `gspot check --changed "\${${CI_BASE_VARIABLE}}"`;
+
+export const GITHUB_EXPRESSION_START = '${{';
+
+export const GITHUB_EXPRESSION_MESSAGE =
+    'GitHub expands "${{" in a workflow command before the shell runs it. Remove "${{" from ci.setup_command and from the scope paths.';
