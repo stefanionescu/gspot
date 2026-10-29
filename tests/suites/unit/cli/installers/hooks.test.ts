@@ -191,3 +191,14 @@ test('with hooks off, install unsets an absolute core.hooksPath that names the g
     expect(steps).toStrictEqual([['git', 'config', '--unset', 'core.hooksPath']]);
     expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
 });
+
+test('hooks already set to .gspot/hooks need no command or note', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
+    });
+    runGitStep(sandbox.path, ['config', 'core.hooksPath', GSPOT_PATHS.hooks]);
+    const steps: (readonly string[])[] = [];
+    expect(installHooks(await openSession(sandbox.path), steps)).toBe('');
+    expect(steps).toStrictEqual([]);
+    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
+});

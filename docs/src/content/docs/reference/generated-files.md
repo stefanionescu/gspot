@@ -26,6 +26,9 @@ Change `gspot.toml`, then run `gspot apply`; gspot writes every generated file f
 | Keys in your own files, such as `install.security.scanner` in `bunfig.toml` and tool keys in `package.json`          | Install options. The other keys stay yours.                                                                                                                                                                                                                                                      | Yes    |
 | `.gspot/node_modules/`, `.gspot/.venv/`, `.gspot/vale/`, `.gspot/state/`, `.gspot/.yarnrc-install.yml`               | Installed tools, run state, and install settings. `.gitignore` keeps them out of Git.                                                                                                                                                                                                            | No     |
 
+`gspot install` records successful npm and Vale installs in `.gspot/state/install.json`. It uses this local record to
+skip unchanged installs. Git ignores the record.
+
 The managed block of `AGENTS.md` lists your repository's generated files and the keys gspot sets. Run `gspot install` in each new clone.
 
 The generated-file lists in `.prettierignore`, `.gitattributes`, and `AGENTS.md` include generated pointers and the enabled CI workflow.

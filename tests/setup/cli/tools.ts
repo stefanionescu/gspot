@@ -8,6 +8,7 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { RuntimePins } from '#tests/types/runner.ts';
 import { runtimePinsSchema } from '#tests/schemas/runner.ts';
+import { readInstallRecord } from '#cli/installers/record.ts';
 import { TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
@@ -54,6 +55,7 @@ export function buildToolInstall(session: Session, writer: Files): ToolInstall {
     const pins = listToolProjectPins(session.toolConfigurations);
     return {
         session,
+        record: readInstallRecord(session),
         packageManager: readInstallPackageManager(session),
         minimumReleaseAge: {
             days: getTable(findRootScope(session.scopes).settings, 'dependencies').min_release_age_days,

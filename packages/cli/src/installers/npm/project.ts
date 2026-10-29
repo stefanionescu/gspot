@@ -6,6 +6,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { runInstallStep } from '#cli/installers/steps.ts';
 import { VERSION_FLAG } from '#cli/config/tools/versions.ts';
 import { rmSync, readFileSync, writeFileSync } from 'node:fs';
+import type { FileContents } from '#cli/types/system/files.ts';
 import { YARN_SETTINGS_FILE } from '#cli/config/files/names.ts';
 import { writeYarnSettings } from '#cli/installers/npm/yarn.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
@@ -15,6 +16,7 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/installers/npm/yarn.ts';
+import { buildInstallKey, recordInstalledProject } from '#cli/installers/record.ts';
 import { buildPackageManagerCommand } from '#cli/repository/npm/package-manager.ts';
 import { writeNpmrc, extractRegistryCredentials } from '#cli/installers/npm/registry.ts';
 import { prepareReleaseAge, writeBunReleaseAge } from '#cli/installers/npm/release-age.ts';
@@ -166,7 +168,19 @@ Install the npm tool project in .gspot.
 export async function installNpmTools(install: NpmToolInstall): Promise<string> {
     const { root, toolConfigurations } = install.session;
     const packageManager = install.packageManager;
-    install.writer.deleteTree(GSPOT_PATHS.nodeModules);
+    const key =
+        packageManager.name === 'npm'
+            ? buildInstallKey([
+                  `${packageManager.name}@${packageManager.version}`,
+                  (install.writer.read(`${GSPOT_FOLDER}/package-lock.json`) as FileContents).bytes,
+              ])
+            : undefined;
+    if (
+        key !== undefined &&
+        install.record.npm === key &&
+        install.writer.readStats(GSPOT_PATHS.nodeModules)?.isDirectory() === true
+    )
+        return '';
     await runPackageManager(install, {
         runFolder: join(root, GSPOT_FOLDER),
         packageManager,
@@ -174,6 +188,7 @@ export async function installNpmTools(install: NpmToolInstall): Promise<string> 
         failure: 'installation failed',
         env: install.registryEnvironment,
     });
+    if (key !== undefined) recordInstalledProject(install, 'npm', key);
     const count = Object.keys(listToolProjectPins(toolConfigurations).npm).length;
     return `installed ${formatCount(count, 'npm tool')} in ${GSPOT_PATHS.nodeModules} (${packageManager.name} ${packageManager.version})`;
 }

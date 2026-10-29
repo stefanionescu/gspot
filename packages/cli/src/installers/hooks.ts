@@ -60,6 +60,7 @@ function planHooks(session: Session): HookPlan {
         return readHooksPath(repository.root) === GSPOT_PATHS.hooks
             ? { command: UNSET_HOOKS_PATH, note: 'disabled hooks: unset core.hooksPath' }
             : { note: '' };
+    if (readHooksPath(repository.root) === GSPOT_PATHS.hooks) return { note: '' };
     const foreign = readForeignHooks(repository.root);
     if (foreign.length > 0) return { note: formatForeignHooks(foreign, session) };
     return {

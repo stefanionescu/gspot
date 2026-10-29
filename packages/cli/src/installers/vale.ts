@@ -12,6 +12,7 @@ import { runRequiredInstallStep } from '#cli/installers/steps.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
+import { buildInstallKey, recordInstalledProject } from '#cli/installers/record.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
 
 import {
@@ -83,6 +84,9 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     const level = session.settings.level;
     const usesVale = session.toolConfigurations.some(({ tools }) => tools.some((tool) => tool.name === VALE_TOOL));
     if (level === 'recommended' || !usesVale) return '';
+    const key = buildInstallKey([level, JSON.stringify(VALE_PACKAGE_RELEASES)]);
+    if (install.record.vale === key && install.writer.readStats(GSPOT_PATHS.valePackages)?.isDirectory() === true)
+        return '';
     const tool = getTool(session.toolConfigurations, VALE_TOOL);
     const available = buildToolAvailability(tool, inspectTool({ ...session, miseBinPaths }, tool));
     if ('status' in available) throw new GspotError('tool', available.note);
@@ -104,6 +108,7 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
         await runRequiredInstallStep(install, command, { cwd: dirname(config), name: 'Vale sync' });
         files.deleteTree(GSPOT_PATHS.valePackages);
         renameSync(join(temporary, GSPOT_PATHS.valePackages), join(root, GSPOT_PATHS.valePackages));
+        recordInstalledProject(install, 'vale', key);
         return `installed Vale packages in ${GSPOT_PATHS.valePackages}`;
     } finally {
         rmSync(temporary, { recursive: true, force: true });

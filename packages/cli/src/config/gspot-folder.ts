@@ -16,6 +16,7 @@ export const GSPOT_PATHS = {
     configurations: `${GSPOT_FOLDER}/configurations`,
     hooks: `${GSPOT_FOLDER}/hooks`,
     state: `${GSPOT_FOLDER}/state`,
+    installRecord: `${GSPOT_FOLDER}/state/install.json`,
     versionPin: `${GSPOT_FOLDER}/version`,
     settingsSchema: `${GSPOT_FOLDER}/${SCHEMA_FILE}`,
     miseProject: `${GSPOT_FOLDER}/${MISE_CONFIG_FILE}`,

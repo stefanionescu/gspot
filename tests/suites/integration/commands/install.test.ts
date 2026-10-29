@@ -7,6 +7,7 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
+import type { InstallCommandJson } from '#cli/types/commands/install.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/samples.ts';
 import { runGit, commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
@@ -71,3 +72,24 @@ test.each([true, false])(
         expect(runGit(sandbox.path, ['rev-parse', '--verify', 'HEAD'])).toStrictEqual(head);
     },
 );
+
+test('a repeated npm install skips npm ci and keeps modules with the registry offline', async () => {
+    await using sandbox = await createNpmProject('npm', 'package.json');
+    const { root, registry } = sandbox;
+    const first = await spawnGspot(root, ['install']);
+    expect(first.code, first.stdout + first.stderr).toBe(0);
+    const record = await readFile(join(root, GSPOT_PATHS.installRecord), 'utf8');
+    const marker = join(root, GSPOT_PATHS.nodeModules, 'keep.txt');
+    await writeFile(marker, 'installed modules');
+    const requests = registry.requests;
+    for (const online of [true, false]) {
+        if (!online) registry[Symbol.dispose]();
+        const next = await spawnGspot(root, ['install', '--json']);
+        expect(next.code, next.stdout + next.stderr).toBe(0);
+        const result = JSON.parse(next.stdout) as InstallCommandJson;
+        expect(result.steps.filter((step) => step.includes('ci'))).toStrictEqual([]);
+        expect(registry.requests).toBe(requests);
+        expect(await readFile(join(root, GSPOT_PATHS.installRecord), 'utf8')).toBe(record);
+        expect(await readFile(marker, 'utf8')).toBe('installed modules');
+    }
+});

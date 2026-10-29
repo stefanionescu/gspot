@@ -87,7 +87,7 @@ and prints the install command. `gspot init` refuses to run where `gspot.toml` e
 </Tabs>
 
 `gspot install` installs the tools and turns on hooks in this clone. If it changes a lockfile under `.gspot/`, commit
-that file.
+that file. A second run skips `npm ci` and the Vale download when their inputs and installed folders have not changed.
 
 ## A hold on new releases
 

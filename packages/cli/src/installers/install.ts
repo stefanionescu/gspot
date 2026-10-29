@@ -5,6 +5,7 @@ import { MISE_TOOL } from '#cli/config/tools/locate.ts';
 import { installHooks } from '#cli/installers/hooks.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { installMiseTools } from '#cli/installers/mise.ts';
+import { readInstallRecord } from '#cli/installers/record.ts';
 import { installValePackages } from '#cli/installers/vale.ts';
 import { installToolProjects } from '#cli/installers/projects.ts';
 import { getTable, findRootScope } from '#cli/settings/scopes.ts';
@@ -49,6 +50,7 @@ export async function installTools(
     try {
         const context: ToolInstall = {
             session,
+            record: readInstallRecord(session),
             packageManager: readInstallPackageManager(session),
             minimumReleaseAge: {
                 days: getTable(findRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
