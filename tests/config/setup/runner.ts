@@ -18,7 +18,7 @@ export const UPSTREAM_REGISTRY = 'https://registry.npmjs.org/';
 
 export const PACKED_PACKAGES_FILE = 'packages.json';
 
-export const TEST_TIMEOUT_MILLISECONDS = 900_000;
+export const TEST_TIMEOUT_MILLISECONDS = 360_000;
 
 export const UNIT_TEST_TIMEOUT_MILLISECONDS = 60_000;
 
