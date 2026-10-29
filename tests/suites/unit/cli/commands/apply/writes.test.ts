@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { type ApplyReport } from '#cli/types/generation/files.ts';
+import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { UPDATED_AGENTS } from '#tests/config/commands/contents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -143,6 +143,20 @@ test('removing rules from a fresh clone removes the managed AGENTS.md block', as
     expect(removed.stdout).toContain(UPDATED_AGENTS);
     expect(removed.stdout).not.toContain('removed  AGENTS.md');
     expect(await readFile(join(checkout, 'AGENTS.md'), 'utf8')).toBe(authored);
+});
+
+test('apply counts the generated files in .gspot/ and names each file it writes outside it', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': FORMAT_SETTINGS, 'sample.json': '{"value":1}\n' });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const tree = await readTree(join(sandbox.path, GSPOT_FOLDER));
+    const gspotFiles = Object.values(tree).filter((description) => description.includes(':file:'));
+    expect(applied.stdout.split('\n').filter((line) => line.startsWith('wrote '))).toStrictEqual([
+        `wrote    ${String(gspotFiles.length)} generated files in .gspot/`,
+        'wrote    .editorconfig',
+        'wrote    .prettierignore',
+        'wrote    prettier.config.mjs',
+    ]);
 });
 
 test('an ignore of every path skips the check and keeps its configured tool and files', async () => {

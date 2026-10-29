@@ -165,7 +165,7 @@ function formatGeneratedChanges(action: string, paths: string[]): string[] {
     const outside = action === 'removed' ? paths : paths.filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
     const label = action.padEnd('updated  '.length);
     return [
-        ...(gspotCount === 0 ? [] : [`${label}${formatCount(gspotCount, GENERATED_FILE_NOUN)}`]),
+        ...(gspotCount === 0 ? [] : [`${label}${formatCount(gspotCount, GENERATED_FILE_NOUN)} in ${GSPOT_FOLDER}/`]),
         ...outside.map((path) => `${label}${path}`),
     ];
 }

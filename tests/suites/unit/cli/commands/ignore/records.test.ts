@@ -142,7 +142,7 @@ test('ignore merges matching paths, keeps different reasons apart, and a record 
     const removed = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2312']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(removed.stdout).toBe(
-        'Removed 2 ignores for rule SC2312 of bash/shellcheck.\nwrote    1 generated file\nnote     The tool lockfile is missing or stale. Run gspot install; until then gspot/generated-files fails on it.\n',
+        'Removed 2 ignores for rule SC2312 of bash/shellcheck.\nwrote    1 generated file in .gspot/\nnote     The tool lockfile is missing or stale. Run gspot install; until then gspot/generated-files fails on it.\n',
     );
     expect(parse(await readFile(settingsPath, 'utf8'))).not.toHaveProperty('ignore');
 });
