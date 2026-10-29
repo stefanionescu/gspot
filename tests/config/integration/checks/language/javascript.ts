@@ -229,3 +229,10 @@ export const DEBUGGER_SAMPLE = {
     expected: { file: 'src/paused.js', line: 11, rule: 'no-debugger' },
     corrected: { files: { 'src/paused.js': JAVASCRIPT_MODULE } },
 };
+
+export const KNIP_FOLDER_FILES = {
+    'package.json': '{"name":"root","private":true,"type":"module","main":"index.js"}',
+    'index.js': 'import "./docs/index.js";\n',
+    'docs/package.json': '{"name":"docs","private":true,"type":"module","main":"index.js"}',
+    'docs/index.js': 'console.log("docs");\n',
+} as const;

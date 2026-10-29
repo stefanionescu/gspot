@@ -95,6 +95,7 @@ export const GENERATE_ARGUMENTS = [process.execPath, 'generate.ts', '', 'two wor
 export const WORKSPACE_SCOPE_CASES = [
     { scope: '', expected: [] },
     { scope: 'package', expected: ['--workspace', 'package'] },
+    { scope: 'docs', expected: ['--directory', 'docs'] },
     { scope: 'source', expected: [] },
 ] as const;
 

@@ -8,6 +8,7 @@ import type { ConfigFile } from '#cli/types/configurations.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
+import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
@@ -68,7 +69,7 @@ function expandArgument(
 ): CommandArgument[] {
     if (argument === FILES_PLACEHOLDER) return substitutions.files;
     if (argument === FILE_PLACEHOLDER) return [{ file: true }];
-    const workspace = WORKSPACE_PLACEHOLDER.exec(argument)?.groups?.['name'];
+    const workspace = WORKSPACE_PLACEHOLDER.exec(argument)?.[1];
     if (workspace !== undefined) {
         if (
             substitutions.scope === '' ||
@@ -76,7 +77,10 @@ function expandArgument(
                 undefined
         )
             return [];
-        return [workspace, substitutions.scope];
+        return [
+            listWorkspaceFolders(substitutions.root).includes(substitutions.scope) ? workspace : '--directory',
+            substitutions.scope,
+        ];
     }
     return [replacePlaceholders(session, planned, argument, substitutions)];
 }

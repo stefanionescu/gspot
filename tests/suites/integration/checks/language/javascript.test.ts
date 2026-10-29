@@ -23,6 +23,7 @@ import {
     ESLINT_SANDBOX,
     DEBUGGER_SAMPLE,
     JSCONFIG_SANDBOX,
+    KNIP_FOLDER_FILES,
     OWN_TYPESCRIPT_RESULTS,
     IMPORTED_AMBIENT_FILES,
     AUTHORED_JSCONFIG_CASES,
@@ -258,4 +259,23 @@ const eslintSandbox = shareInstalledSandbox(ESLINT_SANDBOX);
 
 test('javascript/eslint lints a project that has no TypeScript', async () => {
     expect(await runCheckSample(eslintSandbox(), DEBUGGER_SAMPLE)).toStrictEqual(buildExpectedSummary(DEBUGGER_SAMPLE));
+});
+
+test('Knip checks an independent package with directory instead of workspace', async () => {
+    const { root } = installedSandbox();
+    await using _changes = await applySandboxChanges(
+        installedSandbox(),
+        buildSandboxChanges(JSCONFIG_SANDBOX.files, {
+            'gspot.toml': buildSandboxSettings(['javascript'], { scopes: [{ path: 'docs', configurations: [] }] }),
+            ...KNIP_FOLDER_FILES,
+        }),
+    );
+    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'javascript/knip', '--json']));
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+        { scope: '', status: 'passed' },
+        { scope: 'docs', status: 'passed' },
+    ]);
+    expect(result.report.checks[1]?.command).toContain('--directory');
+    expect(result.report.checks[1]?.command).not.toContain('--workspace');
 });

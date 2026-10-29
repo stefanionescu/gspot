@@ -75,8 +75,9 @@ test.each([...WORKSPACE_SCOPE_CASES])(
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['swift']),
             'Example.swift': 'let example = 1\n',
-            'package.json': '{}',
-            'package/package.json': '{}',
+            'package.json': '{"workspaces":["package"]}',
+            'package/package.json': '{"name":"workspace"}',
+            'docs/package.json': '{"name":"docs"}',
             'source/Example.swift': 'let source = 2\n',
         });
 
