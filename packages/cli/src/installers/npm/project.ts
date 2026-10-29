@@ -3,19 +3,16 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { runInstallStep } from '#cli/installers/steps.ts';
 import { VERSION_FLAG } from '#cli/config/tools/versions.ts';
-import { rmSync, readFileSync, writeFileSync } from 'node:fs';
 import type { FileContents } from '#cli/types/system/files.ts';
-import { YARN_SETTINGS_FILE } from '#cli/config/files/names.ts';
-import { writeYarnSettings } from '#cli/installers/npm/yarn.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/installers/npm/yarn.ts';
 import { buildInstallKey, recordInstalledProject } from '#cli/installers/record.ts';
 import { buildPackageManagerCommand } from '#cli/repository/npm/package-manager.ts';
 import { writeNpmrc, extractRegistryCredentials } from '#cli/installers/npm/registry.ts';
@@ -28,16 +25,14 @@ import {
     NODE_TOOL,
     NPMRC_FILE,
     NPM_SETTING_PREFIX,
-    YARN_ENABLE_SCRIPTS,
     RELEASE_AGE_VERSIONS,
     PACKAGE_MANAGER_ARGUMENTS,
     NPM_CONFIG_FOLDER_VARIABLE,
-    YARN_SETTINGS_FILE_VARIABLE,
 } from '#cli/config/installers/npm/project.ts';
 
 async function createNpmLockfile(
     install: NpmToolInstall,
-    { toolProjectFile, lockfile, yarn }: { toolProjectFile: GeneratedFile; lockfile: string; yarn: string | undefined },
+    { toolProjectFile, lockfile }: { toolProjectFile: GeneratedFile; lockfile: string },
 ): Promise<string> {
     const packageManager = install.packageManager;
     if (which.sync(NODE_TOOL, { nothrow: true }) === null)
@@ -45,7 +40,6 @@ async function createNpmLockfile(
     using scratch = createTemporaryFolder();
     const runFolder = scratch.path;
     writeFileSync(join(runFolder, PACKAGE_JSON), toolProjectFile.content);
-    if (yarn !== undefined) writeFileSync(join(runFolder, YARN_SETTINGS_FILE), yarn);
     const lockfileArguments = PACKAGE_MANAGER_ARGUMENTS[packageManager.name].lockfile;
     const run = await runPackageManager(install, {
         runFolder,
@@ -68,31 +62,22 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerRe
     const env = { ...request.env };
     const credentials = extractRegistryCredentials(env);
     using settings = createTemporaryFolder();
-    try {
-        writeNpmrc(settings.path, env);
-        env[`${NPM_SETTING_PREFIX}userconfig`] = join(settings.path, NPMRC_FILE);
-        env[NPM_CONFIG_FOLDER_VARIABLE] = settings.path;
-        if (packageManager.name === 'yarn') {
-            env[YARN_ENABLE_SCRIPTS] = '0';
-            credentials.push(...(await writeYarnSettings(install, runFolder, env)));
-            env[YARN_SETTINGS_FILE_VARIABLE] = YARN_INSTALL_SETTINGS_FILE;
-        }
-        const args =
-            packageManager.name === 'bun'
-                ? [...commandArguments, `--config=${writeBunReleaseAge(settings.path, install.minimumReleaseAge)}`]
-                : commandArguments;
-        const command = buildPackageManagerCommand(packageManager.command, args);
-        const result = await runInstallStep(install, command, { cwd: runFolder, env });
-        if (result.code !== 0) {
-            throw new GspotError(
-                'install',
-                `${packageManager.name} ${failure} (exit ${String(result.code)}).\n${redactInstallOutput(result, credentials)}`,
-            );
-        }
-        return { env, credentials };
-    } finally {
-        rmSync(join(runFolder, YARN_INSTALL_SETTINGS_FILE), { force: true });
+    writeNpmrc(settings.path, env);
+    env[`${NPM_SETTING_PREFIX}userconfig`] = join(settings.path, NPMRC_FILE);
+    env[NPM_CONFIG_FOLDER_VARIABLE] = settings.path;
+    const args =
+        packageManager.name === 'bun'
+            ? [...commandArguments, `--config=${writeBunReleaseAge(settings.path, install.minimumReleaseAge)}`]
+            : commandArguments;
+    const command = buildPackageManagerCommand(packageManager.command, args);
+    const result = await runInstallStep(install, command, { cwd: runFolder, env });
+    if (result.code !== 0) {
+        throw new GspotError(
+            'install',
+            `${packageManager.name} ${failure} (exit ${String(result.code)}).\n${redactInstallOutput(result, credentials)}`,
+        );
     }
+    return { env, credentials };
 }
 
 /**
@@ -131,14 +116,12 @@ Prepare the npm tool project lockfile, free of credentials.
 
 @param install what install needs for this step.
 @param toolProjectFile the generated package.json.
-@param yarn the generated Yarn settings text, if any.
 
 @returns the lockfile and its recorded bytes.
 */
 export async function prepareNpmLockfile(
     install: NpmToolInstall,
     toolProjectFile: GeneratedFile,
-    yarn: string | undefined,
 ): Promise<GeneratedFile> {
     const { packageManager, registryEnvironment } = install;
     const lockfile = selectLockfileName(packageManager.name);
@@ -155,7 +138,7 @@ export async function prepareNpmLockfile(
         if (isLockfileFresh(packageManager.name, saved, dependencies, registryEnvironment))
             return { path, content: saved, kind: 'lock', read: previous };
     }
-    const content = await createNpmLockfile(install, { toolProjectFile, lockfile, yarn });
+    const content = await createNpmLockfile(install, { toolProjectFile, lockfile });
     return { path, content, kind: 'lock', read: previous };
 }
 

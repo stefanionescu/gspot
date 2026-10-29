@@ -6,7 +6,6 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { parseJsonFindings } from '#cli/runs/output/json.ts';
 import { parseKnipFindings } from '#cli/runs/output/knip.ts';
-import { parseSarifFindings } from '#cli/runs/output/sarif.ts';
 import { parseTyposFindings } from '#cli/runs/output/typos.ts';
 import { DRIVE_LETTER } from '#cli/config/files/path-patterns.ts';
 import { parseSemgrepFindings } from '#cli/runs/output/semgrep.ts';
@@ -46,7 +45,6 @@ export const outputFormats = {
         parse: parseJsonFindings,
         namesFiles: (output) => output.fields?.file !== undefined,
     },
-    sarif: { parse: parseSarifFindings, namesFiles: () => true },
     typos: { parse: parseTyposFindings, namesFiles: () => true },
     taplo: {
         parse: (output) => TAPLO_OUTPUTS.flatMap((format) => parseRegexFindings({ ...output, output: format })),

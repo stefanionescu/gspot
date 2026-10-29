@@ -90,8 +90,7 @@ export async function createNpmProject(
         artifacts,
         registry,
         ...authored,
-        toolPackageManager:
-            packageManager === 'yarn' && authored.yarnConfiguration === undefined ? 'npm' : packageManager,
+        toolPackageManager: packageManager === 'yarn' ? 'npm' : packageManager,
         [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned),
     };
 }

@@ -161,27 +161,7 @@ export function readPackageManagerVersion(
 }
 
 /**
-Select the tool-project manager name without querying unrelated package managers.
-
-@param root the folder for a Yarn version query.
-@param packageManager the repository package manager pin.
-@param timeoutSeconds the version query limit.
-@param reads the run cache for resolved versions.
-@returns npm for Yarn Classic, or the selected manager name.
-*/
-export function selectToolPackageManager(
-    root: string,
-    packageManager: PackageManagerPin,
-    timeoutSeconds: number,
-    reads: ReadCache,
-): PackageManager['name'] {
-    if (packageManager.name !== 'yarn') return packageManager.name;
-    const selected = readPackageManagerVersion(root, packageManager, timeoutSeconds, reads);
-    return isYarnBerry(selected) ? 'yarn' : NPM_TOOL;
-}
-
-/**
-Resolve a package manager for the tool project, using npm when the repository pins Yarn 1.
+Resolve a package manager for the tool project, using npm for every Yarn repository.
 
 @param root the folder for a version query.
 @param packageManager the repository package manager pin.
@@ -194,10 +174,10 @@ export function readToolPackageManager(
     packageManager: PackageManagerPin,
     timeoutSeconds: number,
     reads: ReadCache,
-): PackageManager {
-    const name = selectToolPackageManager(root, packageManager, timeoutSeconds, reads);
+): PackageManager & { name: Exclude<PackageManager['name'], 'yarn'> } {
+    const name = packageManager.name === 'yarn' ? NPM_TOOL : packageManager.name;
     const selected = name === packageManager.name ? packageManager : { name };
-    return readPackageManagerVersion(root, selected, timeoutSeconds, reads);
+    return { ...readPackageManagerVersion(root, selected, timeoutSeconds, reads), name };
 }
 
 /**

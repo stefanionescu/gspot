@@ -22,8 +22,6 @@ export const PACKAGE_MANAGER_AGE_CASES = [
     { name: 'pnpm', version: '10.16.0', minimum: '10.16.0', accepted: true },
     { name: 'bun', version: '1.2.22', minimum: '1.3.0', accepted: false },
     { name: 'bun', version: '1.3.0', minimum: '1.3.0', accepted: true },
-    { name: 'yarn', version: '4.9.0', minimum: '4.10.0', accepted: false },
-    { name: 'yarn', version: '4.10.0', minimum: '4.10.0', accepted: true },
 ];
 
 const CREDENTIAL_TOKEN = 'synthetic-generated-lockfile-token';

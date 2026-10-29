@@ -7,7 +7,10 @@ import type { PackageManager, PackageManagerCommand } from '#cli/types/repositor
 
 export type InstallResult = { note: string; steps: readonly (readonly string[])[] };
 
-export type ToolPackageManager = PackageManager & { command: PackageManagerCommand };
+export type ToolPackageManager = PackageManager & {
+    name: Exclude<PackageManager['name'], 'yarn'>;
+    command: PackageManagerCommand;
+};
 
 export type MinimumReleaseAge = { days: number; npmExclusions: string[]; pythonExclusions: string[] };
 

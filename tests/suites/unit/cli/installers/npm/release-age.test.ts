@@ -58,12 +58,3 @@ test('a pnpm tool lockfile reads the hold from pnpm-workspace.yaml', async () =>
         minimumReleaseAgeExclude: MINIMUM_RELEASE_AGE.npmExclusions,
     });
 });
-
-test('a Yarn tool lockfile keeps its command and writes no settings file', async () => {
-    await using sandbox = await testdir();
-    const command = ['yarn', 'install', '--immutable'];
-    expect(
-        prepareReleaseAge(sandbox.path, command, { name: 'yarn', version: '4.14.1' }, MINIMUM_RELEASE_AGE),
-    ).toStrictEqual(command);
-    expect(await readdir(sandbox.path)).toStrictEqual([]);
-});

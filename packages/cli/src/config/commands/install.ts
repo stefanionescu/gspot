@@ -4,5 +4,4 @@ export const TOOL_PROJECT_FILES: ReadonlySet<string> = new Set([
     GSPOT_PATHS.miseProject,
     GSPOT_PATHS.npmProject,
     GSPOT_PATHS.pythonProject,
-    GSPOT_PATHS.yarnSettings,
 ]);

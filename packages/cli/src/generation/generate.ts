@@ -16,15 +16,14 @@ import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
-import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/installers/npm/yarn.ts';
 import { listWrittenPaths } from '#cli/generation/config-files/ignore-files.ts';
+import { GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { buildPointerFieldEdits } from '#cli/generation/config-files/pointers.ts';
+import { readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildBunScannerEdits } from '#cli/generation/configurations/general/dependencies.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { isConfigurationSelected, listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/installers/projects.ts';
-import { selectToolPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 
 import {
     buildGithubWorkflow,
@@ -95,7 +94,7 @@ function buildAttributesBlock(outsidePaths: string[], authored: string): string 
 
 function buildGitignoreBlock(): string {
     const toolProjectPaths = [...Object.values(INSTALLED_TOOL_FOLDERS), GSPOT_PATHS.state].map((path) => `${path}/`);
-    return [...toolProjectPaths, `${GSPOT_FOLDER}/${YARN_INSTALL_SETTINGS_FILE}`].join('\n');
+    return toolProjectPaths.join('\n');
 }
 
 function addManagedBlocks(session: Session, rules: RuleFile[], generated: GenerationResult): void {
@@ -139,7 +138,7 @@ Generate every file in memory, and write nothing.
 */
 export function generate(session: Session): GenerationResult {
     const { settings, scopes } = session;
-    const { toolsRoot, timeoutSeconds, reads, packageManager, toolConfigurations } = session;
+    const { packageManager, toolConfigurations } = session;
     const generated: GenerationResult = {
         files: [
             { path: GSPOT_PATHS.versionPin, content: cliPackage.version + '\n' },
@@ -161,12 +160,7 @@ export function generate(session: Session): GenerationResult {
         ...(settings.hooks?.enabled === true
             ? buildHookFiles(session.startRunner, listHookNames(session.configuredChecks))
             : []),
-        ...(packageManager === undefined
-            ? []
-            : buildNpmProject(
-                  toolConfigurations,
-                  selectToolPackageManager(toolsRoot, packageManager, timeoutSeconds, reads),
-              )),
+        ...(packageManager === undefined ? [] : buildNpmProject(toolConfigurations)),
         ...buildPythonProject(toolConfigurations, minimumAge),
         buildMiseProject(toolConfigurations),
     );

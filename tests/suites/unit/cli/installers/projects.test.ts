@@ -8,12 +8,12 @@ import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import type { ToolPackageJson } from '#cli/types/installers/npm.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import type { PythonToolProject } from '#cli/types/installers/projects.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
-import { buildNpmProject, listStaleLockfiles } from '#cli/installers/projects.ts';
 
 import {
     YARN_CLIENTS,
@@ -24,26 +24,29 @@ import {
     REACT_NATIVE_TSCONFIG,
 } from '#tests/config/installers/projects.ts';
 
-test('a Yarn 1 repository plans an npm tool lockfile without Yarn settings', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([]),
-        'package.json': '{"private":true,"packageManager":"yarn@1.22.22"}',
-    });
-    const run = processes.spawnProcessBlocking;
-    using _npmVersion = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
-        command[0] === 'npm' && command[1] === '--version'
-            ? buildProcessResult({ stdout: '11.19.0\n' })
-            : run(command, options),
-    );
-    const session = await openSession(sandbox.path);
-    const generated = generate(session);
-    expect(generated.files.some(({ path }) => path === GSPOT_PATHS.yarnSettings)).toBe(false);
-    const lockfiles = await listStaleLockfiles(session, generated.files);
-    expect(
-        lockfiles.filter(({ path }) => path !== GSPOT_PATHS.uvLockfile && path !== GSPOT_PATHS.miseLockfile),
-    ).toStrictEqual([{ path: '.gspot/package-lock.json', kind: 'missing' }]);
-    expect(session.packageManager).toStrictEqual({ name: 'yarn', version: '1.22.22' });
-});
+test.each([...YARN_CLIENTS])(
+    'Yarn $packageManager.version plans an npm tool lockfile without Yarn settings',
+    async ({ packageManager }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([]),
+            'package.json': JSON.stringify({ private: true, packageManager: `yarn@${packageManager.version}` }),
+        });
+        const run = processes.spawnProcessBlocking;
+        using _npmVersion = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
+            command[0] === 'npm' && command[1] === '--version'
+                ? buildProcessResult({ stdout: '11.19.0\n' })
+                : run(command, options),
+        );
+        const session = await openSession(sandbox.path);
+        const generated = generate(session);
+        expect(generated.files.some(({ path }) => path === '.gspot/.yarnrc.yml')).toBe(false);
+        const lockfiles = await listStaleLockfiles(session, generated.files);
+        expect(
+            lockfiles.filter(({ path }) => path !== GSPOT_PATHS.uvLockfile && path !== GSPOT_PATHS.miseLockfile),
+        ).toStrictEqual([{ path: '.gspot/package-lock.json', kind: 'missing' }]);
+        expect(session.packageManager).toStrictEqual(packageManager);
+    },
+);
 
 test.each([...STYLESHEET_CASES])(
     '$name installs postcss-html only when Stylelint reads Vue or Svelte styles',
@@ -106,23 +109,6 @@ test.each([...LICENSE_TOOL_CASES])(
                 dependency.startsWith('pip-licenses'),
             ),
         ).toBe(false);
-    },
-);
-
-test.each([...YARN_CLIENTS])(
-    'Yarn $packageManager.version gets the matching tool project settings',
-    ({ packageManager, settings }) => {
-        const files = buildNpmProject(
-            [],
-            Number(packageManager.version.split('.', 1)[0]) < 2 ? 'npm' : packageManager.name,
-        );
-        expect(files.map((file) => file.path)).toStrictEqual(
-            settings ? [GSPOT_PATHS.npmProject, GSPOT_PATHS.yarnSettings] : [GSPOT_PATHS.npmProject],
-        );
-        if (settings)
-            expect(files[1]!.content).toBe(
-                'nodeLinker: node-modules\nenableGlobalCache: true\ninstallStatePath: ./node_modules/.yarn-install-state.gz\n',
-            );
     },
 );
 

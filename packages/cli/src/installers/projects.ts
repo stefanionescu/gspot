@@ -20,11 +20,10 @@ import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import type { PythonIndexSettings } from '#cli/types/installers/pypi.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
-import { selectToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/installers/npm/project.ts';
 import { isLockfileFresh, selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
-import { NPM_TOOL_PROJECT, UV_PROJECT_TABLE, YARN_TOOL_PROJECT_SETTINGS } from '#cli/config/installers/projects.ts';
+import { NPM_TOOL_PROJECT, UV_PROJECT_TABLE } from '#cli/config/installers/projects.ts';
 
 import {
     readPythonSettings,
@@ -43,7 +42,7 @@ function readMiseLockfileState(files: Files, configurations: Session['toolConfig
 
 function readNpmLockfileState(
     files: Files,
-    name: PackageManager['name'],
+    name: Exclude<PackageManager['name'], 'yarn'>,
     configurations: Session['toolConfigurations'],
     env: Record<string, string>,
 ): StaleLockfile {
@@ -89,7 +88,7 @@ export async function listStaleLockfiles(
     const lockfiles: StaleLockfile[] = [];
     if (projects.has(GSPOT_PATHS.miseProject)) lockfiles.push(readMiseLockfileState(files, toolConfigurations));
     if (projects.has(GSPOT_PATHS.npmProject) && packageManager !== undefined) {
-        const name = selectToolPackageManager(session.toolsRoot, packageManager, session.timeoutSeconds, session.reads);
+        const name = packageManager.name === 'yarn' ? 'npm' : packageManager.name;
         lockfiles.push(readNpmLockfileState(files, name, toolConfigurations, await readRegistryEnvironment(root)));
     }
     if (projects.has(GSPOT_PATHS.pythonProject))
@@ -104,9 +103,8 @@ async function prepareLockfiles(
     const { files } = install.generated;
     const packages = files.find((file) => file.path === GSPOT_PATHS.npmProject);
     const python = files.find((file) => file.path === GSPOT_PATHS.pythonProject);
-    const yarn = files.find((file) => file.path === GSPOT_PATHS.yarnSettings)?.content;
     return [
-        ...(packages === undefined || npm === undefined ? [] : [await prepareNpmLockfile(npm, packages, yarn)]),
+        ...(packages === undefined || npm === undefined ? [] : [await prepareNpmLockfile(npm, packages)]),
         ...(python === undefined || uvPath === undefined ? [] : [await preparePythonLockfile(install, python, uvPath)]),
     ];
 }
@@ -181,14 +179,10 @@ export function buildMiseProject(configurations: Configuration[]): GeneratedFile
 Build the npm tools as a tool project, and add no dependencies to the repository.
 
 @param configurations the configurations with npm tools.
-@param packageManager the package manager of the tool project after mapping Yarn Classic to npm.
 
 @returns the tool project files.
 */
-export function buildNpmProject(
-    configurations: Configuration[],
-    packageManager: PackageManager['name'],
-): GeneratedFile[] {
+export function buildNpmProject(configurations: Configuration[]): GeneratedFile[] {
     const pins = listToolProjectPins(configurations).npm;
     const files: GeneratedFile[] = [
         {
@@ -203,11 +197,6 @@ export function buildNpmProject(
             )}\n`,
         },
     ];
-    if (packageManager === 'yarn')
-        files.push({
-            path: GSPOT_PATHS.yarnSettings,
-            content: YARN_TOOL_PROJECT_SETTINGS,
-        });
     return files;
 }
 

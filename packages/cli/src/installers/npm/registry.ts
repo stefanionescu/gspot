@@ -55,16 +55,7 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
     return merged;
 }
 
-/**
-Add a connection setting under an unused environment variable and return its reference.
-
-@param env the install variables that get the value.
-@param prefix the start of each variable name.
-@param value the connection setting kept out of generated files.
-
-@returns a package-manager environment reference.
-*/
-export function addEnvironmentReference(env: Record<string, string>, prefix: string, value: string): string {
+function addEnvironmentReference(env: Record<string, string>, prefix: string, value: string): string {
     let index = 0;
     while (Object.hasOwn(env, `${prefix}${String(index)}`)) index += 1;
     const name = `${prefix}${String(index)}`;

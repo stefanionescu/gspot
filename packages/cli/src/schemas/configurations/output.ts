@@ -15,9 +15,6 @@ export const outputSchema = z
                     description:
                         'Read a file heading matched by file_pattern, followed by findings matched by pattern.',
                 }),
-                z
-                    .literal('sarif')
-                    .meta({ description: 'Read SARIF results with their rule IDs and source locations.' }),
                 z.literal('knip').meta({ description: 'Read Knip JSON issue categories and source positions.' }),
                 z.literal('semgrep').meta({
                     description: 'Read Semgrep JSON results and source parse errors, with locations and rule IDs.',

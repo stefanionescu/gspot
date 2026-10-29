@@ -55,11 +55,9 @@ export const NEXT_REQUIREMENTS = [
 export const YARN_CLIENTS = [
     {
         packageManager: { name: 'yarn', version: '1.22.22' },
-        settings: false,
     },
     {
         packageManager: { name: 'yarn', version: '4.12.0' },
-        settings: true,
     },
 ] as const;
 

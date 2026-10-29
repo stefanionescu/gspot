@@ -5,7 +5,6 @@ import {
     NODE_MODULES,
     MISE_LOCK_FILE,
     MISE_CONFIG_FILE,
-    YARN_SETTINGS_FILE,
     PROJECT_UV_LOCKFILE,
     PYTHON_ENVIRONMENT_FOLDER,
 } from '#cli/config/files/names.ts';
@@ -23,7 +22,6 @@ export const GSPOT_PATHS = {
     miseLockfile: `${GSPOT_FOLDER}/${MISE_LOCK_FILE}`,
     npmProject: `${GSPOT_FOLDER}/package.json`,
     nodeModules: `${GSPOT_FOLDER}/${NODE_MODULES}`,
-    yarnSettings: `${GSPOT_FOLDER}/${YARN_SETTINGS_FILE}`,
     pythonProject: `${GSPOT_FOLDER}/pyproject.toml`,
     pythonEnvironment: `${GSPOT_FOLDER}/${PYTHON_ENVIRONMENT_FOLDER}`,
     uvLockfile: `${GSPOT_FOLDER}/${PROJECT_UV_LOCKFILE}`,

@@ -98,7 +98,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
 );
 
 test.each([...PACKAGE_MANAGER_CASES])(
-    '%s from %s keeps the authored package files and the lockfile, and a reinstall restores an edited config file',
+    '%s from %s keeps the authored package files and the lockfile, and a reinstall follows the tool manager',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
         const { root, rootPackage, yarnConfiguration, toolPackageManager } = sandbox;
@@ -107,8 +107,12 @@ test.each([...PACKAGE_MANAGER_CASES])(
         const installed = await spawnGspot(root, ['install']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         const version = await runCommand([toolPackageManager, '--version'], { cwd: root });
-        expect(installed.stdout.split('\n', 1)[0]).toBe(
-            `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${toolPackageManager} ${version.stdout.trim()})`,
+        expect(installed.stdout.split('\n').filter((line) => line.startsWith('installed 1 npm tool'))).toStrictEqual(
+            toolPackageManager === 'npm'
+                ? []
+                : [
+                      `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${toolPackageManager} ${version.stdout.trim()})`,
+                  ],
         );
         const workspace = join(root, 'pnpm-workspace.yaml');
         const yarnrc = join(root, '.yarnrc.yml');
@@ -136,7 +140,9 @@ test.each([...PACKAGE_MANAGER_CASES])(
         await writeFile(readmePath, 'authored later');
         const reinstalled = await spawnGspot(root, ['install']);
         expect(reinstalled.code, reinstalled.stdout + reinstalled.stderr).toBe(0);
-        expect(await readFile(readmePath)).toStrictEqual(readme);
+        expect(await readFile(readmePath)).toStrictEqual(
+            toolPackageManager === 'npm' ? Buffer.from('authored later') : readme,
+        );
         const readyTools = ['prettier', 'editorconfig-checker'];
         const diagnosed = await spawnGspot(root, ['doctor', '--json']);
         const report = JSON.parse(diagnosed.stdout) as DoctorReport;
@@ -168,8 +174,14 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
             const cloneInstall = await spawnGspot(clone, ['install']);
             expect(cloneInstall.code, cloneInstall.stdout + cloneInstall.stderr).toBe(0);
             const version = await runCommand([toolPackageManager, '--version'], { cwd: clone });
-            expect(cloneInstall.stdout.split('\n', 1)[0]).toBe(
-                `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${toolPackageManager} ${version.stdout.trim()})`,
+            expect(
+                cloneInstall.stdout.split('\n').filter((line) => line.startsWith('installed 1 npm tool')),
+            ).toStrictEqual(
+                round > 0 && toolPackageManager === 'npm'
+                    ? []
+                    : [
+                          `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${toolPackageManager} ${version.stdout.trim()})`,
+                      ],
             );
             const status = runGit(clone, ['status', '--porcelain']);
             expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });

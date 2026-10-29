@@ -71,7 +71,7 @@ test('every shipped npm and Python tool lockfile has only dated accepted advisor
     for (const project of projects) {
         const lockfile =
             project.path === GSPOT_PATHS.npmProject
-                ? await prepareNpmLockfile(install, project, undefined)
+                ? await prepareNpmLockfile(install, project)
                 : await preparePythonLockfile(install, project, uvPath);
         await writeFile(join(sandbox.path, lockfile.path), lockfile.content);
     }

@@ -12,7 +12,6 @@ import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { listOwnablePaths } from '#cli/generation/config-files/pointers.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
-import { selectToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/generation/outdated.ts';
 import { type OutdatedFile, type GenerationResult } from '#cli/types/generation/files.ts';
 
@@ -119,15 +118,15 @@ export function listExpectedPaths(
     generated: GenerationResult,
 ): Set<string> {
     const paths = new Set([...generated.files, ...generated.blocks, ...generated.managedKeys].map((file) => file.path));
-    const { packageManager, toolsRoot, timeoutSeconds, reads } = session;
+    const { packageManager } = session;
     const project = generated.files.find((file) => file.path === GSPOT_PATHS.npmProject);
     if (packageManager !== undefined && project !== undefined) {
-        const name = selectToolPackageManager(toolsRoot, packageManager, timeoutSeconds, reads);
+        const name = packageManager.name === 'yarn' ? 'npm' : packageManager.name;
         paths.add(`${GSPOT_FOLDER}/${selectLockfileName(name)}`);
     }
     for (const file of generated.files) {
         if (file.path === GSPOT_PATHS.miseProject) paths.add(GSPOT_PATHS.miseLockfile);
-        if (file.path === GSPOT_PATHS.pythonProject) paths.add(GSPOT_PATHS.uvLockfile);
+        else if (file.path === GSPOT_PATHS.pythonProject) paths.add(GSPOT_PATHS.uvLockfile);
     }
     return paths;
 }

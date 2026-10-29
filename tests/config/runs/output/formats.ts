@@ -10,7 +10,6 @@ export const CHECK_OUTPUTS = [
     { format: 'lines' },
     { format: 'none' },
     { format: 'json', fields: { file: 'file', line: 'line', rule: 'rule', message: 'message' } },
-    { format: 'sarif' },
     { format: 'knip' },
     { format: 'semgrep' },
     { format: 'typos' },
@@ -47,10 +46,6 @@ export const OUTPUT_PARSE_RESULTS = {
     json: {
         empty: { error: 'The command printed nothing; it should print a JSON report.' },
         foreign: { error: 'The output is not JSON. It starts with: not the output of any tool {' },
-    },
-    sarif: {
-        empty: { error: 'SARIF printed output that gspot cannot read.' },
-        foreign: { error: 'SARIF printed output that gspot cannot read.' },
     },
     knip: {
         empty: { error: 'Knip printed output that gspot cannot read.' },

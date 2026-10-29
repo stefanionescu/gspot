@@ -1,26 +1,5 @@
 import type { KNIP_ISSUE_MESSAGES } from '#cli/config/runs/output/knip.ts';
 
-export type SarifMessage = { text?: string | undefined };
-
-export type SarifRegion = { startLine?: number | undefined; startColumn?: number | undefined };
-
-export type SarifResultLocation = { physicalLocation?: SarifPhysicalLocation };
-
-export type SarifResult = {
-    ruleId?: string | undefined;
-    message?: SarifMessage | undefined;
-    locations?: SarifResultLocation[] | undefined;
-};
-
-export type SarifArtifact = { location?: SarifArtifactLocation | undefined };
-
-export type SarifNotification = { level?: string | undefined; message?: SarifMessage | undefined };
-
-export type SarifAnalysis = {
-    executionSuccessful?: boolean | undefined;
-    toolExecutionNotifications?: SarifNotification[] | undefined;
-};
-
 export type MarkdownlintResult = {
     fileName: string;
     lineNumber: number;
@@ -47,23 +26,6 @@ export type ReportedTypo = {
     line_num?: number | undefined;
 };
 
-export type SarifArtifactLocation = {
-    uri?: string | undefined;
-    uriBaseId?: string | undefined;
-    index?: number | undefined;
-};
-
-export type SarifPhysicalLocation =
-    | { artifactLocation?: SarifArtifactLocation | undefined; region?: SarifRegion | undefined }
-    | undefined;
-
-export type SarifRun = {
-    results: SarifResult[];
-    artifacts?: SarifArtifact[] | undefined;
-    originalUriBaseIds?: Record<string, SarifArtifactLocation> | undefined;
-    invocations?: SarifAnalysis[] | undefined;
-};
-
 export type SemgrepOutput = {
     results: { check_id: string; path: string; start: { line: number; col: number }; extra: { message: string } }[];
     errors: {
@@ -81,5 +43,3 @@ export type KnipSymbol = {
     line?: number | undefined;
     col?: number | undefined;
 };
-
-export type SarifLog = { version: '2.1.0'; runs: SarifRun[] };

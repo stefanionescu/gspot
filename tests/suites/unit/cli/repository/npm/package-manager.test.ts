@@ -14,8 +14,12 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { detectPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 
+import {
+    detectPackageManager,
+    readToolPackageManager,
+    readPackageManagerVersion,
+} from '#cli/repository/npm/package-manager.ts';
 import {
     NON_EXACT_PNPM_VERSIONS,
     PACKAGE_MANAGER_PIN_CASES,
@@ -124,4 +128,13 @@ test('a lockfile beside a later nested package selects its manager', async () =>
     expect(detectPackageManager(sandbox.path, ['web/package.json', 'apps/admin/package.json'])).toStrictEqual({
         name: 'pnpm',
     });
+});
+
+test.each(['1.22.22', '4.12.0', undefined])('Yarn %s uses npm without querying Yarn', async (version) => {
+    await using sandbox = await testdir();
+    using run = spyOn(processes, 'spawnProcessBlocking').mockReturnValue(buildProcessResult({ stdout: '11.19.0\n' }));
+    expect(
+        readToolPackageManager(sandbox.path, { name: 'yarn', version }, 30, createReadCache(sandbox.path)),
+    ).toStrictEqual({ name: 'npm', version: '11.19.0' });
+    expect(run.mock.calls.map(([command]) => command)).toStrictEqual([['npm', '--version']]);
 });

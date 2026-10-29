@@ -235,17 +235,8 @@ test('a fixed regex message needs an explicit fixable pattern to offer a fix', (
     ]);
 });
 
-test('an unsuccessful SARIF invocation becomes a refused-output note for its command', () => {
-    const check = { ...BASE_CHECK, command: [...BASE_CHECK.command], output: outputSchema.parse({ format: 'sarif' }) };
-    const stdout = JSON.stringify({
-        version: '2.1.0',
-        runs: [{ results: [], invocations: [{ executionSuccessful: false }] }],
-    });
-    expect(
-        parseCommandFindings({ check }, buildProcessResult({ stdout }), { root: '/repo', cwd: '/repo' }),
-    ).toStrictEqual({
-        note: 'SARIF reported an unsuccessful analysis.',
-    });
+test('the removed SARIF format is refused', () => {
+    expect(outputSchema.safeParse({ format: 'sarif' }).success).toBe(false);
 });
 
 test.each([...FIXABLE_FORMAT_CASES])('the %s formatter declares which output supports fixing', (name, stdout, file) => {

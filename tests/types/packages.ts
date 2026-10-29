@@ -1,5 +1,5 @@
 import type { Sandbox } from '#tests/types/sandbox.ts';
-import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
+import type { ToolPackageManager } from '#cli/types/installers/install.ts';
 
 export type GspotProject = AsyncDisposable & {
     root: string;
@@ -28,7 +28,7 @@ export type NpmProject = {
     registry: NpmRegistry;
     rootPackage: string;
     yarnConfiguration: string | undefined;
-    toolPackageManager: PackageManager['name'];
+    toolPackageManager: ToolPackageManager['name'];
     [Symbol.asyncDispose](): Promise<void>;
 };
 

@@ -39,5 +39,3 @@ export type ToolPackageJson = {
     private: true;
     devDependencies: Record<string, string>;
 };
-
-export type YarnSetting = { key: string };

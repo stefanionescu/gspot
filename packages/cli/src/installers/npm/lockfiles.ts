@@ -1,6 +1,5 @@
 import semver from 'semver';
 import { posix } from 'node:path';
-import { parseSyml } from '@yarnpkg/parsers';
 import { isDeepStrictEqual } from 'node:util';
 import { modify, applyEdits } from 'jsonc-parser';
 import { GspotError } from '#cli/system/errors.ts';
@@ -11,35 +10,20 @@ import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { NPM_SETTING_PREFIX } from '#cli/config/installers/npm/project.ts';
+import { bunLockSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
 import type { BunPackage, LockedTarball } from '#cli/types/installers/npm.ts';
 import type { DependencyMap } from '#cli/types/parsers/projects/dependencies.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
+import { INTEGRITY, LOCKFILE_WORKSPACE_KEYS } from '#cli/config/installers/npm/lockfiles.ts';
 import { PNPM_PEER_START, PNPM_ROOT_IMPORTER } from '#cli/config/parsers/projects/lockfiles.ts';
-import { bunLockSchema, yarnLockSchema, yarnPackageSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
-import type { Lockfile, YarnPackage, ToolProjectLockfileName } from '#cli/types/parsers/projects/lockfiles.ts';
-import { INTEGRITY, LOCKFILE_WORKSPACE_KEYS, YARN_DESCRIPTOR_SEPARATOR } from '#cli/config/installers/npm/lockfiles.ts';
+import type { Lockfile, ToolProjectLockfileName } from '#cli/types/parsers/projects/lockfiles.ts';
 
 import {
     bunPackageSchema,
     npmToolLockSchemas,
     npmToolPackageSchema,
     pnpmToolPackageSchema,
-} from '#cli/schemas/installers/npm/lockfiles.ts';
-
-function isYarnLockfileFresh(
-    yarnPackages: Record<string, { version?: string | undefined }>,
-    dependencies: DependencyMap,
-): boolean {
-    return Object.entries(dependencies).every(([dependency, version]) =>
-        Object.entries(yarnPackages).some(([descriptors, yarnPackage]) => {
-            const requested = new Set(descriptors.split(YARN_DESCRIPTOR_SEPARATOR));
-            return (
-                (requested.has(`${dependency}@${version}`) || requested.has(`${dependency}@npm:${version}`)) &&
-                yarnPackage.version === version
-            );
-        }),
-    );
-}
+} from '#cli/schemas/installers/npm.ts';
 
 function findPackageRegistry(name: string, env: Record<string, string>): string | undefined {
     const scope = name.startsWith('@') ? name.split('/', 1)[0] : undefined;
@@ -106,16 +90,6 @@ function parseToolLockfile(name: Exclude<PackageManager['name'], 'yarn'>, conten
     return name === 'pnpm'
         ? parseYamlFile<Record<string, unknown>>(path, content, schema)
         : parseJsonFile<Record<string, unknown>>(path, content, schema);
-}
-
-function parseYarnPackages(content: string): Record<string, YarnPackage> | undefined {
-    const parsed = yarnLockSchema.safeParse(parseSyml(content));
-    if (!parsed.success) return undefined;
-    const yarnPackages = Object.entries(parsed.data).map(
-        ([key, result]) => [key, yarnPackageSchema.safeParse(result)] as const,
-    );
-    if (yarnPackages.some(([, result]) => !result.success)) return undefined;
-    return Object.fromEntries(yarnPackages.flatMap(([key, result]) => (result.success ? [[key, result.data]] : [])));
 }
 
 function parseRootDependencies(
@@ -217,7 +191,7 @@ function isInvalidLockfile(error: unknown): boolean {
 
 /**
 Check whether a lockfile pins every generated dependency.
-npm, Bun, and pnpm must have no extra root dependencies; Yarn may keep extra entries.
+The root dependencies must match the generated tool project exactly.
 
 @param name the package manager that wrote the lockfile.
 @param content the lockfile text.
@@ -227,16 +201,12 @@ npm, Bun, and pnpm must have no extra root dependencies; Yarn may keep extra ent
 @returns true when the lockfile matches.
 */
 export function isLockfileFresh(
-    name: PackageManager['name'],
+    name: Exclude<PackageManager['name'], 'yarn'>,
     content: string,
     dependencies: DependencyMap,
     env: Record<string, string>,
 ): boolean {
     try {
-        if (name === 'yarn') {
-            const yarnPackages = parseYarnPackages(content);
-            return yarnPackages !== undefined && isYarnLockfileFresh(yarnPackages, dependencies);
-        }
         const document = parseToolLockfile(name, content);
         if (!isDeepStrictEqual(parseRootDependencies(name, document), dependencies)) return false;
         const validatePackages = { bun: isBunLockfileFresh, npm: isNpmLockfileFresh, pnpm: isPnpmLockfileFresh };
@@ -253,7 +223,7 @@ Select the lockfile name for the package manager of an npm tool project.
 @param packageManager the validated name.
 @returns the lockfile basename that LOCKFILES declares.
 */
-export function selectLockfileName(packageManager: PackageManager['name']): ToolProjectLockfileName {
+export function selectLockfileName(packageManager: Exclude<PackageManager['name'], 'yarn'>): ToolProjectLockfileName {
     return (
         LOCKFILES.filter((lockfile) => 'toolProject' in lockfile).find(
             (lockfile) => lockfile.packageManager === packageManager,

@@ -18,7 +18,6 @@ export const LOCKFILES = [
         file: 'yarn.lock',
         configuration: 'javascript',
         packageManager: 'yarn',
-        toolProject: true,
         copied: true,
     },
     {

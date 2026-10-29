@@ -8,7 +8,7 @@ import { MINUTES_PER_DAY, SECONDS_PER_DAY, RELEASE_AGE_FILES } from '#cli/config
 
 /**
 Add the minimum release age to the lockfile run of the tool project. npm takes flags, and pnpm reads a settings file in
-the folder it runs in. Bun reads the file of writeBunReleaseAge, and Yarn reads its install settings file.
+the folder it runs in. Bun reads the file of writeBunReleaseAge.
 
 @param runFolder the temporary folder that the package manager runs in.
 @param command the arguments to run.

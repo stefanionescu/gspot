@@ -38,7 +38,7 @@ async function prepareCredentialProject(root: string, packageJson: string, lockf
     using owner = openWriter(root);
     const install = await buildNpmToolInstall(await openSession(root), owner);
     const error = await captureRejection(
-        prepareNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: CREDENTIAL_PACKAGE_JSON }, undefined),
+        prepareNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: CREDENTIAL_PACKAGE_JSON }),
     );
     return { files, error };
 }
@@ -80,11 +80,10 @@ test.each([...FAILED_INSTALL_CASES])(
         const installationError = await captureRejection(
             frozen
                 ? installNpmTools(await buildNpmToolInstall(session, owner))
-                : prepareNpmLockfile(
-                      await buildNpmToolInstall(session, owner),
-                      { path: GSPOT_PATHS.npmProject, content: packageJson },
-                      undefined,
-                  ),
+                : prepareNpmLockfile(await buildNpmToolInstall(session, owner), {
+                      path: GSPOT_PATHS.npmProject,
+                      content: packageJson,
+                  }),
         );
         expect(installationError).toMatchObject({
             name: 'GspotError',
@@ -173,11 +172,10 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
     });
     using owner = openWriter(sandbox.path);
     const lockfileError = await captureRejection(
-        prepareNpmLockfile(
-            await buildNpmToolInstall(session, owner),
-            { path: GSPOT_PATHS.npmProject, content: packageJson },
-            undefined,
-        ),
+        prepareNpmLockfile(await buildNpmToolInstall(session, owner), {
+            path: GSPOT_PATHS.npmProject,
+            content: packageJson,
+        }),
     );
     const message = lockfileError.message;
     expect(message).toBe('The npm tool project needs Node.js to create its lockfile. Install Node.js.');
@@ -186,11 +184,10 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
         [GSPOT_PATHS.npmProject]: packageJson,
         [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
     });
-    const cached = await prepareNpmLockfile(
-        await buildNpmToolInstall(session, owner),
-        { path: GSPOT_PATHS.npmProject, content: packageJson },
-        undefined,
-    );
+    const cached = await prepareNpmLockfile(await buildNpmToolInstall(session, owner), {
+        path: GSPOT_PATHS.npmProject,
+        content: packageJson,
+    });
     expect(cached.content).toBe(lockfile);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(packageJson);
     expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`), 'utf8')).toBe(lockfile);
@@ -215,11 +212,10 @@ test('a Yarn Classic repository resolves its tool lockfile with npm and the rele
     const session = await openSession(sandbox.path);
     using writer = openWriter(sandbox.path);
     const install = await buildNpmToolInstall(session, writer);
-    const lockfile = await prepareNpmLockfile(
-        install,
-        { path: GSPOT_PATHS.npmProject, content: JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: {} }) },
-        undefined,
-    );
+    const lockfile = await prepareNpmLockfile(install, {
+        path: GSPOT_PATHS.npmProject,
+        content: JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: {} }),
+    });
     expect(JSON.parse(lockfile.content)).toStrictEqual({
         lockfileVersion: 3,
         packages: { '': { devDependencies: {} } },

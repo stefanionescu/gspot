@@ -19,7 +19,6 @@ import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
 import { readInstallPackageManager } from '#cli/installers/install.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
-import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { listDistinctTools, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import type { ToolInstall, ToolPackageManager } from '#cli/types/installers/install.ts';
@@ -29,7 +28,7 @@ Read a tool project file, its lockfile, and the lockfile mode.
 */
 export async function readToolProjectFiles(
     root: string,
-    packageManager: PackageManager['name'] | 'uv',
+    packageManager: ToolPackageManager['name'] | 'uv',
 ): Promise<ToolProjectFiles> {
     const isPython = packageManager === 'uv';
     const lockfilePath = join(root, GSPOT_FOLDER, isPython ? 'uv.lock' : selectLockfileName(packageManager));
