@@ -10,10 +10,10 @@ export const GUIDES = {
     python: 'languages/python',
     css: 'languages/css',
     swift: 'languages/swift',
-    security: 'checks/security',
-    testing: 'checks/testing',
-    dependencies: 'checks/dependencies',
-    prose: 'checks/prose',
+    security: 'topics/security',
+    testing: 'topics/testing',
+    dependencies: 'topics/dependencies',
+    prose: 'topics/prose',
 } as const;
 
 export const DETECTION_LABELS = {

@@ -29,7 +29,7 @@ check weaker needs a reason beside it. gspot writes the config files from `gspot
 | Change the options of a lint rule                         | `tools.<tool>.rules`, or `[[tools.eslint.override]]` for some paths        | [Lint rule options](/configure/lint-rules/) |
 | Raise a size or complexity limit                          | `gspot set limits.<key> <value> --reason "<why>"`                          | [Settings](/reference/gspot-toml/#limits)   |
 | Change indentation, line length, or quotes                | `[format]`, and `[[format.override]]` for some files                       | [Settings](/reference/gspot-toml/#format)   |
-| Accept a word that the spelling checks report             | `gspot set spelling.allowed_words <word> --reason "<why>"`                 | [Spelling and prose](/checks/prose/)        |
+| Accept a word that the spelling checks report             | `gspot set spelling.allowed_words <word> --reason "<why>"`                 | [Spelling and prose](/topics/prose/)        |
 | Refuse a word in names                                    | `gspot set naming.banned_words <word>`                                     | [Settings](/reference/gspot-toml/#naming)   |
 | Change coverage minimums, allowed licenses, or registries | `coverage`, `licenses`, and `dependencies` settings                        | [Settings](/reference/gspot-toml/)          |
 
@@ -38,7 +38,7 @@ check weaker needs a reason beside it. gspot writes the config files from `gspot
 | You want to                                               | Do this                                                    | Read                                                              |
 | --------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------- |
 | Add a JavaScript or TypeScript lint rule                  | A plugin module and a `[[tools.eslint.plugins]]` record    | [Lint rule options](/configure/lint-rules/#your-own-eslint-rules) |
-| Add a rule for any language                               | A Semgrep rule file in `tools.semgrep.rule_files`          | [Security](/checks/security/#semgrep)                             |
+| Add a rule for any language                               | A Semgrep rule file in `tools.semgrep.rule_files`          | [Security](/topics/security/#semgrep)                             |
 | Describe the layers of your code                          | `[[import_rule]]` records                                  | [Import rules](/configure/import-rules/)                          |
 | Run a tool or script of your own, in the hooks and CI too | A `[[command_check]]` record                               | [Command checks](/configure/command-checks/)                      |
 | Give coding agents rules of your own                      | Write them in `AGENTS.md`, outside the gspot managed block | [Coding agents](/use/coding-agents/)                              |
