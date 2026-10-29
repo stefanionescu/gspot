@@ -4,19 +4,20 @@ import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
+import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { spawnProcess, streamProcess } from '#cli/system/processes.ts';
-import { isWindows, fakePlatform } from '#tests/setup/system/platform.ts';
-import { UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/runner.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { STREAM_FAILURE, STOPPED_CAPTURES } from '#tests/config/system/processes.ts';
-import { waitForExit, waitForFile, spawnCommand, limitCommand } from '#tests/setup/system/processes.ts';
 
-function isStopped(child: childProcess.ChildProcess | undefined): boolean {
-    if (child === undefined) return false;
-    return (isWindows ? child.exitCode : child.signalCode) !== null;
-}
+import {
+    isStopped,
+    waitForExit,
+    waitForFile,
+    spawnCommand,
+    limitCommand,
+    CHILD_TIMEOUT_SECONDS,
+} from '#tests/setup/system/processes.ts';
 
 function startFailedCapture(capture: 'text' | 'bytes', root: string) {
     using children = spyOn(childProcess, 'spawn');
@@ -92,7 +93,7 @@ test('an exiting CLI stops its running process group', async () => {
     const command = buildProgramCommand('processes/process-group', '19');
     await using started = spawnCommand(command, {
         cwd: sandbox.path,
-        timeoutSeconds: (UNIT_TEST_TIMEOUT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
+        timeoutSeconds: CHILD_TIMEOUT_SECONDS,
     });
     expect(await started.child.exited, await started.stderr).toBe(19);
     const output = await started.stdout;
@@ -198,7 +199,7 @@ async function captureProcess(
     options: AsyncSpawnOptions,
 ): Promise<Omit<SpawnResult, 'stdout'> & { stdout: string | Buffer }> {
     const bounded = {
-        timeoutSeconds: (UNIT_TEST_TIMEOUT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND,
+        timeoutSeconds: CHILD_TIMEOUT_SECONDS,
         ...options,
     };
     if (capture === 'text') return spawnProcess(command, limitCommand(command, bounded).options);

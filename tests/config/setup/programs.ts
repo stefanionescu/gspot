@@ -132,15 +132,6 @@ export const REPORT_SWIFT_COVERAGE_OPTIONS = {
     'log-arguments': { type: 'string' },
 } as const;
 
-export const VALE_PACKAGE_FOLDERS = [
-    'Google',
-    'write-good',
-    'proselint',
-    'alex',
-    'Harper',
-    'config/dictionaries',
-] as const;
-
 export const INHERITED_STREAMS = { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' } as const;
 
 export const LATER_TEST_MESSAGE = 'Later test ran';

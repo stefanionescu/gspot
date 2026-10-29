@@ -8,14 +8,12 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildToolInstall } from '#tests/setup/cli/tools.ts';
+import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
-import { type NpmToolInstall } from '#cli/types/installers/npm.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
 import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/installers/npm/project.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/installers/npm/project.ts';
@@ -39,10 +37,7 @@ async function prepareCredentialProject(root: string, packageJson: string, lockf
     await createFileTree(root, files);
     using owner = openWriter(root);
     const session = await openSession(root);
-    const install = {
-        ...buildToolInstall(session, owner),
-        registryEnvironment: await readRegistryEnvironment(session.root),
-    } as NpmToolInstall;
+    const install = await buildNpmToolInstall(session, owner);
     const error = await captureRejection(
         prepareNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: CREDENTIAL_PACKAGE_JSON }),
     );
@@ -83,10 +78,7 @@ test.each([...FAILED_INSTALL_CASES])(
                 buildProcessResult(command.at(-1) === '--version' ? { stdout: '1.4.2\n' } : { code: 1, ...failure }),
             ),
         );
-        const install = {
-            ...buildToolInstall(session, owner),
-            registryEnvironment: await readRegistryEnvironment(session.root),
-        } as NpmToolInstall;
+        const install = await buildNpmToolInstall(session, owner);
         const installationError = await captureRejection(
             frozen
                 ? installNpmTools(install)
@@ -121,12 +113,7 @@ test('an npm install that runs past the time limit names the limit', async () =>
             buildProcessResult(command.at(-1) === '--version' ? { stdout: '1.4.2\n' } : { code: 1, timedOut: true }),
         ),
     );
-    const error = await captureRejection(
-        installNpmTools({
-            ...buildToolInstall(session, owner),
-            registryEnvironment: await readRegistryEnvironment(session.root),
-        } as NpmToolInstall),
-    );
+    const error = await captureRejection(installNpmTools(await buildNpmToolInstall(session, owner)));
     const message = error.message;
     expect(message).toStartWith(
         'The command mise exec node@24 bun@1.4.2 -- bun install --frozen-lockfile --linker hoisted --config=',
@@ -183,10 +170,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
         MISE_DATA_DIR: join(sandbox.path, 'missing-mise'),
     });
     using owner = openWriter(sandbox.path);
-    const install = {
-        ...buildToolInstall(session, owner),
-        registryEnvironment: await readRegistryEnvironment(session.root),
-    } as NpmToolInstall;
+    const install = await buildNpmToolInstall(session, owner);
     const projectFile = { path: GSPOT_PATHS.npmProject, content: packageJson };
     const lockfileError = await captureRejection(prepareNpmLockfile(install, projectFile));
     const message = lockfileError.message;
@@ -221,10 +205,7 @@ test('a Yarn Classic repository resolves its tool lockfile with npm and the mini
     });
     const session = await openSession(sandbox.path);
     using writer = openWriter(sandbox.path);
-    const install = {
-        ...buildToolInstall(session, writer),
-        registryEnvironment: await readRegistryEnvironment(session.root),
-    } as NpmToolInstall;
+    const install = await buildNpmToolInstall(session, writer);
     const lockfile = await prepareNpmLockfile(install, {
         path: GSPOT_PATHS.npmProject,
         content: JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: {} }),

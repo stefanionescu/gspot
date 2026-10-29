@@ -1,5 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { hasErrorCode } from '#cli/system/errors.ts';
+import type { ChildProcess } from 'node:child_process';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
@@ -139,4 +141,15 @@ export function captureChild(child: ProcessCapture): ChildCapture {
             await errors;
         },
     };
+}
+
+export const CHILD_TIMEOUT_SECONDS =
+    (UNIT_TEST_TIMEOUT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND;
+
+/**
+Check whether a child stopped: Windows sets its exit code, and other systems set the signal that ended it.
+*/
+export function isStopped(child: ChildProcess | undefined): boolean {
+    if (child === undefined) return false;
+    return (isWindows ? child.exitCode : child.signalCode) !== null;
 }

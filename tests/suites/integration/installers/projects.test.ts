@@ -8,19 +8,17 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { listMisePins } from '#cli/configurations/tools.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { runtimePinsSchema } from '#tests/schemas/runner.ts';
-import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import { preparePythonLockfile } from '#cli/installers/pypi.ts';
+import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import { type NpmToolInstall } from '#cli/types/installers/npm.ts';
 import { prepareNpmLockfile } from '#cli/installers/npm/project.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { toolAdvisoryReportSchema } from '#tests/schemas/tool-projects.ts';
 import { readToolBinPaths, listExecutablePaths } from '#cli/tools/locate.ts';
@@ -62,10 +60,7 @@ test('every shipped npm and Python tool lockfile has only dated accepted advisor
     const generated = generateFiles(session);
     using writer = openWriter(sandbox.path);
     await writeGeneratedFiles(session, generated, writer);
-    const install = {
-        ...buildToolInstall(session, writer),
-        registryEnvironment: await readRegistryEnvironment(session.root),
-    } as NpmToolInstall;
+    const install = await buildNpmToolInstall(session, writer);
     const projects = generated.files.filter(
         ({ path }) => path === GSPOT_PATHS.npmProject || path === GSPOT_PATHS.pythonProject,
     );

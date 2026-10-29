@@ -1,9 +1,7 @@
-import { expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { type Level } from '#cli/types/configurations.ts';
-import { spawnGspot } from '#tests/setup/cli/commands.ts';
 import { type ScopeSelection } from '#tests/types/settings.ts';
 import { SCHEMA_DIRECTIVE } from '#cli/config/settings/text.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
@@ -11,6 +9,7 @@ import { selectConfigurations } from '#cli/configurations/select.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { type AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { type Settings, type WrittenSettings } from '#cli/types/settings/file.ts';
@@ -135,7 +134,6 @@ export async function prepareParameterProject(
         'gspot.toml': buildSandboxSettings([scenario.language], { tables: limits, level: 'all' }),
         [scenario.file]: scenario.source,
     });
-    const applied = await spawnGspot(root, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await runGspotStep({ root, run: spawnGspot }, ['apply']);
     return { maximum, defaultMaximum };
 }

@@ -8,8 +8,10 @@ import type { Tool } from '#cli/types/configurations.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
+import type { NpmToolInstall } from '#cli/types/installers/npm.ts';
 import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import type { ToolInstall, ToolPackageManager } from '#cli/types/installers/install.ts';
 
@@ -45,6 +47,20 @@ export function buildToolInstall(session: Session, writer: Files): ToolInstall {
     const install = installers.buildToolInstall(session, writer, generated);
     install.misePath = null;
     return install;
+}
+
+/**
+Build the npm tool install for a sandbox whose package.json names its package manager.
+
+@param session the open sandbox.
+@param writer holds the repository lock and saves files.
+@returns the tool install with its package manager and registry environment.
+*/
+export async function buildNpmToolInstall(session: Session, writer: Files): Promise<NpmToolInstall> {
+    const install = buildToolInstall(session, writer);
+    const { packageManager } = install;
+    if (packageManager === undefined) throw new Error('The sandbox package.json names no package manager.');
+    return { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };
 }
 
 /**

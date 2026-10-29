@@ -3,18 +3,8 @@ import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
 import { streamProcess } from '#cli/system/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
-import { waitForExit } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/runner.ts';
-
-const timeoutSeconds = (UNIT_TEST_TIMEOUT_MILLISECONDS - MILLISECONDS_PER_SECOND) / MILLISECONDS_PER_SECOND;
-
-function isStopped(child: childProcess.ChildProcess | undefined): boolean {
-    if (child === undefined) return false;
-    return (isWindows ? child.exitCode : child.signalCode) !== null;
-}
+import { isStopped, waitForExit, CHILD_TIMEOUT_SECONDS } from '#tests/setup/system/processes.ts';
 
 test('stream reading keeps raw bytes and the error output', async () => {
     await using sandbox = await testdir();
@@ -24,7 +14,7 @@ test('stream reading keeps raw bytes and the error output', async () => {
         command,
         {
             cwd: sandbox.path,
-            timeoutSeconds,
+            timeoutSeconds: CHILD_TIMEOUT_SECONDS,
         },
         async (chunks) => {
             for await (const chunk of chunks) bytes.push(chunk);
@@ -44,7 +34,7 @@ test('a stream reader that throws stops its child process', async () => {
             command,
             {
                 cwd: sandbox.path,
-                timeoutSeconds,
+                timeoutSeconds: CHILD_TIMEOUT_SECONDS,
             },
             async (chunks) => {
                 for await (const chunk of chunks) {
@@ -71,7 +61,7 @@ test('stream cancellation stops the child and keeps the cancellation reason', as
             command,
             {
                 cwd: sandbox.path,
-                timeoutSeconds,
+                timeoutSeconds: CHILD_TIMEOUT_SECONDS,
                 cancelSignal: controller.signal,
             },
             async (chunks) => {
@@ -95,7 +85,7 @@ test('a finished stream keeps the reader error after cleanup', async () => {
             command,
             {
                 cwd: sandbox.path,
-                timeoutSeconds,
+                timeoutSeconds: CHILD_TIMEOUT_SECONDS,
             },
             async (chunks) => {
                 for await (const chunk of chunks) expect(chunk.toString()).toBe('invalid');

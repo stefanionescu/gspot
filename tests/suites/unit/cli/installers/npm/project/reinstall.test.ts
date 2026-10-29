@@ -6,13 +6,11 @@ import { openWriter } from '#cli/repository/writer.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildToolInstall } from '#tests/setup/cli/tools.ts';
+import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import { installNpmTools } from '#cli/installers/npm/project.ts';
-import { type NpmToolInstall } from '#cli/types/installers/npm.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 
 test('npm skips a recorded install, but installs changed locks and missing modules', async () => {
     await using sandbox = await testdir({
@@ -27,37 +25,25 @@ test('npm skips a recorded install, but installs changed locks and missing modul
         return buildProcessResult({ stdout: command.at(-1) === '--version' ? '0.0.0-test\n' : '' });
     });
     const session = await openSession(sandbox.path);
-    const first = {
-        ...buildToolInstall(session, writer),
-        registryEnvironment: await readRegistryEnvironment(session.root),
-    } as NpmToolInstall;
+    const first = await buildNpmToolInstall(session, writer);
     expect(await installNpmTools(first)).toMatch(
         /^installed \d+ npm tools in \.gspot\/node_modules \(npm 0\.0\.0-test\)$/u,
     );
     const recordPath = join(sandbox.path, GSPOT_PATHS.installRecord);
     const saved = await readFile(recordPath, 'utf8');
-    const second = {
-        ...buildToolInstall(session, writer),
-        registryEnvironment: await readRegistryEnvironment(session.root),
-    } as NpmToolInstall;
+    const second = await buildNpmToolInstall(session, writer);
     expect(await installNpmTools(second)).toBe('');
     expect(second.steps).toStrictEqual([]);
     expect(await readFile(recordPath, 'utf8')).toBe(saved);
     await writeFile(join(sandbox.path, GSPOT_FOLDER, 'package-lock.json'), '{"lockfileVersion":3,"packages":{}}');
-    const changed = {
-        ...buildToolInstall(session, writer),
-        registryEnvironment: await readRegistryEnvironment(session.root),
-    } as NpmToolInstall;
+    const changed = await buildNpmToolInstall(session, writer);
     expect(await installNpmTools(changed)).toMatch(
         /^installed \d+ npm tools in \.gspot\/node_modules \(npm 0\.0\.0-test\)$/u,
     );
     expect(changed.steps).toStrictEqual([expect.arrayContaining(['npm', 'ci']) as string[]]);
     expect(await readFile(recordPath, 'utf8')).not.toBe(saved);
     await rm(join(sandbox.path, GSPOT_PATHS.nodeModules), { recursive: true });
-    const missing = {
-        ...buildToolInstall(session, writer),
-        registryEnvironment: await readRegistryEnvironment(session.root),
-    } as NpmToolInstall;
+    const missing = await buildNpmToolInstall(session, writer);
     expect(await installNpmTools(missing)).toMatch(
         /^installed \d+ npm tools in \.gspot\/node_modules \(npm 0\.0\.0-test\)$/u,
     );
@@ -77,10 +63,7 @@ test('Bun keeps installed modules while it runs the frozen install', async () =>
         return buildProcessResult({ stdout: command.at(-1) === '--version' ? '0.0.0-test\n' : '' });
     });
     const session = await openSession(sandbox.path);
-    const install = {
-        ...buildToolInstall(session, writer),
-        registryEnvironment: await readRegistryEnvironment(session.root),
-    } as NpmToolInstall;
+    const install = await buildNpmToolInstall(session, writer);
     expect(await installNpmTools(install)).toMatch(
         /^installed \d+ npm tools in \.gspot\/node_modules \(bun 0\.0\.0-test\)$/u,
     );
@@ -106,10 +89,7 @@ test.each(['{broken', '{"npm":"invalid"}', '{"other":"field"}'])(
             ),
         );
         const session = await openSession(sandbox.path);
-        const install = {
-            ...buildToolInstall(session, writer),
-            registryEnvironment: await readRegistryEnvironment(session.root),
-        } as NpmToolInstall;
+        const install = await buildNpmToolInstall(session, writer);
         const error = await captureRejection(installNpmTools(install));
         expect(error.message).toContain('Install failed');
         expect(install.steps).toStrictEqual([expect.arrayContaining(['npm', 'ci']) as string[]]);
