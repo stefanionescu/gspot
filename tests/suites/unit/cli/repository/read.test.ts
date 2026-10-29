@@ -202,7 +202,7 @@ test.each([...INVALID_INDEX_LINES])(
 );
 
 test.each([0, 1])('reading a repository keeps index stage %i and the full object ID', async (stage) => {
-    await using sandbox = await createGitSandbox({ [INDEX_PATH]: 'source\n' });
+    await using sandbox = await createGitSandbox({ 'source.sql': 'source\n' });
     const run = git.runGitForBytes;
     using _read = spyOn(git, 'runGitForBytes').mockImplementation((root, commandArguments, options) =>
         commandArguments.includes('--stage')

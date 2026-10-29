@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
@@ -236,6 +237,6 @@ test('scalar placeholders select generated pointers, scope, boolean settings and
         ({ scope }) => scope.path === 'app',
     )!;
     expect(replacePlaceholders(session, planned, '{pointer:prettier.config.mjs}', substitutions)).toBe(
-        'app/prettier.config.mjs',
+        join('app', 'prettier.config.mjs'),
     );
 });

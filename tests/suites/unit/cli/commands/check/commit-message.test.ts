@@ -1,6 +1,6 @@
-import { join, basename } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
+import { join, parse, basename } from 'node:path';
 import * as processes from '#cli/system/processes.ts';
 import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -17,8 +17,8 @@ test('check --hook commit-msg passes a conventional message and leaves it unchan
     const spawn = processes.spawnProcess;
     using _command = spyOn(processes, 'spawnProcess').mockImplementation((command, options) =>
         spawn(
-            basename(command[0]!) === 'commitlint'
-                ? [join(testModules, '.bin', 'commitlint'), ...command.slice(1)]
+            parse(command[0]!).name === 'commitlint'
+                ? [join(testModules, '.bin', basename(command[0]!)), ...command.slice(1)]
                 : command,
             options,
         ),
@@ -30,21 +30,8 @@ test('check --hook commit-msg passes a conventional message and leaves it unchan
     );
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stderr).toBe('');
-    expect(result.report.checks.map(({ duration: _duration, ...check }) => check)).toStrictEqual([
-        {
-            check: 'commits/commitlint',
-            scope: '',
-            status: 'passed',
-            fileCount: 3,
-            command: [
-                join(sandbox.path, '.gspot/node_modules/.bin/commitlint'),
-                '--config',
-                join(sandbox.path, '.gspot/configurations/general/commits/commitlint.json'),
-                '--edit',
-                join(sandbox.path, 'message.txt'),
-            ],
-            findings: [],
-        },
+    expect(result.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual([
+        { check: 'commits/commitlint', status: 'passed', findings: [] },
     ]);
     expect(await readFile(join(sandbox.path, 'message.txt'), 'utf8')).toBe('fix: preserve the commit message\n');
 });

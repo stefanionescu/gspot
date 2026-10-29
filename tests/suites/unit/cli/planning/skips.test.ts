@@ -96,6 +96,7 @@ test('a check whose tool has no Windows build is skipped on Windows', async () =
 });
 
 test.each([false, true])('Semgrep tools follow local rules at plan time (custom rules: %s)', async (hasRuleFiles) => {
+    using _platform = fakePlatform('linux');
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['python'], {
             tables: hasRuleFiles ? '[tools.semgrep]\nrule_files = ["rules.yml"]\n' : '',
@@ -119,6 +120,7 @@ test.each([false, true])('Semgrep tools follow local rules at plan time (custom 
 });
 
 test('shipped Semgrep rules select its tool', async () => {
+    using _platform = fakePlatform('linux');
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'package.json': '{"name":"example","version":"1.0.0"}',
@@ -132,6 +134,7 @@ test('shipped Semgrep rules select its tool', async () => {
 });
 
 test('explicit registry packs select Semgrep without local rules', async () => {
+    using _platform = fakePlatform('linux');
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['python'], {
             tables: '[tools.semgrep]\nregistry_packs = ["p/owasp-top-ten"]\n',
