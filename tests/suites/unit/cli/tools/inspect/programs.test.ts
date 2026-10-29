@@ -46,8 +46,14 @@ test('tool inspection finds the project compiler, and the repository compiler fr
 
 test('version reads and runs use the other tools of the tool folder', async () => {
     await using sandbox = await testdir();
-    await writeProgramCommand(sandbox.path, 'node_modules/.bin/teller', 'processes/command', 'companion');
-    await writeProgramCommand(sandbox.path, 'node_modules/.bin/companion', 'fakes/tool', '--line', '3.8.1');
+    await writeProgramCommand(sandbox.path, `${GSPOT_PATHS.nodeModules}/.bin/teller`, 'processes/command', 'companion');
+    await writeProgramCommand(
+        sandbox.path,
+        `${GSPOT_PATHS.nodeModules}/.bin/companion`,
+        'fakes/tool',
+        '--line',
+        '3.8.1',
+    );
     await writeProgramCommand(sandbox.path, 'unrelated/companion', 'fakes/tool', '--line', '9.0.0');
     const env = { PATH: join(sandbox.path, 'unrelated') };
     const tool = buildProgramPin('teller', '3.8.1');
@@ -60,6 +66,28 @@ test('version reads and runs use the other tools of the tool folder', async () =
     });
     expect(result.code).toBe(0);
     expect(result.stdout.trim()).toBe('3.8.1');
+});
+
+test('a mise-pinned program in the repository node_modules or .venv is missing and does not run', async () => {
+    await using sandbox = await testdir();
+    const tool = getTool(readConfigurations().values(), 'gitleaks');
+    const version = ['--line', tool.version!];
+    await writeProgramCommand(
+        sandbox.path,
+        'node_modules/.bin/gitleaks',
+        'fakes/tool',
+        '--write',
+        'npm-ran=',
+        ...version,
+    );
+    const venv = buildVenvExecutablePath('.venv', 'gitleaks');
+    await writeProgramCommand(sandbox.path, venv, 'fakes/tool', '--write', 'venv-ran=', ...version);
+    using _which = fakeExecutableLookup(null);
+    const inspection = inspectTool(buildToolSearch(sandbox.path), tool);
+    expect(inspection.state).toBe('missing');
+    expect(inspection.path).toBeUndefined();
+    expect(await isOnDisk(join(sandbox.path, 'npm-ran'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, 'venv-ran'))).toBe(false);
 });
 
 test('a program on PATH wins over an unrelated mise shim', async () => {

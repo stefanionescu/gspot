@@ -109,7 +109,7 @@ function inspectExecutable(inspected: InspectedTool): ToolInspection {
     const search = isExternal
         ? { folders: [cwd, root] }
         : {
-              folders: [join(root, GSPOT_FOLDER), cwd, root],
+              folders: [join(root, GSPOT_FOLDER)],
               miseBinPaths,
               toolFolderKind: findToolProjectPackage(tool)?.kind,
           };
