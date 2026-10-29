@@ -3,6 +3,8 @@ export const BASEDPYRIGHT_LEVELS = { basic: 'recommended', all: 'all' } as const
 export const BASEDPYRIGHT_ALL_LEVEL_OPTIONS = {
     reportImportCycles: 'error',
     reportImplicitOverride: 'error',
+    reportUnusedClass: 'none',
+    reportUnusedFunction: 'none',
 } as const;
 
 export const BASEDPYRIGHT_OPTIONS = {
