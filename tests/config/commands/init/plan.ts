@@ -59,7 +59,7 @@ export const MANAGED_PLAN_CHANGES = [
 export const TOOL_PLAN_CHANGES = [
     {
         path: '.gspot/pyproject.toml',
-        note: '2 pinned Python tools; matching uv.lock and tool environment',
+        note: '1 pinned Python tool; matching uv.lock and tool environment',
     },
     {
         path: '.gspot/hooks',
@@ -73,7 +73,8 @@ export const EXACT_DEPENDENCY_CHANGES = [
         path: '.gspot/package.json',
         note: '23 pinned npm tools; matching lockfile',
     },
-    ...TOOL_PLAN_CHANGES,
+    { path: '.gspot/pyproject.toml', note: '2 pinned Python tools; matching uv.lock and tool environment' },
+    TOOL_PLAN_CHANGES[1],
     {
         path: 'package.json',
         note: 'typescript is now pinned in .gspot/package.json; remove it from package.json if nothing else uses it',

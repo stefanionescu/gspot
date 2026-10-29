@@ -25,3 +25,34 @@ createRuleTester().run('no-renamed-exports', plugin.rules['no-renamed-exports'],
         },
     ],
 });
+
+createRuleTester().run('no-renamed-exports regressions', plugin.rules['no-renamed-exports'], {
+    valid: [
+        {
+            code: 'const main = () => 1;\nmain();\nexport { main as default };',
+            name: 'a default export by specifier is not a second name',
+        },
+        {
+            code: 'const owner = { value: 0 };\nexport const snapshot = owner.value;\nowner.value = 1;',
+            name: 'a snapshot of a member that the module assigns later is not a rename',
+        },
+        "export { default as Button } from './Button';",
+    ],
+    invalid: [
+        {
+            code: 'const owner = 1;\nexport { owner as alias };',
+            name: 'an export specifier that renames a local value reports',
+            errors: [{ messageId: 'renamed' }],
+        },
+        {
+            code: "export { owner as alias } from './owner';",
+            name: 'a re-export that renames a named export reports',
+            errors: [{ messageId: 'renamed' }],
+        },
+        {
+            code: 'const LEVELS = { all: 2 };\nexport const DEFAULT_LEVEL = LEVELS.all;',
+            name: 'control: a member of a constant object that nothing assigns is a rename',
+            errors: [{ messageId: 'renamed' }],
+        },
+    ],
+});

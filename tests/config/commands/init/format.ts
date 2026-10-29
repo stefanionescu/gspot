@@ -42,6 +42,11 @@ export const FORMAT_FILE_CASES = [
         expected: { indent_width: 4, print_width: 100 },
     },
     {
+        name: 'Prettier ignore file beside EditorConfig',
+        files: { '.prettierignore': 'dist/\n', '.editorconfig': '[*]\nindent_size = 4\nmax_line_length = 100\n' },
+        expected: { indent_width: 4, print_width: 100 },
+    },
+    {
         name: 'Prettier .prettierrc.toml configuration',
         files: { '.prettierrc.toml': 'printWidth = 100\ntabWidth = 4\n' },
         expected: { indent_width: 4, print_width: 100 },
@@ -54,7 +59,7 @@ export const FORMAT_FILE_CASES = [
     {
         name: 'Prettier JavaScript configuration',
         files: { 'prettier.config.mjs': 'export default { tabWidth: 3, printWidth: 90, singleQuote: false };' },
-        expected: { indent_width: 4, print_width: 120 },
+        expected: { indent_width: 2, print_width: 80, quotes: 'double' },
     },
     {
         name: 'EditorConfig without indent_style',
@@ -82,10 +87,10 @@ indent_size = 6
 max_line_length = 96
 `,
         },
-        expected: { indent_width: 2, print_width: 80, quotes: 'single' },
+        expected: { indent_width: 6, print_width: 96, quotes: 'single' },
     },
     {
-        name: 'declared Prettier defaults before EditorConfig',
+        name: 'EditorConfig before declared Prettier defaults',
         files: {
             'package.json': '{"devDependencies":{"prettier":"3.8.1"}}',
             '.editorconfig': `root = true
@@ -94,7 +99,7 @@ indent_size = 6
 max_line_length = 96
 `,
         },
-        expected: { indent_width: 2, print_width: 80, quotes: 'double' },
+        expected: { indent_width: 6, print_width: 96, quotes: 'double' },
     },
 ] as const;
 
@@ -120,3 +125,9 @@ export const FORMAT_WORKSPACE_FILES = {
     'app/deep/package.json': '{"private":true}',
     'sibling/package.json': '{"private":true}',
 } as const;
+
+export const UNREADABLE_PRETTIER_FILES = [
+    { path: 'prettier.config.mjs', text: 'export default { printWidth: 100 };\n' },
+    { path: '.prettierrc.cjs', text: 'module.exports = { printWidth: 100 };\n' },
+    { path: '.prettierrc.json5', text: '// formatting\n{ tabWidth: 4, }\n' },
+] as const;

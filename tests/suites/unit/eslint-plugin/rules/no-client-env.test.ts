@@ -84,3 +84,14 @@ createRuleTester().run<
         },
     ],
 });
+
+createRuleTester().run('no-client-env regressions', plugin.rules['no-client-env'], {
+    valid: [],
+    invalid: [
+        {
+            code: "'use client';\nconst host = process;\nconst key = host.env.SECRET;",
+            name: 'a private read through an alias of an undeclared process reports',
+            errors: [{ messageId: 'private' }],
+        },
+    ],
+});

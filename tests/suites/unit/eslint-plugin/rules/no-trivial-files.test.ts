@@ -84,3 +84,18 @@ createRuleTester().run<
         errors: [{ messageId: 'trivial' as const }],
     })),
 });
+
+createRuleTester().run('no-trivial-files regressions', plugin.rules['no-trivial-files'], {
+    valid: [
+        {
+            code: 'export type Tree = ReadonlyArray<Tree>;',
+            name: 'a recursive type is not forwarding',
+        },
+        {
+            code: "import type { Box, User } from './types';\nexport type UserBox = Box<User>;",
+            name: 'a specialized generic is not forwarding',
+        },
+        'const owner = { value: 0 };\nexport const snapshot = owner.value;\nowner.value = 1;',
+    ],
+    invalid: [],
+});

@@ -1,173 +1,86 @@
 import { resolve } from 'node:path';
-import { createRule } from '../src/create-rule.ts';
-import { convertToPosixPath } from '../src/syntax.ts';
-import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
-import { ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { DRIVE_LETTER } from '../src/config/syntax.ts';
+import type { SchemaLocationOptions } from './types.ts';
+import { ASTUtils, ESLintUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-export type SchemaLocationOptions = [{ folders: readonly string[] }];
+import {
+    ZOD_MODULES,
+    ZOD_UTILITIES,
+    OPTIONS_SCHEMA,
+    ZOD_NAMESPACE_IMPORTS,
+    DEFAULT_SCHEMA_FOLDERS,
+} from './config/schema-location.ts';
 
-const OPTIONS_SCHEMA = {
-    type: 'object',
-    properties: {
-        folders: {
-            description: 'Repository folders that own runtime schemas, relative to the ESLint working directory.',
-            type: 'array',
-            items: { type: 'string' },
-            minItems: 1,
-        },
-    },
-    additionalProperties: false,
-} satisfies JSONSchema4;
-
-const ZOD_MODULES = ['zod', 'zod/v3', 'zod/v4', 'zod/mini', 'zod/v4-mini', 'zod/v4/mini'] as const;
-
-const ZOD_SCHEMA_FACTORIES = [
-    '_default',
-    '_function',
-    'any',
-    'array',
-    'base64',
-    'base64url',
-    'bigint',
-    'boolean',
-    'catch',
-    'cidrv4',
-    'cidrv6',
-    'codec',
-    'creditCard',
-    'cuid',
-    'cuid2',
-    'custom',
-    'date',
-    'discriminatedUnion',
-    'e164',
-    'email',
-    'emoji',
-    'enum',
-    'exactOptional',
-    'file',
-    'float32',
-    'float64',
-    'function',
-    'guid',
-    'hash',
-    'hex',
-    'hostname',
-    'httpUrl',
-    'iban',
-    'instanceof',
-    'int',
-    'int32',
-    'int64',
-    'intersection',
-    'invertCodec',
-    'ipv4',
-    'ipv6',
-    'json',
-    'jwt',
-    'keyof',
-    'ksuid',
-    'lazy',
-    'literal',
-    'looseObject',
-    'looseRecord',
-    'mac',
-    'map',
-    'nan',
-    'nanoid',
-    'nativeEnum',
-    'never',
-    'nonoptional',
-    'null',
-    'nullable',
-    'nullish',
-    'number',
-    'object',
-    'optional',
-    'partialRecord',
-    'pipe',
-    'prefault',
-    'preprocess',
-    'promise',
-    'readonly',
-    'record',
-    'set',
-    'strictObject',
-    'string',
-    'stringFormat',
-    'success',
-    'symbol',
-    'templateLiteral',
-    'transform',
-    'tuple',
-    'uint32',
-    'uint64',
-    'ulid',
-    'undefined',
-    'union',
-    'unknown',
-    'url',
-    'uuid',
-    'uuidv4',
-    'uuidv6',
-    'uuidv7',
-    'void',
-    'xid',
-    'xor',
-] as const;
-
-const DEFAULT_SCHEMA_FOLDERS = ['src/schemas'] as const;
-
-const ZOD_SCHEMA_NAMESPACES = {
-    coerce: ['bigint', 'boolean', 'date', 'number', 'string'],
-    iso: ['date', 'datetime', 'duration', 'time'],
-} as const;
-
-function findZodSchemaConstructors(source: TSESLint.SourceCode): TSESTree.Node[] {
-    const factories = Object.fromEntries(
-        ZOD_SCHEMA_FACTORIES.map((name) => [name, { [ASTUtils.ReferenceTracker.CALL]: true }]),
-    );
-    const namespaces = Object.fromEntries(
-        Object.entries(ZOD_SCHEMA_NAMESPACES).map(([name, methods]) => [
-            name,
-            Object.fromEntries(methods.map((method) => [method, { [ASTUtils.ReferenceTracker.CALL]: true }])),
-        ]),
-    );
-    const constructors = { ...factories, ...namespaces };
-    const imports = Object.fromEntries(
-        ZOD_MODULES.map((name) => [
-            name,
-            { [ASTUtils.ReferenceTracker.ESM]: true, ...constructors, z: constructors, default: constructors },
-        ]),
-    );
-    const tracker = new ASTUtils.ReferenceTracker(source.getScope(source.ast));
-    return [...tracker.iterateEsmReferences(imports)].map((reference) => reference.node);
+function findCall(callee: TSESTree.Node): TSESTree.Node[] {
+    const { parent } = callee;
+    if (parent?.type === AST_NODE_TYPES.MemberExpression && parent.object === callee) return findCall(parent);
+    return parent?.type === AST_NODE_TYPES.CallExpression && parent.callee === callee ? [parent] : [];
 }
 
-export const schemaLocation = createRule<SchemaLocationOptions, 'location'>({
-    name: 'schema-location',
+function listNamespaceCalls(namespace: TSESTree.Identifier): TSESTree.Node[] {
+    const member = namespace.parent;
+    if (member.type !== AST_NODE_TYPES.MemberExpression || member.object !== namespace) return [];
+    const name = ASTUtils.getPropertyName(member);
+    return name === null || ZOD_UTILITIES.has(name) ? [] : findCall(member);
+}
+
+function getImportedName(specifier: TSESTree.ImportClause): string {
+    if (specifier.type !== AST_NODE_TYPES.ImportSpecifier) return 'z';
+    return specifier.imported.type === AST_NODE_TYPES.Identifier ? specifier.imported.name : specifier.imported.value;
+}
+
+function listZodSchemaCalls(source: TSESLint.SourceCode): TSESTree.Node[] {
+    const modules: readonly unknown[] = ZOD_MODULES;
+    return source.ast.body
+        .flatMap((statement) =>
+            statement.type === AST_NODE_TYPES.ImportDeclaration &&
+            statement.importKind !== 'type' &&
+            modules.includes(statement.source.value)
+                ? statement.specifiers
+                : [],
+        )
+        .flatMap((specifier) => {
+            if (specifier.type === AST_NODE_TYPES.ImportSpecifier && specifier.importKind === 'type') return [];
+            const imported = getImportedName(specifier);
+            if (ZOD_UTILITIES.has(imported)) return [];
+            const isNamespace =
+                specifier.type === AST_NODE_TYPES.ImportNamespaceSpecifier || ZOD_NAMESPACE_IMPORTS.has(imported);
+            return source
+                .getDeclaredVariables(specifier)
+                .flatMap((variable) => variable.references)
+                .flatMap(({ identifier }) =>
+                    isNamespace
+                        ? listNamespaceCalls(identifier as TSESTree.Identifier)
+                        : findCall(identifier as TSESTree.Identifier),
+                );
+        });
+}
+
+export const schemaLocation = ESLintUtils.RuleCreator.withoutDocs<SchemaLocationOptions, 'location'>({
     meta: {
         defaultOptions: [{ folders: DEFAULT_SCHEMA_FOLDERS }],
         type: 'suggestion',
         docs: {
-            level: 'none',
-            description: 'Requires Zod schema construction in the configured schema folders.',
-            why: 'A schema folder makes runtime validation contracts easy to find.',
-            fix: 'Move the schema declaration into a configured schema folder and import it where it is used.',
-            example: 'Move `const nameSchema = z.string()` from a parser into `src/schemas/name.ts`.',
+            description:
+                'Requires Zod schema construction in the configured schema folders: every call of a Zod export except the functions that only read, run, or describe schemas, such as safeParse and toJSONSchema.',
         },
         schema: [OPTIONS_SCHEMA],
         messages: { location: 'Declare this Zod schema in a configured schema folder: {{folders}}.' },
     },
     create(context, [options]) {
-        const path = convertToPosixPath(resolve(context.cwd, context.physicalFilename));
-        const folders = options.folders.map((folder) => convertToPosixPath(resolve(context.cwd, folder)));
+        const path = resolve(context.cwd, context.physicalFilename)
+            .replaceAll('\\', '/')
+            .replace(DRIVE_LETTER, (drive) => drive.toUpperCase());
+        const folders = options.folders.map((folder) =>
+            resolve(context.cwd, folder)
+                .replaceAll('\\', '/')
+                .replace(DRIVE_LETTER, (drive) => drive.toUpperCase()),
+        );
         if (folders.some((folder) => path === folder || path.startsWith(`${folder}/`))) return {};
         return {
             Program() {
-                for (const node of findZodSchemaConstructors(context.sourceCode)) {
+                for (const node of listZodSchemaCalls(context.sourceCode))
                     context.report({ node, messageId: 'location', data: { folders: options.folders.join(', ') } });
-                }
             },
         };
     },

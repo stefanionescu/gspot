@@ -1,13 +1,5 @@
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 
-export const ENVIRONMENT_HOSTS = ['process', 'Bun', 'Deno'] as const;
-
-export const ALLOWED_ENVIRONMENT_NAMES = ['NODE_ENV'] as const;
-
-export const ENVIRONMENT_PROPERTY = 'env';
-
-export const VITE_ENVIRONMENT_NAMES = ['MODE', 'BASE_URL', 'PROD', 'DEV', 'SSR'] as const;
-
 export const OPTIONS_SCHEMA = {
     type: 'object',
     properties: {
@@ -28,6 +20,14 @@ export const OPTIONS_SCHEMA = {
     },
     additionalProperties: false,
 } satisfies JSONSchema4;
+
+export const ENVIRONMENT_HOSTS = ['process', 'Bun', 'Deno'] as const;
+
+export const ALLOWED_ENVIRONMENT_NAMES = ['NODE_ENV'] as const;
+
+export const ENVIRONMENT_PROPERTY = 'env';
+
+export const VITE_ENVIRONMENT_NAMES = ['MODE', 'BASE_URL', 'PROD', 'DEV', 'SSR'] as const;
 
 export const PUBLIC_PREFIXES = ['NEXT_PUBLIC_'] as const;
 

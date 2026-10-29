@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 
 test('each accepted suppression example matches its marker and gives a reason', () => {
     const forms = readConfigurations()
@@ -21,4 +22,11 @@ test('each accepted suppression example matches its marker and gives a reason', 
         ).toBe(true);
         expect(new RegExp(form.reason, 'u').exec(example)?.groups?.['reason'], form.name).toMatch(/\S/u);
     }
+});
+
+test('the javascript manifest pins the workspace version of @gspothq/eslint-plugin', () => {
+    const javascript = readConfigurations().get('javascript');
+    expect(javascript?.tools.find((tool) => tool.installers['npm']?.name === '@gspothq/eslint-plugin')?.version).toBe(
+        pluginPackage.version,
+    );
 });

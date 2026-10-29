@@ -1,6 +1,7 @@
 import { Linter } from 'eslint';
 import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
+import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 
 test.each(['recommended', 'all'] as const)(
     '%s turns on no-client-env, and only all turns on no-renamed-exports',
@@ -39,4 +40,8 @@ test('configs.all lints beside a config that registers the plugin again', () => 
     ];
     const messages = linter.verify("export const value = 'public';", config);
     expect(messages).toStrictEqual([]);
+});
+
+test('plugin metadata matches the workspace package', () => {
+    expect(plugin.meta).toStrictEqual({ name: pluginPackage.name, version: pluginPackage.version });
 });

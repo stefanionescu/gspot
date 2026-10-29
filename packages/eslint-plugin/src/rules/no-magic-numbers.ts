@@ -2,10 +2,10 @@ import { createRequire } from 'node:module';
 import { createRule } from '../create-rule.ts';
 import { FUNCTION_TYPES } from '../config/syntax.ts';
 import type { MagicNumbersOptions } from '../types/rules.ts';
+import { UPSTREAM_RULE, OPTIONS_SCHEMA } from '../config/rules/no-magic-numbers.ts';
 import { ESLintUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { UPSTREAM_RULE, OPTIONS_SCHEMA, UPSTREAM_PACKAGE } from '../config/rules/no-magic-numbers.ts';
 
-const requireModule = createRequire(import.meta.url);
+const require = createRequire(import.meta.url);
 
 function isModuleConstant(declaration: TSESTree.VariableDeclaration): boolean {
     if (declaration.kind !== 'const') return false;
@@ -45,7 +45,7 @@ export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic' | 'useCo
         },
     },
     create(context) {
-        const upstream = requireModule(UPSTREAM_PACKAGE) as {
+        const upstream = require('@typescript-eslint/eslint-plugin') as {
             rules: Record<
                 typeof UPSTREAM_RULE,
                 TSESLint.RuleModule<string, MagicNumbersOptions> & { meta: { defaultOptions: MagicNumbersOptions } }

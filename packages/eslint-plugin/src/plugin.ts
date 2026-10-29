@@ -6,9 +6,9 @@ import { noMagicNumbers } from './rules/no-magic-numbers.ts';
 import { noTrivialFiles } from './rules/no-trivial-files.ts';
 import { importBoundaries } from './rules/import-boundaries.ts';
 import { noRenamedExports } from './rules/no-renamed-exports.ts';
+import pluginPackage from '../package.json' with { type: 'json' };
 import { requireServerOnly } from './rules/require-server-only.ts';
 import { noTrivialFunctions } from './rules/no-trivial-functions.ts';
-import { name, version } from '../package.json' with { type: 'json' };
 import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
 
 const rules = {
@@ -31,7 +31,7 @@ const selectLevelRules = (levels: readonly RuleDocs['level'][]) =>
     );
 
 const plugin = {
-    meta: { name, version },
+    meta: { name: pluginPackage.name, version: pluginPackage.version },
     rules,
 };
 

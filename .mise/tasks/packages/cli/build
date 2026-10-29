@@ -19,7 +19,6 @@ download_verified_file() {
     fi
 }
 
-# main: Bundles the CLI and the PurgeCSS child process, and copies or downloads each grammar and its license.
 main() {
     local grammar
 

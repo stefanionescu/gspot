@@ -32,3 +32,54 @@ createRuleTester().run('no-index-imports', plugin.rules['no-index-imports'], {
         ),
     ],
 });
+
+createRuleTester().run('no-index-imports regressions', plugin.rules['no-index-imports'], {
+    valid: [
+        {
+            code: "import text from './value.ts?raw&file=/index.ts';",
+            name: 'query text that ends in /index.ts is not an index import',
+        },
+    ],
+    invalid: [
+        {
+            code: "vi.importMock('./lib/index.js');",
+            name: 'vi.importMock of an index file reports',
+            errors: [{ messageId: 'index' }],
+        },
+        {
+            code: "jest.requireMock('./lib/index.js');",
+            name: 'jest.requireMock of an index file reports',
+            errors: [{ messageId: 'index' }],
+        },
+        {
+            code: "vi.unmock('./lib/index.js');",
+            name: 'vi.unmock of an index file reports',
+            errors: [{ messageId: 'index' }],
+        },
+        {
+            code: "import a = require('./lib/index');",
+            name: 'an import-equals require of an index file reports',
+            errors: [{ messageId: 'index' }],
+        },
+        {
+            code: "type A = import('./lib/index.js').A;",
+            name: 'a type import() of an index file reports',
+            errors: [{ messageId: 'index' }],
+        },
+    ],
+});
+
+createRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run(
+    'no-index-imports require calls',
+    plugin.rules['no-index-imports'],
+    {
+        valid: [],
+        invalid: [
+            {
+                code: "const a = require('./lib/index.js');",
+                filename: '/repo/src/feature/sample.cjs',
+                errors: [{ messageId: 'index' }],
+            },
+        ],
+    },
+);

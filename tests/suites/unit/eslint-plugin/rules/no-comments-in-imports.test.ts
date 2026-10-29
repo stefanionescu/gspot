@@ -125,3 +125,45 @@ createRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run(
         ],
     },
 );
+
+createRuleTester().run('no-comments-in-imports regressions', plugin.rules['no-comments-in-imports'], {
+    valid: [],
+    invalid: [
+        {
+            code: "import a from './a';\n// one\nimport b from './b';\n// two\nimport c from './c';\n",
+            name: 'two misplaced comments in one block report twice',
+            errors: [{ messageId: 'comment' }, { messageId: 'comment' }],
+            output: [
+                "// one\nimport a from './a';\nimport b from './b';\n// two\nimport c from './c';\n",
+                "// one\n// two\nimport a from './a';\nimport b from './b';\nimport c from './c';\n",
+            ],
+        },
+        {
+            code: "import a from './a';\n// note\nimport b = require('./b');\n",
+            name: 'a comment before an import-equals require in the block reports',
+            errors: [{ messageId: 'comment' }],
+            output: "// note\nimport a from './a';\nimport b = require('./b');\n",
+        },
+        {
+            code: "import a from './a';\n// eslint rules are strict here\nimport b from './b';\n",
+            name: 'a prose comment that starts with the word eslint reports',
+            errors: [{ messageId: 'comment' }],
+            output: "// eslint rules are strict here\nimport a from './a';\nimport b from './b';\n",
+        },
+    ],
+});
+
+test.each(['/* eslint-env node */', '// eslint-disable-next-line no-console'])(
+    'the comment rule permits the directive %s',
+    (directive) => {
+        const linter = new Linter({ configType: 'flat' });
+        const config: object = {
+            plugins: { gspot: plugin },
+            rules: { 'gspot/no-comments-in-imports': 'error' },
+        };
+        const messages = linter.verify(`import a from './a';\n${directive}\nimport b from './b';`, config, {
+            allowInlineConfig: false,
+        });
+        expect(messages).toStrictEqual([]);
+    },
+);

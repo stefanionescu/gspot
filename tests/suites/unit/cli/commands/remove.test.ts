@@ -138,7 +138,7 @@ test('remove --scope writes removed_configurations with its reason and applies i
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { written, removed, notes } = JSON.parse(result.stdout) as ApplyReport;
     expect({ written, removed, notes }).toStrictEqual({
-        written: [GSPOT_PATHS.miseProject],
+        written: [GSPOT_PATHS.miseProject, GSPOT_PATHS.pythonProject],
         removed: BASH_CONFIG_FILE_NAMES.map((file) => findManifestTarget('bash', file)),
         notes: [TOOLS_CHANGED_NOTE],
     });

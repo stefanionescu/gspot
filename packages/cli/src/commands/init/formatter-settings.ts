@@ -2,7 +2,6 @@ import { posix } from 'node:path';
 import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { getTool } from '#cli/configurations/tools.ts';
-import { parseFileFields } from '#cli/system/errors.ts';
 import { findScopePath } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
@@ -10,6 +9,7 @@ import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
+import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { FORMAT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { PRETTIER_SCRIPT_FILE } from '#cli/config/commands/init/prettier.ts';
@@ -128,12 +128,25 @@ function readEditorconfig(folder: string): PrettierOptions | null {
     };
 }
 
-function parsePrettierFile(path: string, text: string): PrettierOptions {
-    if (PRETTIER_SCRIPT_FILE.test(path)) return {};
+/**
+Read static Prettier options without running JavaScript.
+
+@param path the config file.
+@param text its contents.
+@returns the options, or undefined when the file needs another parser.
+*/
+export function parsePrettierFile(path: string, text: string): PrettierOptions | undefined {
+    if (PRETTIER_SCRIPT_FILE.test(path)) return undefined;
     const format = PRETTIER_FILE_FORMATS[posix.basename(path)];
     const parsers = { yaml: parseYamlFile, json: parseJsonFile, toml: parseTomlFile };
-    const options = format === undefined ? {} : parsers[format](path, text);
-    return { ...PRETTIER_DEFAULTS, ...stripUndefined(parseFileFields(path, options, prettierSettingsSchema)) };
+    let options: unknown;
+    try {
+        options = format === undefined ? {} : parsers[format](path, text);
+    } catch (error) {
+        if (path.endsWith('.json5') && error instanceof GspotError) return undefined;
+        throw error;
+    }
+    return stripUndefined(parseFileFields(path, options, prettierSettingsSchema));
 }
 
 function readFormatOptions(
@@ -143,24 +156,23 @@ function readFormatOptions(
     prettierFiles: string[],
 ): PrettierOptions | null {
     const folder = posix.join(root, scope);
+    const editorconfig = readEditorconfig(folder);
     const packagePath = posix.join(scope, PACKAGE_JSON);
     const packageJson = findText(folder, PACKAGE_JSON);
     const packageOptions = packageJson === undefined ? undefined : parseJsonFile(packagePath, packageJson)['prettier'];
     const prettierFile = prettierFiles
+        .filter((path) => path !== '.prettierignore')
         .map((path) => ({ path, text: findText(folder, path) }))
         .find((read): read is { path: string; text: string } => read.text !== undefined);
     const usesPrettier =
         prettierFile !== undefined || packageOptions !== undefined || dependencies['prettier'] !== undefined;
-    if (usesPrettier) {
-        if (prettierFile !== undefined)
-            return parsePrettierFile(posix.join(scope, prettierFile.path), prettierFile.text);
-        const options = isTable(packageOptions) ? packageOptions : {};
-        return {
-            ...PRETTIER_DEFAULTS,
-            ...stripUndefined(parseFileFields(packagePath, options, prettierSettingsSchema)),
-        };
-    }
-    return readEditorconfig(folder);
+    if (!usesPrettier) return editorconfig;
+    const packageFields = isTable(packageOptions) ? packageOptions : {};
+    const options =
+        prettierFile === undefined
+            ? stripUndefined(parseFileFields(packagePath, packageFields, prettierSettingsSchema))
+            : parsePrettierFile(posix.join(scope, prettierFile.path), prettierFile.text);
+    return { ...PRETTIER_DEFAULTS, ...editorconfig, ...options };
 }
 
 /**

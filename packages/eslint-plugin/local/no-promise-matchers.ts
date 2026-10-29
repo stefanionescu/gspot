@@ -1,18 +1,13 @@
-import { createRule } from '../src/create-rule.ts';
-import type { TSESTree } from '@typescript-eslint/utils';
+import { ESLintUtils, type TSESTree } from '@typescript-eslint/utils';
+import { PROMISE_MATCHER_SELECTOR } from './config/no-promise-matchers.ts';
 
-export const noPromiseMatchers = createRule<[], 'promise'>({
-    name: 'no-promise-matchers',
+export const noPromiseMatchers = ESLintUtils.RuleCreator.withoutDocs<[], 'promise'>({
     meta: {
         defaultOptions: [],
         type: 'problem',
         docs: {
-            level: 'none',
-            description: 'Reports expect().rejects and expect().resolves in the tests of this repository.',
-            why: 'Bun types those matchers as returning void, so neither TypeScript nor ESLint notices a missing await, and the assertion then runs after the test has passed.',
-            fix: 'Await the promise through captureRejection, then compare the error.',
-            example:
-                'Write `expect(await captureRejection(run())).toMatchObject({ code })` instead of `expect(run()).rejects.toMatchObject({ code })`.',
+            description:
+                'Reports expect().rejects and expect().resolves: Bun types them as returning void, so a missing await passes silently. Await the promise through captureRejection instead.',
         },
         schema: [],
         messages: {
@@ -24,9 +19,7 @@ export const noPromiseMatchers = createRule<[], 'promise'>({
     create(context) {
         return {
             // eslint-disable-next-line gspot/no-trivial-functions -- reason: ESLint calls it for each matching node.
-            'MemberExpression[property.name=/^(?:rejects|resolves)$/][object.type="CallExpression"][object.callee.name="expect"]'(
-                node: TSESTree.MemberExpression,
-            ) {
+            [PROMISE_MATCHER_SELECTOR](node: TSESTree.MemberExpression) {
                 context.report({ node, messageId: 'promise' });
             },
         };

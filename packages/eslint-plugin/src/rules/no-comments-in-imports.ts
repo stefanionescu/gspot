@@ -9,20 +9,25 @@ import {
     LINE_BREAK_GAP,
     LEADING_LINE_BREAK,
     TYPESCRIPT_DIRECTIVE,
+    ESLINT_LINE_DIRECTIVE,
+    ESLINT_BLOCK_DIRECTIVE,
     TOOL_DIRECTIVE_PREFIXES,
     LEADING_COMMENT_LINE_BREAKS,
 } from '../config/rules/no-comments-in-imports.ts';
 
-function isToolDirective(value: string): boolean {
-    const text = value.replace(LEADING_STAR, '').trim();
+function isToolDirective(comment: TSESTree.Comment): boolean {
+    const text = comment.value.replace(LEADING_STAR, '').trim();
     return (
         TYPESCRIPT_DIRECTIVE.test(text) ||
+        (comment.type === AST_TOKEN_TYPES.Line ? ESLINT_LINE_DIRECTIVE : ESLINT_BLOCK_DIRECTIVE).test(text) ||
         TOOL_DIRECTIVE_PREFIXES.some((prefix) => text === prefix.trim() || text.startsWith(prefix))
     );
 }
 
 function isImportLike(node: TSESTree.Statement, sourceType: RuleContext['languageOptions']['sourceType']): boolean {
     if (node.type === AST_NODE_TYPES.ImportDeclaration) return true;
+    if (node.type === AST_NODE_TYPES.TSImportEqualsDeclaration)
+        return node.moduleReference.type === AST_NODE_TYPES.TSExternalModuleReference;
     if (sourceType !== 'commonjs') return false;
     if (node.type === AST_NODE_TYPES.ExpressionStatement) return isRequireCall(node.expression);
     return (
@@ -32,7 +37,7 @@ function isImportLike(node: TSESTree.Statement, sourceType: RuleContext['languag
     );
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it puts isImportLike over the complexity limit of 8.
 function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
     return (
         node?.type === AST_NODE_TYPES.CallExpression &&
@@ -41,6 +46,7 @@ function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
         node.arguments.length === 1
     );
 }
+
 function groupImportBlocks(
     body: TSESTree.Statement[],
     sourceType: RuleContext['languageOptions']['sourceType'],
@@ -59,16 +65,15 @@ function groupImportBlocks(
     }
     return blocks;
 }
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function isFirstOnLine(text: string, comment: TSESTree.Comment): boolean {
-    return BLANK.test(text.slice(comment.range[0] - comment.loc.start.column, comment.range[0]));
-}
-
 function mergeCommentLines(source: TSESLint.SourceCode, text: string): TSESTree.Comment[] {
     const blocks: TSESTree.Comment[] = [];
     let previous: TSESTree.Comment | undefined;
     for (const comment of source.getAllComments()) {
-        if (comment.type !== AST_TOKEN_TYPES.Line || isToolDirective(comment.value) || !isFirstOnLine(text, comment)) {
+        if (
+            comment.type !== AST_TOKEN_TYPES.Line ||
+            isToolDirective(comment) ||
+            !BLANK.test(text.slice(comment.range[0] - comment.loc.start.column, comment.range[0]))
+        ) {
             blocks.push(comment);
             previous = undefined;
             continue;
@@ -108,11 +113,15 @@ function isLeading(
     comments: TSESTree.Comment[],
 ): boolean {
     const start = getStatementOffset(node);
-    if (comment.range[1] > start || !isFirstOnLine(text, comment)) return false;
+    if (
+        comment.range[1] > start ||
+        !BLANK.test(text.slice(comment.range[0] - comment.loc.start.column, comment.range[0]))
+    )
+        return false;
     let between = text.slice(comment.range[1], start);
     const directives = comments.filter(
         (directive) =>
-            directive.range[0] >= comment.range[1] && directive.range[1] <= start && isToolDirective(directive.value),
+            directive.range[0] >= comment.range[1] && directive.range[1] <= start && isToolDirective(directive),
     );
     for (const directive of directives.toReversed()) {
         const from = directive.range[0] - comment.range[1];
@@ -126,7 +135,10 @@ function buildRemovalRange(source: TSESLint.SourceCode, text: string, comment: T
     const lineStart = source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 });
     const newline = text.indexOf('\n', comment.range[1]);
     const end = newline === -1 ? text.length : newline;
-    if (isFirstOnLine(text, comment) && BLANK.test(text.slice(comment.range[1], end)))
+    if (
+        BLANK.test(text.slice(comment.range[0] - comment.loc.start.column, comment.range[0])) &&
+        BLANK.test(text.slice(comment.range[1], end))
+    )
         return [lineStart, newline === -1 ? end : end + 1];
     let start = comment.range[0];
     while (start > 0 && (text[start - 1] === ' ' || text[start - 1] === '\t')) start -= 1;
@@ -144,7 +156,7 @@ export const noCommentsInImports = createRule<[], 'comment'>({
             example:
                 'A file header after an import reports `comment`. A comment between imports does too. Move the comment above the first import or beside the code it explains. A comment that leads the next declaration remains in place. Tool directives, such as `// @ts-expect-error` above the import it targets, are allowed anywhere in the block. CommonJS require declarations follow the same rule when ESLint selects the commonjs source type.',
             description:
-                'Reports comments within or immediately after an import block. Exempts tool directives and comments that lead the next declaration.',
+                'Reports each comment within or immediately after an import block, including TypeScript import-equals declarations. Exempts tool directives and comments that lead the next declaration.',
             why: 'An import block lists dependencies. A file header belongs before it, and a behavior comment belongs with the code it explains.',
             fix: 'Move the comment above the first import or beside its declaration. eslint --fix moves it above the block.',
         },
@@ -160,33 +172,34 @@ export const noCommentsInImports = createRule<[], 'comment'>({
                 for (const { first, last } of groupImportBlocks(node.body, context.languageOptions.sourceType)) {
                     const nextStatement = node.body[node.body.indexOf(last) + 1];
                     const end = nextStatement === undefined ? text.length : getStatementOffset(nextStatement);
-                    const misplaced = comments.find(
+                    const misplaced = comments.filter(
                         (comment) =>
                             comment.range[0] > first.range[0] &&
                             comment.range[1] <= end &&
-                            !isToolDirective(comment.value) &&
+                            !isToolDirective(comment) &&
                             (nextStatement === undefined || !isLeading(text, comment, nextStatement, comments)),
                     );
-                    if (misplaced === undefined) continue;
-                    const isAfterImports = misplaced.loc.start.line > last.loc.end.line;
-                    context.report({
-                        loc: misplaced.loc,
-                        messageId: 'comment',
-                        fix(fixer) {
-                            const removal = buildRemovalRange(source, text, misplaced);
-                            if (isAfterImports) {
-                                const rest = text.slice(removal[1]);
-                                removal[1] += rest.length - rest.trimStart().length;
-                            }
-                            return [
-                                fixer.removeRange(removal),
-                                fixer.insertTextBefore(
-                                    first,
-                                    `${source.getText(misplaced)}${isAfterImports ? '\n\n' : '\n'}`,
-                                ),
-                            ];
-                        },
-                    });
+                    for (const comment of misplaced) {
+                        const isAfterImports = comment.loc.start.line > last.loc.end.line;
+                        context.report({
+                            loc: comment.loc,
+                            messageId: 'comment',
+                            fix(fixer) {
+                                const removal = buildRemovalRange(source, text, comment);
+                                if (isAfterImports) {
+                                    const rest = text.slice(removal[1]);
+                                    removal[1] += rest.length - rest.trimStart().length;
+                                }
+                                return [
+                                    fixer.removeRange(removal),
+                                    fixer.insertTextBefore(
+                                        first,
+                                        `${source.getText(comment)}${isAfterImports ? '\n\n' : '\n'}`,
+                                    ),
+                                ];
+                            },
+                        });
+                    }
                 }
             },
         };

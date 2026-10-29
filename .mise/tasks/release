@@ -1,90 +1,48 @@
 #!/usr/bin/env bash
 #MISE description="Publish both npm packages from a tested main commit, deploy the docs site, tag each published package, and create the GitHub release."
-#MISE depends=["build", "docs:build"]
 #MISE raw=true
 set -euo pipefail
 
-# assert_release_commit: Fails unless the checkout holds main with no changes and CI passed on its commit.
-assert_release_commit() {
-    local branch
-    local changes
-    local commit
-    local workflow
-    local conclusion
+source .mise/release/packages.sh
+source .mise/release/preflight.sh
+source .mise/release/notes.sh
 
-    branch=$(git branch --show-current)
-    changes=$(git status --porcelain)
-    if [[ ${branch} != main || -n ${changes} ]]; then
-        printf 'Run the release on main with no changes.\n' >&2
-        return 1
-    fi
-    commit=$(git rev-parse HEAD)
-    for workflow in tests.yml gspot.yml; do
-        conclusion=$(gh run list --workflow "${workflow}" --commit "${commit}" --json conclusion --jq '.[0].conclusion')
-        if [[ ${conclusion} != success ]]; then
-            printf '%s has not passed on %s.\n' "${workflow}" "${commit}" >&2
-            return 1
-        fi
-    done
-}
-
-# package_field: Prints one string field of the package.json of a package, without its JSON quotes.
-# Arguments:
-#   Package folder.
-#   Field name.
-package_field() {
-    local folder="$1"
-    local field="$2"
-    local value
-
-    value=$(npm pkg get "${field}" --prefix "${folder}") || return 1
-    printf '%s\n' "${value//\"/}"
-}
-
-# publish_package: Publishes a package to npm unless npm already has its version.
-# Arguments:
-#   Package folder.
-#   Package version.
-publish_package() {
-    local folder="$1"
-    local version="$2"
-    local spec
-
-    spec="$(package_field "${folder}" name)@${version}"
-    if npm view "${spec}" version >/dev/null 2>&1; then
-        printf '%s is already on npm.\n' "${spec}"
-    else
-        npm publish "./${folder}"
-    fi
-}
-
-# main: Publishes both packages, deploys the docs site, pushes each release tag, and creates the GitHub release.
-main() {
+main() (
+    local work_folder
+    local root
     local plugin_version
     local cli_version
-    local tag
+    local file
 
-    bun packages/cli/pin-ages.ts
-    assert_release_commit
+    assert_release_ready
+    root=$(pwd -P)
+    work_folder=$(mktemp -d)
+    trap 'cd -- "${root}" && { if [[ -d ${work_folder}/checkout ]]; then git worktree remove --force "${work_folder}/checkout"; fi; } && rm -rf -- "${work_folder}"' EXIT
+    git worktree add --detach "${work_folder}/checkout" HEAD
+    cd -- "${work_folder}/checkout" || exit 1
+    export MISE_TRUSTED_CONFIG_PATHS="${work_folder}/checkout"
+    mise run setup || exit 1
+    mise run build || exit 1
+    mise run docs:build || exit 1
+    for file in packages/cli/README.md packages/cli/LICENSE.md packages/eslint-plugin/LICENSE.md; do
+        if ! git diff --quiet HEAD -- "${file}"; then
+            printf 'Build changed %s. Rebuild and commit the copy before release.\n' "${file}" >&2
+            exit 1
+        fi
+    done
     plugin_version=$(package_field packages/eslint-plugin version)
     cli_version=$(package_field packages/cli version)
     publish_package packages/eslint-plugin "${plugin_version}"
     publish_package packages/cli "${cli_version}"
-
-    bun run --cwd docs wrangler deploy
-
-    for tag in "eslint-plugin-v${plugin_version}" "v${cli_version}"; do
-        if ! git rev-parse -q --verify "refs/tags/${tag}" >/dev/null 2>&1; then
-            git tag "${tag}"
-        fi
-        if ! git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
-            git push origin "${tag}"
-        fi
-    done
-
-    if ! gh release view "v${cli_version}" >/dev/null 2>&1; then
-        gh release create "v${cli_version}" --verify-tag --title "v${cli_version}" --generate-notes
+    bun run --cwd docs wrangler deploy || exit 1
+    curl --fail --show-error --silent --location --connect-timeout 10 --max-time 30 \
+        --output "${work_folder}/llms.txt" https://generativespotting.com/llms.txt || exit 1
+    if ! cmp -s docs/dist/llms.txt "${work_folder}/llms.txt"; then
+        printf 'https://generativespotting.com/llms.txt differs from docs/dist/llms.txt.\n' >&2
+        exit 1
     fi
-}
+    publish_tags "${plugin_version}" "${cli_version}"
+    printf 'Next commit: set npm:@gspothq/cli to %s in mise.toml, then run mise exec -- gspot apply and mise exec -- gspot install.\n' "${cli_version}"
+)
 
 main "$@"

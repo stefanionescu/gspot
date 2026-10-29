@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
+import { isAlias } from '../syntax.ts';
 import { createRule } from '../create-rule.ts';
-import { isAlias, convertToPosixPath } from '../syntax.ts';
 import { INDEX_BASENAMES } from '../config/rules/imports.ts';
 import type { TrivialFilesOptions } from '../types/rules.ts';
 import { OPTIONS_SCHEMA } from '../config/rules/no-trivial-files.ts';
@@ -26,10 +26,17 @@ function listBoundValues(statement: TSESTree.Node): (TSESTree.Node | null)[] {
 function isTypeAlias(node: TSESTree.TSTypeAliasDeclaration): boolean {
     const type = node.typeAnnotation;
     if (type.type !== AST_NODE_TYPES.TSTypeReference) return false;
-    return (
-        type.typeArguments === undefined ||
-        type.typeArguments.params.every((argument) => argument.type === AST_NODE_TYPES.TSTypeReference)
+    const parameters = (node.typeParameters?.params ?? []).map((parameter) =>
+        parameter.constraint === undefined && parameter.default === undefined ? parameter.name.name : null,
     );
+    const passed = (type.typeArguments?.params ?? []).map((argument) =>
+        argument.type === AST_NODE_TYPES.TSTypeReference &&
+        argument.typeName.type === AST_NODE_TYPES.Identifier &&
+        argument.typeArguments === undefined
+            ? argument.typeName.name
+            : undefined,
+    );
+    return passed.length === parameters.length && passed.every((name, index) => name === parameters[index]);
 }
 
 function isForwarding(statement: TSESTree.Node, source: TSESLint.SourceCode): boolean {
@@ -64,7 +71,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
                 'A file containing only `export { value } from "./owner";` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. Set `allowIndex: true` to permit an index barrel.',
             level: 'all',
             description:
-                'Reports a file whose top-level statements are only imports, re-exports, and aliases, such as `export const name = owner.name;` or `export type Alias = Owner;`. Small functions are the job of `gspot/no-trivial-functions`.',
+                'Reports a file whose top-level statements are only imports, re-exports, and aliases, such as `export const name = owner.name;`, `export type Alias = Owner;`, or `export type Alias<T> = Owner<T>;`. A type that gives a generic its arguments, such as `export type UserBox = Box<User>;`, defines a type and is not an alias. Small functions are the job of `gspot/no-trivial-functions`.',
             why: 'A file that only forwards to another module adds a step to every import and hides where the code lives.',
             fix: 'Import re-exported values from the modules that define them, and use the original name of each alias. Then delete the forwarding file.',
         },
@@ -75,7 +82,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
         },
     },
     create(context, [options]) {
-        if (options.allowIndex && INDEX_BASENAMES.has(posix.basename(convertToPosixPath(context.physicalFilename))))
+        if (options.allowIndex && INDEX_BASENAMES.has(posix.basename(context.physicalFilename.replaceAll('\\', '/'))))
             return {};
         return {
             Program(node) {

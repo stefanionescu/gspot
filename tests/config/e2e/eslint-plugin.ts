@@ -5,3 +5,11 @@ const configs: TSESLint.FlatConfig.Config[] = [plugin.configs.recommended, plugi
 const rule: TSESLint.RuleModule<string, readonly unknown[]> | undefined = plugin.rules['import-boundaries'];
 console.log(configs, rule);
 `;
+
+export const PLUGIN_PACKED_FILES = [
+    'LICENSE.md',
+    'README.md',
+    'dist/plugin.js',
+    'package.json',
+    'plugin.d.ts',
+] as const;

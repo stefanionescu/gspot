@@ -137,6 +137,9 @@ export default [
             "packages/eslint-plugin/.markdownlint.jsonc",
             "packages/cli/configurations/**/eslint-presets.json",
             "packages/cli/configurations/**/*-names.json",
+            "packages/cli/README.md",
+            "packages/cli/LICENSE.md",
+            "packages/eslint-plugin/LICENSE.md",
             "docs/worker-configuration.d.ts",
             "docs/cloudflare-env.d.ts",
             "**/bower_components/**",
@@ -2748,6 +2751,45 @@ export default [
             ]
         ]
     },
+    // javascript: your own rule options
+    {
+        "ignores": [],
+        rules: {
+            "n/no-unsupported-features/node-builtins": [
+                "error",
+                {
+                    "version": ">=24",
+                    "allowExperimental": true
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(0, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(0, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(0, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(0, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ]
+        ]
+    },
     // javascript
     {
         languageOptions: {
@@ -2816,6 +2858,45 @@ export default [
             ]
         ]
     },
+    // javascript: your own rule options
+    {
+        "ignores": [],
+        rules: {
+            "n/no-unsupported-features/node-builtins": [
+                "error",
+                {
+                    "version": ">=24",
+                    "allowExperimental": true
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(1, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(1, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(1, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(1, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ]
+        ]
+    },
     // javascript
     {
         languageOptions: {
@@ -2880,6 +2961,45 @@ export default [
             [
                 "**/*.astro",
                 runtimeMatches(2, runtimeDeclarations)
+            ]
+        ]
+    },
+    // javascript: your own rule options
+    {
+        "ignores": [],
+        rules: {
+            "n/no-unsupported-features/node-builtins": [
+                "error",
+                {
+                    "version": ">=24",
+                    "allowExperimental": true
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(2, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(2, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(2, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(2, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
             ]
         ]
     },
@@ -2951,6 +3071,45 @@ export default [
             ]
         ]
     },
+    // javascript: your own rule options
+    {
+        "ignores": [],
+        rules: {
+            "n/no-unsupported-features/node-builtins": [
+                "error",
+                {
+                    "version": ">=24",
+                    "allowExperimental": true
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(3, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(3, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(3, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(3, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ]
+        ]
+    },
     // javascript
     {
         languageOptions: {
@@ -3015,6 +3174,45 @@ export default [
             [
                 "**/*.astro",
                 runtimeMatches(4, runtimeDeclarations)
+            ]
+        ]
+    },
+    // javascript: your own rule options
+    {
+        "ignores": [],
+        rules: {
+            "n/no-unsupported-features/node-builtins": [
+                "error",
+                {
+                    "version": ">=24",
+                    "allowExperimental": true
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(4, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(4, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(4, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(4, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
             ]
         ]
     },
@@ -3086,6 +3284,45 @@ export default [
             ]
         ]
     },
+    // javascript: your own rule options
+    {
+        "ignores": [],
+        rules: {
+            "n/no-unsupported-features/node-builtins": [
+                "error",
+                {
+                    "version": ">=24",
+                    "allowExperimental": true
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(5, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(5, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(5, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(5, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ]
+        ]
+    },
     // javascript
     {
         languageOptions: {
@@ -3150,6 +3387,45 @@ export default [
             [
                 "**/*.astro",
                 runtimeMatches(6, runtimeDeclarations)
+            ]
+        ]
+    },
+    // javascript: your own rule options
+    {
+        "ignores": [],
+        rules: {
+            "n/no-unsupported-features/node-builtins": [
+                "error",
+                {
+                    "version": ">=24",
+                    "allowExperimental": true
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(6, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(6, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(6, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(6, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
             ]
         ]
     },
@@ -3221,6 +3497,45 @@ export default [
             ]
         ]
     },
+    // javascript: your own rule options
+    {
+        "ignores": [],
+        rules: {
+            "n/no-unsupported-features/node-builtins": [
+                "error",
+                {
+                    "version": ">=24",
+                    "allowExperimental": true
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(7, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(7, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(7, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(7, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ]
+        ]
+    },
     // javascript
     {
         languageOptions: {
@@ -3285,6 +3600,45 @@ export default [
             [
                 "**/*.astro",
                 runtimeMatches(8, runtimeDeclarations)
+            ]
+        ]
+    },
+    // javascript: your own rule options
+    {
+        "ignores": [],
+        rules: {
+            "n/no-unsupported-features/node-builtins": [
+                "error",
+                {
+                    "version": ">=24",
+                    "allowExperimental": true
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(8, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(8, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(8, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(8, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
             ]
         ]
     },
@@ -3353,6 +3707,45 @@ export default [
             [
                 "**/*.astro",
                 runtimeMatches(9, runtimeDeclarations)
+            ]
+        ]
+    },
+    // javascript: your own rule options
+    {
+        "ignores": [],
+        rules: {
+            "n/no-unsupported-features/node-builtins": [
+                "error",
+                {
+                    "version": ">=24",
+                    "allowExperimental": true
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(9, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                runtimeMatches(9, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(9, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts"
+            ],
+            [
+                "**/*.astro",
+                runtimeMatches(9, runtimeDeclarations),
+                "**/*",
+                "packages/eslint-plugin/local/source-hook.ts/**"
             ]
         ]
     },
@@ -5483,25 +5876,6 @@ export default [
         "ignores": [],
         rules: {
             "package-json/restrict-dependency-ranges": "off"
-        },
-        files: [
-            [
-                "**/package.json",
-                "**/*",
-                "packages/eslint-plugin/package.json"
-            ],
-            [
-                "**/package.json",
-                "**/*",
-                "packages/eslint-plugin/package.json/**"
-            ]
-        ]
-    },
-    // javascript
-    {
-        "ignores": [],
-        rules: {
-            "package-json/specify-peers-locally": "off"
         },
         files: [
             [

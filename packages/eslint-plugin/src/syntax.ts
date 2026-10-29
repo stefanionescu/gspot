@@ -1,5 +1,6 @@
-import { DRIVE_LETTER, UNWRAPPABLE_NODES } from './config/syntax.ts';
+import type { ImportSource } from './types/syntax.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { IMPORT_SELECTOR, REQUIRE_SELECTOR, UNWRAPPABLE_NODES, IMPORT_EQUALS_SELECTOR } from './config/syntax.ts';
 
 const isUnwrappable = ASTUtils.isNodeOfTypes(UNWRAPPABLE_NODES.map((type) => AST_NODE_TYPES[type]));
 
@@ -9,8 +10,26 @@ function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
     return value;
 }
 
+function getOutermostMember(node: TSESTree.Node): TSESTree.Node {
+    let outer = node;
+    while (outer.parent?.type === AST_NODE_TYPES.MemberExpression && outer.parent.object === outer)
+        outer = outer.parent;
+    return outer;
+}
+
+function isMemberWrite(member: TSESTree.Node): boolean {
+    const { parent } = member;
+    if (member.type !== AST_NODE_TYPES.MemberExpression || parent === undefined) return false;
+    return (
+        (parent.type === AST_NODE_TYPES.AssignmentExpression && parent.left === member) ||
+        parent.type === AST_NODE_TYPES.UpdateExpression ||
+        (parent.type === AST_NODE_TYPES.UnaryExpression && parent.operator === 'delete')
+    );
+}
+
 /**
-Identify a direct alias of a value bound in this module.
+Identify a name or member chain that aliases a value bound in this module.
+The module never assigns the source again, so the alias keeps its value.
 
 @param node the expression assigned to another name
 @param scope the expression's lexical scope
@@ -19,16 +38,36 @@ Identify a direct alias of a value bound in this module.
 export function isAlias(node: TSESTree.Node | null, scope: TSESLint.Scope.Scope): boolean {
     let value = unwrap(node);
     while (value?.type === AST_NODE_TYPES.MemberExpression && !value.computed) value = unwrap(value.object);
-    return value?.type === AST_NODE_TYPES.Identifier && (ASTUtils.findVariable(scope, value)?.defs.length ?? 0) > 0;
+    if (value?.type !== AST_NODE_TYPES.Identifier) return false;
+    const variable = ASTUtils.findVariable(scope, value);
+    return (
+        variable !== null &&
+        variable.defs.length > 0 &&
+        !variable.references.some(
+            (reference) =>
+                (reference.isWrite() && reference.init !== true) ||
+                isMemberWrite(getOutermostMember(reference.identifier)),
+        )
+    );
 }
 
 /**
-Normalize separators and drive casing before comparing repository paths.
+Build visitors for every module specifier: imports, re-exports, import-equals declarations, and CommonJS require calls.
+This includes dynamic imports and type imports.
 
-@param path the operating system path
-@returns the comparable POSIX path
+@param check the check that receives each specifier node
+@returns the visitors of the rule
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function convertToPosixPath(path: string): string {
-    return path.replaceAll('\\', '/').replace(DRIVE_LETTER, (drive) => drive.toUpperCase());
+export function buildSourceVisitors(check: (source: TSESTree.Node) => void): TSESLint.RuleListener {
+    return {
+        [IMPORT_SELECTOR]: ({ source }: ImportSource) => {
+            if (source !== null) check(source);
+        },
+        [IMPORT_EQUALS_SELECTOR]: ({ expression }: TSESTree.TSExternalModuleReference) => {
+            check(expression);
+        },
+        [REQUIRE_SELECTOR]: ({ arguments: [argument] }: TSESTree.CallExpression) => {
+            if (argument !== undefined) check(argument);
+        },
+    };
 }

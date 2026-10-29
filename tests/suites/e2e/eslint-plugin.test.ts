@@ -2,13 +2,13 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { cp, lstat, mkdir, writeFile } from 'node:fs/promises';
 import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
-import { PLUGIN_TYPES_SOURCE } from '#tests/config/e2e/eslint-plugin.ts';
+import { cp, lstat, mkdir, readdir, writeFile } from 'node:fs/promises';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
+import { PLUGIN_TYPES_SOURCE, PLUGIN_PACKED_FILES } from '#tests/config/e2e/eslint-plugin.ts';
 
 async function assertPluginExports(consumer: string): Promise<void> {
     const [program = ''] = buildProgramArguments('processes/eslint-plugin');
@@ -57,5 +57,13 @@ test('the installed ESLint plugin loads through import and require and enforces 
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     const installedPlugin = await lstat(join(consumer, 'node_modules', '@gspothq/eslint-plugin'));
     expect(installedPlugin.isSymbolicLink()).toBe(false);
+    const installedPath = join(consumer, 'node_modules', '@gspothq/eslint-plugin');
+    const files = await readdir(installedPath, { recursive: true, withFileTypes: true });
+    expect(
+        files
+            .filter((file) => file.isFile())
+            .map((file) => join(file.parentPath, file.name).slice(installedPath.length + 1))
+            .toSorted((left, right) => left.localeCompare(right)),
+    ).toStrictEqual([...PLUGIN_PACKED_FILES]);
     await assertPluginExports(consumer);
 });

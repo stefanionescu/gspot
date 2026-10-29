@@ -223,3 +223,32 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
         'pnpm-workspace.yaml is not a valid workspace file: Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 12:\n\npackages: [\n           ^\n. Fix the file.';
     await expectRefusalWithoutWrites(sandbox.path, command, { error: 'filesystem', message });
 });
+
+test('init keeps root Docker and GitHub configurations beside an app scope', async () => {
+    await using sandbox = await createGitSandbox({
+        Dockerfile: 'FROM scratch\n',
+        '.github/workflows/test.yml': 'name: Test\non: push\njobs: {}\n',
+        'app/package.json': '{"name":"example-app","private":true}',
+        'app/index.js': 'export const port = 8080;\n',
+    });
+    const result = await runGspot(sandbox.path, [...buildInitArguments([]), '--dry-run', '--json']);
+    expect(result.code, result.stderr).toBe(0);
+    const { settings } = JSON.parse(result.stdout) as InitJson;
+    const parsed = parseSettings(settings, sandbox.path);
+    expect(parsed.configurations).toContain('docker');
+    expect(parsed.configurations).toContain('github-actions');
+    expect(Object.keys(parsed.scopes)).toContain('app');
+});
+
+test('init names an uninstalled tsconfig extension and the dependency install step', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': '{"name":"example-app","private":true}',
+        'tsconfig.json': '{"extends":"@tsconfig/node22/tsconfig.json"}',
+        'index.ts': 'export const port = 8080;\n',
+    });
+    const result = await runGspot(sandbox.path, [...buildInitArguments([]), '--dry-run']);
+    expect(result.code).toBe(2);
+    expect(result.stderr).toBe(
+        'tsconfig.json extends @tsconfig/node22/tsconfig.json, which is not installed. Install the project dependencies, then run the command again.\n',
+    );
+});

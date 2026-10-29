@@ -10,6 +10,4 @@ export const INDEX_BASENAMES = new Set([
     'index.cts',
 ]);
 
-export const IMPORT_SELECTOR = 'ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression';
-
-export const RELATIVE_PREFIXES = ['./', '../'] as const;
+export const RESOURCE_QUERY = /\?[\s\S]*/u;

@@ -4,13 +4,19 @@ import { NODE_MODULES } from '#cli/config/files/names.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { join, dirname, resolve, relative } from 'node:path';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
 import { findCachedText, readContainedPath } from '#cli/system/files/reads.ts';
 import { typeScriptConfigSchema } from '#cli/schemas/parsers/projects/tsconfig.ts';
 import { isInside, convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
 import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/projects/tsconfig.ts';
-import { TSCONFIG_FILE, TSC_NO_FILES_CODE, TS_EMPTY_FILES_CODE } from '#cli/config/parsers/projects/tsconfig.ts';
+
+import {
+    TSCONFIG_FILE,
+    TSC_NO_FILES_CODE,
+    TS_EMPTY_FILES_CODE,
+    MISSING_EXTENDED_CONFIG,
+} from '#cli/config/parsers/projects/tsconfig.ts';
 
 const PARSED_TSCONFIGS = { create: () => new Map<string, TypeScriptConfiguration | undefined>() };
 
@@ -121,6 +127,16 @@ function readCompilerFile(root: string, path: string, reads: ReadCache): string 
     }
 }
 
+function buildTsconfigError(path: string, error: unknown): GspotError {
+    const detail = error instanceof Error ? error.message : String(error);
+    const missing = MISSING_EXTENDED_CONFIG.exec(detail)?.[1];
+    const message =
+        missing !== undefined && !missing.startsWith('.') && !isAbsolute(missing)
+            ? `${path} extends ${missing}, which is not installed. Install the project dependencies, then run the command again.`
+            : `Cannot read the compiler settings in ${path}: ${detail}`;
+    return new GspotError('configuration', message, { cause: error });
+}
+
 /**
 Resolve compiler options and inherited paths with the TypeScript compiler.
 
@@ -145,11 +161,7 @@ export function readTsconfig(root: string, path: string, reads: ReadCache): Type
         configurations.set(key, parsed);
         return parsed;
     } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
-        const shown = convertToPosixPath(relative(root, path));
-        throw new GspotError('configuration', `Cannot read the compiler settings in ${shown}: ${detail}`, {
-            cause: error,
-        });
+        throw buildTsconfigError(convertToPosixPath(relative(root, path)), error);
     }
 }
 

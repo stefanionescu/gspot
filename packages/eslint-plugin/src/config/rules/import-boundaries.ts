@@ -10,7 +10,7 @@ export const OPTIONS_SCHEMA = {
         },
         aliases: {
             description:
-                'Import alias patterns mapped to repository paths, as in tsconfig `paths` and package.json `imports`: `@/*` to `src/*`, or an exact key to an exact path.',
+                'Import alias patterns mapped to repository paths, as in tsconfig `paths` and package.json `imports`: `@/*` to `src/*` or `./src/*`, or an exact key to an exact path.',
             type: 'object',
             additionalProperties: { type: 'string' },
         },
@@ -24,8 +24,8 @@ export const OPTIONS_SCHEMA = {
     additionalProperties: false,
 } satisfies JSONSchema4;
 
-export const QUERY = /\?[\s\S]*/u;
-
 export const DEFAULT_BOUNDARY_FOLDERS = ['*/*'] as const;
 
 export const TRAILING_SLASH = /\/$/u;
+
+export const RELATIVE_SPECIFIER = /^\.\.?(?:\/|$)/u;

@@ -35,7 +35,11 @@ test('add --scope writes the scope list and applies it without an npm install', 
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { written, removed, notes } = JSON.parse(result.stdout) as ApplyReport;
     expect({ written, removed, notes }).toStrictEqual({
-        written: [...BASH_CONFIG_FILE_NAMES.map((file) => findManifestTarget('bash', file)), GSPOT_PATHS.miseProject],
+        written: [
+            ...BASH_CONFIG_FILE_NAMES.map((file) => findManifestTarget('bash', file)),
+            GSPOT_PATHS.miseProject,
+            GSPOT_PATHS.pythonProject,
+        ],
         removed: [],
         notes: [TOOLS_CHANGED_NOTE],
     });

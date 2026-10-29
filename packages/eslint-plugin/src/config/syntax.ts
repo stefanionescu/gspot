@@ -11,3 +11,10 @@ export const FUNCTION_TYPES = new Set(['FunctionDeclaration', 'FunctionExpressio
 export const UNWRAPPABLE_NODES = ['ChainExpression', ...TYPE_ASSERTION_NODES] as const;
 
 export const DRIVE_LETTER = /^[a-z]:/u;
+
+export const IMPORT_SELECTOR =
+    'ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression, TSImportType';
+
+export const IMPORT_EQUALS_SELECTOR = 'TSExternalModuleReference';
+
+export const REQUIRE_SELECTOR = 'CallExpression[callee.type="Identifier"][callee.name="require"][arguments.length=1]';

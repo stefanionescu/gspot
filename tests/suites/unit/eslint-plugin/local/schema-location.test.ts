@@ -1,7 +1,8 @@
 import { Linter } from 'eslint';
 import { test, expect } from 'bun:test';
 import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
-import { schemaLocation, type SchemaLocationOptions } from '#eslint-plugin-local/schema-location.ts';
+import { schemaLocation } from '#eslint-plugin-local/schema-location.ts';
+import type { SchemaLocationOptions } from '#eslint-plugin-local/types.ts';
 
 createRuleTester().run<'location', [Partial<SchemaLocationOptions[0]>]>('schema-location', schemaLocation, {
     valid: [
@@ -62,4 +63,34 @@ test('schema placement resolves configured folders from the ESLint working direc
     expect(linter.verify(source, config, { filename: '/repo/src/schemas/name.js' })).toStrictEqual([]);
     const messages = linter.verify(source, config, { filename: '/repo/src/parsers/name.js' });
     expect(messages).toMatchObject([{ ruleId: 'gspot/schema-location', messageId: 'location' }]);
+});
+
+createRuleTester().run('schema-location regressions', schemaLocation, {
+    valid: [
+        {
+            code: "import { z } from 'zod';\nz.globalRegistry.add(schema, {});\nexport const result = z.safeParse(schema, value);",
+            filename: '/repo/src/parsers/name.ts',
+            name: 'z.globalRegistry and z.safeParse only read schemas',
+        },
+    ],
+    invalid: [
+        {
+            code: "import { z } from 'zod';\nexport const flag = z.stringbool();",
+            filename: '/repo/src/parsers/name.ts',
+            name: 'z.stringbool() outside the schema folders reports',
+            errors: [{ messageId: 'location' }],
+        },
+        {
+            code: "import { z } from 'zod';\nexport const text = z.fromJSONSchema({ type: 'string' });",
+            filename: '/repo/src/parsers/name.ts',
+            name: 'z.fromJSONSchema() outside the schema folders reports',
+            errors: [{ messageId: 'location' }],
+        },
+        {
+            code: "import { z } from 'zod';\nexport const minimum = z.minLength(3);",
+            filename: '/repo/src/parsers/name.ts',
+            name: 'a check built with z.minLength() outside the schema folders reports',
+            errors: [{ messageId: 'location' }],
+        },
+    ],
 });

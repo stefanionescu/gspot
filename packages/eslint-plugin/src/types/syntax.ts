@@ -9,6 +9,7 @@ export type ImportSource =
     | TSESTree.ImportDeclaration
     | TSESTree.ExportAllDeclaration
     | TSESTree.ExportNamedDeclaration
-    | TSESTree.ImportExpression;
+    | TSESTree.ImportExpression
+    | TSESTree.TSImportType;
 
 export type ImportBlock = { first: TSESTree.Statement; last: TSESTree.Statement };

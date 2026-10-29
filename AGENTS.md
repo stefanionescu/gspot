@@ -93,6 +93,7 @@ You can edit the other keys of that file.
 
 ## This repository
 
+- Before you commit a change under `packages/eslint-plugin/src/`, run `mise run packages:eslint-plugin:lint`.
 - Commit straight to `main`. Do not open branches or pull requests.
 - Name a tool check after its tool. Name a built-in check after what it checks.
 - A unit test runs the source in process. It may run Git and the tools of `tests/node_modules`, but makes no network

@@ -17,6 +17,7 @@ import {
     FORMAT_WORKSPACE_FILES,
     PRETTIER_FORMAT_OPTIONS,
     INVALID_PRETTIER_OPTIONS,
+    UNREADABLE_PRETTIER_FILES,
 } from '#tests/config/commands/init/format.ts';
 
 test.each(INVALID_PRETTIER_OPTIONS)(
@@ -98,11 +99,11 @@ test('init turns Prettier overrides and the Ruff quote style into format overrid
     expect(options[0]).toMatchObject(PRETTIER_FORMAT_OPTIONS);
 });
 
-test.each(['prettier.config.mjs', '.prettierrc.cjs'])(
-    'init names the format settings it cannot read from %s',
-    async (path) => {
+test.each([...UNREADABLE_PRETTIER_FILES])(
+    'init names the format settings it cannot read from $path',
+    async ({ path, text }) => {
         await using sandbox = await testdir({
-            [path]: 'export default { printWidth: 100 };\n',
+            [path]: text,
             'source.js': 'export const count = 1;\n',
         });
         commitAll(sandbox.path);
@@ -110,9 +111,13 @@ test.each(['prettier.config.mjs', '.prettierrc.cjs'])(
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const { plan, settings } = JSON.parse(result.stdout) as InitJson;
         expect([...plan.delete, ...plan.write].find((file) => file.path === path)?.note).toContain(
-            'gspot cannot read a JavaScript Prettier config, so set format.indent_width and format.print_width by hand',
+            'gspot cannot read this Prettier config, so set format.indent_width and format.print_width by hand',
         );
-        expect(parse(settings) as TomlTable).not.toHaveProperty('format');
+        expect(parse(settings) as TomlTable).toHaveProperty('format', {
+            indent_width: 2,
+            print_width: 80,
+            quotes: 'double',
+        });
     },
 );
 

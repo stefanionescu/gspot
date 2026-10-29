@@ -13,6 +13,7 @@ export type ClientEnvOptions = [
 export type ImportBoundariesOptions = [
     { folders: readonly string[]; aliases: Record<string, string>; externals: readonly string[] },
 ];
+export type RelativeImport = { target: string; query: string };
 export type TrivialFunctionsOptions = [{ trivialFunctionStatements: number }];
 
 export type TrivialFilesOptions = [{ allowIndex: boolean }];

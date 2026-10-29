@@ -1,7 +1,7 @@
-import { isInScope } from '#cli/repository/scopes.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import type { ScopeFolder } from '#cli/types/repository/files.ts';
+import { isInScope, findScopePath } from '#cli/repository/scopes.ts';
 import { type ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { expandSuggestions, selectConfigurations, assertConfigurationsExist } from '#cli/configurations/select.ts';
 
@@ -25,19 +25,32 @@ function selectRootConfigurations(
     const named = init.options.configurations;
     if (named !== undefined) return [...new Set(named)];
     const hasScopes = init.repository.scopeFolders.length > 1;
+    const root = selectScopeConfigurations(init, { path: '', origin: 'root', configurations: [] }, []);
     const detectedConfigurations = detected
         .filter((evidence) => {
             const configuration = findInitConfiguration(init, evidence.configuration);
             if (!configuration) return false;
             const { group } = configuration;
-            return !hasScopes || group === 'general' || group === 'language';
+            return !hasScopes || group === 'general' || group === 'language' || root.includes(configuration.name);
         })
         .map((evidence) => evidence.configuration);
     return [...new Set(detectedConfigurations)];
 }
 
 function selectScopeConfigurations(init: InitRepository, scopeFolder: ScopeFolder, rootNames: string[]): string[] {
-    const names = detectConfigurations(init.repository, init.configurationsByName, scopeFolder.path)
+    const repository =
+        scopeFolder.path === ''
+            ? {
+                  ...init.repository,
+                  files: init.repository.files.filter(
+                      (file) => findScopePath(file.path, init.repository.scopeFolders) === '',
+                  ),
+                  dependencyFiles: init.repository.dependencyFiles.filter(
+                      (file) => findScopePath(file.path, init.repository.scopeFolders) === '',
+                  ),
+              }
+            : init.repository;
+    const names = detectConfigurations(repository, init.configurationsByName, scopeFolder.path)
         .filter((evidence) => {
             const configuration = findInitConfiguration(init, evidence.configuration);
             return configuration !== undefined && configuration.group !== 'general';
@@ -98,7 +111,7 @@ export function selectForInit(init: InitRepository): InitConfigurations {
         [...proposedRoot, ...inScopes],
         configurationsByName,
         new Set(detected.map((evidence) => evidence.configuration)),
-    ).filter((name) => !inScopes.has(name) && (!automatic.has(name) || named.has(name)));
+    ).filter((name) => (!inScopes.has(name) || heldAtRoot.includes(name)) && (!automatic.has(name) || named.has(name)));
     const selectedNames = new Set(
         selectConfigurations([...rootNames, ...proposedRoot, ...inScopes], configurationsByName).map(
             (configuration) => configuration.name,
