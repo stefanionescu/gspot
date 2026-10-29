@@ -54,7 +54,6 @@ function buildSwiftlintOptions(planned: PlannedConfigFile, offSet: Set<string>) 
         },
         missing_docs: { error: ['open', 'public'] },
         unused_import: { always_keep_imports: getTable(planned.scope.settings, 'tools.swiftlint').always_keep_imports },
-        trailing_comma: { mandatory_comma: format.trailing_commas !== 'none' },
     };
     const enabled = Object.entries(options).filter(([rule]) => !offSet.has(rule));
     return Object.fromEntries(enabled);

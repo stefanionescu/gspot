@@ -80,7 +80,7 @@ test.each(['basic', 'all'] as const)(
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['swift'], {
                 level,
-                tables: '[format]\nprint_width = 110\ntrailing_commas = "none"\n[limits]\nfunction_lines = 17\nfile_lines = 190\n',
+                tables: '[format]\nprint_width = 110\n[limits]\nfunction_lines = 17\nfile_lines = 190\n',
             }),
             'Value.swift': CLEAN_SWIFT,
         });
@@ -94,7 +94,6 @@ test.each(['basic', 'all'] as const)(
             level === 'all' ? { warning: 190, error: 190, ignore_comment_only_lines: true } : undefined,
         );
         expect(document.line_length).toStrictEqual({ warning: 110, error: 110, ignores_urls: true });
-        expect(document.trailing_comma).toStrictEqual({ mandatory_comma: false });
         expect(document.opt_in_rules.includes('force_unwrapping')).toBe(level === 'all');
         expect(document.disabled_rules.includes('file_length')).toBe(level === 'basic');
     },

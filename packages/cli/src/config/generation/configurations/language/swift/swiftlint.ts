@@ -3,7 +3,7 @@ export const SWIFTLINT_FUNCTION_NESTING = 2;
 export const SWIFTLINT_COMMENTS = {
     identifier_name:
         '# The case and length of types, variables, parameters, and enum cases; naming/identifiers checks functions and methods.',
-    disabled_rules: '# SwiftFormat owns whitespace, braces, and statement layout.',
+    disabled_rules: '# SwiftFormat owns whitespace, punctuation, braces, and statement layout.',
 } as const;
 
 export const SWIFTLINT_ALWAYS_OFF = [
@@ -13,6 +13,16 @@ export const SWIFTLINT_ALWAYS_OFF = [
     'control_statement',
     'implicit_getter',
     'implicit_optional_initialization',
+    'closing_brace',
+    'colon',
+    'comma',
+    'redundant_void_return',
+    'return_arrow_whitespace',
+    'trailing_comma',
+    'trailing_newline',
+    'trailing_semicolon',
+    'vertical_whitespace',
+    'void_return',
 ] as const;
 
 export const SWIFTLINT_DEFAULT_LEVEL_OFF = [
