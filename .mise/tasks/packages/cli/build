@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Build the CLI: bundle gspot.js and the PurgeCSS child process, and copy the grammars and their licenses."
+#MISE description="Build the CLI into a clean dist folder: bundle gspot.js and the PurgeCSS child process, and copy the grammars and their licenses."
 #MISE dir="{{config_root}}/packages/cli"
 set -euo pipefail
 
@@ -23,10 +23,12 @@ main() {
     local grammar
 
     mkdir -p dist
+    rm -f -- dist/*
     {
         printf '%s\n' '#!/usr/bin/env node'
         bun build src/bin.ts --target node --format esm --packages external
     } >dist/gspot.js
+    chmod +x dist/gspot.js
     bun build src/checks/framework/site/purgecss-process.ts --outdir dist --target node --format esm --packages external
 
     mkdir -p grammars/licenses
