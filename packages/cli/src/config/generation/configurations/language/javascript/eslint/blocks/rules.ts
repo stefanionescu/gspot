@@ -63,6 +63,7 @@ export const SONAR_RULES = {
     'sonarjs/for-loop-increment-sign': 'off',
     'sonarjs/no-hardcoded-passwords': 'off',
     'sonarjs/no-hardcoded-secrets': 'off',
+    'sonarjs/prefer-regexp-exec': 'off',
 
     'sonarjs/no-empty-test-file': 'off',
     'sonarjs/no-collapsible-if': 'error',
