@@ -1,3 +1,4 @@
+import { gt } from 'semver';
 import { openWriter } from '#cli/write.ts';
 import { openSession } from '#cli/session.ts';
 import { formatCount } from '#cli/system/text.ts';
@@ -10,8 +11,8 @@ import { TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
-import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { type OutdatedFile } from '#cli/types/generation/files.ts';
+import { readVersionPin, assertVersionPin } from '#cli/repository/version-pin.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/apply.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { formatUpToDate, formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
@@ -59,6 +60,8 @@ async function buildDryRunResult(session: Session): Promise<CommandResult> {
 
 async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
     const root = readRepositoryRoot(options.cwd);
+    const pin = readVersionPin(root);
+    if (pin !== undefined && gt(pin, cliPackage.version)) assertVersionPin(root);
     const session = await openSession(root);
     if (options.isDryRun) return buildDryRunResult(session);
     using writer = openWriter(root);

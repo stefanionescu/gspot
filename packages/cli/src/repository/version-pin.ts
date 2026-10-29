@@ -1,3 +1,4 @@
+import { gt } from 'semver';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -29,6 +30,11 @@ export function assertVersionPin(root: string): void {
     if (versionPin === undefined || versionPin === cliPackage.version) return;
     const runner = selectStartRunner(root);
     const command = runner.installCommand.replace('<version>', () => versionPin);
+    if (gt(versionPin, cliPackage.version))
+        throw new GspotError(
+            'pin',
+            `This repository pins gspot ${versionPin}, newer than this gspot ${cliPackage.version}.\nInstall the pinned version: ${command}`,
+        );
     throw new GspotError(
         'pin',
         [

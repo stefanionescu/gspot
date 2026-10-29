@@ -4,11 +4,12 @@ import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
 import { WRITER_LOCK_FILE } from '#cli/config/write.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { PIN_MESSAGE } from '#tests/config/version-pin.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { startCommand } from '#tests/setup/system/processes.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
+import { readTree, isOnDisk } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -118,3 +119,16 @@ test.each([...LINKED_FILE_CASES])(
         expect(await readFile(join(sandbox.path, 'outside'), 'utf8')).toBe(outside);
     },
 );
+
+test.each([false, true])('apply refuses a newer pin and writes nothing (dry run: %s)', async (dryRun) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        '.gspot/version': '9.9.9\n',
+        '.gspot/preserve.txt': 'keep generated content',
+    });
+    const before = await readTree(sandbox.path);
+    const refused = await runGspot(sandbox.path, ['apply', ...(dryRun ? ['--dry-run'] : []), '--json']);
+    expect(refused.code).toBe(2);
+    expect(JSON.parse(refused.stdout) as CommandFailureJson).toStrictEqual({ error: 'pin', message: PIN_MESSAGE });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
