@@ -36,7 +36,7 @@ test('gspot/generated-files reports an edited file with the apply help and passe
         {
             file: shellcheckrc,
             rule: 'changed',
-            message: 'This generated file differs from what gspot.toml generates.',
+            message: 'This generated file is out of date.',
             help: 'Run gspot apply.',
         },
     ]);
