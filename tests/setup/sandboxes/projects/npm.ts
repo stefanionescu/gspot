@@ -27,7 +27,7 @@ async function writeNpmProject(options: {
     registry: NpmRegistry;
     packageManager: PackageManager['name'];
     projectPath: string;
-}): Promise<Pick<NpmProject, 'rootPackage' | 'yarnConfiguration'>> {
+}): Promise<Pick<NpmProject, 'rootPackage' | 'yarnConfiguration' | 'environment'>> {
     const { root, artifacts, registry, packageManager, projectPath } = options;
     const version = await runCommand([packageManager, '--version'], { cwd: artifacts });
     if (version.code !== 0) throw new Error(`Package manager version failed: ${version.stdout}${version.stderr}`);
@@ -35,10 +35,13 @@ async function writeNpmProject(options: {
         ...NPM_PROJECT_ROOT_PACKAGE,
         packageManager: `${packageManager}@${version.stdout.trim()}`,
     });
+    const npmrc = `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${NPM_REGISTRY_TOKEN}\n`;
+    const userSettings = join(artifacts, 'user.npmrc');
+    await writeFile(userSettings, npmrc, { mode: 0o600 });
     await createFileTree(root, {
         [projectPath]: rootPackage,
         ...(projectPath === 'package.json' && { 'pnpm-workspace.yaml': PNPM_WORKSPACE }),
-        '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${NPM_REGISTRY_TOKEN}\n`,
+        '.npmrc': npmrc,
         'gspot.toml': buildSandboxSettings(['format'], {
             ignore: {
                 checks: NPM_PROJECT_IGNORES,
@@ -54,7 +57,7 @@ async function writeNpmProject(options: {
             : undefined;
     if (yarnConfiguration !== undefined) await writeFile(join(root, '.yarnrc.yml'), yarnConfiguration, { mode: 0o600 });
     runGitStep(root, ['init', '--quiet']);
-    return { rootPackage, yarnConfiguration };
+    return { rootPackage, yarnConfiguration, environment: { NPM_CONFIG_USERCONFIG: userSettings } };
 }
 
 /**
@@ -83,7 +86,10 @@ export async function createNpmProject(
     };
     const registry = resources.use(await createNpmRegistry(artifacts, installPlan));
     const authored = await writeNpmProject({ root, artifacts, registry, packageManager, projectPath });
-    await runGspotStep({ root, run: spawnGspot }, ['apply']);
+    await runGspotStep(
+        { root, run: (cwd, commandArguments) => spawnGspot(cwd, commandArguments, authored.environment) },
+        ['apply'],
+    );
     const owned = resources.move();
     return {
         root,

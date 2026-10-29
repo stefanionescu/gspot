@@ -11,12 +11,12 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
-import { PYTHON_VERSION } from '#cli/config/installers/pypi.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { type PythonToolProject } from '#cli/types/installers/pypi.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import type { MinimumReleaseAge } from '#cli/types/installers/install.ts';
+import { PYTHON_VERSION, INSECURE_HOST_MESSAGE } from '#cli/config/installers/pypi.ts';
 
 import {
     installPythonTools,
@@ -224,6 +224,14 @@ test('project index settings apply only without uv.toml, and missing or empty fi
             message: 'uv.toml: find-links.0: Invalid input: expected string, received number. Fix the field.',
         }),
     );
+});
+
+test.each([
+    { 'uv.toml': 'allow-insecure-host = ["example.com"]\n' },
+    { 'pyproject.toml': '[project]\nname = "service"\n\n[tool.uv]\nallow-insecure-host = ["example.com"]\n' },
+])('repository uv settings that allow an insecure host stop the Python tool install', async (files) => {
+    await using sandbox = await testdir(files);
+    expect(() => readPythonSettings(sandbox.path)).toThrow(new GspotError('install', INSECURE_HOST_MESSAGE));
 });
 
 test('Python resolution excludes releases newer than the minimum release age', async () => {

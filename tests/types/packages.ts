@@ -29,6 +29,7 @@ export type NpmProject = {
     rootPackage: string;
     yarnConfiguration: string | undefined;
     toolPackageManager: ToolPackageManager['name'];
+    environment: Record<string, string>;
     [Symbol.asyncDispose](): Promise<void>;
 };
 

@@ -30,3 +30,13 @@ export const READ_REGISTRY_MESSAGE = 'Cannot read the registry settings. Check t
 export const REGISTRY_URL_MESSAGE = 'A registry URL in the .npmrc files is not valid.';
 
 export const NPMRC_SETTINGS_MESSAGE = 'The .npmrc settings are not valid.';
+
+export const PROJECT_SETTINGS_LEVEL = 'project';
+
+export const SETTINGS_FILE_KEYS = ['userconfig', 'globalconfig'] as const;
+
+export const SETTINGS_FILE_MESSAGE =
+    'The repository .npmrc moves the npm settings files with userconfig or globalconfig. gspot reads only the scope registries of the repository .npmrc for its tools. Remove those lines.';
+
+export const INSECURE_TLS_MESSAGE =
+    'The npm settings turn off TLS checks with strict-ssl=false. gspot installs its tools only over checked TLS. Remove strict-ssl=false, or set cafile to the certificate of your proxy.';
