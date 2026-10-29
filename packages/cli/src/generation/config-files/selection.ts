@@ -43,6 +43,15 @@ function listScopeConfigFiles(session: Session, scope: Scope, usedNames: UsedNam
         tools: new Set(checks.flatMap((planned) => listCheckTools(planned))),
         checks: new Set(checks.map((planned) => planned.check.id)),
     };
+    const checkFiles = Map.groupBy(
+        checks.flatMap((planned) =>
+            listCheckTools(planned).map((tool) => ({
+                tool,
+                files: planned.check.files ?? planned.configuration?.files,
+            })),
+        ),
+        ({ tool }) => tool,
+    );
     return scope.configurations.flatMap((configuration) =>
         configuration.configFiles
             .filter((file) => isConfigFileWritten(session, file, file.per_scope ? used : usedNames))
@@ -50,7 +59,11 @@ function listScopeConfigFiles(session: Session, scope: Scope, usedNames: UsedNam
                 (file) =>
                     !file.per_scope ||
                     scope.path === '' ||
-                    [configuration.files, ...configuration.checks.flatMap((check) => check.files ?? [])].some(
+                    [
+                        configuration.files,
+                        ...configuration.checks.flatMap((check) => check.files ?? []),
+                        ...file.tool.flatMap((tool) => checkFiles.get(tool) ?? []).flatMap(({ files }) => files ?? []),
+                    ].some(
                         (table) =>
                             listCoveredFiles(table, ownFiles, {
                                 configurations: scope.configurations,
