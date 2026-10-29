@@ -4,6 +4,8 @@ export const GSPOT_LAUNCHER_PATH = 'bin/gspot';
 
 export const TOOL_PINS_FILE = 'mise.toml';
 
+export const TOOL_INSTALL_FOLDER = 'tools';
+
 export const MISE_TRUST = ['mise', 'trust'] as const;
 
 export const GSPOT_PACKAGE_SCOPE = '@gspothq/';

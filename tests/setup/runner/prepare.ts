@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
@@ -18,6 +18,7 @@ import {
     MISE_TRUST,
     TOOL_PINS_FILE,
     TOOL_PATHS_FILE,
+    TOOL_INSTALL_FOLDER,
     GSPOT_LAUNCHER_PATH,
 } from '#tests/config/setup/runner.ts';
 
@@ -33,19 +34,21 @@ const paths = await installTestTools();
 await writeFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), paths.join('\n') + '\n');
 
 async function installTestTools(): Promise<string[]> {
-    const config = join(TEST_RUN_FOLDER, TOOL_PINS_FILE);
+    const folder = join(TEST_RUN_FOLDER, TOOL_INSTALL_FOLDER);
+    const config = join(folder, TOOL_PINS_FILE);
     const env = { MISE_STATE_DIR: join(TEST_RUN_FOLDER, 'mise-state') };
     const configurations = readConfigurations().values().toArray();
     const names = listDistinctTools(configurations)
         .filter((tool) => tool.system !== true && hasToolBuild(tool.name))
         .flatMap((tool) => findMisePin(tool)?.name ?? []);
+    await mkdir(folder);
     await writeFile(config, buildMiseProject(configurations).content);
     for (const commandArguments of [
         [...MISE_TRUST, config],
         [...MISE_INSTALL_ARGUMENTS, ...names],
     ]) {
         const result = await runCommand(commandArguments, {
-            cwd: TEST_RUN_FOLDER,
+            cwd: folder,
             env,
             onStderr: (chunk) => {
                 process.stderr.write(chunk);
@@ -53,7 +56,7 @@ async function installTestTools(): Promise<string[]> {
         });
         if (result.code !== 0) throw new Error(`Test tools failed: ${result.stdout}${result.stderr}`);
     }
-    const bins = await runCommand([...MISE_BIN_PATHS_ARGUMENTS, ...names], { cwd: TEST_RUN_FOLDER, env });
+    const bins = await runCommand([...MISE_BIN_PATHS_ARGUMENTS, ...names], { cwd: folder, env });
     if (bins.code !== 0) throw new Error(`Test tool paths failed: ${bins.stdout}${bins.stderr}`);
     return bins.stdout.trim().split(LINE_BREAK);
 }
