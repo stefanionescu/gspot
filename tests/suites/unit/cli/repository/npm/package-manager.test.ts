@@ -89,7 +89,7 @@ test('a refused pinned package manager keeps project files and gives no install 
     const failure = await runGspot(sandbox.path, ['install']);
     expect(failure.code).toBe(2);
     expect(failure.stderr).toBe(
-        'The tool project requires bun@0.x, and `bun --version` exited with 1: The requested version is not available.. Install that package manager version first.\n',
+        'The tool project requires bun@0.x, and `bun --version` exited with 1: The requested version is not available. Install that package manager version first.\n',
     );
     for (const [path, content] of Object.entries(files))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);

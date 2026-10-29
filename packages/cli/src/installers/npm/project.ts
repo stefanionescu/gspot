@@ -3,6 +3,7 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { TRAILING_PERIOD } from '#cli/config/text.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { runInstallStep } from '#cli/installers/steps.ts';
 import { VERSION_FLAG } from '#cli/config/tools/versions.ts';
@@ -107,7 +108,7 @@ export async function assertPackageManagerVersion(install: ToolInstall): Promise
     const result =
         version.code === 0
             ? `found ${found}`
-            : `\`${packageManager.name} ${VERSION_FLAG}\` exited with ${String(version.code)}: ${version.stderr.trim()}`;
+            : `\`${packageManager.name} ${VERSION_FLAG}\` exited with ${String(version.code)}: ${version.stderr.trim().replace(TRAILING_PERIOD, '')}`;
     throw new GspotError(
         'tool',
         `The tool project requires ${packageManager.name}@${requirement}, and ${result}. Install that package manager version first.`,
