@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'node:url';
 import starlight from '@astrojs/starlight';
-import { writeAgentFiles } from '#docs/agents.ts';
 import starlightLlmsTxt from 'starlight-llms-txt';
 import { pruneUnusedStyles } from '#docs/styles.ts';
 import { SIDEBAR } from '#docs/config/navigation.ts';
@@ -51,7 +50,6 @@ export default defineConfig({
                             new URL(`${font}.txt`, licenses),
                         );
                     }
-                    await writeAgentFiles(dir);
                 },
             },
         },

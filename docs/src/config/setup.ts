@@ -3,7 +3,6 @@ import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { START_RUNNERS } from '#cli/config/repository/npm.ts';
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
-import { SKILLS_FOLDER, SKILLS_INDEX_FILE } from '#docs/config/agents.ts';
 import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/generation/ci.ts';
 import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/definitions/root.ts';
 import { REFERENCE_PATH, REFERENCE_FOLDERS, DISJUNCTION_FORMAT, CONJUNCTION_FORMAT } from '#docs/config/reference.ts';
@@ -148,11 +147,6 @@ export const LLMS_PAGES = {
             label: 'JSON output',
             url: `${REFERENCE_URL}${REFERENCE_FOLDERS.jsonOutput}/`,
             description: 'the fields of gspot check --json',
-        },
-        {
-            label: 'Agent Skill',
-            url: `${cliPackage.homepage}/${SKILLS_FOLDER}${SKILLS_INDEX_FILE}`,
-            description: 'the steps above as an Agent Skill',
         },
     ],
 };

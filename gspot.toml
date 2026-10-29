@@ -30,11 +30,6 @@ allow_digits = true
 reason = "Starlight routes the HTTP 404 page by this filename."
 
 [[naming.override]]
-paths = ["docs/src/types/agents.ts"]
-allowed_names = ["$schema"]
-reason = "The Agent Skills discovery index names its schema key $schema."
-
-[[naming.override]]
 paths = ["tests/types/tools.ts"]
 allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."

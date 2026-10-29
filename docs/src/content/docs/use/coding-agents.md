@@ -43,4 +43,4 @@ gspot deletes the file.
 ## These docs for agents
 
 `/llms.txt` holds the setup steps for agents and links these docs as plain text: `/llms-small.txt` for the guides,
-and `/llms-full.txt` for every page. `/.well-known/agent-skills/index.json` lists the same steps as an Agent Skill.
+and `/llms-full.txt` for every page.
