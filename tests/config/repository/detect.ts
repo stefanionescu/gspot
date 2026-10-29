@@ -82,14 +82,7 @@ export const RUNTIME_DETECTION_CASES = [
     },
 ];
 
-export const SITE_DETECTION_PATHS = [
-    'site.webmanifest',
-    'sitemap.xml',
-    'public/site.webmanifest',
-    'public/sitemap.xml',
-    'docs/public/sitemap.xml',
-    'static/site.webmanifest',
-] as const;
+export const SITE_DETECTION_PATHS = ['sitemap.xml', 'public/sitemap.xml', 'docs/public/sitemap.xml'] as const;
 
 export const POSTGRESQL_PROVIDER = 'provider = "postgresql"\n';
 

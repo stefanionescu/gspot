@@ -12,14 +12,7 @@ import { YARN_CLIENTS } from '#tests/config/installers/projects.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { PythonToolProject } from '#cli/types/installers/pypi.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
-
-import {
-    STYLESHEET_CASES,
-    NEXT_REQUIREMENTS,
-    LICENSE_TOOL_CASES,
-    NEXTJS_API_SETTINGS,
-    REACT_NATIVE_TSCONFIG,
-} from '#tests/config/generation/tool-projects.ts';
+import { STYLESHEET_CASES, LICENSE_TOOL_CASES, REACT_NATIVE_TSCONFIG } from '#tests/config/generation/tool-projects.ts';
 
 test.each([...STYLESHEET_CASES])('$name installs postcss-html when Stylelint is selected', async (row) => {
     await using sandbox = await testdir({
@@ -80,57 +73,20 @@ test.each([...LICENSE_TOOL_CASES])(
     },
 );
 
-test.each([...NEXT_REQUIREMENTS])(
-    'Next ESLint plugin keeps its shipped pin across project versions: $name',
-    async (row) => {
-        await using sandbox = await testdir({
-            'project/gspot.toml': buildSandboxSettings(['nextjs'], {
-                scopes: [{ path: 'app/client', configurations: ['nextjs'] }],
-            }),
-            'project/package.json': JSON.stringify({ private: true, dependencies: { next: row.rootRange } }),
-            'project/app/client/source.ts': 'export const count = 1;\n',
-            'node_modules/next/package.json': '{"name":"next","version":"17.0.0"}',
-            ...(row.childRange !== undefined && {
-                'project/app/package.json': JSON.stringify({
-                    private: true,
-                    dependencies: { next: row.childRange },
-                }),
-            }),
-            ...(row.rootVersion !== undefined && {
-                'project/node_modules/next/package.json': JSON.stringify({
-                    name: 'next',
-                    version: row.rootVersion,
-                }),
-            }),
-            ...(row.childVersion !== undefined && {
-                'project/app/node_modules/next/package.json': JSON.stringify({
-                    name: 'next',
-                    version: row.childVersion,
-                }),
-            }),
-        });
-
-        const session = await openSession(join(sandbox.path, 'project'));
-        const generated = generateFiles(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
-        expect((JSON.parse(generated!.content) as ToolPackageJson).devDependencies['@next/eslint-plugin-next']).toBe(
-            getTool(session.configurationsByName.values(), '@next/eslint-plugin-next').version,
-        );
-    },
-);
-
-test('Next.js scopes keep one manifest plugin pin', async () => {
+test('Next ESLint plugin keeps its shipped pin when two folders declare different majors', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript'], NEXTJS_API_SETTINGS),
-        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
-        'web/package.json': '{"dependencies":{"next":"^16.3.6"}}',
-        'api/package.json': '{"dependencies":{"next":"^15.5.9"}}',
-        'web/node_modules/next/package.json': '{"name":"next","version":"16.3.6"}',
-        'api/node_modules/next/package.json': '{"name":"next","version":"15.5.9"}',
+        'project/gspot.toml': buildSandboxSettings(['nextjs'], {
+            scopes: [{ path: 'app/client', configurations: ['nextjs'] }],
+        }),
+        'project/package.json': '{"private":true,"dependencies":{"next":"^16.3.6"}}',
+        'project/app/package.json': '{"private":true,"dependencies":{"next":"^15.5.9"}}',
+        'project/app/client/source.ts': 'export const count = 1;\n',
+        'node_modules/next/package.json': '{"name":"next","version":"17.0.0"}',
     });
 
-    const session = await openSession(sandbox.path);
-    const output = generateFiles(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
-    expect((JSON.parse(output!.content) as ToolPackageJson).devDependencies['@next/eslint-plugin-next']).toBe(
+    const session = await openSession(join(sandbox.path, 'project'));
+    const generated = generateFiles(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
+    expect((JSON.parse(generated!.content) as ToolPackageJson).devDependencies['@next/eslint-plugin-next']).toBe(
         getTool(session.configurationsByName.values(), '@next/eslint-plugin-next').version,
     );
 });

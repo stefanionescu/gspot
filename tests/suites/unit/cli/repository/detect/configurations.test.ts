@@ -236,7 +236,6 @@ test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection within its p
 test('site is detected from a sitemap.xml in any folder', () => {
     const configurationsByName = readConfigurations();
     for (const path of SITE_DETECTION_PATHS) {
-        if (!path.endsWith('sitemap.xml')) continue;
         const detected = detectConfigurations(
             {
                 root: process.cwd(),
