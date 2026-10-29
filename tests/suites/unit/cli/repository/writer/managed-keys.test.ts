@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { CHECK_COMMAND } from '#tests/config/hooks.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
@@ -98,10 +98,11 @@ test('managed TOML keys refuse a malformed file, create missing tables, and writ
     using writer = openWriter(sandbox.path);
     const changes = [{ key: ['tasks', 'gspot:check', 'run'], value: CHECK_COMMAND }];
     expect(() => planManagedKeys(writer, 'broken.toml', changes)).toThrow(
-        new GspotError(
-            'filesystem',
-            'broken.toml:1:7 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
-        ),
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'parse',
+            message: 'broken.toml:1:7 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
+        }),
     );
     expect(await readFile(join(sandbox.path, 'broken.toml'), 'utf8')).toBe('[tasks\n');
     writePlans(writer, [planManagedKeys(writer, 'mise.toml', changes)]);

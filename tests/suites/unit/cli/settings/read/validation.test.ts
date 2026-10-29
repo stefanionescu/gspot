@@ -2,9 +2,10 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { symlink } from 'node:fs/promises';
-import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { readSettings } from '#cli/settings/read.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { FIRST_READ } from '#cli/config/generation/rules.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
@@ -117,10 +118,11 @@ test('a rules.exclude path that matches no rule file names the near match', () =
     const misspelled = getRuleFilePath('engineering', 'ACCESSIBILITY.md').replace(/\.md$/u, '.txt');
     const near = ['ACCESSIBILITY.md', 'CLI.md', 'TESTING.md'].map((file) => getRuleFilePath('engineering', file));
     expect(() => readSettings(stringify({ rules: { exclude: [misspelled] } }), sandbox.path)).toThrow(
-        new GspotError(
-            'settings',
-            `gspot.toml:2: rules.exclude.0: [rules] exclude names ${misspelled}, which matches no rule. Did you mean ${near.join(', ')}?`,
-        ),
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'settings',
+            message: `gspot.toml:2: rules.exclude.0: [rules] exclude names ${misspelled}, which matches no rule. Did you mean ${near.join(', ')}?`,
+        }),
     );
 });
 
@@ -134,10 +136,11 @@ test.each([...FIRST_READ.slice(0, 1), 'general/prose'])(
                 sandbox.path,
             ),
         ).toThrow(
-            new GspotError(
-                'settings',
-                `gspot.toml:2: rules.exclude.0: [rules] exclude names ${GSPOT_PATHS.configurations}/${ruleFile}, which holds a file every agent opens first (general/engineering/rules/WORKING.md, general/prose/rules/WRITING.md, general/engineering/rules/TALKING.md). Remove the entry.`,
-            ),
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'settings',
+                message: `gspot.toml:2: rules.exclude.0: [rules] exclude names ${GSPOT_PATHS.configurations}/${ruleFile}, which holds a file every agent opens first (general/engineering/rules/WORKING.md, general/prose/rules/WRITING.md, general/engineering/rules/TALKING.md). Remove the entry.`,
+            }),
         );
     },
 );
@@ -145,10 +148,12 @@ test.each([...FIRST_READ.slice(0, 1), 'general/prose'])(
 test('a limit looser than the default needs a reason, and a tighter one does not', () => {
     using sandbox = createTemporaryFolder();
     expect(() => readSettings('configurations = ["bash"]\n[limits]\nfile_lines = 1000\n', sandbox.path)).toThrow(
-        new GspotError(
-            'settings',
-            'gspot.toml:3: limits.file_lines: limits.file_lines = 1000 is looser than the shipped default 300, so it needs a reason. Run: gspot set limits.file_lines 1000 --reason "<why>"',
-        ),
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'settings',
+            message:
+                'gspot.toml:3: limits.file_lines: limits.file_lines = 1000 is looser than the shipped default 300, so it needs a reason. Run: gspot set limits.file_lines 1000 --reason "<why>"',
+        }),
     );
     expect(validateSettingsText('configurations = ["bash"]\n[limits]\nfile_lines = 100\n')).toStrictEqual([]);
 });
@@ -163,7 +168,11 @@ test('a record without a reason is refused at its reason field', () => {
     using sandbox = createTemporaryFolder();
     const text = 'configurations = ["bash"]\n[[ignore]]\ncheck = "bash/shellcheck"\n';
     expect(() => readSettings(text, sandbox.path)).toThrow(
-        new GspotError('settings', 'gspot.toml:2: ignore.0.reason: needs a reason. Add reason = "..." to this record.'),
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'settings',
+            message: 'gspot.toml:2: ignore.0.reason: needs a reason. Add reason = "..." to this record.',
+        }),
     );
     expect(validateSettingsText(`${text}reason = "${REVIEWED_REASON}"\n`)).toStrictEqual([]);
 });
@@ -176,10 +185,11 @@ test.each([...EMPTY_REASONS])('a word with the reason "$reason" is refused', ({ 
             sandbox.path,
         ),
     ).toThrow(
-        new GspotError(
-            'settings',
-            `gspot.toml:3: spelling.allowed_words.Codex: spelling.allowed_words.Codex needs a reason of two or more words that says why: ${refused} is refused.`,
-        ),
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'settings',
+            message: `gspot.toml:3: spelling.allowed_words.Codex: spelling.allowed_words.Codex needs a reason of two or more words that says why: ${refused} is refused.`,
+        }),
     );
 });
 
@@ -206,7 +216,11 @@ test.each(['\n', '\r\n'])(
         const invalid = ['# private sample marker', 'configurations = ?', ''].join(newline);
         using sandbox = createTemporaryFolder();
         expect(() => readSettings(invalid, sandbox.path)).toThrow(
-            new GspotError('parse', 'gspot.toml:2:18 is not valid TOML: Unexpected char "?". Fix the file.'),
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'parse',
+                message: 'gspot.toml:2:18 is not valid TOML: Unexpected char "?". Fix the file.',
+            }),
         );
         expect(validateSettingsText(invalid.replace('configurations = ?', 'configurations = []'))).toStrictEqual([]);
     },

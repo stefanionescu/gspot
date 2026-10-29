@@ -2,20 +2,20 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import { openWriter } from '#cli/repository/writer.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { PYTHON_VERSION } from '#cli/config/installers/pypi.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { type PythonToolProject } from '#cli/types/installers/pypi.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import type { MinimumReleaseAge } from '#cli/types/installers/install.ts';
 
 import {
@@ -150,10 +150,11 @@ test.each(INVALID_UV_SETTINGS)(
     async ({ file, field, text }) => {
         await using sandbox = await testdir({ [file]: text });
         expect(() => readPythonSettings(sandbox.path)).toThrow(
-            new GspotError(
-                'parse',
-                `${file}: ${field}: Invalid input: expected array, received string. Fix the field.`,
-            ),
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'parse',
+                message: `${file}: ${field}: Invalid input: expected array, received string. Fix the field.`,
+            }),
         );
     },
 );
@@ -217,10 +218,11 @@ test('project index settings apply only without uv.toml, and missing or empty fi
     });
     await writeFile(join(sandbox.path, 'uv.toml'), 'find-links = [7]');
     expect(() => readPythonSettings(sandbox.path)).toThrow(
-        new GspotError(
-            'parse',
-            'uv.toml: find-links.0: Invalid input: expected string, received number. Fix the field.',
-        ),
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'parse',
+            message: 'uv.toml: find-links.0: Invalid input: expected string, received number. Fix the field.',
+        }),
     );
 });
 

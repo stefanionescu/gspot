@@ -1,7 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/system/errors.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
@@ -57,7 +58,13 @@ test.each(['replacement', 'block', 'keys'] as const)(
         await writeFile(join(sandbox.path, 'config.toml'), 'edited = true\n');
         expect(() => {
             writePlans(writer, plan);
-        }).toThrow(new GspotError('filesystem', 'config.toml changed while gspot wrote it. Run the command again.'));
+        }).toThrow(
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'filesystem',
+                message: 'config.toml changed while gspot wrote it. Run the command again.',
+            }),
+        );
         expect(writer.read('config.toml')).toStrictEqual({
             bytes: Buffer.from('edited = true\n'),
             mode: normalizeFileMode({ mode: 0o640 }),
@@ -81,7 +88,13 @@ test('a batch writes the files before an edited one and refuses the edited one',
     await writeFile(join(sandbox.path, 'last.txt'), 'authored after plan');
     expect(() => {
         writePlans(writer, plans);
-    }).toThrow(new GspotError('filesystem', 'last.txt changed while gspot wrote it. Run the command again.'));
+    }).toThrow(
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'filesystem',
+            message: 'last.txt changed while gspot wrote it. Run the command again.',
+        }),
+    );
     expect(await readFile(join(sandbox.path, 'first.txt'), 'utf8')).toBe('replacement');
     expect(await readFile(join(sandbox.path, 'last.txt'), 'utf8')).toBe('authored after plan');
 });
@@ -111,10 +124,11 @@ test('a file gspot does not own refuses the whole batch and leaves every file as
     expect(() => {
         writePlans(writer, plans);
     }).toThrow(
-        new GspotError(
-            'writing',
-            'gspot did not overwrite these files: authored.txt. Move them aside, then run the command again.',
-        ),
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'writing',
+            message: 'gspot did not overwrite these files: authored.txt. Move them aside, then run the command again.',
+        }),
     );
     expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/owned.txt`), 'utf8')).toBe('installed');
     expect(await readFile(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('keep authored');
@@ -139,7 +153,13 @@ test.each(
         const edited = firstWriter.read('authored.json');
         expect(() => {
             writePlans(firstWriter, [{ path: 'authored.json', before: read, status: 'changed' }]);
-        }).toThrow(new GspotError('filesystem', 'authored.json changed before removal. Run the command again.'));
+        }).toThrow(
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'filesystem',
+                message: 'authored.json changed before removal. Run the command again.',
+            }),
+        );
         expect(() => {
             writePlans(
                 firstWriter,
@@ -147,7 +167,13 @@ test.each(
                     { path: 'authored.json', next: { bytes: Buffer.from('{}\n'), mode: 0o444 }, expected: read },
                 ]),
             );
-        }).toThrow(new GspotError('filesystem', 'authored.json changed while gspot wrote it. Run the command again.'));
+        }).toThrow(
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'filesystem',
+                message: 'authored.json changed while gspot wrote it. Run the command again.',
+            }),
+        );
         expect(firstWriter.read('authored.json')).toStrictEqual(edited);
         await writeFile(path, read.bytes);
         await chmod(path, read.mode);

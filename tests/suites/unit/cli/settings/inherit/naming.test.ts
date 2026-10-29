@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
 import { CSS_HTML_NAMING_SETTINGS } from '#tests/config/settings/inherit.ts';
@@ -33,9 +34,11 @@ test('naming cases equal to the shipped default need no reason, and other cases 
     const text = buildSandboxSettings(['typescript'], { tables: '[naming.typescript.files]\n cases = ["kebab"]\n' });
     readSettings(text, process.cwd());
     expect(() => readSettings(text.replace('["kebab"]', '["camel"]'), process.cwd())).toThrow(
-        new GspotError(
-            'settings',
-            'gspot.toml:4: naming.typescript.files.cases.reason: naming.typescript.files.cases needs a reason. Write it as naming.typescript.files.cases = { value = [...], reason = "..." }, or run gspot set naming.typescript.files.cases ... --reason "<why>".',
-        ),
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'settings',
+            message:
+                'gspot.toml:4: naming.typescript.files.cases.reason: naming.typescript.files.cases needs a reason. Write it as naming.typescript.files.cases = { value = [...], reason = "..." }, or run gspot set naming.typescript.files.cases ... --reason "<why>".',
+        }),
     );
 });

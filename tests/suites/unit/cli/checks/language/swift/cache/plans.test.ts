@@ -1,10 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { getTable } from '#cli/settings/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -82,7 +83,11 @@ test.each([...SWIFT_BUILD_PURPOSES])(
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, check);
         expect(() => planSwiftBuild(session, input, purpose)).toThrow(
-            new GspotError('skip', 'Set swift.xcode_project or add Package.swift in this scope.'),
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'skip',
+                message: 'Set swift.xcode_project or add Package.swift in this scope.',
+            }),
         );
         using _executables = fakeToolExecutables(
             session.configurationsByName

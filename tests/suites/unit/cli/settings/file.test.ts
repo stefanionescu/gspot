@@ -2,14 +2,14 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { openWriter } from '#cli/repository/writer.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { COMMENTED_SETTINGS } from '#tests/config/settings/file.ts';
 import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { stat, link, symlink, readFile, writeFile } from 'node:fs/promises';
 import { setKey, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 
@@ -41,7 +41,13 @@ test('an edit planned from old bytes is refused, and a new plan is written', asy
     using writer = openWriter(sandbox.path);
     expect(() => {
         writeSettings(writer, result.text, input.previous);
-    }).toThrow(new GspotError('filesystem', 'gspot.toml changed while gspot wrote it. Run the command again.'));
+    }).toThrow(
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'filesystem',
+            message: 'gspot.toml changed while gspot wrote it. Run the command again.',
+        }),
+    );
     expect(await readFile(path, 'utf8')).toBe(`${COMMENTED_SETTINGS}# Concurrent edit.\n`);
     const fresh = readSettingsEdit(sandbox.path);
     setKey(fresh.table, 'level', 'all');
@@ -82,7 +88,11 @@ test.each(['symlink inside', 'symlink outside'])(
         const target = join(sandbox.path, kind === 'symlink outside' ? 'outside.toml' : 'project/source.toml');
         await symlink(target, join(root, 'gspot.toml'));
         expect(() => readSettingsEdit(root)).toThrow(
-            new GspotError('filesystem', 'gspot.toml is not a regular file. Use a regular file.'),
+            matchFields<GspotError>({
+                name: 'GspotError',
+                code: 'filesystem',
+                message: 'gspot.toml is not a regular file. Use a regular file.',
+            }),
         );
         expect(await readFile(target, 'utf8')).toBe(COMMENTED_SETTINGS);
     },

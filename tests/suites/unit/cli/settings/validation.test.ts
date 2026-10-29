@@ -1,8 +1,9 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { readSettings } from '#cli/settings/read.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -26,7 +27,9 @@ import {
 
 test.each([...INVALID_SETTING_MESSAGES])('settings errors locate $name', ({ text, message }) => {
     using sandbox = createTemporaryFolder();
-    expect(() => readSettings(text, sandbox.path)).toThrow(new GspotError('settings', message));
+    expect(() => readSettings(text, sandbox.path)).toThrow(
+        matchFields<GspotError>({ name: 'GspotError', code: 'settings', message: message }),
+    );
 });
 
 test('an import rule may import the rules above it, and a rule below is refused', () => {
