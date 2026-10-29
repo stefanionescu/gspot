@@ -2,17 +2,13 @@ import { createFileTree } from 'testdirs';
 import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { type Level } from '#cli/types/configurations.ts';
-import { type ScopeSelection } from '#tests/types/settings.ts';
 import { SCHEMA_DIRECTIVE } from '#cli/config/settings/text.ts';
+import { type WrittenSettings } from '#cli/types/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
-import { type AvailableSettings } from '#cli/types/settings/inheritance.ts';
-import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
-import { type Settings, type WrittenSettings } from '#cli/types/settings/file.ts';
 
 /**
 Build the gspot.toml text of a sandbox, with rules off unless the options turn them on.
@@ -52,17 +48,6 @@ export function buildSandboxSettings(
 }
 
 /**
-Build the defaults of level basic for these shipped configurations.
-
-@param configurations the configuration names to select.
-@returns the settings and defaults they make available.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Settings tests share the configuration selection and default level through it.
-export function buildSelectedAvailableSettings(configurations: string[]): AvailableSettings {
-    return buildAvailableSettings(selectConfigurations(configurations, readConfigurations()), 'basic');
-}
-
-/**
 Parse settings text and return its errors, or none when it parses.
 
 @param text gspot.toml content to parse.
@@ -93,16 +78,6 @@ export function buildReportingCheck(
         stage: options.stage,
         output: { format: 'lines' },
     };
-}
-
-/**
-Resolve the settings and configuration defaults that apply in one scope.
-*/
-export function selectScopeSettings(settings: Settings, scopePath = ''): ScopeSelection {
-    const configurations = selectForScope(settings, scopePath, readConfigurations());
-    const availableSettings = buildAvailableSettings(configurations, 'basic');
-    const scopeSettings = buildScopeSettings(availableSettings, settings, configurations, scopePath);
-    return { scopeSettings, configurations, availableSettings };
 }
 
 /**

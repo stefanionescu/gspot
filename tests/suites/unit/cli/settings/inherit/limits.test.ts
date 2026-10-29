@@ -1,14 +1,13 @@
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { openSession } from '#cli/planning/session.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
+import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 
-import {
-    buildSandboxSettings,
-    validateSettingsText,
-    buildSelectedAvailableSettings,
-} from '#tests/setup/cli/settings.ts';
-
-test('limits that no check reads are refused', () => {
-    const availableSettings = buildSelectedAvailableSettings(['structure', 'sql', 'bash']);
+test('limits that no check reads are refused', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['sql', 'bash']) });
+    const { scopes } = await openSession(sandbox.path);
+    const { availableSettings } = scopes[0]!;
     expect(findSetting(availableSettings, 'limits.sql.function_lines')).toBeUndefined();
     expect(findSetting(availableSettings, 'limits.bash.cyclomatic_complexity')).toBeUndefined();
     expect(findSetting(availableSettings, 'limits.sql.function_parameters')).toBeUndefined();

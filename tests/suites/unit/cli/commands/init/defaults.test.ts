@@ -1,12 +1,13 @@
+import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { getTable } from '#cli/settings/scopes.ts';
-import { readSettings } from '#cli/settings/read.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { stripDefaults } from '#cli/commands/init/defaults.ts';
 import { SCHEMA_DIRECTIVE } from '#cli/config/settings/text.ts';
-import { selectScopeSettings } from '#tests/setup/cli/settings.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { DEFAULT_CASES } from '#tests/config/commands/init/defaults.ts';
 
 test.each([...DEFAULT_CASES])('init strips $name without changing inherited values', ({ source, expected }) => {
@@ -20,17 +21,15 @@ test.each([...DEFAULT_CASES])('init strips $name without changing inherited valu
 test.each([
     'configurations = ["supabase"]\n[supabase]\nfunctions_folder = "supabase/functions"\n[[scope]]\npath = "apps/api"\n',
     'configurations = ["supabase"]\n[[scope]]\npath = "app"\nsupabase.functions_folder = "supabase/functions"\n[[scope]]\npath = "app/child"\n',
-])("dropping defaults keeps every scope's paths the same (%j)", (source) => {
-    using sandbox = createTemporaryFolder();
-    const before = readSettings(source, sandbox.path);
-    const authored = parseTomlFile('gspot.toml', source);
-    const written = buildSettingsText('', source, stripDefaults(authored));
-    const after = readSettings(written, sandbox.path);
-    for (const path of ['', ...before.scopes.keys()]) {
-        expect(getTable(selectScopeSettings(after, path).scopeSettings, 'supabase')).toStrictEqual(
-            getTable(selectScopeSettings(before, path).scopeSettings, 'supabase'),
-        );
-    }
+])("dropping defaults keeps every scope's paths the same (%j)", async (source) => {
+    await using sandbox = await testdir({ 'gspot.toml': source, 'apps/api/.keep': '', 'app/child/.keep': '' });
+    const before = await openSession(sandbox.path);
+    const written = buildSettingsText('', source, stripDefaults(parseTomlFile('gspot.toml', source)));
+    await writeFile(join(sandbox.path, 'gspot.toml'), written);
+    const after = await openSession(sandbox.path);
+    expect(after.scopes.map(({ path, settings }) => [path, getTable(settings, 'supabase')])).toStrictEqual(
+        before.scopes.map(({ path, settings }) => [path, getTable(settings, 'supabase')]),
+    );
     expect(
         buildSettingsText('', written.slice(SCHEMA_DIRECTIVE.length + 1), parseTomlFile('gspot.toml', written)),
     ).toBe(written);

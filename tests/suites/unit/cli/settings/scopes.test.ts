@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
-import { readSettings } from '#cli/settings/read.ts';
 import { TWO_WORDS } from '#tests/config/ignores.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { test, expect, setSystemTime } from 'bun:test';
@@ -9,11 +8,9 @@ import { buildSettingsText } from '#cli/settings/text.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { setKey, getScopeTable } from '#cli/settings/edit.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
-import { selectScopeSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
     getLimit,
@@ -116,25 +113,15 @@ test('a per-scope limit overrides a root language limit in the scope view', asyn
     expect(getLimit(scope.settings, 'file_lines', 'python')).toBe(100);
 });
 
-test('an ignore past its until date stays in the scope view and the parsed settings', () => {
-    using sandbox = createTemporaryFolder();
+test('an ignore past its until date stays in the scope view and the parsed settings', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSettingsText('', '', { configurations: [], ignore: IGNORE_EXPIRY_CASES }),
+    });
     setSystemTime(new Date('2030-05-20T23:59:59.000Z'));
     try {
-        const settings = readSettings(
-            buildSettingsText('', '', { configurations: [], ignore: IGNORE_EXPIRY_CASES }),
-            sandbox.path,
-        );
-        const rootSettings = selectScopeSettings(settings).scopeSettings;
-        const configurations = selectForScope(settings, '', readConfigurations());
-        const availableSettings = buildAvailableSettings(configurations, settings.level);
-        const scope: Scope = {
-            path: '',
-            origin: 'root',
-            configurations,
-            availableSettings,
-            settings: rootSettings,
-        };
-        expect(listIgnores(rootSettings, 'dependencies/osv-scanner')).toStrictEqual([
+        const { settings, scopes } = await openSession(sandbox.path);
+        const scope = scopes[0]!;
+        expect(listIgnores(scope.settings, 'dependencies/osv-scanner')).toStrictEqual([
             { ...IGNORE_EXPIRY_CASES[0], paths: [] },
             { ...IGNORE_EXPIRY_CASES[1], paths: [] },
             { ...IGNORE_EXPIRY_CASES[2], paths: [] },
@@ -153,8 +140,8 @@ test('an ignore past its until date stays in the scope view and the parsed setti
             IGNORE_EXPIRY_CASES[3],
         ]);
         setSystemTime(new Date('2030-05-21T00:00:00.000Z'));
-        const next = selectScopeSettings(settings).scopeSettings;
-        expect(listIgnoredRules({ ...scope, settings: next }, 'dependencies/osv-scanner')).toStrictEqual([
+        const next = await openSession(sandbox.path);
+        expect(listIgnoredRules(next.scopes[0]!, 'dependencies/osv-scanner')).toStrictEqual([
             'permanent',
             'past',
             'today',
@@ -224,13 +211,13 @@ test.each([...PROJECT_SCOPE_CASES])('scope $scope selects $name: $selected', ({ 
     expect(names.includes(name)).toBe(selected);
 });
 
-test('a rule option named reason is passed on and is not a gspot reason', () => {
-    using sandbox = createTemporaryFolder();
-    const settings = readSettings(
-        'configurations = ["css"]\n[tools.stylelint.rules]\nselector-class-pattern = ["^[a-z]+$", { reason = false }]\n',
-        sandbox.path,
-    );
-    const rules: unknown = getTable(selectScopeSettings(settings).scopeSettings, 'tools.stylelint').rules;
+test('a rule option named reason is passed on and is not a gspot reason', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml':
+            'configurations = ["css"]\n[tools.stylelint.rules]\nselector-class-pattern = ["^[a-z]+$", { reason = false }]\n',
+    });
+    const { scopes } = await openSession(sandbox.path);
+    const rules: unknown = getTable(scopes[0]!.settings, 'tools.stylelint').rules;
     expect(rules).toStrictEqual({ 'selector-class-pattern': ['^[a-z]+$', { reason: false }] });
 });
 
@@ -261,25 +248,24 @@ test('the nearest parent scope contains a nested path', async () => {
     expect(findParentScope(scopes, 'api/v1/src')?.path).toBe('api/v1');
 });
 
-test('an ignore without a check applies to every check', () => {
-    using sandbox = createTemporaryFolder();
-    const settings = readSettings(
-        '[[ignore]]\npaths = ["generated/**"]\nreason = "The generator owns these files."\n',
-        sandbox.path,
-    );
-    const selected = selectScopeSettings(settings).scopeSettings;
+test('an ignore without a check applies to every check', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': '[[ignore]]\npaths = ["generated/**"]\nreason = "The generator owns these files."\n',
+    });
+    const { scopes } = await openSession(sandbox.path);
+    const selected = scopes[0]!.settings;
     const expected = [{ paths: ['generated/**'], reason: 'The generator owns these files.' }];
     expect(listIgnores(selected, 'python/ruff')).toStrictEqual(expected);
     expect(listIgnores(selected, 'typescript/tsc')).toStrictEqual(expected);
 });
 
-test('a table rule option keeps its value and reason fields', () => {
-    using sandbox = createTemporaryFolder();
-    const settings = readSettings(
-        'configurations = ["css"]\n[tools.stylelint.rules]\nselector-class-pattern = {value = "^[a-z]+$", reason = "The style rule receives both fields."}\n',
-        sandbox.path,
-    );
-    const rules: unknown = getTable(selectScopeSettings(settings).scopeSettings, 'tools.stylelint').rules;
+test('a table rule option keeps its value and reason fields', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml':
+            'configurations = ["css"]\n[tools.stylelint.rules]\nselector-class-pattern = {value = "^[a-z]+$", reason = "The style rule receives both fields."}\n',
+    });
+    const { scopes } = await openSession(sandbox.path);
+    const rules: unknown = getTable(scopes[0]!.settings, 'tools.stylelint').rules;
     expect(rules).toStrictEqual({
         'selector-class-pattern': { value: '^[a-z]+$', reason: 'The style rule receives both fields.' },
     });

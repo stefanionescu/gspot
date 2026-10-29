@@ -8,9 +8,9 @@ import { openSession } from '#cli/planning/session.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { buildSandboxSettings, buildSelectedAvailableSettings } from '#tests/setup/cli/settings.ts';
 
 import {
     REPLACED_LIST_DEFAULTS,
@@ -98,30 +98,31 @@ test('a root list replaces configuration defaults, and a scope list adds to the 
         'handler',
     ]);
     expect(
-        validateKeys(defaults, settings, new Map([['api', defaults]]), buildSelectedAvailableSettings([])),
+        validateKeys(defaults, settings, new Map([['api', defaults]]), buildAvailableSettings([], 'basic')),
     ).toStrictEqual([]);
 });
 
 test.each(REPLACED_LIST_DEFAULTS)(
     'a written $key list replaces its shipped default',
-    ({ key, configurations, tables, value }) => {
-        using sandbox = createTemporaryFolder();
-        const availableSettings = buildSelectedAvailableSettings(configurations);
-        const settings = readSettings(buildSandboxSettings(configurations, { tables }), sandbox.path);
-        expect(getSettingValue(availableSettings, settings, key, '')?.value).toStrictEqual(value);
+    async ({ key, configurations, tables, value }) => {
+        await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(configurations, { tables }) });
+        const { settings, scopes } = await openSession(sandbox.path);
+        expect(getSettingValue(scopes[0]!.availableSettings, settings, key, '')?.value).toStrictEqual(value);
     },
 );
 
-test('a first list written in a scope replaces the shipped default for that scope and its children', () => {
-    using sandbox = createTemporaryFolder();
-    const availableSettings = buildSelectedAvailableSettings(['supabase']);
-    const settings = readSettings(
-        buildSandboxSettings(['supabase'], {
+test('a first list written in a scope replaces the shipped default for that scope and its children', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['supabase'], {
             tables: '[[scope]]\npath = "app"\nsupabase.schemas = ["api"]\n',
         }),
-        sandbox.path,
-    );
-    expect(getSettingValue(availableSettings, settings, 'supabase.schemas', '')?.value).toStrictEqual(['public']);
+        'app/deep/schema.sql': '',
+    });
+    const { settings, scopes } = await openSession(sandbox.path);
+    const [root, app] = scopes;
+    expect(getSettingValue(root!.availableSettings, settings, 'supabase.schemas', '')?.value).toStrictEqual(['public']);
     for (const scope of ['app', 'app/deep'])
-        expect(getSettingValue(availableSettings, settings, 'supabase.schemas', scope)?.value).toStrictEqual(['api']);
+        expect(getSettingValue(app!.availableSettings, settings, 'supabase.schemas', scope)?.value).toStrictEqual([
+            'api',
+        ]);
 });

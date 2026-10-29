@@ -17,8 +17,8 @@ import {
 
 test.each([...NAMING_LIMIT_CASES])(
     '$language accepts its exact limits and reports the next character or word',
-    ({ language, category, characters, words }) => {
-        const naming = buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
+    async ({ language, category, characters, words }) => {
+        const naming = await buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
         const context = buildFileNaming(naming);
         const declaration = buildIdentifier({
             file: 'source',
@@ -54,8 +54,8 @@ test.each([...NAMING_LIMIT_CASES])(
     },
 );
 
-test('the JavaScript handle override and a repository use override strip their prefixes only in their own files and languages', () => {
-    const naming = readNaming(HOOK_PREFIX_TABLES);
+test('the JavaScript handle override and a repository use override strip their prefixes only in their own files and languages', async () => {
+    const naming = await readNaming(HOOK_PREFIX_TABLES);
     const declaration = buildIdentifier(HANDLE_ROUTE_IDENTIFIER);
     expect(listRuleMessages(declaration, naming)).toStrictEqual([]);
     expect(listRuleMessages({ ...declaration, file: 'src/hooks/login.ts', name: 'useLogin' }, naming)).toStrictEqual(
@@ -71,8 +71,8 @@ test('the JavaScript handle override and a repository use override strip their p
     ]);
 });
 
-test('a number word such as base64 counts as one word, and repeated words, words over the limit, banned words and digits are still reported', () => {
-    const naming = buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
+test('a number word such as base64 counts as one word, and repeated words, words over the limit, banned words and digits are still reported', async () => {
+    const naming = await buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
     const context = buildFileNaming({ ...naming, limitLookup: () => ({ cases: [], maxCharacters: 35, maxWords: 4 }) });
     const declaration = buildIdentifier({ name: 'base64User', category: 'variables', file: 'source.ts' });
     expect(listRuleMessages(declaration, context)).toStrictEqual([]);
@@ -93,22 +93,22 @@ test('a number word such as base64 counts as one word, and repeated words, words
     ]);
 });
 
-test('a name that breaks all five naming limits gets five findings, and the banned-word message names its word list', () => {
+test('a name that breaks all five naming limits gets five findings, and the banned-word message names its word list', async () => {
     expect(
-        listRuleMessages(buildIdentifier({ name: 'helperValue2UserUserWithMoreWordsHere' }), readNaming('')),
+        listRuleMessages(buildIdentifier({ name: 'helperValue2UserUserWithMoreWordsHere' }), await readNaming('')),
     ).toStrictEqual([...OVERLONG_NAME_FINDINGS]);
 });
 
-test('case follows the category, and each dot-separated piece of a file name is checked alone', () => {
-    const naming = readNaming('');
+test('case follows the category, and each dot-separated piece of a file name is checked alone', async () => {
+    const naming = await readNaming('');
     expect(listRuleMessages(buildIdentifier({ name: 'my_type', category: 'types' }), naming)).toStrictEqual([
         { rule: 'case', message: 'typescript types "my_type": expected pascal case.' },
     ]);
     expect(listRuleMessages(buildIdentifier({ name: 'bash.test', category: 'files' }), naming)).toStrictEqual([]);
 });
 
-test('the naming check accepts _ as a variable, a digit in a tests/ path, and a Bash name with an ignored prefix', () => {
-    const naming = readNaming(`[[naming.override]]
+test('the naming check accepts _ as a variable, a digit in a tests/ path, and a Bash name with an ignored prefix', async () => {
+    const naming = await readNaming(`[[naming.override]]
 paths = ["tests/acceptance/**"]
 allow_digits = true
 reason = "Acceptance tests number their steps."
@@ -128,8 +128,8 @@ reason = "Acceptance tests number their steps."
     ).toStrictEqual([]);
 });
 
-test('allowed names and path overrides skip the naming rules', () => {
-    const naming = readNaming(ALLOWED_NAME_TABLES);
+test('allowed names and path overrides skip the naming rules', async () => {
+    const naming = await readNaming(ALLOWED_NAME_TABLES);
     expect(listRuleMessages(buildIdentifier({ name: 'requestAnimationFrame' }), naming)).toStrictEqual([]);
     expect(
         listRuleMessages(
@@ -147,14 +147,17 @@ test('allowed names and path overrides skip the naming rules', () => {
     ]);
 });
 
-test('a word of the shipped tests list passes in a test file, and the same word from banned_words is reported there', () => {
+test('a word of the shipped tests list passes in a test file, and the same word from banned_words is reported there', async () => {
     const declaration = buildIdentifier({ name: 'actualRoot' });
-    expect(listRuleMessages(declaration, { ...readNaming(''), isTestFile: true })).toStrictEqual([]);
-    expect(listRuleMessages(declaration, readNaming(''))).toStrictEqual([
+    expect(listRuleMessages(declaration, { ...(await readNaming('')), isTestFile: true })).toStrictEqual([]);
+    expect(listRuleMessages(declaration, await readNaming(''))).toStrictEqual([
         { rule: 'banned-word', message: 'typescript functions "actualRoot": "actual" is banned (tests list).' },
     ]);
     expect(
-        listRuleMessages(declaration, { ...readNaming('[naming]\nbanned_words = ["actual"]\n'), isTestFile: true }),
+        listRuleMessages(declaration, {
+            ...(await readNaming('[naming]\nbanned_words = ["actual"]\n')),
+            isTestFile: true,
+        }),
     ).toStrictEqual([
         {
             rule: 'banned-word',
@@ -163,8 +166,8 @@ test('a word of the shipped tests list passes in a test file, and the same word 
     ]);
 });
 
-test('a banned word matches a word or a run of words, never the inside of a word', () => {
-    const naming = readNaming('[naming]\nbanned_words = ["widget", "paper trail", "cross-cutting"]\n');
+test('a banned word matches a word or a run of words, never the inside of a word', async () => {
+    const naming = await readNaming('[naming]\nbanned_words = ["widget", "paper trail", "cross-cutting"]\n');
     expect(listRuleMessages(buildIdentifier({ name: 'widgetPrice' }), naming)).toStrictEqual([
         {
             rule: 'banned-word',
@@ -189,8 +192,8 @@ test('a banned word matches a word or a run of words, never the inside of a word
 
 test.each([...LINTER_LIMIT_CASES])(
     '$language $category enforces its length, case and word limits',
-    ({ language, category, expected, wordy }) => {
-        const naming = buildScopeNamingSettings(
+    async ({ language, category, expected, wordy }) => {
+        const naming = await buildScopeNamingSettings(
             buildSandboxSettings(['naming'], {
                 rules: true,
                 level: 'all',
@@ -216,8 +219,8 @@ reason = "The authored interface selects this case."
     },
 );
 
-test('an ignored_prefix override strips handle from function and method names in its files', () => {
-    const naming = readNaming(HANDLE_PREFIX_TABLES);
+test('an ignored_prefix override strips handle from function and method names in its files', async () => {
+    const naming = await readNaming(HANDLE_PREFIX_TABLES);
     expect(listRuleMessages(buildIdentifier({ name: 'handleSubmit', category: 'functions' }), naming)).toStrictEqual(
         [],
     );
@@ -238,9 +241,9 @@ test('an ignored_prefix override strips handle from function and method names in
 });
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Naming tests share the settings parser and file context through it.
-function readNaming(tables: string): FileNaming {
+async function readNaming(tables: string): Promise<FileNaming> {
     return buildFileNaming(
-        buildScopeNamingSettings(
+        await buildScopeNamingSettings(
             buildSandboxSettings(['typescript', 'python', 'bash', 'naming'], { rules: true, tables }),
         ),
     );
