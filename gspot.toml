@@ -297,6 +297,7 @@ React = "Official product name."
 Native = "Part of the React Native product name."
 Simple = "Part of the Simple Icons product name."
 certifi = "The tests name the Python certificate bundle package certifi."
+writeable = "ESLint accepts writeable as the value of a global."
 
 [tools.eslint]
 import_extension = "ts"

@@ -107,6 +107,7 @@ exceptions:
   - Native
   - Simple
   - certifi
+  - writeable
   - API
   - CLI
   - HTTP

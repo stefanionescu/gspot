@@ -16,6 +16,7 @@ React = "React"
 Native = "Native"
 Simple = "Simple"
 certifi = "certifi"
+writeable = "writeable"
 
 [files]
 extend-exclude = [

@@ -94,6 +94,7 @@ Vale
 vertica
 Windows
 wrangler
+writeable
 xmllint
 YAML
 yamllint
