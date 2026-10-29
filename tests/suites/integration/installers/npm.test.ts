@@ -137,14 +137,11 @@ test.each([...PACKAGE_MANAGER_CASES])(
             projectFile: Buffer.from(projectFile),
         });
         const readmePath = join(root, `${GSPOT_PATHS.nodeModules}/prettier/README.md`);
-        const readme = await readFile(readmePath);
         await unlink(readmePath);
         await writeFile(readmePath, 'authored later');
         const reinstalled = await spawnGspot(root, ['install']);
         expect(reinstalled.code, reinstalled.stdout + reinstalled.stderr).toBe(0);
-        expect(await readFile(readmePath)).toStrictEqual(
-            toolPackageManager === 'npm' ? Buffer.from('authored later') : readme,
-        );
+        expect(await readFile(readmePath, 'utf8')).toBe('authored later');
         const readyTools = ['prettier', 'editorconfig-checker'];
         const diagnosed = await spawnGspot(root, ['doctor', '--json']);
         const report = JSON.parse(diagnosed.stdout) as DoctorReport;

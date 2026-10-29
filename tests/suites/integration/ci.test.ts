@@ -159,7 +159,7 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
         const firstPush = await runCiJob(sandbox.path, generated, executables.path, '0'.repeat(base.length));
         expect(firstPush.code, firstPush.stdout + firstPush.stderr).toBe(1);
-        expect(firstPush.stdout.split('\n').filter((line) => line.includes('.sh'))).toStrictEqual([
+        expect(firstPush.stdout.split('\n').filter((line) => line.includes('.sh:'))).toStrictEqual([
             '  legacy.sh: syntax error',
         ]);
     });

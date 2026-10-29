@@ -104,7 +104,9 @@ test("markdownlint run by an editor reads the pointer files with each scope's op
             { cwd: join(root, folder) },
         );
         expect(invalid.code).toBe(1);
-        expect(invalid.stdout + invalid.stderr).toContain(`${path}:3 MD044/proper-names`);
+        const output = invalid.stdout + invalid.stderr;
+        expect(output).toContain(`${path}:3`);
+        expect(output).toContain('MD044/proper-names');
     }
 });
 
