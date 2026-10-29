@@ -60,21 +60,18 @@ async function findUnrunnableResult(
 ): Promise<CheckResult | undefined> {
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: CANCELED_CHECK_NOTE };
     if (planned.check.needs?.includes('docker') !== true) return undefined;
-    if (
-        'status' in
-        buildToolAvailability(
+    const docker = buildToolAvailability(
+        getTool(session.configurationsByName.values(), DOCKER_TOOL),
+        inspectTool(
+            { ...session, cwd: session.root, miseBinPaths: session.readMiseBinPaths() },
             getTool(session.configurationsByName.values(), DOCKER_TOOL),
-            inspectTool(
-                { ...session, cwd: session.root, miseBinPaths: session.readMiseBinPaths() },
-                getTool(session.configurationsByName.values(), DOCKER_TOOL),
-            ),
-        )
-    )
-        return { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE };
+        ),
+    );
+    if ('status' in docker) return { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE };
     const available = getCachedValue(session.reads, DOCKER_AVAILABILITY);
     let pending = available.get(session.root);
     if (pending === undefined) {
-        pending = spawnProcess([DOCKER_TOOL, 'info'], {
+        pending = spawnProcess([docker.path, 'info'], {
             cwd: session.root,
             timeoutSeconds: session.timeoutSeconds,
             cancelSignal: session.cancelSignal,

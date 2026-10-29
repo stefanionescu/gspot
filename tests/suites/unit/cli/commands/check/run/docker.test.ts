@@ -39,5 +39,5 @@ test('Docker checks share one daemon request and report an unavailable daemon be
         { check: 'nginx/syntax', status: 'missing', note: 'Start Docker, then run the check again.' },
         { check: 'nginx/second', status: 'missing', note: 'Start Docker, then run the check again.' },
     ]);
-    expect(commands).toStrictEqual([['docker', 'info']]);
+    expect(commands.map((command) => command.slice(1))).toStrictEqual([['info']]);
 });
