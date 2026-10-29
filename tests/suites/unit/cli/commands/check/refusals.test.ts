@@ -123,6 +123,23 @@ test.each([...PUSH_INPUT_REFUSALS])(
     },
 );
 
+test.each([
+    { staged: ['source.sh'], message: 'gspot.toml and .gspot/ are not staged. Stage gspot.toml and .gspot/.' },
+    { staged: ['source.sh', 'gspot.toml'], message: '.gspot/ is not staged. Stage gspot.toml and .gspot/.' },
+    { staged: ['source.sh', GSPOT_FOLDER], message: 'gspot.toml is not staged. Stage gspot.toml and .gspot/.' },
+])('a staged check of $staged after apply names the setup files that are not staged', async ({ staged, message }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'source.sh': CLEAN_BASH_SCRIPT,
+    });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    runGitStep(sandbox.path, ['add', '--', ...staged]);
+    const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(JSON.parse(refused.stdout)).toStrictEqual({ error: 'git', message });
+});
+
 test('a staged check during a merge conflict exits 2, names the conflict, and leaves no copy behind', async () => {
     await using sandbox = await createFixableSandbox();
     runGitStep(sandbox.path, ['checkout', '-qb', 'other']);

@@ -1,12 +1,13 @@
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { addAbortSignal } from 'node:stream';
-import { constants, accessSync } from 'node:fs';
+import { readGitPaths } from '#cli/system/git.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { runPushCheck } from '#cli/commands/check/push.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { constants, accessSync, existsSync } from 'node:fs';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { printProgress } from '#cli/commands/check/report.ts';
 import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
@@ -27,6 +28,7 @@ import {
 } from '#cli/types/commands/check.ts';
 import {
     FIX_FLAG,
+    SETUP_PATHS,
     ONLY_OPTION,
     HOOK_OPTION,
     VERBOSE_FLAG,
@@ -38,9 +40,11 @@ import {
     PUSH_STDIN_MESSAGE,
     PUSH_INPUT_MESSAGE,
     COMMIT_FILE_MESSAGE,
+    STAGE_SETUP_MESSAGE,
     CHECK_LIST_SEPARATOR,
     EMPTY_CHECKS_MESSAGE,
     CHECK_STOPPED_MESSAGE,
+    GIT_SETUP_FILES_ARGUMENTS,
 } from '#cli/config/commands/check/check.ts';
 
 async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
@@ -167,11 +171,24 @@ function parseCheckFlags(paths: string[], flags: CheckFlags, cwd: string): { roo
     return { root, options };
 }
 
+async function assertSetupStaged(root: string, cancelSignal: AbortSignal): Promise<void> {
+    const indexed = await readGitPaths(root, GIT_SETUP_FILES_ARGUMENTS, { cancelSignal });
+    const unstaged = SETUP_PATHS.filter(
+        (path) => existsSync(join(root, path)) && !indexed.some((file) => file.startsWith(path)),
+    );
+    if (unstaged.length > 0)
+        throw new GspotError(
+            'git',
+            `${unstaged.join(' and ')} ${unstaged.length === 1 ? 'is' : 'are'} not staged. ${STAGE_SETUP_MESSAGE}`,
+        );
+}
+
 async function runStagedCheck(
     root: string,
     options: CheckOptions,
     cancelSignal: AbortSignal,
 ): Promise<CommandResult<CheckCommandJson>> {
+    await assertSetupStaged(root, cancelSignal);
     const staged = await readStagedPaths(root, cancelSignal);
     using copy = await copyRevision(root, { kind: 'index' }, cancelSignal);
     const paths = options.paths.map((path) => buildArgumentPath(root, options.cwd, path));
