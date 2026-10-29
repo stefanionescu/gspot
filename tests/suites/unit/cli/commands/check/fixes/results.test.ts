@@ -187,4 +187,6 @@ test('a fixer that leaves a code file that fails to parse is named in the fix re
     const session = await openSession(sandbox.path);
     const result = await runChecks(session, { ...buildRunOptions({ only: ['project/merge-imports'] }), fix: true });
     expect(result.fixes?.broken).toStrictEqual(['client.ts', 'notes.ts']);
+    expect(result.report.exitCode).toBe(2);
+    expect(result.report.failed).toStrictEqual([]);
 });

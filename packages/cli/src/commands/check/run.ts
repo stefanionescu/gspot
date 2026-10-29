@@ -189,6 +189,7 @@ function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport
     return (
         session.cancelSignal?.aborted === true ||
         results.some((result) => INCOMPLETE_STATUSES.has(result.status)) ||
+        (fixes !== undefined && fixes.broken.length > 0) ||
         fixes?.results.some((result) => result.status === 'failed') === true
     );
 }

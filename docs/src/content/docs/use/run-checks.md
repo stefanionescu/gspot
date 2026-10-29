@@ -58,6 +58,8 @@ gspot check --fix --dry-run
 The changes stay in your working tree, unstaged, so review them before you commit. To add a fixer for your own command,
 see [command checks](/configure/command-checks/#add-a-fix-command).
 
+When a fixer leaves a code file that fails to parse, gspot names the file and exits with code 2.
+
 ## Statuses and exit codes
 
 | Status    | Meaning                                           | Exit code |
