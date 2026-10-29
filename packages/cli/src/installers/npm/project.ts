@@ -48,7 +48,7 @@ async function createNpmLockfile(
     const run = await runPackageManager(install, {
         runFolder,
         packageManager,
-        commandArguments: prepareReleaseAge(runFolder, lockfileArguments, packageManager, install.releaseAgeDays),
+        commandArguments: prepareReleaseAge(runFolder, lockfileArguments, packageManager, install.minimumReleaseAge),
         failure: 'lockfile resolution failed',
         env: install.registryEnvironment,
     });
@@ -77,7 +77,7 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerRe
         }
         const args =
             packageManager.name === 'bun'
-                ? [...commandArguments, `--config=${writeBunReleaseAge(settings.path, install.releaseAgeDays)}`]
+                ? [...commandArguments, `--config=${writeBunReleaseAge(settings.path, install.minimumReleaseAge)}`]
                 : commandArguments;
         const command = buildPackageManagerCommand(packageManager.command, args);
         const result = await runInstallStep(install, command, { cwd: runFolder, env });

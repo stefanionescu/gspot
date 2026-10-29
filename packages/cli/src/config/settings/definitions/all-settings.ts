@@ -123,7 +123,8 @@ export const SETTING_DEFINITIONS = {
     },
     'dependencies.min_release_age_days': {
         configurations: ['dependencies'],
-        description: 'How many days a new release waits before gspot installs it as one of its tools in .gspot.',
+        description:
+            'How many days a package that the gspot tools pull in waits after its release before gspot installs it in .gspot. The tools themselves install at their pinned versions.',
         reason_when: 'lowering',
         default: 7,
     },

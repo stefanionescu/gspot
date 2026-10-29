@@ -78,9 +78,10 @@ counts for that folder and the folders inside it.
 
 ## Release age of the gspot tools
 
-gspot installs its own tools in `.gspot/` and holds back each release for `dependencies.min_release_age_days` days, 7 by
-default. It leaves the install settings of your project alone: to hold back your own dependencies, set the release age
-option of your package manager. To make gspot wait 14 days:
+gspot installs its own tools in `.gspot/` at the exact versions it pins. Each package that those tools pull in waits
+`dependencies.min_release_age_days` days after its release, 7 by default. gspot leaves the install settings of your
+project alone: to hold back your own dependencies, set the release age option of your package manager. To make gspot wait
+14 days:
 
 ```shell
 gspot set dependencies.min_release_age_days 14

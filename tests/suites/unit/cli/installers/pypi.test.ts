@@ -25,6 +25,7 @@ import {
 } from '#cli/installers/pypi.ts';
 import {
     UV_TOML,
+    PYTHON_RELEASE_AGE,
     PYPROJECT_UV_INDEX,
     UV_LOCKFILE_ORIGINS,
     PYTHON_TOOL_PROJECT,
@@ -151,7 +152,7 @@ test.each(INVALID_UV_SETTINGS)(
     async ({ file, field, text }) => {
         await using sandbox = await testdir({ [file]: text });
         await using scratch = await testdir();
-        expect(() => writePythonSettings(sandbox.path, scratch.path, 7)).toThrow(
+        expect(() => writePythonSettings(sandbox.path, scratch.path, PYTHON_RELEASE_AGE)).toThrow(
             new GspotError(
                 'filesystem',
                 `${file}: ${field}: Invalid input: expected array, received string. Fix the field.`,
@@ -164,9 +165,13 @@ test('uv.toml wins and local index paths are read relative to the repository', a
     using _clock = spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-24T15:30:00.000Z'));
     await using sandbox = await testdir({ 'uv.toml': UV_TOML, 'pyproject.toml': PYPROJECT_UV_INDEX });
     await using scratch = await testdir();
-    expect(writePythonSettings(sandbox.path, scratch.path, 7)).toStrictEqual(['test%2Bpassword', 'test+password']);
+    expect(writePythonSettings(sandbox.path, scratch.path, PYTHON_RELEASE_AGE)).toStrictEqual([
+        'test%2Bpassword',
+        'test+password',
+    ]);
     const contents: unknown = parse(readFileSync(join(scratch.path, 'uv.toml'), 'utf8'));
     expect(contents).toStrictEqual({
+        'exclude-newer-package': { ruff: false, semgrep: false },
         'exclude-newer': '2026-10-17T15:30:00.000Z',
         'index-url': 'https://alex:test%2Bpassword@example.com/simple',
         'find-links': [join(sandbox.path, 'wheels'), 'https://example.com/wheels'],
@@ -179,28 +184,31 @@ test('project index settings apply only without uv.toml, missing or empty files 
     using _clock = spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-24T15:30:00.000Z'));
     await using sandbox = await testdir({ 'pyproject.toml': PYPROJECT_UV_INDEX });
     await using scratch = await testdir();
-    expect(writePythonSettings(sandbox.path, scratch.path, 7)).toStrictEqual([]);
+    expect(writePythonSettings(sandbox.path, scratch.path, PYTHON_RELEASE_AGE)).toStrictEqual([]);
     const contents: unknown = parse(readFileSync(join(scratch.path, 'uv.toml'), 'utf8'));
     expect(contents).toStrictEqual({
+        'exclude-newer-package': { ruff: false, semgrep: false },
         'exclude-newer': '2026-10-17T15:30:00.000Z',
         'index-url': 'https://example.com/simple',
         'find-links': [join(sandbox.path, 'wheels')],
     });
     await createFileTree(sandbox.path, { 'uv.toml': '' });
-    expect(writePythonSettings(sandbox.path, scratch.path, 7)).toStrictEqual([]);
+    expect(writePythonSettings(sandbox.path, scratch.path, PYTHON_RELEASE_AGE)).toStrictEqual([]);
     const uvSettings: unknown = parse(readFileSync(join(scratch.path, 'uv.toml'), 'utf8'));
     expect(uvSettings).toStrictEqual({
+        'exclude-newer-package': { ruff: false, semgrep: false },
         'exclude-newer': '2026-10-17T15:30:00.000Z',
     });
     await rm(join(sandbox.path, 'uv.toml'));
     await rm(join(sandbox.path, 'pyproject.toml'));
-    expect(writePythonSettings(sandbox.path, scratch.path, 7)).toStrictEqual([]);
+    expect(writePythonSettings(sandbox.path, scratch.path, PYTHON_RELEASE_AGE)).toStrictEqual([]);
     const keptSettings: unknown = parse(readFileSync(join(scratch.path, 'uv.toml'), 'utf8'));
     expect(keptSettings).toStrictEqual({
+        'exclude-newer-package': { ruff: false, semgrep: false },
         'exclude-newer': '2026-10-17T15:30:00.000Z',
     });
     await writeFile(join(sandbox.path, 'uv.toml'), 'find-links = [7]');
-    expect(() => writePythonSettings(sandbox.path, scratch.path, 7)).toThrow(
+    expect(() => writePythonSettings(sandbox.path, scratch.path, PYTHON_RELEASE_AGE)).toThrow(
         new GspotError(
             'filesystem',
             'uv.toml: find-links.0: Invalid input: expected string, received number. Fix the field.',
@@ -212,9 +220,10 @@ test('Python resolution excludes releases newer than the configured hold', async
     await using sandbox = await testdir();
     await using scratch = await testdir();
     using _clock = spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-24T15:30:00.000Z'));
-    writePythonSettings(sandbox.path, scratch.path, 14);
+    writePythonSettings(sandbox.path, scratch.path, { ...PYTHON_RELEASE_AGE, days: 14 });
     const contents: unknown = parse(readFileSync(join(scratch.path, 'uv.toml'), 'utf8'));
     expect(contents).toStrictEqual({
+        'exclude-newer-package': { ruff: false, semgrep: false },
         'exclude-newer': '2026-10-10T15:30:00.000Z',
     });
 });

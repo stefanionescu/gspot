@@ -9,7 +9,6 @@ import type { Tool } from '#cli/types/configurations.ts';
 import type { RuntimePins } from '#tests/types/runner.ts';
 import { runtimePinsSchema } from '#tests/schemas/runner.ts';
 import { TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
-import { listDistinctTools } from '#cli/configurations/tools.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
 import { getTable, findRootScope } from '#cli/settings/scopes.ts';
@@ -20,6 +19,7 @@ import { readInstallPackageManager } from '#cli/installers/install.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
+import { listDistinctTools, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import type { ToolInstall, ToolPackageManager } from '#cli/types/installers/install.ts';
 
@@ -50,12 +50,16 @@ Build the tool install for a sandbox.
 @returns the session, writer, generated files, and tools that the install steps read.
 */
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 15 calls in 6 files share it.
 export function buildToolInstall(session: Session, writer: Files): ToolInstall {
+    const pins = listToolProjectPins(session.toolConfigurations);
     return {
         session,
         packageManager: readInstallPackageManager(session),
-        releaseAgeDays: getTable(findRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
+        minimumReleaseAge: {
+            days: getTable(findRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
+            npmExclusions: Object.keys(pins.npm),
+            pythonExclusions: pins.python.map((pin) => pin.slice(0, pin.indexOf('=='))),
+        },
         writer,
         generated: generate(session),
         tools: listDistinctTools(session.toolConfigurations),

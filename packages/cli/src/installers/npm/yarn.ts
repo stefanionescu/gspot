@@ -10,8 +10,8 @@ import { YARN_SETTINGS_FILE } from '#cli/config/files/names.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { addEnvironmentReference } from '#cli/installers/npm/registry.ts';
 import { NPM_SETTING_PREFIX } from '#cli/config/installers/npm/project.ts';
+import { MINUTES_PER_DAY } from '#cli/config/installers/npm/release-age.ts';
 import { buildPackageManagerCommand } from '#cli/repository/npm/package-manager.ts';
-import { GSPOT_PACKAGES, MINUTES_PER_DAY } from '#cli/config/installers/npm/release-age.ts';
 import { yarnSettingsSchema, yarnConfigSettingSchema } from '#cli/schemas/installers/npm/yarn.ts';
 
 import {
@@ -117,8 +117,8 @@ export async function writeYarnSettings(
             secrets,
         );
     }
-    settings[YARN_SETTING_KEYS.npmMinimalAgeGate] = install.releaseAgeDays * MINUTES_PER_DAY;
-    settings[YARN_SETTING_KEYS.npmPreapprovedPackages] = [...GSPOT_PACKAGES];
+    settings[YARN_SETTING_KEYS.npmMinimalAgeGate] = install.minimumReleaseAge.days * MINUTES_PER_DAY;
+    settings[YARN_SETTING_KEYS.npmPreapprovedPackages] = install.minimumReleaseAge.npmExclusions;
     writeFileSync(join(runFolder, YARN_INSTALL_SETTINGS_FILE), stringify(settings), { mode: PRIVATE_FILE });
     return secrets.filter((value) => value.length > 0);
 }

@@ -6,12 +6,12 @@ import { installHooks } from '#cli/installers/hooks.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { installMiseTools } from '#cli/installers/mise.ts';
 import { installValePackages } from '#cli/installers/vale.ts';
-import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { installToolProjects } from '#cli/installers/projects.ts';
 import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { assertPackageManagerVersion } from '#cli/installers/npm/project.ts';
 import { readToolPackageManager } from '#cli/repository/npm/package-manager.ts';
+import { listDistinctTools, listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { ToolInstall, InstallResult, ToolPackageManager } from '#cli/types/installers/install.ts';
 
 /**
@@ -42,6 +42,7 @@ export async function installTools(
     generated: GenerationResult,
 ): Promise<InstallResult> {
     const configurations = session.toolConfigurations;
+    const pins = listToolProjectPins(configurations);
     const steps: (readonly string[])[] = [];
     const tools = listDistinctTools(configurations);
     const misePath = which.sync(MISE_TOOL, { nothrow: true });
@@ -49,7 +50,11 @@ export async function installTools(
         const context: ToolInstall = {
             session,
             packageManager: readInstallPackageManager(session),
-            releaseAgeDays: getTable(findRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
+            minimumReleaseAge: {
+                days: getTable(findRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
+                npmExclusions: Object.keys(pins.npm),
+                pythonExclusions: pins.python.map((pin) => pin.slice(0, pin.indexOf('=='))),
+            },
             writer,
             generated,
             tools,

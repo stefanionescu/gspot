@@ -1,5 +1,6 @@
 import { PYTHON_VERSION } from '#cli/config/installers/pypi.ts';
 import type { PythonIndexSettings } from '#cli/types/installers/pypi.ts';
+import type { MinimumReleaseAge } from '#cli/types/installers/install.ts';
 
 export const UV_TOML = `index-url = "https://alex:test%2Bpassword@example.com/simple"
 find-links = ["wheels", "https://example.com/wheels"]
@@ -101,3 +102,9 @@ export const INVALID_UV_SETTINGS = [
     },
     { file: 'pyproject.toml', field: 'tool.uv.index', text: '[tool.uv]\nindex = "x"\n' },
 ];
+
+export const PYTHON_RELEASE_AGE: MinimumReleaseAge = {
+    days: 7,
+    npmExclusions: [],
+    pythonExclusions: ['ruff', 'semgrep'],
+};

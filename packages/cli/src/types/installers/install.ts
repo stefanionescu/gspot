@@ -8,10 +8,12 @@ export type InstallResult = { note: string; steps: readonly (readonly string[])[
 
 export type ToolPackageManager = PackageManager & { command: PackageManagerCommand };
 
+export type MinimumReleaseAge = { days: number; npmExclusions: string[]; pythonExclusions: string[] };
+
 export type ToolInstall = {
     session: Session;
     packageManager: ToolPackageManager | undefined;
-    releaseAgeDays: number;
+    minimumReleaseAge: MinimumReleaseAge;
     writer: Files;
     generated: GenerationResult;
     tools: Tool[];

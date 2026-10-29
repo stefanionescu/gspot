@@ -153,6 +153,7 @@ async function createPythonIndex(work: string): Promise<Disposable & { url: stri
     const { user, password } = PYTHON_INDEX_CREDENTIALS;
     const credentials = `${user}:${password}`;
     const authentication = `Basic ${Buffer.from(credentials).toString('base64')}`;
+    const uploadedAt = new Date().toISOString();
     const server = Bun.serve({
         hostname: REGISTRY_HOST,
         port: 0,
@@ -164,7 +165,7 @@ async function createPythonIndex(work: string): Promise<Disposable & { url: stri
                 filename: wheel,
                 url: `/${wheel}`,
                 hashes: { sha256: digest },
-                'upload-time': '2020-01-01T00:00:00Z',
+                'upload-time': uploadedAt,
             };
             return Response.json(
                 { meta: { 'api-version': '1.1' }, name: 'ruff', files: [file] },

@@ -13,13 +13,13 @@ import { compareText, formatCount } from '#cli/system/text.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { uvLockSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
 import type { PythonToolProject } from '#cli/types/installers/projects.ts';
 import type { UvLockfile } from '#cli/types/parsers/projects/lockfiles.ts';
 import { getTool, listToolProjectPins } from '#cli/configurations/tools.ts';
+import type { ToolInstall, MinimumReleaseAge } from '#cli/types/installers/install.ts';
 import { type UvCommand, type PythonIndexSettings } from '#cli/types/installers/pypi.ts';
 import { PROJECT_UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { UV_TOOL, UV_PROJECT_FLAGS, UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/uv.ts';
@@ -125,7 +125,7 @@ export async function preparePythonLockfile(
     const runFolder = scratch.path;
     writeFileSync(join(runFolder, PYPROJECT_TOML), toolProjectFile.content);
 
-    const credentials = writePythonSettings(root, runFolder, install.releaseAgeDays);
+    const credentials = writePythonSettings(root, runFolder, install.minimumReleaseAge);
     await runUv(install, {
         runFolder,
         commandArguments: UV_LOCKFILE_ARGUMENTS,
@@ -155,7 +155,7 @@ export async function installPythonTools(install: ToolInstall, executable: strin
     const runFolder = join(root, GSPOT_FOLDER);
 
     using settings = createTemporaryFolder();
-    const credentials = writePythonSettings(root, settings.path, install.releaseAgeDays);
+    const credentials = writePythonSettings(root, settings.path, install.minimumReleaseAge);
     for (const commandArguments of [UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS]) {
         await runUv(install, {
             runFolder,
@@ -250,12 +250,19 @@ credentials.
 
 @param root the base folder for reading uv settings and resolving local index paths.
 @param settingsFolder the folder where the resolution runs.
-@param days the minimum age of a release, in days.
+@param minimumReleaseAge the minimum age of a release, and the Python pins it exempts.
 @returns index credentials that must stay out of generated lockfiles.
 */
-export function writePythonSettings(root: string, settingsFolder: string, days: number): string[] {
+export function writePythonSettings(
+    root: string,
+    settingsFolder: string,
+    minimumReleaseAge: MinimumReleaseAge,
+): string[] {
     const { settings, credentials } = readPythonSettings(root);
-    settings['exclude-newer'] = new Date(Date.now() - days * MILLISECONDS_PER_DAY).toISOString();
+    settings['exclude-newer'] = new Date(Date.now() - minimumReleaseAge.days * MILLISECONDS_PER_DAY).toISOString();
+    settings['exclude-newer-package'] = Object.fromEntries(
+        minimumReleaseAge.pythonExclusions.map((name) => [name, false]),
+    );
     writeFileSync(join(settingsFolder, UV_SETTINGS_FILE), stringify(settings), { mode: PRIVATE_FILE });
     return credentials;
 }

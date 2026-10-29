@@ -229,8 +229,9 @@ test('a Yarn Classic repository resolves its tool lockfile with npm and the rele
             'npm',
             ...PACKAGE_MANAGER_ARGUMENTS.npm.lockfile,
             '--min-release-age=7',
-            '--min-release-age-exclude=@gspothq/cli',
-            '--min-release-age-exclude=@gspothq/eslint-plugin',
+            '--min-release-age-exclude=ajv',
+            '--min-release-age-exclude=prettier',
+            '--min-release-age-exclude=v8r',
         ],
     ]);
 });
