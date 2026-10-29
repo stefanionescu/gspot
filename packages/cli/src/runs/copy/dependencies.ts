@@ -37,7 +37,7 @@ function listUntrackedDeclarations(root: string, tracked: ReadonlySet<string>, p
 function findDependencyTarget(plan: Pick<CopyPlan, 'root' | 'target'>, installed: string): string {
     const targetPath = realpathSync(installed);
     const local = relative(plan.root, targetPath);
-    return isInside(local) && (local === '' || !splitSystemPath(local).includes(NODE_MODULES))
+    return isInside(local) && (local === '' || !splitSystemPath(convertToPosixPath(local)).includes(NODE_MODULES))
         ? join(plan.target, local)
         : targetPath;
 }
