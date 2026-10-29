@@ -15,9 +15,6 @@ Run `mise run docs:deploy` to build and deploy the site to the `gspot-docs` Work
 your Wrangler login. This task publishes documentation without publishing npm packages. The release task also deploys
 the site.
 
-A Cloudflare rule on the zone serves `<path>index.md` when a request accepts `text/markdown`. `public/_headers` sends
-`Vary: Accept` for it. Keep the rule when you move the site.
-
 ## Asset licenses
 
 Keep the required notices with every distributed copy of the assets.

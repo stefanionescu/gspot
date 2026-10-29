@@ -33,9 +33,6 @@ export default defineConfig({
             tsconfigPaths: true,
             alias: {
                 '#docs': fileURLToPath(new URL('src', import.meta.url)),
-                'starlight-llms-txt/markdown': fileURLToPath(
-                    new URL('node_modules/starlight-llms-txt/entryToSimpleMarkdown.ts', import.meta.url),
-                ),
             },
         },
         oxc: { target: 'es2022' },
@@ -61,7 +58,6 @@ export default defineConfig({
         },
         starlight({
             title: 'gspot',
-            routeMiddleware: './src/route-middleware.ts',
             favicon: FAVICON,
             plugins: [
                 starlightLlmsTxt({

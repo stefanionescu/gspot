@@ -42,7 +42,5 @@ gspot deletes the file.
 
 ## These docs for agents
 
-Each page of these docs has a Markdown copy at its address plus `index.md`. For example, the Quickstart copy lives at
-`https://generativespotting.com/start/quickstart/index.md`. A request with `Accept: text/markdown` gets the copy at the
-page address. `/llms.txt` holds the setup steps for agents, and `/.well-known/agent-skills/index.json` lists the same
-steps as an Agent Skill.
+`/llms.txt` holds the setup steps for agents and links these docs as plain text: `/llms-small.txt` for the guides,
+and `/llms-full.txt` for every page. `/.well-known/agent-skills/index.json` lists the same steps as an Agent Skill.
