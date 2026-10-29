@@ -60,7 +60,7 @@ export const SIDEBAR = [
             { slug: 'reference/checks/index' },
             { slug: 'reference/configurations/index' },
             { slug: 'reference/gspot-toml/index' },
-            { slug: 'reference/eslint-plugin' },
+            { slug: 'reference/eslint-plugin/index' },
             { slug: 'reference/json-output' },
             { slug: 'reference/generated-files' },
         ],

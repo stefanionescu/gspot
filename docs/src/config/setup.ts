@@ -2,10 +2,16 @@ import { SIDEBAR } from '#docs/config/navigation.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { START_RUNNERS } from '#cli/config/repository/npm.ts';
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
-import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/generation/ci.ts';
 import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/definitions/root.ts';
-import { REFERENCE_PATH, REFERENCE_FOLDERS, DISJUNCTION_FORMAT, CONJUNCTION_FORMAT } from '#docs/config/reference.ts';
+
+import {
+    REFERENCE_PATH,
+    RANGE_OPERATOR,
+    REFERENCE_FOLDERS,
+    DISJUNCTION_FORMAT,
+    CONJUNCTION_FORMAT,
+} from '#docs/config/reference.ts';
 
 const PACKAGE_MANAGERS = { bun: 'Bun', npm: 'npm', pnpm: 'pnpm', yarn: 'Yarn', mise: 'mise' } as const;
 
@@ -37,17 +43,9 @@ export const LOCKFILE_INSTALLS = [
     })),
 ];
 
-const RANGE_OPERATOR = /^[<>=^~]+/u;
-
 export const RUNTIME_MINIMUMS = {
     node: cliPackage.engines.node.replace(RANGE_OPERATOR, ''),
     bun: cliPackage.engines.bun.replace(RANGE_OPERATOR, ''),
-} as const;
-
-export const PLUGIN_REQUIREMENTS = {
-    node: pluginPackage.engines.node.replace(RANGE_OPERATOR, ''),
-    eslint: pluginPackage.peerDependencies.eslint.replace(RANGE_OPERATOR, ''),
-    typescriptEslint: pluginPackage.peerDependencies['@typescript-eslint/eslint-plugin'].replace(RANGE_OPERATOR, ''),
 } as const;
 
 export const RELEASE_AGE_EXCLUSIONS = [
@@ -104,8 +102,8 @@ ${SETUP_COMMANDS.map(({ label, lines }) => `   - ${label}: \`${lines[0]}\``).joi
 - Exit codes: \`0\` every check that ran passed, \`1\` findings remain, \`2\` a check could not run. After \`2\`, run
   \`gspot install\`, then \`gspot doctor\`.
 - \`gspot explain <check, lint rule, setting, or file>\` explains it and names the commands that change it.
-  \`gspot check --fix\` runs the formatters and other fixers. Each check has a page at
-  ${REFERENCE_URL}${REFERENCE_FOLDERS.checks}/<check>/.
+  \`gspot check --fix\` runs the formatters and other fixers. The check \`<configuration>/<name>\` has a section
+  at ${REFERENCE_URL}${REFERENCE_FOLDERS.configurations}/<configuration>/#<name>.
 - Fix the code first. Ask the user before you ignore a finding, remove a configuration, or raise a limit; each takes
   \`--reason "<why>"\`. To ignore a finding:
   \`gspot ignore <check> --reason "<why>"\`, with \`--rule <rule>\` and \`--paths "<glob>"\` to narrow it.

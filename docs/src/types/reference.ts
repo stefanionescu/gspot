@@ -34,8 +34,6 @@ export type ReferencePage = {
     body: string;
 };
 
-export type PluginRule = { name: string; link: string; configs: string[]; summary: string };
-
 export type GuideCheck = { name: string; link: string; stage: string; summary: string };
 
 export type SettingsSchema = ReturnType<typeof buildJsonSchema>;

@@ -1,5 +1,11 @@
 import type { ReferencePage } from '#docs/types/reference.ts';
-import { MARKDOWN_ESCAPES, FLAGS_OUTSIDE_CODE, HTML_BRACKET_ENTITIES } from '#docs/config/reference.ts';
+
+import {
+    MARKDOWN_ESCAPES,
+    FLAGS_OUTSIDE_CODE,
+    TABLE_HEADING_LEVEL,
+    HTML_BRACKET_ENTITIES,
+} from '#docs/config/reference.ts';
 
 /**
 Build a reference page with escaped markup and no edit link.
@@ -16,14 +22,15 @@ export function buildReferencePage(title: string, description: string, body: str
 }
 
 /**
-Format a level-two section, or nothing for empty text.
+Format a section under a heading, or nothing for empty text.
 
 @param title the heading
 @param body the Markdown text
+@param level the heading level
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, buildCheckPage passes the complexity limit.
-export function formatSection(title: string, body: string): string {
-    return body === '' ? '' : `\n## ${title}\n\n${body}\n`;
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, formatCheckSection passes the complexity limit.
+export function formatSection(title: string, body: string, level = TABLE_HEADING_LEVEL): string {
+    return body === '' ? '' : `\n${'#'.repeat(level)} ${title}\n\n${body}\n`;
 }
 
 /**

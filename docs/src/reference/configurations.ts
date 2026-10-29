@@ -7,14 +7,14 @@ import type { Configuration } from '#cli/types/configurations.ts';
 import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
 import { findToolProjectPackage } from '#cli/configurations/tools.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import type { GuideSlug, ReferencePage } from '#docs/types/reference.ts';
+import { listSuppressions, formatCheckSection } from '#docs/reference/checks.ts';
+import type { GuideSlug, Suppression, ReferencePage } from '#docs/types/reference.ts';
 import { formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
 
 import {
     SETS_HEADING,
     REFERENCE_PATH,
     CHECKS_HEADING,
-    PURPOSE_HEADING,
     ALL_FILES_LABEL,
     DETECTION_LABELS,
     SELECTED_HEADING,
@@ -128,7 +128,11 @@ function formatConfigurationGuide(name: string, guideTitles: Record<GuideSlug, s
     return `The [${title} guide](/${slug}/) explains the setup.`;
 }
 
-function buildConfigurationPage(configuration: Configuration, guideTitles: Record<GuideSlug, string>): ReferencePage {
+function buildConfigurationPage(
+    configuration: Configuration,
+    guideTitles: Record<GuideSlug, string>,
+    suppressions: Map<string, Suppression>,
+): ReferencePage {
     const selection = formatSelection(configuration);
     const defaults = Object.entries(configuration.defaults).map(([name, value]) => [
         `\`${name}\``,
@@ -140,18 +144,7 @@ function buildConfigurationPage(configuration: Configuration, guideTitles: Recor
     ]);
     const ruleFiles = listRuleFiles(configuration).map(({ path }) => posix.join(GSPOT_PATHS.configurations, path));
     const sections: [string, string][] = [
-        [
-            'Checks',
-            formatTable(
-                ['Check', 'Stage', 'Level', PURPOSE_HEADING],
-                configuration.checks.map((check) => [
-                    `[\`${check.id}\`](${REFERENCE_PATH}${REFERENCE_FOLDERS['checks']}/${check.id === '' ? '' : check.id + '/'})`,
-                    `\`${check.stage}\``,
-                    `\`${check.level}\``,
-                    check.summary,
-                ]),
-            ),
-        ],
+        ['Checks', configuration.checks.map((check) => formatCheckSection(check, suppressions)).join('')],
         ['Settings', formatTable(['Setting', SETS_HEADING], settings)],
         [SELECTED_HEADING, selection],
         [RULES_OFF_HEADING, formatLintRulesOff(configuration)],
@@ -180,7 +173,7 @@ function buildConfigurationPage(configuration: Configuration, guideTitles: Recor
 Build the grouped configuration index and its pages.
 
 @param guideTitles the authored guide titles keyed by slug.
-@returns the index and each configuration page, keyed by path
+@returns the index and each configuration page with a section per check, keyed by path
 */
 export function buildConfigurationPages(guideTitles: Record<GuideSlug, string>): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>([
@@ -204,10 +197,11 @@ export function buildConfigurationPages(guideTitles: Record<GuideSlug, string>):
             ),
         ],
     ]);
+    const suppressions = listSuppressions(CLI_REFERENCE.configurations);
     for (const configuration of CLI_REFERENCE.configurations)
         pages.set(
             `${REFERENCE_FOLDERS.configurations}/${configuration.name}`,
-            buildConfigurationPage(configuration, guideTitles),
+            buildConfigurationPage(configuration, guideTitles, suppressions),
         );
     return pages;
 }

@@ -1,18 +1,20 @@
 import plugin from '#eslint-plugin/plugin.ts';
+import type { ReferencePage } from '#docs/types/reference.ts';
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
-import type { PluginRule, ReferencePage } from '#docs/types/reference.ts';
-import { formatTable, buildReferencePage } from '#docs/reference/markdown.ts';
+import { formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
 
 import {
-    REFERENCE_PATH,
-    FIRST_SENTENCE,
+    PLUGIN_TITLE,
+    PLUGIN_OPENING,
     PURPOSE_HEADING,
-    REFERENCE_FOLDERS,
     NO_CONFIG_MESSAGE,
     CONJUNCTION_FORMAT,
     SCHEMA_TYPE_LABELS,
     NO_OPTIONS_MESSAGE,
     ESLINT_FIX_MESSAGE,
+    PLUGIN_DESCRIPTION,
+    MINOR_HEADING_LEVEL,
+    SUBSECTION_HEADING_LEVEL,
     DEFAULT_OPTION_DESCRIPTION,
 } from '#docs/config/reference.ts';
 
@@ -43,56 +45,39 @@ function formatRuleOptions({
     );
 }
 
-function listRuleConfigs(name: string): string[] {
-    return Object.entries(plugin.configs)
+function formatRuleConfigs(name: string): string {
+    const configs = Object.entries(plugin.configs)
         .filter(([, configuration]) => configuration.rules[`${PLUGIN_PREFIX}/${name}`] !== undefined)
         .map(([config]) => config);
-}
-
-function formatRuleConfigs(configs: string[]): string {
     if (configs.length === 0) return NO_CONFIG_MESSAGE;
     const names = CONJUNCTION_FORMAT.format(configs.map((config) => `\`${config}\``));
-    return configs.length === 1 ? `The ${names} config turns it on.` : `The ${names} configs turn it on.`;
+    const rule = `\`${PLUGIN_PREFIX}/${name}\``;
+    return configs.length === 1 ? `The ${names} config turns on ${rule}.` : `The ${names} configs turn on ${rule}.`;
+}
+
+function formatRuleSection(name: string, rule: (typeof plugin.rules)[keyof typeof plugin.rules]): string {
+    const { docs } = rule.meta;
+    if (docs === undefined) throw new Error(`The plugin rule ${name} has no docs.`);
+    const facts = formatRuleConfigs(name) + (rule.meta.fixable === undefined ? '' : ESLINT_FIX_MESSAGE);
+    const heading = `${'#'.repeat(SUBSECTION_HEADING_LEVEL)} \`${name}\``;
+    const sections = [
+        formatSection('Why', docs.why, MINOR_HEADING_LEVEL),
+        formatSection('What to do', docs.fix, MINOR_HEADING_LEVEL),
+        formatSection('Example', docs.example, MINOR_HEADING_LEVEL),
+        formatSection('Options', formatRuleOptions(rule.meta), MINOR_HEADING_LEVEL),
+    ];
+    return `\n${heading}\n\n${docs.description}\n\n${facts}\n${sections.join('')}`;
 }
 
 /**
-List the plugin rules for the plugin page: the rule, the configs that turn it on, and what it finds.
-
-@returns one row per rule, sorted by name
+Build the plugin page: how to install and use the plugin, then a section per rule. Each section names the configs
+that turn the rule on, why, what to do, an example, and its options. The rule name gives its heading and anchor.
 */
-export function listPluginRules(): PluginRule[] {
-    return Object.entries(plugin.rules)
-        .toSorted(([left], [right]) => left.localeCompare(right))
-        .map(([name, rule]) => {
-            const { docs } = rule.meta;
-            if (docs === undefined) throw new Error(`The plugin rule ${name} has no docs.`);
-            return {
-                name: `${PLUGIN_PREFIX}/${name}`,
-                link: `${REFERENCE_PATH}${REFERENCE_FOLDERS['eslintPlugin']}/${name === '' ? '' : name + '/'}`,
-                configs: listRuleConfigs(name),
-                summary: (FIRST_SENTENCE.exec(docs.description)?.[0] ?? docs.description).trim(),
-            };
-        });
-}
-
-/**
-Build the page of each plugin rule: which configs turn it on, why, what to do, an example, and its options.
-
-@returns the pages, keyed by path inside the reference
-*/
-export function buildPluginPages(): Map<string, ReferencePage> {
-    return new Map(
-        Object.entries(plugin.rules).map(([name, rule]) => {
-            const { docs } = rule.meta;
-            if (docs === undefined) throw new Error(`The plugin rule ${name} has no docs.`);
-            const facts =
-                formatRuleConfigs(listRuleConfigs(name)) + (rule.meta.fixable === undefined ? '' : ESLINT_FIX_MESSAGE);
-            const optionsBody = formatRuleOptions(rule.meta);
-            const body = `${docs.description}\n\n${facts}\n\n## Why\n\n${docs.why}\n\n## What to do\n\n${docs.fix}\n\n## Example\n\n${docs.example}\n\n## Options\n\n${optionsBody}\n`;
-            return [
-                `${REFERENCE_FOLDERS.eslintPlugin}/${name}`,
-                buildReferencePage(`${PLUGIN_PREFIX}/${name}`, docs.description, body),
-            ];
-        }),
+export function buildPluginPage(): ReferencePage {
+    const rules = Object.entries(plugin.rules).toSorted(([left], [right]) => left.localeCompare(right));
+    return buildReferencePage(
+        PLUGIN_TITLE,
+        PLUGIN_DESCRIPTION,
+        PLUGIN_OPENING + formatSection('Rules', rules.map(([name, rule]) => formatRuleSection(name, rule)).join('')),
     );
 }

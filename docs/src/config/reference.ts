@@ -1,4 +1,5 @@
 import { type GuideSlug } from '#docs/types/reference.ts';
+import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 
 const CODE_SPAN = /(?<!`)(?<delimiter>`+)(?!`)[\s\S]+?(?<!`)\k<delimiter>(?!`)/u;
 
@@ -63,8 +64,6 @@ export const REFERENCE_FOLDERS = {
     checks: 'checks',
     eslintPlugin: 'eslint-plugin',
 } as const;
-
-export const FIRST_SENTENCE = /^[\s\S]*?\.(?=\s|$)/u;
 
 export const DOCS_SOURCE_NAME = 'gspot-docs';
 
@@ -235,3 +234,100 @@ export const TOP_LEVEL_HEADING = 'Top-level keys';
 export const SENTENCE_END = /[.\n]$/u;
 
 export const COMMANDS_OPENING = `Run gspot from any folder of the repository; it uses the \`gspot.toml\` at the top of the Git repository. Start each command the way your repository runs gspot, such as \`bun run --no-install gspot\` or \`mise exec -- gspot\`. See [Installation](/start/install/#choose-how-to-install). Commands that change settings write generated files too.\n\n`;
+
+export const SUBSECTION_HEADING_LEVEL = 3;
+
+export const MINOR_HEADING_LEVEL = 4;
+
+export const RANGE_OPERATOR = /^[<>=^~]+/u;
+
+const PLUGIN_REQUIREMENTS = {
+    node: pluginPackage.engines.node.replace(RANGE_OPERATOR, ''),
+    eslint: pluginPackage.peerDependencies.eslint.replace(RANGE_OPERATOR, ''),
+    typescriptEslint: pluginPackage.peerDependencies['@typescript-eslint/eslint-plugin'].replace(RANGE_OPERATOR, ''),
+} as const;
+
+export const PLUGIN_TITLE = 'ESLint plugin';
+
+export const PLUGIN_DESCRIPTION =
+    'Lint rules for the code that AI coding agents write, for ESLint with or without gspot.';
+
+export const PLUGIN_OPENING = `\`@gspothq/eslint-plugin\` holds ESLint rules for code that AI coding agents often write.
+
+The rules flag files that only forward to another module, functions of a few statements, and exports that only rename a
+value. They flag imports through index files and relative imports that leave their folder. They also flag comments mixed
+into import blocks and private environment variables read in client code.
+
+The [gspot CLI](https://www.npmjs.com/package/@gspothq/cli) sets this plugin up for you. Install it yourself only when
+you run ESLint without gspot.
+
+## Install
+
+You need Node.js ${PLUGIN_REQUIREMENTS.node} or newer and ESLint ${PLUGIN_REQUIREMENTS.eslint} or newer with a flat config file, such as
+\`eslint.config.mjs\`.
+
+| Package manager | Command |
+| --- | --- |
+| Bun | \`bun add --dev @gspothq/eslint-plugin eslint\` |
+| npm | \`npm install --save-dev @gspothq/eslint-plugin eslint\` |
+| pnpm | \`pnpm add --save-dev @gspothq/eslint-plugin eslint\` |
+| Yarn | \`yarn add --dev @gspothq/eslint-plugin eslint\` |
+
+## Use
+
+Add a plugin config to \`eslint.config.mjs\`. \`recommended\` turns on \`gspot/no-client-env\`; \`all\` turns on every lint
+rule except \`gspot/require-server-only\` and \`gspot/no-magic-numbers\`.
+
+\`\`\`javascript
+import gspot from '@gspothq/eslint-plugin';
+
+export default [gspot.configs.all];
+\`\`\`
+
+A finding looks like this:
+
+\`\`\`text
+src/orders.js
+  15:14  error  getOrderTotal only renames orderTotal. Export the source value under its own name.  gspot/no-renamed-exports
+\`\`\`
+
+Turn on \`gspot/require-server-only\` for the files that hold server code:
+
+\`\`\`javascript
+import gspot from '@gspothq/eslint-plugin';
+
+export default [{ files: ['src/server/**/*.js'], plugins: { gspot }, rules: { 'gspot/require-server-only': 'error' } }];
+\`\`\`
+
+\`gspot/import-boundaries\` reads its folders relative to the working folder of ESLint. To use another root, set
+\`settings: { gspot: { root: import.meta.dirname } }\`.
+
+## TypeScript
+
+Install \`@typescript-eslint/parser\` with the TypeScript version it supports, then select your TypeScript files:
+
+\`\`\`javascript
+import gspot from '@gspothq/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
+
+export default [
+    {
+        ...gspot.configs.all,
+        files: ['**/*.ts', '**/*.tsx'],
+        languageOptions: { parser: tsParser },
+    },
+];
+\`\`\`
+
+## Magic numbers
+
+\`gspot/no-magic-numbers\` reports the numbers that \`@typescript-eslint/no-magic-numbers\` reports. It skips the
+initializer of a module-level \`const\`, where an array of numbers counts as named. It takes the options of that rule
+and needs \`@typescript-eslint/eslint-plugin\` ${PLUGIN_REQUIREMENTS.typescriptEslint} or newer installed:
+
+\`\`\`javascript
+import gspot from '@gspothq/eslint-plugin';
+
+export default [{ files: ['**/*.ts'], plugins: { gspot }, rules: { 'gspot/no-magic-numbers': ['error', { ignore: [0, 1] }] } }];
+\`\`\`
+`;

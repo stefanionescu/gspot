@@ -1,3 +1,4 @@
+import { posix } from 'node:path';
 import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
@@ -22,6 +23,8 @@ import {
     SUPPRESSIONS_CHECK,
     LINT_RULES_MESSAGE,
     REFUSED_FORM_LABEL,
+    MINOR_HEADING_LEVEL,
+    SUBSECTION_HEADING_LEVEL,
     SUPPRESSION_FORMS_HEADING,
     REFUSED_SUPPRESSION_MESSAGE,
 } from '#docs/config/reference.ts';
@@ -45,22 +48,6 @@ function listCheckRequirements(check: Check): string[] {
     ];
 }
 
-function formatCheckFacts(check: Check, configuration: Configuration): string {
-    const configurationName = configuration.name;
-    const timing =
-        check.stage === 'manual'
-            ? `only when \`gspot check --only ${check.id}\` names it`
-            : `at the \`${check.stage}\` [stage](/start/concepts/#stage)`;
-    return [
-        `Part of the [\`${configurationName}\`](${REFERENCE_PATH}${REFERENCE_FOLDERS['configurations']}/${configurationName === '' ? '' : configurationName + '/'}) configuration, at the \`${check.level}\` [level](/start/concepts/#levels). It runs ${timing}, ${CHECK_RUN_LABELS[check.runs]}.`,
-        ...listCheckRequirements(check),
-        check.fix === undefined ? '' : CHECK_FIX_MESSAGE,
-        check.when?.setting === undefined ? '' : `It skips until you set \`${check.when.setting}\`.`,
-    ]
-        .filter(Boolean)
-        .join(' ');
-}
-
 function formatSuppressionComment(suppression: Suppression | undefined): string {
     if (suppression === undefined) return '';
     return suppression.forbidden === true
@@ -79,23 +66,28 @@ function formatTurnOff(check: Check, suppressions: Map<string, Suppression>): st
 }
 
 /**
-Build the reference page of one check: where it runs, why it matters, what to do, and how to turn it off.
+Format the section of one check on the page of its configuration: where it runs, why it matters, what to do, and how
+to turn it off. The check name without the configuration gives its heading and anchor.
 
 @param check the record from the manifest
-@param configuration the parsed configuration that declares it
 @param suppressions the suppression form of each tool
 */
-export function buildCheckPage(
-    check: Check,
-    configuration: Configuration,
-    suppressions: Map<string, Suppression>,
-): ReferencePage {
-    const lines = [
-        `${check.summary}\n\n${formatCheckFacts(check, configuration)}\n`,
-        formatSection('Why', check.why),
-        formatSection(HELP_HEADING, check.help),
-        formatSection('Example', check.example ?? ''),
-        formatSection(TURN_OFF_HEADING, formatTurnOff(check, suppressions)),
+export function formatCheckSection(check: Check, suppressions: Map<string, Suppression>): string {
+    const timing =
+        check.stage === 'manual'
+            ? `only when \`gspot check --only ${check.id}\` names it`
+            : `at the \`${check.stage}\` [stage](/start/concepts/#stage)`;
+    const facts = [
+        `\`${check.id}\` runs ${timing}, ${CHECK_RUN_LABELS[check.runs]}, at the \`${check.level}\` [level](/start/concepts/#levels).`,
+        ...listCheckRequirements(check),
+        check.fix === undefined ? '' : CHECK_FIX_MESSAGE,
+        check.when?.setting === undefined ? '' : `It skips until you set \`${check.when.setting}\`.`,
+    ];
+    const sections = [
+        formatSection('Why', check.why, MINOR_HEADING_LEVEL),
+        formatSection(HELP_HEADING, check.help, MINOR_HEADING_LEVEL),
+        formatSection('Example', check.example ?? '', MINOR_HEADING_LEVEL),
+        formatSection(TURN_OFF_HEADING, formatTurnOff(check, suppressions), MINOR_HEADING_LEVEL),
         formatSection(
             SUPPRESSION_FORMS_HEADING,
             check.id === SUPPRESSIONS_CHECK
@@ -107,13 +99,15 @@ export function buildCheckPage(
                       ]),
                   )
                 : '',
+            MINOR_HEADING_LEVEL,
         ),
     ];
-    return buildReferencePage(check.id, check.summary, lines.join(''));
+    const heading = `${'#'.repeat(SUBSECTION_HEADING_LEVEL)} \`${posix.basename(check.id)}\``;
+    return `\n${heading}\n\n${check.summary}\n\n${facts.filter(Boolean).join(' ')}\n${sections.join('')}`;
 }
 
 /**
-Build the check index: one table per group, each check linked to its page.
+Build the check index: one table per group, each check linked to its section on the page of its configuration.
 */
 export function buildCheckIndex(): ReferencePage {
     const { checks } = CLI_REFERENCE;
@@ -128,14 +122,12 @@ export function buildCheckIndex(): ReferencePage {
                         title,
                         formatTable(
                             ['Check', 'Stage', 'Level', PURPOSE_HEADING],
-                            groupChecks
-                                .map(({ check }) => check)
-                                .map((check) => [
-                                    `[\`${check.id}\`](${REFERENCE_PATH}${REFERENCE_FOLDERS['checks']}/${check.id === '' ? '' : check.id + '/'})`,
-                                    `\`${check.stage}\``,
-                                    `\`${check.level}\``,
-                                    check.summary,
-                                ]),
+                            groupChecks.map(({ check, configuration }) => [
+                                `[\`${check.id}\`](${REFERENCE_PATH}${REFERENCE_FOLDERS.configurations}/${configuration.name}/#${posix.basename(check.id)})`,
+                                `\`${check.stage}\``,
+                                `\`${check.level}\``,
+                                check.summary,
+                            ]),
                         ),
                     );
                 })
@@ -167,9 +159,9 @@ List the checks of some configurations for a guide page, in the order their mani
 export function listGuideChecks(configurations: string[]): GuideCheck[] {
     return CLI_REFERENCE.checks
         .filter(({ configuration }) => configurations.includes(configuration.name))
-        .map(({ check }) => ({
+        .map(({ check, configuration }) => ({
             name: check.id,
-            link: `${REFERENCE_PATH}${REFERENCE_FOLDERS['checks']}/${check.id === '' ? '' : check.id + '/'}`,
+            link: `${REFERENCE_PATH}${REFERENCE_FOLDERS.configurations}/${configuration.name}/#${posix.basename(check.id)}`,
             stage: check.stage,
             summary: check.summary,
         }));

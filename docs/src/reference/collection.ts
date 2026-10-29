@@ -1,12 +1,11 @@
-import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import type { Loader, DataStore } from 'astro/loaders';
 import { docsLoader } from '@astrojs/starlight/loaders';
+import { buildCheckIndex } from '#docs/reference/checks.ts';
 import { buildCommandPage } from '#docs/reference/commands.ts';
 import { buildSettingsPage } from '#docs/reference/settings.ts';
-import { buildPluginPages } from '#docs/reference/eslint-plugin.ts';
+import { buildPluginPage } from '#docs/reference/eslint-plugin.ts';
 import type { GuideSlug, ReferencePage } from '#docs/types/reference.ts';
 import { buildConfigurationPages } from '#docs/reference/configurations.ts';
-import { buildCheckPage, buildCheckIndex, listSuppressions } from '#docs/reference/checks.ts';
 
 import {
     GUIDES,
@@ -28,20 +27,6 @@ function getGuideTitles(store: DataStore): Record<GuideSlug, string> {
     return titles;
 }
 
-function buildReferencePages(guideTitles: Record<GuideSlug, string>): Map<string, ReferencePage> {
-    const pages = new Map([
-        [`${REFERENCE_FOLDERS.commands}/index`, buildCommandPage()],
-        ...buildConfigurationPages(guideTitles),
-        [`${REFERENCE_FOLDERS.settings}/index`, buildSettingsPage()],
-        ...buildPluginPages(),
-        [`${REFERENCE_FOLDERS.checks}/index`, buildCheckIndex()],
-    ]);
-    const suppressions = listSuppressions(CLI_REFERENCE.configurations);
-    for (const { check, configuration } of CLI_REFERENCE.checks)
-        pages.set(`${REFERENCE_FOLDERS.checks}/${check.id}`, buildCheckPage(check, configuration, suppressions));
-    return pages;
-}
-
 /**
 Load the hand-written and generated pages into the Starlight content collection.
 */
@@ -53,7 +38,14 @@ export function createDocsSource(): Loader {
             for (const id of previous) context.store.delete(id);
             await docsLoader().load(context);
             const ids: string[] = [];
-            for (const [path, page] of buildReferencePages(getGuideTitles(context.store))) {
+            const pages = new Map<string, ReferencePage>([
+                [`${REFERENCE_FOLDERS.commands}/index`, buildCommandPage()],
+                ...buildConfigurationPages(getGuideTitles(context.store)),
+                [`${REFERENCE_FOLDERS.settings}/index`, buildSettingsPage()],
+                [`${REFERENCE_FOLDERS.eslintPlugin}/index`, buildPluginPage()],
+                [`${REFERENCE_FOLDERS.checks}/index`, buildCheckIndex()],
+            ]);
+            for (const [path, page] of pages) {
                 const id = `${REFERENCE_PATH.slice(1)}${path}`;
                 const { body } = page;
                 const metadata = await context.parseData({
