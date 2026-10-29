@@ -85,7 +85,6 @@ test.each([...STOPPED_CAPTURES])(
         const pid = Number(await readFile(marker, 'utf8'));
         await waitForExit(pid);
     },
-    20_000,
 );
 
 test('an exiting CLI stops its running process group', async () => {
