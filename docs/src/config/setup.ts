@@ -137,7 +137,7 @@ export const LLMS_PAGES = {
             description: 'every command, its options, and exit codes',
         },
         {
-            label: 'Settings',
+            label: 'gspot.toml settings',
             url: `${REFERENCE_URL}${REFERENCE_FOLDERS.settings}/`,
             description: 'every key of gspot.toml, its accepted values, and its default',
         },

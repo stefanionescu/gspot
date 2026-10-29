@@ -104,5 +104,3 @@ If the fix command exits with one of the `exit_codes`, gspot reports remaining f
 failed run.
 
 [Command check settings](/reference/gspot-toml/#command_check) lists the keys and the values they accept.
-
-The hooks run the code of the repository as you; see [Trust](/start/concepts/#trust).

@@ -63,10 +63,8 @@ your coding agent do the setup.
 ## Documentation
 
 - [Run checks](https://generativespotting.com/use/run-checks/): read a finding, explain it, and fix it.
-- [gspot.toml](https://generativespotting.com/configure/gspot-toml/): choose configurations and a level, and change
-  settings.
-- [Customize gspot](https://generativespotting.com/configure/customize/): each thing you can change, and the one
-  command or setting that changes it.
+- [gspot.toml](https://generativespotting.com/configure/gspot-toml/): each thing you can change, and the command or
+  setting that changes it.
 - [Checks](https://generativespotting.com/reference/checks/): what each check finds, and how to fix its findings.
 - [Commands](https://generativespotting.com/reference/commands/): every command, its options, and its exit codes.
 - [ESLint plugin](https://generativespotting.com/reference/eslint-plugin/): the lint rules of gspot, for ESLint with or

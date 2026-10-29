@@ -24,5 +24,3 @@ gspot is a command-line tool that lints AI-generated code and installs rules for
 - At level `all`: the stricter checks that [Levels](/start/concepts/#levels) lists
 
 Continue with the [Quickstart](/start/quickstart/).
-
-The hooks run the code of the repository as you; see [Trust](/start/concepts/#trust).

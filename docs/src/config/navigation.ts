@@ -1,6 +1,6 @@
 export const SIDEBAR = [
     {
-        label: 'Getting started',
+        label: 'Basics',
         collapsed: false,
         items: [
             { slug: 'start/overview' },
@@ -28,7 +28,6 @@ export const SIDEBAR = [
         label: 'Configuration',
         collapsed: false,
         items: [
-            { slug: 'configure/customize' },
             { slug: 'configure/gspot-toml' },
             { slug: 'configure/files' },
             { slug: 'configure/lint-rules' },
@@ -38,13 +37,19 @@ export const SIDEBAR = [
         ],
     },
     {
-        label: 'Guides',
+        label: 'Languages',
         collapsed: false,
         items: [
             { slug: 'languages/javascript-typescript' },
             { slug: 'languages/python' },
             { slug: 'languages/swift' },
             { slug: 'languages/css' },
+        ],
+    },
+    {
+        label: 'Topics',
+        collapsed: false,
+        items: [
             { slug: 'topics/security' },
             { slug: 'topics/dependencies' },
             { slug: 'topics/testing' },

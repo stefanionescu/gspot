@@ -282,7 +282,7 @@ export function buildSettingsPage(): ReferencePage {
         );
     const topLevelKeys = roots.filter((child) => isSettingValue(schema, child.node));
     const page = buildReferencePage(
-        'Settings',
+        'gspot.toml settings',
         SETTINGS_DESCRIPTION,
         SETTINGS_OPENING +
             `The [JSON Schema](/${SCHEMA_FILE}) describes every key.\n` +
