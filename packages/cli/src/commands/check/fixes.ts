@@ -8,6 +8,7 @@ import { buildDiff } from '#cli/generation/outdated.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { isReportedCrash } from '#cli/runs/command/output.ts';
+import type { FileContents } from '#cli/types/system/files.ts';
 import type { CheckRunOptions } from '#cli/types/runs/check.ts';
 import type { CommandLaunch } from '#cli/types/runs/command.ts';
 import { FIX_ROUNDS } from '#cli/config/commands/check/fixes.ts';
@@ -206,6 +207,18 @@ async function listBrokenSyntax(changed: string[], before: PathBytes, after: Pat
     return checked.flat();
 }
 
+function restoreBrokenFiles(root: string, broken: string[], rounds: FixRounds): void {
+    using files = openFiles(root);
+    for (const path of broken) {
+        const now = files.read(path) as FileContents;
+        files.write(
+            path,
+            { ...now, bytes: rounds.before.get(path) as Buffer },
+            { ...now, bytes: rounds.after.get(path) as Buffer },
+        );
+    }
+}
+
 /**
 Runs fixes in passes and collects their results. A dry run always removes its copy.
 
@@ -232,9 +245,11 @@ export async function runFixers(
           )
         : undefined;
     const root = scratch?.path ?? session.root;
-    const { before, after, results } = await runFixerRounds(session, checks, root, paths);
+    const rounds = await runFixerRounds(session, checks, root, paths);
+    const { before, after, results } = rounds;
     const changed = listChangedPaths(before, after);
     const broken = await listBrokenSyntax(changed, before, after);
+    if (!isDryRun) restoreBrokenFiles(session.root, broken, rounds);
     const diffs = isDryRun
         ? changed.map((path) =>
               buildDiff(path, before.get(path)?.toString('utf8') ?? '', after.get(path)?.toString('utf8') ?? '', [
@@ -243,5 +258,5 @@ export async function runFixers(
               ]),
           )
         : [];
-    return { results, changed, broken, diffs };
+    return { results, changed: isDryRun ? changed : changed.filter((path) => !broken.includes(path)), broken, diffs };
 }

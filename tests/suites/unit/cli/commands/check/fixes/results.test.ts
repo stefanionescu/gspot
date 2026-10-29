@@ -6,10 +6,12 @@ import { stringify } from '@decimalturn/toml-patch';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
+import { formatFixes } from '#cli/commands/check/report.ts';
 import { buildProgramPin } from '#tests/setup/cli/tools.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { FIXER_RESULTS } from '#tests/config/commands/check/fixes/results.ts';
 import { planFixer, buildRunOptions, buildFixerSettings } from '#tests/setup/cli/runs.ts';
@@ -158,35 +160,83 @@ test('a failed version check blocks a check and its fix without changing source 
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
 });
 
-test('a fixer that leaves a code file that fails to parse is named in the fix report', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings([], {
-            rules: true,
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/merge-imports',
-                        stage: 'commit',
-                        paths: ['*.ts'],
-                        command: buildProgramCommand('fakes/tool'),
-                        fix: buildProgramCommand(
-                            'fakes/tool',
-                            '--text',
-                            "import Hls, type { A } from 'hls.js';\n",
-                            '{files}',
-                        ),
-                        output: { format: 'none' },
-                    },
-                ],
+test.each([false, true])(
+    'a fixer that breaks a file with an unstaged edit puts the file back and exits 2',
+    async (isDryRun) => {
+        await using sandbox = await createGitSandbox({});
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildSandboxSettings([], {
+                rules: true,
+                tables: stringify({
+                    command_check: [
+                        {
+                            id: 'project/merge-imports',
+                            stage: 'commit',
+                            paths: ['*.ts'],
+                            command: buildProgramCommand('fakes/tool'),
+                            fix: buildProgramCommand(
+                                'fakes/tool',
+                                '--text',
+                                "import Hls, type { A } from 'hls.js';\n",
+                                '{files}',
+                            ),
+                            output: { format: 'none' },
+                        },
+                    ],
+                }),
             }),
-        }),
-        'client.ts': "import Hls from 'hls.js';\nexport { Hls };\n",
-        'notes.ts': "export const note = 'kept';\n",
+            'client.ts': "import Hls from 'hls.js';\nexport { Hls };\n",
+            'notes.ts': "export const note = 'kept';\n",
+        });
+        commitAll(sandbox.path);
+        await writeFile(join(sandbox.path, 'client.ts'), "export const localEdit = 'keep';\n");
+        const before = await readFile(join(sandbox.path, 'client.ts'));
+        const session = await openSession(sandbox.path);
+        const result = await runChecks(
+            session,
+            buildRunOptions({ only: ['project/merge-imports'], fix: true, isDryRun }),
+        );
+        expect(result.fixes?.broken).toStrictEqual(['client.ts', 'notes.ts']);
+        expect(await readFile(join(sandbox.path, 'client.ts'))).toStrictEqual(before);
+        expect(result.fixes?.changed).toStrictEqual(isDryRun ? ['client.ts', 'notes.ts'] : []);
+        const output = formatFixes(result.fixes!, { isDryRun });
+        expect(output.join('\n')).not.toContain('git checkout');
+        expect(output.join('\n')).not.toContain('Fixed ');
+        expect(output).toContain(
+            isDryRun
+                ? 'The fixers would leave a syntax error in client.ts.'
+                : 'The fixers left a syntax error in client.ts; gspot put back the file as it was before the fixers.',
+        );
+        expect(result.report.exitCode).toBe(2);
+        expect(result.report.failed).toStrictEqual([]);
+    },
+);
+
+test('a fixer that leaves a code file that fails to parse is named in the fix report', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildFixerSettings(['*.ts']),
+        'client.ts': 'export const client = true;\n',
+        'notes.ts': 'export const note = false;\n',
     });
+    const before = await readFile(join(sandbox.path, 'client.ts'));
     const session = await openSession(sandbox.path);
-    const result = await runChecks(session, { ...buildRunOptions({ only: ['project/merge-imports'] }), fix: true });
-    expect(result.fixes?.broken).toStrictEqual(['client.ts', 'notes.ts']);
-    expect(result.report.exitCode).toBe(2);
-    expect(result.report.failed).toStrictEqual([]);
+    const planned = planFixer(
+        session,
+        buildProgramCommand(
+            'fakes/tool',
+            '--write',
+            'client.ts=export const =;',
+            '--write',
+            'notes.ts=export const note = true;\n',
+        ),
+    );
+    const fixed = await runFixers(buildCheckSession(session), [planned], { isDryRun: false });
+    expect(fixed.broken).toStrictEqual(['client.ts']);
+    expect(fixed.changed).toStrictEqual(['notes.ts']);
+    expect(await readFile(join(sandbox.path, 'client.ts'))).toStrictEqual(before);
+    expect(await readFile(join(sandbox.path, 'notes.ts'), 'utf8')).toBe('export const note = true;\n');
+    expect(formatFixes(fixed, { isDryRun: false })).toStrictEqual([
+        'Fixed 1 file: notes.ts. The changes are not staged.',
+        'The fixers left a syntax error in client.ts; gspot put back the file as it was before the fixers.',
+    ]);
 });

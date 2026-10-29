@@ -198,14 +198,16 @@ export function formatFixes(fixes: FixReport, options: { isDryRun: boolean }): s
         return [
             ...fixes.diffs,
             count === 0 ? 'No fixer changes anything.' : `${formatCount(count, 'file')} would change.`,
+            ...fixes.broken.map((path) => `The fixers would leave a syntax error in ${path}.`),
             '',
         ];
-    if (count === 0) return ['No fixer changed anything.'];
+    if (count === 0 && fixes.broken.length === 0) return ['No fixer changed anything.'];
     return [
-        `Fixed ${formatCount(count, 'file')}: ${fixes.changed.join(', ')}. The changes are not staged.`,
+        ...(count === 0
+            ? []
+            : [`Fixed ${formatCount(count, 'file')}: ${fixes.changed.join(', ')}. The changes are not staged.`]),
         ...fixes.broken.map(
-            (path) =>
-                `The fixers left a syntax error in ${path}. Restore it with git checkout -- ${path}, then fix it by hand.`,
+            (path) => `The fixers left a syntax error in ${path}; gspot put back the file as it was before the fixers.`,
         ),
     ];
 }
