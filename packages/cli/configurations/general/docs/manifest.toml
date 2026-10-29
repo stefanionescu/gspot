@@ -44,7 +44,7 @@ help = "Fix the path or the task name. To keep an example code block out of the 
 name = "missing-paths"
 runs = "once"
 stage = "commit"
-summary = "Checks that documented paths point to tracked files, and that each `mise run`, `npm run`, `pnpm run`, `yarn run`, and `bun run` command names a task or script of its project."
+summary = "Checks that documented paths point to tracked files, and that each `mise run`, `npm run`, `pnpm run`, `yarn run`, and `bun run` command names a task or script of its project. It leaves the targets of inline Markdown links to lychee."
 why = "A stale path in the docs sends the reader to a deleted file."
 
 [[check]]

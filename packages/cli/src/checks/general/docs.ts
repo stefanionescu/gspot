@@ -36,11 +36,13 @@ import {
     FILE_EXTENSION,
     PATH_CHARACTERS,
     MISE_CONF_FILES,
+    CODE_SPAN_START,
     TITLE_ATTRIBUTE,
     EMPHASIS_MARKERS,
     PATH_TOKEN_SKIPS,
     REMOTE_ARGUMENTS,
     TOKEN_SEPARATORS,
+    INLINE_LINK_TARGET,
     MARKDOWN_EXTENSIONS,
     TRAILING_PUNCTUATION,
     RELATIVE_PATH_PREFIXES,
@@ -204,7 +206,7 @@ function extractProseLines(text: string): ProseLine[] {
 }
 
 function extractPathTokens(line: string): string[] {
-    let text = line;
+    let text = line.replaceAll(INLINE_LINK_TARGET, (match) => (match.startsWith(CODE_SPAN_START) ? match : ''));
     for (const pattern of REMOTE_ARGUMENTS) text = text.replaceAll(pattern, '');
     return text
         .split(TOKEN_SEPARATORS)

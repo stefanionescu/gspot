@@ -19,6 +19,10 @@ export const REMOTE_ARGUMENTS = [
     /\b(?:Accept|Content-Type):\s*[a-z]+\/[a-z0-9!#$&^_.+-]+/giu,
 ] as const;
 
+export const INLINE_LINK_TARGET = /`[^`\n]*`|\]\(<?[^\s()<>]+/gu;
+
+export const CODE_SPAN_START = '`';
+
 export const MISE_RUN = 'mise run ';
 
 export const BUN_RUN = 'bun run ';

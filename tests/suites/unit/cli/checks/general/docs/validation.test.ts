@@ -111,6 +111,20 @@ test('missing-paths: wildcard examples are skipped; bold, italic and code paths 
     ]);
 });
 
+test('missing-paths: leaves inline link targets to lychee, and checks prose, code spans, and reference definitions', async () => {
+    const found = await runMissingPathsCheck(
+        {
+            'a.md': 'See [the guide](docs/missing.md "Guide"), ![logo](<img/missing logo.png>), and docs/gone.md.\nWrite `[the guide](docs/code.md)`.\n\n[guide]: docs/absent.md\n',
+        },
+        { paths: ['a.md'] },
+    );
+    expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
+        { file: 'a.md', line: 1, rule: 'missing-path', message: 'docs/gone.md names no tracked file or folder.' },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: 'docs/code.md names no tracked file or folder.' },
+        { file: 'a.md', line: 4, rule: 'missing-path', message: 'docs/absent.md names no tracked file or folder.' },
+    ]);
+});
+
 test('missing-paths: gitignored paths and paths inside ignored folders count as present; others are reported', async () => {
     const found = await runMissingPathsCheck(IGNORED_PATH_FILES, { paths: ['a.md'] });
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
