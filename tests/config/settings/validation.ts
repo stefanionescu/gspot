@@ -147,14 +147,14 @@ export const REFUSED_RULE_OPTIONS = [
     },
     {
         tool: 'yamllint',
-        configuration: 'files',
+        configuration: 'data-files',
         toml: '[tools.yamllint.rules]\ntruthy = true\n',
         message:
             'gspot.toml:4: tools.yamllint.rules.truthy: This table holds options only, without a severity; the level decides which rules run. To turn truthy off, run gspot ignore data-files/yamllint --rule truthy --reason "<why>".',
     },
     {
         tool: 'yamllint',
-        configuration: 'files',
+        configuration: 'data-files',
         toml: '[tools.yamllint.rules]\ntruthy = { ignore = "**" }\n',
         message:
             'gspot.toml:4: tools.yamllint.rules.truthy: This table holds options only, without a severity; the level decides which rules run. To turn truthy off, run gspot ignore data-files/yamllint --rule truthy --reason "<why>".',
