@@ -22,11 +22,11 @@ export const PACKAGE_STYLE_CASES = [
         ],
     },
     {
-        sample: `<<<<<<< HEAD
+        sample: `${'<'.repeat(7)} HEAD
 One native branch.
-=======
+${'='.repeat(7)}
 The other native branch.
->>>>>>> native`,
+${'>'.repeat(7)} native`,
         findings: [
             [33, 'gspot.title-case'],
             [33, 'gspot.merge-conflict-markers'],

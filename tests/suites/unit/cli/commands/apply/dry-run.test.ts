@@ -239,10 +239,7 @@ test('apply --dry-run reports a changed file, a stray, a conflict, and an edited
     await edit(shellcheckrc, (text) => `${text}# Edited.\n`);
     await edit(
         GSPOT_PATHS.npmProject,
-        (text) => `<<<<<<< ours
-${text}=======
->>>>>>> theirs
-`,
+        (text) => `${'<'.repeat(7)} ours\n${text}${'='.repeat(7)}\n${'>'.repeat(7)} theirs\n`,
     );
     await edit('AGENTS.md', (text) =>
         text.replace('<!-- <<< gspot managed <<< -->', 'Edited inside.\n<!-- <<< gspot managed <<< -->'),
