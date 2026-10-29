@@ -1,4 +1,5 @@
 export const SCHEMA_URL = 'https://generativespotting.com/gspot.schema.json';
+
 export const HIDDEN_FACT_KEYS = [
     'configurations',
     'languages',
@@ -6,8 +7,10 @@ export const HIDDEN_FACT_KEYS = [
     'reason_values',
     'language_defaults',
     'path_role',
+    'template',
     'default_all',
 ] as const;
+
 export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     scope: 'Settings for one folder: its configurations and the tables that differ from the root.',
     import_rule:
@@ -47,4 +50,9 @@ export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     ci: 'Whether gspot writes a CI workflow, for which provider, and on which systems it runs.',
     rules: 'Whether gspot writes rules for coding agents, and which rule files it leaves out.',
 };
+
 export const JSON_SCHEMA_DIALECT = 'https://json-schema.org/draft/2020-12/schema';
+
+export const LOCAL_DATE_DESCRIPTION = 'An unquoted TOML date in YYYY-MM-DD form, such as 2026-11-08.';
+
+export const SCHEMA_DESCRIPTION = 'The settings of gspot for one repository.';

@@ -7,12 +7,12 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 
 import {

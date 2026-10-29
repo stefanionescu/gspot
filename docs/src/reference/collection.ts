@@ -44,8 +44,6 @@ function buildReferencePages(guideTitles: Record<GuideSlug, string>): Map<string
 
 /**
 Load the hand-written and generated pages into the Starlight content collection.
-
-@returns the Astro loader
 */
 export function createDocsSource(): Loader {
     return {

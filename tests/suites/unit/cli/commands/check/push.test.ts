@@ -1,17 +1,18 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { CHECK_COMMAND } from '#tests/config/hooks.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { RunReport } from '#cli/types/runs/run.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { type PushReport } from '#cli/types/commands/check.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { CLI_BIN, runGspot } from '#tests/setup/cli/commands.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check/push.ts';
-import { preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { type RunReport, type PushReport } from '#cli/types/commands/check.ts';
 import { PUSH_CONTENT, BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
 
 async function assertWorkingTreeKept(root: string, head: string): Promise<void> {
     expect(runGitStep(root, ['rev-parse', 'HEAD'])).toBe(head);
@@ -179,7 +180,7 @@ test('the pre-push report prints a command that reproduces the same findings', a
             'reproduce',
             process.execPath,
             CLI_BIN,
-            reproduction[0]!.replace('gspot check', 'gspot check --json'),
+            reproduction[0]!.replace(CHECK_COMMAND, 'gspot check --json'),
         ],
         { cwd: checkout.path },
     );
@@ -243,11 +244,12 @@ test('pre-push of a forced rewind checks the rewound commit', async () => {
     expect((JSON.parse(forced.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
     await assertWorkingTreeKept(sandbox.path, broken);
 });
+
 test('a pushed commit that changes gspot.toml checks every file of that commit', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'changed.sh': 'echo base\n',
-        'legacy.sh': 'if then\n',
+        'legacy.sh': BROKEN_IF_SCRIPT,
     });
 
     commitAll(sandbox.path);

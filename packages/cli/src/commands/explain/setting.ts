@@ -1,12 +1,17 @@
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
+import { buildSettings } from '#cli/settings/read.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
+import { REASON_HELP } from '#cli/config/commands/explain.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
-import { RECORD_FIELDS, isScopeSetting } from '#cli/settings/schemas.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
 import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
+import { RECORD_FIELDS, isScopeSetting, findSettingSchema } from '#cli/settings/schema-lookup.ts';
 
 function formatSettingScope(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     const { scope, shipped, inherited } = scopeSetting;
@@ -28,15 +33,40 @@ function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingS
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
     const value = inherited?.value;
     return [
-        ...(value !== undefined && isLoosening(setting, value, shipped)
-            ? [
-                  'If you set this value, give a reason: write it as { value = ..., reason = "..." }, or run gspot set with --reason.',
-              ]
-            : []),
+        ...(value !== undefined && isLoosening(setting, value, shipped) ? [REASON_HELP] : []),
         ...(inherited?.reason === undefined ? [] : [`Reason on record: ${inherited.reason}`]),
         `Change it: gspot set ${quoteArgument(key)} <value>${target} [--reason "<why>"]`,
         `Back to the default: gspot unset ${quoteArgument(key)}${target}`,
     ];
+}
+
+function explainShippedSetting(key: string): Explanation | undefined {
+    const settings = buildSettings(settingsSchema.parse({}), {});
+    const available = buildAvailableSettings([...readConfigurations().values()], settings.level);
+    const match = findSetting(available, key);
+    if (match === undefined) return undefined;
+    const { name: _name, ...facts } = match.setting;
+    const shipped = findSettingDefault(available, settings, match, '')?.value;
+    const scope = { scope: '', shipped, inherited: undefined, readBy: [] };
+    const owners = findSettingSchema(key)?.meta()?.['configurations'] as string[] | undefined;
+    const ownership =
+        owners === undefined
+            ? []
+            : [`Configurations: ${new Intl.ListFormat('en', { type: 'conjunction' }).format(owners)}`];
+    return {
+        kind: 'setting',
+        subject: key,
+        text: [
+            key,
+            '',
+            match.setting.description,
+            ...ownership,
+            'No gspot.toml here: these are the shipped values',
+            ...formatSettingScope(key, match.setting, scope),
+            '',
+        ].join('\n'),
+        facts: { key, ...facts, scopes: [{ scope: '', default: shipped }] },
+    };
 }
 
 /**
@@ -44,10 +74,10 @@ Describe a setting's defaults, effective values, and edit commands.
 
 @param session the repository settings and selected scopes, when available.
 @param key the setting name to resolve.
-@returns the explanation, or undefined when no selected configuration declares the setting.
+@returns undefined when no selected configuration declares the setting.
 */
 export function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
-    if (session === undefined) return undefined;
+    if (session === undefined) return explainShippedSetting(key);
     const { settings } = session;
     const isScopeKey = isScopeSetting(key);
     const scopes = session.scopes.flatMap((scope) => {
@@ -67,6 +97,7 @@ export function explainSetting(session: Session | undefined, key: string): Expla
     });
     const first = scopes[0];
     if (first === undefined) return undefined;
+    const { name: _name, ...settingFacts } = first.setting;
     const lines = [
         key,
         '',
@@ -80,7 +111,7 @@ export function explainSetting(session: Session | undefined, key: string): Expla
         text: `${lines.join('\n')}\n`,
         facts: {
             key,
-            ...first.setting,
+            ...settingFacts,
             scopes: scopes.map(({ scope, shipped, inherited, readBy }) => ({
                 scope,
                 default: shipped,

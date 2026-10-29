@@ -2,18 +2,20 @@ import { parse } from 'yaml';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { dirname } from 'node:path/posix';
-import { openSession } from '#cli/session.ts';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { COMMENT_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
+    GSPOT_STYLES_LINE,
     PROSE_STYLE_CASES,
     PRODUCT_WORD_SETTINGS,
-    RECOMMENDED_VALE_STYLE_FILES,
+    DEFAULT_LEVEL_STYLE_FILES,
 } from '#tests/config/generation/configurations/general/prose.ts';
 
 test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (level) => {
@@ -22,15 +24,15 @@ test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (
         'gspot.toml': buildSandboxSettings(['prose'], { level }),
     });
 
-    const output = generate(await openSession(sandbox.path));
+    const output = generateFiles(await openSession(sandbox.path));
     const paths = new Set(output.files.map((file) => file.path));
-    expect(paths.has(findManifestTarget('prose', 'styles/gspot/link-text.yml'))).toBe(true);
+    expect(paths.has(getManifestTarget('prose', 'styles/gspot/link-text.yml'))).toBe(true);
     const configuration = output.files.find((file) => file.path === GSPOT_PATHS.valeConfigFile)!;
     expect(/^Packages = /mu.test(configuration.content)).toBe(level === 'all');
     expect(configuration.content).toContain(
         level === 'all'
             ? 'BasedOnStyles = gspot, Vale, Google, write-good, proselint, alex, Harper'
-            : 'BasedOnStyles = gspot',
+            : GSPOT_STYLES_LINE,
     );
     const [general = '', markup = ''] = configuration.content.split('[*.{md,mdx}]', 2);
     expect(general).toContain('gspot.alt-text = NO');
@@ -38,17 +40,17 @@ test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (
     expect(configuration.content.includes('Vocab = words')).toBe(level === 'all');
 });
 
-test('at level recommended, gspot writes only the Vale styles that run', async () => {
+test('at level basic, gspot writes only the Vale styles that run', async () => {
     await using sandbox = await testdir({
         'sample.md': '# Sample\n',
-        'gspot.toml': buildSandboxSettings(['prose'], { level: 'recommended' }),
+        'gspot.toml': buildSandboxSettings(['prose'], { level: 'basic' }),
     });
-    const output = generate(await openSession(sandbox.path));
+    const output = generateFiles(await openSession(sandbox.path));
     const paths = output.files
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${dirname(GSPOT_PATHS.valeConfigFile)}/`));
     expect(paths.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        ...RECOMMENDED_VALE_STYLE_FILES.map((file) => findManifestTarget('prose', file)),
+        ...DEFAULT_LEVEL_STYLE_FILES.map((file) => getManifestTarget('prose', file)),
         GSPOT_PATHS.valeConfigFile,
     ]);
 });
@@ -63,7 +65,7 @@ test('your banned headings and the shipped ones reach the heading style once', a
     });
 
     const session = await openSession(sandbox.path);
-    const output = generate(session);
+    const output = generateFiles(session);
     const style = output.files.find((file) => file.path.endsWith('/gspot/banned-headings.yml'))!.content;
     expect((parse(style) as { tokens: string[] }).tokens).toStrictEqual([
         String.raw`(?:\b|^)project structure(?:\b|$)`,
@@ -87,7 +89,7 @@ test('the Vale vocabulary and heading exceptions hold the products of every scop
     });
 
     const session = await openSession(sandbox.path);
-    const files = generate(session).files;
+    const files = generateFiles(session).files;
     const text = files.find(({ path }) => path.endsWith('/vocabularies/words/accept.txt'))!.content;
     const vocabulary = text.split('\n');
     expect(vocabulary.at(-1)).toBe('');
@@ -110,29 +112,30 @@ test('Vale disables E-Prime when the upstream styles are active', async () => {
         'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
         'guide.md': '# Guide\n\nThe file is generated.\n',
     });
-    const files = generate(await openSession(sandbox.path)).files;
-    const ini = files.find(({ path }) => path === findManifestTarget('prose', 'vale.ini'))!.content;
+    const files = generateFiles(await openSession(sandbox.path)).files;
+    const ini = files.find(({ path }) => path === getManifestTarget('prose', 'vale.ini'))!.content;
     expect(ini).toContain('write-good.E-Prime = NO');
 });
 
-test.each(['recommended', 'all'] as const)('Vale limits code comments to mistake checks at level %s', async (level) => {
+test.each(['basic', 'all'] as const)('Vale limits code comments to mistake checks at level %s', async (level) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['prose'], { level }),
-        'source.ts': "// The file is generated by ESLint's parser.\nexport const value = 1;\n",
+        'source.ts': COMMENT_SOURCE,
     });
-    const files = generate(await openSession(sandbox.path)).files;
-    const ini = files.find(({ path }) => path === findManifestTarget('prose', 'vale.ini'))!.content;
-    expect(ini).toContain(
-        '[*.{ts,tsx,js,jsx,swift,py,css,sh,bash,zsh,sql,pgsql,psql}]\n' +
-            'BasedOnStyles =\n' +
-            'gspot.conscious-language = YES\n' +
-            'gspot.placeholders = YES\n' +
-            'gspot.merge-conflict-markers = YES\n' +
-            'gspot.session-identifiers = YES\n' +
-            'gspot.straight-quotes = YES\n' +
-            'gspot.em-dashes = YES',
-    );
-    expect(ini).toContain(level === 'all' ? 'BasedOnStyles = gspot, Vale, Google' : 'BasedOnStyles = gspot');
+    const files = generateFiles(await openSession(sandbox.path)).files;
+    const ini = files.find(({ path }) => path === getManifestTarget('prose', 'vale.ini'))!.content;
+    if (level === 'all')
+        expect(ini).toContain(
+            '[*.{ts,tsx,js,jsx,swift,py,css,sh,bash,zsh,sql,pgsql,psql}]\n' +
+                'BasedOnStyles =\n' +
+                'gspot.conscious-language = YES\n' +
+                'gspot.placeholders = YES\n' +
+                'gspot.merge-conflict-markers = YES\n' +
+                'gspot.session-identifiers = YES\n' +
+                'gspot.straight-quotes = YES\n' +
+                'gspot.em-dashes = YES',
+        );
+    expect(ini).toContain(level === 'all' ? 'BasedOnStyles = gspot, Vale, Google' : GSPOT_STYLES_LINE);
 });
 
 test.each([...PROSE_STYLE_CASES])(
@@ -145,8 +148,8 @@ test.each([...PROSE_STYLE_CASES])(
             }),
             'guide.md': '# Guide\n',
         });
-        const files = generate(await openSession(sandbox.path)).files;
-        const target = findManifestTarget('prose', `styles/gspot/${name}.yml`);
+        const files = generateFiles(await openSession(sandbox.path)).files;
+        const target = getManifestTarget('prose', `styles/gspot/${name}.yml`);
         const style: unknown = parse(files.find(({ path }) => path === target)!.content);
         expect(style).toMatchObject({ ...expected, level: 'error' });
         expect(style).not.toHaveProperty('setting');

@@ -34,7 +34,6 @@ tool = "syncpack"
 [[check]]
 example = "A locked package version named in an OSV advisory reports a finding. Upgrade to a fixed version, and update the lockfile."
 files = { filenames = ["bun.lock", "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "go.mod", "Cargo.lock", "Gemfile.lock", "gems.locked", "requirements.txt", "Pipfile.lock", "poetry.lock", "pdm.lock", "pylock.toml", "uv.lock", "pom.xml", "gradle.lockfile", "buildscript-gradle.lockfile", "conan.lock", "pubspec.lock", "mix.lock", "cabal.project.freeze", "stack.yaml.lock", "composer.lock", "renv.lock", "packages.config", "packages.lock.json", "*.deps.json"], paths = ["**/gradle/verification-metadata.xml"], kinds = ["source", "generated"] }
-level = "recommended"
 name = "osv-scanner"
 needs = ["network"]
 runs = "once"
@@ -52,17 +51,16 @@ files = { filenames = ["package.json"] }
 help = "Set every package.json to the same version of the dependency, then update the lockfile."
 level = "all"
 name = "syncpack"
-output = { format = "lines" }
+output = { format = "regex", pattern = "^\\s*✘ (?<message>.+ in (?<file>\\S+) at \\S+) \\((?<rule>[A-Za-z]+)\\)$" }
 runs = "once"
 stage = "push"
-summary = "Checks that every workspace package resolves each dependency to one version."
+summary = "Checks that each dependency has ranges that agree across the workspace."
 why = "Two versions of a dependency in one workspace behave differently, so a bug shows in only one package."
 
 [[check]]
 example = "A lockfile URL outside `dependencies.allowed_registries` reports its host. Install the package again from an allowed registry, or add that host to the list."
 files = { filenames = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"], kinds = ["source", "generated"] }
 help = "Install the package again from an allowed registry, or add the host to `dependencies.allowed_registries`. Keep the lockfile of one package manager, and delete the others."
-level = "recommended"
 name = "lockfiles"
 runs = "scope"
 stage = "commit"
@@ -73,7 +71,6 @@ why = "A lockfile line from another host installs code nobody chose, and reviewe
 example = "A `package.json` that asks for `zod ^4.1.0` while `bun.lock` records `^4.0.0` reports `stale-lockfile`. Run `bun install` and commit the lockfile."
 files = { filenames = ["package.json", "package-lock.json", "pnpm-lock.yaml", "bun.lock"], kinds = ["source", "generated"] }
 help = "Run the install of the package manager, and commit the lockfile it writes."
-level = "recommended"
 name = "stale-lockfile"
 runs = "scope"
 stage = "push"
@@ -84,7 +81,6 @@ why = "A frozen install in CI stops when package.json and the lockfile disagree,
 example = "A `packageManager` of `bun@1.4.2` while `mise.toml` pins `bun = \"1.4.3\"` reports `package-manager-pin`. Write one version in both."
 files = { filenames = ["package.json"] }
 help = "Write the same version of the package manager in packageManager and in mise.toml."
-level = "recommended"
 name = "package-manager-pin"
 runs = "scope"
 stage = "push"

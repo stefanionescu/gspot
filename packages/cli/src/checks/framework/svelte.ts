@@ -1,51 +1,49 @@
-import { join } from 'node:path';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { join, dirname } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { joinScope } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { parseToolReport } from '#cli/parsers/formats/json.ts';
+import type { CheckFinding } from '#cli/types/runs/check.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
+import { buildTsconfig } from '#cli/checks/tsc/scope-tsconfig.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { writeScopeTsconfig } from '#cli/checks/tsc/scope-tsconfig.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
 import { TSCONFIG_COPY_FOLDER } from '#cli/config/checks/tsc/compiler.ts';
-import { findingSchema, failureMessageSchema } from '#cli/schemas/checks/framework/svelte.ts';
+import { svelteFindingSchema, failureMessageSchema } from '#cli/schemas/checks/framework/svelte.ts';
 
 import {
     FAILURE_LINE,
     FINDING_LINE,
+    SVELTE_CHECK_RULE,
     SVELTE_CHECK_COMMAND,
     SVELTE_TSCONFIG_FLAG,
 } from '#cli/config/checks/framework/svelte.ts';
 
-function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): Finding[] {
+function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): CheckFinding[] {
     const lines = stdout.split('\n');
     const failure = lines
         .map((line) => FAILURE_LINE.exec(line)?.groups?.['message'])
         .find((text) => text !== undefined);
     if (failure !== undefined)
         throw new Error(
-            `The svelte-check run failed: ${parseToolReport('svelte-check', failure, failureMessageSchema)}`,
+            `The svelte-check run failed: ${parseToolOutput(SVELTE_CHECK_RULE, failure, failureMessageSchema)}`,
         );
-    return lines.flatMap((line): Finding[] => {
+    return lines.flatMap((line): CheckFinding[] => {
         const text = FINDING_LINE.exec(line)?.groups?.['message'];
         if (text === undefined) return [];
-        const reported = parseToolReport('svelte-check', text, findingSchema);
+        const reported = parseToolOutput(SVELTE_CHECK_RULE, text, svelteFindingSchema);
         const rule = typeof reported.code === 'number' ? `TS${String(reported.code)}` : reported.code;
         return [
-            buildFinding(
-                planned,
-                {
-                    file: joinScope(planned.scope.path, convertToPosixPath(reported.filename)),
-                    line: reported.start.line + 1,
-                    column: reported.start.character + 1,
-                },
-                rule ?? 'svelte-check',
-                reported.message,
-            ),
+            {
+                file: joinScope(planned.scope.path, convertToPosixPath(reported.filename)),
+                line: reported.start.line + 1,
+                column: reported.start.character + 1,
+                rule: rule ?? SVELTE_CHECK_RULE,
+                message: reported.message,
+            },
         ];
     });
 }
@@ -57,10 +55,11 @@ Runs svelte-check on the scope for compiler warnings, accessibility warnings, an
 @param planned the scope to check.
 @returns one finding for each error and warning.
 */
-export async function checkSvelteCheck(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSvelteCheck(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     using runtime = createTemporaryFolder();
     const target = join(runtime.path, TSCONFIG_COPY_FOLDER, planned.scope.path, TSCONFIG_FILE);
-    writeScopeTsconfig(session, planned.scope, target);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, JSON.stringify(buildTsconfig(session, planned.scope, target)));
     const command = [...SVELTE_CHECK_COMMAND, SVELTE_TSCONFIG_FLAG, target];
     const result = await runCheckTool(session, planned, command, {
         cwd: join(session.root, planned.scope.path),

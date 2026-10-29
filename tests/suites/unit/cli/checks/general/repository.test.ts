@@ -1,16 +1,17 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
+import { join, relative } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
-import { symlink, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { unlink, symlink, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { LOCAL_FILE_PATHS, LARGE_FILE_TABLES } from '#tests/config/checks/general/repository.ts';
-import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 test(`local-files reports each tracked path that a scope's configurations leave untracked, once, including a path only in the Git index`, async () => {
     await using sandbox = await testdir();
@@ -31,15 +32,19 @@ test(`local-files reports each tracked path that a scope's configurations leave 
         ...session.repository.index,
         ...indexOnly.map((path) => ({ ...session.repository.index[0]!, path })),
     ];
-    const found = await findBuiltInCheck('repository/local-files')(session, input);
-    expect(
-        found
-            .map(({ file, line, rule }) => ({ file, line, rule }))
-            .toSorted((left, right) => left.file.localeCompare(right.file)),
-    ).toStrictEqual(
+    const found = await getBuiltInCheck('repository/local-files')(session, input);
+    expect(found.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
         [...refused, ...indexOnly]
             .toSorted((left, right) => left.localeCompare(right))
-            .map((file) => ({ file, line: 1, rule: 'tracked-file' })),
+            .map((file) => ({
+                check: 'repository/local-files',
+                file,
+                line: 1,
+                rule: 'tracked-file',
+                fixable: false,
+                help: 'Add the reported file or folder to .gitignore and remove it from the index with `git rm --cached`.',
+                message: `${file} is tracked; its selected configuration declares it untracked. Remove it from the Git index and add it to .gitignore.`,
+            })),
     );
 });
 
@@ -71,12 +76,18 @@ vendor/** linguist-vendored
         buildRunOptions({ only: ['repository/large-files'] }),
     );
 
-    expect(
-        failed.report.checks.flatMap(({ findings }) => findings.map(({ file, rule, line }) => ({ file, rule, line }))),
-    ).toStrictEqual([
-        { file: 'app/big.bin', rule: 'size', line: 1 },
-        { file: 'big.bin', rule: 'size', line: 1 },
-    ]);
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
+        ['app/big.bin', 'big.bin'].map((file) => ({
+            check: 'repository/large-files',
+            file,
+            rule: 'size',
+            line: 1,
+            fixable: false,
+            message:
+                '1 kB is over the 1 kB limit; mark it as generated or vendored in .gitattributes, move it to LFS, or ignore this finding with a reason.',
+            help: 'Track the file with Git LFS, classify it as generated or vendored in .gitattributes, or raise repository.max_file_kilobytes with a reason.',
+        })),
+    );
     await writeFile(join(sandbox.path, 'app/big.bin'), Buffer.alloc(BYTES_PER_KILOBYTE));
     await writeFile(join(sandbox.path, 'big.bin'), Buffer.alloc(BYTES_PER_KILOBYTE));
 
@@ -92,11 +103,21 @@ vendor/** linguist-vendored
 test('a tracked outward symlink is a local-files finding', async () => {
     await using outside = await testdir({ 'external.ts': 'export {};\n' });
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    await symlink(outside.path, join(sandbox.path, 'outside'), 'dir');
+    await symlink(relative(sandbox.path, outside.path), join(sandbox.path, 'outside'), 'dir');
     runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['add', '-A']);
     const findings = await runSandboxCheck(sandbox.path, 'repository/local-files');
-    expect(findings).toMatchObject([{ file: 'outside', rule: 'outward-link' }]);
+    expect(findings).toStrictEqual([
+        {
+            check: 'repository/local-files',
+            file: 'outside',
+            line: 1,
+            rule: 'outward-link',
+            fixable: false,
+            message: 'outside links outside the repository.',
+            help: 'Replace the link with the file or folder it points to, or delete it.',
+        },
+    ]);
 });
 
 test('oversized and invalid UTF-8 files get one repository finding and leave other checks', async () => {
@@ -110,11 +131,72 @@ test('oversized and invalid UTF-8 files get one repository finding and leave oth
     const planned = planChecks(session, { stage: 'all', only: ['format/prettier'] })[0]!;
     expect(planned.files.map(({ path }) => path)).not.toContain('large.md');
     expect(planned.files.map(({ path }) => path)).not.toContain('latin1.md');
-    expect(await runSandboxCheck(sandbox.path, 'repository/encoding')).toMatchObject([
+    expect(await runSandboxCheck(sandbox.path, 'repository/encoding')).toStrictEqual([
         {
+            check: 'repository/encoding',
             file: 'latin1.md',
+            line: 1,
+            fixable: false,
+            help: 'Save the reported file as UTF-8, then run the check again.',
             rule: 'encoding',
             message: 'latin1.md is not UTF-8 text. Save it as UTF-8, then run the command again.',
         },
     ]);
+});
+
+test('encoding reports Git paths whose bytes are not UTF-8', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['repository']),
+        'README.md': 'Readable text.\n',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planSandboxCheck(session, 'repository/encoding');
+    session.repository.unreadablePaths = [String.raw`"invalid-\377.txt"`];
+    expect(await getBuiltInCheck('repository/encoding')(session, planned)).toStrictEqual([
+        {
+            check: 'repository/encoding',
+            file: String.raw`"invalid-\377.txt"`,
+            rule: 'path-encoding',
+            help: 'Save the reported file as UTF-8, then run the check again.',
+            line: 1,
+            fixable: false,
+            message: String.raw`"invalid-\377.txt" is not a UTF-8 path. Rename the file using UTF-8.`,
+        },
+    ]);
+});
+
+test('large files use the size limit of their owning scope', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], {
+            tables: '[repository]\nmax_file_kilobytes = 1\n[[scope]]\npath = "app"\n[scope.repository]\nmax_file_kilobytes = 2\n',
+        }),
+        'root.bin': Buffer.alloc(BYTES_PER_KILOBYTE + 1),
+        'app/accepted.bin': Buffer.alloc(BYTES_PER_KILOBYTE + 1),
+    });
+    expect(await runSandboxCheck(sandbox.path, 'repository/large-files')).toMatchObject([
+        { file: 'root.bin', rule: 'size' },
+    ]);
+});
+
+test('absolute links inside the repository are reported and an indexed link replaced by a file is ignored', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'source.txt': 'Source.\n',
+    });
+    await symlink(join(sandbox.path, 'source.txt'), join(sandbox.path, 'link.txt'));
+    runGitStep(sandbox.path, ['add', 'link.txt']);
+    expect(await runSandboxCheck(sandbox.path, 'repository/local-files')).toStrictEqual([
+        {
+            check: 'repository/local-files',
+            file: 'link.txt',
+            rule: 'absolute-link',
+            line: 1,
+            fixable: false,
+            message: 'link.txt uses an absolute link target.',
+            help: 'Use a relative link target inside the repository.',
+        },
+    ]);
+    await unlink(join(sandbox.path, 'link.txt'));
+    await writeFile(join(sandbox.path, 'link.txt'), 'Now a regular file.\n');
+    expect(await runSandboxCheck(sandbox.path, 'repository/local-files')).toStrictEqual([]);
 });

@@ -1,14 +1,14 @@
 import { LocalDate } from '@decimalturn/toml-patch';
 
 export const POSTGRES_SCOPE_SETTINGS = {
-    level: 'recommended',
+    level: 'basic',
     rules: true,
     scopes: [{ path: 'api', configurations: ['supabase'] }, { path: 'authored' }],
     tables: 'postgres.client_schemas = ["client"]\n',
 } as const;
 
 export const OPENAPI_SCOPE_SETTINGS = {
-    level: 'recommended',
+    level: 'basic',
     rules: true,
     scopes: [{ path: 'api' }],
     tables: 'removed_configurations = { value = ["openapi"], reason = "This scope does not publish an OpenAPI document." }\n',

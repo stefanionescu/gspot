@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
+import { openSession } from '#cli/planning/session.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
@@ -11,13 +12,13 @@ import { buildProgramPin } from '#tests/setup/cli/tools.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { FIXER_RESULTS } from '#tests/config/commands/check/fixes/results.ts';
 import { planFixer, buildRunOptions, buildFixerSettings } from '#tests/setup/cli/runs.ts';
 import { buildProgramCommand, buildProgramArguments } from '#tests/setup/system/programs.ts';
 
-test.each([0, 3])('a declared crash pattern fails a fix that exits %p', async (code) => {
+test.each([0, 3])('a crash pattern fails a fix that exits %p', async (code) => {
     await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
     const session = await openSession(sandbox.path);
@@ -27,7 +28,7 @@ test.each([0, 3])('a declared crash pattern fails a fix that exits %p', async (c
     );
     planned.check.exit_codes = [3];
     planned.tool!.crash_pattern = '^Fatal:';
-    const failedRun = await runFixers(buildCheckSession(session), [planned], { isDryRun: false });
+    const failedRun = await runFixers(buildCheckSession(session), [planned], { dryRun: false });
     const failed = failedRun.results[0];
     expect(failed).toMatchObject({
         status: 'failed',
@@ -36,7 +37,7 @@ test.each([0, 3])('a declared crash pattern fails a fix that exits %p', async (c
     });
     const corrected = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'));
     corrected.tool!.crash_pattern = planned.tool!.crash_pattern;
-    const correctedResultRun = await runFixers(buildCheckSession(session), [corrected], { isDryRun: false });
+    const correctedResultRun = await runFixers(buildCheckSession(session), [corrected], { dryRun: false });
     const correctedResult = correctedResultRun.results[0];
     expect(correctedResult).toMatchObject({
         status: 'changed',
@@ -45,14 +46,14 @@ test.each([0, 3])('a declared crash pattern fails a fix that exits %p', async (c
 });
 
 test.each([...FIXER_RESULTS])(
-    '$name classifies $status from the exit code and the resulting bytes',
+    '$name classifies $status from the exit code and the bytes it leaves',
     async ({ toolArguments, exit_codes: exitCodes, status, after, note }) => {
         await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
         const session = await openSession(sandbox.path);
         const planned = planFixer(session, buildProgramCommand('fakes/tool', ...toolArguments));
         if (exitCodes !== undefined) planned.check.exit_codes = [...exitCodes];
-        const resultRun = await runFixers(buildCheckSession(session), [planned], { isDryRun: false });
+        const resultRun = await runFixers(buildCheckSession(session), [planned], { dryRun: false });
         const result = resultRun.results[0];
         expect({ status: result!.status, note: 'note' in result! ? result.note : undefined }).toStrictEqual({
             status,
@@ -69,7 +70,7 @@ test('a fixer that swaps one invalid UTF-8 byte for another reports the file as 
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write-hex', 'source.txt=fe'));
     await writeFile(join(sandbox.path, 'source.txt'), Buffer.from([0xff]));
-    const resultRun = await runFixers(buildCheckSession(session), [planned], { isDryRun: false });
+    const resultRun = await runFixers(buildCheckSession(session), [planned], { dryRun: false });
     const result = resultRun.results[0];
     expect(result).toMatchObject({ status: 'changed', changed: ['source.txt'] });
     expect(await readFile(join(sandbox.path, 'source.txt'))).toStrictEqual(Buffer.from([0xfe]));
@@ -80,7 +81,7 @@ test('a fixer that deletes an empty file reports it as changed', async () => {
 
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, buildProgramCommand('fakes/tool', '--delete', 'source.txt'));
-    const resultRun = await runFixers(buildCheckSession(session), [planned], { isDryRun: false });
+    const resultRun = await runFixers(buildCheckSession(session), [planned], { dryRun: false });
     const result = resultRun.results[0];
     expect(result).toMatchObject({ status: 'changed', changed: ['source.txt'] });
     expect(await isOnDisk(join(sandbox.path, 'source.txt'))).toBe(false);
@@ -95,14 +96,14 @@ test('a skipped fixer reports skipped, and a fixer whose program is missing fail
         buildCheckSession(session),
         [{ ...planned, skip: { cause: 'level', note: 'Not selected.' } }],
         {
-            isDryRun: false,
+            dryRun: false,
         },
     );
     const skipped = skippedRun.results[0]!;
     const failedRun = await runFixers(
         buildCheckSession(session),
         [{ ...planned, check: { ...planned.check, fix: [join(sandbox.path, 'absent-tool')] } }],
-        { isDryRun: false },
+        { dryRun: false },
     );
     const failed = failedRun.results[0]!;
     expect(skipped.status).toBe('skipped');
@@ -121,7 +122,7 @@ test('a fixer runs its own program when the check program is missing', async () 
     const resultRun = await runFixers(
         buildCheckSession(session),
         [{ ...planned, tool: { name: join(sandbox.path, 'absent-check-tool'), installers: {}, kind: 'program' } }],
-        { isDryRun: false },
+        { dryRun: false },
     );
     const result = resultRun.results[0]!;
     expect(result.status).toBe('changed');
@@ -154,7 +155,7 @@ test('a failed version check blocks a check and its fix without changing source 
     const checked = await runCommandCheck(buildCheckSession(session), planned);
     expect(checked.status).toBe('error');
     expect(checked.note).toBe('The version command of version-teller exited 7: 3.8.1');
-    const fixedRun = await runFixers(buildCheckSession(session), [planned], { isDryRun: false });
+    const fixedRun = await runFixers(buildCheckSession(session), [planned], { dryRun: false });
     const fixed = fixedRun.results[0]!;
     expect(fixed.status).toBe('failed');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
@@ -194,12 +195,12 @@ test.each([false, true])(
         const session = await openSession(sandbox.path);
         const result = await runChecks(
             session,
-            buildRunOptions({ only: ['project/merge-imports'], fix: true, isDryRun }),
+            buildRunOptions({ only: ['project/merge-imports'], fix: true, dryRun: isDryRun }),
         );
         expect(result.fixes?.broken).toStrictEqual(['client.ts', 'notes.ts']);
         expect(await readFile(join(sandbox.path, 'client.ts'))).toStrictEqual(before);
         expect(result.fixes?.changed).toStrictEqual(isDryRun ? ['client.ts', 'notes.ts'] : []);
-        const output = formatFixes(result.fixes!, { isDryRun });
+        const output = formatFixes(result.fixes!, { dryRun: isDryRun });
         expect(output.join('\n')).not.toContain('git checkout');
         expect(output.join('\n')).not.toContain('Fixed ');
         expect(output).toContain(
@@ -230,12 +231,12 @@ test('a fixer that leaves a code file that fails to parse is named in the fix re
             'notes.ts=export const note = true;\n',
         ),
     );
-    const fixed = await runFixers(buildCheckSession(session), [planned], { isDryRun: false });
+    const fixed = await runFixers(buildCheckSession(session), [planned], { dryRun: false });
     expect(fixed.broken).toStrictEqual(['client.ts']);
     expect(fixed.changed).toStrictEqual(['notes.ts']);
     expect(await readFile(join(sandbox.path, 'client.ts'))).toStrictEqual(before);
     expect(await readFile(join(sandbox.path, 'notes.ts'), 'utf8')).toBe('export const note = true;\n');
-    expect(formatFixes(fixed, { isDryRun: false })).toStrictEqual([
+    expect(formatFixes(fixed, { dryRun: false })).toStrictEqual([
         'Fixed 1 file: notes.ts. The changes are not staged.',
         'The fixers left a syntax error in client.ts; gspot put back the file as it was before the fixers.',
     ]);

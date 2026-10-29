@@ -1,7 +1,8 @@
 import ts from 'typescript';
 import type { Node } from 'web-tree-sitter';
+import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import { EXPANSION_NODES } from '#cli/config/parsers/code/bash.ts';
-import { listTypescriptNodes } from '#cli/parsers/code/typescript.ts';
+import { ASTRO_EXTENSION, ASTRO_FRONT_MATTER } from '#cli/config/parsers/code/comments.ts';
 
 import type {
     EnvironmentRead,
@@ -10,11 +11,19 @@ import type {
     EnvironmentScope,
 } from '#cli/types/parsers/code/environment.ts';
 import {
-    ENV_NAME,
     OS_MODULE,
-    SWIFT_ENV_READ,
+    OCTAL_RADIX,
+    VARIABLE_NAME,
+    SCRIPT_LANGUAGE,
+    COMPONENT_SCRIPT,
+    HEXADECIMAL_RADIX,
+    SWIFT_ENVIRONMENT,
+    MAXIMUM_CODE_POINT,
     PYTHON_SCOPE_NODES,
+    COMPONENT_EXTENSION,
     PYTHON_IMPORT_NODES,
+    PYTHON_STRING_ESCAPE,
+    PYTHON_STRING_ESCAPES,
     OS_ENVIRONMENT_MEMBERS,
     JAVASCRIPT_ENVIRONMENT_FIELDS,
     JAVASCRIPT_ENVIRONMENT_GETTERS,
@@ -25,7 +34,6 @@ Read expansions of the environment names that the environment readers declare.
 
 @param syntaxRoot the parsed Bash source.
 @param readerVariables the variables that environment readers declare.
-@returns the environment reads and their source positions.
 */
 export function listBashEnvironmentReads(syntaxRoot: Node, readerVariables: ReadonlySet<string>): EnvironmentRead[] {
     return syntaxRoot.descendantsOfType([...EXPANSION_NODES]).flatMap((expansion) =>
@@ -43,17 +51,16 @@ export function listBashEnvironmentReads(syntaxRoot: Node, readerVariables: Read
 Read Swift process environment access from navigation expressions.
 
 @param syntaxRoot the parsed Swift source.
-@returns the environment reads and their source positions.
 */
 export function listSwiftEnvironmentReads(syntaxRoot: Node): EnvironmentRead[] {
     return syntaxRoot
         .descendantsOfType('navigation_expression')
-        .filter((node) => node.text.replaceAll(/\s+/gu, '') === SWIFT_ENV_READ)
+        .filter((node) => node.text.replaceAll(WHITESPACE_RUN, '') === SWIFT_ENVIRONMENT)
         .map((node) => ({ key: undefined, line: node.startPosition.row + 1, column: node.startPosition.column + 1 }));
 }
 
 function findGetterKey(node: ts.CallExpression, source: ts.SourceFile, getters: Set<string>): string | undefined {
-    if (!getters.has(node.expression.getText(source).replaceAll(/\s+/gu, ''))) return undefined;
+    if (!getters.has(node.expression.getText(source).replaceAll(WHITESPACE_RUN, ''))) return undefined;
     const argument = node.arguments[0];
     return argument !== undefined && ts.isStringLiteralLike(argument) ? argument.text : undefined;
 }
@@ -61,7 +68,8 @@ function findGetterKey(node: ts.CallExpression, source: ts.SourceFile, getters: 
 function findEnvironmentKey(node: ts.Node, source: ts.SourceFile, getters: Set<string>): string | undefined {
     if (ts.isCallExpression(node)) return findGetterKey(node, source, getters);
     if (!ts.isPropertyAccessExpression(node) && !ts.isElementAccessExpression(node)) return undefined;
-    if (!JAVASCRIPT_ENVIRONMENT_FIELDS.has(node.expression.getText(source).replaceAll(/\s+/gu, ''))) return undefined;
+    if (!JAVASCRIPT_ENVIRONMENT_FIELDS.has(node.expression.getText(source).replaceAll(WHITESPACE_RUN, '')))
+        return undefined;
     if (ts.isPropertyAccessExpression(node)) return node.name.text;
     return ts.isStringLiteralLike(node.argumentExpression) ? node.argumentExpression.text : undefined;
 }
@@ -72,21 +80,48 @@ Read environment members and calls to the environment functions in JavaScript or
 @param path the original source path.
 @param text the JavaScript or TypeScript source.
 @param environmentFunctions the configured names that read process variables.
-@returns the environment reads and their source positions.
 */
 export function listJavascriptEnvironmentReads(
     path: string,
     text: string,
     environmentFunctions: readonly string[],
 ): EnvironmentRead[] {
-    const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    if (COMPONENT_EXTENSION.test(path)) {
+        const front = path.endsWith(ASTRO_EXTENSION) ? ASTRO_FRONT_MATTER.exec(text)?.[1] : undefined;
+        const frontReads =
+            front === undefined ? [] : listJavascriptEnvironmentReads(`${path}.ts`, `\n${front}`, environmentFunctions);
+        return [
+            ...frontReads,
+            ...[...text.matchAll(COMPONENT_SCRIPT)].flatMap((script) => {
+                const body = script.groups?.['body'] ?? '';
+                const language =
+                    SCRIPT_LANGUAGE.exec(script.groups?.['attributes'] ?? '')?.groups?.['language'] ?? 'ts';
+                const start = script.index + script[0].indexOf('>') + 1;
+                const prefix = text.slice(0, start).replaceAll(/[^\r\n]/gu, ' ');
+                return listJavascriptEnvironmentReads(`${path}.${language}`, prefix + body, environmentFunctions);
+            }),
+        ];
+    }
+    const source = ts.createSourceFile(
+        path,
+        text,
+        ts.ScriptTarget.Latest,
+        true,
+        /\.[cm]?[jt]sx$/u.test(path) ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+    );
     const getters = new Set([...JAVASCRIPT_ENVIRONMENT_GETTERS, ...environmentFunctions]);
-    return listTypescriptNodes(source).flatMap((node) => {
+    const reads: EnvironmentRead[] = [];
+    const visit = (node: ts.Node): void => {
+        reads.push(...listDeclarationReads(node, source));
         const key = findEnvironmentKey(node, source, getters);
-        if (key === undefined || !ENV_NAME.test(key)) return [];
-        const at = source.getLineAndCharacterOfPosition(node.getStart(source));
-        return [{ key, line: at.line + 1, column: at.character + 1 }];
-    });
+        if (key !== undefined && VARIABLE_NAME.test(key)) {
+            const position = source.getLineAndCharacterOfPosition(node.getStart(source));
+            reads.push({ key, line: position.line + 1, column: position.character + 1 });
+        }
+        ts.forEachChild(node, visit);
+    };
+    visit(source);
+    return reads;
 }
 
 function findDeclarationScope(node: Node): Node {
@@ -129,11 +164,11 @@ function listEnvironmentImports(node: Node): EnvironmentScope {
     return imported;
 }
 
-function listPythonNames(root: Node): EnvironmentNames {
+function listPythonNames(syntaxRoot: Node): EnvironmentNames {
     const scopeNames: EnvironmentNames = new Map();
     const nodes = [
-        ...root.descendantsOfType([...PYTHON_IMPORT_NODES]),
-        ...root.descendantsOfType([
+        ...syntaxRoot.descendantsOfType([...PYTHON_IMPORT_NODES]),
+        ...syntaxRoot.descendantsOfType([
             'assignment',
             'for_statement',
             'function_definition',
@@ -143,11 +178,12 @@ function listPythonNames(root: Node): EnvironmentNames {
     ];
     for (const node of nodes) {
         const scope = findDeclarationScope(node).id;
-        const names = scopeNames.get(scope) ?? new Map<string, EnvironmentKind>();
+        const names = scopeNames.get(scope) ?? new Map<string, { position: number; kind: EnvironmentKind }[]>();
         const bound = PYTHON_IMPORT_NODES.has(node.type)
             ? listEnvironmentImports(node)
             : new Map<string, EnvironmentKind>(listBoundNames(node).map((name) => [name, undefined]));
-        for (const [name, kind] of bound) names.set(name, kind);
+        for (const [name, kind] of bound)
+            names.set(name, [...(names.get(name) ?? []), { position: node.startIndex, kind }]);
         scopeNames.set(scope, names);
     }
     return scopeNames;
@@ -155,12 +191,15 @@ function listPythonNames(root: Node): EnvironmentNames {
 
 function findEnvironmentKind(node: Node, name: string, scopeNames: EnvironmentNames): EnvironmentKind {
     let scope = findDeclarationScope(node);
-    let names = scopeNames.get(scope.id);
-    while (names?.has(name) !== true && scope.parent !== null) {
+    for (;;) {
+        const declarations = scopeNames.get(scope.id)?.get(name);
+        const declaration = declarations
+            ?.filter((property) => property.position <= node.startIndex)
+            .toSorted((left, right) => right.position - left.position)[0];
+        if (declaration !== undefined) return declaration.kind;
+        if (scope.parent === null) return undefined;
         scope = findDeclarationScope(scope);
-        names = scopeNames.get(scope.id);
     }
-    return names?.get(name);
 }
 
 function findReceiver(node: Node): Node | null {
@@ -172,11 +211,11 @@ function findReceiver(node: Node): Node | null {
     return node;
 }
 
-function isPythonEnvironmentRead(node: Node, names: EnvironmentNames, environment: Set<number>): boolean {
+function isPythonEnvironmentRead(node: Node, names: EnvironmentNames, accessIds: Set<number>): boolean {
     const receiver = findReceiver(node);
     if (receiver?.type !== 'identifier') return false;
     const kind = findEnvironmentKind(node, receiver.text, names);
-    if (kind === OS_MODULE) return environment.has(node.id);
+    if (kind === OS_MODULE) return accessIds.has(node.id);
     return kind === 'getenv' ? node.type === 'call' : kind === 'environ';
 }
 
@@ -199,7 +238,6 @@ Read Python environment access and calls to the environment functions, through i
 
 @param syntaxRoot the parsed Python source.
 @param environmentFunctions the configured names that read process variables.
-@returns the environment reads and their source positions.
 */
 export function listPythonEnvironmentReads(
     syntaxRoot: Node,
@@ -207,7 +245,7 @@ export function listPythonEnvironmentReads(
 ): EnvironmentRead[] {
     const pythonNames = listPythonNames(syntaxRoot);
     const nodes = syntaxRoot.descendantsOfType(['attribute', 'call', 'identifier']);
-    const environment = new Set(
+    const accessIds = new Set(
         nodes
             .filter((node) =>
                 node.type === 'attribute'
@@ -223,14 +261,55 @@ export function listPythonEnvironmentReads(
                 (node.type === 'call' &&
                     environmentFunctions.includes(node.childForFieldName('function')?.text ?? '')) ||
                 ((node.type !== 'identifier' || node.parent?.type === 'subscript') &&
-                    isPythonEnvironmentRead(node, pythonNames, environment)),
+                    isPythonEnvironmentRead(node, pythonNames, accessIds)),
         )
         .map((node) => {
             const literal = findEnvironmentKeyNode(node);
             const key =
-                literal?.type === 'string'
-                    ? literal.namedChildren.find((child) => child.type === 'string_content')?.text
+                literal?.type === 'string' && literal.descendantsOfType('interpolation').length === 0
+                    ? decodePythonKey(literal)
                     : undefined;
             return { key, line: node.startPosition.row + 1, column: node.startPosition.column + 1 };
         });
+}
+
+function decodePythonKey(literal: Node): string | undefined {
+    const value = literal.namedChildren.find((child) => child.type === 'string_content')?.text;
+    if (value === undefined || /^[BFTU]*R[BFRTU]*["']/iu.test(literal.text)) return value;
+    return value.replaceAll(
+        PYTHON_STRING_ESCAPE,
+        (
+            escape,
+            hexadecimal: string | undefined,
+            unicode: string | undefined,
+            longUnicode: string | undefined,
+            octal: string | undefined,
+            character: string | undefined,
+        ) => {
+            const digits = [hexadecimal, unicode, longUnicode, octal].find((value) => value !== undefined);
+            if (digits !== undefined) {
+                const point = Number.parseInt(digits, octal === undefined ? HEXADECIMAL_RADIX : OCTAL_RADIX);
+                return point <= MAXIMUM_CODE_POINT ? String.fromCodePoint(point) : escape;
+            }
+            return PYTHON_STRING_ESCAPES[character ?? ''] ?? escape;
+        },
+    );
+}
+
+function listDeclarationReads(node: ts.Node, source: ts.SourceFile): EnvironmentRead[] {
+    if (!ts.isVariableDeclaration(node) || !ts.isObjectBindingPattern(node.name) || node.initializer === undefined)
+        return [];
+    if (!JAVASCRIPT_ENVIRONMENT_FIELDS.has(node.initializer.getText(source).replaceAll(WHITESPACE_RUN, ''))) return [];
+    return node.name.elements.flatMap((declaration) => {
+        const property = declaration.propertyName ?? declaration.name;
+        if (
+            declaration.dotDotDotToken !== undefined ||
+            (!ts.isIdentifier(property) && !ts.isStringLiteralLike(property))
+        )
+            return [];
+        const key = property.text;
+        if (!VARIABLE_NAME.test(key)) return [];
+        const position = source.getLineAndCharacterOfPosition(property.getStart(source));
+        return [{ key, line: position.line + 1, column: position.character + 1 }];
+    });
 }

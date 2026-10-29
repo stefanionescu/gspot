@@ -26,7 +26,10 @@ function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configura
                     if (typeof tool !== 'string') return tool;
                     const found = toolsByName.get(tool);
                     if (found === undefined)
-                        throw buildManifestError(configuration.name, [`tool ${tool} has no declaration.`]);
+                        throw new GspotError(
+                            'configuration',
+                            `The configuration manifest for ${configuration.name} is not valid:\ntool ${tool} has no declaration.`,
+                        );
                     return found;
                 }),
             },
@@ -34,25 +37,33 @@ function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configura
     );
 }
 
-function parseManifest(text: string, configurationFolder: string): ParsedManifest {
+function parseManifest(text: string, folder: string): ParsedManifest {
     const parsed = parseToml(text) as Record<string, unknown>;
     const result = manifestSchema.safeParse({
         ...parsed,
-        folder: configurationFolder,
+        folder: folder,
         configuration: {
             ...(isTable(parsed['configuration']) && parsed['configuration']),
-            name: posix.basename(configurationFolder),
-            group: posix.basename(posix.dirname(configurationFolder)),
+            name: posix.basename(folder),
+            group: posix.basename(posix.dirname(folder)),
         },
     });
     if (!result.success)
-        throw buildManifestError(posix.basename(configurationFolder), [
-            ...new Set(result.error.issues.flatMap((issue) => formatZodIssue(issue))),
-        ]);
+        throw new GspotError(
+            'configuration',
+            [
+                `The configuration manifest for ${posix.basename(folder)} is not valid:`,
+                ...new Set(result.error.issues.flatMap((issue) => formatZodIssue(issue))),
+            ].join('\n'),
+        );
     return result.data;
 }
 
-function readShippedConfigurations(): Map<string, Configuration> {
+/**
+Read every configuration once per process.
+*/
+export function readConfigurations(): Map<string, Configuration> {
+    if (shippedConfigurations !== undefined) return shippedConfigurations;
     const manifests = new Map<string, ParsedManifest>();
     const paths = listAssets(`${CONFIGURATIONS_FOLDER}/`).filter((path) => path.endsWith(`/${MANIFEST_FILE}`));
     for (const path of paths) {
@@ -60,22 +71,13 @@ function readShippedConfigurations(): Map<string, Configuration> {
         const manifest = parseManifest(readFileSync(buildAssetPath(path), 'utf8'), folder);
         manifests.set(manifest.configuration.name, manifest);
     }
-    return buildConfigurations(
+    shippedConfigurations = buildConfigurations(
         manifests
             .values()
             .toArray()
             .toSorted((first, second) => compareText(first.configuration.name, second.configuration.name)),
     );
-}
 
-/**
-Read every configuration once per process.
-
-@returns the configurations by name.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 90 calls in 57 files share it.
-export function readConfigurations(): Map<string, Configuration> {
-    shippedConfigurations ??= readShippedConfigurations();
     return shippedConfigurations;
 }
 
@@ -95,7 +97,6 @@ export function listCheckIds(checks: readonly Pick<Check, 'id'>[]): string[] {
 List the files in the rules folder of a configuration.
 
 @param configuration the shipped configuration that owns the rule files.
-@returns each file with its asset source, its group, and its path under the configurations folder.
 */
 export function listRuleFiles(configuration: Configuration): ShippedRule[] {
     const { group } = configuration;
@@ -110,8 +111,7 @@ export function listRuleFiles(configuration: Configuration): ShippedRule[] {
 /**
 Index the declared checks by ID, with the configuration of each.
 
-@param configurations the shipped bundles that own the declared checks.
-@returns the declared checks by ID.
+@param configurations the configurations that declare the checks.
 */
 export function listChecksById(configurations: Iterable<Configuration>): Map<string, ConfigurationCheck> {
     const checks = new Map<string, ConfigurationCheck>();
@@ -123,14 +123,6 @@ export function listChecksById(configurations: Iterable<Configuration>): Map<str
     return checks;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
-function buildManifestError(configuration: string, errors: string[]): GspotError {
-    return new GspotError(
-        'configuration',
-        [`The configuration manifest for \`${configuration}\` is not valid:`, ...errors].join('\n'),
-    );
-}
-
 function listManifestTools(manifests: Iterable<ParsedManifest>): Map<string, Tool> {
     const tools = new Map<string, Tool>();
     for (const manifest of manifests) {
@@ -138,7 +130,10 @@ function listManifestTools(manifests: Iterable<ParsedManifest>): Map<string, Too
         for (const tool of declarations) {
             const previous = tools.get(tool.name);
             if (previous !== undefined)
-                throw buildManifestError(manifest.configuration.name, [`tool ${tool.name} is already declared.`]);
+                throw new GspotError(
+                    'configuration',
+                    `The configuration manifest for ${manifest.configuration.name} is not valid:\ntool ${tool.name} is already declared.`,
+                );
             tools.set(tool.name, tool);
         }
     }
@@ -148,11 +143,14 @@ function listManifestTools(manifests: Iterable<ParsedManifest>): Map<string, Too
 /**
 Refuse a check ID that no configuration or command check declares.
 
-@param name the requested check ID.
+@param checkId the requested check ID.
 @param settings the command checks of gspot.toml.
 */
-export function assertCheckExists(name: string, settings: Pick<Settings, 'commandChecks'>): void {
+export function assertCheckExists(checkId: string, settings: Pick<Settings, 'commandChecks'>): void {
     const checkIds = listCheckIds(Object.values(settings.commandChecks));
-    if (!checkIds.includes(name))
-        throw new GspotError('arguments', `There is no check called ${name}.${formatSimilarNames(name, checkIds)}`);
+    if (!checkIds.includes(checkId))
+        throw new GspotError(
+            'arguments',
+            `There is no check called ${checkId}.${formatSimilarNames(checkId, checkIds)}`,
+        );
 }

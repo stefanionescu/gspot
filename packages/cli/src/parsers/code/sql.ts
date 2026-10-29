@@ -2,18 +2,10 @@ import { getPosition } from '#cli/system/text.ts';
 import type { Parsed } from '#cli/types/shapes.ts';
 import type { TextRange } from '#cli/types/text.ts';
 import { dirname, basename } from 'node:path/posix';
+import type { Node, ParseResult } from '@pgsql/types';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import type { Node, RawStmt, ParseResult } from '@pgsql/types';
 
-import {
-    FROZEN_ALL,
-    FROZEN_NONE,
-    WORD_CHARACTER,
-    IDENTIFIER_START,
-    MIGRATION_VERSION,
-    DOLLAR_TAG_BLOCKER,
-} from '#cli/config/parsers/code/sql.ts';
 import type {
     SqlFile,
     SqlToken,
@@ -21,15 +13,22 @@ import type {
     SqlStatement,
     MatchedToken,
     SqlNodeFields,
-    SqlStatementVisitors,
 } from '#cli/types/parsers/code/sql.ts';
+import {
+    FROZEN_ALL,
+    FROZEN_NONE,
+    WORD_CHARACTER,
+    IDENTIFIER_START,
+    MIGRATION_VERSION,
+    DOLLAR_TAG_BLOCKER,
+    PRISMA_MIGRATION_FILE,
+} from '#cli/config/parsers/code/sql.ts';
 
 /**
 Select migration paths at or below the written version.
 
 @param paths the migration files to filter.
 @param through the written freeze version.
-@returns the frozen paths.
 */
 export function selectFrozenMigrations(paths: string[], through: string): Set<string> {
     if (through === FROZEN_NONE) return new Set();
@@ -39,7 +38,7 @@ export function selectFrozenMigrations(paths: string[], through: string): Set<st
             const version = extractMigrationVersion(path);
             return (
                 through === FROZEN_ALL ||
-                (version !== undefined && cutoff !== undefined && BigInt(version) <= BigInt(cutoff))
+                (version !== undefined && cutoff !== undefined && compareMigrationVersions(version, cutoff) <= 0)
             );
         }),
     );
@@ -53,17 +52,29 @@ Extract a migration version from its file name or its Prisma folder.
 */
 export function extractMigrationVersion(path: string): string | undefined {
     const name = basename(path);
-    const versioned = name === 'migration.sql' ? basename(dirname(path)) : name;
-    return MIGRATION_VERSION.exec(versioned)?.groups?.['version'];
+    const versioned = name === PRISMA_MIGRATION_FILE ? basename(dirname(path)) : name;
+    return MIGRATION_VERSION.exec(versioned)?.groups?.['version']?.replaceAll('_', '.');
+}
+
+/**
+Order two migration versions group by group, each group as a number.
+
+@param left a version.
+@param right another version.
+@returns a negative number when left comes first, zero for equal versions, or a positive number otherwise.
+*/
+export function compareMigrationVersions(left: string, right: string): number {
+    const first = left.replaceAll('_', '.').split('.');
+    const second = right.replaceAll('_', '.').split('.');
+    for (let index = 0; index < Math.max(first.length, second.length); index += 1) {
+        const before = BigInt(first[index] ?? '0');
+        const after = BigInt(second[index] ?? '0');
+        if (before !== after) return before < after ? -1 : 1;
+    }
+    return 0;
 }
 
 const PARSED_SQL_FILES = { create: () => new Map<string, Promise<SqlFile>>() };
-
-function buildStatements(bytes: Buffer, statement: RawStmt): SqlStatement[] {
-    if (statement.stmt === undefined) return [];
-    const start = bytes.subarray(0, statement.stmt_location ?? 0).toString('utf8').length;
-    return Object.entries(statement.stmt).map(([kind, fields]) => ({ kind, fields, start }) as SqlStatement);
-}
 
 async function parseSqlText(text: string): Promise<SqlFile> {
     const { text: source, variables } = replacePsqlSyntax(text);
@@ -71,13 +82,7 @@ async function parseSqlText(text: string): Promise<SqlFile> {
     const parsed = await parsePostgres(source);
     const bytes = Buffer.from(source, 'utf8');
     if ('error' in parsed) {
-        let offset = 0;
-        let remaining = Math.min(parsed.error.offset, [...source].length);
-        for (const character of source) {
-            if (remaining <= 0) break;
-            offset += character.length;
-            remaining -= 1;
-        }
+        const offset = [...source].slice(0, parsed.error.offset).join('').length;
         return {
             source,
             variables,
@@ -86,10 +91,23 @@ async function parseSqlText(text: string): Promise<SqlFile> {
         };
     }
     const statements = parsed.value.stmts ?? [];
+    let byteOffset = 0;
+    let offset = 0;
+    const built: SqlStatement[] = [];
+    for (const statement of statements.toSorted(
+        (left, right) => (left.stmt_location ?? 0) - (right.stmt_location ?? 0),
+    )) {
+        const location = statement.stmt_location ?? 0;
+        offset += bytes.subarray(byteOffset, location).toString('utf8').length;
+        byteOffset = location;
+        if (statement.stmt === undefined) continue;
+        for (const [kind, fields] of Object.entries(statement.stmt))
+            built.push({ kind, fields, start: offset } as SqlStatement);
+    }
     return {
         source,
         variables,
-        statements: statements.flatMap((statement) => buildStatements(bytes, statement)),
+        statements: built,
         error: undefined,
     };
 }
@@ -139,31 +157,10 @@ export function listNodeFields<Kind extends keyof SqlNodeFields>(
 }
 
 /**
-Pass a parsed statement to the reader for its kind.
-
-@param statement the parse result and source offset.
-@param readers the functions for each kind.
-@param readerArguments the extra values to pass on.
-@returns the result, or undefined for a kind without a reader.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
-export function visitStatement<Result, Arguments extends unknown[]>(
-    statement: SqlStatement,
-    readers: SqlStatementVisitors<Result, Arguments>,
-    ...readerArguments: Arguments
-): Result | undefined {
-    const read = readers[statement.kind] as
-        | ((statement: SqlStatement, ...readerArguments: Arguments) => Result)
-        | undefined;
-    return read?.(statement, ...readerArguments);
-}
-
-/**
 Parse a PostgreSQL file once per run.
 
 @param text the original SQL, including supported psql syntax.
 @param reads the run cache.
-@returns the statements and the original error positions.
 */
 export function parseSqlFile(text: string, reads: ReadCache): Promise<SqlFile> {
     const files = getCachedValue(reads, PARSED_SQL_FILES);
@@ -175,13 +172,13 @@ export function parseSqlFile(text: string, reads: ReadCache): Promise<SqlFile> {
     return parsed;
 }
 
-function findLineEnd(text: string, from: number, stops: string): number {
-    for (let at = from; at < text.length; at += 1) if (stops.includes(text[at] ?? '')) return at;
+function findLineEnd(text: string, offset: number, stops: string): number {
+    for (let at = offset; at < text.length; at += 1) if (stops.includes(text[at] ?? '')) return at;
     return text.length;
 }
 
-function findDoubledQuoteEnd(text: string, from: number, quote: string): number {
-    for (let at = from; at < text.length; at += 1) {
+function findDoubledQuoteEnd(text: string, offset: number, quote: string): number {
+    for (let at = offset; at < text.length; at += 1) {
         if (text[at] !== quote) continue;
         if (text[at + 1] === quote) at += 1;
         else return at + 1;
@@ -189,8 +186,8 @@ function findDoubledQuoteEnd(text: string, from: number, quote: string): number 
     return text.length;
 }
 
-function findEscapedStringEnd(text: string, from: number): number {
-    for (let at = from; at < text.length; at += 1) {
+function findEscapedStringEnd(text: string, offset: number): number {
+    for (let at = offset; at < text.length; at += 1) {
         const char = text[at];
         if (char === '\\' || (char === "'" && text[at + 1] === "'")) at += 1;
         else if (char === "'") return at + 1;
@@ -198,17 +195,17 @@ function findEscapedStringEnd(text: string, from: number): number {
     return text.length;
 }
 
-function findIdentifierEnd(text: string, from: number): number {
-    if (!IDENTIFIER_START.test(text[from] ?? '')) return from;
-    let end = from + 1;
+function findIdentifierEnd(text: string, offset: number): number {
+    if (!IDENTIFIER_START.test(text[offset] ?? '')) return offset;
+    let end = offset + 1;
     while (WORD_CHARACTER.test(text[end] ?? '')) end += 1;
     return end;
 }
 
-function findVariableEnd(text: string, at: number): number {
-    const quote = text[at + 1];
+function findVariableEnd(text: string, offset: number): number {
+    const quote = text[offset + 1];
     const isQuoted = quote === "'" || quote === '"';
-    const start = at + (isQuoted ? ":'".length : 1);
+    const start = offset + (isQuoted ? ":'".length : 1);
     const end = findIdentifierEnd(text, start);
     if (end === start) return -1;
     if (!isQuoted) return end;
@@ -216,27 +213,22 @@ function findVariableEnd(text: string, at: number): number {
 }
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function matchEscapedString(text: string, at: number): MatchedToken | undefined {
-    return text[at + 1] !== "'" || WORD_CHARACTER.test(text[at - 1] ?? '')
+function matchEscapedString(text: string, offset: number): MatchedToken | undefined {
+    return text[offset + 1] !== "'" || WORD_CHARACTER.test(text[offset - 1] ?? '')
         ? undefined
-        : { end: findEscapedStringEnd(text, at + "E'".length), kind: 'other' };
+        : { end: findEscapedStringEnd(text, offset + "E'".length), kind: 'other' };
 }
 
-function matchDollarTag(text: string, at: number): MatchedToken | undefined {
-    if (DOLLAR_TAG_BLOCKER.test(text[at - 1] ?? '')) return undefined;
-    const end = findIdentifierEnd(text, at + 1);
+function matchDollarTag(text: string, offset: number): MatchedToken | undefined {
+    if (DOLLAR_TAG_BLOCKER.test(text[offset - 1] ?? '')) return undefined;
+    const end = findIdentifierEnd(text, offset + 1);
     return text[end] === '$' ? { end: end + 1, kind: 'dollar' } : undefined;
 }
 
-function matchColonToken(text: string, at: number): MatchedToken | undefined {
-    if (text[at + 1] === ':') return { end: at + '::'.length, kind: 'other' };
-    const end = findVariableEnd(text, at);
+function matchColonToken(text: string, offset: number): MatchedToken | undefined {
+    if (text[offset + 1] === ':') return { end: offset + '::'.length, kind: 'other' };
+    const end = findVariableEnd(text, offset);
     return end === -1 ? undefined : { end, kind: 'variable' };
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The SQL token table calls it for both quote characters.
-function matchQuotedToken(text: string, at: number): MatchedToken {
-    return { end: findDoubledQuoteEnd(text, at + 1, text[at] ?? ''), kind: 'other' };
 }
 
 const TOKEN_MATCHERS: Record<string, (text: string, at: number) => MatchedToken | undefined> = {
@@ -248,8 +240,8 @@ const TOKEN_MATCHERS: Record<string, (text: string, at: number) => MatchedToken 
     },
     E: matchEscapedString,
     e: matchEscapedString,
-    "'": matchQuotedToken,
-    '"': matchQuotedToken,
+    "'": (text, at) => ({ end: findDoubledQuoteEnd(text, at + 1, "'"), kind: 'other' }),
+    '"': (text, at) => ({ end: findDoubledQuoteEnd(text, at + 1, '"'), kind: 'other' }),
     $: matchDollarTag,
     '\\': (text, at) => {
         return { end: findLineEnd(text, at, '\r\n'), kind: 'command' };
@@ -257,9 +249,9 @@ const TOKEN_MATCHERS: Record<string, (text: string, at: number) => MatchedToken 
     ':': matchColonToken,
 };
 
-function findBlockCommentEnd(text: string, from: number): number {
+function findBlockCommentEnd(text: string, offset: number): number {
     let depth = 1;
-    for (let at = from; at < text.length; at += 1) {
+    for (let at = offset; at < text.length; at += 1) {
         const pair = text.slice(at, at + '/*'.length);
         if (pair === '/*') {
             depth += 1;
@@ -273,10 +265,10 @@ function findBlockCommentEnd(text: string, from: number): number {
     return text.length;
 }
 
-function findTokenEnd(text: string, at: number, token: MatchedToken): number {
+function findTokenEnd(text: string, offset: number, token: MatchedToken): number {
     if (token.kind === 'block-comment') return findBlockCommentEnd(text, token.end);
     if (token.kind !== 'dollar') return token.end;
-    const tag = text.slice(at, token.end);
+    const tag = text.slice(offset, token.end);
     const close = text.indexOf(tag, token.end);
     return close === -1 ? text.length : close + tag.length;
 }

@@ -29,15 +29,15 @@ class Item(BaseModel):
     name: str
 
 
-CATALOG = (Item(name='Notebook'), Item(name='Pencil'))
-router = APIRouter(prefix='/items', tags=['items'])
+CATALOG = (Item(name="Notebook"), Item(name="Pencil"))
+router = APIRouter(prefix="/items", tags=["items"])
 
 
-@router.get('/{item_id}')
+@router.get("/{item_id}")
 def get_item(item_id: Annotated[int, Path(ge=0)]) -> Item:
     """Return one catalog item or a public not-found response."""
     if item_id >= len(CATALOG):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Item not found')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
     return CATALOG[item_id]
 
 
@@ -73,9 +73,10 @@ validation failure shows a server bug. Fix the data or the schema.
 ## Status codes and errors
 
 Put a non-default success code in the decorator, with a `fastapi.status` constant. Raise `HTTPException` rather than
-returning it. Its `detail` supplies a public error message. Existence and authorization checks fail the same way, so
-responses do not reveal a private resource. Return the standard error shape from global exception handlers, and never
-echo the request body of a validation failure.
+returning it. Its `detail` supplies a public error message. Never put the text of a caught exception in `detail`; log
+it, and return a stable message. Existence and authorization checks fail the same way, so responses do not reveal a
+private resource. Return the standard error shape from global exception handlers, and never echo the request body of a
+validation failure.
 
 ## Runtime
 
@@ -90,6 +91,8 @@ echo the request body of a validation failure.
   cross-cutting HTTP behavior in middleware; the one added last runs outermost.
 - Turn OpenAPI and the interactive docs off unless a typed setting turns them on, and the schema exposes no internal or
   admin routes.
+- Read `debug` from a typed setting that defaults to off.
+- List the allowed origins of `CORSMiddleware`. Never allow `["*"]` together with `allow_credentials=True`.
 
 ## Testing
 

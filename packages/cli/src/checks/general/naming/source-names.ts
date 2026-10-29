@@ -13,8 +13,7 @@ import { extractTypescriptIdentifiers } from '#cli/checks/general/naming/languag
 /**
 List source files with the selected language configuration for each file.
 
-@param planned the selected check, configuration manifests, and source files.
-@returns the source files and their language names.
+@param planned the scope and its source files.
 */
 export function listNamedFiles(planned: PlannedCheck): NamedFile[] {
     const languages = planned.scope.configurations
@@ -35,7 +34,7 @@ export function listNamedFiles(planned: PlannedCheck): NamedFile[] {
 const IDENTIFIERS = { create: () => new Map<string, Promise<IdentifierRead>>() };
 
 /**
-Lists the identifiers a file declares, or none when no extractor reads its language.
+Lists the identifiers a file declares, or none when no extractor reads its language, once per session.
 
 @param file the repository path of the source.
 @param text the source to parse.
@@ -43,50 +42,44 @@ Lists the identifiers a file declares, or none when no extractor reads its langu
 @param session the read cache and parser resources.
 @returns the identifiers in source order, or a syntax error.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function parseIdentifiers(
     file: string,
     text: string,
     language: string,
     session: Pick<Session, 'reads' | 'resources'>,
 ): Promise<IdentifierRead> {
-    return getCachedMapValue(session.reads, IDENTIFIERS, file, () => readIdentifiers(file, text, language, session));
-}
-
-async function readIdentifiers(
-    file: string,
-    text: string,
-    language: string,
-    session: Pick<Session, 'reads' | 'resources'>,
-): Promise<IdentifierRead> {
-    if (language === 'sql') return extractSqlIdentifiers(file, text, session.reads);
-    const grammar = selectGrammar(file, language);
-    if (grammar === undefined) return { identifiers: [], error: undefined };
-    const tree = await parseSource(grammar, text, session);
-    try {
-        let identifiers: Identifier[];
-        switch (grammar) {
-            case 'bash': {
-                identifiers = extractBashIdentifiers(tree.rootNode, file);
-                break;
+    return getCachedMapValue(session.reads, IDENTIFIERS, file, async () => {
+        if (language === 'sql') return extractSqlIdentifiers(file, text, session.reads);
+        const grammar = selectGrammar(file, language);
+        if (grammar === undefined) return { identifiers: [], error: undefined };
+        const tree = await parseSource(grammar, text, session);
+        try {
+            let identifiers: Identifier[];
+            switch (grammar) {
+                case 'bash': {
+                    identifiers = extractBashIdentifiers(tree.rootNode, file);
+                    break;
+                }
+                case 'swift': {
+                    identifiers = extractSwiftIdentifiers(tree.rootNode, file);
+                    break;
+                }
+                case 'python': {
+                    identifiers = extractPythonIdentifiers(tree.rootNode, file);
+                    break;
+                }
+                default: {
+                    identifiers = extractTypescriptIdentifiers(tree.rootNode, file, language);
+                }
             }
-            case 'swift': {
-                identifiers = extractSwiftIdentifiers(tree.rootNode, file);
-                break;
-            }
-            case 'python': {
-                identifiers = extractPythonIdentifiers(tree.rootNode, file);
-                break;
-            }
-            default: {
-                identifiers = extractTypescriptIdentifiers(tree.rootNode, file, language);
-            }
+            return {
+                identifiers: identifiers.toSorted(
+                    (left, right) => left.line - right.line || left.column - right.column,
+                ),
+                error: undefined,
+            };
+        } finally {
+            tree.delete();
         }
-        return {
-            identifiers: identifiers.toSorted((left, right) => left.line - right.line || left.column - right.column),
-            error: undefined,
-        };
-    } finally {
-        tree.delete();
-    }
+    });
 }

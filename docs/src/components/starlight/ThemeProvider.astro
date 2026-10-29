@@ -8,7 +8,12 @@ import geistMono from '@fontsource-variable/geist-mono/files/geist-mono-latin-wg
 <link rel="preload" href={geist} as="font" type="font/woff2" crossorigin />
 <link rel="preload" href={geistMono} as="font" type="font/woff2" crossorigin />
 <script is:inline define:vars={{ THEME_STORAGE_KEY }}>
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    let stored;
+    try {
+        stored = localStorage.getItem(THEME_STORAGE_KEY);
+    } catch (error) {
+        if (!(error instanceof DOMException)) throw error;
+    }
     const theme = stored === 'light' ? 'light' : 'dark';
     document.documentElement.dataset.theme = theme;
     document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', theme);

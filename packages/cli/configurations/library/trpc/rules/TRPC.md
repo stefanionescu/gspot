@@ -28,6 +28,8 @@ dehydration. Give a rendered server total and the client-query rows one source o
 For cookie-setting operations, use a transport that can finish headers before streaming. Configure serialization at both
 ends and preserve transformer metadata. Bound batch sizes and expensive work. Let one layer own retries.
 
+Import the files that `trpc.server_files` lists only with `import type`.
+
 See [TanStack integration](https://trpc.io/docs/client/tanstack-react-query/setup) and
 [links](https://trpc.io/docs/client/links).
 

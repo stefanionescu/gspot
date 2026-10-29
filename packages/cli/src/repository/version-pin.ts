@@ -4,13 +4,13 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { selectStartRunner } from '#cli/repository/npm/package-manager.ts';
+import { UPGRADE_PIN_MESSAGE } from '#cli/config/repository/version-pin.ts';
 
 /**
 Read the pinned gspot version.
 
 @param root the folder that holds .gspot/version.
-
-@returns the version, or undefined when the repository has no pin.
+@returns undefined when the repository has no pin.
 */
 export function readVersionPin(root: string): string | undefined {
     using files = openFiles(root);
@@ -40,7 +40,7 @@ export function assertVersionPin(root: string): void {
         [
             `This repository pins gspot ${versionPin}, and you are running gspot ${cliPackage.version}.`,
             `Install the pinned version: ${command}`,
-            'To upgrade the repository pin to this version: gspot apply',
+            UPGRADE_PIN_MESSAGE,
         ].join('\n'),
     );
 }

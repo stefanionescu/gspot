@@ -58,3 +58,5 @@ MD044 = { names = ["Nested label"] }
 `;
 
 export const TITLED_DOCUMENT = '# Title\n\nA document with a title.\n';
+
+export const REQUEST_FLOW_IMAGE = '![Request flow]';

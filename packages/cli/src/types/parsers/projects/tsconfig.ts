@@ -1,13 +1,13 @@
 import type ts from 'typescript';
 
-export type TypeScriptConfiguration = Omit<ts.ParsedCommandLine, 'raw'> & {
+export type ParsedTsconfig = Omit<ts.ParsedCommandLine, 'raw'> & {
     raw: { [key: string]: unknown; compilerOptions?: Record<string, unknown> | undefined };
     tsconfigFiles: string[];
-    extendedConfigurationFiles: string[];
+    extendedTsconfigFiles: string[];
 };
 
 export type TypeScriptProject = {
     path: string;
-    config: TypeScriptConfiguration;
-    projects: Map<string, TypeScriptConfiguration>;
+    config: ParsedTsconfig;
+    projects: Map<string, ParsedTsconfig>;
 };

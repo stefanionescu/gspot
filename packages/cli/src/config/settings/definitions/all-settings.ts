@@ -59,15 +59,18 @@ export const SETTING_DEFINITIONS = {
             'The Xcode project or workspace, relative to the repository root, which init fills in when it finds one; without it, the checks use the Swift package.',
     },
     'swift.xcode_scheme': {
+        template: 'repository',
         configurations: ['swift'],
         description: 'The shared scheme the build, the analyzer, and Periphery use.',
     },
     'swift.xcode_destination': {
+        template: 'repository',
         configurations: ['swift'],
         description: 'The xcodebuild destination.',
         default: 'generic/platform=iOS Simulator',
     },
     'xcode.allowed_entitlements': {
+        template: 'repository',
         configurations: ['xcode'],
         description: 'The entitlements the app may hold; empty turns the check off.',
         default: [] as [],
@@ -89,6 +92,7 @@ export const SETTING_DEFINITIONS = {
         default: 'worker-configuration.d.ts',
     },
     'cloudflare.types_interface': {
+        template: 'repository',
         configurations: ['cloudflare'],
         description: 'Environment interface name passed to wrangler types; OpenNext defaults to CloudflareEnv.',
         default: 'Env',
@@ -135,6 +139,7 @@ export const SETTING_DEFINITIONS = {
         default: ['registry.npmjs.org', 'registry.yarnpkg.com'] as ['registry.npmjs.org', 'registry.yarnpkg.com'],
     },
     'dependencies.bun_scanner': {
+        template: 'code',
         configurations: ['dependencies'],
         description: 'The npm package that Bun runs as its install security scanner. Without it, Bun runs no scanner.',
     },
@@ -150,6 +155,7 @@ export const SETTING_DEFINITIONS = {
         default: [] as [],
     },
     'drizzle.client_names': {
+        template: 'repository',
         configurations: ['drizzle'],
         description: 'The Drizzle client identifiers checked for update and delete operations without a where clause.',
         default: ['db'] as ['db'],
@@ -160,15 +166,18 @@ export const SETTING_DEFINITIONS = {
             'The committed OpenAPI document, relative to the repository root, which init fills in when it finds one; without it, the OpenAPI checks do not run.',
     },
     'openapi.generate_command': {
+        template: 'code',
         configurations: ['openapi'],
         description: 'The command that writes the OpenAPI document from the code, run in the project scope folder.',
     },
     'postgres.client_schemas': {
+        template: 'repository',
         configurations: ['postgres'],
         description: 'The schemas clients reach, where every table needs row level security.',
         default: [] as [],
     },
     'postgres.frozen_through': {
+        template: 'repository',
         configurations: ['postgres'],
         description:
             'The last migration version that has run everywhere (none, all, or a version); Squawk skips those migrations, and they may not change.',
@@ -191,12 +200,14 @@ export const SETTING_DEFINITIONS = {
         ],
     },
     'secrets.environment_functions': {
+        template: 'repository',
         configurations: ['secrets'],
         description:
             'Functions of this project that read environment variables, such as read_env. secrets/env-examples reads the keys they take.',
         default: [] as [],
     },
     'site.build_command': {
+        template: 'code',
         configurations: ['site'],
         description:
             'The command that builds the site. Without it, gspot runs the build script of the package manager.',
@@ -233,6 +244,7 @@ export const SETTING_DEFINITIONS = {
         default: 'supabase/functions',
     },
     'supabase.schemas': {
+        template: 'repository',
         configurations: ['supabase'],
         description: 'The database schemas to include in generated types.',
         default: ['public'] as ['public'],
@@ -243,6 +255,7 @@ export const SETTING_DEFINITIONS = {
             'The committed database types file, relative to the repository root; without it, no type comparison runs.',
     },
     'translations.base_locale': {
+        template: 'repository',
         configurations: ['translations'],
         description: 'The locale whose message keys every other locale must contain.',
         default: 'en',
@@ -253,6 +266,7 @@ export const SETTING_DEFINITIONS = {
     },
 
     'structure.environment_readers': {
+        reason_when: 'adding',
         configurations: ['structure'],
         description: 'The files that may read environment variables; other files get the values passed in.',
         default: [] as [],
@@ -269,6 +283,7 @@ export const SETTING_DEFINITIONS = {
         default: [] as [],
     },
     'zustand.store_files': {
+        reason_when: 'adding',
         configurations: ['zustand'],
         description: 'The files that may create a store.',
         default: ['**/store.*', '**/stores/*', '**/store/*', '**/*.store.*'] as [

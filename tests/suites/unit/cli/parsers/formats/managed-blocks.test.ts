@@ -3,13 +3,13 @@ import { BLOCK_FORMATS, MALFORMED_BLOCKS } from '#tests/config/parsers/formats/m
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 
 test('a managed block is appended and replaced without changing your own text', () => {
-    const first = replaceBlock('# Mine\n\ntext\n', 'block one', { path: 'AGENTS.md', style: 'markdown' });
-    expect(findBlockBody(first, { path: 'AGENTS.md', style: 'markdown' })).toBe('block one');
-    const second = replaceBlock(first, 'block two', { path: 'AGENTS.md', style: 'markdown' });
+    const first = replaceBlock('# Mine\n\ntext\n', 'block one', { path: 'AGENTS.md' });
+    expect(findBlockBody(first, { path: 'AGENTS.md' })).toBe('block one');
+    const second = replaceBlock(first, 'block two', { path: 'AGENTS.md' });
     expect(second.match(/gspot managed >>>/g)).toHaveLength(1);
-    expect(findBlockBody(second, { path: 'AGENTS.md', style: 'markdown' })).toBe('block two');
+    expect(findBlockBody(second, { path: 'AGENTS.md' })).toBe('block two');
     expect(second).toStartWith('# Mine\n\ntext\n\n');
-    expect(replaceBlock(second, 'block two', { path: 'AGENTS.md', style: 'markdown' })).toBe(second);
+    expect(replaceBlock(second, 'block two', { path: 'AGENTS.md' })).toBe(second);
 });
 test.each([...MALFORMED_BLOCKS])('every block operation refuses malformed markers in $path: $source', (context) => {
     const { source, path } = context;

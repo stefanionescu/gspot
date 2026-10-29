@@ -2,7 +2,7 @@ allowed_words = ["Bun", "Node", "npm", "pnpm", "mise", "CI", "macOS", "Linux", "
 
 [configuration]
 always_selected = true
-description = "Working and writing code: rules for coding agents, and no checks. The `[rules]` setting turns them on or off."
+description = "Working and writing code: rules for coding agents, with no checks."
 title = "Engineering"
 
 [rules]

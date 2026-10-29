@@ -1,12 +1,14 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { isSettingEmpty } from '#cli/planning/skips.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { simulateOperatingSystem } from '#tests/setup/system/platform.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { VUE_TSC_SKIP, NEXT_INTL_PROJECTS } from '#tests/config/planning/skips.ts';
 
 test('a check whose required setting is missing is skipped with a note naming the setting', async () => {
@@ -78,6 +80,7 @@ test('vue/vue-tsc without the typescript configuration is skipped with its condi
         })),
     ).toStrictEqual([...VUE_TSC_SKIP]);
 });
+
 test('a check whose tool has no Windows build is skipped on Windows', async () => {
     using mockResources = new DisposableStack();
     await using sandbox = await testdir({
@@ -85,10 +88,10 @@ test('a check whose tool has no Windows build is skipped on Windows', async () =
         'rules.yml': 'rules: []\n',
         'source.py': 'PORT = 8080\n',
     });
-    mockResources.use(simulateOperatingSystem('win32'));
+    mockResources.use(fakePlatform('win32'));
     const session = await openSession(sandbox.path);
-    expect(planChecks(session, { stage: 'all', only: ['security/semgrep'] })).toMatchObject([
-        { check: { id: 'security/semgrep' }, skip: { cause: 'system' } },
+    expect(planChecks(session, { stage: 'all', only: ['security/semgrep'] }).map(({ skip }) => skip)).toStrictEqual([
+        { cause: 'system', note: 'semgrep has no Windows build' },
     ]);
 });
 
@@ -140,4 +143,75 @@ test('explicit registry packs select Semgrep without local rules', async () => {
     expect(listToolProjectPins(session.toolConfigurations).python.some((pin) => pin.startsWith('semgrep=='))).toBe(
         true,
     );
+});
+
+test('a setting table containing only empty lists is empty', () => {
+    expect([isSettingEmpty({ paths: [], names: [] }), isSettingEmpty({ paths: [], names: ['entry'] })]).toStrictEqual([
+        true,
+        false,
+    ]);
+});
+
+test('generated and vendored test files do not satisfy a source-tag condition', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['swift']),
+        '.gitattributes': 'Generated.swift linguist-generated\nVendored.swift linguist-vendored\n',
+        'Generated.swift': 'import XCTest\n',
+        'Vendored.swift': 'import Testing\n',
+        'Source.swift': 'let value = 1\n',
+    });
+    const session = await openSession(sandbox.path);
+    expect(
+        planChecks(session, { stage: 'push', only: ['swift/coverage'] }).map(({ check, skip }) => ({
+            check: check.id,
+            skip,
+        })),
+    ).toStrictEqual([
+        {
+            check: 'swift/coverage',
+            skip: { cause: 'condition', note: 'Needs files marked swift-test or swift-test-target in this scope.' },
+        },
+    ]);
+});
+
+test('one matching dependency satisfies a condition listing alternatives', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['translations'], {
+            tables: '[translations]\nmessages_folder = "messages"\n',
+        }),
+        'package.json': '{"dependencies":{"next-intl":"4.8.3"}}',
+        'messages/en.json': '{"greeting":"Hello"}',
+    });
+    const session = await openSession(sandbox.path);
+    const root = session.scopes[0]!;
+    const configurations = root.configurations.map((configuration) =>
+        configuration.name === 'translations'
+            ? {
+                  ...configuration,
+                  checks: configuration.checks.map((check) => ({
+                      ...check,
+                      when: { ...check.when, dependencies: ['missing-library', 'next-intl'] },
+                  })),
+              }
+            : configuration,
+    );
+    const inScope = { ...session, scopes: [{ ...root, configurations }] };
+    expect(
+        planChecks(inScope, { stage: 'push', only: ['translations/messages'] }).map(({ check, skip }) => ({
+            check: check.id,
+            skip,
+        })),
+    ).toStrictEqual([{ check: 'translations/messages', skip: undefined }]);
+});
+
+test('a check for other systems names the host in its skip note', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['swift'], { level: 'all' }),
+        'main.swift': 'let value = 1\n',
+    });
+    using _platform = fakePlatform('linux');
+    const planned = planChecks(await openSession(sandbox.path), { stage: 'all', only: ['swift/swiftlint-analyze'] });
+    expect(planned.map(({ skip }) => skip)).toStrictEqual([
+        { cause: 'system', note: 'runs on macos only; this is linux' },
+    ]);
 });

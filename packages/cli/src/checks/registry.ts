@@ -1,5 +1,4 @@
 import { checkTsc } from '#cli/checks/tsc/check.ts';
-import type { Check } from '#cli/types/configurations.ts';
 import type { CheckCode } from '#cli/types/runs/check.ts';
 import { checkProseVale } from '#cli/checks/general/prose.ts';
 import { checkExpoDoctor } from '#cli/checks/framework/expo.ts';
@@ -8,6 +7,7 @@ import { checkSvelteCheck } from '#cli/checks/framework/svelte.ts';
 import { checkSiteBuild } from '#cli/checks/framework/site/build.ts';
 import { checkBashSafety } from '#cli/checks/language/bash/safety.ts';
 import { checkHtmlInlineScripts } from '#cli/checks/language/html.ts';
+import { checkSwiftBuild } from '#cli/checks/language/swift/build.ts';
 import { checkLicensesAllowed } from '#cli/checks/general/licenses.ts';
 import { checkNamingPaths } from '#cli/checks/general/naming/paths.ts';
 import { checkSecuritySemgrep } from '#cli/checks/general/security.ts';
@@ -15,14 +15,15 @@ import { checkNginxSyntax } from '#cli/checks/infrastructure/nginx.ts';
 import { checkMarkdownFences } from '#cli/checks/language/markdown.ts';
 import { checkJavascriptTsc } from '#cli/checks/language/javascript.ts';
 import { checkTranslationsMessages } from '#cli/checks/translations.ts';
-import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
 import { checkAnsibleLint } from '#cli/checks/infrastructure/ansible.ts';
 import { MARKDOWNLINT_PATH_PREFIX } from '#cli/config/checks/registry.ts';
 import { checkDuplicationJscpd } from '#cli/checks/general/duplication.ts';
 import { checkSwiftCoverage } from '#cli/checks/language/swift/coverage.ts';
 import { checkTypescriptTsconfig } from '#cli/checks/language/typescript.ts';
+import { checkPostgresGrants } from '#cli/checks/database/postgres/grants.ts';
 import { checkCommitsCommitlintPushed } from '#cli/checks/general/commits.ts';
 import { checkBashShellcheck } from '#cli/checks/language/bash/shellcheck.ts';
+import { checkSwiftPeriphery } from '#cli/checks/language/swift/periphery.ts';
 import { checkReactDomReactVersions } from '#cli/checks/framework/react-dom.ts';
 import { checkBashDocComments } from '#cli/checks/language/bash/doc-comments.ts';
 import { checkNamingIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
@@ -40,16 +41,20 @@ import { checkBashUnusedFunctions } from '#cli/checks/language/bash/unused-funct
 import { checkStructureImportRules } from '#cli/checks/general/structure/import-rules.ts';
 import { checkDocsMissingPaths, checkDocsRequiredFiles } from '#cli/checks/general/docs.ts';
 import { checkGithubActionsActionlint } from '#cli/checks/infrastructure/github-actions.ts';
+import { checkPostgresMigrationOrder } from '#cli/checks/database/postgres/migration-order.ts';
 import { checkStructureSharedPrefixes } from '#cli/checks/general/structure/shared-prefixes.ts';
+import { checkPostgresEditedMigrations } from '#cli/checks/database/postgres/edited-migrations.ts';
+import { checkPostgresRowLevelSecurity } from '#cli/checks/database/postgres/row-level-security.ts';
 import { checkStructureTrivialFunctions } from '#cli/checks/general/structure/trivial-functions.ts';
 import { checkSecretsEnvExamples, checkSecretsGitleaksPushed } from '#cli/checks/general/secrets.ts';
+import { checkPostgresDefinerSearchPath } from '#cli/checks/database/postgres/definer-search-path.ts';
 import { checkPostgresForeignKeyIndexes } from '#cli/checks/database/postgres/foreign-key-indexes.ts';
 import { checkCloudflareHeaders, checkCloudflareRedirects } from '#cli/checks/platform/cloudflare.ts';
 import { checkStructureFileFolderClashes } from '#cli/checks/general/structure/file-folder-clashes.ts';
 import { checkStructureEnvironmentReaders } from '#cli/checks/general/structure/environment-readers.ts';
 import { checkStructurePassThroughFolders } from '#cli/checks/general/structure/pass-through-folders.ts';
+import { listSwiftlintConfigFiles, checkSwiftSwiftlintAnalyze } from '#cli/checks/language/swift/swiftlint.ts';
 import { checkDockerignore, checkDockerCompose, checkDockerTrivyImage } from '#cli/checks/infrastructure/docker.ts';
-import { checkPostgresMigrationOrder, checkPostgresEditedMigrations } from '#cli/checks/database/postgres/history.ts';
 
 import {
     checkRepositoryEncoding,
@@ -57,21 +62,10 @@ import {
     checkRepositoryLocalFiles,
 } from '#cli/checks/general/repository.ts';
 import {
-    checkPostgresGrants,
-    checkPostgresRowLevelSecurity,
-    checkPostgresDefinerSearchPath,
-} from '#cli/checks/database/postgres/access.ts';
-import {
     checkDependenciesLockfiles,
     checkDependenciesStaleLockfile,
     checkDependenciesPackageManagerPin,
 } from '#cli/checks/general/dependencies.ts';
-import {
-    checkSwiftBuild,
-    checkSwiftPeriphery,
-    listSwiftlintConfigFiles,
-    checkSwiftSwiftlintAnalyze,
-} from '#cli/checks/language/swift/build.ts';
 import {
     checkSiteSize,
     checkSiteLychee,
@@ -108,7 +102,7 @@ import {
     checkXcodeAppTransportSecurity,
 } from '#cli/checks/infrastructure/xcode.ts';
 
-const CHECK_CODE: Record<string, CheckCode> = {
+export const CHECK_CODE: Record<string, CheckCode> = {
     'ansible/ansible-lint': { check: checkAnsibleLint },
     'bash/doc-comments': { check: checkBashDocComments },
     'bash/function-size': { check: checkBashFunctionSize },
@@ -207,14 +201,3 @@ const CHECK_CODE: Record<string, CheckCode> = {
     'xcode/unused-assets': { check: checkXcodeUnusedAssets },
     'xcode/xcstrings': { check: checkXcodeXcstrings },
 };
-
-/**
-Find the code of one check: the generator output check, or the code under its check ID.
-
-@param check the check to run.
-@returns the check code, or undefined for a check that runs only its declared command.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function findCheckCode(check: Pick<Check, 'id' | 'generator_outputs'>): CheckCode | undefined {
-    return check.generator_outputs === undefined ? CHECK_CODE[check.id] : { check: checkGeneratorOutputs };
-}

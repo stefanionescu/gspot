@@ -1,10 +1,11 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { UNSAFE_PATH_MESSAGE } from '#tests/config/messages.ts';
 import { symlink, realpath, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { TSCONFIG_PARSE_ERRORS } from '#tests/config/parsers/projects/tsconfig.ts';
@@ -20,7 +21,7 @@ test('a tsconfig can extend a dependency installed above the repository', async 
 });
 
 test.each([...TSCONFIG_PARSE_ERRORS])(
-    '$name raises a configuration error with its compiler diagnostic',
+    '$name raises a configuration error with its compiler message',
     async ({ json, message }) => {
         await using sandbox = await testdir({ 'tsconfig.json': json });
         const path = join(sandbox.path, 'tsconfig.json');
@@ -85,7 +86,7 @@ test('tsconfig reads share one read cache per run and keep folders apart', async
     expect(readTsconfig(reads.root, path, reads)).toStrictEqual(initial);
     const secondReads = createReadCache(second.path);
     expect(readTsconfig(second.path, join(second.path, 'tsconfig.json'), secondReads)?.options.strict).toBe(false);
-    expect(() => readTsconfig(second.path, path, secondReads)).toThrow('is not a safe repository-relative path');
+    expect(() => readTsconfig(second.path, path, secondReads)).toThrow(UNSAFE_PATH_MESSAGE);
     await writeFile(join(first.path, 'base.json'), '{"compilerOptions":{"strict":false}}');
     expect(readTsconfig(reads.root, path, reads)).toStrictEqual(initial);
     const next = createReadCache(first.path);

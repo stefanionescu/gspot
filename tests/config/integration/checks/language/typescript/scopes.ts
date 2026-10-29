@@ -35,7 +35,7 @@ const PRIVATE_GLOBAL_FINDING = {
 } as const;
 
 export const STANDALONE_TYPESCRIPT_FINDINGS = {
-    recommended: [PRIVATE_GLOBAL_FINDING],
+    basic: [PRIVATE_GLOBAL_FINDING],
     all: [
         PRIVATE_GLOBAL_FINDING,
         {

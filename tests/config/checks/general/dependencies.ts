@@ -1,4 +1,3 @@
-import type { CheckResult } from '#cli/types/runs/check.ts';
 import { SETTING_REASON } from '#tests/config/commands/set.ts';
 
 export const BUN_PROJECT_FILES = {
@@ -114,12 +113,12 @@ export const HOST_LOCKFILE = {
     },
 } as const;
 
-export const REGISTRY_SCOPE_RESULTS: { scope: string; status: CheckResult['status']; files: string[] }[] = [
-    { scope: '', status: 'failed', files: ['package-lock.json', 'package-lock.json', 'package-lock.json'] },
-    { scope: 'app', status: 'passed', files: [] },
+export const REGISTRY_SCOPE_RESULTS = [
+    { scope: '', status: 'failed' as const, files: ['package-lock.json', 'package-lock.json', 'package-lock.json'] },
+    { scope: 'app', status: 'passed' as const, files: [] },
     {
         scope: 'sibling',
-        status: 'failed',
+        status: 'failed' as const,
         files: ['sibling/package-lock.json', 'sibling/package-lock.json', 'sibling/package-lock.json'],
     },
 ];
@@ -164,3 +163,5 @@ export const LOCKFILE_DOWNLOAD_CASES = [
         lines: [1],
     },
 ] as const;
+
+export const BUN_PIN_SETTINGS = '[tools]\nbun = "0.0.0-test.2"\n';

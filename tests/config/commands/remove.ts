@@ -55,3 +55,5 @@ export const SCOPE_REMOVALS = [
         },
     },
 ] as const;
+
+export const API_LANGUAGE_REASON = 'The API uses another language.';

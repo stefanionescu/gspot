@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { RunReport } from '#cli/types/runs/run.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { type RunReport } from '#cli/types/commands/check.ts';
 import jestPackage from 'jest/package.json' with { type: 'json' };
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -13,6 +13,7 @@ import {
     JEST_PROJECT_FILES,
     JEST_MISSING_IMPORT,
     JEST_COVERAGE_TABLES,
+    COVERAGE_THRESHOLD_MESSAGE,
     CORRECTED_MATH_TEST_SOURCE,
 } from '#tests/config/integration/checks/testing/jest.ts';
 
@@ -46,7 +47,7 @@ test("jest/coverage at level all uses the scope's coverage limits and runs only 
             scope: 'app',
             status: 'failed',
             findings: [
-                { file: '', message: 'coverage threshold for lines (80%) not met: 66.66%' },
+                { file: '', message: COVERAGE_THRESHOLD_MESSAGE },
                 { file: '', message: 'coverage threshold for functions (100%) not met: 50%' },
             ],
         },
@@ -66,7 +67,7 @@ test('jest/coverage at level all reports uncovered functions and failed tests an
     expect(uncovered).toMatchObject([
         {
             findings: [
-                { file: '', message: 'coverage threshold for lines (80%) not met: 66.66%' },
+                { file: '', message: COVERAGE_THRESHOLD_MESSAGE },
                 { file: '', message: 'coverage threshold for functions (80%) not met: 50%' },
             ],
         },
@@ -82,7 +83,7 @@ test('jest/coverage at level all reports uncovered functions and failed tests an
     await assertJestFilesKept(sandbox.path);
 });
 
-test('jest/coverage reports a test file with a missing import as an error and passes after the fix', async () => {
+test('jest/coverage reports a test file with a missing import as a failed test and passes after the fix', async () => {
     await using sandbox = await createGitSandbox({
         ...JEST_PROJECT_FILES,
         'gspot.toml': buildSandboxSettings(['jest'], { tables: JEST_COVERAGE_TABLES, level: 'all' }),

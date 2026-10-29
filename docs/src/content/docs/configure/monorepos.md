@@ -32,7 +32,7 @@ gspot install
 gspot check api
 ```
 
-To add a configuration that init did not find: `gspot add pytest --scope services/api`.
+To add a configuration that init did not find: `gspot add zod --scope api`.
 
 ## Which scope a file belongs to
 
@@ -51,13 +51,16 @@ file.
 gspot set limits.function_lines 80 --scope api --reason "The parser is one state machine."
 ```
 
-Root settings cover every scope. Write paths relative to the repository root. The default paths of a configuration
-resolve inside the scope that selects it.
+Root settings cover every scope. Write paths relative to the repository root; only `python.import_folders` takes
+folders relative to its scope. The default paths of a configuration resolve inside the scope that selects it.
 
-The first written list replaces its shipped default. A scope list adds to the written lists of the root and its parent
-scopes, without repeats. A single-value setting takes the nearest value.
+The first value that you write replaces the shipped default. In a scope, a list of plain values, such as `test_files`,
+adds to the lists of the root and of the parent scopes, without repeats. A table, such as `spelling.allowed_words`,
+adds its keys. A command, such as `site.build_command`, a list of records, such as `[[tools.eslint.plugins]]`, and a
+single value take the nearest value that you wrote.
 
-If two selected configurations give different defaults for the same setting, gspot names both. To pick one, set the
-value at the root or in a scope.
+List defaults of several configurations add up. When two selected configurations give a single-value setting
+different defaults, a framework, platform, library, or database configuration wins over the others. With two others,
+gspot stops with an error that names both. To pick one, set the value at the root or in a scope.
 
 [Scope settings](/reference/gspot-toml/#scope) lists the keys and the values they accept.

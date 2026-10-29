@@ -1,4 +1,4 @@
-import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 
 export const NPM_INSTALL_FLAGS = ['--ignore-scripts', '--no-audit', '--no-fund'] as const;
 
@@ -15,14 +15,6 @@ export const PUSH_CONTENT = {
 export const REGISTRY_HOST = '127.0.0.1';
 
 export const NPM_REGISTRY_TOKEN = 'synthetic-package-install-token';
-
-export const NPM_PACK_FLAGS = ['--ignore-scripts', '--json'] as const;
-
-export const UPSTREAM_REGISTRY = 'https://registry.npmjs.org/';
-
-export const GSPOT_PACKAGE_SCOPE = '@gspothq/';
-
-export const PACKED_PUBLISH_TIME = '2025-01-01T00:00:00.000Z';
 
 export const SANDBOX_PACKAGE_JSON = {
     name: 'example',
@@ -89,6 +81,7 @@ export const NESTED_SCOPE_FILES = {
 } as const;
 
 export const BASH_SANDBOX = {
+    executable: ['scripts/a.sh', 'scripts/b.sh', 'scripts/build.sh'],
     cleanSource: CLEAN_BASH_SCRIPT,
     configurations: ['bash', 'javascript'],
     files: {
@@ -106,3 +99,11 @@ paths = ["**/*.sh"]
 stage = "commit"
 output = { format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$" }
 `;
+
+export const TEAMS_TABLE_SQL = 'CREATE TABLE teams (id integer PRIMARY KEY);\n';
+
+export const TEAMS_MIGRATION_PATH = 'migrations/20240201_teams.sql';
+
+export const IGNORE_ALL_PATTERN = '*\n';
+
+export const CHANGED_CONTEXT = 'changed context';

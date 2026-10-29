@@ -1,3 +1,4 @@
+import { LINE_BREAK } from '#cli/config/text.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/runs/output/text.ts';
 import { type ToolOutput } from '#cli/types/runs/output/formats.ts';
@@ -36,14 +37,13 @@ function buildMatchedFinding(
 Read a finding from each matching output line.
 
 @param output the tool output to read.
-@returns the findings from matched lines.
 */
 export function parseRegexFindings(output: ToolOutput): Finding[] {
     const { output: format, text } = output;
     const pattern = new RegExp(format.pattern as string, 'u');
     const fixable = format.fixable === undefined ? undefined : new RegExp(format.fixable, 'u');
     const findings = new Map<string, Finding>();
-    for (const line of text.split(/\r?\n/u)) {
+    for (const line of text.split(LINE_BREAK)) {
         const groups = pattern.exec(line)?.groups;
         if (!groups) continue;
         const finding = buildMatchedFinding(output, fixable, line, groups);
@@ -56,7 +56,6 @@ export function parseRegexFindings(output: ToolOutput): Finding[] {
 Read findings grouped under output file headings.
 
 @param output the tool output to read.
-@returns the findings under each matched file heading.
 */
 export function parseGroupedFindings(output: ToolOutput): Finding[] {
     const { check, output: format, text, help } = output;
@@ -64,7 +63,7 @@ export function parseGroupedFindings(output: ToolOutput): Finding[] {
     const pattern = new RegExp(format.pattern as string, 'u');
     const findings: Finding[] = [];
     let file = '';
-    for (const line of text.split(/\r?\n/u)) {
+    for (const line of text.split(LINE_BREAK)) {
         const header = filePattern.exec(line)?.groups?.['file'];
         if (header !== undefined) {
             file = header.replace(LEADING_DOT_SLASH, '');
@@ -82,7 +81,6 @@ export function parseGroupedFindings(output: ToolOutput): Finding[] {
 Read one finding from each nonempty output line.
 
 @param output the tool output to read.
-@returns the findings from the output lines.
 */
 export function parseLineFindings(output: ToolOutput): Finding[] {
     const { check, text, help } = output;

@@ -54,7 +54,7 @@ version = "16.4.2"
 
 [eslint]
 required_tools = ["@next/eslint-plugin-next"]
-all_level_rules = ["@next/next/next-script-for-ga", "@next/next/no-html-link-for-pages", "@next/next/no-img-element", "@next/next/no-page-custom-font"]
+all_level_rules = ["@next/next/next-script-for-ga", "@next/next/no-img-element", "@next/next/no-page-custom-font"]
 
 [[eslint.rules_off]]
 files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
@@ -70,7 +70,6 @@ tool = "semgrep"
 example = "`const count: number = \"one\";` reports an incompatible assignment. Assign a number, such as `const count: number = 1;`."
 help = "Fix the first error tsc prints; later errors often come from the same mistake."
 instead_of = "typescript/tsc"
-level = "recommended"
 name = "tsc"
 runs = "scope"
 stage = "push"

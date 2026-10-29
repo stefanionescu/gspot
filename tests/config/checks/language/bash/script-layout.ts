@@ -19,5 +19,5 @@ export const ENVIRONMENT_READER_SCOPE_TABLES = `[[scope]]
 path = "tools"
 configurations = ["bash"]
 [scope.structure]
-environment_readers = ["tools/env.sh"]
+environment_readers = { value = ["tools/env.sh"], reason = "This script reads the process environment." }
 `;

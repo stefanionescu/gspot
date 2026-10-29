@@ -1,6 +1,6 @@
 import type { Finding } from '#cli/types/runs/check.ts';
-import { knipReportSchema } from '#cli/schemas/runs/knip.ts';
-import { parseToolReport } from '#cli/parsers/formats/json.ts';
+import { knipOutputSchema } from '#cli/schemas/runs/knip.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
 import { KNIP_ISSUE_MESSAGES } from '#cli/config/runs/output/knip.ts';
 
@@ -12,7 +12,7 @@ Read the Knip JSON categories, and keep grouped symbols and source positions.
 */
 export function parseKnipFindings(output: ToolOutput): Finding[] {
     const { check, stdout, help } = output;
-    const report = parseToolReport('Knip', stdout, knipReportSchema);
+    const report = parseToolOutput('Knip', stdout, knipOutputSchema);
     const findings: Finding[] = [];
     for (const row of report.issues) {
         for (const category of Object.keys(KNIP_ISSUE_MESSAGES) as (keyof typeof KNIP_ISSUE_MESSAGES)[]) {

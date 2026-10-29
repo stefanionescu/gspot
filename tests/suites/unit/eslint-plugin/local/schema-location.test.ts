@@ -51,7 +51,7 @@ createRuleTester().run<'location', [Partial<SchemaLocationOptions[0]>]>('schema-
     ],
 });
 
-test('schema placement resolves configured folders from the ESLint working directory', () => {
+test('configured folders start at the ESLint cwd', () => {
     const linter = new Linter({ configType: 'flat', cwd: '/repo' });
     const config: object[] = [
         {

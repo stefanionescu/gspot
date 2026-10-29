@@ -1,23 +1,27 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
+import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { listToolInstallFiles } from '#tests/setup/cli/tools.ts';
+import { listNpmInstallFiles } from '#tests/setup/cli/tools.ts';
 import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation/write.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
-import { readSandboxSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 import { API_SCOPE_FILES, TOOLS_CHANGED_NOTE, BASH_CONFIG_FILE_NAMES } from '#tests/config/commands/samples.ts';
 
 import {
     SCOPE_REMOVALS,
+    API_LANGUAGE_REASON,
     PARENT_REQUIREMENT_SETTINGS,
     EXCLUDED_CONFIGURATION_SETTINGS,
 } from '#tests/config/commands/remove.ts';
@@ -51,13 +55,14 @@ test.each([...SCOPE_REMOVALS])('remove bash --scope $scope: $name', async ({ set
         '--scope',
         scope,
         '--reason',
-        'The API uses another language.',
+        API_LANGUAGE_REASON,
         '--json',
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stderr).toBe('');
     expect(JSON.parse(result.stdout)).toMatchObject({ changed: true });
-    expect(readSandboxSettings(sandbox.path)).toMatchObject(expected);
+    const written = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
+    expect({ ...written, scopes: Object.fromEntries(written.scopes) }).toMatchObject(expected);
 });
 
 test('remove refuses a dependency required by a parent configuration and leaves all files unchanged', async () => {
@@ -73,7 +78,7 @@ test('remove refuses a dependency required by a parent configuration and leaves 
         '--scope',
         'api/child',
         '--reason',
-        'The API uses another language.',
+        API_LANGUAGE_REASON,
         '--json',
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(2);
@@ -88,18 +93,14 @@ test('remove refuses a dependency required by a parent configuration and leaves 
 
 test('remove without --reason exits 2 and writes nothing', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash'], { rules: true }) });
-    const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, ['remove', 'bash', '--json']);
-    expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toStrictEqual({
+    await assertRefusalWithoutWrites(sandbox.path, ['remove', 'bash'], {
         error: 'arguments',
         message: "Required option '--reason <text>' not specified",
     });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('remove writes the reason beside the removed names, and add takes a name out and keeps the reason', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash', 'python']),
     });
     const reason = 'The project uses another language.';
@@ -131,7 +132,7 @@ test('remove --scope writes removed_configurations with its reason and applies i
     commitAll(sandbox.path);
     const initial = await runGspot(sandbox.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, findManifestTarget('bash', 'shellcheckrc')))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(true);
     using npm = recordNpmCommands();
     const reason = 'The API scope no longer uses Bash.';
     const result = await runGspot(sandbox.path, ['remove', 'bash', '--scope', 'api', '--reason', reason, '--json']);
@@ -139,12 +140,12 @@ test('remove --scope writes removed_configurations with its reason and applies i
     const { written, removed, notes } = JSON.parse(result.stdout) as ApplyReport;
     expect({ written, removed, notes }).toStrictEqual({
         written: [GSPOT_PATHS.miseProject, GSPOT_PATHS.pythonProject],
-        removed: BASH_CONFIG_FILE_NAMES.map((file) => findManifestTarget('bash', file)),
+        removed: BASH_CONFIG_FILE_NAMES.map((file) => getManifestTarget('bash', file)),
         notes: [TOOLS_CHANGED_NOTE],
     });
     expect(npm.commands).toStrictEqual([]);
-    const saved = readSandboxSettings(sandbox.path);
-    expect(saved.scopes['api']!.configurations).toStrictEqual([]);
+    const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
+    expect(saved.scopes.get('api')!.configurations).toStrictEqual([]);
     expect(saved.configurations).toStrictEqual(['markdown']);
     const contents = (parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['scope'];
     expect(contents).toStrictEqual([
@@ -152,13 +153,13 @@ test('remove --scope writes removed_configurations with its reason and applies i
     ]);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, findManifestTarget('bash', 'shellcheckrc')))).toBe(false);
-    expect(await listToolInstallFiles(sandbox.path)).toStrictEqual([]);
+    expect(await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(false);
+    expect(await listNpmInstallFiles(sandbox.path)).toStrictEqual([]);
 });
 
 test('remove reports no change for a configuration the root does not list', async () => {
     const settings = buildSandboxSettings(['typescript'], { scopes: [{ path: 'api', configurations: ['bash'] }] });
-    await using sandbox = await testdir({ 'gspot.toml': settings, 'api/entry.sh': 'echo api\n' });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': settings, 'api/entry.sh': 'echo api\n' });
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
     const message = 'No change: bash is not selected.';
@@ -176,7 +177,7 @@ test('remove reports no change for a configuration the root does not list', asyn
 });
 
 test('remove checks requirements against the scope selection', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': EXCLUDED_CONFIGURATION_SETTINGS,
         'api/entry.sh': 'echo api\n',
     });
@@ -206,7 +207,7 @@ test('remove names only removed configurations in a mixed request', async () => 
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout.split('\n', 1)[0]).toBe('Removed bash. python was not selected.');
-    const settings = readSandboxSettings(sandbox.path);
+    const settings = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
     expect(settings.configurations).toStrictEqual([]);
     expect(settings.removed_configurations).toStrictEqual(['bash']);
 });

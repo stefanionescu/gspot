@@ -33,9 +33,9 @@ def parse_config(environ: Mapping[str, str]) -> AppConfig:
         ValueError: MAX_ITEMS is missing, or is not an integer greater than zero.
 
     """
-    max_items = int(environ.get('MAX_ITEMS', ''))
+    max_items = int(environ.get("MAX_ITEMS", ""))
     if max_items < 1:
-        message = 'MAX_ITEMS must be greater than zero'
+        message = "MAX_ITEMS must be greater than zero"
         raise ValueError(message)
     return AppConfig(max_items=max_items)
 ```
@@ -156,6 +156,7 @@ add `attrs` in place of a small dataclass or a function.
 
 from dataclasses import field, dataclass
 
+
 @dataclass
 class Batch:
     """Prompt text owned by one processing batch.
@@ -167,7 +168,8 @@ class Batch:
 
     prompts: list[str] = field(default_factory=list)
 
-__all__ = ['Batch']
+
+__all__ = ["Batch"]
 ```
 
 ### Dataclass conventions
@@ -213,15 +215,16 @@ Good:
 
 MAX_BATCH_SIZE = 1000
 
+
 def parse_batch_limit(raw: str) -> int:
     """Return a positive batch limit within the supported range."""
     try:
         value = int(raw)
     except ValueError as error:
-        message = 'Batch limit must be a decimal integer.'
+        message = "Batch limit must be a decimal integer."
         raise ValueError(message) from error
     if not 1 <= value <= MAX_BATCH_SIZE:
-        message = f'Batch limit must be between 1 and {MAX_BATCH_SIZE}.'
+        message = f"Batch limit must be between 1 and {MAX_BATCH_SIZE}."
         raise ValueError(message)
     return value
 ```
@@ -289,15 +292,17 @@ Good:
 import sys
 from pathlib import Path
 
+
 def main() -> int:
     """Read the first argument as a path and print its normalized records."""
     path = Path(sys.argv[1])
-    with path.open(encoding='utf-8') as source:
+    with path.open(encoding="utf-8") as source:
         records = [record for line in source if (record := line.strip())]
-    _ = sys.stdout.write('\n'.join(records))
+    _ = sys.stdout.write("\n".join(records))
     return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     raise SystemExit(main())
 ```
 

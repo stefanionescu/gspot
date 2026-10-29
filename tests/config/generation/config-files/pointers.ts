@@ -64,4 +64,4 @@ export const XCTEST_POINTER_CASES = [
     },
 ] as const;
 
-export const MODULE_VALUE = { location: 'the requested module' } as const;
+export const DEFAULT_EXPORT = { location: 'the requested module' } as const;

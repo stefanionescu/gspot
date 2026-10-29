@@ -4,6 +4,7 @@ import { extractExtension } from '#cli/system/paths.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
+import { EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/detect.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/files.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
 import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
@@ -16,9 +17,10 @@ import {
     type ConfigurationEvidence,
 } from '#cli/types/repository/detect.ts';
 
-function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFile[], scope: string): ScopeContents {
+function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFile[], scopePath: string): ScopeContents {
     const scopeFiles = files.filter(
-        (file) => file.kind === 'source' && !file.path.startsWith(`${GSPOT_FOLDER}/`) && isInScope(file.path, scope),
+        (file) =>
+            file.kind === 'source' && !file.path.startsWith(`${GSPOT_FOLDER}/`) && isInScope(file.path, scopePath),
     );
     const extensionCounts = new Map<string, number>();
     const shebangs = new Set(
@@ -50,7 +52,7 @@ function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFil
         dependencies: new Map(
             scopeDependencyFiles.flatMap((file) => Object.keys(file.dependencies).map((name) => [name, file.path])),
         ),
-        scope,
+        scope: scopePath,
     };
 }
 
@@ -91,7 +93,7 @@ function findConfigurationEvidence(
             .find((found) => found !== undefined) ?? findContentEvidence(root, configuration.detect, contents);
     if (evidence !== undefined) return { configuration: configuration.name, group: configuration.group, ...evidence };
     return configuration.always_selected && contents.scope === ''
-        ? { configuration: configuration.name, group: configuration.group, evidence: 'every repository' }
+        ? { configuration: configuration.name, group: configuration.group, evidence: EVERY_REPOSITORY_EVIDENCE }
         : undefined;
 }
 
@@ -162,20 +164,19 @@ Propose configurations from the files and the dependencies, with the evidence fo
 
 @param repository the inventory and parsed package declarations.
 @param configurationsByName every configuration manifest.
-@param scope the folder, '' for the root.
-@returns each matching configuration with its repository evidence.
+@param scopePath the folder, '' for the root.
 */
 export function detectConfigurations(
     repository: Pick<Repository, 'root' | 'files' | 'dependencyFiles'>,
     configurationsByName: Map<string, Configuration>,
-    scope = '',
+    scopePath = '',
 ): ConfigurationEvidence[] {
     const { root, files, dependencyFiles } = repository;
     const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, configurationsByName.values());
     const contents = buildScopeContents(
         files.filter((file) => !toolOnlyPackages.has(file.path)),
         dependencyFiles.filter((dependencyFile) => !toolOnlyPackages.has(dependencyFile.path)),
-        scope,
+        scopePath,
     );
     return configurationsByName
         .values()
@@ -190,7 +191,6 @@ Select the conditions that the file and dependency evidence meets.
 @param conditions the detection rules of the manifests.
 @param files the repository source inventory.
 @param dependencyFiles the parsed dependency files.
-@returns the conditions that match.
 */
 export function detectConditions(
     conditions: Configuration['detect'][],
@@ -216,7 +216,7 @@ List the general configurations that gspot adds without an explicit selection.
 */
 export function listAutomaticConfigurations(
     configurationsByName: Map<string, Configuration>,
-    repository?: Pick<Repository, 'root' | 'files' | 'hasGit'>,
+    repository?: Pick<Repository, 'root' | 'files' | 'hasGit' | 'dependencyFiles'>,
 ): string[] {
     const general = new Map([...configurationsByName].filter(([, configuration]) => configuration.group === 'general'));
     const automatic = new Set(
@@ -226,8 +226,16 @@ export function listAutomaticConfigurations(
             .map((configuration) => configuration.name),
     );
     if (repository === undefined) return [...automatic];
+    const toolOnlyPackages = listToolOnlyPackages(repository.dependencyFiles, configurationsByName.values());
     const detected = new Set(
-        detectConfigurations({ ...repository, dependencyFiles: [] }, general).map(({ configuration }) => configuration),
+        detectConfigurations(
+            {
+                ...repository,
+                files: repository.files.filter((file) => !toolOnlyPackages.has(file.path)),
+                dependencyFiles: repository.dependencyFiles.filter((file) => !toolOnlyPackages.has(file.path)),
+            },
+            general,
+        ).map(({ configuration }) => configuration),
     );
     for (const configuration of general.values())
         if (detected.has(configuration.name) && (configuration.when?.git !== true || repository.hasGit))

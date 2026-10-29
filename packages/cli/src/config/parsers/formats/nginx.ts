@@ -18,3 +18,5 @@ export const ESCAPE_LENGTH = 2;
 export const QUOTED_ARGUMENT = /^(["'])([\s\S]*)\1$/u;
 
 export const ESCAPED_CHARACTER = /\\([trn"'\\])/gu;
+
+export const WHITESPACE_CHARACTER = /\s/u;

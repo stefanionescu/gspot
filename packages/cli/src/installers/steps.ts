@@ -12,7 +12,6 @@ Record and run one install command with the shared cancellation and time limit.
 @param options the working folder and environment.
 @param options.cwd the folder where the command runs.
 @param options.env variable overrides for the child process.
-@returns the process output and exit status.
 */
 export async function runInstallStep(
     install: ToolInstall,
@@ -40,7 +39,6 @@ Record and run one install command, and stop when it exits with an error.
 @param options.cwd the folder where the command runs.
 @param options.env variable overrides for the child process.
 @param options.name how the error names the command.
-@returns the process output.
 */
 export async function runRequiredInstallStep(
     install: ToolInstall,

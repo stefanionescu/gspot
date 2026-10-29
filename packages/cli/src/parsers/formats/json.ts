@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { getPosition } from '#cli/system/text.ts';
 import { JSONC_OPTIONS } from '#cli/config/parsers/formats/json.ts';
@@ -17,20 +17,20 @@ Read a JSON object, and validate it against the schema, if any.
 @param path the repository-relative file.
 @param text the complete JSON source, including comments.
 @param schema the shape to check.
-@returns the parsed object.
 */
 export function parseJsonFile(path: string, text: string, schema?: z.ZodType): unknown {
     const errors: ParseError[] = [];
-    const value: unknown = parse(text, errors, JSONC_OPTIONS);
+    const offset = text.startsWith('\uFEFF') ? 1 : 0;
+    const value: unknown = parse(text.slice(offset), errors, JSONC_OPTIONS);
     const error = errors[0];
     if (error !== undefined) {
-        const { line, column } = getPosition(text, error.offset);
+        const { line, column } = getPosition(text, error.offset + offset);
         throw new GspotError(
-            'filesystem',
+            'parse',
             `${path}:${String(line)}:${String(column)} is not valid JSON: ${printParseErrorCode(error.error)}. Fix the file.`,
         );
     }
-    if (!isTable(value)) throw new GspotError('filesystem', `${path} must contain a JSON object. Fix the file.`);
+    if (!isTable(value)) throw new GspotError('parse', `${path} must contain a JSON object. Fix the file.`);
     return schema === undefined ? value : parseFileFields(path, value, schema);
 }
 
@@ -39,7 +39,6 @@ Open a JSON file to edit shared fields, and leave other content as written.
 
 @param path the file that syntax and edit errors name.
 @param text the complete JSON or JSON-with-comments text.
-@returns the editable document.
 */
 export function openJsonFile(path: string, text: string): EditableFile {
     let editedText = text;
@@ -48,7 +47,9 @@ export function openJsonFile(path: string, text: string): EditableFile {
         getValue: (keys) => normalizeTables(getValueAt(document, keys)),
         set(keys, value) {
             if (isDeepStrictEqual(normalizeTables(getValueAt(document, keys)), normalizeTables(value))) return;
-            const next = applyEdits(editedText, modify(editedText, [...keys], value, {}));
+            const offset = editedText.startsWith('\uFEFF') ? 1 : 0;
+            const source = editedText.slice(offset);
+            const next = editedText.slice(0, offset) + applyEdits(source, modify(source, [...keys], value, {}));
             document = parseJsonFile(path, next);
             editedText = next;
         },
@@ -56,23 +57,23 @@ export function openJsonFile(path: string, text: string): EditableFile {
     };
 }
 
-export function parseToolReport(tool: string, text: string): unknown;
+export function parseToolOutput(tool: string, text: string): unknown;
 
-export function parseToolReport<Value>(tool: string, text: string, schema: z.ZodType<Value>): Value;
+export function parseToolOutput<Value>(tool: string, text: string, schema: z.ZodType<Value>): Value;
 
 /**
-Parse and validate a report, and keep its untrusted contents out of errors.
+Parse and validate the output of a tool, and keep its untrusted contents out of errors.
 
-@param tool the program that printed the report.
-@param text the JSON report.
+@param tool the program that printed the output.
+@param text the JSON output.
 @param schema the shape to validate when supplied.
-@returns the parsed report, with any requested validation.
 */
-export function parseToolReport(tool: string, text: string, schema?: z.ZodType): unknown {
+export function parseToolOutput(tool: string, text: string, schema?: z.ZodType): unknown {
     try {
         const parsed: unknown = JSON.parse(text);
         return schema === undefined ? parsed : schema.parse(parsed);
-    } catch {
-        throw new GspotError('output', `${tool} printed output that gspot cannot read.`);
+    } catch (error) {
+        if (!(error instanceof SyntaxError) && !(error instanceof z.ZodError)) throw error;
+        throw new GspotError('output', `${tool} printed output that gspot cannot read.`, { cause: error });
     }
 }

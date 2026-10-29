@@ -4,6 +4,7 @@ import * as clack from '@clack/prompts';
 import * as systemEnvironment from 'std-env';
 import { testdir, createFileTree } from 'testdirs';
 import { mock, test, spyOn, expect } from 'bun:test';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -12,12 +13,18 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { fakeTerminals } from '#tests/setup/system/fakes.ts';
 import { TEST_VERSION } from '#tests/config/commands/samples.ts';
 import { rm, stat, readFile, writeFile } from 'node:fs/promises';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
+import { INVALID_CSS } from '#tests/config/commands/init/sources.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { SQLFLUFF_KEPT_NOTE } from '#tests/config/commands/init/messages.ts';
 import { EDITED_STYLELINT_PACKAGE } from '#tests/config/generation/write.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
-import { CSS_MANAGED_PLAN_CHANGES } from '#tests/config/commands/init/write.ts';
-import { INVALID_CSS, SQLFLUFF_KEPT_NOTE } from '#tests/config/commands/init/samples.ts';
+
+import {
+    STOPPED_ERROR_MESSAGE,
+    GENERATED_WRITE_MESSAGE,
+    CSS_MANAGED_PLAN_CHANGES,
+} from '#tests/config/commands/init/write.ts';
 
 test.each([
     [
@@ -38,7 +45,7 @@ test.each([
     expect(plan.delete).toStrictEqual([
         { path: '.shellcheckrc', note: 'replaced by the generated shellcheck config file' },
     ]);
-    await using _terminal = await simulateInteractiveTerminal();
+    await using _terminal = await fakeInteractiveTerminal();
     mockResources.use(
         spyOn(clack, 'confirm').mockImplementation(async () => {
             await change(join(sandbox.path, '.shellcheckrc'));
@@ -63,15 +70,13 @@ test('a failed init keeps the version pin it already wrote', async () => {
     commitAll(sandbox.path);
     const rename = fs.renameSync;
     using _publication = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
-        if (String(target) === join(sandbox.path, '.gitattributes')) throw new Error('Generated write denied');
+        if (String(target) === join(sandbox.path, '.gitattributes')) throw new Error(GENERATED_WRITE_MESSAGE);
         rename(source, target);
     });
 
     const refused = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations']);
     expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe(
-        'gspot stopped because of an internal error: Generated write denied. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n',
-    );
+    expect(refused.stderr).toBe(STOPPED_ERROR_MESSAGE);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.versionPin), 'utf8')).toBe(`${cliPackage.version}\n`);
 });
 
@@ -82,17 +87,15 @@ test('init keeps the old config file when the generated one cannot be written', 
     commitAll(sandbox.path);
     const rename = fs.renameSync;
     using _publication = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
-        if (String(target) === join(sandbox.path, findManifestTarget('spelling', 'typos.toml')))
-            throw new Error('Generated write denied');
+        if (String(target) === join(sandbox.path, getManifestTarget('spelling', 'typos.toml')))
+            throw new Error(GENERATED_WRITE_MESSAGE);
         rename(source, target);
     });
     const refused = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'spelling']);
     expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe(
-        'gspot stopped because of an internal error: Generated write denied. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n',
-    );
+    expect(refused.stderr).toBe(STOPPED_ERROR_MESSAGE);
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
-    const exists = await isOnDisk(join(sandbox.path, findManifestTarget('spelling', 'typos.toml')));
+    const exists = await isOnDisk(join(sandbox.path, getManifestTarget('spelling', 'typos.toml')));
     expect(exists).toBe(false);
 });
 
@@ -105,7 +108,7 @@ test('init refuses to write package.json when one of its managed fields changed 
     expect(plan.change).toStrictEqual([...CSS_MANAGED_PLAN_CHANGES]);
     expect(plan.delete.map(({ path }) => path)).not.toContain('package.json');
     let mode = 0;
-    await using _terminal = await simulateInteractiveTerminal();
+    await using _terminal = await fakeInteractiveTerminal();
     mockResources.use(
         spyOn(clack, 'confirm').mockImplementation(async () => {
             await writeFile(join(sandbox.path, 'package.json'), EDITED_STYLELINT_PACKAGE);
@@ -135,13 +138,13 @@ test('init keeps a shared file that was edited after the plan', async () => {
 
     const preview = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'sql', '--json']);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
-    expect(plan.retained).toStrictEqual([{ path: 'setup.cfg', note: SQLFLUFF_KEPT_NOTE }]);
+    expect(plan.keep).toStrictEqual([{ path: 'setup.cfg', note: SQLFLUFF_KEPT_NOTE }]);
     const edited = `[sqlfluff]
 exclude_rules = LT01, RF01
 [flake8]
 ignore = E501
 `;
-    await using _terminal = await simulateInteractiveTerminal();
+    await using _terminal = await fakeInteractiveTerminal();
     mockResources.use(
         spyOn(clack, 'confirm').mockImplementation(async () => {
             await writeFile(join(sandbox.path, 'setup.cfg'), edited);
@@ -151,23 +154,25 @@ ignore = E501
     const written = await runGspot(sandbox.path, ['init', '--configurations', 'sql']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
-    const exists = await isOnDisk(join(sandbox.path, findManifestTarget('sql', 'sqlfluff.cfg')));
+    const exists = await isOnDisk(join(sandbox.path, getManifestTarget('sql', 'sqlfluff.cfg')));
     expect(exists).toBe(true);
 });
+
 test.each([true, false])('init writes gspot.toml only when you confirm the plan (answer %p)', async (answer) => {
     await using sandbox = await testdir({ 'README.md': '# Example\n' });
     commitAll(sandbox.path);
-    await using _terminal = await simulateInteractiveTerminal();
+    await using _terminal = await fakeInteractiveTerminal();
     using confirmation = spyOn(clack, 'confirm').mockResolvedValue(answer);
     const result = await runGspot(sandbox.path, ['init']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(answer);
-    expect(confirmation).toHaveBeenCalledWith({ message: 'Continue?', initialValue: true });
+    expect(confirmation).toHaveBeenCalledWith({ message: 'Continue?', initialValue: true, output: process.stderr });
 });
+
 test('init writes nothing and says Canceled. Nothing was written. when you cancel the confirmation', async () => {
     await using sandbox = await testdir({ 'README.md': '# Example\n' });
     commitAll(sandbox.path);
-    await using _terminal = await simulateInteractiveTerminal();
+    await using _terminal = await fakeInteractiveTerminal();
     using _confirmation = spyOn(clack, 'confirm').mockResolvedValue(Symbol('cancel'));
     const refused = await runGspot(sandbox.path, ['init']);
     expect(refused.code).toBe(2);
@@ -175,7 +180,7 @@ test('init writes nothing and says Canceled. Nothing was written. when you cance
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
 });
 
-async function simulateInteractiveTerminal(): Promise<AsyncDisposable> {
+async function fakeInteractiveTerminal(): Promise<AsyncDisposable> {
     const resources = new AsyncDisposableStack();
     const previousEnvironment = { ...systemEnvironment };
     await mock.module('std-env', () => ({ ...previousEnvironment, isCI: false }));
@@ -185,7 +190,7 @@ async function simulateInteractiveTerminal(): Promise<AsyncDisposable> {
     resources.use(
         fakeTerminals([
             [process.stdin, true],
-            [process.stdout, true],
+            [process.stderr, true],
         ]),
     );
     return resources;

@@ -1,4 +1,4 @@
-export const GITHUB_PIPELINE = `on: push
+export const GITHUB_WORKFLOW = `on: push
 jobs:
   application:
     runs-on: ubuntu-24.04

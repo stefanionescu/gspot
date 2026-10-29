@@ -39,3 +39,5 @@ export const TRIVY_IMAGE_COMMAND = [
 ] as const;
 
 export const TRIVY_CONFIG_FILE = 'trivy';
+
+export const RULES = { missingFile: 'missing-file', missingEntry: 'missing-entry', secret: 'secret' } as const;

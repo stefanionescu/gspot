@@ -5,7 +5,7 @@ test('mise validates a task alias through the file schema', () => {
     expect(() => parseMiseTasks('[tasks.build]\nalias = 5\nrun = "echo"\n', 'mise.toml')).toThrow(
         expect.objectContaining({
             name: 'GspotError',
-            code: 'filesystem',
+            code: 'parse',
             message:
                 'mise.toml: tasks.build: Invalid input; tasks.build: Invalid input: expected string, received object; tasks.build: Invalid input: expected array, received object; tasks.build.alias: Invalid input; tasks.build.alias: Invalid input: expected string, received number; tasks.build.alias: Invalid input: expected array, received number. Fix the field.',
         }),

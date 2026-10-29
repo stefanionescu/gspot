@@ -1,22 +1,22 @@
 import { join, posix } from 'node:path';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { parseCheckedFile } from '#cli/checks/syntax.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
-import { findScopePath } from '#cli/repository/scopes.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { runCommandGroups } from '#cli/runs/command/check.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/placeholders.ts';
-import { parseToolReport } from '#cli/parsers/formats/json.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { runCommandBatches } from '#cli/runs/command/check.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
-import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
 import { DOCKERFILE_NAME } from '#cli/config/repository/files/classify.ts';
 import { readCachedText, findCachedText } from '#cli/system/files/reads.ts';
-import { composeSchema, imageReportSchema } from '#cli/schemas/checks/infrastructure/docker.ts';
+import { type CheckResult, type CheckFinding } from '#cli/types/runs/check.ts';
+import { composeSchema, trivyImageOutputSchema } from '#cli/schemas/checks/infrastructure/docker.ts';
 
 import {
     type ImageFinding,
@@ -25,6 +25,7 @@ import {
     type ComposeDeclaration,
 } from '#cli/types/checks/infrastructure/docker.ts';
 import {
+    RULES,
     DOCKERIGNORE,
     EDGE_SLASHES,
     COMPOSE_CHECK,
@@ -83,11 +84,18 @@ function listBuildContexts(declarations: ComposeDeclaration[], folder: string): 
 }
 
 function readComposeDocuments(session: Session, planned: PlannedCheck): ComposeDocuments {
-    const documents: ComposeDocuments = { declarations: [], contexts: new Map() };
+    const documents: ComposeDocuments = { declarations: [], contexts: new Map(), findings: [] };
     const groups = groupComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
     for (const group of groups) {
         const declarations = [...group.before, group.last].flatMap(({ path }) => {
-            const document = parseYamlFile(path, readCachedText(session.reads, path), composeSchema);
+            const parsed = parseCheckedFile(path, () =>
+                parseYamlFile(path, readCachedText(session.reads, path), composeSchema),
+            );
+            if ('error' in parsed) {
+                documents.findings.push(parsed.error);
+                return [];
+            }
+            const document = parsed.value;
             const servicePairs = document.services === undefined ? [] : Object.entries(document.services);
             return servicePairs.map(([name, service]) => ({ name, path, service }));
         });
@@ -105,11 +113,10 @@ Validates each Compose project with its overrides.
 
 @param session the repository and its tools.
 @param planned the Compose check and its files.
-@returns the check result.
 */
 export async function checkDockerCompose(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const groups = groupComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
-    return runCommandGroups(
+    return runCommandBatches(
         session,
         planned,
         groups.map(({ last, before }) => {
@@ -130,17 +137,30 @@ export async function checkDockerCompose(session: CheckSession, planned: Planned
 }
 
 function listMissingPatterns(required: string[], text: string): string[] {
-    const lines = text.split('\n').map((line) => line.trim().replaceAll(EDGE_SLASHES, ''));
-    const last = lines.findLastIndex((line) => EXCLUDE_ALL_LINES.has(line));
-    const after = lines.slice(last + 1);
-    return required.filter((pattern) => {
-        if (IGNORE_PATTERN_FORMS.some(([prefix, suffix]) => lines.includes(`${prefix}${pattern}${suffix}`)))
-            return false;
-        if (last === -1) return true;
-        return (
-            after.some((line) => line.startsWith('!')) && (pattern.startsWith('**/') || after.includes(`!${pattern}`))
-        );
+    const lines = text.split('\n').map((line) => {
+        const value = line.trim().replaceAll(EDGE_SLASHES, '');
+        const negated = value.startsWith('!');
+        const spelling = negated ? value.slice(1) : value;
+        return { negated, entry: spelling.endsWith('/**') ? spelling.slice(0, -'/**'.length) : spelling };
     });
+    const patterns = required.map((pattern) => (pattern.endsWith('/**') ? pattern.slice(0, -'/**'.length) : pattern));
+    const absent = new Set(
+        patterns.filter((pattern) => {
+            let excluded = false;
+            let broad = false;
+            for (const { negated, entry } of lines) {
+                if (EXCLUDE_ALL_LINES.has(entry)) {
+                    excluded = !negated;
+                    broad = !negated;
+                } else if (IGNORE_PATTERN_FORMS.some(([prefix, suffix]) => entry === `${prefix}${pattern}${suffix}`)) {
+                    excluded = !negated;
+                    broad = false;
+                } else if (negated && broad && pattern.startsWith('**/')) excluded = false;
+            }
+            return !excluded;
+        }),
+    );
+    return required.filter((_, index) => absent.has(patterns[index] ?? ''));
 }
 
 /**
@@ -148,51 +168,53 @@ Reports each Dockerfile with no ignore file, or with one that misses a required 
 
 @param session the repository and its tools.
 @param planned the scope files to read.
-@returns the findings.
 */
-export function checkDockerignore(session: Session, planned: PlannedCheck): Finding[] {
-    const { contexts } = readComposeDocuments(session, planned);
-    return planned.files
-        .filter((file) => file.tags.includes('dockerfile') && !file.path.endsWith(DOCKERIGNORE))
-        .flatMap(({ path: dockerfile }): Finding[] => {
-            const scopePath = findScopePath(dockerfile, session.scopes);
-            const scope = session.scopes.find((each) => each.path === scopePath) as Scope;
-            const required = [
-                ...DOCKERIGNORE_PATTERNS,
-                ...scope.configurations.flatMap((configuration) => configuration.ignored_paths),
-            ];
-            const paths = [
-                ...new Set([
-                    `${dockerfile}${DOCKERIGNORE}`,
-                    ...(contexts.get(dockerfile) ?? []),
-                    posix.join(posix.dirname(dockerfile), DOCKERIGNORE),
-                ]),
-            ];
-            const ignore = paths
-                .values()
-                .map((path) => ({ path, text: findCachedText(session.reads, path) }))
-                .find((file): file is typeof file & { text: string } => file.text !== undefined);
-            if (ignore === undefined)
-                return [
-                    buildFinding(
-                        planned,
-                        { file: dockerfile, line: 1 },
-                        'missing-file',
-                        `Add an ignore file at ${paths.join(' or ')} that lists ${required.join(', ')}.`,
-                    ),
+export function checkDockerignore(session: Session, planned: PlannedCheck): CheckFinding[] {
+    const { contexts, findings } = readComposeDocuments(session, planned);
+    return [
+        ...findings,
+        ...planned.files
+            .filter((file) => file.tags.includes('dockerfile') && !file.path.endsWith(DOCKERIGNORE))
+            .flatMap(({ path: dockerfile }): CheckFinding[] => {
+                const scopePath = selectScopePath(dockerfile, session.scopes);
+                const scope = session.scopes.find((each) => each.path === scopePath) as Scope;
+                const required = [
+                    ...DOCKERIGNORE_PATTERNS,
+                    ...scope.configurations.flatMap((configuration) => configuration.ignored_paths),
                 ];
-            const missing = listMissingPatterns(required, ignore.text);
-            return missing.length === 0
-                ? []
-                : [
-                      buildFinding(
-                          planned,
-                          { file: ignore.path, line: 1 },
-                          'missing-entry',
-                          `Add these entries to ${ignore.path}: ${missing.join(', ')}.`,
-                      ),
-                  ];
-        });
+                const paths = [
+                    ...new Set([
+                        `${dockerfile}${DOCKERIGNORE}`,
+                        ...(contexts.get(dockerfile) ?? []),
+                        posix.join(posix.dirname(dockerfile), DOCKERIGNORE),
+                    ]),
+                ];
+                const ignore = paths
+                    .values()
+                    .map((path) => ({ path, text: findCachedText(session.reads, path) }))
+                    .find((file): file is typeof file & { text: string } => file.text !== undefined);
+                if (ignore === undefined)
+                    return [
+                        {
+                            file: dockerfile,
+                            line: 1,
+                            rule: RULES.missingFile,
+                            message: `Add an ignore file at ${paths.join(' or ')} that lists ${required.join(', ')}.`,
+                        },
+                    ];
+                const missing = listMissingPatterns(required, ignore.text);
+                return missing.length === 0
+                    ? []
+                    : [
+                          {
+                              file: ignore.path,
+                              line: 1,
+                              rule: RULES.missingEntry,
+                              message: `Add these entries to ${ignore.path}: ${missing.join(', ')}.`,
+                          },
+                      ];
+            }),
+    ];
 }
 
 async function scanImage(session: CheckSession, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
@@ -205,14 +227,14 @@ async function scanImage(session: CheckSession, planned: PlannedCheck, image: st
         const detail = formatOutputTail(output, `exit ${String(result.code)}`);
         throw new Error(`Trivy could not scan ${image}: ${detail}`);
     }
-    const report = parseToolReport('Trivy', result.stdout, imageReportSchema);
+    const report = parseToolOutput('Trivy', result.stdout, trivyImageOutputSchema);
     return (report.Results ?? []).flatMap((target) => [
         ...(target.Vulnerabilities ?? []).map((vulnerability) => ({
             rule: vulnerability.VulnerabilityID,
             message: `${image}: ${vulnerability.VulnerabilityID} (${vulnerability.PkgName})`,
         })),
         ...(target.Secrets ?? []).map((secret) => ({
-            rule: 'secret',
+            rule: RULES.secret,
             message: `${image}: ${secret.RuleID}: ${secret.Title}`,
         })),
     ]);
@@ -223,15 +245,16 @@ Scans each literal service image once and reports its findings in every Compose 
 
 @param session the repository and its tools.
 @param planned the scope files to read.
-@returns the findings.
 */
-export async function checkDockerTrivyImage(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkDockerTrivyImage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scanned = new Map<string, ImageFinding[]>();
-    const findings: Finding[] = [];
-    const files = Map.groupBy(readComposeDocuments(session, planned).declarations, ({ path }) => path);
+    const documents = readComposeDocuments(session, planned);
+    const findings = [...documents.findings];
+    const files = Map.groupBy(documents.declarations, ({ path }) => path);
     for (const [path, services] of files) {
         const images = new Set(
             services
+                .filter(({ service }) => service.build === undefined)
                 .map(({ service: { image } }) => image)
                 .filter((image): image is string => image !== undefined && !image.includes('$')),
         );
@@ -242,7 +265,12 @@ export async function checkDockerTrivyImage(session: CheckSession, planned: Plan
                 scanned.set(image, report);
             }
             findings.push(
-                ...report.map(({ rule, message }) => buildFinding(planned, { file: path, line: 1 }, rule, message)),
+                ...report.map(({ rule, message }) => ({
+                    file: path,
+                    line: 1,
+                    rule: rule,
+                    message: message,
+                })),
             );
         }
     }

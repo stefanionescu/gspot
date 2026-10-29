@@ -14,3 +14,5 @@ export type PythonIndexSettings = {
 export type PythonProjectSettings = { tool: { uv: PythonIndexSettings['settings'] } };
 
 export type PythonIndex = { url: string; [key: string]: unknown };
+
+export type PythonToolProject = { name: string; version: string; 'requires-python': string; dependencies: string[] };

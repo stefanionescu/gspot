@@ -21,3 +21,7 @@ export const GIT_SUFFIX = '.git';
 export const PYTHON_NAME_SEPARATORS = /[._-]+/gu;
 
 export const PIPFILE = 'Pipfile';
+
+export const REQUIREMENTS_TXT = 'requirements.txt';
+
+export const PYTEST_TABLE = 'tool.pytest';

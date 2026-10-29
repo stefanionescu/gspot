@@ -103,3 +103,5 @@ export const PURGECSS_SIBLING_CONFIGURATIONS = [
     'spelling',
     'structure',
 ];
+
+export const POSTGRES_ORIGIN = 'configuration postgres';

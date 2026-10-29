@@ -1,21 +1,27 @@
-import { openWriter } from '#cli/write.ts';
-import { openSession } from '#cli/session.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { openWriter } from '#cli/repository/writer.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { installTools } from '#cli/installers/install.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
-import { TOOL_PROJECT_FILES } from '#cli/config/commands/install.ts';
-import type { GenerationResult } from '#cli/types/generation/files.ts';
+import type { Generation } from '#cli/types/generation/files.ts';
 import type { InstallCommandJson } from '#cli/types/commands/install.ts';
-import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 
-function hasOutdatedToolProjects(files: Files, generated: GenerationResult): boolean {
+import {
+    TOOL_PROJECT_FILES,
+    TOOL_PROJECTS_MESSAGE,
+    TOOLS_INSTALLED_MESSAGE,
+    INSTALLATION_STOPPED_MESSAGE,
+} from '#cli/config/commands/install.ts';
+
+function hasOutdatedToolProjects(files: Files, generated: Generation): boolean {
     return [...TOOL_PROJECT_FILES].some((path) => {
         const file = generated.files.find((each) => each.path === path);
         const next = file === undefined ? undefined : { bytes: Buffer.from(file.content), mode: OWNER_WRITABLE_FILE };
@@ -26,14 +32,13 @@ function hasOutdatedToolProjects(files: Files, generated: GenerationResult): boo
 async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promise<CommandResult<InstallCommandJson>> {
     const root = readRepositoryRoot(cwd);
     const session = await openSession(root, { cancelSignal });
-    const generated = generate(session);
+    const generated = generateFiles(session);
     using writer = openWriter(root);
-    if (hasOutdatedToolProjects(writer, generated))
-        throw new GspotError('install', 'The tool projects in .gspot do not match gspot.toml. Run gspot apply first.');
+    if (hasOutdatedToolProjects(writer, generated)) throw new GspotError('install', TOOL_PROJECTS_MESSAGE);
     const { note, steps } = await installTools(session, writer, generated);
     return {
-        text: `${note === '' ? 'No change: every tool is installed.' : note}\n`,
-        json: { steps },
+        text: `${note === '' ? TOOLS_INSTALLED_MESSAGE : note}\n`,
+        json: { notes: note === '' ? [] : [note], steps },
         exitCode: 0,
     };
 }
@@ -53,7 +58,7 @@ export function registerInstall(program: Command, onResult: CommandCompletion): 
             onResult(
                 await runCancelableCommand(
                     (cancelSignal) => runInstallCommand(process.cwd(), cancelSignal),
-                    'Installation stopped before every tool was installed.',
+                    INSTALLATION_STOPPED_MESSAGE,
                 ),
             );
         });

@@ -6,11 +6,11 @@ import { stringify } from '@decimalturn/toml-patch';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { type GitleaksHistory } from '#tests/types/secrets.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     API_TOKEN,
@@ -43,10 +43,10 @@ async function prepareHistory(root: string): Promise<GitleaksHistory> {
     return { base, leaked, removed };
 }
 
-function assertSecretFindings(check: CheckResult | undefined, output: string, prefix: string): void {
-    expect(check?.status).toBe('failed');
+function assertSecretFindings(result: CheckResult | undefined, output: string, prefix: string): void {
+    expect(result?.status).toBe('failed');
     expect(
-        check?.findings
+        result?.findings
             .map(({ file, rule, line, column }) => ({ file, rule, line, column }))
             .toSorted((left, right) => left.file.localeCompare(right.file)),
     ).toStrictEqual([
@@ -185,5 +185,5 @@ const installedSandbox = shareInstalledSandbox({
 });
 
 test.each([...DOTENV_LINTER_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
-    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
+    await assertCheckSample(installedSandbox(), sample);
 });

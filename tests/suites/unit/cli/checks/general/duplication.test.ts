@@ -1,10 +1,10 @@
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { join, toNamespacedPath } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { fakeNpmTool } from '#tests/setup/system/fakes.ts';

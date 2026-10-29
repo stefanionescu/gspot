@@ -20,8 +20,8 @@ Read this rule when code handles input, authentication, redirects, or downloads.
 
 ## Web sinks
 
-- Render untrusted content as text. When the page requires HTML, sanitize it in one module and add a suppression with
-  the reason there.
+- Render untrusted content as text. When the page requires HTML, sanitize it in one module, and accept the finding of
+  that module as SUPPRESSIONS.md says.
 - Reject executable script URLs and untrusted inline code.
 - Send security headers: HTTP Strict Transport Security (HSTS), `X-Content-Type-Options: nosniff`, frame policy,
   referrer policy, and a Content Security Policy that the application's own scripts satisfy.

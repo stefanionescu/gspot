@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 test("deptry ignores gspot's tool folder and reads the authored exclude settings again after they change", async () => {

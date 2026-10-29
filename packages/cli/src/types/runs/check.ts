@@ -21,12 +21,12 @@ export type CheckRunOptions = {
     listConfigFiles?: ((session: Session, planned: PlannedCheck) => string[]) | undefined;
 };
 
-export type BuiltInCheckResult = { findings: Finding[]; files: string[] };
+export type BuiltInCheckResult = { findings: CheckFinding[]; files: string[] };
 
 export type BuiltInCheck = (
     session: CheckSession,
     planned: PlannedCheck,
-) => Finding[] | BuiltInCheckResult | Promise<Finding[] | BuiltInCheckResult>;
+) => CheckFinding[] | BuiltInCheckResult | Promise<CheckFinding[] | BuiltInCheckResult>;
 
 export type CheckResult = {
     check: string;
@@ -55,3 +55,5 @@ export type Finding = {
 };
 
 export type FindingPlace = Pick<Finding, 'file' | 'line' | 'column'>;
+
+export type CheckFinding = Omit<Finding, 'check' | 'fixable'>;

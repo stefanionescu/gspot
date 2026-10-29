@@ -3,26 +3,21 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import type { LinkFailure } from '#tests/types/reports.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { LINK_PAGE, ROOT_LINK_FILES, LINK_SCOPE_TABLES } from '#tests/config/integration/checks/general/docs.ts';
 
-import {
-    LINK_PAGE,
-    ROOT_LINK_FILES,
-    LINK_TEXT_CASES,
-    LINK_SCOPE_TABLES,
-} from '#tests/config/integration/checks/general/docs.ts';
-
-async function assertLinkFailures(root: string, check: string, failures: readonly LinkFailure[]): Promise<void> {
-    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', check, '--json']));
+async function assertLinkFailures(root: string, checkId: string, failures: readonly LinkFailure[]): Promise<void> {
+    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', checkId, '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(failures.length === 0 ? 0 : 1);
     expect(checked.report.checks).toMatchObject(
         ['', 'app'].map((scope) => {
             const expected = failures.filter((failure) => failure.scope === scope);
             return {
-                check,
+                check: checkId,
                 scope,
                 status: expected.length === 0 ? 'passed' : 'failed',
                 findings: expected.map(({ file, rule }) => matchFields({ file, rule, line: 3, column: 6 })),
@@ -31,10 +26,13 @@ async function assertLinkFailures(root: string, check: string, failures: readonl
     );
 }
 
-async function assertTextLinks(root: string, check: string, target: string): Promise<void> {
-    for (const { text, failures } of LINK_TEXT_CASES) {
+async function assertTextLinks(root: string, checkId: string, target: string): Promise<void> {
+    for (const { text, failures } of [
+        { text: 'absent', failures: [{ scope: '', file: 'root.md', rule: 'ERROR' }] },
+        { text: 'Current%20setup', failures: [] },
+    ] as const) {
         await writeFile(join(root, 'root.md'), `# Links\n\nRead [the page](${target}#:~:text=${text}).\n`);
-        await assertLinkFailures(root, check, failures);
+        await assertLinkFailures(root, checkId, failures);
     }
 }
 
@@ -80,7 +78,7 @@ test('docs/lychee reads a root-relative link from the repository root, and leave
     await using sandbox = await testdir({
         ...ROOT_LINK_FILES,
         'gspot.toml': buildSandboxSettings([], {
-            level: 'recommended',
+            level: 'basic',
             rules: true,
             scopes: [{ path: 'web', configurations: ['site'] }],
             tables: '[scope.site]\nbuild_command = ["node", "build.mjs"]\n',

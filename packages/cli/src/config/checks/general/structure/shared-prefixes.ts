@@ -10,3 +10,5 @@ export const HOOK_FOLDERS = [GSPOT_PATHS.hooks, MISE_HOOKS_PATH, ...FOREIGN_HOOK
 export const INDEX_BASE_NAMES = new Set(['index', 'mod', '__init__']);
 
 export const COMPANION_SUFFIX = /\.(?:test|spec|stories|story|module|styles?|mock|bench)$/u;
+
+export const SHARED_PREFIX_RULE = 'shared-prefix';

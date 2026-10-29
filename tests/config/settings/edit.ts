@@ -1,6 +1,4 @@
-import type { IgnoreRecord } from '#cli/types/settings/file.ts';
-
-export const SEMGREP_IGNORE: IgnoreRecord = {
+export const SEMGREP_IGNORE = {
     check: 'security/semgrep',
     rule: 'js/file-system-race',
     paths: ['sample.js'],

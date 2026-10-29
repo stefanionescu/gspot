@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect, beforeAll } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -99,5 +99,5 @@ test('SQLFluff reports and fixes uppercase function names', async () => {
 });
 
 test.each([...SQL_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
-    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
+    await assertCheckSample(installedSandbox(), sample);
 });

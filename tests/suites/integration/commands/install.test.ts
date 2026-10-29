@@ -4,20 +4,23 @@ import { test, expect } from 'bun:test';
 import { INIT_FILES } from '#tests/config/init.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
+import { TOOL_PROJECTS_MESSAGE } from '#tests/config/messages.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import type { InstallCommandJson } from '#cli/types/commands/install.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
-import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/samples.ts';
-import { runGit, commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { spawnGspot, applyThenInstall, buildInitArguments } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { spawnGspot, applyThenInstall } from '#tests/setup/cli/commands.ts';
+import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/package-managers.ts';
 
 test('after init and install, apply has nothing to write', async () => {
     await using sandbox = await testdir(INIT_FILES);
 
     commitAll(sandbox.path);
-    const init = await spawnGspot(sandbox.path, buildInitArguments([]));
+    const init = await spawnGspot(sandbox.path, ['init', '--yes']);
     expect(init.code, init.stdout + init.stderr).toBe(0);
     await applyThenInstall(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json']);
@@ -38,7 +41,7 @@ test('install refuses an npm tool project edited to run scripts, before it conta
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(JSON.parse(refused.stdout)).toStrictEqual({
         error: 'install',
-        message: 'The tool projects in .gspot do not match gspot.toml. Run gspot apply first.',
+        message: TOOL_PROJECTS_MESSAGE,
     });
     expect(registry.requests).toBe(requests);
     expect(await readFile(packageJsonPath, 'utf8')).toBe(scriptedPackage);
@@ -55,12 +58,8 @@ test.each([true, false])(
         await writeFile(join(sandbox.path, 'scripts/a.sh'), CLEAN_BASH_SCRIPT + '\n\n');
         await writeFile(join(sandbox.path, 'notes.txt'), 'draft\n');
         const staged = runGitStep(sandbox.path, ['diff', '--cached', '--binary']);
-        const head = runGit(sandbox.path, ['rev-parse', '--verify', 'HEAD']);
-        const initialized = await spawnGspot(sandbox.path, [
-            ...buildInitArguments([]),
-            '--json',
-            '--no-configurations',
-        ]);
+        const head = runCommandBlocking(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: sandbox.path, env: {} });
+        const initialized = await spawnGspot(sandbox.path, ['init', '--yes', '--json', '--no-configurations']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(true);
         await applyThenInstall(sandbox.path);
@@ -69,7 +68,9 @@ test.each([true, false])(
         expect(await readFile(join(sandbox.path, 'scripts/a.sh'), 'utf8')).toBe(CLEAN_BASH_SCRIPT + '\n\n');
         expect(await readFile(join(sandbox.path, 'notes.txt'), 'utf8')).toBe('draft\n');
         expect(runGitStep(sandbox.path, ['diff', '--cached', '--binary'])).toBe(staged);
-        expect(runGit(sandbox.path, ['rev-parse', '--verify', 'HEAD'])).toStrictEqual(head);
+        expect(
+            runCommandBlocking(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: sandbox.path, env: {} }),
+        ).toStrictEqual(head);
     },
 );
 

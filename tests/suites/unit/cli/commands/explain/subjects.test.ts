@@ -3,12 +3,13 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, writeFile } from 'node:fs/promises';
 import { getTool } from '#cli/configurations/tools.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { type PathExplanation } from '#cli/types/commands/explain.ts';
-import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     PATH_IGNORES,
@@ -51,12 +52,13 @@ test('a path explanation lists the command checks and the ignores that apply', a
         stage: 'manual',
     });
     expect(JSON.parse(corrected.stdout)).not.toHaveProperty('unchecked');
+    const text = await runGspot(sandbox.path, ['explain', './api/build.sh']);
+    expect(text.stdout).toContain('  project/syntax  manual  (repository command)');
     const command = await runGspot(sandbox.path, ['explain', 'project/syntax', '--json']);
     expect(command.code, command.stdout + command.stderr).toBe(0);
-    expect(JSON.parse(command.stdout)).toMatchObject(SYNTAX_CHECK_EXPLANATION);
-    expect((JSON.parse(ignored.stdout) as PathExplanation).checks).toStrictEqual(
-        explanation.checks.filter(({ check }) => check !== 'project/syntax'),
-    );
+    expect(command.stderr).toBe('');
+    expect(JSON.parse(command.stdout)).toStrictEqual(SYNTAX_CHECK_EXPLANATION);
+    expect((JSON.parse(ignored.stdout) as PathExplanation).checks).toStrictEqual(explanation.checks);
 });
 
 test('a configuration name stays a name, and a tracked or ./ path explains the file', async () => {
@@ -117,7 +119,26 @@ test('a file path reports its scope, checks, and ignores', async () => {
         fileKind: 'source',
         ignores: [...PATH_IGNORES],
     });
-    expect(explanation.configurations).toStrictEqual(['format', 'prose', 'secrets', 'security', 'spelling', 'bash']);
+    const text = await runGspot(sandbox.path, ['explain', './api/build.sh']);
+    expect(text.code, text.stdout + text.stderr).toBe(0);
+    expect(text.stdout).toStartWith('api/build.sh  (scope api, source by default)\n\n');
+    expect(text.stdout).toContain('Checked by: format, gspot, prose, repository, secrets, security, spelling, bash');
+    expect(text.stdout).toContain('  bash/shellcheck  commit  (bash)');
+    expect(text.stdout).toContain('  bash/shfmt  commit  (bash)');
+    expect(text.stdout).toContain('  bash/unused-functions  commit  (bash)');
+    expect(text.stdout).toContain('  bash/unread-arguments  commit  (bash)');
+    expect(text.stdout).toContain('  bash/safety  commit  (bash)');
+    expect(text.stdout).toContain('  bash/shellcheck SC2086  The script deliberately splits a list of arguments.');
+    expect(explanation.configurations).toStrictEqual([
+        'format',
+        'gspot',
+        'prose',
+        'repository',
+        'secrets',
+        'security',
+        'spelling',
+        'bash',
+    ]);
     expect(explanation.checks.filter(({ configuration }) => configuration === 'bash')).toStrictEqual(
         ['shellcheck', 'shfmt', 'unused-functions', 'unread-arguments', 'safety'].map((name) => ({
             check: `bash/${name}`,
@@ -165,3 +186,41 @@ test.each([...CHECK_TOOL_MINIMUMS])(
         expect(result.stdout.split('\n').filter((line) => line.startsWith('Needs '))).toStrictEqual(expected);
     },
 );
+
+test('explain of a check says whether its configuration is selected and names the add command', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'source.sh': 'echo example\n',
+    });
+    const selected = await runGspot(sandbox.path, ['explain', 'bash/shellcheck']);
+    expect({ code: selected.code, stderr: selected.stderr }).toStrictEqual({ code: 0, stderr: '' });
+    expect(selected.stdout.split('\n').filter((line) => line.startsWith('Selected in this repository:'))).toStrictEqual(
+        ['Selected in this repository: yes'],
+    );
+    const unselected = await runGspot(sandbox.path, ['explain', 'docker/hadolint']);
+    expect({ code: unselected.code, stderr: unselected.stderr }).toStrictEqual({ code: 0, stderr: '' });
+    expect(
+        unselected.stdout.split('\n').filter((line) => line.startsWith('Selected in this repository:')),
+    ).toStrictEqual(['Selected in this repository: no (gspot add docker)']);
+});
+
+test('explain --json reports every field of a configuration', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['explain', 'engineering', '--json']);
+    expect(result.code).toBe(0);
+    expect(result.stderr).toBe('');
+    expect(JSON.parse(result.stdout)).toStrictEqual({
+        name: 'engineering',
+        group: 'general',
+        title: 'Engineering',
+        description: 'Working and writing code: rules for coding agents, with no checks.',
+        requires: [],
+        tools: [],
+        checks: [],
+        settings: [],
+        rules: [],
+        alwaysSelected: true,
+        kind: 'configuration',
+        subject: 'engineering',
+    });
+});

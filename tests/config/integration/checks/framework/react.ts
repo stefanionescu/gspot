@@ -1,6 +1,6 @@
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
 
-const WEB_TSCONFIG = {
+export const WEB_TSCONFIG = {
     compilerOptions: {
         ...STRICT_COMPILER_OPTIONS,
         module: 'ESNext',
@@ -11,7 +11,7 @@ const WEB_TSCONFIG = {
     include: ['src'],
 } as const;
 
-const CLEAN_COMPONENT = `// A test component.
+export const CLEAN_COMPONENT = `// A test component.
 import type { ReactNode } from 'react';
 
 /**
@@ -25,12 +25,6 @@ export function Greeting({ name }: Readonly<{ name: string }>): ReactNode {
     return <p>{name}</p>;
 }
 `;
-
-export const REACT_SANDBOX = {
-    configurations: ['typescript', 'react-dom'],
-    json: { 'tsconfig.json': WEB_TSCONFIG },
-    files: { 'src/Greeting.tsx': CLEAN_COMPONENT },
-} as const;
 
 const COUNTER = `// A test component.
 import { useState, type ReactNode } from "react";

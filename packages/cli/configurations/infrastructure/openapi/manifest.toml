@@ -3,7 +3,7 @@ description = "OpenAPI documents: the committed document passes its lint rules a
 title = "OpenAPI"
 
 [detect]
-filenames = ["openapi.yaml", "openapi.yml", "openapi.json", "swagger.json", "swagger.yaml"]
+filenames = ["openapi.yaml", "openapi.yml", "openapi.json", "swagger.json", "swagger.yaml", "swagger.yml"]
 
 [[tool]]
 name = "spectral"
@@ -23,7 +23,6 @@ cwd = "root"
 example = "An operation that references an undefined schema reports a finding. Define the schema or fix the reference in the source, then generate the document again."
 files = { extensions = [".yaml", ".yml", ".json"] }
 help = "Change the document the way the rule says, or the code that writes it."
-level = "recommended"
 name = "spectral"
 output = { format = "regex", pattern = '^(?<file>.+):(?<line>\d+):(?<column>\d+) (?:error|warning) (?<rule>\S+) "(?<message>.*)"$' }
 runs = "scope"
@@ -37,7 +36,6 @@ command = ["{setting:openapi.generate_command}"]
 example = "A committed document that differs from the generator output reports drift. Run the generator, review the change, and commit it."
 generator_outputs = [{ path = "{setting:openapi.document}" }]
 help = "Run the command and commit the document it writes."
-level = "recommended"
 name = "stale-document"
 runs = "scope"
 stage = "push"

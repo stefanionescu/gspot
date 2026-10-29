@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { TERMS_SOURCE } from '#tests/config/typescript.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { UNMATCHED_PATH_CASES } from '#tests/config/checks/general/gspot/unmatched-paths.ts';
@@ -33,7 +34,7 @@ test('an unmatched ignore path with an unescaped route group gets help to escape
         'gspot.toml': buildSandboxSettings(['typescript'], {
             tables: '[[ignore]]\ncheck = "structure/lone-files"\npaths = ["app/(missing)/**"]\nreason = "A route group."\n',
         }),
-        'app/(legal)/terms/page.tsx': 'export default function Terms() { return null; }\n',
+        'app/(legal)/terms/page.tsx': TERMS_SOURCE,
     });
     commitAll(sandbox.path);
     const unmatched = await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths');

@@ -25,8 +25,6 @@ export const PYTHON_PACKAGE_ORIGINS = ['https://files.pythonhosted.org'] as cons
 
 export const URL_SCHEME = /^[a-z][a-z0-9+.-]*:/iu;
 
-export const HTTP_URL = /^https?:\/\//u;
-
 export const INDEX_SETTINGS = new Set([
     'index',
     'index-url',
@@ -42,10 +40,10 @@ export const INDEX_SETTINGS = new Set([
 
 export const UV_SETTINGS_FILE = 'uv.toml';
 
-export const MILLISECONDS_PER_DAY = 86_400_000;
-
 export const PYTHON_TOOL_PROJECT = {
     name: 'tools',
     version: '0.0.0',
     'requires-python': `==${PYTHON_VERSION}`,
 } as const;
+
+export const PYTHON_TOOL_NOUN = 'Python tool';

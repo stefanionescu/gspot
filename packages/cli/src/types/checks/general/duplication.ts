@@ -1,6 +1,6 @@
 export type CloneLocation = { name: string; start: number };
 
-export type CloneReport = {
+export type JscpdOutput = {
     duplicates: {
         lines: number;
         firstFile: CloneLocation;

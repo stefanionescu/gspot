@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/planning/session.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
@@ -10,7 +11,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     NOT_GENERATED,
@@ -27,6 +28,7 @@ test.each([...GENERATED_HEADERS])('the generated header is found in each comment
 test.each([...NOT_GENERATED])('your own comment is not a generated header: %j', (text) => {
     expect(hasGeneratedHeader(text)).toBe(false);
 });
+
 test('generated Gradle and Maven launchers are classified generated and never select Bash', async () => {
     await using sandbox = await createGitSandbox({ ...GENERATED_LAUNCHERS, 'gspot.toml': buildSandboxSettings([]) });
     runGitStep(sandbox.path, ['add', '.']);

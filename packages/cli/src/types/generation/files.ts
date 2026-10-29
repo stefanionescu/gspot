@@ -1,9 +1,7 @@
 import type { Session } from '#cli/types/session.ts';
-import type { ManagedKeys } from '#cli/types/write.ts';
-import type { FileContents } from '#cli/types/system/files.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
-import type { BlockStyle } from '#cli/types/parsers/formats/managed-blocks.ts';
+import type { ManagedKeys } from '#cli/types/repository/writer.ts';
 import type { IGNORE_SECTION_TITLES } from '#cli/config/generation/config-files/ignore-files.ts';
 
 import {
@@ -14,7 +12,7 @@ import {
     type SourcedConfigFile,
 } from '#cli/types/configurations.ts';
 
-type ManagedBlock = { path: string; block: string; style: BlockStyle };
+type ManagedBlock = { path: string; body: string };
 
 type SemgrepRule = Record<string, unknown> & { id: string; paths?: { include: string[] } };
 
@@ -22,11 +20,10 @@ export type GeneratedFile = {
     path: string;
     content: string;
     executable?: boolean;
-    read?: FileContents | undefined;
-    kind?: 'lock' | 'workflow';
+    kind?: 'workflow';
 };
 
-export type GenerationResult = {
+export type Generation = {
     files: GeneratedFile[];
     blocks: ManagedBlock[];
     managedKeys: ManagedKeys[];
@@ -55,7 +52,7 @@ export type PlannedConfigFile = ConfigFileOwner & {
 export type RuleOptionsRun = {
     configured: string[];
     running: ReadonlySet<string>;
-    higher: ReadonlySet<string>;
+    allLevelRules: ReadonlySet<string>;
     level: Level;
     suffix?: string;
 };

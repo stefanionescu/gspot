@@ -1,22 +1,24 @@
 import semver from 'semver';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
-import { buildVenvBinPath } from '#cli/system/paths.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { executableLayout } from '#cli/system/paths.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import { type DoctorReport } from '#cli/types/commands/doctor.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { join, dirname, extname, basename, delimiter } from 'node:path';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { ZERO_COVERAGE_TABLES } from '#tests/config/commands/doctor/tools.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { getTool, listDistinctTools, findToolProjectPackage } from '#cli/configurations/tools.ts';
+import { ZERO_COVERAGE_TABLES, MISSING_REPORT_TOOLS } from '#tests/config/commands/doctor/tools.ts';
 
 test('doctor reports no unowned gspot files in a fresh clone', async () => {
     await using sandbox = await testdir();
@@ -33,6 +35,7 @@ test('doctor reports no unowned gspot files in a fresh clone', async () => {
     expect(JSON.parse(result.stdout)).toMatchObject({ suggestions: { unowned: [] } });
     expect(resultText.stdout).not.toContain('config files gspot does not own');
 });
+
 test.each(['ok', 'newer', 'outdated'] as const)(
     'doctor exit code follows the library state %s: an outdated tool exits 1',
     async (state) => {
@@ -60,7 +63,8 @@ test.each(['ok', 'newer', 'outdated'] as const)(
                     const installation = findToolProjectPackage(tool);
                     let folder = 'test-tools';
                     if (installation?.kind === 'npm') folder = join(GSPOT_PATHS.nodeModules, '.bin');
-                    else if (installation?.kind === 'python') folder = buildVenvBinPath(GSPOT_PATHS.pythonEnvironment);
+                    else if (installation?.kind === 'python')
+                        folder = join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder);
                     return [join(folder, tool.name), 'native lookup target'];
                 }),
             ),
@@ -68,6 +72,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
         using resources = new DisposableStack();
         resources.use(fakeToolExecutables(tools));
         const result = await runGspot(sandbox.path, ['doctor', '--json']);
+        expect(result.code, result.stdout + result.stderr).not.toBe(2);
         const report = JSON.parse(result.stdout) as DoctorReport;
         expect(report.tools.find((tool) => tool.name === pin.name)).toMatchObject({ state, found: version });
         expect(result.code).toBe(state === 'outdated' ? 1 : 0);
@@ -82,8 +87,16 @@ test('doctor lists a tool once when two scopes find the same install', async () 
     });
 
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
+    expect(result.code, result.stdout + result.stderr).not.toBe(2);
     const report = JSON.parse(result.stdout) as DoctorReport;
-    expect(report.tools.filter(({ name }) => name === 'eslint-plugin-zod')).toHaveLength(1);
+    expect(report.tools.filter(({ name }) => name === 'eslint-plugin-zod')).toStrictEqual([
+        {
+            name: 'eslint-plugin-zod',
+            state: 'missing',
+            help: 'Run gspot install.',
+            want: getTool(readConfigurations().values(), 'eslint-plugin-zod').version!,
+        },
+    ]);
 });
 
 test('doctor names a missing coverage plugin and leaves it out when every coverage limit is zero', async () => {
@@ -121,9 +134,7 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
             .split('\n')
             .filter((line) => line.includes('pytest-cov'))
             .map((line) => line.trim().replaceAll(/\s{2,}/gu, ' ')),
-    ).toStrictEqual([
-        'missing pytest-cov The version command of the host tool does not list pytest-cov. Install pytest-cov in the Python environment used by pytest.',
-    ]);
+    ).toStrictEqual(['missing pytest-cov The version command of the host tool does not list pytest-cov.']);
     isPresent = true;
     const available = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(
@@ -136,6 +147,7 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
     const zero = await runGspot(sandbox.path, ['doctor', '--json']);
     expect((JSON.parse(zero.stdout) as DoctorReport).tools.map((tool) => tool.name)).not.toContain('pytest-cov');
 });
+
 test('doctor and gspot check report a missing xmllint with its install command', async () => {
     await using sandbox = await testdir();
     const root = join(sandbox.path, 'project');
@@ -173,4 +185,30 @@ test('doctor and gspot check report a missing xmllint with its install command',
     expect(checked.report.checks).toMatchObject([
         { check: 'data-files/xmllint', status: 'missing', findings: [], note: `xmllint is not installed. ${help}` },
     ]);
+});
+
+test('doctor --json reports every field when the required tools are missing', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    using _lookup = fakeExecutableLookup(null);
+    const result = await runGspot(sandbox.path, ['doctor', '--json']);
+    expect(result.code).toBe(1);
+    expect(result.stderr).toBe('');
+    const tools = MISSING_REPORT_TOOLS.map(([name, installer]) => {
+        const version = getTool(readConfigurations().values(), name).version;
+        let help: string = installer;
+        if (installer === 'project') help = 'Run gspot install.';
+        if (installer === 'mise')
+            help = `Install mise (https://mise.jdx.dev/getting-started.html), or install ${name} ${String(version)} yourself.`;
+        return { name, state: 'missing', help, ...(version === undefined ? {} : { want: version }) };
+    });
+    expect(JSON.parse(result.stdout)).toStrictEqual({
+        submodules: [],
+        tools,
+        suggestions: { detected: [], suggested: [], undetected: [], unowned: [], lintJobs: [] },
+        hooks: 'none',
+        ci: 'none',
+        ruleFiles: 0,
+        version: { running: cliPackage.version },
+        exitCode: 1,
+    });
 });

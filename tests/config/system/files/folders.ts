@@ -16,3 +16,9 @@ export const GLOB_FILES = {
     '.hidden/nested/c.ts': '',
     'node_modules/.hidden/foreign.ts': '',
 } as const;
+
+export const LINKED_GLOBS = [
+    { link: '.config', target: '../outside', pattern: '.config/sub/*.toml' },
+    { link: '.config/sub', target: '../../outside/sub', pattern: '.config/sub/*.toml' },
+    { link: '.config', target: '../outside', pattern: '.config/sub/tool.toml' },
+];

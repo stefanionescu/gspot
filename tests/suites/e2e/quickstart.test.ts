@@ -1,15 +1,17 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
+import { parse } from '@decimalturn/toml-patch';
 import { testdir, createFileTree } from 'testdirs';
-import { mkdir, writeFile } from 'node:fs/promises';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { readRuntimePins } from '#tests/setup/cli/tools.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { runtimePinsSchema } from '#tests/schemas/runner.ts';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
-import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { GIT_ISOLATION_ENVIRONMENT } from '#tests/config/setup/system/git.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { SWIFT_TUTORIAL, PYTHON_TUTORIAL } from '#tests/config/e2e/quickstart.ts';
+import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
 
 test('the Python quickstart reports its finding through the installed hook and passes after the fix', async () => {
     await runQuickstart(PYTHON_TUTORIAL);
@@ -27,14 +29,15 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
     const root = join(sandbox.path, tutorial.folder);
     await mkdir(root);
     const environment = {
-        ...GIT_ISOLATION_ENVIRONMENT,
         MISE_CONFIG_DIR: join(sandbox.path, 'config'),
         MISE_DATA_DIR: join(sandbox.path, 'data'),
         MISE_STATE_DIR: join(sandbox.path, 'state'),
         MISE_CACHE_DIR: join(sandbox.path, 'cache'),
         MISE_CEILING_PATHS: dirname(root),
     };
-    const runtimePins = await readRuntimePins();
+    const runtimePins = runtimePinsSchema.parse(
+        parse(await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8')),
+    ).tools;
     for (const command of [
         ['mise', 'use', `node@${runtimePins.node}`, `npm:@gspothq/cli@${cliPackage.version}`],
         ...tutorial.projectCommands,
@@ -58,7 +61,10 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
     }
     const source = join(root, tutorial.sourcePath);
     runGitStep(root, ['add', '-A']);
-    const committed = runGit(root, ['commit', '-qm', 'chore: Set up gspot'], environment);
+    const committed = runCommandBlocking(['git', 'commit', '-qm', 'chore: Set up gspot'], {
+        cwd: root,
+        env: environment,
+    });
     expect(committed.code, committed.stdout + committed.stderr).toBe(0);
     await writeFile(source, tutorial.invalidSource);
     const command = [...gspotCommand, 'check', '--only', tutorial.check, '--json'];
@@ -75,7 +81,10 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
 
 function assertCommitRejected(root: string, rule: string, environment: Record<string, string>): void {
     runGitStep(root, ['add', '-A']);
-    const refused = runGit(root, ['commit', '-qm', 'feat: Add invalid source'], environment);
+    const refused = runCommandBlocking(['git', 'commit', '-qm', 'feat: Add invalid source'], {
+        cwd: root,
+        env: environment,
+    });
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     expect(refused.stdout + refused.stderr).toContain(rule);
 }

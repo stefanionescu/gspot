@@ -40,18 +40,13 @@ allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/**", "packages/cli/src/types/commands/list.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/runs/output/formats.ts", "packages/cli/src/types/runs/output/reports.ts", "packages/cli/src/types/settings/**"]
+paths = ["packages/cli/src/types/checks/**", "packages/cli/src/types/commands/list.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/runs/output/formats.ts", "packages/cli/src/types/runs/output/outputs.ts", "packages/cli/src/types/settings/**"]
 categories = ["properties"]
 cases = ["camel", "upper-snake", "snake"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/commands/init.ts"]
-allowed_names = ["retained"]
-reason = "gspot init --json prints this field name."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/parsers/formats/markdown.ts", "packages/eslint-plugin/src/rules/no-magic-numbers.ts", "packages/eslint-plugin/src/types/rules.ts"]
+paths = ["packages/cli/src/types/parsers/formats/markdown.ts", "packages/eslint-plugin/src/rules/no-magic-numbers.ts", "packages/eslint-plugin/src/types/create-rule.ts"]
 allowed_names = ["meta"]
 reason = "remark names the text after a code fence language meta, and ESLint names the rule description meta."
 
@@ -114,7 +109,7 @@ allowed_names = ["checkSupabaseDenoCheck"]
 reason = "Check functions start with check and spell the supabase/deno-check check ID."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/runs/output/reports.ts"]
+paths = ["packages/cli/src/types/runs/output/outputs.ts"]
 allowed_names = ["fixInfo"]
 reason = "markdownlint names its fix field fixInfo."
 
@@ -181,9 +176,9 @@ allowed_names = ["getDocumentFragment"]
 reason = "vue-eslint-parser names this parser service getDocumentFragment."
 
 [[naming.override]]
-paths = ["docs/src/route-data.ts", "docs/src/types/reference.ts"]
-allowed_names = ["route-data", "data"]
-reason = "Starlight requires route-data.ts, and Astro content entries keep their fields in data."
+paths = ["docs/src/types/reference.ts"]
+allowed_names = ["data"]
+reason = "Astro content entries keep their fields in data."
 
 [[naming.override]]
 paths = ["packages/cli/src/config/checks/language/swift/cache.ts"]
@@ -196,7 +191,7 @@ allowed_names = ["data"]
 reason = "llvm-cov export reports keep their coverage under data."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/runs/output/reports.ts"]
+paths = ["packages/cli/src/types/runs/output/outputs.ts"]
 allowed_names = ["extra"]
 reason = "Semgrep reports keep the details of each result under extra."
 
@@ -221,7 +216,7 @@ allowed_names = ["reason_when"]
 reason = "gspot list settings --json and the shipped setting definitions name this field reason_when."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/database/postgres/access.ts", "packages/cli/src/checks/database/postgres/foreign-key-indexes.ts", "packages/cli/src/checks/framework/react-dom.ts", "packages/cli/src/checks/general/dependencies.ts", "packages/cli/src/checks/general/gspot.ts", "packages/cli/src/checks/general/structure/file-folder-clashes.ts", "packages/cli/src/checks/general/structure/pass-through-folders.ts", "packages/cli/src/checks/infrastructure/xcode.ts", "packages/cli/src/checks/platform/supabase.ts"]
+paths = ["packages/cli/src/checks/database/postgres/definer-search-path.ts", "packages/cli/src/checks/database/postgres/row-level-security.ts", "packages/cli/src/checks/database/postgres/foreign-key-indexes.ts", "packages/cli/src/checks/framework/react-dom.ts", "packages/cli/src/checks/general/dependencies.ts", "packages/cli/src/checks/general/gspot.ts", "packages/cli/src/checks/general/structure/file-folder-clashes.ts", "packages/cli/src/checks/general/structure/pass-through-folders.ts", "packages/cli/src/checks/infrastructure/xcode.ts", "packages/cli/src/checks/platform/supabase.ts"]
 categories = ["functions"]
 allowed_names = ["checkPostgresDefinerSearchPath", "checkPostgresRowLevelSecurity", "checkPostgresForeignKeyIndexes", "checkReactDomReactVersions", "checkDependenciesPackageManagerPin", "checkGspotConflictingConfigFiles", "checkStructureFileFolderClashes", "checkStructurePassThroughFolders", "checkXcodeFilesWithoutTarget", "checkXcodeAppTransportSecurity", "checkSupabaseServiceRoleKey"]
 reason = "Each check function is named check, then its configuration, then its check name."
@@ -246,7 +241,7 @@ bun_scanner = "@socketsecurity/bun-security-scanner"
 allowed_urls = { value = ["^https://www\\.npmjs\\.com/package/@gspothq/cli$"], reason = "The npm package page returns HTTP 403 to automated requests." }
 
 [licenses]
-allowed = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0", "MIT-0", "PSF-2.0"]
+allowed = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "BlueOak-1.0.0", "Python-2.0", "MIT-0", "PSF-2.0"]
 
 [[licenses.allowed_package]]
 name = "@fontsource-variable/geist-mono"
@@ -280,7 +275,6 @@ reason = "Vite depends on it to build the docs site; the license binds changes t
 
 [spelling.allowed_words]
 vertica = "SQLFluff names its Vertica dialect vertica."
-axe = "Part of the published axe-core license name."
 optin = "Zod names its optional input marker optin."
 IIF = "ESLint names immediately invoked functions IIFEs."
 next-intl = "The next-intl package name."
@@ -293,6 +287,8 @@ Native = "Part of the React Native product name."
 Simple = "Part of the Simple Icons product name."
 certifi = "The tests name the Python certificate bundle package certifi."
 writeable = "ESLint accepts writeable as the value of a global."
+styl = "The Stylus stylesheet extension is .styl."
+USAGE = "mise uses USAGE in task argument directives."
 
 [tools.eslint]
 import_extension = "ts"
@@ -318,14 +314,13 @@ paths = ["packages/eslint-plugin/local/source-hook.ts"]
 "n/no-unsupported-features/node-builtins" = [{ version = ">=24", allowExperimental = true }]
 
 [tools.knip]
-entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/local/plugin.mjs", "packages/eslint-plugin/local/source-hook.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config-files/purgecss.ts", "packages/cli/linter-exports.ts", "packages/cli/pin-ages.ts"]
+entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/local/plugin.mjs", "packages/eslint-plugin/local/source-hook.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-middleware.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config-files/purgecss.ts", "packages/cli/linter-exports.ts", "packages/cli/pin-ages.ts"]
 
 [[scope]]
 path = "docs"
 configurations = ["css", "astro", "cloudflare", "site"]
-removed_configurations = { value = ["zod"], reason = "The docs site declares no Zod schema." }
 site.build_command = ["bun", "--bun", "astro", "build"]
-tools.knip.ignore_dependencies = { value = ["@fontsource-variable/geist", "@fontsource-variable/geist-mono", "satteri"], reason = "The site imports the fonts through CSS, and Astro prerender externalizes the native satteri loader in astro.config.ts." }
+tools.knip.ignore_dependencies = { value = ["satteri"], reason = "Astro prerender externalizes the native satteri loader in astro.config.ts." }
 
 [[scope]]
 path = "packages/cli"
@@ -335,7 +330,7 @@ tools.knip.ignore_dependencies = { value = ["tree-sitter-bash", "tree-sitter-css
 [[scope]]
 path = "tests"
 configurations = ["zod"]
-removed_configurations = { value = ["astro", "jest", "nestjs", "nextjs", "react", "react-dom", "svelte", "vitest", "vue", "cloudflare"], reason = "The test code uses none of these frameworks; only the sandboxes that the tests create do." }
+removed_configurations = { value = ["jest", "nestjs", "nextjs", "react", "react-dom", "svelte", "vitest", "vue"], reason = "The test code uses none of these frameworks; only the sandboxes that the tests create do." }
 tools.knip.ignore_dependencies = { value = ["@darraghor/eslint-plugin-nestjs-typed", "@next/eslint-plugin-next", "@react-native/eslint-plugin", "@vitest/eslint-plugin", "bats", "eslint-plugin-drizzle", "eslint-plugin-expo", "eslint-plugin-i18next", "eslint-plugin-jest", "@eslint-react/eslint-plugin", "eslint-plugin-react-hooks", "eslint-plugin-react-refresh", "eslint-plugin-svelte", "eslint-plugin-testing-library", "eslint-plugin-vue", "eslint-plugin-vuejs-accessibility", "pnpm", "supabase", "svelte-eslint-parser", "vue-eslint-parser", "yarn", "@nestjs/common", "@nestjs/core", "@tanstack/eslint-plugin-query", "eslint-plugin-jsx-a11y-x", "reflect-metadata", "rxjs", "vue"], reason = "Native sandbox commands load these packages from the linked tests installation." }
 
 [[import_rule]]
@@ -360,12 +355,8 @@ name = "configurations"
 paths = ["packages/cli/src/configurations/**", "packages/cli/src/schemas/configurations/**"]
 
 [[import_rule]]
-name = "local"
+name = "repository"
 paths = ["packages/cli/src/repository/**", "packages/cli/src/schemas/repository/**"]
-
-[[import_rule]]
-name = "write"
-paths = ["packages/cli/src/write.ts"]
 
 [[import_rule]]
 name = "settings"
@@ -374,10 +365,6 @@ paths = ["packages/cli/src/settings/**", "packages/cli/src/schemas/settings/**"]
 [[import_rule]]
 name = "planning"
 paths = ["packages/cli/src/planning/**"]
-
-[[import_rule]]
-name = "session"
-paths = ["packages/cli/src/session.ts"]
 
 [[import_rule]]
 name = "tools"
@@ -405,7 +392,7 @@ paths = ["packages/cli/src/commands/**", "packages/cli/src/schemas/commands.ts"]
 
 [[import_rule]]
 name = "main"
-paths = ["packages/cli/src/main.ts", "packages/cli/src/bin.ts", "packages/cli/linter-exports.ts", "packages/cli/pin-ages.ts"]
+paths = ["packages/cli/src/main.ts", "packages/cli/src/bin.ts", "packages/cli/linter-exports.ts", "packages/cli/pin-ages.ts", "packages/cli/src/schemas/linter-exports.ts"]
 
 [[import_rule]]
 name = "plugin-config"
@@ -480,11 +467,6 @@ until = 2026-11-27
 check = "docs/missing-paths"
 paths = ["packages/cli/configurations/infrastructure/docker/rules/DOCKER.md", "packages/cli/configurations/language/html/rules/HTML.md", "packages/cli/configurations/platform/supabase/rules/SUPABASE.md"]
 reason = "Paths in shipped rules are examples for user projects."
-
-[[ignore]]
-check = "javascript/eslint"
-rule = "import-x/exports-last"
-reason = "import-x/exports-last wants every export after every other statement. This repository exports each declaration where it declares it."
 
 [[ignore]]
 check = "javascript/eslint"

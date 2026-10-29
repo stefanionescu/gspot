@@ -1,4 +1,4 @@
-import { NPM_TOOL_PROJECT } from '#cli/config/installers/projects.ts';
+import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
 
 export const PACKAGE_MANAGER_TIMEOUT = {
     code: 1,
@@ -24,9 +24,7 @@ export const PACKAGE_MANAGER_AGE_CASES = [
     { name: 'bun', version: '1.3.0', minimum: '1.3.0', accepted: true },
 ];
 
-const CREDENTIAL_TOKEN = 'synthetic-generated-lockfile-token';
-
-export const CREDENTIAL_NPMRC = `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${CREDENTIAL_TOKEN}\n`;
+export const CREDENTIAL_TOKEN = 'synthetic-generated-lockfile-token';
 
 export const CREDENTIAL_PACKAGE_JSON = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
 

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -16,7 +16,7 @@ import { createCopy, createCheckCopy, selectCopyPaths } from '#cli/runs/copy/fil
 import { cp, mkdir, lstat, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 import { TEST_WORKSPACE_FILES, WORKSPACE_SOURCE_FILES } from '#tests/config/runs/copy/files.ts';
 
-test('a copy holds workspace dependencies and working bin links, and edits in it reach neither source', async () => {
+test('a copy isolates workspace sources and links external dependencies and executable tools', async () => {
     await using sandbox = await testdir();
     await using external = await testdir();
     await createFileTree(sandbox.path, {
@@ -47,7 +47,7 @@ test('a copy holds workspace dependencies and working bin links, and edits in it
     expect(result.code, result.stderr).toBe(0);
     expect(result.stdout.trim()).toBe('tool works');
     await writeFile(join(scratch, 'node_modules/core/value.js'), 'preview edit');
-    await writeFile(join(scratch, 'node_modules/external/value.js'), 'external preview edit');
+    expect(await realpath(join(scratch, 'node_modules/external'))).toBe(await realpath(external.path));
     expect(await readFile(join(sandbox.path, 'packages/core/value.js'), 'utf8')).toBe('export default "original";');
     expect(await readFile(join(external.path, 'value.js'), 'utf8')).toBe('external original');
 });
@@ -145,7 +145,7 @@ test.each([false, true])(
             await writeFile(join(sandbox.path, 'packages/core/value.js'), 'export const value = "unstaged";');
             await writeFile(join(sandbox.path, 'packages/core/untracked.js'), 'private working bytes');
         }
-        const inspect = async (root: string) => {
+        const assertCheckCopy = async (root: string) => {
             const session = await openSession(root);
             const input = planSandboxCheck(session, 'javascript/eslint', {
                 scope: 'apps/web',
@@ -178,8 +178,8 @@ test.each([false, true])(
         };
         if (revision) {
             using copy = await copyRevision(sandbox.path, { kind: 'index' });
-            await inspect(copy.root);
-        } else await inspect(sandbox.path);
+            await assertCheckCopy(copy.root);
+        } else await assertCheckCopy(sandbox.path);
         expect(await readFile(join(sandbox.path, 'packages/core/value.js'), 'utf8')).toBe(
             revision
                 ? 'export const value = "unstaged";'

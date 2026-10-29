@@ -5,6 +5,7 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { parseSqlFile, selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
 
 import {
+    SELECT_SQL,
     NESTED_COMMENT_SQL,
     QUOTED_PSQL_SOURCES,
     FROZEN_MIGRATION_CASES,
@@ -17,7 +18,7 @@ test('empty SQL has no statements', async () => {
     expect(result.statements).toStrictEqual([]);
 });
 
-test('SQL statement positions skip nested comments and count Unicode correctly', async () => {
+test('SQL statement positions skip nested comments and count each Unicode character as one column', async () => {
     const parsed = await parseSqlFile(NESTED_COMMENT_SQL, createReadCache(process.cwd()));
     expect(parsed.error).toBeUndefined();
     expect(parsed.statements.map((statement) => statement.kind)).toStrictEqual(['DropStmt', 'SelectStmt']);
@@ -36,7 +37,7 @@ test('psql commands and variables keep error positions and PostgreSQL casts', as
     ].join('\n');
     const broken = await parseSqlFile(text, createReadCache(process.cwd()));
     expect(broken.error).toStrictEqual({ text: `syntax error at or near "${TYPO.select}"`, line: 4, column: 1 });
-    const corrected = await parseSqlFile(text.replace(`${TYPO.select} 2`, 'SELECT 2'), createReadCache(process.cwd()));
+    const corrected = await parseSqlFile(text.replace(`${TYPO.select} 2`, SELECT_SQL), createReadCache(process.cwd()));
     expect(corrected.error).toBeUndefined();
     expect(corrected.statements.map((statement) => getPosition(text, statement.start))).toStrictEqual([
         { line: 2, column: 1 },
@@ -67,7 +68,7 @@ test('an SQL error after Unicode points at the right token', async () => {
         line: 1,
         column: text.lastIndexOf(TYPO.select) + 1,
     });
-    const corrected = await parseSqlFile(text.replace(`${TYPO.select} 2`, 'SELECT 2'), createReadCache(process.cwd()));
+    const corrected = await parseSqlFile(text.replace(`${TYPO.select} 2`, SELECT_SQL), createReadCache(process.cwd()));
     expect(corrected.error).toBeUndefined();
 });
 
@@ -85,7 +86,7 @@ test.each(["'", "E'", '"'])('an unterminated SQL %s value gives the parser error
 });
 
 test.each([...FROZEN_MIGRATION_CASES])(
-    'freeze version $through selects the expected migrations',
+    'freeze version $through selects the frozen migrations',
     ({ through, frozen }) => {
         expect([...selectFrozenMigrations([...FROZEN_MIGRATION_PATHS], through)]).toStrictEqual([...frozen]);
     },

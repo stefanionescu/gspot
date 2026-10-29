@@ -55,7 +55,6 @@ Orders scope paths from outermost to innermost, then by name.
 
 @param left the first scope path.
 @param right the second scope path.
-@returns the comparison result.
 */
 export function compareScopeDepth(left: string, right: string): number {
     const leftDepth = left === '' ? 0 : left.split('/').length;
@@ -67,14 +66,14 @@ export function compareScopeDepth(left: string, right: string): number {
 Check whether literal include selectors cover a whole project scope.
 
 @param paths the root-relative inclusion and exclusion selectors.
-@param scope the project folder, empty for the root.
+@param scopePath the project folder, empty for the root.
 @returns true only when no exclusion or partial selector leaves scope content active.
 */
-export function isScopeCovered(paths: string[], scope: string): boolean {
+export function isScopeCovered(paths: string[], scopePath: string): boolean {
     if (paths.some((path) => path.startsWith(GLOB_EXCLUDE))) return false;
     if (EVERY_FILE_GLOBS.some((pattern) => paths.includes(pattern))) return true;
-    if (scope === '') return false;
-    const segments = scope.split('/');
+    if (scopePath === '') return false;
+    const segments = scopePath.split('/');
     return segments.some((_, index) => {
         const literal = escapeGlob(segments.slice(0, index + 1).join('/'));
         return paths.includes(literal) || paths.includes(`${literal}${FOLDER_CONTENTS}`);
@@ -94,14 +93,14 @@ export function joinScope(scope: string, path: string): string {
 }
 
 /**
-Find the project scopes for init and for runs. Leave out the root and tool-only packages.
+List the project scopes, without the root and tool-only packages.
 
 @param files the repository inventory.
 @param dependencyFiles the parsed dependency files.
 @param configurations the configurations with project files and npm tools.
 @returns project scopes in path order.
 */
-export function findScopePaths(
+export function detectScopeFolders(
     files: TrackedFile[],
     dependencyFiles: DependencyFile[],
     configurations: Iterable<Configuration>,
@@ -171,27 +170,11 @@ Find the scope of a file: the deepest scope that contains it, else the root.
 
 @param path the file to place.
 @param scopes the scopes to search.
-@returns the path of the deepest matching scope, or the empty root path.
 */
-export function findScopePath(path: string, scopes: readonly { path: string }[]): string {
+export function selectScopePath(path: string, scopes: readonly { path: string }[]): string {
     return (
         scopes
             .filter((scope) => scope.path !== '' && isInScope(path, scope.path))
             .toSorted((left, right) => right.path.length - left.path.length)[0]?.path ?? ''
     );
-}
-
-/**
-Group files by their scope: the deepest scope that contains each file, else the root.
-
-@param files the files to place.
-@param scopes the scopes to search.
-@returns the files of each scope path, in their order.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 5 files share it.
-export function groupFilesByScope<File extends Pick<TrackedFile, 'path'>>(
-    files: readonly File[],
-    scopes: readonly { path: string }[],
-): Map<string, File[]> {
-    return Map.groupBy(files, (file) => findScopePath(file.path, scopes));
 }

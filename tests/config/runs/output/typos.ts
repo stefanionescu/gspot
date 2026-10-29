@@ -41,3 +41,30 @@ export const TYPOS_REPORT_ERRORS = [
         message: 'Cannot read reported source file missing.txt.',
     },
 ] as const;
+
+export const TYPOS_FINDING_CASES = [
+    {
+        name: 'a byte offset after Unicode text',
+        source: 'café te\u0068\n',
+        report: { ...TYPO_REPORT, byte_offset: 6 },
+        expected: { file: 'sample.txt', line: 1, column: 6, message: '`te\u0068` should be `the`', fixable: true },
+    },
+    {
+        name: 'several possible corrections',
+        source: 'te\u0068\n',
+        report: { ...TYPO_REPORT, corrections: ['the', 'tea'] },
+        expected: {
+            file: 'sample.txt',
+            line: 1,
+            column: 1,
+            message: '`te\u0068` should be `the`, `tea`',
+            fixable: false,
+        },
+    },
+    {
+        name: 'a misspelled file name',
+        source: '',
+        report: { type: 'typo', path: 'te\u0068.txt', byte_offset: 0, typo: 'te\u0068', corrections: ['the'] },
+        expected: { file: 'te\u0068.txt', message: 'Filename: `te\u0068` should be `the`', fixable: false },
+    },
+] as const;

@@ -5,20 +5,23 @@ import { checkStageSchema } from '#cli/schemas/configurations/fields.ts';
 import { listRuleFiles, readConfigurations } from '#cli/configurations/manifests.ts';
 import type { Explanation, ConfigurationExplanation } from '#cli/types/commands/explain.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in this file share it.
-function formatList(label: string, values: string[]): string[] {
-    return values.length === 0 ? [] : [`${label}: ${values.join(', ')}`];
-}
+import {
+    TOOL_PINS,
+    DETECTED_BY,
+    ESLINT_FILES_MESSAGE,
+    LANGUAGE_FILES_MESSAGE,
+    PRETTIER_FILES_MESSAGE,
+} from '#cli/config/commands/explain.ts';
 
 /**
 Describe a configuration's detection, checks, rules, and settings.
 
 @param session the repository settings when the caller opened a repository.
-@param configurationName the configuration to describe.
-@returns the explanation, or undefined for an unknown configuration.
+@param name the configuration to describe.
+@returns undefined for an unknown configuration.
 */
-export function explainConfiguration(session: Session | undefined, configurationName: string): Explanation | undefined {
-    const configuration = readConfigurations().get(configurationName);
+export function explainConfiguration(session: Session | undefined, name: string): Explanation | undefined {
+    const configuration = readConfigurations().get(name);
     if (configuration === undefined) return undefined;
     const facts: ConfigurationExplanation = {
         name: configuration.name,
@@ -37,37 +40,41 @@ export function explainConfiguration(session: Session | undefined, configuration
         alwaysSelected: configuration.always_selected,
     };
     const { detect, files } = configuration;
+    const lists = [
+        {
+            label: DETECTED_BY,
+            values: [
+                ...detect.extensions,
+                ...detect.filenames,
+                ...detect.dependencies.map((name) => `${name} in dependencies`),
+                ...detect.paths,
+                ...detect.project_files.map((path) => `project file ${path}`),
+                ...detect.shebangs.map((name) => `shebang ${name}`),
+                ...detect.runtimes.map((name) => `runtime ${name}`),
+                ...detect.tags.map((tag) => `tag ${tag}`),
+                ...Object.entries(detect.content).map(([path, pattern]) => `${path} matching ${pattern}`),
+                ...detect.absent_dependencies.map((name) => `${name} absent from dependencies`),
+            ],
+        },
+        { label: 'Files', values: [...files.extensions, ...files.filenames, ...files.paths, ...files.tags] },
+        { label: 'Files', values: files.languages ? [LANGUAGE_FILES_MESSAGE] : [] },
+        { label: 'Files', values: files.prettier_plugins ? [PRETTIER_FILES_MESSAGE] : [] },
+        { label: 'Files', values: files.eslint_plugins ? [ESLINT_FILES_MESSAGE] : [] },
+        { label: 'Requires', values: facts.requires },
+        { label: TOOL_PINS, values: facts.tools },
+        ...checkStageSchema.options.map((stage) => ({
+            label: `Checks at ${stage}`,
+            values: facts.checks.filter((check) => check.stage === stage).map((check) => check.check),
+        })),
+        { label: 'Settings', values: facts.settings },
+        { label: 'Rules', values: facts.rules },
+    ];
     const lines = [
         `${facts.title} (${facts.group} configuration)`,
         '',
         facts.description,
         '',
-        ...formatList('Detected by', [
-            ...detect.extensions,
-            ...detect.filenames,
-            ...detect.dependencies.map((name) => `${name} in dependencies`),
-            ...detect.paths,
-            ...detect.project_files.map((path) => `project file ${path}`),
-            ...detect.shebangs.map((name) => `shebang ${name}`),
-            ...detect.runtimes.map((name) => `runtime ${name}`),
-            ...detect.tags.map((tag) => `tag ${tag}`),
-            ...Object.entries(detect.content).map(([path, pattern]) => `${path} matching ${pattern}`),
-            ...detect.absent_dependencies.map((name) => `${name} absent from dependencies`),
-        ]),
-        ...formatList('Files', [...files.extensions, ...files.filenames, ...files.paths, ...files.tags]),
-        ...(files.languages ? ['Files: every file a language configuration selects'] : []),
-        ...(files.prettier_plugins ? ['Files: the file types of the selected Prettier plugins'] : []),
-        ...(files.eslint_plugins ? ['Files: the file types of the selected ESLint plugins'] : []),
-        ...formatList('Requires', facts.requires),
-        ...formatList('Tools it pins', facts.tools),
-        ...checkStageSchema.options.flatMap((stage) =>
-            formatList(
-                `Checks at ${stage}`,
-                facts.checks.filter((check) => check.stage === stage).map((check) => check.check),
-            ),
-        ),
-        ...formatList('Settings', facts.settings),
-        ...formatList('Rules', facts.rules),
+        ...lists.filter(({ values }) => values.length > 0).map(({ label, values }) => `${label}: ${values.join(', ')}`),
     ];
-    return { kind: 'configuration', subject: configurationName, text: `${lines.join('\n')}\n`, facts };
+    return { kind: 'configuration', subject: name, text: `${lines.join('\n')}\n`, facts };
 }

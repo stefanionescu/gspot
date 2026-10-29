@@ -16,11 +16,20 @@ not cover another writer. Choose database defaults or triggers when the contract
 
 See [column types](https://orm.drizzle.team/docs/column-types) and [relations](https://orm.drizzle.team/docs/relations).
 
+### Query builder
+
+<!-- level: all -->
+
+Build queries with the query builder, not the `sql` template, which skips the types of the schema.
+
 ## Authorized operations
 
 Select only the fields the caller may see. Apply resource and tenant restrictions in the query or an enforced policy. A
 row identifier proves no permission, and an inferred insert type allows fields a public request must not set. Keep
 public schemas apart from persistence types.
+
+Give every `update` and `delete` a `where` clause. The check covers the clients in `drizzle.client_names`, `db` by
+default; add each other client or transaction name, such as `tx`.
 
 Scope writes to the authorized resource and verify affected rows. Bound growing collections and use deterministic
 ordering with a unique tie-breaker. An absent filter differs from zero or false. Use a version predicate or an atomic
@@ -34,7 +43,8 @@ Pass `tx` to every participating operation and await it before the transaction r
 irreversible effects outside. Retry only bounded serialization failures or deadlocks, and publish success or
 invalidation after commit. Use a durable outbox when an external effect must follow the commit.
 
-Review generated SQL for unintended drops, renames, constraints, grants, row-level security (RLS), and provider-owned
+After you change a schema, run `drizzle-kit generate`, and commit the migration it writes. Review generated SQL for
+unintended drops, renames, constraints, grants, row-level security (RLS), and provider-owned
 objects. Keep one authoritative migration history; push schema changes only in disposable local experiments. Keep reads
 that must observe a write or current permissions on the primary.
 

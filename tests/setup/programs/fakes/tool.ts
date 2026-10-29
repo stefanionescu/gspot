@@ -1,7 +1,6 @@
 import { parseArgs } from 'node:util';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { rmSync, mkdirSync, existsSync, appendFileSync } from 'node:fs';
-import { splitPair, writeMarker } from '#tests/setup/system/programs.ts';
+import { rmSync, mkdirSync, existsSync, renameSync, appendFileSync } from 'node:fs';
 import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/system/processes.ts';
 import { FAKE_TOOL_OPTIONS, WAIT_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
 
@@ -28,16 +27,20 @@ function findStopCode(): string | undefined {
 }
 
 const steps: Partial<Record<keyof typeof FAKE_TOOL_OPTIONS, (value: string) => unknown>> = {
-    write: (pair) => Bun.write(...splitPair(pair)),
-    'write-hex': (pair) => Bun.write(splitPair(pair)[0], Buffer.from(splitPair(pair)[1], 'hex')),
+    write: (pair) => Bun.write(...([pair.slice(0, pair.indexOf('=')), pair.slice(pair.indexOf('=') + 1)] as const)),
+    'write-hex': (pair) =>
+        Bun.write(
+            ([pair.slice(0, pair.indexOf('=')), pair.slice(pair.indexOf('=') + 1)] as const)[0],
+            Buffer.from(([pair.slice(0, pair.indexOf('=')), pair.slice(pair.indexOf('=') + 1)] as const)[1], 'hex'),
+        ),
     delete: (path) => {
         rmSync(path);
     },
     append: (pair) => {
-        appendFileSync(...splitPair(pair));
+        appendFileSync(...([pair.slice(0, pair.indexOf('=')), pair.slice(pair.indexOf('=') + 1)] as const));
     },
     'copy-environment-file': async (pair) => {
-        const [path, name] = splitPair(pair);
+        const [path, name] = [pair.slice(0, pair.indexOf('=')), pair.slice(pair.indexOf('=') + 1)] as const;
         await Bun.write(path, await Bun.file(readEnvironmentVariable(name) ?? '').text());
     },
     'replace-with-folder': (folder) => {
@@ -49,7 +52,10 @@ const steps: Partial<Record<keyof typeof FAKE_TOOL_OPTIONS, (value: string) => u
     },
     text: (text) => Promise.all(positionals.map((path) => Bun.write(path, text))),
     'record-cwd': (record) => Bun.write(record, process.cwd()),
-    mark: (mark) => writeMarker(mark, String(process.pid)),
+    mark: async (mark) => {
+        await Bun.write(`${mark}.partial`, String(process.pid));
+        renameSync(`${mark}.partial`, mark);
+    },
     line: (line) => process.stdout.write(`${line}\n`),
     'print-environment': (name) => process.stdout.write(readEnvironmentVariable(name) ?? ''),
     stdout: (text) => process.stdout.write(text),

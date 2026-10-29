@@ -1,5 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
+import { CAFE_SCRIPT_PATH } from '#tests/config/paths.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -18,7 +20,7 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
     ).toStrictEqual([
         {
             check: 'security/semgrep',
-            file: 'scripts/café build.sh',
+            file: CAFE_SCRIPT_PATH,
             line: 2,
             column: 1,
             rule: 'gspot.bash.eval',
@@ -28,7 +30,7 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
         },
         {
             check: 'security/semgrep',
-            file: 'scripts/café build.sh',
+            file: CAFE_SCRIPT_PATH,
             line: 1,
             column: 1,
             rule: 'parse-error',
@@ -38,8 +40,9 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
         },
     ]);
 });
+
 test.each([...SEMGREP_REFUSED_REPORTS])('a Semgrep report with %s is an error', async (_name, stdout, note) => {
-    await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\n' });
+    await using sandbox = await testdir({ 'scripts/café build.sh': BROKEN_IF_SCRIPT });
     const check = readConfigurations()
         .get('security')!
         .checks.find((check) => check.id === 'security/semgrep')!;

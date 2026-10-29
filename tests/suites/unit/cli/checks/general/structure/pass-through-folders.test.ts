@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-test('a folder whose only entry is one folder is reported, and a file beside the folder clears it', async () => {
+test('a folder whose only child is one folder is reported, and a file beside the folder clears it', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'src/index.ts': 'export const index = 1;\n',
@@ -27,7 +27,7 @@ test('a folder whose only entry is one folder is reported, and a file beside the
     expect(await runSandboxCheck(grouped.path, 'structure/pass-through-folders')).toStrictEqual([]);
 });
 
-test('a child scope counts as an entry of its parent folder, and a scope folder is not reported', async () => {
+test('a child scope counts as a child of its parent folder, and a scope folder is not reported', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',

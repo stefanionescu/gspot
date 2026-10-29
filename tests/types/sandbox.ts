@@ -8,6 +8,7 @@ export type SandboxPlan = {
     json?: Readonly<Record<string, unknown>>;
     level?: Level;
     cleanSource?: string;
+    executable?: readonly string[];
 };
 
 export type InstalledSandboxPlan = SandboxPlan & {

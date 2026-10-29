@@ -1,6 +1,5 @@
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { PYTHON_VERSION } from '#cli/config/installers/pypi.ts';
-import type { PythonIndexSettings } from '#cli/types/installers/pypi.ts';
-import type { MinimumReleaseAge } from '#cli/types/installers/install.ts';
 
 export const UV_TOML = `index-url = "https://alex:test%2Bpassword@example.com/simple"
 find-links = ["wheels", "https://example.com/wheels"]
@@ -42,7 +41,7 @@ export const UV_LOCKFILE_MISMATCHES = [
     ['virtual root', 'virtual = "."', 'virtual = "elsewhere"'],
 ] as const;
 
-export const UV_LOCKFILE_ORIGINS: ReadonlyArray<readonly [string, string, boolean, PythonIndexSettings['settings']]> = [
+export const UV_LOCKFILE_ORIGINS = [
     ['https://pypi.org/simple', 'https://files.pythonhosted.org/example.whl', true, {}],
     ['https://attacker.example/simple', 'https://files.pythonhosted.org/example.whl', false, {}],
     ['https://pypi.org/simple', 'https://attacker.example/example.whl', false, {}],
@@ -76,7 +75,7 @@ export const UV_LOCKFILE_ORIGINS: ReadonlyArray<readonly [string, string, boolea
         true,
         { index: [{ url: 'https://packages.example/simple' }] },
     ],
-];
+] satisfies [string, string, boolean, Record<string, unknown>][];
 
 export const LOCKFILE_PASSWORD_ERROR = {
     name: 'GspotError',
@@ -92,6 +91,7 @@ name = "authored-project"
 index-url = "https://example.com/simple"
 find-links = ["wheels"]
 `;
+
 export const INVALID_UV_SETTINGS = [
     { file: 'uv.toml', field: 'find-links', text: 'find-links = "https://example.com/wheels"\n' },
     { file: 'uv.toml', field: 'index', text: 'index = "x"\n' },
@@ -103,8 +103,15 @@ export const INVALID_UV_SETTINGS = [
     { file: 'pyproject.toml', field: 'tool.uv.index', text: '[tool.uv]\nindex = "x"\n' },
 ];
 
-export const PYTHON_RELEASE_AGE: MinimumReleaseAge = {
+export const PYTHON_RELEASE_AGE = {
     days: 7,
     npmExclusions: [],
     pythonExclusions: ['ruff', 'semgrep'],
+};
+
+export const PYTHON_INSTALL_FILES = {
+    'gspot.toml': 'configurations = []\n[rules]\nenabled = false\n',
+    [GSPOT_PATHS.pythonProject]: PYTHON_TOOL_PROJECT.replaceAll('{python-version}', () => PYTHON_VERSION),
+    [GSPOT_PATHS.uvLockfile]: PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', () => PYTHON_VERSION),
+    'uv.toml': UV_TOML,
 };

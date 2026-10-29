@@ -7,6 +7,7 @@ import {
     QUOTED_TRAP_CALLS,
     BASH_COMMENT_CASES,
     MKTEMP_CLEANUP_CASES,
+    CONTINUED_TRAP_SOURCE,
     FORWARDING_CALL_CASES,
 } from '#tests/config/parsers/code/bash.ts';
 
@@ -55,10 +56,11 @@ test('one-line Bash functions count only their own parameters, not those of nest
         { name: 'printf', count: 2, line: 1, forwards: false },
         { name: 'printf', count: 2, line: 1, forwards: false },
         { name: 'outer', count: 2, line: 2, forwards: false },
+        { name: '--flag', count: 0, line: 2, forwards: false },
     ]);
 });
 
-test('literal trap handlers count as calls while expanded trap bodies stay uninterpreted', async () => {
+test('literal trap handlers count as calls while trap bodies with expansions stay uninterpreted', async () => {
     const parsed = await parseBashScript('trap _cleanup EXIT\ntrap "_quoted" EXIT\ntrap $handler EXIT\n');
     expect(parsed.calls).toStrictEqual([...TRAP_CALLS]);
 });
@@ -77,6 +79,20 @@ test.each([...FORWARDING_CALL_CASES])(
     'Bash calls mark positional argument forwarding: $source',
     async ({ source, count, forwards }) => {
         const parsed = await parseBashScript(source);
-        expect(parsed.calls).toStrictEqual([{ name: 'consume', count, line: 1, forwards }]);
+        expect(parsed.calls.filter(({ name }) => name === 'consume')).toStrictEqual([
+            { name: 'consume', count, line: 1, forwards },
+        ]);
     },
 );
+
+test('continued trap commands and cleanup retain their original source rows', async () => {
+    const parsed = await parseBashScript(CONTINUED_TRAP_SOURCE);
+    expect(parsed.temporaryPaths).toStrictEqual([{ name: 'tmp', line: 1, cleanupLines: [3] }]);
+    expect(parsed.commands.filter(({ name }) => name === 'rm')).toStrictEqual([
+        { name: 'rm', arguments: ['-rf', '--', undefined], line: 3 },
+    ]);
+    expect(parsed.calls.filter(({ name }) => name === 'rm')).toStrictEqual([
+        { name: 'rm', count: 3, forwards: false, line: 3 },
+    ]);
+    expect(parsed.swallowedLines).toStrictEqual([4]);
+});

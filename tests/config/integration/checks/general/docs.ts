@@ -11,11 +11,6 @@ configurations = []
 allowed_urls = { value = ["/child-only$"], reason = "The child guide describes an unavailable endpoint." }
 `;
 
-export const LINK_TEXT_CASES = [
-    { text: 'absent', failures: [{ scope: '', file: 'root.md', rule: 'ERROR' }] },
-    { text: 'Current%20setup', failures: [] },
-] as const;
-
 export const ROOT_LINK_FILES = {
     'root.md': '# Links\n\nRead [the setup guide](/guides/setup.md#setup).\n',
     'guides/setup.md': '# Setup\n',

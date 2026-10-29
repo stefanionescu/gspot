@@ -1,20 +1,23 @@
 import type { Node } from 'web-tree-sitter';
 import { getLimit } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
-import type { Finding } from '#cli/types/runs/check.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import { isDocstring } from '#cli/parsers/code/python.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { buildFinding, getNodePlace } from '#cli/checks/finding.ts';
+import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { PARSED_SOURCES } from '#cli/checks/general/structure/parsed-sources.ts';
 import type { ParsedSource, ParsedLanguage } from '#cli/types/checks/general/structure.ts';
 
 import {
+    RULES,
+    ONE_STATEMENT,
+    FUNCTION_LABEL,
     BARE_NAME_NODES,
     TYPE_ALIAS_NODES,
     FORWARDING_NODES,
     PYTHON_EXPORT_LIST,
     BASH_COMMAND_NODES,
+    TRIVIAL_FILE_MESSAGE,
     SWIFT_ACCESSOR_NODES,
     TYPE_REFERENCE_NODES,
     BASH_SOURCE_COMMANDS,
@@ -113,17 +116,27 @@ function formatAccessorName(node: Node, label: string): string {
     return name === undefined ? label : `${label} of ${name}`;
 }
 
-function listTrivialFunctions(planned: PlannedCheck, source: ParsedSource): Finding[] {
+function listTrivialFunctions(planned: PlannedCheck, source: ParsedSource): CheckFinding[] {
     const limit = getLimit(planned.scope.settings, 'trivial_function_statements', source.language);
-    return (source.captures.get('function') ?? []).flatMap((node) => {
+    return (source.captures.get(FUNCTION_LABEL) ?? []).flatMap((node) => {
         const body = extractFunctionBody(node, source.language);
         const count = countExecutableStatements(body, source.language);
         if (count > limit) return [];
-        const label = node.childForFieldName('name')?.text ?? SWIFT_FUNCTION_LABELS[node.type] ?? 'function';
+        const label = node.childForFieldName('name')?.text ?? SWIFT_FUNCTION_LABELS[node.type] ?? FUNCTION_LABEL;
         const name = SWIFT_ACCESSOR_NODES.has(node.type) ? formatAccessorName(node, label) : label;
-        const statements = count === 1 ? '1 statement' : `${String(count)} statements`;
+        const statements = count === 1 ? ONE_STATEMENT : `${String(count)} statements`;
         const message = `${name} has ${statements}. Functions with ${String(limit)} or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.`;
-        return [{ ...buildFinding(planned, getNodePlace(source.path, node), 'trivial-function', message), name }];
+        return [
+            {
+                file: source.path,
+                line: node.startPosition.row + 1,
+                column: node.startPosition.column + 1,
+                rule: RULES.trivialFunction,
+                message: message,
+
+                name,
+            },
+        ];
     });
 }
 
@@ -132,9 +145,8 @@ Report named functions at the statement limit and files that only forward code.
 
 @param session the repository and its tools.
 @param planned the scope files and statement limits.
-@returns the findings.
 */
-export async function checkStructureTrivialFunctions(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkStructureTrivialFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const parsed = await parseCached({ ...session, files: planned.files, scope: planned.scope }, PARSED_SOURCES);
     const functions = parsed.flatMap((source) => listTrivialFunctions(planned, source));
     const files = parsed
@@ -145,12 +157,12 @@ export async function checkStructureTrivialFunctions(session: Session, planned: 
                     ? 1
                     : (source.tree.rootNode.namedChildren.find((node) => !node.type.includes('comment'))?.startPosition
                           .row ?? 0) + 1;
-            return buildFinding(
-                planned,
-                { file: source.path, line },
-                'trivial-file',
-                'This file only imports, re-exports, or renames code. Import from the module that defines it, and delete this file.',
-            );
+            return {
+                file: source.path,
+                line,
+                rule: RULES.trivialFile,
+                message: TRIVIAL_FILE_MESSAGE,
+            };
         });
     return [...functions, ...files];
 }

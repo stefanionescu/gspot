@@ -7,11 +7,17 @@ import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { PATHS_BASE_OPTION, LOCAL_PATH_PREFIX } from '#cli/config/repository/npm.ts';
+import { IMPORT_CONDITIONS, PATHS_BASE_OPTION, LOCAL_PATH_PREFIX } from '#cli/config/repository/npm.ts';
 
 function findImportTarget(target: unknown): string | undefined {
     if (typeof target === 'string') return target;
-    return isTable(target) ? Object.values(target).find((value) => typeof value === 'string') : undefined;
+    if (!isTable(target)) return undefined;
+    for (const [condition, value] of Object.entries(target)) {
+        if (!IMPORT_CONDITIONS.has(condition)) continue;
+        const found = findImportTarget(value);
+        if (found !== undefined) return found;
+    }
+    return undefined;
 }
 
 /**
@@ -19,7 +25,6 @@ Read the package.json imports of one project, which Node resolves without a comp
 
 @param root the repository root.
 @param prefix the project folder with a trailing slash, or empty for the root.
-@returns the alias prefixes and their repository-relative folders.
 */
 export function readPackageAliases(root: string, prefix: string): Record<string, string> {
     const aliases: Record<string, string> = {};
@@ -39,12 +44,12 @@ export function readPackageAliases(root: string, prefix: string): Record<string,
 Resolve package imports and TypeScript paths for one scope. TypeScript paths win.
 
 @param root the root that alias paths start from.
-@param scope the folder, empty for the root.
+@param scopePath the folder, empty for the root.
 @param reads the run cache for compiler settings.
 @returns aliases relative to the repository root.
 */
-export function readScopeAliases(root: string, scope: string, reads: ReadCache): Record<string, string> {
-    const prefix = joinScope(scope, '');
+export function readScopeAliases(root: string, scopePath: string, reads: ReadCache): Record<string, string> {
+    const prefix = joinScope(scopePath, '');
     const aliases = readPackageAliases(root, prefix);
     const path = join(root, prefix, TSCONFIG_FILE);
     const config = readTsconfig(root, path, reads);

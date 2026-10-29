@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { createEslint, compareFindings, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     JSDOC_FILES,
@@ -53,13 +53,16 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
     expect(await listLintFindings(eslint, sandbox.path, files, JSDOC_RULES)).toStrictEqual(
         JSDOC_FINDINGS.flatMap(({ file, findings }) =>
             findings.map(({ ruleId, line }) => ({ file, rule: ruleId, line })),
-        ).toSorted(compareFindings),
+        ).toSorted(
+            (left, right) =>
+                left.file.localeCompare(right.file) || left.line - right.line || left.rule.localeCompare(right.rule),
+        ),
     );
     const tscArguments = [
         'node',
         'node_modules/typescript/lib/tsc.js',
         '--project',
-        findManifestTarget('javascript', 'jsconfig.json'),
+        getManifestTarget('javascript', 'jsconfig.json'),
         '--pretty',
         'false',
     ];

@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     SHEBANGS,
@@ -51,7 +51,7 @@ test.each([...SHEBANGS])('a $name shebang gives only its language and runtime ta
     const prefix = Buffer.from(source);
     const result = classifyFile(
         '.',
-        { path: 'script', size: prefix.length, executable: false, symlink: false },
+        { path: 'script', size: prefix.length, executable: false, isSymlink: false },
         prefix,
         { attributes: new Map(), generatedPaths: [] },
     );
@@ -62,7 +62,7 @@ test.each([...SHEBANGS])('a $name shebang gives only its language and runtime ta
 test('binary content gets no shebang language or runtime tags', () => {
     const prefix = Buffer.from('#!/usr/bin/env bun\n\0');
     expect(
-        classifyFile('.', { path: 'script', size: prefix.length, executable: true, symlink: false }, prefix, {
+        classifyFile('.', { path: 'script', size: prefix.length, executable: true, isSymlink: false }, prefix, {
             attributes: new Map(),
             generatedPaths: [],
         }),
@@ -80,7 +80,7 @@ test('sh overrides the Bash extension tag of a .sh script', () => {
     const prefix = Buffer.from('#!/bin/sh\nprintf "%s\\n" example\n');
     const result = classifyFile(
         '.',
-        { path: 'script.sh', size: prefix.length, executable: false, symlink: false },
+        { path: 'script.sh', size: prefix.length, executable: false, isSymlink: false },
         prefix,
         { attributes: new Map(), generatedPaths: [] },
     );

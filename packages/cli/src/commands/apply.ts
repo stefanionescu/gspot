@@ -1,20 +1,23 @@
 import { gt } from 'semver';
-import { openWriter } from '#cli/write.ts';
-import { openSession } from '#cli/session.ts';
 import { formatCount } from '#cli/system/text.ts';
-import { type Session } from '#cli/types/session.ts';
-import { generate } from '#cli/generation/generate.ts';
+import type { Session } from '#cli/types/session.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { openWriter } from '#cli/repository/writer.ts';
 import { type Command } from '@commander-js/extra-typings';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
-import { DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
-import { type OutdatedFile } from '#cli/types/generation/files.ts';
+import { stripControlCharacters } from '#cli/system/terminal.ts';
+import type { OutdatedFile } from '#cli/types/generation/files.ts';
+import { GENERATED_FILE_NOUN } from '#cli/config/generation/write.ts';
+import { DRY_RUN_FLAG, DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
+import type { DryRunJson, ApplyOptions } from '#cli/types/commands/apply.ts';
+import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { readVersionPin, assertVersionPin } from '#cli/repository/version-pin.ts';
-import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/apply.ts';
-import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+import { APPLY_WRITE_MESSAGE, INSTALL_WRITE_MESSAGE } from '#cli/config/commands/apply.ts';
 import { formatUpToDate, formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
 
 function formatFileChanges(files: OutdatedFile[], repair: string): string[] {
@@ -28,27 +31,27 @@ function formatFileChanges(files: OutdatedFile[], repair: string): string[] {
     return [...lines, '', repair, ''];
 }
 
-function formatOutdatedFiles(outdatedFiles: OutdatedFile[]): string {
+function formatOutdatedFiles(files: OutdatedFile[]): string {
     const lines = [
-        `${formatCount(outdatedFiles.length, 'generated file')} ${outdatedFiles.length === 1 ? 'needs' : 'need'} updating:`,
+        `${formatCount(files.length, GENERATED_FILE_NOUN)} ${files.length === 1 ? 'needs' : 'need'} updating:`,
         '',
     ];
     const groups = [
         {
-            files: outdatedFiles.filter(({ path }) => !TOOL_LOCKFILES.has(path)),
-            repair: 'Run gspot apply to write these files.',
+            files: files.filter(({ path }) => !TOOL_LOCKFILES.has(path)),
+            repair: APPLY_WRITE_MESSAGE,
         },
         {
-            files: outdatedFiles.filter(({ path }) => TOOL_LOCKFILES.has(path)),
-            repair: 'Run gspot install to write the tool lockfiles.',
+            files: files.filter(({ path }) => TOOL_LOCKFILES.has(path)),
+            repair: INSTALL_WRITE_MESSAGE,
         },
     ];
     for (const group of groups) lines.push(...formatFileChanges(group.files, group.repair));
-    return `${lines.join('\n')}\n`;
+    return `${lines.map((line) => stripControlCharacters(line)).join('\n')}\n`;
 }
 
 async function buildDryRunResult(session: Session): Promise<CommandResult> {
-    const generated = generate(session);
+    const generated = generateFiles(session);
     const outdatedFiles = await listOutdatedFiles(session, generated);
     const summary =
         outdatedFiles.length === 0 ? `${formatUpToDate(generated.files.length)}\n` : formatOutdatedFiles(outdatedFiles);
@@ -63,10 +66,11 @@ async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
     const pin = readVersionPin(root);
     if (pin !== undefined && gt(pin, cliPackage.version)) assertVersionPin(root);
     const session = await openSession(root);
-    if (options.isDryRun) return buildDryRunResult(session);
+    if (options.dryRun) return buildDryRunResult(session);
     using writer = openWriter(root);
-    const report = await writeGeneratedFiles(session, generate(session), writer);
-    return { text: formatApplyReport(report), json: report, exitCode: 0 };
+    const report = await writeGeneratedFiles(session, generateFiles(session), writer);
+    const version = pin === cliPackage.version ? '' : `version ${pin ?? 'unpinned'} -> ${cliPackage.version}\n`;
+    return { text: version + formatApplyReport(report), json: report, exitCode: 0 };
 }
 
 /**
@@ -81,12 +85,12 @@ export function registerApply(program: Command, onResult: CommandCompletion): vo
         .command('apply')
         .summary(COMMAND_HELP.apply.summary)
         .description(COMMAND_HELP.apply.description)
-        .option('--dry-run', COMMAND_HELP.apply.options['--dry-run'])
+        .option(DRY_RUN_FLAG, COMMAND_HELP.apply.options[DRY_RUN_FLAG])
         .action(async (flags) => {
             onResult(
                 await runApplyCommand({
                     cwd: process.cwd(),
-                    isDryRun: flags.dryRun === true,
+                    dryRun: flags.dryRun === true,
                 }),
             );
         });

@@ -9,7 +9,7 @@ import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts
 
 export type PathIgnore = { base: string; matcher: Ignore };
 
-export type ListedFile = { path: string; size: number; executable: boolean; symlink: boolean };
+export type ListedFile = { path: string; size: number; executable: boolean; isSymlink: boolean };
 
 export type TrackedFile = {
     path: string;
@@ -25,6 +25,7 @@ export type Repository = {
     attributes: Map<string, Record<string, string>>;
     hasGit: boolean;
     index: GitIndexFile[];
+    unreadablePaths: string[];
     files: TrackedFile[];
     dependencyFiles: DependencyFile[];
     scopeFolders: ScopeFolder[];

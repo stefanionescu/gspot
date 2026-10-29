@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { SEMGREP_CHECK } from '#tests/config/integration/checks/general/security/samples.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { SEMGREP_CHECK } from '#tests/config/integration/checks/general/security/sandbox.ts';
 import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {

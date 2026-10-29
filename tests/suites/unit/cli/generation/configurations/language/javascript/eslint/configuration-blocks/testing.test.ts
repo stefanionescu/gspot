@@ -4,7 +4,12 @@ import { LEVELS } from '#cli/config/configurations/names.ts';
 import { type EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { TESTING_LIBRARY_CASES } from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/testing.ts';
+
+import {
+    TESTING_LIBRARY_CASES,
+    ASSERTION_RULE_OWNERS,
+    JEST_RECOMMENDED_RULES,
+} from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/testing.ts';
 
 test.each(['js', 'jsx'])('Jest rules apply only to their scope for .%s files', async (extension) => {
     await using sandbox = await testdir({
@@ -109,3 +114,29 @@ test('Testing Library rules take the framework package of each scope', async () 
     const applicationConfiguration = (await eslint.calculateConfigForFile('app/sample.test.js')) as EslintConfiguration;
     expect(applicationConfiguration.rules['testing-library/no-dom-import']).toStrictEqual([2, 'vue']);
 });
+
+test.each(ASSERTION_RULE_OWNERS)(
+    'basic assertion ownership with $configuration',
+    async ({ configuration, assertions }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(
+                ['javascript', ...(configuration === undefined ? [] : [configuration])],
+                { level: 'basic' },
+            ),
+            'package.json': '{"private":true,"type":"module"}',
+            'source.test.js': '',
+            'source.js': '',
+        });
+        const eslint = await createEslint(sandbox.path);
+        const tests = (await eslint.calculateConfigForFile('source.test.js')) as EslintConfiguration;
+        const source = (await eslint.calculateConfigForFile('source.js')) as EslintConfiguration;
+        expect(tests.rules['sonarjs/assertions-in-tests']?.[0]).toBe(assertions);
+        expect(tests.rules['sonarjs/no-empty-test-file']?.[0]).toBe(2);
+        expect(source.rules['sonarjs/assertions-in-tests']?.[0]).toBe(0);
+        expect(source.rules['sonarjs/no-empty-test-file']?.[0]).toBe(0);
+        if (configuration === 'jest')
+            expect(
+                Object.fromEntries(JEST_RECOMMENDED_RULES.map((name) => [name, tests.rules[name]?.[0]])),
+            ).toStrictEqual(Object.fromEntries(JEST_RECOMMENDED_RULES.map((name) => [name, 2])));
+    },
+);

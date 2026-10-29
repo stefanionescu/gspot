@@ -26,3 +26,17 @@ export const PROJECT_ESCAPES: Readonly<Record<string, string>> = {
     '\\': '\\',
     '\n': '\n',
 };
+
+export const GROUP_CYCLE_MESSAGE = 'The Xcode project contains a group cycle.';
+
+export const MISSING_FILE_REF_MESSAGE = 'An Xcode source build entry has no file reference.';
+
+export const MISSING_ROOT_MESSAGE = 'The Xcode project has no project root.';
+
+export const MISSING_MAIN_GROUP_MESSAGE = 'The Xcode project has no main group.';
+
+export const INVALID_STRING_MESSAGE = 'The Xcode project has an invalid string.';
+
+export const TRAILING_TEXT_MESSAGE = 'The Xcode project has text after its root dictionary.';
+
+export const OCTAL_ESCAPE_START = /^[0-7]/u;

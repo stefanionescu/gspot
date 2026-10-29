@@ -1,17 +1,5 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 
-export const VALE_PACKAGES = ['Google', 'write-good', 'proselint', 'alex', 'Harper'] as const;
-
-export const VALE_PACKAGE_RELEASES = {
-    Google: { version: 'v0.7.1', sha256: '4b67fca1f2a88595b2a578ab98bbf3017a23af677b04f93e862843f3ea1a9a0b' },
-    'write-good': { version: 'v0.4.1', sha256: '2960ef10861ddc7dc76292a4967eb3789bf05ca24f862042f6d15f53332887f0' },
-    proselint: { version: 'v0.3.4', sha256: '48b1fb481ba44f6505d44346b283f6cdc74efd234f913bbdb09bf34420fab81c' },
-    alex: { version: 'v0.2.3', sha256: '44014c7f63d4a8bce86788e074edb80333a9b6eba07e5dd27b24823b69eed50b' },
-    Harper: { version: 'v0.1.0', sha256: 'bfab282e7abd8906f8656c240ccd4d873679878ed8e0c42d683ad7e2798c436c' },
-} as const;
-
-export const VALE_PACKAGE_REPOSITORY = 'https://github.com/vale-cli/';
-
 export const VALE_REGEX_SYMBOLS = /[.*+?^${}()|[\]\\/-]/gu;
 
 export const CAPITALIZATION_STYLES = {
@@ -48,7 +36,7 @@ export const LENGTH_STYLES = {
 } as const;
 
 export const ALT_TEXT_TOKENS = [
-    String.raw`<img\b(?![^>]*\balt\s*=)[^>]*>`,
+    String.raw`<img(?:\s+(?!alt(?:\s*=|[\s/>]))[^\s=/>]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'>]+))?)*\s*/?>`,
     String.raw`!\[(?:Image|Graphic|Picture) of`,
 ] as const;
 
@@ -109,3 +97,15 @@ export const BANNED_HEADINGS = [
 ] as const;
 
 export const VALE_STYLES_PATH = `${GSPOT_PATHS.configurations}/general/prose/styles`;
+
+export const BANNED_HEADING_MESSAGE = "Heading '%s' lists files and folders. Describe behavior and ownership instead.";
+
+export const ACRONYM_MESSAGE = "Spell out '%s' on first use.";
+
+export const ACRONYM_PATTERN = String.raw`\b([A-Z]{3,6})\b`;
+
+export const ACRONYM_DEFINITION_PATTERN = String.raw`(?:\b[A-Za-z]+(?:-[A-Za-z]+)* ){2,5}\(([A-Z]{3,6})\)`;
+
+export const ALT_TEXT_MESSAGE = 'An image needs an alt attribute; decorative images can use an empty value.';
+
+export const ACRONYM_NAME = /^[A-Z]{3,6}$/u;

@@ -2,13 +2,15 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { APP_SCOPE_SETTINGS } from '#tests/config/toml.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
+import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
-import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { STRICT_TSCONFIG_TEXT, STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
 import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -26,16 +28,13 @@ test.each([...LEVELS])(
     "typescript/tsc at level %s checks each scope alone and keeps the authored declarations, without gspot's own @types",
     async (level) => {
         const { root } = installedSandbox();
-        await using _sourceChange = await changeAppliedSandbox(installedSandbox(), {
+        await using _sourceChange = await changeSandbox(installedSandbox(), {
             files: {
                 ...STANDALONE_TYPESCRIPT_FILES,
                 '.gitignore': `${GSPOT_FOLDER}/\nnode_modules/\n`,
                 'gspot.toml': buildSandboxSettings(['typescript'], {
                     level,
-                    tables: `[[scope]]
-path = "app"
-configurations = ["typescript"]
-`,
+                    tables: APP_SCOPE_SETTINGS,
                 }),
             },
         });

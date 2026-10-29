@@ -6,24 +6,28 @@ import type { Session } from '#cli/types/session.ts';
 import { buildValeIni } from '#cli/installers/vale.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
+import { VALE_PACKAGES, VALE_PACKAGE_URLS } from '#cli/config/installers/vale.ts';
 
 import {
     ACRONYMS,
+    ACRONYM_NAME,
     LENGTH_STYLES,
-    VALE_PACKAGES,
+    ACRONYM_MESSAGE,
+    ACRONYM_PATTERN,
     ALT_TEXT_TOKENS,
     BANNED_HEADINGS,
+    ALT_TEXT_MESSAGE,
     VALE_STYLES_PATH,
     VALE_REGEX_SYMBOLS,
     CAPITALIZATION_STYLES,
-    VALE_PACKAGE_RELEASES,
-    VALE_PACKAGE_REPOSITORY,
+    BANNED_HEADING_MESSAGE,
+    ACRONYM_DEFINITION_PATTERN,
 } from '#cli/config/generation/configurations/general/prose.ts';
 
 function listExceptions(words: string[]): string[] {
-    return [...new Set([...words, ...ACRONYMS])].map((word) =>
-        word.replaceAll(VALE_REGEX_SYMBOLS, (symbol) => '\\' + symbol),
-    );
+    return [...new Set([...words, ...ACRONYMS])]
+        .toSorted(compareText)
+        .map((word) => word.replaceAll(VALE_REGEX_SYMBOLS, (symbol) => '\\' + symbol));
 }
 
 /**
@@ -31,7 +35,6 @@ Build the title or heading capitalization rule with the accepted vocabulary.
 
 @param planned the generated config file and scope.
 @param name whether to check heading or title case.
-@returns the Vale capitalization rule.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function buildCapitalizationStyle(planned: PlannedConfigFile, name: keyof typeof CAPITALIZATION_STYLES): string {
@@ -46,47 +49,40 @@ export function buildCapitalizationStyle(planned: PlannedConfigFile, name: keyof
 /**
 Build the `acronyms` style of Vale: the Vale acronym rule with the allowed acronyms.
 
-@param planned the config file with its scope, level, and target path.
-@returns the Vale acronym rule with the allowed acronyms.
+@param planned the config file to build.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildAcronymsStyle(planned: PlannedConfigFile): string {
     const words = listAllowedWords(planned.session);
 
     return stringify({
         extends: 'conditional',
-        message: "Spell out '%s' on first use.",
+        message: ACRONYM_MESSAGE,
         level: 'error',
         ignorecase: false,
-        first: String.raw`\b([A-Z]{3,6})\b`,
-        second: String.raw`(?:\b[A-Za-z]+(?:-[A-Za-z]+)* ){2,5}\(([A-Z]{3,6})\)`,
-        exceptions: listExceptions(words),
+        first: ACRONYM_PATTERN,
+        second: ACRONYM_DEFINITION_PATTERN,
+        exceptions: listExceptions(words).filter((word) => ACRONYM_NAME.test(word)),
     });
 }
 
 /**
 Build vale.ini: the Vale style locations and rule levels for the prose checks.
 
-@param planned the config file with its scope, level, and target path.
-@returns the Vale style locations and rule levels for the prose checks.
+@param planned the config file to build.
 */
 export function buildValeIniFile(planned: PlannedConfigFile): string {
     const folders = planned.level === 'all' ? [VALE_STYLES_PATH, GSPOT_PATHS.valePackages] : [VALE_STYLES_PATH];
     return buildValeIni({
         level: planned.level,
         stylesPaths: folders.map((path) => relative(dirname(planned.targetPath), path)),
-        packages: VALE_PACKAGES.map(
-            (name) =>
-                `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${VALE_PACKAGE_RELEASES[name].version}/${name}.zip`,
-        ),
+        packages: VALE_PACKAGES.map((name) => VALE_PACKAGE_URLS[name]),
     });
 }
 
 /**
 Build the `alt-text` style of Vale: the Vale alternative-text rule.
 
-@param planned the config file with its scope, level, and target path.
-@returns the Vale alternative-text rule.
+@param planned the config file to build.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildAltTextStyle(planned: PlannedConfigFile): string {
@@ -94,7 +90,7 @@ export function buildAltTextStyle(planned: PlannedConfigFile): string {
 
     return stringify({
         extends: 'existence',
-        message: 'An image needs an alt attribute; decorative images can use an empty value.',
+        message: ALT_TEXT_MESSAGE,
         level: 'error',
         scope: 'raw',
         nonword: true,
@@ -105,14 +101,13 @@ export function buildAltTextStyle(planned: PlannedConfigFile): string {
 /**
 Build the `banned-headings` style of Vale: the Vale rule for the banned headings.
 
-@param planned the config file with its scope, level, and target path.
-@returns the Vale rule for the banned headings.
+@param planned the config file to build.
 */
 export function buildBannedHeadingsStyle(planned: PlannedConfigFile): string {
     const headings = [...new Set([...BANNED_HEADINGS, ...getTable(planned.scope.settings, 'docs').banned_headings])];
     return stringify({
         extends: 'existence',
-        message: "Heading '%s' lists files and folders. Describe behavior and ownership instead.",
+        message: BANNED_HEADING_MESSAGE,
         level: 'error',
         ignorecase: true,
         scope: 'heading',
@@ -129,7 +124,6 @@ Build a prose length rule with its configured ceiling.
 
 @param planned the generated config file and scope.
 @param name the prose unit that the rule limits.
-@returns the Vale occurrence rule.
 */
 export function buildLengthStyle(planned: PlannedConfigFile, name: keyof typeof LENGTH_STYLES): string {
     const { setting, message, ...style } = LENGTH_STYLES[name];
@@ -140,8 +134,7 @@ export function buildLengthStyle(planned: PlannedConfigFile, name: keyof typeof 
 /**
 Build the accepted words of Vale: the accepted product names and your own allowed words, one per line.
 
-@param planned the config file with its scope, level, and target path.
-@returns the accepted product names and your own allowed words, one per line.
+@param planned the config file to build.
 */
 export function buildAcceptedWordsFile(planned: PlannedConfigFile): string {
     const words = listAllowedWords(planned.session);

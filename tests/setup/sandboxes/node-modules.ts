@@ -2,6 +2,7 @@ import { join, dirname } from 'node:path';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { IGNORE_ALL_PATTERN } from '#tests/config/setup/sandboxes.ts';
 import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
 import { mkdir, readdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
@@ -11,14 +12,14 @@ export const workspaceModules = join(REPOSITORY_ROOT, 'node_modules');
 
 export const testModules = join(import.meta.dir, '../../node_modules');
 
-async function listPackageNames(store: string): Promise<string[]> {
-    const listed = await readdir(store);
+async function listPackageNames(modulesFolder: string): Promise<string[]> {
+    const listed = await readdir(modulesFolder);
     const names = await Promise.all(
         listed
             .filter((stored) => !stored.startsWith('.'))
             .map(async (name) => {
                 if (!name.startsWith('@')) return [name];
-                const children = await readdir(join(store, name));
+                const children = await readdir(join(modulesFolder, name));
                 return children.map((child) => join(name, child));
             }),
     );
@@ -28,8 +29,6 @@ async function listPackageNames(store: string): Promise<string[]> {
 /**
 Link test packages before workspace packages, with their .bin and the workspace .bun store.
 Links to the real package folders keep relative dependencies that Windows store junctions break.
-
-@param modulesFolder the node_modules folder to create.
 */
 export async function linkInstalledModules(modulesFolder: string): Promise<void> {
     const packages = await Promise.all(
@@ -45,15 +44,12 @@ export async function linkInstalledModules(modulesFolder: string): Promise<void>
         await mkdir(dirname(destination), { recursive: true });
         await symlink(await realpath(join(store, name)), destination, FOLDER_LINK_TYPE);
     }
-    await writeFile(join(modulesFolder, '.gitignore'), '*\n');
+    await writeFile(join(modulesFolder, '.gitignore'), IGNORE_ALL_PATTERN);
 }
 
 /**
 Link declared packages and the installed packages they depend on, so a copy of node_modules holds only those. A test
 package wins over a workspace package of the same name, as in linkInstalledModules.
-
-@param modulesFolder the node_modules folder to create.
-@param names packages that the sandbox project declares.
 */
 export async function linkPackages(modulesFolder: string, names: readonly string[]): Promise<void> {
     const pending = await Promise.all(
@@ -91,5 +87,5 @@ export async function linkTypescript(modulesFolder: string): Promise<void> {
     await mkdir(modulesFolder, { recursive: true });
     await linkPackages(modulesFolder, ['typescript']);
     await symlink(await realpath(join(testModules, '.bin')), join(modulesFolder, '.bin'), FOLDER_LINK_TYPE);
-    await writeFile(join(modulesFolder, '.gitignore'), '*\n');
+    await writeFile(join(modulesFolder, '.gitignore'), IGNORE_ALL_PATTERN);
 }

@@ -1,4 +1,5 @@
-import type { ToolInstall, ToolPackageManager } from '#cli/types/installers/install.ts';
+import { type LOCKFILES } from '#cli/config/files/lockfiles.ts';
+import { type ToolInstall, type ToolPackageManager } from '#cli/types/installers/install.ts';
 
 export type NpmToolInstall = ToolInstall & {
     packageManager: ToolPackageManager;
@@ -10,11 +11,11 @@ export type PackageManagerRequest = {
     packageManager: ToolPackageManager;
     commandArguments: string[];
     failure: string;
-    env: Record<string, string>;
+    environment: Record<string, string>;
 };
 
 export type PackageManagerRun = {
-    env: Record<string, string>;
+    environment: Record<string, string>;
     credentials: string[];
 };
 
@@ -39,3 +40,7 @@ export type ToolPackageJson = {
     private: true;
     devDependencies: Record<string, string>;
 };
+
+export type Lockfile = (typeof LOCKFILES)[number];
+
+export type ToolProjectLockfileName = Extract<Lockfile, { toolProject: true }>['file'];

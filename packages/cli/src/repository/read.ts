@@ -2,25 +2,27 @@ import { statSync, realpathSync } from 'node:fs';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { INDEX_LINE } from '#cli/config/parsers/git.ts';
 import { join, posix, dirname, resolve } from 'node:path';
-import { findScopePaths } from '#cli/repository/scopes.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
+import { type ReadCache } from '#cli/types/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
+import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
+import { detectScopeFolders } from '#cli/repository/scopes.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
+import { gitIndexFileSchema } from '#cli/schemas/parsers/git.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
-import { detectSwiftTags } from '#cli/repository/files/swift-tags.ts';
 import { readCachedText, readCachedPrefix } from '#cli/system/files/reads.ts';
 import { SWIFT_EXTENSION, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
-import { readIndexFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
+import { listGitFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
+import { GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files/tracked.ts';
 import { runGitBlocking, isGitRepository, isNotRepository } from '#cli/system/git.ts';
-import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
-import type { RepositoryListing, RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
-import { FILE_PREFIX_BYTES, GIT_CHECK_ATTRIBUTES_ARGUMENTS } from '#cli/config/repository/read.ts';
-import { mergeAttributes, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
+import { type RepositoryListing, type RepositoryReadOptions } from '#cli/types/repository/read.ts';
+import { type Repository, type ScopeFolder, type TrackedFile } from '#cli/types/repository/files.ts';
 import { SET_VALUES, VENDORED_ATTRIBUTE, GENERATED_ATTRIBUTE } from '#cli/config/repository/files/classify.ts';
+import { ROOT_SCOPE, FILE_PREFIX_BYTES, GIT_CHECK_ATTRIBUTES_ARGUMENTS } from '#cli/config/repository/read.ts';
+import { mergeAttributes, parseListingLine, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
 
 function readAttributes(root: string, paths: string[]): Map<string, Record<string, string>> {
     if (paths.length === 0) return new Map();
@@ -36,13 +38,20 @@ List the tracked files and the untracked files that Git does not ignore. Each fi
 attributes.
 
 @param reads the run cache.
-@returns the files, the Git index, and the attributes of each file.
 */
 export async function listRepositoryFiles(reads: ReadCache): Promise<RepositoryListing> {
     const root = reads.root;
     const hasGit = isGitRepository(root);
-    const index = hasGit ? await readIndexFiles(root) : [];
-    const listedFiles = await listTrackedFiles(root, index, { hasGit });
+    const unreadablePaths: string[] = [];
+    const index = hasGit
+        ? await listGitFiles(root, GIT_INDEX_FILES_ARGUMENTS, undefined, unreadablePaths).then((listed) =>
+              listed
+                  .split('\0')
+                  .filter(Boolean)
+                  .map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema)),
+          )
+        : [];
+    const listedFiles = await listTrackedFiles(root, index, { hasGit, unreadablePaths });
     const attributes = hasGit
         ? readAttributes(
               root,
@@ -51,9 +60,9 @@ export async function listRepositoryFiles(reads: ReadCache): Promise<RepositoryL
         : new Map<string, Record<string, string>>();
     const files = listedFiles.map((listedFile) => ({
         ...listedFile,
-        prefix: listedFile.symlink ? Buffer.alloc(0) : readCachedPrefix(reads, listedFile.path, FILE_PREFIX_BYTES),
+        prefix: listedFile.isSymlink ? Buffer.alloc(0) : readCachedPrefix(reads, listedFile.path, FILE_PREFIX_BYTES),
     }));
-    return { root, hasGit, index, attributes, files };
+    return { root, hasGit, index, attributes, files, unreadablePaths };
 }
 
 /**
@@ -65,26 +74,25 @@ Classify the listed files, and read the dependency files and the written and dis
 @param options.generatedPaths the generated and vendored path rules.
 @param options.scopes the written scope tables.
 @param options.configurationsByName the shipped configurations.
-@returns the repository inventory.
 */
 export async function readRepository(
     reads: ReadCache,
     listing: RepositoryListing,
     { generatedPaths, scopes, configurationsByName }: RepositoryReadOptions,
 ): Promise<Repository> {
-    const { root, hasGit, index, attributes } = listing;
+    const { root, hasGit, index, attributes, unreadablePaths } = listing;
     using files = openFiles(root);
     const tracked: TrackedFile[] = [];
     for (const listedFile of listing.files) {
         const file = classifyFile(root, listedFile, listedFile.prefix, { generatedPaths, attributes });
-        if (!listedFile.symlink && file.kind === 'source' && file.path.endsWith(SWIFT_EXTENSION)) {
+        if (!listedFile.isSymlink && file.kind === 'source' && file.path.endsWith(SWIFT_EXTENSION)) {
             const tags = await detectSwiftTags(file.path, readCachedText(reads, file.path));
             file.tags.push(...tags);
         }
         tracked.push(file);
     }
     const dependencyFiles = await readDependencyFiles(reads, tracked);
-    const discovered = findScopePaths(tracked, dependencyFiles, configurationsByName.values());
+    const discovered = detectScopeFolders(tracked, dependencyFiles, configurationsByName.values());
     const written: ScopeFolder[] = [
         { ...ROOT_SCOPE, configurations: [] },
         ...scopes
@@ -100,6 +108,7 @@ export async function readRepository(
     return {
         root,
         attributes,
+        unreadablePaths,
         index,
         hasGit,
         files: tracked,
@@ -116,7 +125,6 @@ Read generated and vendored selectors from each tracked attribute file.
 
 @param reads the run cache.
 @param paths the tracked root-relative files.
-@returns the selectors that Git attributes declare.
 */
 export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[] {
     return [
@@ -125,7 +133,7 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
                 .filter((path) => posix.basename(path) === GITATTRIBUTES_FILE)
                 .flatMap((path) => {
                     const text = readCachedText(reads, path);
-                    const authored = stripBlock(text, { path, style: 'hash' });
+                    const authored = stripBlock(text, { path });
                     return parseAttributePatterns(authored, posix.dirname(path))
                         .filter((rule) =>
                             Object.entries(mergeAttributes(rule.attributes)).some(

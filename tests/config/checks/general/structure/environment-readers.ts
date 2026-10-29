@@ -1,6 +1,6 @@
-import { BASH_HEADER } from '#tests/config/samples.ts';
+import { BASH_HEADER } from '#tests/config/bash.ts';
 
-export const BASH_ENV_READ_CASES = [
+export const BASH_ENVIRONMENT_READ_CASES = [
     {
         check: 'structure/environment-readers',
         files: {
@@ -19,7 +19,8 @@ main() {
 main "$@"
 `,
         },
-        settings: '[structure]\nenvironment_readers = ["scripts/environment.sh"]\n',
+        settings:
+            '[structure]\nenvironment_readers = { value = ["scripts/environment.sh"], reason = "These paths own environment access for this project." }\n',
         expected: { file: 'scripts/reader.sh', rule: 'read-outside-reader', line: 10 },
         corrected: {
             files: {
@@ -52,3 +53,5 @@ def bound():
 from unrelated import getenv as other
 fifth = other("KEY")
 `;
+
+export const OS_VALUE_SOURCE = 'import os\nVALUE = os.environ["KEY"]\n';

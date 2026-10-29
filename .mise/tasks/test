@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
 #MISE description="Run one test suite: unit, integration, or e2e. With no suite, run unit."
 #MISE depends=["build"]
+#USAGE arg "[suite]" default="unit" {
+#USAGE   choices "unit" "integration" "e2e"
+#USAGE }
 set -euo pipefail
+: "${usage_suite:?mise must provide the selected test suite}"
 
-suite=${1:-unit}
-if [[ ${suite} == unit ]]; then
+test_run_folder="$(mktemp -d)" || exit 1
+trap 'rm -rf -- "${test_run_folder}"' EXIT
+export TEST_RUN_FOLDER="${test_run_folder}"
+
+if [[ ${usage_suite} == unit ]]; then
     bun test --parallel --preload ./tests/setup/runner/unit.ts ./tests/suites/unit
 else
     bun tests/setup/runner/prepare.ts
-    bun test --parallel --preload ./tests/setup/runner/integration.ts "./tests/suites/${suite}"
+    bun test --parallel --preload ./tests/setup/runner/integration.ts "./tests/suites/${usage_suite}"
 fi

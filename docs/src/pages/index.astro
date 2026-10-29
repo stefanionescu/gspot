@@ -1,11 +1,19 @@
 ---
+import type { ImageMetadata } from 'astro';
 import Example from '../components/home/Example.astro';
 import InlineText from '../components/InlineText.astro';
-import { formatReferencePath } from '../reference/markdown.ts';
-import '../components/home/page.css';
 import { TOOLS, USE_CASES, HOME_TITLE } from '../config/home.ts';
-import { DOCS_PATH, DESCRIPTION, REPOSITORY_URL } from '../config/site.ts';
+import '../components/home/page.css';
+import { REFERENCE_PATH, REFERENCE_FOLDERS } from '../config/reference.ts';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { LICENSE, NPM_URL, DOCS_PATH, DESCRIPTION, REPOSITORY_URL } from '../config/site.ts';
+
+const images = import.meta.glob<ImageMetadata>('../assets/tools/*', { eager: true, import: 'default' });
+const tools = TOOLS.map(({ name, icon }) => {
+    const image = images[`../assets/tools/${icon}`];
+    if (image === undefined) throw new Error(`Missing tool image: ${icon}.`);
+    return { name, icon: image.src };
+});
 ---
 
 <StarlightPage
@@ -26,7 +34,7 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
                 Works with these tools
             </p>
             <ul>
-                {TOOLS.map(({ name, icon }) => (
+                {tools.map(({ name, icon }) => (
                     <li>
                         <span class="tool-icon" style={`--icon: url(${icon})`} aria-hidden="true"></span>
                         {name}
@@ -78,15 +86,15 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
                 ))}
             </ul>
             <p class="more">
-                <a href={formatReferencePath('checks', '')}>See every check →</a>
+                <a href={`${REFERENCE_PATH}${REFERENCE_FOLDERS.checks}/`}>See every check →</a>
             </p>
         </section>
         <footer class="home-footer">
             <div class="home-footer-content">
-                <span>gspot · Apache-2.0</span>
+                <span>gspot · {LICENSE}</span>
                 <nav aria-label="Footer">
                     <a href={DOCS_PATH}>Docs</a>
-                    <a href="https://www.npmjs.com/package/@gspothq/cli">npm</a>
+                    <a href={NPM_URL}>npm</a>
                     <a href={REPOSITORY_URL}>GitHub</a>
                 </nav>
             </div>

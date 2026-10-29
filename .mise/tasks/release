@@ -34,13 +34,7 @@ main() (
     cli_version=$(package_field packages/cli version)
     publish_package packages/eslint-plugin "${plugin_version}"
     publish_package packages/cli "${cli_version}"
-    bun run --cwd docs wrangler deploy || exit 1
-    curl --fail --show-error --silent --location --connect-timeout 10 --max-time 30 \
-        --output "${work_folder}/llms.txt" https://generativespotting.com/llms.txt || exit 1
-    if ! cmp -s docs/dist/llms.txt "${work_folder}/llms.txt"; then
-        printf 'https://generativespotting.com/llms.txt differs from docs/dist/llms.txt.\n' >&2
-        exit 1
-    fi
+    mise run docs:deploy || exit 1
     publish_tags "${plugin_version}" "${cli_version}"
     printf 'Next commit: set npm:@gspothq/cli to %s in mise.toml, then run mise exec -- gspot apply and mise exec -- gspot install.\n' "${cli_version}"
 )

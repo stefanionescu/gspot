@@ -79,3 +79,5 @@ export const SPACED_COMMENT_FINDINGS = [
     [9, 1, 'docComments'],
     [9, 1, 'spaceInsideComments'],
 ] as const;
+
+export const IMPORTED_SOURCE_REASON = 'The imported source retains its documentation layout.';

@@ -11,6 +11,6 @@ test.each([...PUBLISHED_SCHEMA_CASES])('runtime and published schemas agree on $
     expect(isPublishedSettings(input)).toBe(valid);
 });
 
-test('the published schema strips internal reason conditions', () => {
+test('the published schema leaves out reason_when', () => {
     expect(JSON.stringify(buildJsonSchema())).not.toContain('"reason_when":');
 });

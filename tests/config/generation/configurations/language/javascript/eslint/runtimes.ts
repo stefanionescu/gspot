@@ -74,3 +74,7 @@ export const RUNTIME_GLOBAL_FINDINGS = [
         messages: [{ ruleId: 'no-undef', line: 2, message: "'Buffer' is not defined." }],
     },
 ];
+
+export const WINDOW_UNDEFINED_MESSAGE = "'window' is not defined.";
+
+export const PROCESS_UNDEFINED_MESSAGE = "'process' is not defined.";

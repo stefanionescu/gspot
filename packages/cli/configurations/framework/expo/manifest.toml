@@ -28,7 +28,6 @@ all_level_rules = ["expo/prefer-box-shadow"]
 [[check]]
 example = "A `react-native` version that differs from the one the Expo SDK requires fails a Doctor check. Run `npx expo install --check` to install the matching version."
 help = "Follow the advice Expo Doctor prints, then run `npx expo install --check`."
-level = "recommended"
 name = "expo-doctor"
 needs = ["network"]
 runs = "scope"

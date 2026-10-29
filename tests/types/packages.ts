@@ -44,4 +44,4 @@ export type PythonProject = AsyncDisposable & {
     rootConfiguration: Buffer<ArrayBuffer>;
 };
 
-export type IndexedPythonProject = PythonProject & { projectFiles: ToolProjectFiles };
+export type IndexedPythonProject = PythonProject & { files: ToolProjectFiles };

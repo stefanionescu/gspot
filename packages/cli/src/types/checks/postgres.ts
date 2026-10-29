@@ -1,5 +1,5 @@
 import type { AlterTableCmd } from '@pgsql/types';
-import type { Finding } from '#cli/types/runs/check.ts';
+import type { CheckFinding } from '#cli/types/runs/check.ts';
 import type { SqlFile, SqlStatement, SqlNodeFields } from '#cli/types/parsers/code/sql.ts';
 
 type SourceStatement = { path: string; offset: number; text: string };
@@ -37,6 +37,8 @@ export type SchemaState = Pick<Schema, 'tables' | 'secured'> & {
 
 export type Location = { migration: Migration; statement: SqlStatement; table: string };
 
-export type MigrationRead = { migrations: Migration[]; findings: Finding[] };
+export type MigrationRead = { migrations: Migration[]; findings: CheckFinding[] };
 
-export type MigrationStatement = { migration: Migration; statement: SqlStatement };
+type MigrationStatement = { migration: Migration; statement: SqlStatement };
+
+export type FunctionSecurity = MigrationStatement & { definer: boolean; path: boolean };

@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import { DRIVE_LETTER } from '../src/config/syntax.ts';
+import { findPathInFolder } from '../src/paths.ts';
 import type { SchemaLocationOptions } from './types.ts';
 import { ASTUtils, ESLintUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -68,15 +68,9 @@ export const schemaLocation = ESLintUtils.RuleCreator.withoutDocs<SchemaLocation
         messages: { location: 'Declare this Zod schema in a configured schema folder: {{folders}}.' },
     },
     create(context, [options]) {
-        const path = resolve(context.cwd, context.physicalFilename)
-            .replaceAll('\\', '/')
-            .replace(DRIVE_LETTER, (drive) => drive.toUpperCase());
-        const folders = options.folders.map((folder) =>
-            resolve(context.cwd, folder)
-                .replaceAll('\\', '/')
-                .replace(DRIVE_LETTER, (drive) => drive.toUpperCase()),
-        );
-        if (folders.some((folder) => path === folder || path.startsWith(`${folder}/`))) return {};
+        const path = resolve(context.cwd, context.physicalFilename);
+        if (options.folders.some((folder) => findPathInFolder(resolve(context.cwd, folder), path) !== undefined))
+            return {};
         return {
             Program() {
                 for (const node of listZodSchemaCalls(context.sourceCode))

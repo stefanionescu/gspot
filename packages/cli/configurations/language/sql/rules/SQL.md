@@ -7,6 +7,14 @@ Read this rule when you write SQL.
 - Fully qualify cross-schema references.
 - Prefer explicit column lists for each `INSERT` and every grant of write privileges.
 - Keep table constraints close to the definition unless the migration must add them later for dependency reasons.
+- Write keywords, type names, and the literals `NULL`, `TRUE`, and `FALSE` in uppercase, and identifiers and function
+  names in lowercase. Start each clause on its own line. `gspot check --fix` corrects the case:
+
+```sql
+SELECT count(*)
+FROM order_items
+WHERE deleted_at IS NULL;
+```
 
 ## Naming
 

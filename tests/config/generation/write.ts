@@ -1,5 +1,4 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import type { PackageFieldScenario } from '#tests/types/write.ts';
 import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/authored-config-files.ts';
 
 const COMMITLINT_PROJECT = {
@@ -43,10 +42,14 @@ export const COMMITLINT_PACKAGE_FIELDS = {
             ],
         },
     ],
-} satisfies PackageFieldScenario;
+};
 
 export const STYLELINT_PACKAGE_FIELDS = {
-    project: STYLELINT_FILES,
+    project: {
+        ...STYLELINT_FILES,
+        'app/child/source.css': 'a { opacity: 1; }\n',
+        'other/source.css': 'a { opacity: 1; }\n',
+    },
     configurations: ['css'],
     tables: '[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "other"\n',
     unchanged: ['plain/package.json'],
@@ -59,7 +62,7 @@ export const STYLELINT_PACKAGE_FIELDS = {
         },
         { path: 'other/package.json', keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }] },
     ],
-} satisfies PackageFieldScenario;
+};
 
 export const EDITED_COMMITLINT_PACKAGE =
     '{"name":"edited-project","private":true,"commitlint":{"extends":"../.gspot/configurations/general/commits/commitlint.json"},"kept":[0,false,""]}\n';

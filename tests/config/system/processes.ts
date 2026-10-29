@@ -1,1 +1,6 @@
-export const DESCENDANT_TIMEOUT_MILLISECONDS = 20_000;
+export const STREAM_FAILURE = 'Test stream failure.';
+
+export const STOPPED_CAPTURES = [
+    ['text', 'timeout'],
+    ['bytes', 'canceled'],
+] as const;

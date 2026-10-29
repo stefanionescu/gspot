@@ -1,14 +1,13 @@
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
-import { trimTrailingSlashes } from '#cli/system/paths.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { formatSchema } from '#cli/schemas/settings/fields.ts';
-import { isTable, getValueAt, createTable } from '#cli/system/tables.ts';
-import { mergeIgnores, buildSettingsText } from '#cli/settings/text/build.ts';
-import { parseTomlText, isReasonedValue, readSettingsFile } from '#cli/settings/file.ts';
+import { isReasonedValue, readSettingsFile } from '#cli/settings/file.ts';
+import { isTable, getValueAt, createTable, normalizeTables } from '#cli/system/tables.ts';
+import { TOML_FORMAT, SETTINGS_FILE, SETTINGS_PREFACE } from '#cli/config/settings/file.ts';
 import type { SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
+import { parseTomlFile, parseTomlSyntax, buildPatchedToml } from '#cli/parsers/formats/toml.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
 function splitKey(key: string): SettingKey {
@@ -17,21 +16,26 @@ function splitKey(key: string): SettingKey {
 }
 
 /**
-Apply a settings change to the parsed table, check the result, and build the new gspot.toml text. The change edits
-input.table in place.
+Apply a settings change to edit.table, check the result, and patch it into the previous gspot.toml text.
 
 @param root the folder against which the edited scope paths resolve.
 @param edit the settings read before the edit.
-@returns the new gspot.toml text, the settings that it holds, and whether the text changed.
 */
 export function buildEditedSettings(root: string, edit: SettingsEdit): EditedSettings {
     const { text, table } = edit;
-    if (Array.isArray(table['ignore'])) table['ignore'] = mergeIgnores(table['ignore'] as TomlTable[]);
-    const format = formatSchema.safeParse(table['format']).data ?? formatSchema.parse({});
-    const next = isDeepStrictEqual(table, parseTomlText(text, SETTINGS_FILE))
+    const previous = parseTomlFile(SETTINGS_FILE, text);
+    const opening = SETTINGS_PREFACE.exec(text)?.[0] ?? '';
+    const body = text.slice(opening.length);
+    const next = isDeepStrictEqual(normalizeTables(table), normalizeTables(previous))
         ? text
-        : buildSettingsText(text, table, format);
-    return { text: next, settings: parseSettings(next, root), changed: next !== text };
+        : opening + buildPatchedToml(parseTomlSyntax(body, previous), table, TOML_FORMAT);
+    const settings = parseSettings(next, root);
+    if (Array.isArray(settings))
+        throw new GspotError(
+            'arguments',
+            settings.map((error) => `${error.path.join('.')}: ${error.message}`).join('\n'),
+        );
+    return { text: next, settings, changed: next !== text };
 }
 
 /**
@@ -54,7 +58,7 @@ Delete a dotted key and the empty tables it leaves behind.
 @param table the table to edit.
 @param key the dotted setting name.
 */
-export function deleteKey(table: TomlTable, key: string): void {
+export function removeKey(table: TomlTable, key: string): void {
     const { path, name } = splitKey(key);
     const tables = [table];
     let walked = table;
@@ -105,33 +109,33 @@ export function removeFromList(table: TomlTable, key: string, values: unknown[])
         const identity = JSON.stringify(isTable(listed) && 'name' in listed ? listed['name'] : listed);
         return gone.has(identity) || gone.has(JSON.stringify(listed)) ? [] : removeRecordPaths(listed, gone);
     });
-    if (kept.length === 0) deleteKey(table, key);
+    if (kept.length === 0) removeKey(table, key);
     else parent[name] = isReasonedValue(written) ? { ...written, value: kept } : kept;
 }
 
 /**
-Find the table that a command writes into: the document, or the scope table with that path.
+Find the table that a command writes into: the document, or the scope table of that path, added for a project folder
+that has none.
 
 @param table the parsed document.
-@param scope the folder of a nested table, if any.
-@returns the document or the matching scope table.
+@param scopePath the folder of a nested table, if any.
 */
-export function getScopeTable(table: TomlTable, scope: string | undefined): TomlTable {
-    if (scope === undefined) return table;
+export function getScopeTable(table: TomlTable, scopePath: string): TomlTable {
+    if (scopePath === '') return table;
     const scopes = table['scope'];
     const scopeTable: unknown = Array.isArray(scopes)
         ? scopes.find(
               (each) =>
                   isTable(each) &&
                   typeof each['path'] === 'string' &&
-                  trimTrailingSlashes(each['path']) === trimTrailingSlashes(scope),
+                  stripTrailingSlashes(each['path']) === stripTrailingSlashes(scopePath),
           )
         : undefined;
-    if (!isTable(scopeTable))
-        throw new GspotError(
-            'arguments',
-            `gspot.toml has no [[scope]] with path = ${JSON.stringify(scope)}. Add one, or leave out --scope.`,
-        );
+    if (!isTable(scopeTable)) {
+        const created = { path: scopePath };
+        table['scope'] = [...(Array.isArray(scopes) ? (scopes as unknown[]) : []), created];
+        return created;
+    }
     return scopeTable;
 }
 
@@ -139,10 +143,9 @@ export function getScopeTable(table: TomlTable, scope: string | undefined): Toml
 Read the bytes and mode of gspot.toml before an edit.
 
 @param root the folder that holds gspot.toml.
-@returns the settings before the edit, with the file contents.
 */
 export function readSettingsEdit(root: string): SettingsEdit {
     const { text, previous } = readSettingsFile(root);
-    const table = parseTomlText(text, SETTINGS_FILE);
+    const table = parseTomlFile(SETTINGS_FILE, text);
     return { text, table, previous };
 }

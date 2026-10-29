@@ -9,5 +9,5 @@ title = "Zustand"
 dependencies = ["zustand"]
 
 [[eslint.selectors]]
-message = "Pass a selector to the store hook, so the component renders when its slice changes and at no other time."
+message = "Create stores only in the files of zustand.store_files."
 selector = "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0], CallExpression[callee.name='useStore'][arguments.length=1]"

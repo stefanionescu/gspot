@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { nonemptyPaths } from '#cli/schemas/settings/fields.ts';
 import type { SettingsError } from '#cli/types/settings/file.ts';
+import { nonemptyPathsSchema } from '#cli/schemas/settings/fields.ts';
 import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 
 const importRuleSchema = z.strictObject({
-    name: z.string().min(1).describe(SETTING_DEFINITIONS['import_rule.name'].description),
-    paths: nonemptyPaths.describe(SETTING_DEFINITIONS['import_rule.paths'].description),
-    can_import: z.string().array().optional().describe(SETTING_DEFINITIONS['import_rule.can_import'].description),
+    name: z.string().min(1).meta(SETTING_DEFINITIONS['import_rule.name']),
+    paths: nonemptyPathsSchema.meta(SETTING_DEFINITIONS['import_rule.paths']),
+    can_import: z.string().array().optional().meta(SETTING_DEFINITIONS['import_rule.can_import']),
 } satisfies SchemaShape<ImportRule>);
 
 function validateImportRules(rules: ImportRule[]): SettingsError[] {

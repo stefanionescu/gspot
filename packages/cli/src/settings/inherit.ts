@@ -4,23 +4,23 @@ import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { commandSchema } from '#cli/schemas/configurations/fields.ts';
-import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/inheritance.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, SettingsTable } from '#cli/types/settings/file.ts';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
-import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/schemas.ts';
+import { SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/inheritance.ts';
+import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/schema-lookup.ts';
 import { CATEGORY_PARENTS, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
 import { CATEGORY_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
 
-import {
-    type Setting,
-    type SettingMatch,
-    type InheritedValue,
-    type SettingDefault,
-    type WrittenSetting,
-    type InheritedSetting,
-    type AvailableSettings,
-    type WrittenScopeTable,
+import type {
+    Setting,
+    SettingMatch,
+    InheritedValue,
+    SettingDefault,
+    WrittenSetting,
+    InheritedSetting,
+    AvailableSettings,
+    WrittenScopeTable,
 } from '#cli/types/settings/inheritance.ts';
 
 function findLanguageSetting(
@@ -75,7 +75,9 @@ function mergeTable(
     const written = possibleKeys
         .map((writtenKey) => ({ writtenKey, found: getWrittenSetting(table.table, writtenKey) }))
         .filter((row): row is typeof row & { found: NonNullable<typeof row.found> } => row.found !== undefined);
-    const owner = table.scope === undefined ? SETTINGS_FILE : `[scope ${JSON.stringify(table.scope)}]`;
+    const owner = table.scope === '' ? SETTINGS_FILE : `[scope ${JSON.stringify(table.scope)}]`;
+    const origin = table.scope === '' ? 'root' : 'scope';
+    const originScope = table.scope === '' ? {} : { originScope: table.scope };
     for (const { writtenKey, found } of written) {
         result = {
             value: mergeValue(
@@ -84,8 +86,8 @@ function mergeTable(
                 getValueAt(table.table, writtenKey.split('.')),
             ),
             source: writtenKey === key ? owner : `${owner} (${writtenKey})`,
-            origin: table.scope === undefined ? 'root' : 'scope',
-            ...stripUndefined({ originScope: table.scope }),
+            origin,
+            ...originScope,
             reason: found.reason,
         };
     }
@@ -99,7 +101,6 @@ of tables, and single values replace.
 @param setting the setting whose schema selects the merge rule.
 @param inherited the value so far.
 @param found the value the next table writes.
-@returns the merged value.
 */
 export function mergeValue(setting: Setting, inherited: unknown, found: unknown): unknown {
     let schema = findSettingSchema(setting.name);
@@ -126,11 +127,11 @@ List the root settings and every scope table, with their locations in the docume
 @param settings the parsed gspot.toml.
 @returns the tables in written order, root first.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in 8 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, its rule repeats in the code of several layers.
 export function listSettingsTables(settings: Settings): WrittenScopeTable[] {
     return [
-        { table: settings, path: [] },
-        ...Object.entries(settings.scopes).map(
+        { table: settings, scope: '', path: [] },
+        ...[...settings.scopes].map(
             ([scope, table], index) => ({ table, scope, path: ['scope', index] }) satisfies WrittenScopeTable,
         ),
     ];
@@ -140,13 +141,12 @@ export function listSettingsTables(settings: Settings): WrittenScopeTable[] {
 List the root settings and the scope tables that apply, from outermost to innermost.
 
 @param settings the parsed gspot.toml.
-@param scope the folder, '' or undefined for the root alone.
-@returns the tables with their scope paths and reported names.
+@param scopePath the folder, '' for the root alone.
 */
-export function listApplicableTables(settings: Settings, scope = ''): WrittenScopeTable[] {
+export function listApplicableTables(settings: Settings, scopePath: string): WrittenScopeTable[] {
     return listSettingsTables(settings)
-        .filter((settingsTable) => settingsTable.scope === undefined || isInScope(scope, settingsTable.scope))
-        .toSorted((left, right) => compareScopeDepth(left.scope ?? '', right.scope ?? ''));
+        .filter((settingsTable) => settingsTable.scope === '' || isInScope(scopePath, settingsTable.scope))
+        .toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
 }
 
 /**
@@ -154,7 +154,6 @@ Match a written key to its setting. Per-language and per-category keys map back 
 
 @param availableSettings the settings and defaults of the selected configurations.
 @param key the dotted name as written.
-@returns the match with its language and category, or undefined.
 */
 export function findSetting(availableSettings: AvailableSettings, key: string): SettingMatch | undefined {
     const direct = availableSettings.settings.get(key);
@@ -170,7 +169,7 @@ Get the written value of a dotted key.
 
 @param settings the root table or one scope.
 @param key the dotted setting name.
-@returns the value with its reason, or undefined when the key has no value.
+@returns undefined when the key has no value.
 */
 export function getWrittenSetting(settings: Pick<Settings, 'written'>, key: string): WrittenSetting | undefined {
     const value: unknown = getValueAt(settings.written, key.split('.'));
@@ -178,7 +177,7 @@ export function getWrittenSetting(settings: Pick<Settings, 'written'>, key: stri
     return isReasonedValue(value)
         ? stripUndefined({
               value: value.value,
-              reason: typeof value.reason === 'string' ? value.reason : undefined,
+              reason: value.reason,
           })
         : { value };
 }
@@ -202,14 +201,14 @@ Resolve one default against its language, scope, and site build folder.
 @param availableSettings the settings and defaults of the configurations in use.
 @param settings reads a value from the settings tables of the caller.
 @param match the setting and its language, if any.
-@param scope the project whose shipped paths apply.
-@returns the default with repository-relative paths, or undefined.
+@param scopePath the project whose shipped paths apply.
+@returns the default, with repository-relative paths.
 */
 export function findSettingDefault(
     availableSettings: AvailableSettings,
     settings: Settings,
     match: SettingMatch,
-    scope: string | undefined,
+    scopePath: string,
 ): SettingDefault | undefined {
     const { setting } = match;
     const table = setting.name.slice(0, setting.name.indexOf('.'));
@@ -223,8 +222,8 @@ export function findSettingDefault(
     if (shipped === undefined) return undefined;
     const folder =
         setting.path_role === 'build'
-            ? (getSettingValue(availableSettings, settings, 'site.build_folder', scope)?.value as string)
-            : (scope ?? '');
+            ? (getSettingValue(availableSettings, settings, 'site.build_folder', scopePath)?.value as string)
+            : scopePath;
     return { ...shipped, value: joinDefaultPaths(setting.name, shipped.value, folder) };
 }
 
@@ -234,27 +233,29 @@ Resolve one key: the configuration default, then the root table, then each scope
 @param availableSettings the settings and defaults of the selected configurations.
 @param settings the parsed gspot.toml.
 @param key the dotted setting name.
-@param scope the folder whose table applies last, if any.
-@returns the value with where it came from, or undefined when nothing exposes the key.
+@param scopePath the folder whose table applies last, if any.
+@returns undefined when nothing exposes the key.
 */
 export function getSettingValue(
     availableSettings: AvailableSettings,
     settings: Settings,
     key: string,
-    scope?: string,
+    scopePath: string,
 ): InheritedSetting | undefined {
     const match = findSetting(availableSettings, key);
     if (!match) return undefined;
     const { setting } = match;
-    const shipped = findSettingDefault(availableSettings, settings, match, scope);
-    const tables = listApplicableTables(settings, scope);
+    const shipped = findSettingDefault(availableSettings, settings, match, scopePath);
+    const tables = listApplicableTables(settings, scopePath);
     const keys = listPossibleKeys(match, key);
     let inherited: InheritedValue = { value: undefined, source: 'unset', origin: 'unset', reason: undefined };
     if (shipped !== undefined)
         inherited = {
             value: shipped.value,
             source:
-                shipped.configuration === 'gspot default' ? 'gspot default' : `configuration ${shipped.configuration}`,
+                shipped.configuration === SHIPPED_DEFAULT_ORIGIN
+                    ? SHIPPED_DEFAULT_ORIGIN
+                    : `configuration ${shipped.configuration}`,
             origin: 'configuration',
             reason: undefined,
         };
@@ -266,7 +267,7 @@ export function getSettingValue(
         value,
         source,
         origin,
-        ...stripUndefined({ reason, scope, originScope }),
+        ...stripUndefined({ reason, scope: scopePath, originScope }),
     };
 }
 
@@ -316,19 +317,19 @@ List the settings that apply, with language defaults and written variants, in ke
 
 @param availableSettings the settings and defaults of the selected configurations.
 @param settings the parsed gspot.toml.
-@param scope the folder whose table applies last, if any.
+@param scopePath the folder whose table applies last, if any.
 @returns the resolved settings in key order.
 */
 export function listInheritedSettings(
     availableSettings: AvailableSettings,
     settings: Settings,
-    scope?: string,
+    scopePath: string,
 ): InheritedSetting[] {
     const keys = [
         ...new Set([
             ...availableSettings.settings.keys(),
             ...availableSettings.defaults.keys(),
-            ...listApplicableTables(settings, scope).flatMap(({ table }) =>
+            ...listApplicableTables(settings, scopePath).flatMap(({ table }) =>
                 listWrittenKeys(table, availableSettings).filter(
                     (key) => findSetting(availableSettings, key) !== undefined,
                 ),
@@ -336,18 +337,6 @@ export function listInheritedSettings(
         ]),
     ].toSorted((a, b) => compareText(a, b));
     return keys
-        .map((key) => getSettingValue(availableSettings, settings, key, scope))
+        .map((key) => getSettingValue(availableSettings, settings, key, scopePath))
         .filter((row) => row !== undefined);
-}
-
-/**
-Get the table name of a setting: tools.<tool> for a tool setting, else the first part of the key.
-
-@param key the full setting name.
-@returns its table name.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function getSettingTable(key: string): string {
-    const [table, tool] = key.split('.', TABLE_KEY_SEGMENTS);
-    return table === 'tools' && tool !== undefined ? `${table}.${tool}` : (table as string);
 }

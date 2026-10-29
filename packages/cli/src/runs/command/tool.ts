@@ -3,13 +3,12 @@ import { dirname, delimiter } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { listOtherTools } from '#cli/planning/tools.ts';
-import type { Tool } from '#cli/types/configurations.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
+import type { ProcessFailure, ToolRunOptions } from '#cli/types/tools/run.ts';
 import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
-import type { ProcessFailure, ToolRunOptions, ToolAvailability } from '#cli/types/tools/run.ts';
 import type { CheckTool, CheckToolOptions, CheckToolProgram, ToolProcessResult } from '#cli/types/runs/command.ts';
 
 function getCheckTool(
@@ -20,7 +19,10 @@ function getCheckTool(
 ): CheckTool {
     const tool = getTool(session.configurationsByName.values(), name);
     const env = { ...planned.check.env, ...options.env };
-    const availability = readToolAvailability(session, options.cwd, tool);
+    const availability = buildToolAvailability(
+        tool,
+        inspectTool({ ...session, cwd: options.cwd, miseBinPaths: session.readMiseBinPaths() }, tool),
+    );
     if ('status' in availability) {
         if (availability.status === 'error') throw new Error(availability.note);
         throw new GspotError('tool', availability.note);
@@ -49,7 +51,6 @@ Run a tool process and classify a failure.
 
 @param commandArguments the executable and expanded arguments.
 @param options the process options and tool name for a failure note.
-@returns the process result and any failure.
 */
 export async function runToolProcess(
     commandArguments: string[],
@@ -61,33 +62,17 @@ export async function runToolProcess(
 }
 
 /**
-Read the executable of a declared tool and its version, or why it cannot run.
-
-@param session the repository and tool paths.
-@param cwd the working folder.
-@param tool the tool with its version pin.
-@returns the executable path or its installation failure.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 4 files share it.
-export function readToolAvailability(session: CheckSession, cwd: string, tool: Tool): ToolAvailability {
-    return buildToolAvailability(
-        tool,
-        inspectTool({ ...session, cwd, miseBinPaths: session.readMiseBinPaths() }, tool),
-    );
-}
-
-/**
 Add the folders of the installed other tools of a check to the process `PATH`, also in a copy.
 
 @param session the repository and its configurations.
 @param names the other tools to add.
-@param env variables for the tool process.
+@param environment variables for the tool process.
 @returns the environment with their folders on `PATH`.
 */
 export function buildOtherToolEnvironment(
     session: CheckSession,
     names: string[],
-    env: Record<string, string>,
+    environment: Record<string, string>,
 ): Record<string, string> {
     const folders = names
         .map(
@@ -99,11 +84,11 @@ export function buildOtherToolEnvironment(
         )
         .filter((path) => path !== undefined)
         .map((path) => dirname(path));
-    if (folders.length === 0) return env;
-    const pathKey = Object.keys(env).find((name) => foldVariableName(name) === 'PATH') ?? 'PATH';
+    if (folders.length === 0) return environment;
+    const pathKey = Object.keys(environment).find((name) => foldVariableName(name) === 'PATH') ?? 'PATH';
     return {
-        ...env,
-        [pathKey]: [...folders, env[pathKey] ?? readEnvironmentVariable('PATH') ?? ''].join(delimiter),
+        ...environment,
+        [pathKey]: [...folders, environment[pathKey] ?? readEnvironmentVariable('PATH') ?? ''].join(delimiter),
     };
 }
 
@@ -114,7 +99,6 @@ Run the tool of a check with the tool time limit and failure handling.
 @param planned the check and scope.
 @param command the executable name and arguments, or a shipped program that drives the tool through its JavaScript API.
 @param options how to start the process.
-@returns the process output.
 */
 export async function runCheckTool(
     session: CheckSession,

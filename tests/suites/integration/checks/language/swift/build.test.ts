@@ -3,14 +3,14 @@ import { join, dirname, basename } from 'node:path';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { SWIFT_LANGUAGE_PACKAGE } from '#tests/config/swift.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system/platform.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     XCODE_TOOL_PROJECT,
@@ -115,7 +115,7 @@ describe.skipIf(!isMacos)('Swift package samples', () => {
         test.skipIf(!hasToolBuild(sample.tool))(
             `${sample.check} reports ${sample.expected.rule} in a Swift package and passes after the fix`,
             async () => {
-                expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
+                await assertCheckSample(installedSandbox(), sample);
             },
         );
     }

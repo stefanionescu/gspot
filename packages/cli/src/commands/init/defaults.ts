@@ -2,16 +2,16 @@ import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { buildSettings } from '#cli/settings/read.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
-import { trimTrailingSlashes } from '#cli/system/paths.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { type WrittenTable } from '#cli/types/commands/init.ts';
+import type { WrittenTable } from '#cli/types/commands/init.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { DETECTED_SETTINGS } from '#cli/config/commands/init/defaults.ts';
-import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
 
 function isInheritedValueChanged(
     name: string,
@@ -27,24 +27,17 @@ function isInheritedValueChanged(
     const changed = { ...settings };
     if (writtenTable.scope === '') changed.written = omitted;
     else {
-        const previous = settings.scopes[writtenTable.scope] as Settings['scopes'][string];
-        changed.scopes = { ...settings.scopes, [writtenTable.scope]: { ...previous, written: omitted } };
+        const previous = settings.scopes.get(writtenTable.scope) as NonNullable<ReturnType<Settings['scopes']['get']>>;
+        changed.scopes = new Map(settings.scopes);
+        changed.scopes.set(writtenTable.scope, { ...previous, written: omitted });
     }
     return consumers.some(
         (consumer) =>
             !isDeepStrictEqual(
-                getSettingValue(consumer.available, settings, key, consumer.scope)?.value,
-                getSettingValue(consumer.available, changed, key, consumer.scope)?.value,
+                getSettingValue(consumer.availableSettings, settings, key, consumer.scope)?.value,
+                getSettingValue(consumer.availableSettings, changed, key, consumer.scope)?.value,
             ),
     );
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function parseSelectedConfigurations(table: TomlTable) {
-    return {
-        configurations: settingsSchema.shape.configurations.parse(table['configurations']),
-        removed_configurations: settingsSchema.shape.removed_configurations.parse(table['removed_configurations']),
-    };
 }
 
 function stripTableDefaults(
@@ -57,7 +50,7 @@ function stripTableDefaults(
     const fields = Object.entries(table).map(([name, value]) => {
         const segments = [...path, name];
         const key = segments.join('.');
-        return { name, value, segments, key, setting: findSetting(writtenTable.available, key)?.setting };
+        return { name, value, segments, key, setting: findSetting(writtenTable.availableSettings, key)?.setting };
     });
     const settingFields = new Map(
         fields
@@ -108,27 +101,38 @@ export function stripDefaults(settings: TomlTable): TomlTable {
     const allSettings = buildSettings(settingsSchema.parse(settings), settings);
     const level = settingsSchema.shape.level.parse(settings['level']);
     const scopes = ((settings['scope'] ?? []) as TomlTable[]).map((table) => ({
-        path: trimTrailingSlashes(table['path'] as string),
+        path: stripTrailingSlashes(table['path'] as string),
         table,
     }));
     const selected = {
-        ...parseSelectedConfigurations(settings),
-        scopes: Object.fromEntries(scopes.map(({ path, table }) => [path, parseSelectedConfigurations(table)])),
+        configurations: settingsSchema.shape.configurations.parse(settings['configurations']),
+        removed_configurations: settingsSchema.shape.removed_configurations.parse(settings['removed_configurations']),
+        scopes: new Map(
+            scopes.map(({ path, table }) => [
+                path,
+                {
+                    configurations: settingsSchema.shape.configurations.parse(table['configurations']),
+                    removed_configurations: settingsSchema.shape.removed_configurations.parse(
+                        table['removed_configurations'],
+                    ),
+                },
+            ]),
+        ),
     };
     const root = {
         scope: '',
         table: settings,
-        available: buildAvailableSettings(selectForScope(selected, '', configurationsByName), level),
+        availableSettings: buildAvailableSettings(selectForScope(selected, '', configurationsByName), level),
     };
     const tables = [
         root,
         ...scopes.map<WrittenTable>(({ path, table }) => ({
             scope: path,
             table,
-            available: buildAvailableSettings(selectForScope(selected, path, configurationsByName), level),
+            availableSettings: buildAvailableSettings(selectForScope(selected, path, configurationsByName), level),
         })),
     ].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
-    for (const key of DETECTED_SETTINGS) for (const table of tables) table.available.defaults.delete(key);
+    for (const key of DETECTED_SETTINGS) for (const table of tables) table.availableSettings.defaults.delete(key);
     const scopeValues = scopes.map(({ path }) => {
         const writtenTable = tables.find((each) => each.scope === path) as WrittenTable;
         return stripTableDefaults(writtenTable.table, writtenTable, tables, allSettings);

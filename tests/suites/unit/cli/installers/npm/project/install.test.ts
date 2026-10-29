@@ -1,25 +1,27 @@
 import { join } from 'node:path';
-import { openWriter } from '#cli/write.ts';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { openWriter } from '#cli/repository/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
+import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
+import { type NpmToolInstall } from '#cli/types/installers/npm.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { NPM_TOOL_PROJECT } from '#cli/config/installers/projects.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
+import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
 import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/installers/npm/project.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/installers/npm/project.ts';
 
 import {
-    CREDENTIAL_NPMRC,
+    CREDENTIAL_TOKEN,
     CREDENTIAL_LOCKFILE,
     FAILED_INSTALL_CASES,
     CREDENTIAL_PACKAGE_JSON,
@@ -27,7 +29,7 @@ import {
 
 async function prepareCredentialProject(root: string, packageJson: string, lockfile: string) {
     const files = {
-        '.npmrc': CREDENTIAL_NPMRC,
+        '.npmrc': `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${CREDENTIAL_TOKEN}\n`,
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
         [GSPOT_PATHS.npmProject]: packageJson,
         [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
@@ -36,7 +38,11 @@ async function prepareCredentialProject(root: string, packageJson: string, lockf
     };
     await createFileTree(root, files);
     using owner = openWriter(root);
-    const install = await buildNpmToolInstall(await openSession(root), owner);
+    const session = await openSession(root);
+    const install = {
+        ...buildToolInstall(session, owner),
+        registryEnvironment: await readRegistryEnvironment(session.root),
+    } as NpmToolInstall;
     const error = await captureRejection(
         prepareNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: CREDENTIAL_PACKAGE_JSON }),
     );
@@ -77,13 +83,14 @@ test.each([...FAILED_INSTALL_CASES])(
                 buildProcessResult(command.at(-1) === '--version' ? { stdout: '1.4.2\n' } : { code: 1, ...failure }),
             ),
         );
+        const install = {
+            ...buildToolInstall(session, owner),
+            registryEnvironment: await readRegistryEnvironment(session.root),
+        } as NpmToolInstall;
         const installationError = await captureRejection(
             frozen
-                ? installNpmTools(await buildNpmToolInstall(session, owner))
-                : prepareNpmLockfile(await buildNpmToolInstall(session, owner), {
-                      path: GSPOT_PATHS.npmProject,
-                      content: packageJson,
-                  }),
+                ? installNpmTools(install)
+                : prepareNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: packageJson }),
         );
         expect(installationError).toMatchObject({
             name: 'GspotError',
@@ -114,7 +121,12 @@ test('an npm install that runs past the time limit names the limit', async () =>
             buildProcessResult(command.at(-1) === '--version' ? { stdout: '1.4.2\n' } : { code: 1, timedOut: true }),
         ),
     );
-    const error = await captureRejection(installNpmTools(await buildNpmToolInstall(session, owner)));
+    const error = await captureRejection(
+        installNpmTools({
+            ...buildToolInstall(session, owner),
+            registryEnvironment: await readRegistryEnvironment(session.root),
+        } as NpmToolInstall),
+    );
     const message = error.message;
     expect(message).toStartWith(
         'The command mise exec node@24 bun@1.4.2 -- bun install --frozen-lockfile --linker hoisted --config=',
@@ -171,12 +183,12 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
         MISE_DATA_DIR: join(sandbox.path, 'missing-mise'),
     });
     using owner = openWriter(sandbox.path);
-    const lockfileError = await captureRejection(
-        prepareNpmLockfile(await buildNpmToolInstall(session, owner), {
-            path: GSPOT_PATHS.npmProject,
-            content: packageJson,
-        }),
-    );
+    const install = {
+        ...buildToolInstall(session, owner),
+        registryEnvironment: await readRegistryEnvironment(session.root),
+    } as NpmToolInstall;
+    const projectFile = { path: GSPOT_PATHS.npmProject, content: packageJson };
+    const lockfileError = await captureRejection(prepareNpmLockfile(install, projectFile));
     const message = lockfileError.message;
     expect(message).toBe('The npm tool project needs Node.js to create its lockfile. Install Node.js.');
     expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.npmProject))).toBe(false);
@@ -184,15 +196,13 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
         [GSPOT_PATHS.npmProject]: packageJson,
         [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
     });
-    const cached = await prepareNpmLockfile(await buildNpmToolInstall(session, owner), {
-        path: GSPOT_PATHS.npmProject,
-        content: packageJson,
-    });
-    expect(cached.content).toBe(lockfile);
+    const cached = await prepareNpmLockfile(install, projectFile);
+    expect(cached.next.bytes.toString('utf8')).toBe(lockfile);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(packageJson);
     expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`), 'utf8')).toBe(lockfile);
 });
-test('a Yarn Classic repository resolves its tool lockfile with npm and the release hold', async () => {
+
+test('a Yarn Classic repository resolves its tool lockfile with npm and the minimum release age', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"packageManager":"yarn@1.22.22"}',
@@ -211,12 +221,15 @@ test('a Yarn Classic repository resolves its tool lockfile with npm and the rele
     });
     const session = await openSession(sandbox.path);
     using writer = openWriter(sandbox.path);
-    const install = await buildNpmToolInstall(session, writer);
+    const install = {
+        ...buildToolInstall(session, writer),
+        registryEnvironment: await readRegistryEnvironment(session.root),
+    } as NpmToolInstall;
     const lockfile = await prepareNpmLockfile(install, {
         path: GSPOT_PATHS.npmProject,
         content: JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: {} }),
     });
-    expect(JSON.parse(lockfile.content)).toStrictEqual({
+    expect(JSON.parse(lockfile.next.bytes.toString('utf8'))).toStrictEqual({
         lockfileVersion: 3,
         packages: { '': { devDependencies: {} } },
     });

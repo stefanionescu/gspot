@@ -1,7 +1,7 @@
 import { readGitText } from '#cli/system/git.ts';
 import { compareText } from '#cli/system/text.ts';
+import { MILLISECONDS_PER_DAY } from '#cli/config/units.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
-import { MILLISECONDS_PER_DAY } from '#cli/config/installers/pypi.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';

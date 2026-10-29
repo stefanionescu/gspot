@@ -2,17 +2,19 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { realpathSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import { getTool } from '#cli/configurations/tools.ts';
+import { openSession } from '#cli/planning/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { type Check } from '#cli/types/configurations.ts';
+import { CAFE_SCRIPT_PATH } from '#tests/config/paths.ts';
 import { isLinux } from '#tests/setup/system/platform.ts';
 import { BASE_CHECK } from '#tests/config/runs/command.ts';
 import { FAILED_RUN } from '#tests/config/runs/samples.ts';
 import type { CommandRun } from '#cli/types/runs/command.ts';
+import { GREETING_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { outputSchema } from '#cli/schemas/configurations/output.ts';
 import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
@@ -73,7 +75,7 @@ test.each([...LINE_ENDING_CASES])(
         expect(findings).toStrictEqual([
             {
                 check: check.id,
-                file: 'scripts/café build.sh',
+                file: CAFE_SCRIPT_PATH,
                 line: 1,
                 column: 6,
                 rule: 'SC2086',
@@ -147,6 +149,11 @@ test('grouped output drops line endings and makes absolute paths relative', asyn
             fixable: false,
         },
     ]);
+    expect(
+        parseOutput(check, './src/a.ts:\n  2: Incorrect spacing\n', '', { root: sandbox.path, cwd: sandbox.path }),
+    ).toStrictEqual([
+        { check: check.id, file: 'src/a.ts', line: 2, message: 'Incorrect spacing', help: check.help, fixable: false },
+    ]);
 });
 
 test('a message that names a file by its resolved absolute path names it relative to the root', async () => {
@@ -160,7 +167,7 @@ test('a message that names a file by its resolved absolute path names it relativ
 });
 
 test('EditorConfig output keeps file and line findings', async () => {
-    await using sandbox = await testdir({ 'source.js': 'const greeting="hello";', ' notes.txt': 'text   \n' });
+    await using sandbox = await testdir({ 'source.js': GREETING_SOURCE, ' notes.txt': 'text   \n' });
 
     const check = getShippedCheck('format/editorconfig-checker');
 
@@ -215,7 +222,7 @@ test('a regex finding without a rule group keeps a trailing bracketed word in it
     ).toStrictEqual([
         {
             check: 'pytest/coverage',
-            file: '',
+            file: 'tests/test_total.py',
             message: 'FAILED tests/test_total.py::test_sum - assert total(items) == expected(items)',
             help: pytest.help,
             fixable: false,

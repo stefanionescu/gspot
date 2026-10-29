@@ -46,7 +46,6 @@ export function includeFolderContents(patterns: string[]): string[] {
 Build a matcher for literal filenames and globs that tests both the filename and the repository path.
 
 @param names exact filenames and glob selectors.
-@returns the filename matcher that detection and ownership share.
 */
 export function buildFilenameMatcher(names: string[]): (path: string) => boolean {
     const literals = new Set(names.filter((name) => !picomatch.scan(name).isGlob));

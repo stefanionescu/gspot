@@ -1,19 +1,21 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { unlink, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { expectSampleFix } from '#tests/setup/cli/samples.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
     HOST_LOCKFILE,
     MISE_PIN_FILES,
+    BUN_PIN_SETTINGS,
     BUN_PROJECT_FILES,
     LOCKFILE_HOST_CASES,
     DEPENDENCIES_SANDBOX,
@@ -30,7 +32,7 @@ test('dependencies/lockfiles accepts a vendored file tarball without treating it
     expect(await runSandboxCheck(sandbox.path, 'dependencies/lockfiles')).toStrictEqual([]);
 });
 
-test('dependencies/lockfiles reports Git download hosts until they are allowed, and plain HTTP even when allowed', async () => {
+test('dependencies/lockfiles reports Git download hosts until they are allowed, and an http: download even when its host is allowed', async () => {
     const insecureDownload = new URL(HOST_LOCKFILE.packages['node_modules/third'].resolved);
     insecureDownload.protocol = 'http:';
     const lockfile = {
@@ -89,7 +91,8 @@ test.each([...LOCKFILE_HOST_CASES])(
     'dependencies/lockfiles reports $expected.rule in $expected.file and passes after the fix',
     async (row) => {
         const sample = { check: 'dependencies/lockfiles', ...row };
-        await expectSampleFix(DEPENDENCIES_SANDBOX, sample);
+        await using sandbox = await createSandbox(DEPENDENCIES_SANDBOX);
+        await assertCheckSample(sandbox, sample);
     },
 );
 
@@ -158,7 +161,7 @@ test.each([...MISE_PIN_FILES])(
         const packageJson = JSON.stringify({ name: 'shop', private: true, packageManager: 'bun@0.0.0-test.1' });
         await using sandbox = await testdir({
             'package.json': packageJson,
-            [file]: '[tools]\nbun = "0.0.0-test.2"\n',
+            [file]: BUN_PIN_SETTINGS,
             'gspot.toml': buildSandboxSettings(['javascript']),
         });
         const findings = await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin');
@@ -174,9 +177,10 @@ test.each([...MISE_PIN_FILES])(
         expect(await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin')).toStrictEqual([]);
     },
 );
+
 test('package-manager-pin uses the highest-precedence mise file in a folder', async () => {
     await using sandbox = await testdir({
-        ...Object.fromEntries(MISE_PIN_FILES.map(({ file }) => [file, '[tools]\nbun = "0.0.0-test.2"\n'])),
+        ...Object.fromEntries(MISE_PIN_FILES.map(({ file }) => [file, BUN_PIN_SETTINGS])),
         '.mise.local.toml': '[tools]\nbun = "0.0.0-test.1"\n',
         'package.json': JSON.stringify({ name: 'shop', private: true, packageManager: 'bun@0.0.0-test.1' }),
         'gspot.toml': buildSandboxSettings(['javascript']),
@@ -194,5 +198,35 @@ test('stale-lockfile reports each dependency that package.json and bun.lock disa
         'package.json asks for zod ^4.1.0, but bun.lock records ^4.0.0. Run bun install and commit the lockfile.',
         'package.json declares typescript 5.9.3, which bun.lock does not record. Run bun install and commit the lockfile.',
         'bun.lock records left-pad, which package.json no longer declares. Run bun install and commit the lockfile.',
+    ]);
+});
+
+test('package-manager-pin reports malformed mise syntax and still reads other mise files', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'package.json': '{"packageManager":"bun@1.0.0"}',
+        'mise.toml': '[tools',
+        '.mise.toml': '[tools]\nbun = "2.0.0"\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'mise.toml', rule: 'syntax' },
+        { file: 'package.json', rule: 'package-manager-pin' },
+    ]);
+});
+
+test('stale-lockfile reports a peer dependency and an unrecorded workspace importer', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { scopes: [{ path: 'packages/app', configurations: [] }] }),
+        'package.json': '{"workspaces":["packages/*"],"peerDependencies":{"react":"^19.0.0"}}',
+        'packages/app/package.json': '{"name":"app","dependencies":{"zod":"^4.0.0"}}',
+        'package-lock.json': '{"lockfileVersion":3,"packages":{"":{}}}',
+    });
+    expect([
+        ...(await runSandboxCheck(sandbox.path, 'dependencies/stale-lockfile')),
+        ...(await runSandboxCheck(sandbox.path, 'dependencies/stale-lockfile', { scope: 'packages/app' })),
+    ]).toMatchObject([
+        { file: 'package.json', rule: 'stale-lockfile' },
+        { file: 'packages/app/package.json', rule: 'stale-lockfile' },
     ]);
 });

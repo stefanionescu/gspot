@@ -18,6 +18,18 @@ overwrite them. Keep working beside them, and ask the user only when your change
 - Never add `[skip ci]`, `[ci skip]`, `[no ci]`, or another marker that stops CI.
 - Never force-push the default branch or a protected branch.
 
+### Commit message format
+
+<!-- level: all -->
+
+- Write the first line as `<type>: <subject>` or `<type>(<scope>): <subject>`, such as
+  `fix(api): reject an empty order`. Put `!` before the colon for a breaking change.
+- Take the type from `type-enum` and the scope from `scope-enum` in
+  `.gspot/configurations/general/commits/commitlint.json`. Leave out the scope when none fits. Without a `scope-enum`, any kebab-case word works as a scope.
+- Start the subject in lowercase or in sentence case, and end it without a period.
+- Keep the first line and each body line at 72 characters or fewer. Leave a blank line after the first line and before
+  the footers.
+
 ## Branches and pull requests
 
 When the repository uses branches and pull requests, follow these steps. Skip them when changes go straight to the

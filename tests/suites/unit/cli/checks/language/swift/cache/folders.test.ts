@@ -1,7 +1,7 @@
 import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/planning/session.ts';
 import { SWIFT_PACKAGE } from '#tests/config/swift.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
@@ -49,6 +49,7 @@ test('build cache rejects external output links and concurrent writers', async (
     repaired[Symbol.dispose]();
     expect(await isOnDisk(join(folder, 'build.lock'))).toBe(false);
 });
+
 test('the Swift build folder lives in the gspot cache and differs between repositories', async () => {
     await using first = await testdir();
     await using second = await testdir();
@@ -64,7 +65,7 @@ test('the Swift build folder lives in the gspot cache and differs between reposi
     expect(folder).toStartWith(readCacheFolder() + sep);
 });
 
-test('two copies of one repository with the same installed root share one build folder', async () => {
+test('two copies of one repository that share a tools root share one build folder', async () => {
     const files = { 'gspot.toml': buildSandboxSettings(['swift']), 'Package.swift': SWIFT_PACKAGE };
     await using installed = await testdir(files);
     await using first = await testdir(files);

@@ -1,10 +1,10 @@
 import { join, dirname } from 'node:path';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { getTool } from '#cli/configurations/tools.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
@@ -13,15 +13,22 @@ import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import { VALE_ALERT, VALE_OUTPUT_CASES, VALE_SANDBOX_FILES } from '#tests/config/checks/general/prose.ts';
-import { runSandboxCheck, findBuiltInCheck, planSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
+import { runSandboxCheck, getBuiltInCheck, planSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
+
+import {
+    VALE_ALERT,
+    EMPTY_VALE_INI,
+    VALE_OUTPUT_CASES,
+    VALE_SANDBOX_FILES,
+    VALE_INSTALLED_FILES,
+} from '#tests/config/checks/general/prose.ts';
 
 test('Vale gets the timeout setting, and its alerts become findings with file, line and column', async () => {
     await using sandbox = await testdir();
     const path = 'sample.md';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['prose', 'markdown'], { tables: 'tool_timeout_seconds = 1\n' }),
-        [GSPOT_PATHS.valeConfigFile]: 'Packages =\n',
+        [GSPOT_PATHS.valeConfigFile]: EMPTY_VALE_INI,
         [path]: '# Example text\n',
     });
     using resources = new DisposableStack();
@@ -54,8 +61,9 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
 
 test('prose/vale sends Vale each stdin file as gspot read it at the start of the run, not a later edit', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['prose', 'typescript']),
-        [GSPOT_PATHS.valeConfigFile]: 'Packages =\n',
+        ...VALE_INSTALLED_FILES,
+        'gspot.toml': buildSandboxSettings(['prose', 'typescript'], { level: 'all' }),
+        [GSPOT_PATHS.valeConfigFile]: EMPTY_VALE_INI,
         'first.mts': '// First explanation.\n',
         'second.cts': '// Second explanation.\n',
     });
@@ -77,7 +85,7 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
             return Promise.resolve(buildProcessResult({ stdout: JSON.stringify({ 'source.mts.ts': [VALE_ALERT] }) }));
         }),
     );
-    const findings = await findBuiltInCheck('prose/vale')(session, planSandboxCheck(session, 'prose/vale', { paths }));
+    const findings = await getBuiltInCheck('prose/vale')(session, planSandboxCheck(session, 'prose/vale', { paths }));
     expect(run.mock.calls.map(([command]) => command.includes('--ext=.ts'))).toStrictEqual(paths.map(() => true));
     expect(scanned).toStrictEqual(previous);
     expect(nativePaths).toStrictEqual(paths.map((path) => `--path=${join(sandbox.path, path)}.ts`));
@@ -90,8 +98,9 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
 
 test('Vale reads known file types by path, and .mts files and scripts without an extension through stdin', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['prose', 'typescript', 'bash']),
-        [GSPOT_PATHS.valeConfigFile]: 'Packages =\n',
+        ...VALE_INSTALLED_FILES,
+        'gspot.toml': buildSandboxSettings(['prose', 'typescript', 'bash'], { level: 'all' }),
+        [GSPOT_PATHS.valeConfigFile]: EMPTY_VALE_INI,
         'a.tsx': '// Component explanation.\n',
         'a.mts': '// Module explanation.\n',
         'hooks/pre-commit': '#!/bin/sh\n# Hook explanation.\n',

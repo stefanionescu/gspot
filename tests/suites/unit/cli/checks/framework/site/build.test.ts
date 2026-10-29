@@ -1,25 +1,29 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { quoteArgument } from '#cli/system/text.ts';
 import * as processes from '#cli/system/processes.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
+import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
-import { findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSiteSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { listBuiltFiles, readSuccessfulBuild } from '#cli/checks/framework/site/build.ts';
 import { BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/config/checks/framework/site/build.ts';
 
 test('build: a push run builds the site without changing committed dist files or Git status', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSiteSettings(buildProgramCommand('fakes/tool', '--write', 'dist/index.html=built')),
+        'gspot.toml': buildSandboxSettings(['site'], {
+            level: 'all',
+            tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/tool', '--write', 'dist/index.html=built'))}\n`,
+        }),
         '.gitignore': `${GSPOT_FOLDER}/\n`,
         'dist/index.html': 'committed output\n',
     });
@@ -35,13 +39,16 @@ test('build: a push run builds the site without changing committed dist files or
 test('build: a build that reads an untracked file fails until the file is in the paths', async () => {
     const command = buildProgramCommand('fakes/site-build', '--copy', 'local-input.txt=dist/index.html');
     await using sandbox = await testdir({
-        'gspot.toml': buildSiteSettings(command),
+        'gspot.toml': buildSandboxSettings(['site'], {
+            level: 'all',
+            tables: `[site]\nbuild_command = ${JSON.stringify(command)}\n`,
+        }),
         'local-input.txt': 'Only available in the working tree.',
     });
     using resources = new DisposableStack();
     const session = await openSession(sandbox.path, { resources });
     const request = planSandboxCheck(session, 'site/build', { paths: [] });
-    const findings = await findBuiltInCheck('site/build')(session, request);
+    const findings = await getBuiltInCheck('site/build')(session, request);
     expect(findings).toMatchObject([{ rule: 'build', line: 1 }]);
     const [summary, ...output] = findings[0]!.message.split('\n');
     expect(summary).toBe(`${command.map((argument) => quoteArgument(argument)).join(' ')} did not build the site.`);
@@ -51,13 +58,16 @@ test('build: a build that reads an untracked file fails until the file is in the
         buildCheckSession(checkedSession),
         planSandboxCheck(checkedSession, 'site/build', { paths: ['local-input.txt'] }),
     );
-    expect(corrected.isBuilt).toBe(true);
+    expect(corrected.built).toBe(true);
     expect(await isOnDisk(join(sandbox.path, 'dist'))).toBe(false);
 });
 
 test.each([0, 7])("build: a run deletes the build's copy after exit %i", async (code) => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSiteSettings(buildProgramCommand('fakes/tool')),
+        'gspot.toml': buildSandboxSettings(['site'], {
+            level: 'all',
+            tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/tool'))}\n`,
+        }),
         'dist/index.html': 'authored output',
     });
 
@@ -112,7 +122,7 @@ test("build: a scope's site build copies only the workspace packages it depends 
     const session = await openSession(sandbox.path, { resources });
     const input = planSandboxCheck(session, 'site/build', { scope: 'web' });
     const built = await readSuccessfulBuild(buildCheckSession(session), input);
-    expect(built.isBuilt, built.failure).toBe(true);
+    expect(built.built, built.failure).toBe(true);
     expect(await readFile(join(built.folder, 'index.html'), 'utf8')).toBe('<h1>Workspace site</h1>');
     expect(await isOnDisk(join(built.cwd, '../packages/unused/private.txt'))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, 'web/dist'))).toBe(false);
@@ -125,13 +135,27 @@ test('build: a failed site build skips every check that reads the build, and a n
     const failing = buildProgramCommand('fakes/tool', '--stderr', 'Test build failure\n', '--exit', '1');
     const tables = '[[site.size_limit]]\npaths = ["dist/**"]\nkilobytes = 100\n';
     await using sandbox = await testdir({
-        'gspot.toml': buildSiteSettings(failing, { tables }),
+        'gspot.toml': buildSandboxSettings(['site'], {
+            level: 'all',
+            tables: `[site]\nbuild_command = ${JSON.stringify(failing)}\n${tables}`,
+        }),
         'page.html': '<!doctype html><html lang="en"><title>Example</title></html>',
     });
     using resources = new DisposableStack();
     const consumers = new Set(BUILD_OUTPUT_CHECKS);
     const session = await openSession(sandbox.path, { resources });
     const failed = await runChecks(session, buildRunOptions({ only: ['site/build', ...consumers] }));
+    expect(failed.report.checks.find(({ check }) => check === 'site/build')?.findings).toStrictEqual([
+        {
+            check: 'site/build',
+            file: '',
+            line: 1,
+            rule: 'build',
+            fixable: false,
+            help: getShippedCheck('site/build').help,
+            message: `${failing.map((argument) => quoteArgument(argument)).join(' ')} did not build the site.\nTest build failure`,
+        },
+    ]);
 
     expect(
         failed.report.checks
@@ -157,7 +181,13 @@ test('build: a failed site build skips every check that reads the build, and a n
         ].toSorted((left, right) => left.check.localeCompare(right.check)),
     );
     const built = buildProgramCommand('fakes/tool', '--write', 'dist/index.html=built');
-    await writeFile(join(sandbox.path, 'gspot.toml'), buildSiteSettings(built, { tables }));
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['site'], {
+            level: 'all',
+            tables: `[site]\nbuild_command = ${JSON.stringify(built)}\n${tables}`,
+        }),
+    );
     const next = await openSession(sandbox.path, { resources });
     const rebuilt = await runChecks(next, buildRunOptions({ only: ['site/build'] }));
 

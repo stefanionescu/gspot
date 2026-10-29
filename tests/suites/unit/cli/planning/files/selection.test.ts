@@ -1,25 +1,28 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
 import { symlink, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
     TSC_PUSH_OPTIONS,
     EDITORCONFIG_FILES,
     PROJECT_PATH_IGNORES,
     LAYERED_SCOPE_SETTINGS,
+    PROJECT_FINDING_MESSAGE,
     TYPESCRIPT_SCOPES_SETTINGS,
 } from '#tests/config/planning/files.ts';
 
@@ -56,8 +59,11 @@ test("a file named on the command line runs its scope's project check on every f
     ]);
     const result = await runChecks(session, buildRunOptions({ ...TSC_PUSH_OPTIONS, paths: ['api/source.ts'] }));
     expect(result.report.exitCode, JSON.stringify(result.report)).toBe(1);
-    expect(result.report.checks.find(({ scope }) => scope === 'api')?.findings[0]?.message).toBe('Project finding');
+    expect(result.report.checks.find(({ scope }) => scope === 'api')?.findings[0]?.message).toBe(
+        PROJECT_FINDING_MESSAGE,
+    );
 });
+
 test.each([...PROJECT_PATH_IGNORES])(
     '$name, and the TypeScript check plans only the files that the ignore leaves',
     async ({ changed, present, check, rule, files }) => {
@@ -84,6 +90,7 @@ test.each([...PROJECT_PATH_IGNORES])(
         expect(planned.flatMap((plannedCheck) => plannedCheck.triggerPaths)).toStrictEqual([]);
     },
 );
+
 test('EditorConfig checks source files beyond the Prettier extensions and skips binary files', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['format']),
@@ -98,6 +105,7 @@ test('EditorConfig checks source files beyond the Prettier extensions and skips 
     );
     expect(planned!.skip).toBeUndefined();
 });
+
 test('a project-wide TypeScript check counts its source file and tsconfig.json, not unrelated files', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript']),
@@ -127,6 +135,7 @@ test('a project-wide TypeScript check counts its source file and tsconfig.json, 
     expect(staged.code, staged.stdout + staged.stderr).toBe(0);
     expect(staged.report.checks).toMatchObject([{ check: 'typescript/tsc', fileCount: 2 }]);
 });
+
 test(`a scope's per-scope check plans every file of its scope and covers only its test files`, async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['jest'], {
@@ -151,10 +160,11 @@ test(`a scope's per-scope check plans every file of its scope and covers only it
         'apps/web/value.test.js',
     ]);
 });
+
 test('Xcode plutil and general xmllint checks select their Apple and XML files', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
-            level: 'recommended',
+            level: 'basic',
             rules: true,
             scopes: [{ path: 'api', configurations: ['xcode'] }],
         }),
@@ -178,7 +188,8 @@ test('Xcode plutil and general xmllint checks select their Apple and XML files',
         ['xcode/plutil', ['api/app.plist']],
     ]);
 });
-test('Prettier receives all matching files and applies its own linked ignore file', async () => {
+
+test('Prettier gets every matching file, also those its ignore file lists', async () => {
     await using sandbox = await createGitSandbox({});
     const ignored = 'ignored.md\n';
     await createFileTree(sandbox.path, {
@@ -193,11 +204,12 @@ test('Prettier receives all matching files and applies its own linked ignore fil
     const plans = planChecks(session, { stage: 'commit', only: ['format/prettier'] });
     expect(plans[0]!.files.map((file) => file.path)).toStrictEqual(['ignored.md', 'kept.md']);
 });
+
 test('a command check reads each matching file once across nested scopes', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': LAYERED_SCOPE_SETTINGS + BASH_SYNTAX_CHECK,
-        'api/entry.sh': 'if then\n',
-        'api/worker/entry.sh': 'if then\n',
+        'api/entry.sh': BROKEN_IF_SCRIPT,
+        'api/worker/entry.sh': BROKEN_IF_SCRIPT,
         'api/worker/query.sql': 'SELECT 1;\n',
     });
 
@@ -214,4 +226,31 @@ test('a command check reads each matching file once across nested scopes', async
     expect(new Set(checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(
         new Set(['api/entry.sh', 'api/worker/entry.sh']),
     );
+});
+
+test('a deleted generated path is not a trigger for a configured project check', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['dependencies']),
+        'source.ts': 'export const value = 1;\n',
+    });
+    const planned = planChecks(await openSession(sandbox.path), {
+        stage: 'push',
+        only: ['dependencies/osv-scanner'],
+        changed: ['.gspot/package-lock.json'],
+    });
+    expect(planned.map(({ check, triggerPaths }) => ({ check: check.id, triggerPaths }))).toStrictEqual([
+        { check: 'dependencies/osv-scanner', triggerPaths: [] },
+    ]);
+});
+
+test('a project check leaves binary files out of its planned inputs', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['docker']),
+        Dockerfile: 'FROM scratch\n',
+        'image.bin': new Uint8Array([0, 255, 0]),
+    });
+    const planned = planChecks(await openSession(sandbox.path), { stage: 'commit', only: ['docker/dockerignore'] });
+    expect(
+        planned.map(({ check, files }) => ({ check: check.id, files: files.map(({ path }) => path) })),
+    ).toStrictEqual([{ check: 'docker/dockerignore', files: ['Dockerfile', 'gspot.toml'] }]);
 });

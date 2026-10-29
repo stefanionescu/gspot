@@ -24,7 +24,14 @@ explain what each one does. Browser code imports no server implementation.
 - Do not create container classes or exported objects only to simulate a namespace.
 - Keep JSDoc `@typedef` declarations in the module that uses them, following the project's folder arrangement. Share
   them through type imports when another module needs the contract.
-- Import the module that declares a symbol. A library can explicitly select index-only re-exports.
+- Import the module that declares a symbol, never an index file.
+- Export a symbol where you declare it. Do not re-export it, and do not export a constant that only renames another
+  value. When a library publishes its API through an index file, ask the user to set `structure.reexports` to
+  `index-only`.
+- Do not add a file that only imports and re-exports other modules.
+- Keep comments out of an import block. Put a file header above it.
+- Keep each relative import inside its boundary folder: each second-level folder, such as `src/cart`, and each folder
+  that `javascript.import_boundaries` lists. Import another boundary through its package name or path alias.
 - Name a namespace import after its file or package, such as `fileOne` for `file-one.js`.
 - Keep the exported name of an import. Add an alias only when two imports collide, and name it for its domain, such as
   `DomesticatedCat`.
@@ -44,10 +51,15 @@ explain what each one does. Browser code imports no server implementation.
 Use object literals for grouped arguments, and destructure fields when that makes the code clearer. A function that
 mutates its input names and documents that effect.
 
+Write a JSDoc comment as `/**` on its own line, then lines with no leading `*`, then `*/`.
+
 ### Function conventions
 
 <!-- level: all -->
 
+- Give every exported function and method a JSDoc comment: a summary that says more than the name, a blank line, and
+  `@param <name> <what it is>` for each parameter, with no type in braces. Document a destructured parameter and each
+  of its properties, such as `@param props` and `@param props.items`.
 - Do not add optional parameters to hide a broken caller contract.
 - Use early returns when they make missing-value and error handling clearer.
 - Keep constructors small. Add inheritance only for a real runtime relationship.

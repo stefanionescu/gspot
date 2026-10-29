@@ -201,6 +201,7 @@ export const SWIFT_TAG_CASES = [
         tagged: false,
     },
 ] as const;
+
 export const TYPE_DECLARATION_FILES = {
     'next-env.d.ts': '/// <reference types="next" />\n',
     'worker-configuration.d.ts': '/// <reference types="@cloudflare/workers-types" />\n',
@@ -209,3 +210,5 @@ export const TYPE_DECLARATION_FILES = {
     'app/worker-configuration.d.ts': '/// <reference types="@cloudflare/workers-types" />\n',
     'app/handwritten.d.ts': '/// <reference types="@cloudflare/workers-types" />\n',
 } as const;
+
+export const LINGUIST_GENERATED_LINE = '*.ts linguist-generated\n';

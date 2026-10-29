@@ -1,8 +1,8 @@
 import { zipSync } from 'fflate';
 import { testdir } from 'testdirs';
 import { createHash } from 'node:crypto';
-import { openSession } from '#cli/session.ts';
 import { join, basename, delimiter } from 'node:path';
+import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { listMisePins } from '#cli/configurations/tools.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
@@ -13,11 +13,13 @@ import { PYTHON_VERSION } from '#cli/config/installers/pypi.ts';
 import { REGISTRY_HOST } from '#tests/config/setup/sandboxes.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { IndexedPythonProject } from '#tests/types/packages.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { AUTHENTICATION_REQUIRED_MESSAGE } from '#tests/config/setup/runner.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { spawnGspot, runGspotStep, applyThenInstall } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -28,11 +30,14 @@ import {
 } from '#tests/config/integration/installers/pypi.ts';
 
 const resources = new AsyncDisposableStack();
+
 const pythonIndex = Promise.withResolvers<{ url: string }>();
+
 beforeAll(async () => {
     const work = resources.use(await testdir());
     pythonIndex.resolve(resources.use(await createPythonIndex(work.path)));
 });
+
 afterAll(() => resources.disposeAsync());
 
 test.each([...PYTHON_PROJECTS])(
@@ -41,7 +46,7 @@ test.each([...PYTHON_PROJECTS])(
         await using sandbox = await createGitSandbox({});
         await using artifacts = await createGitSandbox({});
         await using project = await createIndexedPythonProject(sandbox.path, configuration);
-        const { projectFile, lockfilePath, lockfile } = project.projectFiles;
+        const { projectFile, lockfilePath, lockfile } = project.files;
         const { rootProject, rootConfiguration } = project;
         expect(lockfile.toString('utf8')).not.toContain(PYTHON_INDEX_CREDENTIALS.password);
         const brokenUv = await writeProgramCommand(artifacts.path, 'bin/uv', 'fakes/tool', '--exit', '87');
@@ -115,7 +120,7 @@ test('apply keeps a conflicted Python lockfile and install repairs it', async ()
     const configuration = 'uv.toml';
     await using sandbox = await createGitSandbox({});
     await using project = await createIndexedPythonProject(sandbox.path, configuration);
-    const { lockfilePath, lockfile } = project.projectFiles;
+    const { lockfilePath, lockfile } = project.files;
     const { rootConfiguration } = project;
     const conflict = '<<<<<<< interrupted lockfile\n';
     await chmod(lockfilePath, 0o644);
@@ -131,11 +136,11 @@ test('apply keeps a conflicted Python lockfile and install repairs it', async ()
     expect(await readFile(join(sandbox.path, configuration))).toStrictEqual(rootConfiguration);
 });
 
-async function createPythonIndex(work: string): Promise<Disposable & { url: string }> {
-    await using _source = await createPythonProject(work, { indexFile: 'uv.toml' });
-    await applyThenInstall(work);
-    const binary = buildVenvExecutablePath(join(work, GSPOT_PATHS.pythonEnvironment), 'ruff');
-    const inspected = await runCommand([binary, '--version'], { cwd: work });
+async function createPythonIndex(workFolder: string): Promise<Disposable & { url: string }> {
+    await using _source = await createPythonProject(workFolder, { indexFile: 'uv.toml' });
+    await applyThenInstall(workFolder);
+    const binary = buildVenvExecutablePath(join(workFolder, GSPOT_PATHS.pythonEnvironment), 'ruff');
+    const inspected = await runCommand([binary, '--version'], { cwd: workFolder });
     if (inspected.code !== 0) throw new Error(`Ruff version failed: ${inspected.stderr}`);
     const version = /^ruff (?<version>\d+\.\d+\.\d[-+\w.]*)$/u.exec(inspected.stdout.trim())?.groups?.['version'];
     if (version === undefined) throw new Error('Ruff version output is invalid.');
@@ -159,7 +164,7 @@ async function createPythonIndex(work: string): Promise<Disposable & { url: stri
         port: 0,
         fetch(request) {
             if (request.headers.get('authorization') !== authentication)
-                return new Response('Authentication required', { status: 401 });
+                return new Response(AUTHENTICATION_REQUIRED_MESSAGE, { status: 401 });
             if (new URL(request.url).pathname.endsWith('.whl')) return new Response(archive);
             const file = {
                 filename: wheel,
@@ -222,7 +227,7 @@ async function createIndexedPythonProject(
     return {
         rootProject: project.rootProject,
         rootConfiguration: project.rootConfiguration,
-        projectFiles,
+        files: projectFiles,
         [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned),
     };
 }

@@ -2,24 +2,46 @@ import { resolve } from 'node:path';
 import { addAbortSignal } from 'node:stream';
 import { constants, accessSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
-import { isGitRepository } from '#cli/system/git.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { runPushCheck } from '#cli/commands/check/push.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import type { CheckProgress } from '#cli/types/runs/run.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { printProgress } from '#cli/commands/check/report.ts';
 import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
+import { DRY_RUN_FLAG } from '#cli/config/commands/dry-run.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
-import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
+import { STAGED_FLAG, CHANGED_FLAG } from '#cli/config/commands/check/flags.ts';
+import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { Option, type Command, InvalidArgumentError } from '@commander-js/extra-typings';
-import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/check.ts';
-import { PROGRESS_CLEAR, NO_BASE_REVISION, CHECK_LIST_SEPARATOR } from '#cli/config/commands/check/check.ts';
+
+import {
+    type CheckFlags,
+    type CheckOptions,
+    type CheckProgress,
+    type CheckCommandJson,
+} from '#cli/types/commands/check.ts';
+import {
+    FIX_FLAG,
+    ONLY_OPTION,
+    HOOK_OPTION,
+    VERBOSE_FLAG,
+    PROGRESS_CLEAR,
+    CHANGED_OPTION,
+    DRY_RUN_MESSAGE,
+    NO_BASE_REVISION,
+    PRE_COMMIT_OPTION,
+    PUSH_STDIN_MESSAGE,
+    PUSH_INPUT_MESSAGE,
+    COMMIT_FILE_MESSAGE,
+    CHECK_LIST_SEPARATOR,
+    EMPTY_CHECKS_MESSAGE,
+    CHECK_STOPPED_MESSAGE,
+} from '#cli/config/commands/check/check.ts';
 
 async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
     cancelSignal.throwIfAborted();
@@ -31,8 +53,7 @@ async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
         return input + decoder.decode();
     } catch (error) {
         cancelSignal.throwIfAborted();
-        if (error instanceof TypeError)
-            throw new GspotError('git', 'Git sent pre-push input that is not UTF-8 text.', { cause: error });
+        if (error instanceof TypeError) throw new GspotError('git', PUSH_INPUT_MESSAGE, { cause: error });
         throw error;
     }
 }
@@ -42,7 +63,7 @@ function parseCheckNames(value: string, previous: string[] | undefined): string[
         .split(CHECK_LIST_SEPARATOR)
         .map((check) => check.trim())
         .filter((check) => check !== '');
-    if (checks.length === 0) throw new InvalidArgumentError('Name a check, such as --only python/ruff.');
+    if (checks.length === 0) throw new InvalidArgumentError(EMPTY_CHECKS_MESSAGE);
     return [...(previous ?? []), ...checks];
 }
 
@@ -65,7 +86,7 @@ function buildCheckOptions(paths: string[], flags: CheckFlags, cwd: string): Che
         cwd,
         staged: flags.staged === true || hook === 'pre-commit',
         fix: flags.fix === true,
-        isDryRun: flags.dryRun === true,
+        dryRun: flags.dryRun === true,
         verbose: flags.verbose === true,
         paths: hook === 'commit-msg' ? [] : paths,
         ...stripUndefined({
@@ -87,49 +108,29 @@ function buildCheckOptions(paths: string[], flags: CheckFlags, cwd: string): Che
 
 function assertPushFlags(flags: CheckFlags): void {
     const conflicts = [
-        flags.staged === true ? '--staged' : undefined,
-        getChangedBase(flags.changed) === undefined ? undefined : '--changed',
-        flags.fix === true ? '--fix' : undefined,
-        flags.dryRun === true ? '--dry-run' : undefined,
+        flags.staged === true ? STAGED_FLAG : undefined,
+        flags.changed === undefined ? undefined : CHANGED_FLAG,
+        flags.fix === true ? FIX_FLAG : undefined,
+        flags.dryRun === true ? DRY_RUN_FLAG : undefined,
     ].filter((value) => value !== undefined);
     if (conflicts.length > 0)
         throw new GspotError(
             'arguments',
             `${conflicts.join(', ')} cannot run with --hook pre-push: it checks the pushed commits. Leave out ${conflicts.join(', ')}.`,
         );
-    if (process.stdin.isTTY)
-        throw new GspotError(
-            'arguments',
-            '--hook pre-push reads the lines that Git writes to standard input. Run it from the pre-push hook.',
-        );
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function formatStagedFlag(hook: CheckFlags['hook']): string {
-    return hook === 'pre-commit' ? '--hook pre-commit' : '--staged';
+    if (process.stdin.isTTY) throw new GspotError('arguments', PUSH_STDIN_MESSAGE);
 }
 
 function assertCheckSelection(options: CheckOptions, flags: CheckFlags): void {
     if (flags.hook === 'pre-push') assertPushFlags(flags);
-    const selector = formatStagedFlag(flags.hook);
+    const selector = flags.hook === 'pre-commit' ? PRE_COMMIT_OPTION : STAGED_FLAG;
     if (options.staged && options.fix)
         throw new GspotError(
             'arguments',
             `--fix cannot run with ${selector}: fixers change the working tree, not the staged files. Run gspot check --fix, then stage the changes.`,
         );
-    if (options.staged && options.base !== undefined)
+    if (options.staged && flags.changed !== undefined)
         throw new GspotError('arguments', `--changed cannot run with ${selector}. Choose one file selection.`);
-}
-
-function assertGitSelection(root: string, options: CheckOptions): void {
-    const staged = formatStagedFlag(options.hook);
-    const gitFlags = [
-        options.staged ? staged : undefined,
-        options.base === undefined ? undefined : '--changed',
-        options.hook === 'pre-push' ? '--hook pre-push' : undefined,
-    ].filter((value) => value !== undefined);
-    if (gitFlags.length > 0 && !isGitRepository(root))
-        throw new GspotError('git', `${gitFlags.join(', ')} needs a Git repository.`);
 }
 
 function assertMessageSelection(options: CheckOptions, paths: string[]): void {
@@ -142,8 +143,7 @@ function assertMessageSelection(options: CheckOptions, paths: string[]): void {
             'arguments',
             `${messageCheck.id} checks commit messages. Run gspot check --hook commit-msg -- <file>.`,
         );
-    if (options.hook === 'commit-msg' && paths.length !== 1)
-        throw new GspotError('arguments', '--hook commit-msg needs one commit message file after --.');
+    if (options.hook === 'commit-msg' && paths.length !== 1) throw new GspotError('arguments', COMMIT_FILE_MESSAGE);
 }
 
 function assertReadableMessageFile(options: CheckOptions): void {
@@ -158,12 +158,10 @@ function assertReadableMessageFile(options: CheckOptions): void {
 }
 
 function parseCheckFlags(paths: string[], flags: CheckFlags, cwd: string): { root: string; options: CheckOptions } {
-    if (flags.dryRun === true && flags.fix !== true)
-        throw new GspotError('arguments', '--dry-run previews the fixes. Add --fix.');
+    if (flags.dryRun === true && flags.fix !== true) throw new GspotError('arguments', DRY_RUN_MESSAGE);
     const options = buildCheckOptions(paths, flags, cwd);
     assertCheckSelection(options, flags);
     const root = readRepositoryRoot(options.cwd);
-    assertGitSelection(root, options);
     assertMessageSelection(options, paths);
     assertReadableMessageFile(options);
     return { root, options };
@@ -179,6 +177,7 @@ async function runStagedCheck(
     const paths = options.paths.map((path) => buildArgumentPath(root, options.cwd, path));
     return await runTreeCheck(copy.root, { ...options, cwd: copy.root, paths }, cancelSignal, {
         ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
+        unreadablePaths: copy.unreadablePaths,
         content: 'index',
         cwd: options.cwd,
         paths: options.paths,
@@ -213,7 +212,7 @@ async function runCheckCommand(
         return await runCancelableCommand(async (cancelSignal) => {
             const { root, options } = parseCheckFlags(paths, flags, cwd);
             return await runCheckSelection(root, options, cancelSignal);
-        }, 'Check stopped before every check finished.');
+        }, CHECK_STOPPED_MESSAGE);
     } finally {
         if (flags.json !== true && process.stderr.isTTY) process.stderr.write(PROGRESS_CLEAR);
     }
@@ -232,13 +231,13 @@ export function registerCheck(program: Command, onResult: CommandCompletion): vo
         .argument('[paths...]', COMMAND_HELP.check.arguments['paths'])
         .summary(COMMAND_HELP.check.summary)
         .description(COMMAND_HELP.check.description)
-        .option('--only <checks>', COMMAND_HELP.check.options['--only <checks>'], parseCheckNames)
-        .option('--staged', COMMAND_HELP.check.options['--staged'])
-        .option('--changed [ref]', COMMAND_HELP.check.options['--changed [ref]'])
-        .option('--fix', COMMAND_HELP.check.options['--fix'])
-        .option('--dry-run', COMMAND_HELP.check.options['--dry-run'])
-        .addOption(new Option('--hook <hook>', COMMAND_HELP.check.options['--hook <hook>']).choices(CHECK_HOOKS))
-        .option('--verbose', COMMAND_HELP.check.options['--verbose'])
+        .option(ONLY_OPTION, COMMAND_HELP.check.options[ONLY_OPTION], parseCheckNames)
+        .option(STAGED_FLAG, COMMAND_HELP.check.options[STAGED_FLAG])
+        .option(CHANGED_OPTION, COMMAND_HELP.check.options[CHANGED_OPTION])
+        .option(FIX_FLAG, COMMAND_HELP.check.options[FIX_FLAG])
+        .option(DRY_RUN_FLAG, COMMAND_HELP.check.options[DRY_RUN_FLAG])
+        .addOption(new Option(HOOK_OPTION, COMMAND_HELP.check.options[HOOK_OPTION]).choices(CHECK_HOOKS))
+        .option(VERBOSE_FLAG, COMMAND_HELP.check.options[VERBOSE_FLAG])
         .action(async (paths, flags) => {
             onResult(await runCheckCommand(paths, flags, process.cwd()));
         });

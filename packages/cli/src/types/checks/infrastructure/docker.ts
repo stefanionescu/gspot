@@ -1,10 +1,15 @@
+import type { CheckFinding } from '#cli/types/runs/check.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 
 export type ComposeDeclaration = { name: string; path: string; service: ComposeService };
 
 export type ComposeFiles = { last: TrackedFile; before: TrackedFile[] };
 
-export type ComposeDocuments = { declarations: ComposeDeclaration[]; contexts: Map<string, string[]> };
+export type ComposeDocuments = {
+    findings: CheckFinding[];
+    declarations: ComposeDeclaration[];
+    contexts: Map<string, string[]>;
+};
 
 export type ComposeService = {
     image?: string | undefined;

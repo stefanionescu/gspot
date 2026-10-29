@@ -1,40 +1,35 @@
 import { spyOn } from 'bun:test';
-import { openSession } from '#cli/session.ts';
+import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { type Session } from '#cli/types/session.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { runBuiltInCheck } from '#cli/runs/results.ts';
+import { ROOT_LABEL } from '#tests/config/messages.ts';
 import { SWIFT_PACKAGE } from '#tests/config/swift.ts';
-import { findCheckCode } from '#cli/checks/registry.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { findScopePath } from '#cli/repository/scopes.ts';
 import * as environment from '#cli/system/environment.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 
 /**
 Keep the compiler cache in a temporary folder until the test ends.
-
-@returns a stack that removes the folder and the spy.
 */
 export async function redirectCacheFolder(): Promise<AsyncDisposableStack> {
     await using resources = new AsyncDisposableStack();
     const cache = resources.use(await testdir());
-    resources.use(spyOn(environment, 'readCacheFolder').mockReturnValue(cache.path));
+    resources.use(overrideEnvironment({ XDG_CACHE_HOME: cache.path }));
     return resources.move();
 }
 
 /**
 Plan one sandbox check with its complete repository and selected scope files.
-
-@param session the sandbox the test opened.
-@param checkId for example bash/shellcheck.
-@param options which files to include and what to clean up.
-@param options.scope a folder to check; the root by default.
-@param options.paths files to check; every file by default.
-@returns the files and settings that the check reads.
 */
 export function planSandboxCheck(
     session: Session,
@@ -43,7 +38,7 @@ export function planSandboxCheck(
 ): PlannedCheck {
     const path = options.scope ?? '';
     const scope = session.scopes.find((each) => each.path === path);
-    if (scope === undefined) throw new Error(`The sandbox has no scope at ${path || 'the root'}.`);
+    if (scope === undefined) throw new Error(`The sandbox has no scope at ${path || ROOT_LABEL}.`);
     const selected = scope.configurations
         .flatMap((configuration) => configuration.checks.map((check) => ({ configuration, check })))
         .find(({ check }) => check.id === checkId);
@@ -52,7 +47,7 @@ export function planSandboxCheck(
     const paths = options.paths;
     const files = session.repository.files.filter(
         (file) =>
-            (check.runs === 'once' || findScopePath(file.path, session.repository.scopeFolders) === path) &&
+            (check.runs === 'once' || selectScopePath(file.path, session.repository.scopeFolders) === path) &&
             (paths === undefined || paths.includes(file.path)),
     );
     const tool = getToolName(check);
@@ -67,12 +62,7 @@ export function planSandboxCheck(
 }
 
 /**
-Create a Swift sandbox with fake tool versions and a temporary compiler cache.
-
-@param sandbox folder that the test removes.
-@param checkId for example swift/swiftlint.
-@param files paths and text to add or replace.
-@returns the session, planned check, and their cleanup.
+Create a Swift sandbox with fake tool versions and a temporary compiler cache. The test removes the sandbox folder.
 */
 export async function prepareSwiftCheck(
     sandbox: TestdirResult,
@@ -110,7 +100,11 @@ export async function runSandboxCheck(
     using resources = new DisposableStack();
     const session = await openSession(root, { resources });
     const planned = planSandboxCheck(session, checkId, options);
-    const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
+    const result = await runCheckCode(
+        buildCheckSession(session),
+        planned,
+        planned.check.generator_outputs === undefined ? CHECK_CODE[planned.check.id] : { check: checkGeneratorOutputs },
+    );
     return result.findings;
 }
 
@@ -129,15 +123,12 @@ export async function openFakeToolSession(
 
 /**
 Find the code of a built-in check, as a function that resolves to its findings.
-
-@param checkId a check with built-in code, such as `structure/lone-files`.
-@returns a function that runs the planned check in its session and resolves to its findings.
 */
-export function findBuiltInCheck(checkId: string): (session: Session, planned: PlannedCheck) => Promise<Finding[]> {
-    const check = findCheckCode({ id: checkId })?.check;
+export function getBuiltInCheck(checkId: string): (session: Session, planned: PlannedCheck) => Promise<Finding[]> {
+    const check = CHECK_CODE[checkId]?.check;
     if (check === undefined) throw new Error(`${checkId} has no built-in check.`);
     return async (session, planned) => {
-        const result = await check(buildCheckSession(session), planned);
-        return Array.isArray(result) ? result : result.findings;
+        const result = await runBuiltInCheck(check, buildCheckSession(session), planned);
+        return [...result.findings];
     };
 }

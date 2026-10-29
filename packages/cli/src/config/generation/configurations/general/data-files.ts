@@ -2,8 +2,6 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 
 export const TAPLO_FORMATTING = {
-    align_entries: false,
-    reorder_keys: false,
     array_auto_expand: false,
     array_auto_collapse: false,
 } as const;
@@ -35,4 +33,8 @@ export const YAMLLINT_RULE_OPTIONS = { truthy: { 'check-keys': false } } as cons
 
 export const YAMLLINT_YAML_OPTIONS = { version: '1.1' } as const;
 
-export const YAMLLINT_RULES = ['anchors', 'key-duplicates', 'truthy'] as const;
+export const YAMLLINT_RULES = ['anchors', 'key-duplicates', 'octal-values', 'truthy'] as const;
+
+export const V8R_TABLE = 'tools.v8r';
+
+export const YAMLLINT_CHECK = 'data-files/yamllint';

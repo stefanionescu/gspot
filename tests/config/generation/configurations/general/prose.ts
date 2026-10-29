@@ -1,4 +1,4 @@
-export const RECOMMENDED_VALE_STYLE_FILES = [
+export const DEFAULT_LEVEL_STYLE_FILES = [
     'styles/gspot/alt-text.yml',
     'styles/gspot/dates.yml',
     'styles/gspot/link-text.yml',
@@ -44,3 +44,5 @@ export const PROSE_STYLE_CASES = [
         expected: { scope: 'sentence', max: 17, message: 'A sentence longer than 17 words. Split it.' },
     },
 ] as const;
+
+export const GSPOT_STYLES_LINE = 'BasedOnStyles = gspot';

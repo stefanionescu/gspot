@@ -67,3 +67,12 @@ export const VALE_OUTPUT_CASES = [
     },
     { name: 'empty reports', stdout: '{}', findings: [] },
 ] as const;
+
+export const EMPTY_VALE_INI = 'Packages =\n';
+
+export const VALE_INSTALLED_FILES = Object.fromEntries(
+    ['Google', 'write-good', 'proselint', 'alex', 'Harper', 'config/dictionaries'].map((folder) => [
+        `${GSPOT_PATHS.valePackages}/${folder}/.keep`,
+        '',
+    ]),
+);

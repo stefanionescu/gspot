@@ -31,7 +31,7 @@ import type {
     PackageManagerCommand,
 } from '#cli/types/repository/npm/package-manager.ts';
 
-const packageManagerVersions: CacheKey<Map<string, PackageManager>> = { create: () => new Map() };
+const PACKAGE_MANAGER_VERSIONS: CacheKey<Map<string, PackageManager>> = { create: () => new Map() };
 
 function buildPackageManagerField(
     pin: { name: string | undefined; version: string | undefined },
@@ -63,7 +63,7 @@ function readFirstPackageManager(
 ): PackageManagerField | { name: PackageManagerPin['name']; version?: undefined } {
     for (const path of packageJsonPaths) {
         const packageJson = readPackageJson(root, path);
-        const pin = packageJson === undefined ? undefined : readPackageManagerPin(packageJson);
+        const pin = packageJson === undefined ? undefined : getPackageManagerPin(packageJson);
         if (pin !== undefined) return pin;
         const lockfile = LOCKFILES.filter((row) => 'configuration' in row && row.configuration === 'javascript').find(
             ({ file }) => existsSync(join(root, dirname(path), file)),
@@ -89,9 +89,8 @@ export function isYarnBerry(packageManager: PackageManager): boolean {
 Read and validate the package manager pin written in package.json.
 
 @param packageJson the repository package fields.
-@returns the declared package manager and its source field.
 */
-export function readPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
+export function getPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
     if (packageJson.packageManager !== undefined) return parsePackageManagerField(packageJson.packageManager);
     const engines = packageJson.devEngines?.packageManager;
     const engine = Array.isArray(engines) ? engines[0] : engines;
@@ -138,7 +137,6 @@ Resolve an undeclared package manager version only when generating or installing
 @param packageManager the declared or detected name and version.
 @param timeoutSeconds the limit for the version query.
 @param reads the run cache that owns the resolved version.
-@returns the name and version requirement that the tool project uses.
 */
 export function readPackageManagerVersion(
     root: string,
@@ -147,7 +145,7 @@ export function readPackageManagerVersion(
     reads: ReadCache,
 ): PackageManager {
     const key = JSON.stringify([root, packageManager.name, packageManager.version]);
-    return getCachedMapValue(reads, packageManagerVersions, key, () => {
+    return getCachedMapValue(reads, PACKAGE_MANAGER_VERSIONS, key, () => {
         const { name, version } = packageManager;
         if (version !== undefined) return { name, version };
         const result = spawnProcessBlocking([name, VERSION_FLAG], {
@@ -156,12 +154,19 @@ export function readPackageManagerVersion(
         });
         if (result.code !== 0)
             throw new GspotError('tool', `Cannot determine the ${name} version for the tool project.`);
-        return packageManagerSchema.parse({ name, version: result.stdout.trim() });
+        const parsed = packageManagerSchema.safeParse({ name, version: result.stdout.trim() });
+        if (!parsed.success)
+            throw new GspotError(
+                'tool',
+                `Cannot read the ${name} version for the tool project. Check that ${name} --version prints a version.`,
+                { cause: parsed.error },
+            );
+        return parsed.data;
     });
 }
 
 /**
-Resolve a package manager for the tool project, using npm for every Yarn repository.
+Resolve a package manager for the tool project, using npm when the repository pins Yarn.
 
 @param root the folder for a version query.
 @param packageManager the repository package manager pin.
@@ -184,7 +189,6 @@ export function readToolPackageManager(
 Select the runner from the root gspot dependency.
 
 @param root the folder whose package.json decides the runner.
-
 @returns the runner of the package manager, or mise when gspot has no root npm dependency.
 */
 export function selectStartRunner(root: string): StartRunner {
@@ -202,12 +206,15 @@ export function selectStartRunner(root: string): StartRunner {
 Run a declared package manager with its pinned runtime and version.
 
 @param packageManager the manager name and declared version, if any.
-@param args the manager arguments.
+@param commandArguments the executable options and operands to pass after its name.
 @returns the direct command or the mise command for the exact pin.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function buildPackageManagerCommand(packageManager: PackageManagerCommand, args: readonly string[]): string[] {
-    const command = [packageManager.name, ...args];
+export function buildPackageManagerCommand(
+    packageManager: PackageManagerCommand,
+    commandArguments: readonly string[],
+): string[] {
+    const command = [packageManager.name, ...commandArguments];
     return packageManager.version === undefined
         ? command
         : ['mise', 'exec', CI_NODE, `${packageManager.name}@${packageManager.version}`, '--', ...command];

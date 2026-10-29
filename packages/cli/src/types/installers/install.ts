@@ -1,8 +1,8 @@
 import type { Session } from '#cli/types/session.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import type { Tool } from '#cli/types/configurations.ts';
+import type { Generation } from '#cli/types/generation/files.ts';
 import type { InstallRecord } from '#cli/types/installers/record.ts';
-import type { GenerationResult } from '#cli/types/generation/files.ts';
 import type { PackageManager, PackageManagerCommand } from '#cli/types/repository/npm/package-manager.ts';
 
 export type InstallResult = { note: string; steps: readonly (readonly string[])[] };
@@ -20,7 +20,7 @@ export type ToolInstall = {
     packageManager: ToolPackageManager | undefined;
     minimumReleaseAge: MinimumReleaseAge;
     writer: Files;
-    generated: GenerationResult;
+    generated: Generation;
     tools: Tool[];
     misePath: string | null;
     steps: (readonly string[])[];

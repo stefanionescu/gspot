@@ -2,16 +2,16 @@ import { isDeepStrictEqual } from 'node:util';
 import type { Session } from '#cli/types/session.ts';
 import { posix, dirname, relative } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { ManagedKeys } from '#cli/types/write.ts';
+import { listCheckTools } from '#cli/planning/tools.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
+import type { ManagedKeys } from '#cli/types/repository/writer.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { listCheckTools, listConfiguredChecks } from '#cli/planning/tools.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
@@ -20,7 +20,8 @@ import type { GeneratedFile, ConfigFileOwner, PlannedPointerField } from '#cli/t
 import { TARGET_PLACEHOLDER, TARGET_MODULE_PLACEHOLDER } from '#cli/config/generation/config-files/pointers.ts';
 
 function fillTarget(body: string, pointerPath: string, targetPath: string): string {
-    const target = buildRelativeTarget(pointerPath, targetPath);
+    const relativePath = convertToPosixPath(relative(dirname(pointerPath), targetPath));
+    const target = relativePath.startsWith('./') || relativePath.startsWith('../') ? relativePath : `./${relativePath}`;
     return body.replaceAll(TARGET_PLACEHOLDER, (placeholder) => {
         if (placeholder === TARGET_MODULE_PLACEHOLDER) {
             return JSON.stringify(
@@ -32,33 +33,6 @@ function fillTarget(body: string, pointerPath: string, targetPath: string): stri
         }
         return JSON.stringify(target);
     });
-}
-
-/**
-Build the path from the folder of a file to a target, which starts with ./ or ../ so that a module import or an extends
-field reads it as relative.
-
-@param filePath the file that names the target, from the repository root.
-@param targetPath the target, from the repository root.
-@returns the relative path.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
-export function buildRelativeTarget(filePath: string, targetPath: string): string {
-    const relativePath = convertToPosixPath(relative(dirname(filePath), targetPath));
-    return relativePath.startsWith('./') || relativePath.startsWith('../') ? relativePath : `./${relativePath}`;
-}
-
-function buildPointerFile(
-    pointer: NonNullable<ConfigFile['pointer']>,
-    pointerPath: string,
-    targetPath: string,
-): GeneratedFile {
-    const body = fillTarget(pointer.body, pointerPath, targetPath);
-    const notes = [`The config file is ${targetPath}.`, ...(pointer.note === undefined ? [] : [pointer.note])];
-    return {
-        path: pointerPath,
-        content: `${formatHeader(pointerPath, notes)}${body}`,
-    };
 }
 
 /**
@@ -91,7 +65,8 @@ export function listPointerPaths(owner: ConfigFileOwner, configFile: ConfigFile)
         owned.flatMap(({ path }) =>
             [...includeParentFolders([extractParentFolder(path)])]
                 .filter((folder) => folder !== '' && isMatch(folder))
-                .toSorted((left, right) => right.length - left.length)
+                .toSorted((left, right) => left.length - right.length)
+                .slice(0, 1)
                 .map((folder) => (isInScope(folder, scopePath) ? folder : scopePath)),
         ),
     );
@@ -99,8 +74,7 @@ export function listPointerPaths(owner: ConfigFileOwner, configFile: ConfigFile)
 }
 
 /**
-List every path outside .gspot/ that gspot can write. Include manifest targets and pointers at each scope root and
-pointer folder, and both CI workflow paths.
+List every path outside .gspot/ that gspot can write. Include manifest targets and pointers at each scope root and pointer folder, and both CI workflow paths.
 
 @param session the scopes and the configurations.
 @returns the paths, from the repository root.
@@ -158,13 +132,28 @@ function listPointerFieldTargets({
         );
 }
 
+function listPointerTools(session: Session) {
+    return session.scopes.flatMap((scope) => {
+        const required = new Set(
+            session.configuredChecks
+                .filter((planned) => planned.scope.path === scope.path || planned.check.runs === 'once')
+                .flatMap((check) => listCheckTools(check)),
+        );
+        return readConfigurations()
+            .values()
+            .flatMap((configuration) =>
+                configuration.tools.map((tool) => ({ scope, configuration, tool, consumed: required.has(tool.name) })),
+            )
+            .toArray();
+    });
+}
+
 /**
 Point the package fields that manifests declare at the generated config files.
 
 @param session the repository files and scopes.
 @param generated the config files that this run generates.
 @param configFiles the config file path for each scope and config file.
-@returns changes to the declared package fields.
 */
 export function buildPointerFieldEdits(
     session: Session,
@@ -174,15 +163,7 @@ export function buildPointerFieldEdits(
     const { root, repository, scopes } = session;
     const paths = new Set(generated.map(({ path }) => path));
     const scopePaths = scopes.map(({ path }) => path);
-    const tools = scopes.flatMap((scope) => {
-        const required = new Set(listConfiguredChecks(session, scope).flatMap((check) => listCheckTools(check)));
-        return readConfigurations()
-            .values()
-            .flatMap((configuration) =>
-                configuration.tools.map((tool) => ({ scope, configuration, tool, consumed: required.has(tool.name) })),
-            )
-            .toArray();
-    });
+    const tools = listPointerTools(session);
     const pointerTargets = tools.flatMap((selected) =>
         listPointerFieldTargets({ ...selected, paths, configFiles, scopePaths }),
     );
@@ -202,17 +183,26 @@ export function buildPointerFieldEdits(
         const document = parseJsonFile(path, source.bytes.toString('utf8'));
         const keys = pointerFields
             .values()
+            .map((row) => {
+                const relativePath = convertToPosixPath(relative(dirname(path), row.target));
+                return {
+                    ...row,
+                    extends:
+                        relativePath.startsWith('./') || relativePath.startsWith('../')
+                            ? relativePath
+                            : `./${relativePath}`,
+                };
+            })
             .filter(
                 (row) =>
                     Object.hasOwn(document, row.key) &&
                     isInScope(path, row.scope) &&
                     row.children.every((child) => !isInScope(path, child)) &&
-                    (paths.has(row.target) ||
-                        isDeepStrictEqual(document[row.key], { extends: buildRelativeTarget(path, row.target) })),
+                    (paths.has(row.target) || isDeepStrictEqual(document[row.key], { extends: row.extends })),
             )
             .map((row) => ({
                 key: [row.key],
-                value: paths.has(row.target) ? { extends: buildRelativeTarget(path, row.target) } : undefined,
+                value: paths.has(row.target) ? { extends: row.extends } : undefined,
             }))
             .toArray();
         if (keys.length > 0) edits.push({ path, keys });
@@ -226,11 +216,13 @@ Build the pointers of one generated config file.
 @param owner the repository and the scope.
 @param configFile the shipped config file.
 @param target the config file path.
-@returns the pointer files for the config file.
 */
 export function buildPointerFiles(owner: ConfigFileOwner, configFile: ConfigFile, target: string): GeneratedFile[] {
     const { pointer } = configFile;
     return pointer === undefined
         ? []
-        : listPointerPaths(owner, configFile).map((path) => buildPointerFile(pointer, path, target));
+        : listPointerPaths(owner, configFile).map((path) => ({
+              path,
+              content: `${formatHeader(path, pointer.note === undefined ? [] : [pointer.note])}${fillTarget(pointer.body, path, target)}`,
+          }));
 }

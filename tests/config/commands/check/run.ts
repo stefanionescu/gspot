@@ -9,8 +9,6 @@ export const QUALITY_SEARCH_ARGUMENTS = [
     '{files}',
 ];
 
-export const QUALITY_FIX_ARGUMENTS = ['--log-arguments', 'fixed.txt', '--text', 'corrected\n', '--', '{files}'];
-
 const HEADERS_FILE = `/*
     X-Content-Type-Options: nosniff
     Referrer-Policy: same-origin

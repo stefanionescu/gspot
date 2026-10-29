@@ -15,12 +15,6 @@ export const MISE_CHECKSUM_PATTERN = /^(?:sha256|blake3):[a-f0-9]{64}$/u;
 
 export const MISE_PLATFORM_PREFIX = 'platforms.';
 
-export const MISE_ARCHIVE_LIMIT = 256 * 1024 * 1024;
+export const MISE_TRUST_NOTE = 'trusted .gspot/mise.toml for mise';
 
-export const MISE_LOCK_SECTION_START = /^(?=\[)/mu;
-
-export const MISE_PLATFORM_HEADER = /^\[tools\.(?:"[^"]+"|[\w-]+)\."platforms\.[^"]+"\]$/u;
-
-export const MISE_URL_LINE = /^url = "(?<url>[^"]+)"$/mu;
-
-export const MISE_CHECKSUM_LINE = /^checksum = /mu;
+export const MISE_TRUSTED_PATHS_VARIABLE = 'MISE_TRUSTED_CONFIG_PATHS';

@@ -15,17 +15,15 @@ import type { IgnoreSection, PlannedConfigFile } from '#cli/types/generation/fil
 import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';
 
 import {
+    PRETTIER_CHECK,
     BUILD_OUTPUT_FOLDERS,
     IGNORE_SECTION_TITLES,
     BUILD_OUTPUT_PATTERNS,
     GSPOT_FOLDER_PATTERNS,
-    PRETTIERIGNORE_PURPOSE,
-    LOCAL_ENVIRONMENT_PATTERNS,
 } from '#cli/config/generation/config-files/ignore-files.ts';
 
 /**
-List the paths outside .gspot/ that a run writes: the root targets and pointer paths of the config files it writes,
-and the CI workflow when CI runs.
+List the paths outside .gspot/ that a run writes: the root targets and pointer paths of the config files it writes, and the CI workflow when CI runs.
 
 @param session the scopes and the settings.
 @returns the paths, each from the repository root with a leading slash.
@@ -45,14 +43,13 @@ export function listWrittenPaths(session: Session): string[] {
     });
     if (session.settings.ci?.enabled === true)
         paths.push(session.settings.ci.provider === 'github' ? GITHUB_WORKFLOW : GITLAB_WORKFLOW);
-    return [...new Set(paths)].map((path) => `/${path}`);
+    return [...new Set(paths)].toSorted(compareText).map((path) => `/${path}`);
 }
 
 /**
 Group path ignores by source, before the ignores of a check.
 
 @param session the repository to read.
-@returns the exclusion groups in order.
 */
 export function buildIgnoreSections(session: Session): IgnoreSection[] {
     const { reads, repository, scopes } = session;
@@ -100,7 +97,6 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
                 ),
             ).map(({ file }) => file),
         },
-        { key: 'environment', title: IGNORE_SECTION_TITLES.environment, patterns: [...LOCAL_ENVIRONMENT_PATTERNS] },
         ...session.settings.ignore
             .filter((ignore) => ignore.check === undefined)
             .map((ignore): IgnoreSection => ({ key: 'settings', title: ignore.reason, patterns: ignore.paths ?? [] })),
@@ -111,32 +107,19 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
 List the path ignores of one check, each with its written reason.
 
 @param scopeSettings the merged settings and ignores of the scope.
-@param check the ID whose path ignores apply.
+@param checkId the ID whose path ignores apply.
 @returns one section for each path ignore.
 */
-export function listCheckIgnoreSections(scopeSettings: ScopeSettings, check: string): IgnoreSection[] {
-    return listIgnores(scopeSettings, check)
+export function listCheckIgnoreSections(scopeSettings: ScopeSettings, checkId: string): IgnoreSection[] {
+    return listIgnores(scopeSettings, checkId)
         .filter((ignore) => ignore.rule === undefined && ignore.names === undefined)
         .map(({ reason, paths }): IgnoreSection => ({ key: 'settings', title: reason, patterns: paths }));
-}
-
-/**
-Join shared exclusions with the path ignores of one check.
-
-@param planned the config file and its scope.
-@param check the ID whose path ignores apply.
-@returns the exclusion groups in order.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function listIgnoreSections(planned: PlannedConfigFile, check: string): IgnoreSection[] {
-    return [...buildIgnoreSections(planned.session), ...listCheckIgnoreSections(planned.scope.settings, check)];
 }
 
 /**
 Keep each pattern in its first section.
 
 @param sections the ordered sections.
-@returns sections with repeated patterns removed.
 */
 export function keepFirstPatterns(sections: IgnoreSection[]): IgnoreSection[] {
     const seen = new Set<string>();
@@ -148,22 +131,6 @@ export function keepFirstPatterns(sections: IgnoreSection[]): IgnoreSection[] {
             return true;
         }),
     }));
-}
-
-/**
-Turn each reason line into a comment.
-
-@param reason the written reason.
-@param indent the spacing before each comment.
-@returns the comment lines.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
-export function formatReasonLines(reason: string, indent: string): string[] {
-    return reason
-        .replaceAll('\r\n', '\n')
-        .replaceAll('\r', '\n')
-        .split('\n')
-        .map((line) => `${indent}# ${line}`);
 }
 
 function convertToGlob(pattern: string): string {
@@ -184,25 +151,41 @@ Convert the sections to the globs that config files use.
 @returns the globs, each once.
 */
 export function convertToGlobs(sections: IgnoreSection[]): string[] {
-    const patterns = sections.flatMap((section) => section.patterns);
+    const patterns = sections.flatMap((section) => [
+        ...section.patterns.filter((pattern) => !pattern.startsWith('!')),
+        ...section.patterns.filter((pattern) => pattern.startsWith('!')),
+    ]);
     return [...new Set(patterns.map((pattern) => convertToGlob(pattern)))];
 }
 
 /**
 Build .prettierignore: the ignored paths in the shared section order, with the written reasons.
 
-@param planned the config file with its scope, level, and target path.
-@returns the ignore file text.
+@param planned the config file to build.
 */
 export function buildPrettierignoreFile(planned: PlannedConfigFile): string {
-    const ordered = listIgnoreSections(planned, 'format/prettier').map((section) => ({
+    const ordered = [
+        ...buildIgnoreSections(planned.session),
+        ...listCheckIgnoreSections(planned.scope.settings, PRETTIER_CHECK),
+    ].map((section) => ({
         ...section,
-        patterns: section.patterns.some((pattern) => pattern.startsWith('!'))
-            ? section.patterns
-            : section.patterns.toSorted((left, right) => compareText(left, right)),
+        patterns: [
+            ...section.patterns.filter((pattern) => !pattern.startsWith('!')).toSorted(compareText),
+            ...section.patterns.filter((pattern) => pattern.startsWith('!')).toSorted(compareText),
+        ],
     }));
     const lines = keepFirstPatterns(ordered).flatMap(({ title, patterns }) =>
-        patterns.length === 0 ? [] : ['', ...formatReasonLines(title, ''), ...patterns],
+        patterns.length === 0
+            ? []
+            : [
+                  '',
+                  ...title
+                      .replaceAll('\r\n', '\n')
+                      .replaceAll('\r', '\n')
+                      .split('\n')
+                      .map((line) => `# ${line}`),
+                  ...patterns,
+              ],
     );
-    return [`# ${PRETTIERIGNORE_PURPOSE}`, ...lines, ''].join('\n');
+    return [...lines, ''].join('\n').trimStart();
 }

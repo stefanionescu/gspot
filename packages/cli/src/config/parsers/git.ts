@@ -1,7 +1,7 @@
 import { HASH_SOURCE } from '#cli/config/git.ts';
 import { GITLINK_MODE, GIT_FILE_MODES } from '#cli/config/files/modes.ts';
 
-export const UNSUPPORTED_INDEX_LINE =
+export const UNSUPPORTED_GIT_FILE_MESSAGE =
     'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.';
 
 export const BLOB_HEADER = new RegExp(String.raw`^(${HASH_SOURCE}) blob (\d+)$`, 'u');
@@ -49,3 +49,9 @@ export const INVALID_GIT_STREAM_MESSAGE = 'The Git object stream is incomplete o
 export const GIT_MODES = [...(Object.keys(GIT_FILE_MODES) as (keyof typeof GIT_FILE_MODES)[]), GITLINK_MODE] as const;
 
 export const ANY_FOLDER_PREFIX = '**/';
+
+export const SIZE_GROUP = 2;
+
+export const FIRST_PRINTABLE_BYTE = 32;
+export const FIRST_NON_PRINTABLE_BYTE = 127;
+export const OCTAL_BYTE_WIDTH = 3;

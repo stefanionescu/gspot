@@ -1,24 +1,26 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
-import { README, LICENSE } from '#tests/config/samples.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { README, LICENSE } from '#tests/config/documents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     MDX_GUIDE,
     DOC_TASK_FILES,
     DOC_TASK_SCOPES,
+    SRC_GONE_MESSAGE,
     DOC_TASK_FINDINGS,
     MISE_TASK_SOURCES,
     IGNORED_PATH_FILES,
     LICENSE_FILE_CASES,
+    SRC_MISSING_MESSAGE,
     RELATIVE_PATH_FILES,
     DOC_FENCE_PATH_CASES,
     MALFORMED_TASK_FILES,
@@ -56,9 +58,9 @@ test('missing-paths: wildcard examples are skipped; bold, italic and code paths 
         { paths: ['a.md'] },
     );
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        { file: 'a.md', line: 2, rule: 'missing-path', message: 'src/missing.ts names no tracked file or folder.' },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: SRC_MISSING_MESSAGE },
         { file: 'a.md', line: 2, rule: 'missing-path', message: 'src/absent.ts names no tracked file or folder.' },
-        { file: 'a.md', line: 2, rule: 'missing-path', message: 'src/gone.ts names no tracked file or folder.' },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: SRC_GONE_MESSAGE },
     ]);
 });
 
@@ -66,7 +68,7 @@ test('missing-paths: gitignored paths and paths inside ignored folders count as 
     const found = await runMissingPathsCheck(IGNORED_PATH_FILES, { paths: ['a.md'] });
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
         { file: 'a.md', line: 2, rule: 'missing-path', message: 'app/private.ts names no tracked file or folder.' },
-        { file: 'a.md', line: 2, rule: 'missing-path', message: 'src/gone.ts names no tracked file or folder.' },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: SRC_GONE_MESSAGE },
     ]);
 });
 
@@ -124,14 +126,14 @@ test.each([...MALFORMED_TASK_FILES])(
         await writeFile(join(sandbox.path, path), text);
         session.reads = createReadCache(sandbox.path);
         const input = planSandboxCheck(session, 'docs/missing-paths', { paths: [document] });
-        const failure = await captureRejection(findBuiltInCheck('docs/missing-paths')(session, input));
+        const failure = await captureRejection(getBuiltInCheck('docs/missing-paths')(session, input));
         expect(failure.message).toBe(message);
     },
 );
 
 test('missing-paths: documented tasks are checked against their task tool and the nearest scope that defines them', async () => {
     const found = await runMissingPathsCheck({
-        'gspot.toml': buildSandboxSettings([], { level: 'recommended', scopes: DOC_TASK_SCOPES }),
+        'gspot.toml': buildSandboxSettings([], { level: 'basic', scopes: DOC_TASK_SCOPES }),
         ...DOC_TASK_FILES,
     });
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
@@ -150,7 +152,7 @@ test('missing-paths: a document in a child scope does not read unrelated or shad
     session.reads = createReadCache(sandbox.path);
 
     expect(
-        await findBuiltInCheck('docs/missing-paths')(
+        await getBuiltInCheck('docs/missing-paths')(
             session,
             planSandboxCheck(session, 'docs/missing-paths', { paths: ['app/nested/guide.md'] }),
         ),
@@ -158,7 +160,7 @@ test('missing-paths: a document in a child scope does not read unrelated or shad
 });
 
 test.each([...DOC_FENCE_PATH_CASES])(
-    'missing-paths: a $language fence with "$info" reports example paths=$reported',
+    'missing-paths: a $language fence with "$attributes" reports example paths=$reported',
     async ({ info, language, reported }) => {
         const pathFindings = await runMissingPathsCheck(
             {
@@ -168,7 +170,7 @@ test.each([...DOC_FENCE_PATH_CASES])(
         );
         expect(pathFindings.map(({ line, message }) => [line, message])).toStrictEqual([
             ...(reported ? [[2, 'src/example.ts names no tracked file or folder.']] : []),
-            [5, 'src/missing.ts names no tracked file or folder.'],
+            [5, SRC_MISSING_MESSAGE],
         ]);
     },
 );
@@ -218,4 +220,25 @@ test('required-files: a scope without README.md is reported and passes once READ
     ]);
     await writeFile(join(sandbox.path, 'app/README.md'), README);
     expect(await runSandboxCheck(sandbox.path, 'docs/required-files', { scope: 'app' })).toStrictEqual([]);
+});
+
+test('missing-paths: a generator output named by a setting counts as present before it is generated', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['docs', 'openapi'], {
+            level: 'all',
+            tables: '[openapi]\ndocument = "generated/openapi.json"\ngenerate_command = ["bun", "generate.ts"]\n',
+        }),
+        'README.md': 'Read `generated/openapi.json` and `generated/missing.d.ts`.\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'docs/missing-paths', { paths: ['README.md'] })).toStrictEqual([
+        {
+            check: 'docs/missing-paths',
+            file: 'README.md',
+            line: 1,
+            rule: 'missing-path',
+            fixable: false,
+            message: 'generated/missing.d.ts names no tracked file or folder.',
+            help: 'Fix the path or the task name. To keep an example code block out of the check, give it a `title=` attribute.',
+        },
+    ]);
 });

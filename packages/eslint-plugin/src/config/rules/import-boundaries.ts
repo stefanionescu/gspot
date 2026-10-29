@@ -26,6 +26,4 @@ export const OPTIONS_SCHEMA = {
 
 export const DEFAULT_BOUNDARY_FOLDERS = ['*/*'] as const;
 
-export const TRAILING_SLASH = /\/$/u;
-
 export const RELATIVE_SPECIFIER = /^\.\.?(?:\/|$)/u;

@@ -1,60 +1,57 @@
-import type { Session } from '#cli/types/session.ts';
+import { type Session } from '#cli/types/session.ts';
+import { type TomlTable } from '#cli/types/settings/file.ts';
 import { type FileContents } from '#cli/types/system/files.ts';
-import type { TRAILING_COMMAS } from '#cli/config/settings/fields.ts';
-import type { RepositorySetup } from '#cli/types/repository/setup.ts';
-import type { GenerationResult } from '#cli/types/generation/files.ts';
-import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
-import type { Level, Configuration } from '#cli/types/configurations.ts';
-import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
-import type { ConfigurationEvidence } from '#cli/types/repository/detect.ts';
-import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
+import { type Generation } from '#cli/types/generation/files.ts';
+import { type TRAILING_COMMAS } from '#cli/config/settings/fields.ts';
+import { type RepositorySetup } from '#cli/types/repository/setup.ts';
+import { type AvailableSettings } from '#cli/types/settings/inheritance.ts';
+import { type ConfigurationEvidence } from '#cli/types/repository/detect.ts';
+import { type Level, type Configuration } from '#cli/types/configurations.ts';
+import { type Repository, type ScopeFolder, type TrackedFile } from '#cli/types/repository/files.ts';
 
 export type InitScan = {
+    template?: Template;
     repository: Repository;
     repositorySetup: RepositorySetup;
     configurations: InitConfigurations;
     everySelected: Configuration[];
-    answers: InitAnswers;
     conflicts: ConflictingConfigFiles;
     foreignDisableComments: InitFileRow[];
 };
 
 export type InitPlan = {
+    template?: { file: string; leftOut: LeftOutSetting[] };
     level: Level;
     configurations: { configuration: string; origin: ConfigurationOrigin; checks: number; checksOff: number }[];
     write: InitFileRow[];
     delete: InitFileRow[];
-    retained: InitFileRow[];
+    keep: InitFileRow[];
     change: InitFileRow[];
-    noLongerRuns: InitFileRow[];
+    lintFolders: InitFileRow[];
 };
 
 export type ConflictingConfigFiles = {
     changed: InitFileRow[];
-    read: Map<string, FileContents | undefined>;
+    reviewed: Map<string, FileContents | undefined>;
     deleted: InitFileRow[];
     kept: InitFileRow[];
 };
 
-export type SettingsDraft = InitAnswers & {
+export type SettingsDraft = {
+    template?: Template;
+    base: string;
     level?: Level;
     configurations: string[];
     scopes: ScopeFolder[];
 };
 
-export type InitAnswers = {
-    hooks: boolean;
-    ci: NonNullable<Settings['ci']>['provider'] | 'none';
-    rules: boolean;
-};
-
 export type InitPlanning = {
     detection: DetectionSummary;
     session: Session;
-    generated: GenerationResult;
+    generated: Generation;
     plan: InitPlan;
     settingsText: string;
-    read: Map<string, FileContents | undefined>;
+    reviewed: Map<string, FileContents | undefined>;
 };
 
 export type InitJson = { root: string; plan: InitPlan; settings: string; written: boolean };
@@ -68,20 +65,20 @@ export type DetectionSummary = {
     unowned: string[];
     configurationsByName: Map<string, Configuration>;
     hasGit: boolean;
-    ciProvider: InitAnswers['ci'];
 };
 
 export type InitFileRow = { path: string; note: string };
 
 export type InitOptions = {
+    template?: Template;
     cwd: string;
     yes: boolean;
-    isDryRun: boolean;
+    dryRun: boolean;
     level?: Level;
     configurations?: string[];
 };
 
-export type ConfigurationOrigin = 'named' | 'detected' | 'suggested' | 'required';
+export type ConfigurationOrigin = 'named' | 'template' | 'detected' | 'suggested' | 'required' | 'always';
 
 export type InitConfigurations = {
     scopes: ScopeFolder[];
@@ -94,10 +91,15 @@ export type InitConfigurations = {
 export type InitRepository = {
     repository: Repository;
     configurationsByName: Map<string, Configuration>;
-    options: Pick<InitOptions, 'configurations'>;
+    options: Pick<InitOptions, 'configurations' | 'template'>;
 };
 
-export type ConfigurationChoices = { named: Set<string>; detected: Set<string>; written: Set<string> };
+export type ConfigurationChoices = {
+    template: Set<string>;
+    named: Set<string>;
+    detected: Set<string>;
+    written: Set<string>;
+};
 
 export type PrettierOptions = {
     tabWidth?: number | undefined;
@@ -118,6 +120,17 @@ export type RuffFormatSettings = {
 
 export type ScopeConfigurations = { scope: string; selected: Configuration[] };
 
-export type WrittenTable = { scope: string; table: TomlTable; available: AvailableSettings };
+export type WrittenTable = { scope: string; table: TomlTable; availableSettings: AvailableSettings };
 
 export type EditorconfigSection = { files: string; fields: Record<string, string> };
+
+export type Template = {
+    file: string;
+    text: string;
+    table: TomlTable;
+    configurations: string[];
+    removed: string[];
+    leftOut: LeftOutSetting[];
+};
+
+export type LeftOutSetting = { key: string; note: string };

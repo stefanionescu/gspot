@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import { openWriter } from '#cli/write.ts';
 import { readFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { getTool } from '#cli/configurations/tools.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { openWriter } from '#cli/repository/writer.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/vale.ts';
@@ -12,11 +12,11 @@ import { buildInstallKey } from '#cli/installers/record.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
+import { PREVIOUS_BYTES } from '#tests/config/installers/vale.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { VALE_PACKAGE_FOLDERS } from '#cli/config/installers/vale.ts';
 import { hasValePackages, installValePackages } from '#cli/installers/vale.ts';
-import { VALE_PACKAGE_RELEASES } from '#cli/config/generation/configurations/general/prose.ts';
+import { VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/installers/vale.ts';
 
 test.each([...LEVELS])(
     'Vale packages are ready at %s only with the generated vale.ini and the installed folders',
@@ -24,7 +24,7 @@ test.each([...LEVELS])(
         await using sandbox = await testdir();
         expect(hasValePackages(sandbox.path, level)).toBe(false);
         await createFileTree(sandbox.path, { [GSPOT_PATHS.valeConfigFile]: VALE_PACKAGES_INI });
-        expect(hasValePackages(sandbox.path, level)).toBe(level === 'recommended');
+        expect(hasValePackages(sandbox.path, level)).toBe(level === 'basic');
         for (const folder of VALE_PACKAGE_FOLDERS)
             await createFileTree(sandbox.path, { [`${GSPOT_PATHS.valePackages}/${folder}/.keep`]: '' });
         expect(hasValePackages(sandbox.path, level)).toBe(true);
@@ -44,8 +44,8 @@ test.each([...VALE_PACKAGE_FOLDERS])(
     },
 );
 
-test('at level recommended install installs no Vale packages', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['prose'], { level: 'recommended' }) });
+test('at level basic install installs no Vale packages', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['prose'], { level: 'basic' }) });
 
     const session = await openSession(sandbox.path);
     using writer = openWriter(sandbox.path);
@@ -59,7 +59,7 @@ test('a changed Vale archive is refused before sync and preserves installed pack
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
         [GSPOT_PATHS.valeConfigFile]: VALE_PACKAGES_INI,
-        [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: 'previous bytes\n',
+        [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: PREVIOUS_BYTES,
     });
     const session = await openSession(sandbox.path);
     const tool = getTool(session.configurationsByName.values(), 'vale');
@@ -73,7 +73,7 @@ test('a changed Vale archive is refused before sync and preserves installed pack
     );
     expect(install.steps).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
-        'previous bytes\n',
+        PREVIOUS_BYTES,
     );
 });
 

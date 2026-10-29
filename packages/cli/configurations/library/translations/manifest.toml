@@ -23,11 +23,10 @@ all_level_rules = ["i18next/no-literal-string"]
 [[check]]
 example = "When the base locale defines `welcome` and another lacks it, the check reports the missing key. Add the translation with the same placeholders."
 help = "Correct the message, or add the missing key to the locale."
-level = "recommended"
 name = "messages"
 runs = "scope"
 stage = "push"
-summary = "Checks the next-intl JSON/ICU files under `translations.messages_folder`: each message parses, none stays empty, and each locale holds all keys of the base."
+summary = "Checks the next-intl JSON/ICU files under `translations.messages_folder`: each message parses, none stays empty, and each locale holds all keys of the base, and holds no key the base lacks."
 why = "next-intl loads one locale at a time, so only a comparison with the base finds a missing key."
 
 [check.when]

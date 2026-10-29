@@ -1,8 +1,8 @@
 import { testdir } from 'testdirs';
-import { openWriter } from '#cli/write.ts';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { openWriter } from '#cli/repository/writer.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
@@ -11,7 +11,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { assertPackageManagerVersion } from '#cli/installers/npm/project.ts';
 import { PACKAGE_MANAGER_TIMEOUT, PACKAGE_MANAGER_AGE_CASES } from '#tests/config/installers/npm/project.ts';
 
-test('the npm fallback for Yarn 1 refuses npm without the release age guard', async () => {
+test('npm in place of Yarn 1 refuses to run without the minimum release age', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"packageManager":"yarn@1.22.22"}',

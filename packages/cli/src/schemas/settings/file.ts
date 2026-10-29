@@ -1,44 +1,47 @@
 import { z } from 'zod';
 import { ciSchema } from '#cli/schemas/settings/ci.ts';
-import { type SchemaShape } from '#cli/types/shapes.ts';
-import { trimTrailingSlashes } from '#cli/system/paths.ts';
-import { isPortablePath } from '#cli/system/files/names.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { hooksSchema } from '#cli/schemas/settings/hooks.ts';
 import { rulesSchema } from '#cli/schemas/settings/rules.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
+import { TABLE_DESCRIPTIONS } from '#cli/config/settings/json-schema.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { levelSchema, commandCheckFields } from '#cli/schemas/configurations/fields.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools/tables.ts';
-import { type WrittenScope, type ParsedSettings, type WrittenSettings } from '#cli/types/settings/file.ts';
+import type { WrittenScope, ParsedSettings, WrittenSettings } from '#cli/types/settings/file.ts';
+import { DEVICE_NAME, UNSAFE_PATH_END, UNSAFE_CHARACTERS, RESERVED_SEGMENTS } from '#cli/config/system/files/names.ts';
 
 import {
+    formatSchema,
+    localDateSchema,
+    relativePathSchema,
+    allowReasonedValue,
+    nonemptyPathsSchema,
+} from '#cli/schemas/settings/fields.ts';
+import {
+    COMMAND_CHECK_ID,
     GSPOT_FOLDER_PATH,
     SETTINGS_EXAMPLES,
     SCOPE_PATH_MESSAGES,
     NAMED_FINDING_CHECKS,
+    NO_CHECK_RULE_MESSAGE,
+    NO_CHECK_PATHS_MESSAGE,
 } from '#cli/config/settings/file.ts';
-import {
-    formatSchema,
-    relativePath,
-    nonemptyPaths,
-    relativePaths,
-    localDateSchema,
-    allowReasonedValue,
-} from '#cli/schemas/settings/fields.ts';
 
 export const ignoreSchema = z
     .strictObject({
-        check: z.string().optional().describe(SETTING_DEFINITIONS['ignore.check'].description),
-        rule: z.string().optional().describe(SETTING_DEFINITIONS['ignore.rule'].description),
-        names: z.string().min(1).array().min(1).optional().describe(SETTING_DEFINITIONS['ignore.names'].description),
-        paths: relativePaths.optional().describe(SETTING_DEFINITIONS['ignore.paths'].description),
+        check: z.string().optional().meta(SETTING_DEFINITIONS['ignore.check']),
+        rule: z.string().optional().meta(SETTING_DEFINITIONS['ignore.rule']),
+        names: z.string().min(1).array().min(1).optional().meta(SETTING_DEFINITIONS['ignore.names']),
+        paths: nonemptyPathsSchema.optional().meta(SETTING_DEFINITIONS['ignore.paths']),
         reason: z
-            .string({ error: 'needs a reason. Add `reason = "..."` to this record.' })
-            .describe(SETTING_DEFINITIONS['ignore.reason'].description),
+            .string({ error: 'needs a reason. Add reason = "..." to this record.' })
+            .meta(SETTING_DEFINITIONS['ignore.reason']),
         until: localDateSchema.optional().meta(SETTING_DEFINITIONS['ignore.until']),
     } satisfies SchemaShape<
         NonNullable<ParsedSettings['ignore']>[number],
@@ -51,22 +54,29 @@ export const ignoreSchema = z
                 path: ['names'],
                 message: `names applies only to ${new Intl.ListFormat('en', { type: 'conjunction' }).format(NAMED_FINDING_CHECKS)}, whose findings name a definition.`,
             });
-        if (ignore.check !== undefined) return;
-        if (ignore.paths === undefined || ignore.paths.length === 0)
-            context.addIssue({ code: 'custom', path: ['paths'], message: 'An ignore without check needs paths.' });
+    })
+    .superRefine((ignore, context) => {
+        if (ignore.check !== undefined) {
+            return;
+        }
+        if (ignore.paths === undefined)
+            context.addIssue({ code: 'custom', path: ['paths'], message: NO_CHECK_PATHS_MESSAGE });
         if (ignore.rule !== undefined)
             context.addIssue({
                 code: 'custom',
                 path: ['rule'],
-                message: 'An ignore without check cannot name a rule. Add the check that owns the rule.',
+                message: NO_CHECK_RULE_MESSAGE,
             });
     });
 
 export const commandCheckSchema = z.strictObject({
-    id: z.string().min(1).describe(SETTING_DEFINITIONS['command_check.id'].description),
+    id: z
+        .string()
+        .regex(COMMAND_CHECK_ID, 'Use a check ID without whitespace or commas.')
+        .meta(SETTING_DEFINITIONS['command_check.id']),
     command: commandCheckFields.command.unwrap().meta(SETTING_DEFINITIONS['command_check.command']),
-    paths: nonemptyPaths.meta(SETTING_DEFINITIONS['command_check.paths']),
-    outputs: relativePaths.optional().describe(SETTING_DEFINITIONS['command_check.outputs'].description),
+    paths: nonemptyPathsSchema.meta(SETTING_DEFINITIONS['command_check.paths']),
+    outputs: nonemptyPathsSchema.optional().meta(SETTING_DEFINITIONS['command_check.outputs']),
     stage: commandCheckFields.stage.exclude(['message']).meta(SETTING_DEFINITIONS['command_check.stage']),
     summary: commandCheckFields.summary.meta(SETTING_DEFINITIONS['command_check.summary']),
     help: commandCheckFields.help.meta(SETTING_DEFINITIONS['command_check.help']),
@@ -150,21 +160,40 @@ const scopeBody = {
         .optional(),
 };
 
+for (const [name, schema] of Object.entries(scopeBody)) {
+    const description = TABLE_DESCRIPTIONS[name];
+    if (description !== undefined) z.globalRegistry.add(schema, { ...schema.meta(), description });
+}
+
 export const scopeSchema = z.strictObject({
-    path: relativePath
-        .refine((path) => isPortablePath(trimTrailingSlashes(path)), SCOPE_PATH_MESSAGES.portable)
+    path: relativePathSchema
+        .refine(
+            (path) =>
+                stripTrailingSlashes(
+                    stripTrailingSlashes(stripTrailingSlashes(stripTrailingSlashes(stripTrailingSlashes(path)))),
+                )
+                    .split('/')
+                    .every(
+                        (segment) =>
+                            !RESERVED_SEGMENTS.has(segment) &&
+                            !UNSAFE_CHARACTERS.test(segment) &&
+                            !UNSAFE_PATH_END.test(segment) &&
+                            !DEVICE_NAME.test(segment),
+                    ),
+            SCOPE_PATH_MESSAGES.portable,
+        )
         .refine((path) => {
             const folder = path.normalize('NFC');
             return !GSPOT_FOLDER_PATH.test(folder) && !STATE_FOLDER_PATTERN.test(folder);
         }, SCOPE_PATH_MESSAGES.gspot)
-        .describe(SETTING_DEFINITIONS['scope.path'].description),
+        .meta(SETTING_DEFINITIONS['scope.path']),
     configurations: z
         .string()
         .array()
         .default(SETTING_DEFINITIONS['scope.configurations'].default)
-        .describe(SETTING_DEFINITIONS['scope.configurations'].description),
+        .meta(SETTING_DEFINITIONS['scope.configurations']),
     removed_configurations: allowReasonedValue(z.string().array(), SETTING_DEFINITIONS['scope.removed_configurations']),
-    test_files: relativePath.array().optional().describe(SETTING_DEFINITIONS['scope.test_files'].description),
+    test_files: relativePathSchema.array().optional().meta(SETTING_DEFINITIONS['scope.test_files']),
     ...scopeBody,
 } satisfies SchemaShape<NonNullable<ParsedSettings['scope']>[number], WrittenScope>);
 
@@ -176,7 +205,7 @@ export const rootSettingSchemas = {
         .positive()
         .default(SETTING_DEFINITIONS['tool_timeout_seconds'].default)
         .meta(SETTING_DEFINITIONS['tool_timeout_seconds']),
-    test_files: relativePath
+    test_files: relativePathSchema
         .array()
         .default(SETTING_DEFINITIONS['test_files'].default)
         .meta(SETTING_DEFINITIONS['test_files']),
@@ -189,7 +218,7 @@ export const settingsSchema = z
             .string()
             .array()
             .default(SETTING_DEFINITIONS['configurations'].default)
-            .describe(SETTING_DEFINITIONS['configurations'].description),
+            .meta(SETTING_DEFINITIONS['configurations']),
         removed_configurations: allowReasonedValue(z.string().array(), SETTING_DEFINITIONS['removed_configurations']),
         scope: scopeSchema.array().optional(),
         ...rootBody,
@@ -215,7 +244,7 @@ export const settingsSchema = z
                 key: 'scope',
                 field: 'path',
                 names: (written.scope ?? []).map((scope) =>
-                    trimTrailingSlashes(scope.path).normalize('NFC').toLowerCase(),
+                    stripTrailingSlashes(scope.path).normalize('NFC').toLowerCase(),
                 ),
             },
             {
@@ -238,3 +267,8 @@ export const settingsSchema = z
         }
     })
     .meta({ examples: SETTINGS_EXAMPLES }) satisfies z.ZodType<ParsedSettings, WrittenSettings>;
+
+for (const [name, schema] of Object.entries(settingsSchema.shape)) {
+    const description = TABLE_DESCRIPTIONS[name];
+    if (description !== undefined) z.globalRegistry.add(schema, { ...schema.meta(), description });
+}

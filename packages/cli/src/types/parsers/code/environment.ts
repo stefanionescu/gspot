@@ -4,4 +4,4 @@ export type EnvironmentKind = 'os' | 'environ' | 'getenv' | undefined;
 
 export type EnvironmentScope = Map<string, EnvironmentKind>;
 
-export type EnvironmentNames = Map<number, EnvironmentScope>;
+export type EnvironmentNames = Map<number, Map<string, { position: number; kind: EnvironmentKind }[]>>;

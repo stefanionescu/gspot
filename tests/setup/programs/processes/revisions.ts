@@ -6,16 +6,27 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { runGit, readGitText, runGitBlocking, runGitForBytes } from '#cli/system/git.ts';
 
 const [timeoutSeconds = '', reportPath = ''] = process.argv.slice(2);
+
 const root = process.cwd();
+
 const nested = join(root, 'nested');
-const gitDirOutput = await readGitText(root, ['rev-parse', '--absolute-git-dir'], {});
-const gitDir = gitDirOutput.trim();
+
+const gitFolderOutput = await readGitText(root, ['rev-parse', '--absolute-git-dir'], {});
+
+const gitFolder = gitFolderOutput.trim();
+
 const index = resolve(root, readEnvironmentVariable('GIT_INDEX_FILE') ?? '');
-const head = readFileSync(join(gitDir, 'HEAD'));
+
+const head = readFileSync(join(gitFolder, 'HEAD'));
+
 const indexed = readFileSync(index);
+
 const headOutput = await readGitText(root, ['rev-parse', 'HEAD'], {});
+
 const hash = headOutput.trim();
+
 const reports = [];
+
 for (const source of [{ kind: 'index' as const }, { kind: 'commit' as const, hash }]) {
     using copy = await copyRevision(nested, source);
     const folderOutput = await readGitText(copy.root, ['rev-parse', '--absolute-git-dir'], {});
@@ -37,7 +48,7 @@ for (const source of [{ kind: 'index' as const }, { kind: 'commit' as const, has
         kind: source.kind,
         source: readFileSync(join(copy.root, 'source.txt'), 'utf8'),
         tree: copy.tree === treeOutput.trim(),
-        ownMetadata: folder !== gitDir,
+        ownMetadata: folder !== gitFolder,
         toolMetadata: tool.stdout.trim() === folder,
         paths: Buffer.from(bytes.stdout).toString('utf8').split('\0').filter(Boolean),
         configuration: boundaryConfig.stdout.trim(),
@@ -45,11 +56,12 @@ for (const source of [{ kind: 'index' as const }, { kind: 'commit' as const, has
         cancelled: cancelled.canceled && cancelled.code !== 0,
     });
 }
+
 writeFileSync(
     reportPath,
     JSON.stringify({
         reports,
-        headKept: readFileSync(join(gitDir, 'HEAD')).equals(head),
+        headKept: readFileSync(join(gitFolder, 'HEAD')).equals(head),
         indexKept: readFileSync(index).equals(indexed),
         workingBytes: readFileSync(join(nested, 'source.txt'), 'utf8'),
     }),

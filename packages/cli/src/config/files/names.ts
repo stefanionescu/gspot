@@ -4,9 +4,16 @@ export const REQUIREMENTS_FILE = /(?:^|\/)requirements[^/]*\.txt$/u;
 
 export const JSCONFIG_FILE = 'jsconfig.json';
 
-export const PBXPROJ_NAME = 'project.pbxproj';
+export const PBXPROJ_FILE = 'project.pbxproj';
 
-export const MISE_SCRIPT_PATH = '.mise/tasks/**';
+export const MISE_TASK_FOLDERS = [
+    'mise-tasks',
+    '.mise-tasks',
+    'mise/tasks',
+    '.mise/tasks',
+    '.config/mise/tasks',
+] as const;
+export const MISE_TASKS_GLOB = '{mise-tasks,.mise-tasks,mise/tasks,.mise/tasks,.config/mise/tasks}/**';
 
 export const SWIFT_EXTENSION = '.swift';
 
@@ -29,14 +36,14 @@ export const MISE_FILES = [
 
 export const SQL_EXTENSION = '.sql';
 
-export const PBXPROJ = `.xcodeproj/${PBXPROJ_NAME}`;
+export const PBXPROJ_SUFFIX = `.xcodeproj/${PBXPROJ_FILE}`;
 
 export const NPM_PACKAGE_FOLDER = `${NODE_MODULES}/`;
 
 export const SCHEMA_FILE = 'gspot.schema.json';
 
-export const PROJECT_UV_LOCKFILE = 'uv.lock';
+export const UV_LOCKFILE = 'uv.lock';
 
 export const MISE_CONFIG_FILE = 'mise.toml';
 
-export const MISE_LOCK_FILE = 'mise.lock';
+export const MISE_LOCKFILE = 'mise.lock';

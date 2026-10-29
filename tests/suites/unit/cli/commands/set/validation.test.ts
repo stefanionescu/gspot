@@ -2,10 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { VALUE_VALIDATION_CASES } from '#tests/config/commands/set.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test.each([false, true])('set validates the value before its reason: %s', async (hasReason) => {
+test.each(VALUE_VALIDATION_CASES)('set validates the value before its reason: $name', async ({ hasReason }) => {
     const settings = buildSandboxSettings(['structure']);
     await using sandbox = await createGitSandbox({ 'gspot.toml': settings });
     const result = await runGspot(sandbox.path, [

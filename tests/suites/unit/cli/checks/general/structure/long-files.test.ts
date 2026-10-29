@@ -14,8 +14,16 @@ test.each(['.sh', '.bats', ''])('Bash %s heredocs and multiline strings count as
         [file]: source,
     });
     const found = await runSandboxCheck(sandbox.path, 'structure/long-files');
-    expect(found).toMatchObject([
-        { file, line: 1, rule: 'file-lines', message: 'This file has 6 code lines, over the limit of 5.' },
+    expect(found).toStrictEqual([
+        {
+            check: 'structure/long-files',
+            file,
+            line: 1,
+            rule: 'file-lines',
+            fixable: false,
+            message: 'This file has 6 code lines, over the limit of 5.',
+            help: 'Split the file by responsibility, or raise `limits.<language>.file_lines` with a reason.',
+        },
     ]);
     await writeFile(join(sandbox.path, file), source.replace('# literal\nEOF', 'EOF'));
     expect(await runSandboxCheck(sandbox.path, 'structure/long-files')).toStrictEqual([]);
@@ -29,4 +37,27 @@ test('Python files count each executable line against the declared limit', async
     expect(await runSandboxCheck(sandbox.path, 'structure/long-files')).toMatchObject([
         { file: 'example/big.py', rule: 'file-lines', line: 1 },
     ]);
+});
+
+test('SQL strings count while multiline SQL comments do not', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['sql'], { level: 'all', tables: '[limits.sql]\nfile_lines = 2\n' }),
+        'query.sql': '/* This comment\nspans two lines. */\nSELECT $$first\n-- string content\nlast$$;\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'structure/long-files')).toMatchObject([
+        { file: 'query.sql', rule: 'file-lines', message: 'This file has 3 code lines, over the limit of 2.' },
+    ]);
+});
+
+test('a Python string line that starts with # counts as code', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['python'], { level: 'all', tables: '[limits.python]\nfile_lines = 2\n' }),
+        'source.py': 'value = """first\n# string content\nlast"""\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'structure/long-files');
+    expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
+        { file: 'source.py', rule: 'file-lines', message: 'This file has 3 code lines, over the limit of 2.' },
+    ]);
+    await writeFile(join(sandbox.path, 'source.py'), 'value = """first\nlast"""\n# a comment\n');
+    expect(await runSandboxCheck(sandbox.path, 'structure/long-files')).toStrictEqual([]);
 });

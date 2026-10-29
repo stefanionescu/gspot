@@ -44,7 +44,7 @@ async function writeNpmProject(options: {
                 checks: NPM_PROJECT_IGNORES,
                 reason: 'The sandbox tests package-manager installation and preserves authored dependencies.',
             },
-            level: 'recommended',
+            level: 'basic',
         }),
         ...NPM_PROJECT_FILES,
     });

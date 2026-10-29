@@ -10,11 +10,12 @@ Read this rule when you name a file, folder, type, function, or variable.
 concept reads alike throughout the program.
 
 - Acronyms: follow the language. TypeScript and JavaScript treat them as words, such as `parseHttpUrl` and `userId`.
-  Swift keeps uppercase initialisms, such as `avatarURL` and `userID`, and writes `apiClient` at the start of a name. Python, SQL, and
-  Bash lowercase them inside snake_case, such as `http_url` and `user_id`.
-- Folders: kebab-case for TypeScript, JavaScript, Bash, HTML, CSS, and static sites; snake_case for Python packages;
-  PascalCase for Swift folders, which mirror type names.
-- On the wire: camelCase JSON fields and kebab-case URL segments. Log fields follow LOGGING.md.
+  Swift keeps uppercase initialisms, such as `avatarURL` and `userID`, and writes `apiClient` at the start of a name.
+  Python, SQL, and Bash lowercase them inside snake_case, such as `http_url` and `user_id`.
+- Folders: kebab-case for TypeScript, JavaScript, HTML, CSS, and static sites; kebab-case or snake_case for Bash;
+  snake_case for Python packages; PascalCase for Swift folders, which mirror type names.
+- On the wire: camelCase JSON fields and kebab-case URL segments. Log event names and fields: `snake_case`, unless an
+  existing logging interface defines their spelling.
 - Environment variables: `UPPER_SNAKE_CASE`, with no application prefix.
 - Constants: a module-level constant bound to a literal or a frozen object uses `UPPER_SNAKE_CASE` in TypeScript,
   JavaScript, Python, and Bash, and camelCase in Swift.
@@ -23,8 +24,9 @@ concept reads alike throughout the program.
 
 <!-- level: all -->
 
-At level `all`, the checks `naming/identifiers` and `naming/paths` enforce banned words, case, and length. Fix a finding
-by renaming. Never hide a bad name in a string key, an alias, or a file name.
+`naming/identifiers` and `naming/paths` check banned words, case, length, and word count. Fix a finding by renaming.
+Never hide a bad name in a string key, an alias, or a file name. When no file uses a name of `allowed_names` in a
+`[[naming.override]]` record, remove it.
 
 ## Principles
 

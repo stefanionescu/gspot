@@ -1,4 +1,8 @@
 export const SKIP_REASON_CASES = [
+    { body: 'let trait = .enabled(if: false)', missing: true },
+    { body: 'let trait = ConditionTrait.enabled(if: false)', missing: true },
+    { body: 'let trait = Testing.ConditionTrait.enabled(if: false, "Requires a simulator")', missing: false },
+
     { body: 'try XCTSkip()', missing: true },
     { body: 'try XCTSkip("")', missing: true },
     { body: 'try XCTSkip("   ")', missing: true },

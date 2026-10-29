@@ -8,10 +8,10 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { GUIDE, README, LICENSE } from '#tests/config/samples.ts';
+import { GUIDE, README, LICENSE } from '#tests/config/documents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -19,6 +19,7 @@ import {
     MDX_FILES,
     MARKDOWN_FILES,
     TITLED_DOCUMENT,
+    REQUEST_FLOW_IMAGE,
     MARKDOWNLINT_TABLES,
 } from '#tests/config/integration/checks/language/markdown.ts';
 
@@ -43,7 +44,7 @@ test.each([...LEVELS])(
             { file: 'root.md', line: 7, rule: 'MD045' },
             ...(level === 'all' ? [{ file: 'title.md', line: 1, rule: 'MD041' }] : []),
         ]);
-        await writeFile(join(root, 'root.md'), MARKDOWN_FILES['root.md'].replace('![]', '![Request flow]'));
+        await writeFile(join(root, 'root.md'), MARKDOWN_FILES['root.md'].replace('![]', REQUEST_FLOW_IMAGE));
         await writeFile(
             join(root, 'app/guide.md'),
             MARKDOWN_FILES['app/guide.md'].replace('Nested label.', 'nested label.'),
@@ -67,7 +68,7 @@ test.each([...LEVELS])(
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await readFile(join(root, 'app/guide.md'), 'utf8')).toBe(MARKDOWN_FILES['app/guide.md']);
         expect(await readFile(join(root, 'root.md'), 'utf8')).toBe(
-            MARKDOWN_FILES['root.md'].replace('![]', '![Request flow]'),
+            MARKDOWN_FILES['root.md'].replace('![]', REQUEST_FLOW_IMAGE),
         );
     },
 );
@@ -81,7 +82,7 @@ test("markdownlint run by an editor reads the pointer files with each scope's op
                 level: 'all',
                 tables: MARKDOWNLINT_TABLES,
             }),
-            'root.md': MARKDOWN_FILES['root.md'].replace('![]', '![Request flow]'),
+            'root.md': MARKDOWN_FILES['root.md'].replace('![]', REQUEST_FLOW_IMAGE),
             'title.md': TITLED_DOCUMENT,
         },
     });
@@ -95,6 +96,15 @@ test("markdownlint run by an editor reads the pointer files with each scope's op
             { cwd: join(root, folder) },
         );
         expect(toolResult.code, toolResult.stdout + toolResult.stderr).toBe(0);
+        const path = folder === '' ? 'root.md' : 'guide.md';
+        const label = folder === '' ? 'root label' : 'nested label';
+        await writeFile(join(root, folder, path), `# Title\n\n${label}.\n`);
+        const invalid = await runCommand(
+            [join(root, `${GSPOT_PATHS.nodeModules}/.bin/markdownlint-cli2`), '--no-globs', `:${path}`],
+            { cwd: join(root, folder) },
+        );
+        expect(invalid.code).toBe(1);
+        expect(invalid.stdout + invalid.stderr).toContain(`${path}:3 MD044/proper-names`);
     }
 });
 
@@ -137,7 +147,7 @@ test('markdownlint reports line, column, and fixable for findings in files whose
             ...Object.fromEntries(paths.map((path) => [path, 'café <img src="example.png"> https://example.com\n'])),
         },
     });
-    const configuration = findManifestTarget('markdown', 'markdownlint-cli2.mjs');
+    const configuration = getManifestTarget('markdown', 'markdownlint-cli2.mjs');
     expect(await isOnDisk(join(root, configuration))).toBe(true);
     const command = ['check', ...paths, '--only', 'markdown/markdownlint', '--json'];
     const failed = parseCheckReport(await spawnGspot(root, command));

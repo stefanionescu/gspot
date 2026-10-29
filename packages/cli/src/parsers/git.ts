@@ -1,33 +1,45 @@
 import type { z } from 'zod';
 import { posix } from 'node:path';
-import { LINE_FEED } from '#cli/config/text.ts';
+import { OCTAL_RADIX } from '#cli/config/units.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import { gitFileSchema } from '#cli/schemas/parsers/git.ts';
+import { LINE_FEED, WHITESPACE_RUN } from '#cli/config/text.ts';
 import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
-import { gitFileSchema, gitIndexFileSchema } from '#cli/schemas/parsers/git.ts';
 import type { GitFile, GitStream, GitIndexFile, AttributePattern } from '#cli/types/parsers/git.ts';
 
 import {
     TREE_LINE,
     INDEX_LINE,
+    SIZE_GROUP,
     BLOB_HEADER,
     PATH_ESCAPES,
     ATTRIBUTE_LINE,
     OCTAL_PATH_BYTE,
+    OCTAL_BYTE_WIDTH,
     ATTRIBUTE_FIELDS,
     ANY_FOLDER_PREFIX,
     QUOTED_PATH_CHUNKS,
-    UNSUPPORTED_INDEX_LINE,
+    FIRST_PRINTABLE_BYTE,
     IGNORED_ATTRIBUTE_LINE,
+    FIRST_NON_PRINTABLE_BYTE,
     QUOTED_ATTRIBUTE_PATTERN,
     IGNORED_ATTRIBUTE_PATTERN,
     ATTRIBUTE_ASSIGNMENT_SIDES,
     INVALID_GIT_STREAM_MESSAGE,
+    UNSUPPORTED_GIT_FILE_MESSAGE,
 } from '#cli/config/parsers/git.ts';
 
-function parseIndexLine<T>(match: RegExpExecArray | null, schema: z.ZodType<T>): T {
+/**
+Validate the fields of an index or tree entry.
+
+@param match the entry matched against its listing format.
+@param schema the expected fields and supported file modes.
+@returns the validated entry.
+*/
+export function parseListingLine<T>(match: RegExpExecArray | null, schema: z.ZodType<T>): T {
     const parsed = schema.safeParse(match?.groups);
-    if (!parsed.success) throw new GspotError('git', UNSUPPORTED_INDEX_LINE);
+    if (!parsed.success) throw new GspotError('git', UNSUPPORTED_GIT_FILE_MESSAGE);
     return parsed.data;
 }
 
@@ -67,7 +79,7 @@ async function readStreamBytes(stream: GitStream, size: number): Promise<Buffer>
 
 function parseBlobSize(header: string, hash: string): number {
     const match = BLOB_HEADER.exec(header);
-    const size = Number(match?.[2]);
+    const size = Number(match?.[SIZE_GROUP]);
     if (match?.[1] !== hash || !Number.isSafeInteger(size)) throw new GspotError('git', INVALID_GIT_STREAM_MESSAGE);
     return size;
 }
@@ -82,7 +94,7 @@ function decodeQuotedPattern(pattern: string): string | undefined {
             continue;
         }
         if (OCTAL_PATH_BYTE.test(chunk)) {
-            const value = Number.parseInt(chunk.slice(1), 8);
+            const value = Number.parseInt(chunk.slice(1), OCTAL_RADIX);
             bytes.push(Buffer.from([value]));
             continue;
         }
@@ -114,7 +126,7 @@ export function parseAttributePatterns(text: string, folder: string): AttributeP
         return [
             {
                 pattern: posix.join(folder, local),
-                attributes: trimmed.slice(match[0].length).split(/\s+/u).filter(Boolean),
+                attributes: trimmed.slice(match[0].length).split(WHITESPACE_RUN).filter(Boolean),
             },
         ];
     });
@@ -124,7 +136,6 @@ export function parseAttributePatterns(text: string, folder: string): AttributeP
 Read attribute tokens from one selector, clearing entries with the ! prefix.
 
 @param tokens the attribute tokens from one matching pattern.
-@returns the attributes of the selector.
 */
 export function mergeAttributes(tokens: string[]): Record<string, string> {
     const attributes: Record<string, string> = {};
@@ -141,7 +152,6 @@ export function mergeAttributes(tokens: string[]): Record<string, string> {
 Parse the null-delimited path, name, and value triplets from Git, and keep spaces in paths.
 
 @param text the successful check-attr -z output.
-@returns the final attributes per path.
 */
 export function parsePathAttributes(text: string): Map<string, Record<string, string>> {
     const fields = text.split('\0');
@@ -154,54 +164,65 @@ export function parsePathAttributes(text: string): Map<string, Record<string, st
     return attributes;
 }
 
-/**
-Parse an unquoted index listing, retaining merge stages for working-tree inventory.
-
-@param text the complete null-delimited listing.
-@returns the index entries with their stages.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function parseIndexFiles(text: string): GitIndexFile[] {
-    return text
-        .split('\0')
-        .filter(Boolean)
-        .map((line) => parseIndexLine(INDEX_LINE.exec(line), gitIndexFileSchema));
+function formatUnreadablePath(record: string): string {
+    const path = INDEX_LINE.exec(record)?.groups?.['path'] ?? TREE_LINE.exec(record)?.groups?.['path'] ?? record;
+    const quoted = [...Buffer.from(path, 'latin1')]
+        .map((byte) => {
+            const character = String.fromCodePoint(byte);
+            if (character === '\\' || character === '"') return `\\${character}`;
+            return byte >= FIRST_PRINTABLE_BYTE && byte < FIRST_NON_PRINTABLE_BYTE
+                ? character
+                : `\\${byte.toString(OCTAL_RADIX).padStart(OCTAL_BYTE_WIDTH, '0')}`;
+        })
+        .join('');
+    return `"${quoted}"`;
 }
 
 /**
-Decode a Git path listing, and refuse a listing that fails UTF-8 decoding.
+Split a Git path listing on null bytes. Separate paths with invalid UTF-8.
 
 @param output the bytes that Git printed.
-@returns the listing text.
+@param unreadablePaths receives quoted names with octal byte escapes
 */
-export function decodeGitPaths(output: Uint8Array): string {
-    const text = decodeUtf8(output);
-    if (text === undefined) throw new GspotError('git', 'Git listed a path that is not valid UTF-8.');
-    return text;
+export function decodeGitPaths(output: Uint8Array, unreadablePaths: string[] = []): string {
+    const records: string[] = [];
+    for (const record of Buffer.from(output).toString('latin1').split('\0')) {
+        if (record === '') continue;
+        const bytes = Buffer.from(record, 'latin1');
+        const text = decodeUtf8(bytes);
+        if (text === undefined) {
+            unreadablePaths.push(formatUnreadablePath(record));
+        } else {
+            records.push(text);
+        }
+    }
+    return records.join('\0');
 }
 
 /**
 Validate unquoted, null-delimited committed-tree entries.
 
 @param output the complete Git listing.
+@param unreadablePaths receives names with invalid UTF-8.
 @returns supported modes, full object IDs, and UTF-8 paths.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function parseTreeFiles(output: Uint8Array): GitFile[] {
-    return decodeGitPaths(output)
-        .split('\0')
-        .filter(Boolean)
-        .map((line) => parseIndexLine(TREE_LINE.exec(line), gitFileSchema));
+export function parseTreeFiles(output: Uint8Array, unreadablePaths: string[] = []): GitFile[] {
+    const files: GitFile[] = [];
+    for (const line of decodeGitPaths(output, unreadablePaths).split('\0')) {
+        if (line === '') continue;
+        files.push(parseListingLine(TREE_LINE.exec(line), gitFileSchema));
+    }
+    return files;
 }
 
 /**
 Turn index entries into revision entries, and refuse conflicts.
 
 @param indexFiles the validated index listing.
-@returns entries from the resolved index.
 */
 export function stripIndexStages(indexFiles: GitIndexFile[]): GitFile[] {
-    if (indexFiles.some((indexFile) => indexFile.stage !== 0)) throw new GspotError('git', UNSUPPORTED_INDEX_LINE);
+    if (indexFiles.some((indexFile) => indexFile.stage !== 0))
+        throw new GspotError('git', UNSUPPORTED_GIT_FILE_MESSAGE);
     return indexFiles.map(({ mode, hash, path }) => ({ mode, hash, path }));
 }
 
@@ -223,7 +244,8 @@ export async function* parseGitBlobs(
     };
     for (const hash of requestedIds) {
         const bytes = await readStreamBytes(stream, parseBlobSize(await readBlobLine(stream), hash));
-        await readStreamBytes(stream, 1);
+        const terminator = await readStreamBytes(stream, 1);
+        if (terminator[0] !== LINE_FEED) throw new GspotError('git', INVALID_GIT_STREAM_MESSAGE);
         yield [hash, bytes];
     }
     if ((await readNextChunk(stream)) !== undefined) throw new GspotError('git', INVALID_GIT_STREAM_MESSAGE);

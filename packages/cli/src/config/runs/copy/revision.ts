@@ -20,3 +20,12 @@ export const GIT_VERIFY_HEAD_ARGUMENTS = ['rev-parse', '--verify', 'HEAD'] as co
 
 export const DEPENDENCY_REVISION_NOTE =
     'The dependency files in the working tree differ from the checked revision; the checks used the installed dependencies.';
+
+export const GIT_ALTERNATES_PATH = '.git/objects/info/alternates';
+
+export const GIT_SHALLOW_PATH = '.git/shallow';
+
+export const INSTALLED_DEPENDENCIES_MESSAGE =
+    'Installed dependencies are tracked in the selected revision. Untrack them before checking again.';
+
+export const DECLARATION_CONFIG_EXTENSIONS = new Set(['.json', '.jsonc']);

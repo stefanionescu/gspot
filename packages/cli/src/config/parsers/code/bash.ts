@@ -1,12 +1,12 @@
 export const ALL_POSITIONAL_PARAMETERS = new Set(['@', '*', '#']);
 
-export const FORWARDED_ARGUMENTS: ReadonlySet<string> = new Set(['"$@"', '"$*"']);
-
 export const LOCAL_DECLARATION_WORDS = new Set(['local', 'declare', 'typeset']);
 
 export const POSITIONAL_PARAMETER = /^[1-9]\d*$/u;
 
 export const SHIFT_COMMAND = 'shift';
+
+export const GETOPTS_COMMAND = 'getopts';
 
 export const TEMPORARY_VALUE_NODES: ReadonlySet<string> = new Set(['string', 'command_substitution']);
 
@@ -15,8 +15,6 @@ export const TEMPORARY_FILE_COMMAND = 'mktemp';
 export const END_OF_OPTIONS = '--';
 
 export const REMOVE_COMMAND = 'rm';
-
-export const TRAP_COMMAND = 'trap';
 
 export const BASH_BRANCH_NODES: readonly string[] = [
     'if_statement',
@@ -38,9 +36,5 @@ export const BASH_COMPOUND_NODES: readonly string[] = [
 export const FOR_HEADER_FIELDS = ['initializer', 'condition', 'update'] as const;
 
 export const EXPANSION_NODES: readonly string[] = ['simple_expansion', 'expansion'];
-
-export const TRAP_EXPANSION_NODES = [...EXPANSION_NODES, 'command_substitution', 'arithmetic_expansion'];
-
-export const TRAP_STRING_ESCAPES = /\\(["\\$\u{60}\n])/gu;
 
 export const NOT_LINE_BREAK = /[^\r\n]/gu;

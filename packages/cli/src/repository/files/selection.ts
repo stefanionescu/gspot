@@ -1,4 +1,3 @@
-import { posix } from 'node:path/posix';
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
@@ -9,21 +8,20 @@ import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts'
 import { TEST_FILES_PLACEHOLDER } from '#cli/config/repository/files/selection.ts';
 import type { TrackedFile, CoveredFilesOptions } from '#cli/types/repository/files.ts';
 
-function addPluginExtensions(owners: Configuration['files'], configurations: Configuration[]): Configuration['files'] {
-    if (!owners.prettier_plugins && !owners.eslint_plugins) return owners;
+function addPluginExtensions(table: Configuration['files'], configurations: Configuration[]): Configuration['files'] {
+    if (!table.prettier_plugins && !table.eslint_plugins) return table;
     const extensions = configurations
         .flatMap((configuration) => configuration.tools)
         .flatMap((tool) => [
-            ...(owners.prettier_plugins ? (tool.prettier?.extensions ?? []) : []),
-            ...(owners.eslint_plugins ? (tool.eslint?.extensions ?? []) : []),
+            ...(table.prettier_plugins ? (tool.prettier?.extensions ?? []) : []),
+            ...(table.eslint_plugins ? (tool.eslint?.extensions ?? []) : []),
         ]);
-    return { ...owners, extensions: [...owners.extensions, ...extensions] };
+    return { ...table, extensions: [...table.extensions, ...extensions] };
 }
 /**
 Build one matcher for the extensions, filenames, tags, and paths of a files table.
 
 @param table the file patterns.
-@returns a test of whether a tracked file matches.
 */
 export function buildFileMatcher(table: Configuration['files']): (file: TrackedFile) => boolean {
     const filenames = buildFilenameMatcher(table.filenames);
@@ -43,7 +41,6 @@ List the files that the patterns match in one scope, within its `kinds` and `lan
 @param options.configurations configurations that declare languages and Prettier plugins.
 @param options.scopePath the folder to match in.
 @param options.settings settings and repository-relative test paths for the scope.
-@returns the matching files.
 */
 export function listCoveredFiles(
     table: Configuration['files'],
@@ -83,7 +80,7 @@ export function listCoveredFiles(
         ...(owners.languages ? filterSourceConfigurations(configurations).map(({ files }) => files) : []),
     ].map((table) => buildFileMatcher(table));
     return scopeFiles.filter((file) => {
-        const scopeFile = { ...file, path: posix.relative(scope, file.path) };
+        const scopeFile = { ...file, path: scope === '' ? file.path : file.path.slice(scope.length + 1) };
         return (
             (ownsTests && tests(file.path)) || settingMatches(file.path) || matches.some((match) => match(scopeFile))
         );
@@ -94,7 +91,6 @@ Select source paths by extension or whole file name.
 
 @param files the classified inventory.
 @param endings the extensions or file names to select.
-@returns the matching source paths.
 */
 export function listSourcePaths(files: TrackedFile[], endings: readonly string[]): string[] {
     return files
@@ -114,7 +110,6 @@ List the files covered by another check in the selected configurations.
 
 @param planned the planned scope and its candidate files.
 @param checkId the declaration whose coverage to apply.
-@returns the matching tracked files.
 */
 export function listCheckFiles(planned: PlannedCheck, checkId: string): TrackedFile[] {
     return planned.scope.configurations.flatMap((configuration) =>

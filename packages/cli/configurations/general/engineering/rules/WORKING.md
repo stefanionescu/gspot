@@ -50,6 +50,9 @@ rules say how to write a test, not when.
 Run `gspot explain <check>` to see what a check looks for and how to fix its findings. When a rule and a check conflict,
 follow the check, and name both to the user.
 
+When `gspot.toml` holds `[[import_rule]]` records, import only what they allow, and keep each code file inside the paths
+of a rule.
+
 ## No defensive logic
 
 Do not add guards, fallbacks, retries, defaults, or wrappers for states the public interface rules out. Handle known

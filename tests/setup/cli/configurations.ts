@@ -1,13 +1,10 @@
 import { parse } from '@decimalturn/toml-patch';
-import { getTool } from '#cli/configurations/tools.ts';
 import { manifestSchema } from '#cli/schemas/configurations/manifest.ts';
 import { type Check, type Configuration } from '#cli/types/configurations.ts';
 import { listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
 
 /**
 List the shipped configurations that gspot selects in every repository.
-
-@returns their names.
 */
 export function listAlwaysSelected(): string[] {
     return readConfigurations()
@@ -18,14 +15,7 @@ export function listAlwaysSelected(): string[] {
 }
 
 /**
-Parse a manifest.toml for one test.
-
-@param name what to call the configuration.
-@param fields extra manifest tables and fields.
-@param fields.requires configurations that it needs.
-@param fields.tables extra TOML for the manifest.
-@param fields.group where the configuration sits.
-@returns the parsed configuration.
+Parse a manifest.toml for one test, with fields.tables appended as TOML.
 */
 export function buildConfiguration(
     name: string,
@@ -42,19 +32,19 @@ export function buildConfiguration(
             description: 'A configuration for the tests, long enough.',
         },
     });
-    const { configuration, tools, ...rest } = parsed;
+    const { configuration, ...rest } = parsed;
     return {
         ...rest,
         ...configuration,
-        tools: tools.map((tool) => (typeof tool === 'string' ? getTool(readConfigurations().values(), tool) : tool)),
+        tools: [],
     };
 }
 
 /**
 Read one shipped check by ID, rejecting unknown names.
 */
-export function getShippedCheck(name: string): Check {
-    const declaration = listChecksById(readConfigurations().values()).get(name);
-    if (declaration === undefined) throw new Error(`The shipped check ${name} does not exist.`);
+export function getShippedCheck(checkId: string): Check {
+    const declaration = listChecksById(readConfigurations().values()).get(checkId);
+    if (declaration === undefined) throw new Error(`The shipped check ${checkId} does not exist.`);
     return declaration.check;
 }

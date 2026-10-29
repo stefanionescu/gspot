@@ -2,9 +2,9 @@
 import example from '../../config/example.json';
 import { SUMMARY_SENTENCE_BREAK } from '../../config/home.ts';
 
-type Props = { status: string; summary: string };
+type Props = { status: string; summary?: string };
 const { status, summary } = Astro.props;
-const [first, ...sentences] = summary.split(SUMMARY_SENTENCE_BREAK);
+const [first, ...sentences] = (summary ?? '').split(SUMMARY_SENTENCE_BREAK);
 const rest = sentences.join(' ');
 const failedChecks = [...new Set(example.findings.map(({ check }) => check))].map((check) => ({
     name: check,
@@ -53,10 +53,12 @@ const failedChecks = [...new Set(example.findings.map(({ check }) => check))].ma
                     </ol>
                 </>
             ))}
-        <p class="summary">
-            <strong class:list={status}>{first}</strong>
-            {rest === '' ? '' : ` ${rest}`}
-        </p>
+        {summary !== undefined && (
+            <p class="summary">
+                <strong class:list={status}>{first}</strong>
+                {rest === '' ? '' : ` ${rest}`}
+            </p>
+        )}
         {status === 'passed' && <p class="muted">{example.commit_record}</p>}
     </div>
 </figure>

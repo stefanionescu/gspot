@@ -1,9 +1,10 @@
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
-import { buildFinding } from '#cli/checks/finding.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import { SYNTAX_RULE } from '#cli/config/checks/syntax.ts';
 import { DOCKER_TOOL } from '#cli/config/tools/inspect.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
@@ -12,11 +13,12 @@ import type { Session, CheckSession } from '#cli/types/session.ts';
 import { parseNginxDirectives } from '#cli/parsers/formats/nginx.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { type Finding, type BuiltInCheckResult } from '#cli/types/runs/check.ts';
 import type { Mount, NginxMounts } from '#cli/types/checks/infrastructure/nginx.ts';
+import { type CheckFinding, type BuiltInCheckResult } from '#cli/types/runs/check.ts';
 
 import {
     NGINX_CONF,
+    NGINX_TABLE,
     LOCAL_NAMES,
     VOLUME_FLAG,
     NGINX_FOLDER,
@@ -30,7 +32,9 @@ import {
     OPENSSL_KEY_FLAG,
     NGINX_COPY_PREFIX,
     NGINX_MAIN_TARGET,
+    DOCKER_DAEMON_NOTE,
     NGINX_TEST_COMMAND,
+    DOCKER_DAEMON_ERROR,
     NGINX_VARIABLE_MARK,
     NGINX_DUMP_FILE_LINE,
     NGINX_EMERGENCY_MARK,
@@ -56,8 +60,8 @@ function listIncludedFiles(planned: PlannedCheck, text: string, base: string): P
     return included;
 }
 
-function copyNginxFiles(session: Session, planned: PlannedCheck, path: string, work: string): Map<string, Mount> {
-    const folder = mkdtempSync(join(work, NGINX_COPY_PREFIX));
+function copyNginxFiles(session: Session, planned: PlannedCheck, path: string, workFolder: string): Map<string, Mount> {
+    const folder = mkdtempSync(join(workFolder, NGINX_COPY_PREFIX));
     const copies = new Map<string, Mount>();
     const pending = [{ path, target: NGINX_MAIN_TARGET }];
     const base = posix.dirname(path);
@@ -73,17 +77,19 @@ function copyNginxFiles(session: Session, planned: PlannedCheck, path: string, w
     return copies;
 }
 
-function buildSyntaxResult(
-    planned: PlannedCheck,
-    path: string,
-    copies: Map<string, Mount>,
-    message: string,
-): BuiltInCheckResult {
+function buildSyntaxResult(path: string, copies: Map<string, Mount>, message: string): BuiltInCheckResult {
     const location = ERROR_LOCATION.exec(message)?.groups;
     const { file: target = '', line = '1' } = location === undefined ? {} : location;
     const file = copies.get(target)?.path ?? path;
     return {
-        findings: [buildFinding(planned, { file, line: Number(line) }, 'syntax', message)],
+        findings: [
+            {
+                file,
+                line: Number(line),
+                rule: SYNTAX_RULE,
+                message: message,
+            },
+        ],
         files: copies.has(target) ? [file] : [],
     };
 }
@@ -92,14 +98,14 @@ async function testNginxFile(
     session: CheckSession,
     planned: PlannedCheck,
     path: string,
-    work: string,
+    workFolder: string,
     image: string,
 ): Promise<BuiltInCheckResult> {
-    const copies = copyNginxFiles(session, planned, path, work);
+    const copies = copyNginxFiles(session, planned, path, workFolder);
     const mounts = {
         configs: copies.values().toArray(),
-        certificate: join(work, NGINX_CERTIFICATE_FILE),
-        key: join(work, NGINX_KEY_FILE),
+        certificate: join(workFolder, NGINX_CERTIFICATE_FILE),
+        key: join(workFolder, NGINX_KEY_FILE),
     };
     const commandArguments = buildNginxTestArguments(
         copies
@@ -129,10 +135,11 @@ async function testNginxFile(
             }),
         };
     }
+    if (DOCKER_DAEMON_ERROR.test(result.stderr)) throw new GspotError('tool', DOCKER_DAEMON_NOTE);
     const errorLine = result.stderr.split('\n').find((line) => line.includes(NGINX_EMERGENCY_MARK));
     if (errorLine === undefined || result.code !== 1)
         throw new Error(`The nginx run failed (exit ${String(result.code)}): ${result.stderr.trim()}`);
-    return buildSyntaxResult(planned, path, copies, errorLine);
+    return buildSyntaxResult(path, copies, errorLine);
 }
 
 function buildNginxTestArguments(text: string, mounts: NginxMounts, image: string): string[] {
@@ -168,11 +175,11 @@ function buildNginxTestArguments(text: string, mounts: NginxMounts, image: strin
 Tests every tracked nginx.conf with the server's own parser.
 
 @param session the repository and its tools.
-@param planned the scope files and nginx image.
+@param planned the configured check and selected scope files.
 @returns one finding for each file nginx refuses.
 */
 export async function checkNginxSyntax(session: CheckSession, planned: PlannedCheck): Promise<BuiltInCheckResult> {
-    const image = getTable(planned.scope.settings, 'tools.nginx')['image'];
+    const image = getTable(planned.scope.settings, NGINX_TABLE)['image'];
     const paths = listSourcePaths(planned.files, [NGINX_CONF]);
     if (paths.length === 0) return { findings: [], files: [] };
     using workFolder = createTemporaryFolder();
@@ -193,7 +200,7 @@ export async function checkNginxSyntax(session: CheckSession, planned: PlannedCh
         throw new Error(
             `The openssl command could not write the temporary certificate: ${formatOutputTail(certificate)}`,
         );
-    const findings: Finding[] = [];
+    const findings: CheckFinding[] = [];
     const checked = new Set<string>();
     for (const path of paths) {
         const result = await testNginxFile(session, planned, path, workFolder.path, image);

@@ -26,7 +26,8 @@ string, a display name, or an English source sentence.
 - Group related messages under one namespace per feature. Share a message only when its meaning and grammatical role
   match everywhere.
 - Translators get complete sentences or clauses. Never concatenate translated fragments or pluralize by appending an
-  English suffix; use International Components for Unicode (ICU) arguments, plurals, selects, and rich text through the library's rendering API.
+  English suffix; use International Components for Unicode (ICU) arguments, plurals, selects, and rich text through the
+  library's rendering API.
 - Placeholder names belong to the message contract, so a change to one updates every caller and catalog together.
 - Rich tags stay stable and map to trusted components. Never accept executable markup from a translator or a provider
   response.

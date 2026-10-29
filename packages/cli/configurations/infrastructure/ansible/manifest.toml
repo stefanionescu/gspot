@@ -2,6 +2,9 @@
 description = "Ansible playbooks, roles, and collections: the lint rules of the Ansible project."
 title = "Ansible"
 
+[detect]
+paths = ["**/ansible.cfg", "**/galaxy.yml", "**/requirements.yml", "**/roles/*/tasks/main.yml", "**/playbooks/*.{yml,yaml}", "**/group_vars/**", "**/host_vars/**", "**/inventory/**", "**/inventory.{ini,yml,yaml}"]
+
 [files]
 paths = ["**/ansible.cfg", "**/galaxy.yml", "**/requirements.yml", "**/roles/*/tasks/main.yml"]
 
@@ -22,9 +25,9 @@ command = ["ansible-lint", "-c", "{config_file:ansible-lint}", "--offline", "--n
 example = "A task with `ansible.builtin.command: systemctl restart nginx` reports `command-instead-of-module`. Use `ansible.builtin.systemd` with `name: nginx` and `state: restarted` instead."
 files = { extensions = [".yml", ".yaml", ".cfg", ".j2"] }
 help = "Change the task the way the rule says. Turn one rule off with `gspot ignore ansible/ansible-lint --rule <rule> --reason \"<why>\"`."
-level = "recommended"
 name = "ansible-lint"
+output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):[\\d:]* (?<rule>[^:]+): (?<message>.*)$" }
 runs = "scope"
 stage = "commit"
-summary = "Runs the moderate ansible-lint profile at recommended and production at all, beside each ansible.cfg or at the scope root."
+summary = "Runs the moderate ansible-lint profile at level basic and production at level all, beside each ansible.cfg or at the scope root."
 why = "Playbooks run as root on production hosts, and a non-idempotent task changes them each time."

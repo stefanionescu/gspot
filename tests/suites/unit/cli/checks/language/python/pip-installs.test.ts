@@ -2,12 +2,13 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { rm } from 'node:fs/promises';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { LOCKED_SCOPE_SETTINGS } from '#tests/config/checks/language/python/pip-installs.ts';
+import { LOCKED_SCOPE_SETTINGS, REQUIREMENTS_FILE_FINDING } from '#tests/config/checks/language/python/pip-installs.ts';
 
 test.each(LOCKFILES.filter(({ packageManager }) => ['uv', 'poetry', 'pdm'].includes(packageManager)))(
     'a requirements file is reported only in a scope with a $file lockfile and passes once removed',
@@ -27,9 +28,7 @@ test.each(LOCKFILES.filter(({ packageManager }) => ['uv', 'poetry', 'pdm'].inclu
             buildRunOptions({ only: ['python/pip-installs'] }),
         );
 
-        expect(checked.report.checks.flatMap((check) => check.findings)).toMatchObject([
-            { file: 'locked/requirements.txt', rule: 'requirements-file' },
-        ]);
+        expect(checked.report.checks.flatMap((check) => check.findings)).toStrictEqual([REQUIREMENTS_FILE_FINDING]);
         expect(
             checked.report.checks.filter((check) => check.status === 'failed').map((check) => check.scope),
         ).toStrictEqual(['locked']);
@@ -42,3 +41,22 @@ test.each(LOCKFILES.filter(({ packageManager }) => ['uv', 'poetry', 'pdm'].inclu
         expect(corrected.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
     },
 );
+
+test('an unmanaged pip install reports the complete source finding', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['python']),
+        'uv.lock': 'version = 1\n',
+        'install.sh': 'pip install requests\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'python/pip-installs')).toStrictEqual([
+        {
+            check: 'python/pip-installs',
+            file: 'install.sh',
+            line: 1,
+            rule: 'pip-install',
+            fixable: false,
+            message: 'Add the package to pyproject.toml and install it from the lockfile.',
+            help: REQUIREMENTS_FILE_FINDING.help,
+        },
+    ]);
+});

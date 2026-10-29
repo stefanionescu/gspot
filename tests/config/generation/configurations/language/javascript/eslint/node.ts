@@ -64,47 +64,47 @@ const NODE_SCRIPT_OUTPUT = 'console.log("result");\nprocess.exit(0);\n';
 export const NODE_SCRIPT_CASES = [
     {
         file: 'scripts/run[one]',
-        recommended: [{ ruleId: 'no-unused-vars', line: 2 }],
+        everyLevel: [{ ruleId: 'no-unused-vars', line: 2 }],
         corrected: NODE_SCRIPT_CORRECTED,
     },
     {
         file: 'scripts/run{one,two}',
-        recommended: [{ ruleId: 'no-unused-vars', line: 2 }],
+        everyLevel: [{ ruleId: 'no-unused-vars', line: 2 }],
         corrected: NODE_SCRIPT_CORRECTED,
     },
     {
         file: 'scripts/run.task',
-        recommended: [{ ruleId: 'no-unused-vars', line: 2 }],
+        everyLevel: [{ ruleId: 'no-unused-vars', line: 2 }],
         corrected: NODE_SCRIPT_CORRECTED,
     },
     {
         file: 'child/scripts/run',
-        recommended: [{ ruleId: 'no-unused-vars', line: 2 }],
+        everyLevel: [{ ruleId: 'no-unused-vars', line: 2 }],
         corrected: NODE_SCRIPT_CORRECTED,
     },
     {
         file: 'scripts/run.ts',
-        recommended: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 2 }],
+        everyLevel: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 2 }],
         corrected: NODE_SCRIPT_CORRECTED,
     },
     {
         file: 'scripts/typed.ts',
-        recommended: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1 }],
+        everyLevel: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1 }],
         corrected: NODE_SCRIPT_OUTPUT,
     },
     {
         file: 'scripts/run.js',
-        recommended: [{ ruleId: 'no-unused-vars', line: 1 }],
+        everyLevel: [{ ruleId: 'no-unused-vars', line: 1 }],
         corrected: NODE_SCRIPT_OUTPUT,
     },
     {
         file: 'build.config.ts',
-        recommended: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1 }],
+        everyLevel: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1 }],
         corrected: NODE_SCRIPT_OUTPUT,
     },
     {
         file: 'src/source.ts',
-        recommended: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1 }],
+        everyLevel: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1 }],
         corrected: 'export const result = 1;\n',
         all: [
             { ruleId: 'n/no-process-exit', line: 3 },
@@ -152,7 +152,7 @@ process.exit(0);
 } as const;
 
 export const NODE_SCRIPT_TABLES = `[javascript]
-script_files = ["scripts/**", "child/scripts/**", "build.config.ts"]
+script_files = { value = ["scripts/**", "child/scripts/**", "build.config.ts"], reason = "This test sets the allowed locations explicitly." }
 
 [limits.javascript]
 trivial_function_statements = 3
@@ -174,25 +174,25 @@ export const EXTENSIONLESS_SCRIPT_CASES = [
         file: 'scripts/syntax',
         source: '#!/usr/bin/env node\nconst =;\n',
         corrected: '#!/usr/bin/env node\nconsole.log(process.cwd());\n',
-        recommended: [{ ruleId: null, line: 2 }],
+        everyLevel: [{ ruleId: null, line: 2 }],
     },
     {
         file: 'scripts/globals',
         source: '#!/usr/bin/env node\nconsole.log(document.title);\n',
         corrected: '#!/usr/bin/env node\nconsole.log(process.cwd());\n',
-        recommended: [{ ruleId: 'no-undef', line: 2 }],
+        everyLevel: [{ ruleId: 'no-undef', line: 2 }],
     },
     {
         file: 'scripts/engine',
         source: '#!/usr/bin/env node\nconsole.log(Object.groupBy([1], String));\n',
         corrected: '#!/usr/bin/env node\nconsole.log(Object.groupBy([1], String));\n',
-        recommended: [],
+        everyLevel: [],
     },
     {
         file: 'child/scripts/engine',
         source: '#!/usr/bin/env node\nconsole.log(Object.groupBy([1], String));\n',
         corrected: '#!/usr/bin/env node\nconsole.log(Object.fromEntries([["group", [1]]]));\n',
-        recommended: [{ ruleId: 'n/no-unsupported-features/es-builtins', line: 2 }],
+        everyLevel: [{ ruleId: 'n/no-unsupported-features/es-builtins', line: 2 }],
     },
     {
         file: 'scripts/structural',
@@ -201,7 +201,7 @@ function value() { console.log("ready"); return process.cwd(); }
 console.log(value());
 `,
         corrected: '#!/usr/bin/env node\nconsole.log("ready");\nconsole.log(process.cwd());\n',
-        recommended: [],
+        everyLevel: [],
         all: [{ ruleId: 'gspot/no-trivial-functions', line: 2 }],
     },
     {
@@ -214,14 +214,14 @@ console.log(value());
 function value() { console.log("ready"); return process.cwd(); }
 console.log(value());
 `,
-        recommended: [],
+        everyLevel: [],
     },
     {
         file: 'scripts/parameters',
         source: '#!/usr/bin/env node\nexport function sum(first, second, third) { const partial = first + second; const total = partial + third; console.log(total); return total; }\n',
         corrected:
             '#!/usr/bin/env node\nexport function sum(first, second) { const partial = first + second; const total = partial * 2; console.log(total); return total; }\n',
-        recommended: [],
+        everyLevel: [],
         all: [{ ruleId: 'max-params', line: 2 }],
     },
     {
@@ -234,7 +234,7 @@ console.log(value);
 import { value } from "../source.js";
 console.log(value);
 `,
-        recommended: [{ ruleId: 'n/file-extension-in-import', line: 2 }],
+        everyLevel: [{ ruleId: 'n/file-extension-in-import', line: 2 }],
     },
 ] as const;
 
@@ -256,7 +256,7 @@ export const EXTENSIONLESS_SCRIPT_RULES = [
 ] as const;
 
 export const PACKAGE_MANAGER_LEVELS = [
-    { level: 'recommended', severity: 0 },
+    { level: 'basic', severity: 0 },
     { level: 'all', severity: 2 },
 ] as const;
 

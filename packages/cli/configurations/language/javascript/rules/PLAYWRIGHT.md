@@ -17,8 +17,7 @@ Read this rule when you write or change a Playwright test.
 
 ## Test data and page objects
 
-- Keep shared setup in the builders folder that TESTING.md describes. Introduce page objects only when several tests
-  repeat the same interactions.
+- Introduce page objects only when several tests repeat the same interactions.
 - Reuse isolated authentication state for tests that do not exercise login. Login tests verify the full authentication
   journey. Keep account state isolated between concurrent workers.
 

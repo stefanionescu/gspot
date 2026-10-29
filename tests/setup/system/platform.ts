@@ -10,9 +10,6 @@ export const isMacos = process.platform === 'darwin';
 
 /**
 Whether the pinned tool has a build for this machine.
-
-@param name tool as its manifest pins it.
-@returns whether a tool test may run it here.
 */
 export function hasToolBuild(name: string): boolean {
     const operatingSystem = getOperatingSystem();
@@ -23,12 +20,12 @@ export function hasToolBuild(name: string): boolean {
 /**
 Make process.platform report another system until disposal.
 
-@param name system to report.
+@param platform system to report.
 @returns a resource that restores the real value.
 */
-export function simulateOperatingSystem(name: NodeJS.Platform): Disposable {
+export function fakePlatform(platform: NodeJS.Platform): Disposable {
     const descriptor = Object.getOwnPropertyDescriptor(process, 'platform')!;
-    Object.defineProperty(process, 'platform', { value: name });
+    Object.defineProperty(process, 'platform', { value: platform });
     return {
         // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
         [Symbol.dispose]() {

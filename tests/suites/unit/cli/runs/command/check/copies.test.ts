@@ -1,16 +1,19 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { openSession } from '#cli/session.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
+import { PYVENV_HOME } from '#tests/config/python.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { listCopyPythonArguments } from '#cli/tools/uv.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildCheckSession } from '#cli/commands/check/run.ts';
+import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/uv.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runCommandCheck, buildCommandSetup } from '#cli/runs/command/check.ts';
 import { writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
@@ -23,7 +26,7 @@ test('a Python check that runs in a copy uses the environment that the working t
         'uv.lock': 'version = 1\n',
         'app/main.py': 'import requests\n',
     };
-    await createFileTree(working.path, { ...files, '.venv/pyvenv.cfg': 'home = /usr/bin\n' });
+    await createFileTree(working.path, { ...files, '.venv/pyvenv.cfg': PYVENV_HOME });
     await createFileTree(sandbox.path, files);
     const session = await openSession(sandbox.path, { toolsRoot: working.path });
     const planned = planChecks(session, buildRunOptions({ only: ['python/basedpyright'] })).find(
@@ -32,6 +35,12 @@ test('a Python check that runs in a copy uses the environment that the working t
     expect(buildCommandSetup(session, planned, { options: {}, root: session.root }).env[UV_PROJECT_ENVIRONMENT]).toBe(
         join(working.path, '.venv'),
     );
+    expect(
+        listCopyPythonArguments(
+            planned.tool!,
+            buildCommandSetup(session, planned, { options: {}, root: session.root }).env,
+        ),
+    ).toStrictEqual(['--pythonpath', buildVenvExecutablePath(join(working.path, '.venv'), 'python')]);
     const inPlace = await openSession(working.path);
     const local = planChecks(inPlace, buildRunOptions({ only: ['python/basedpyright'] })).find(
         ({ check }) => check.id === 'python/basedpyright',
@@ -41,7 +50,7 @@ test('a Python check that runs in a copy uses the environment that the working t
     );
 });
 
-test('a command run in a copy finds the other tools beside its program before a PATH entry', async () => {
+test('a command run in a copy finds the other tools beside its program before a PATH folder', async () => {
     await using sandbox = await createGitSandbox({});
     const files = {
         'gspot.toml': buildSandboxSettings([], {
@@ -72,4 +81,5 @@ test('a command run in a copy finds the other tools beside its program before a 
     const result = await runCommandCheck(buildCheckSession(session), planned, { copyRoot: join(sandbox.path, 'copy') });
     expect(result.status, result.note).toBe('passed');
     expect(result.findings).toStrictEqual([]);
+    expect(result.command).toStrictEqual([join(sandbox.path, 'native/checker')]);
 });

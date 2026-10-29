@@ -1,30 +1,13 @@
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
 import { createRule } from '../create-rule.ts';
-import { DRIVE_LETTER } from '../config/syntax.ts';
+import { findPathInFolder } from '../paths.ts';
 import { buildSourceVisitors } from '../syntax.ts';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
 import { RESOURCE_QUERY } from '../config/rules/imports.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { RuleContext, RelativeImport, ImportBoundariesOptions } from '../types/rules.ts';
-
-import {
-    OPTIONS_SCHEMA,
-    TRAILING_SLASH,
-    RELATIVE_SPECIFIER,
-    DEFAULT_BOUNDARY_FOLDERS,
-} from '../config/rules/import-boundaries.ts';
-
-function getLintedPath(context: RuleContext): string | undefined {
-    const absolute = context.physicalFilename
-        .replaceAll('\\', '/')
-        .replace(DRIVE_LETTER, (drive) => drive.toUpperCase());
-    const root = ((context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd)
-        .replaceAll('\\', '/')
-        .replace(DRIVE_LETTER, (drive) => drive.toUpperCase())
-        .replace(TRAILING_SLASH, '');
-    return absolute.startsWith(`${root}/`) ? absolute.slice(root.length + 1) : undefined;
-}
+import type { RelativeImport, ImportBoundariesOptions } from '../types/rules.ts';
+import { OPTIONS_SCHEMA, RELATIVE_SPECIFIER, DEFAULT_BOUNDARY_FOLDERS } from '../config/rules/import-boundaries.ts';
 
 function matchAlias(importedPath: string, pattern: string, target: string): string | undefined {
     const keyStar = pattern.indexOf('*');
@@ -48,19 +31,15 @@ function findAlias(importedPath: string, aliases: Record<string, string>): strin
     return undefined;
 }
 
-function readEscapingImport(source: string, importer: string, boundary: string): RelativeImport | undefined {
+function findEscapingImport(source: string, parentFolder: string, boundary: string): RelativeImport | undefined {
     if (!RELATIVE_SPECIFIER.test(source)) return undefined;
     const query = RESOURCE_QUERY.exec(source)?.[0] ?? '';
-    const target = posix.join(importer, source.slice(0, source.length - query.length));
-    const isInside =
-        boundary === '.'
-            ? target !== '..' && !target.startsWith('../')
-            : target === boundary || target.startsWith(`${boundary}/`);
-    return isInside ? undefined : { target, query };
+    const target = posix.join(parentFolder, source.slice(0, source.length - query.length));
+    return findPathInFolder(boundary, target) === undefined ? { target, query } : undefined;
 }
 
 function findBoundary(parentFolder: string, isBoundary: (path: string) => boolean): string | undefined {
-    if (parentFolder === '..' || parentFolder.startsWith('../')) return undefined;
+    if (findPathInFolder('.', parentFolder) === undefined) return undefined;
     const segments = parentFolder.split('/');
     const ancestors = segments.map((_segment, index) => segments.slice(0, index + 1).join('/'));
     ancestors.unshift('.');
@@ -89,7 +68,10 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
         },
     },
     create(context, [options]) {
-        const relative = getLintedPath(context);
+        const relative = findPathInFolder(
+            (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd,
+            context.physicalFilename,
+        );
         if (relative === undefined) return {};
         const { folders, aliases, externals } = options;
         const isExternal = picomatch([...externals], { dot: true });
@@ -101,7 +83,7 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
             const imported =
                 source === null || isExternal(source)
                     ? undefined
-                    : readEscapingImport(source, posix.dirname(relative), folder);
+                    : findEscapingImport(source, posix.dirname(relative), folder);
             if (source === null || imported === undefined) return;
             const { target, query } = imported;
             const alias = findAlias(target, aliases);

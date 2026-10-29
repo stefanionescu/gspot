@@ -7,11 +7,18 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { Tool, Check } from '#cli/types/configurations.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
 import type { OutputPaths } from '#cli/types/runs/output/formats.ts';
-import { parseOutput, outputFormats } from '#cli/runs/output/formats.ts';
-import { TAIL_LINES, OUT_OF_MEMORY } from '#cli/config/runs/command/output.ts';
+import { parseOutput, OUTPUT_FORMATS } from '#cli/runs/output/formats.ts';
+import type { Finding, CheckResult, CheckFinding } from '#cli/types/runs/check.ts';
 import type { CommandRun, OutputCheck, ParsedFindings, CommandLineOutput } from '#cli/types/runs/command.ts';
+
+import {
+    TAIL_LINES,
+    OUT_OF_MEMORY,
+    STACK_FRAME_LINE,
+    OUT_OF_MEMORY_MESSAGE,
+    NO_ERROR_OUTPUT_MESSAGE,
+} from '#cli/config/runs/command/output.ts';
 
 function buildUnexplainedFailure(check: Check, tool: Tool, result: SpawnResult, file: string | undefined): Finding {
     const emptyOutputText = `${tool.name} exited ${String(result.code)}`;
@@ -46,16 +53,10 @@ function isOnDisk(file: string, roots: string[]): boolean {
 
 function throwCrash(planned: OutputCheck, result: SpawnResult, options: { verbose?: boolean | undefined }): never {
     const failure = `${planned.tool?.name ?? planned.check.id} failed with exit ${String(result.code)}`;
-    if (planned.check.needs?.includes('network') === true) {
-        const last = result.stderr.trim().split('\n').at(-1);
-        const detail = last === undefined || last === '' ? '' : `\n${last}`;
-        throw new GspotError(
-            'output',
-            `${failure}. It needs network access: check the network or proxy, then run again.${detail}`,
-        );
-    }
     const detail = formatOutputTail(result, '', options);
-    throw new GspotError('output', detail === '' ? `${failure} and printed nothing.` : `${failure}:\n${detail}`);
+    const message = detail === '' ? `${failure} and printed nothing.` : `${failure}:\n${detail}`;
+    const network = planned.check.needs?.includes('network') === true ? ' This check needs network access.' : '';
+    throw new GspotError('output', message + network);
 }
 
 function isSilentCrash(check: Check, result: SpawnResult, parsed: Finding[], paths: OutputPaths): boolean {
@@ -63,7 +64,7 @@ function isSilentCrash(check: Check, result: SpawnResult, parsed: Finding[], pat
         return false;
     const output = check.output;
     return (
-        outputFormats[output.format].namesFiles(output) &&
+        OUTPUT_FORMATS[output.format].namesFiles(output) &&
         parsed.every((finding) => !isOnDisk(finding.file, [paths.cwd, paths.root]))
     );
 }
@@ -90,7 +91,6 @@ Builds the check result from what the runs collected.
 @param completion.state the findings and failure flag.
 @param completion.commandArguments what the process ran, placeholders expanded.
 @param completion.started the monotonic start time.
-@returns the status, findings, and duration.
 */
 export function buildCheckResult(
     check: Check,
@@ -98,8 +98,8 @@ export function buildCheckResult(
 ): CheckResult {
     const { base, state, commandArguments, started } = completion;
     const output = check.output;
-    const descriptor = outputFormats[output.format];
-    const isEveryFindingKept = state.failed || (check.runs !== 'history' && descriptor.namesFiles(output));
+    const descriptor = OUTPUT_FORMATS[output.format];
+    const isEveryFindingKept = state.failed || (check.runs !== 'history' && !descriptor.namesFiles(output));
     const findings = isEveryFindingKept
         ? state.findings
         : state.findings.filter((finding) => finding.file !== '' || finding.line !== undefined);
@@ -165,7 +165,6 @@ Checks whether a run exited with an undeclared code or printed a crash pattern.
 @param check the declared exit codes and crash pattern.
 @param tool the tool with the shared crash pattern.
 @param result what the process returned.
-@returns whether the tool broke.
 */
 export function isReportedCrash(check: Check, tool: Tool | undefined, result: SpawnResult): boolean {
     if (result.code !== 0 && check.exit_codes !== undefined && !check.exit_codes.includes(result.code)) return true;
@@ -180,20 +179,18 @@ Formats the last lines of tool output.
 @param emptyOutputText the text when both streams stay empty.
 @param options controls crash details.
 @param options.verbose includes stack frames.
-@returns the last lines of output.
 */
 export function formatOutputTail(
     result: Pick<SpawnResult, 'stdout' | 'stderr'>,
-    emptyOutputText = 'The tool printed no error output.',
+    emptyOutputText = NO_ERROR_OUTPUT_MESSAGE,
     options: { verbose?: boolean | undefined } = {},
 ): string {
-    if (OUT_OF_MEMORY.test(result.stderr) || OUT_OF_MEMORY.test(result.stdout))
-        return 'The tool ran out of memory. It most likely read build output or a bundle: keep that folder in .gitignore, or add an [[ignore]] with its paths.';
+    if (OUT_OF_MEMORY.test(result.stderr) || OUT_OF_MEMORY.test(result.stdout)) return OUT_OF_MEMORY_MESSAGE;
     const output = [result.stderr, result.stdout]
         .map((stream) =>
             stripVTControlCharacters(stream)
                 .split('\n')
-                .filter((line) => options.verbose === true || !/^\s+at /u.test(line))
+                .filter((line) => options.verbose === true || !STACK_FRAME_LINE.test(line))
                 .join('\n')
                 .trim()
                 .split('\n')
@@ -210,13 +207,12 @@ Returns the findings, or fails when the tool exited nonzero with none.
 @param result the exit code and output.
 @param findings what the parser read.
 @param toolName the program that ran.
-@returns the parsed findings.
 */
 export function assertToolFindings(
     result: Pick<SpawnResult, 'code' | 'stdout' | 'stderr'>,
-    findings: Finding[],
+    findings: CheckFinding[],
     toolName: string,
-): Finding[] {
+): CheckFinding[] {
     if (result.code !== 0 && findings.length === 0)
         throw new Error(`The ${toolName} command failed (exit ${String(result.code)}): ${formatOutputTail(result)}`);
     return findings;

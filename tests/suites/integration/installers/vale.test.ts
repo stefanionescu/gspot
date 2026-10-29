@@ -1,27 +1,29 @@
 import { join } from 'node:path';
-import { openWriter } from '#cli/write.ts';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { openWriter } from '#cli/repository/writer.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/vale.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
+import { PREVIOUS_BYTES } from '#tests/config/installers/vale.ts';
+import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
+import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { PROSE_SANDBOX } from '#tests/config/integration/samples.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { hasValePackages, installValePackages } from '#cli/installers/vale.ts';
 
 import {
+    AUTHORED_STYLE,
     GOOGLE_RULE_PATH,
     AUTHORED_STYLE_PATH,
     AUTHORED_VALE_FILES,
@@ -29,6 +31,12 @@ import {
 } from '#tests/config/integration/installers/vale.ts';
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
+
+async function assertAuthoredFiles(root: string): Promise<void> {
+    const authored = await readFile(join(root, 'authored.txt'), 'utf8');
+    const style = await readFile(join(root, AUTHORED_STYLE_PATH), 'utf8');
+    expect({ authored, style }).toStrictEqual({ authored: 'keep\n', style: AUTHORED_STYLE });
+}
 
 test('gspot install restores deleted Vale dictionaries, and prose/vale passes again', async () => {
     const { root } = installedSandbox();
@@ -45,31 +53,25 @@ test('gspot install restores deleted Vale dictionaries, and prose/vale passes ag
 
 test('Vale package install deletes a package gspot no longer ships', async () => {
     const sandbox = installedSandbox();
-    await using _change = await changeAppliedSandbox(sandbox, AUTHORED_VALE_FILES);
+    await using _change = await changeSandbox(sandbox, AUTHORED_VALE_FILES);
     await createFileTree(sandbox.root, { [`${GSPOT_PATHS.valePackages}/Retired/terms.yml`]: 'old rule\n' });
     const installed = await spawnGspot(sandbox.root, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.root, `${GSPOT_PATHS.valePackages}/Retired`))).toBe(false);
     expect(await isOnDisk(join(sandbox.root, GOOGLE_RULE_PATH))).toBe(true);
-    expect({
-        authored: await readFile(join(sandbox.root, 'authored.txt'), 'utf8'),
-        style: await readFile(join(sandbox.root, AUTHORED_STYLE_PATH), 'utf8'),
-    }).toStrictEqual({ authored: 'keep\n', style: 'authored legacy bytes\n' });
+    await assertAuthoredFiles(sandbox.root);
 });
 
 test('Vale package install replaces an edited package and keeps the authored files', async () => {
     const sandbox = installedSandbox();
-    await using _change = await changeAppliedSandbox(sandbox, AUTHORED_VALE_FILES);
+    await using _change = await changeSandbox(sandbox, AUTHORED_VALE_FILES);
     const previous = await readFile(join(sandbox.root, GOOGLE_RULE_PATH));
     await chmod(join(sandbox.root, GOOGLE_RULE_PATH), 0o644);
     await writeFile(join(sandbox.root, GOOGLE_RULE_PATH), 'edited\n');
     const installed = await spawnGspot(sandbox.root, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(await readFile(join(sandbox.root, GOOGLE_RULE_PATH))).toStrictEqual(previous);
-    expect({
-        authored: await readFile(join(sandbox.root, 'authored.txt'), 'utf8'),
-        style: await readFile(join(sandbox.root, AUTHORED_STYLE_PATH), 'utf8'),
-    }).toStrictEqual({ authored: 'keep\n', style: 'authored legacy bytes\n' });
+    await assertAuthoredFiles(sandbox.root);
 });
 
 test.each([...VALE_INSTALL_FAILURES])(
@@ -78,7 +80,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['prose'], { level: 'all', tables: settings }),
             [GSPOT_PATHS.valeConfigFile]: VALE_PACKAGES_INI,
-            [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: 'previous bytes\n',
+            [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: PREVIOUS_BYTES,
             'guide.md': 'Authored text.\n',
         });
 
@@ -105,7 +107,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         const failure = await captureRejection(installValePackages(request, []));
         expect(failure.message).toEndWith(message);
         expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
-            'previous bytes\n',
+            PREVIOUS_BYTES,
         );
         expect(request.steps).toStrictEqual([
             [executable, '--config', expect.stringContaining('vale-') as string, 'sync'],

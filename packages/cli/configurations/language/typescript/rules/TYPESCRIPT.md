@@ -2,8 +2,6 @@
 
 Read this rule when you change TypeScript code.
 
-TypeScript checks static types. JAVASCRIPT.md, NODE.md, BUN.md, and DENO.md cover modules and execution.
-
 ## Executables and compiler output
 
 Error output and process exits stay at executable boundaries.
@@ -24,6 +22,13 @@ Describe absence precisely: `property?: T` and `property: T | undefined` define 
 `exactOptionalPropertyTypes`. A nullable alias gets a name only when the domain defines the union. Add nullability where
 the public interface allows absence. Normalize external empty strings, missing fields, and nulls where they enter the
 program.
+
+### Value conventions
+
+<!-- level: all -->
+
+- Name every number other than `-1`, `0`, and `1` in a module-level constant, such as `MILLISECONDS_PER_DAY`.
+- Annotate the parameters and the return type of every exported function.
 
 ## Functions and classes
 
@@ -46,12 +51,12 @@ messages.forEach(async (message) => {
 await Promise.all(messages.map((message) => persistMessage(message)));
 
 /**
- * Run a provider operation and release its lock on success or failure.
- *
- * @param request the provider operation to submit
- * @returns the provider's result
- * @throws wraps a provider failure while preserving its cause
- */
+Run a provider operation and release its lock on success or failure.
+
+@param request the provider operation to submit
+@returns the provider's result
+@throws wraps a provider failure while preserving its cause
+*/
 export async function createProviderOperation(request: ProviderOperationRequest): Promise<ProviderOperationResult> {
     try {
         return await postProviderOperation(request);

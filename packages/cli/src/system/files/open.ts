@@ -1,9 +1,9 @@
 import { compareText } from '#cli/system/text.ts';
 import { readContainedPath } from '#cli/system/files/reads.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import type { Files, FileBounds } from '#cli/types/system/files.ts';
 import { createLock, releaseLocks } from '#cli/system/files/lock.ts';
 import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+import { GspotError, hasErrorCode, buildWriteError } from '#cli/system/errors.ts';
+import type { Files, FileBounds, FileContents } from '#cli/types/system/files.ts';
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
 
 import {
@@ -15,24 +15,56 @@ import {
     readBoundedKeepingLinks,
 } from '#cli/system/files/bounded.ts';
 
+function createBoundedFolder(bounds: FileBounds, path: string, mode: number): void {
+    try {
+        const target = preparePath(bounds, path);
+        try {
+            mkdirSync(target, { mode });
+        } catch (error) {
+            if (!hasErrorCode(error, 'EEXIST')) throw error;
+        }
+        if (!lstatSync(target).isDirectory())
+            throw new GspotError('filesystem', `${path} is not a folder. Choose a folder.`);
+        chmodSync(target, mode);
+    } catch (error) {
+        throw buildWriteError(path, error);
+    }
+}
+
+function deleteBoundedFile(bounds: FileBounds, path: string, expected: FileContents): void {
+    try {
+        if (!isSameContents(readBoundedKeepingLinks(bounds, path), expected))
+            throw new GspotError('filesystem', `${path} changed before removal. Run the command again.`);
+        unlinkSync(buildContainedPath(bounds, path));
+    } catch (error) {
+        throw buildWriteError(path, error);
+    }
+}
+
 /**
 Open a reader and writer confined to one root, with paths checked for this system.
 
 @param root the folder containing every relative path.
-@returns the disposable file handle.
 */
 export function openFiles(root: string): Files {
     const bounds: FileBounds = { root: realpathSync(root), locks: new Map() };
     const files: Files = {
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The Files type declares it.
         deleteFolder(path) {
-            rmdirSync(buildContainedPath(bounds, path));
+            try {
+                rmdirSync(buildContainedPath(bounds, path));
+            } catch (error) {
+                throw buildWriteError(path, error);
+            }
         },
         deleteTree(path) {
-            const stat = files.readStats(path);
-            if (stat?.isDirectory() === false)
-                throw new GspotError('filesystem', `${path} is not a folder. Choose a folder.`);
-            if (stat !== undefined) rmSync(buildContainedPath(bounds, path), { recursive: true, force: true });
+            try {
+                const stat = files.readStats(path);
+                if (stat?.isDirectory() === false)
+                    throw new GspotError('filesystem', `${path} is not a folder. Choose a folder.`);
+                if (stat !== undefined) rmSync(buildContainedPath(bounds, path), { recursive: true, force: true });
+            } catch (error) {
+                throw buildWriteError(path, error);
+            }
         },
         readCanonicalPath: (path) => readContainedPath(bounds.root, path),
         list(path) {
@@ -49,7 +81,8 @@ export function openFiles(root: string): Files {
         readStats(path) {
             try {
                 const stat = lstatSync(buildContainedPath(bounds, path));
-                if (stat.isSymbolicLink()) throw new Error(`${path} is a link. gspot does not write through links.`);
+                if (stat.isSymbolicLink())
+                    throw new GspotError('filesystem', `${path} is a link. gspot does not write through links.`);
                 return stat;
             } catch (error) {
                 if (hasErrorCode(error, 'ENOENT')) return undefined;
@@ -59,25 +92,11 @@ export function openFiles(root: string): Files {
         read: (path) => readBounded(bounds, path),
         readKeepingLinks: (path) => readBoundedKeepingLinks(bounds, path),
         write: replaceBounded.bind(undefined, bounds),
-        deleteFile(path, expected) {
-            if (!isSameContents(readBoundedKeepingLinks(bounds, path), expected))
-                throw new GspotError('filesystem', `${path} changed before removal. Run the command again.`);
-            unlinkSync(buildContainedPath(bounds, path));
-        },
-        createFolder(path, mode) {
-            const target = preparePath(bounds, path);
-            try {
-                mkdirSync(target, { mode });
-            } catch (error) {
-                if (!hasErrorCode(error, 'EEXIST')) throw error;
-            }
-            if (!lstatSync(target).isDirectory())
-                throw new GspotError('filesystem', `${path} is not a folder. Choose a folder.`);
-            chmodSync(target, mode);
-        },
+        deleteFile: deleteBoundedFile.bind(undefined, bounds),
+        createFolder: createBoundedFolder.bind(undefined, bounds),
         createLock: createLock.bind(undefined, bounds),
         [Symbol.dispose]() {
-            for (const path of releaseLocks(bounds)) removeEmptyFolders(files, path);
+            for (const path of releaseLocks(bounds)) deleteEmptyFolders(files, path);
         },
     };
     return files;
@@ -89,7 +108,7 @@ Remove the empty parent folders that a removed file leaves, stopping at the root
 @param files the file handle of the root.
 @param path the removed file.
 */
-export function removeEmptyFolders(files: Files, path: string): void {
+export function deleteEmptyFolders(files: Files, path: string): void {
     const parents = listEnclosingFolders(extractParentFolder(path)).slice(0, -1);
     for (const folder of parents) {
         if (files.list(folder).length > 0) return;

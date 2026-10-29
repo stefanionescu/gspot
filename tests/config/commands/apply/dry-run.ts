@@ -1,7 +1,7 @@
 export const MISSING_GENERATED_PATHS = [
     '.editorconfig',
     '.gitattributes',
-    '.gitignore',
+    '.gspot/.gitignore',
     '.gspot/configurations/general/data-files/taplo.toml',
     '.gspot/configurations/general/data-files/v8r.yml',
     '.gspot/configurations/general/data-files/yamllint.yml',
@@ -28,3 +28,7 @@ export const MISSING_GENERATED_PATHS = [
     '.prettierignore',
     'prettier.config.mjs',
 ] as const;
+
+export const APPLY_WRITE_MESSAGE = 'Run gspot apply to write these files.';
+
+export const INSTALL_WRITE_MESSAGE = 'Run gspot install to write the tool lockfiles.';

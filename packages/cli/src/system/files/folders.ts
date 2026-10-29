@@ -26,8 +26,6 @@ function assertInsideFolder(pattern: string): void {
 /**
 Makes an empty folder under the system temporary folder that removes itself, with everything in it, when disposed.
 Use the real system path, which on Windows expands short folder names, as the paths tools report do.
-
-@returns the folder, which the caller disposes, as `using` does.
 */
 export function createTemporaryFolder(): TemporaryFolder {
     const folder = mkdtempSync(join(tmpdir(), 'gspot-'));

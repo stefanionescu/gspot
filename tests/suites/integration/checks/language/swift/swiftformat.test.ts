@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { CLEAN_SWIFT } from '#tests/config/samples.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { CLEAN_SWIFT } from '#tests/config/swift.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { SWIFT_SANDBOX } from '#tests/config/integration/checks/language/swift/samples.ts';
+import { SWIFT_SANDBOX } from '#tests/config/integration/checks/language/swift/sandboxes.ts';
 
 import {
     SOURCE_HEADER,
@@ -17,6 +17,7 @@ import {
     SWIFT_DOCS_SOURCE,
     FORMATTED_INLINE_DOCS,
     FORMATTED_DOCS_SOURCE,
+    IMPORTED_SOURCE_REASON,
     BLOCK_COMMENT_FINDINGS,
     INLINE_COMMENT_FINDINGS,
     SPACED_COMMENT_FINDINGS,
@@ -27,7 +28,7 @@ const installedSandbox = shareInstalledSandbox(SWIFT_SANDBOX);
 test.skipIf(!hasToolBuild('swiftformat'))('swiftformat keeps the source header when it fixes spacing', async () => {
     const { root } = installedSandbox();
     const path = join(root, 'Sources/App/Greeting.swift');
-    await using _change = await changeAppliedSandbox(installedSandbox(), {
+    await using _change = await changeSandbox(installedSandbox(), {
         files: {
             'Sources/App/Greeting.swift': SOURCE_HEADER + CLEAN_SWIFT.replace('func greeting', 'func   greeting'),
         },
@@ -38,10 +39,10 @@ test.skipIf(!hasToolBuild('swiftformat'))('swiftformat keeps the source header w
 });
 
 test.skipIf(!hasToolBuild('swiftformat'))(
-    'at level recommended, SwiftFormat leaves Swift block comments unchecked',
+    'at level basic, SwiftFormat leaves Swift block comments unchecked',
     async () => {
         await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['swift'], { level: 'recommended' }),
+            'gspot.toml': buildSandboxSettings(['swift'], { level: 'basic' }),
             'Value.swift': SWIFT_DOCS_SOURCE,
         });
 
@@ -53,12 +54,12 @@ test.skipIf(!hasToolBuild('swiftformat'))(
     },
 );
 
-async function readFormatFindings(root: string, code: 0 | 1, scope: string) {
+async function readFormatFindings(root: string, code: 0 | 1, scopePath: string) {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(code);
     expect(result.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
-        ...(scope === '' ? [] : [{ scope: '', status: 'skipped' as const }]),
-        { scope, status: code === 0 ? 'passed' : 'failed' },
+        ...(scopePath === '' ? [] : [{ scope: '', status: 'skipped' as const }]),
+        { scope: scopePath, status: code === 0 ? 'passed' : 'failed' },
     ]);
     return result.report.checks.flatMap(({ findings }) =>
         findings.map(({ file, line, column, rule }) => [file, line, column, rule]),
@@ -89,7 +90,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             '--rule',
             'blockComments',
             '--reason',
-            'The imported source retains its documentation layout.',
+            IMPORTED_SOURCE_REASON,
         ]);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
         expect(await readFormatFindings(root, 1, '')).toStrictEqual(
@@ -139,7 +140,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             '--paths',
             'nested/**',
             '--reason',
-            'The imported source retains its documentation layout.',
+            IMPORTED_SOURCE_REASON,
         ]);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
         expect(await readFormatFindings(root, 1, 'nested')).toStrictEqual(

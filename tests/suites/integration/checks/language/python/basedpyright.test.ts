@@ -2,17 +2,17 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { ARITHMETIC_MODULE } from '#tests/config/integration/checks/samples.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { PYTHON_SANDBOX, ARITHMETIC_MODULE_PATH } from '#tests/config/integration/checks/language/python/samples.ts';
+import { PYTHON_SANDBOX, ARITHMETIC_MODULE_PATH } from '#tests/config/integration/checks/language/python/sandboxes.ts';
 
 const installedSandbox = shareInstalledSandbox(PYTHON_SANDBOX);
 
 test('basedpyright reports a type error and passes after the fix', async () => {
     const { root } = installedSandbox();
-    await using _change = await changeAppliedSandbox(installedSandbox(), {
+    await using _change = await changeSandbox(installedSandbox(), {
         files: { [ARITHMETIC_MODULE_PATH]: `${ARITHMETIC_MODULE}\n\nTOTAL: int = "three"\n` },
     });
     const venv = await runCommand(['uv', 'venv', '.venv'], { cwd: root });

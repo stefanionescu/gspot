@@ -33,3 +33,12 @@ export const NGINX_MOUNT_CASES = [
     DYNAMIC_TARGET_CASE,
     { name: 'empty directives', source: '# Empty configuration.\n;{};', hosts: [], certificates: [] },
 ] as const;
+
+export const NGINX_EMERGENCY_CASES = [
+    {
+        stderr: 'nginx: [emerg] unknown directive "invalid" in /etc/nginx/conf.d/site.conf:7',
+        file: 'conf.d/site.conf',
+        line: 7,
+    },
+    { stderr: 'nginx: [emerg] configuration could not be read', file: 'nginx.conf', line: 1 },
+] as const;

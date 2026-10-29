@@ -6,7 +6,6 @@ Build the declared plugin imports and lint rule blocks.
 
 @param scope the planned ESLint file of the scope.
 @param configuration the name with the pinned lint rule list.
-@returns the imports and ESLint blocks for this configuration.
 */
 export function buildPluginRuleBlocks(scope: EslintScope, configuration: string): ConfigurationBlocks {
     const declaration = PLUGIN_RULE_BLOCKS[configuration] as (typeof PLUGIN_RULE_BLOCKS)[string];
@@ -17,6 +16,7 @@ export function buildPluginRuleBlocks(scope: EslintScope, configuration: string)
         blocks: [
             {
                 fields: {
+                    ...declaration.fields,
                     files,
                     ...(declaration.ignoresTests === true && {
                         ignores: [
@@ -27,7 +27,7 @@ export function buildPluginRuleBlocks(scope: EslintScope, configuration: string)
                     }),
                     rules: declaration.rules,
                 },
-                properties: declaration.properties,
+                calls: declaration.calls,
             },
         ],
     };

@@ -30,17 +30,16 @@ extensions = [".ts", ".tsx", ".mts", ".cts"]
 
 [eslint]
 required_tools = ["typescript-eslint"]
-all_level_rules = ["@typescript-eslint/ban-ts-comment", "@typescript-eslint/consistent-type-definitions", "@typescript-eslint/consistent-type-exports", "@typescript-eslint/consistent-type-imports", "@typescript-eslint/explicit-module-boundary-types", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-extraneous-class", "@typescript-eslint/no-mixed-enums", "@typescript-eslint/no-namespace", "@typescript-eslint/no-non-null-assertion", "@typescript-eslint/no-require-imports", "@typescript-eslint/no-this-alias", "@typescript-eslint/no-unnecessary-type-parameters", "@typescript-eslint/prefer-readonly", "@typescript-eslint/prefer-reduce-type-parameter", "@typescript-eslint/prefer-return-this-type", "@typescript-eslint/strict-boolean-expressions", "@typescript-eslint/triple-slash-reference", "@typescript-eslint/unified-signatures", "gspot/no-magic-numbers"]
+all_level_rules = ["@typescript-eslint/ban-ts-comment", "@typescript-eslint/consistent-type-definitions", "@typescript-eslint/consistent-type-exports", "@typescript-eslint/consistent-type-imports", "@typescript-eslint/explicit-module-boundary-types", "@typescript-eslint/no-extraneous-class", "@typescript-eslint/no-mixed-enums", "@typescript-eslint/no-non-null-assertion", "@typescript-eslint/no-unnecessary-type-parameters", "@typescript-eslint/prefer-readonly", "@typescript-eslint/prefer-reduce-type-parameter", "@typescript-eslint/prefer-return-this-type", "@typescript-eslint/strict-boolean-expressions", "@typescript-eslint/unified-signatures", "gspot/no-magic-numbers"]
 
 [[check]]
 cwd = "scope"
 example = "`const count: number = \"one\";` reports an incompatible assignment. Assign a number, such as `const count: number = 1;`."
 help = "Fix the first error tsc prints; later errors often come from the same mistake."
-level = "recommended"
 name = "tsc"
 runs = "scope"
 stage = "push"
-summary = "Runs tsc with the strict compiler options over every TypeScript file."
+summary = "Runs tsc on each tsconfig project, or on the TypeScript files of a scope that has no tsconfig, with the strict options of the level."
 tool = "tsc"
 why = "A type error left in a file can crash the program at run time, though the editor already showed it."
 
@@ -51,7 +50,6 @@ pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\
 [[check]]
 example = "A tsconfig with `strict` set to `false` reports a finding. Set `strict` to `true`, and fix the new type errors."
 help = "Turn on the reported compiler option in your tsconfig."
-level = "recommended"
 name = "tsconfig"
 stage = "commit"
 summary = "Requires strict in every tsconfig you write. Level all also requires noUncheckedIndexedAccess, exactOptionalPropertyTypes, noImplicitOverride, noFallthroughCasesInSwitch, noImplicitReturns, and noPropertyAccessFromIndexSignature."

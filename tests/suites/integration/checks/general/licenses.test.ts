@@ -4,17 +4,12 @@ import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
-import {
-    runGspot,
-    spawnGspot,
-    applyThenInstall,
-    parseCheckReport,
-    buildInitArguments,
-} from '#tests/setup/cli/commands.ts';
 import {
     MIT_ONLY,
     LICENSED_PACKAGES,
@@ -30,7 +25,10 @@ test('licenses/allowed accepts an allowed license choice and reports a disallowe
     });
     const root = sandbox.path;
     commitAll(root);
-    for (const command of [buildInitArguments(['licenses']), ['set', 'licenses.allowed', '["MIT","Apache-2.0"]']]) {
+    for (const command of [
+        ['init', '--yes', '--configurations', 'licenses'],
+        ['set', 'licenses.allowed', '["MIT","Apache-2.0"]'],
+    ]) {
         const applied = await spawnGspot(root, command);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     }
@@ -101,7 +99,7 @@ test("licenses/allowed reads installed Python packages, ignores the project's pi
     expect(passed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });
 
-test('an allowed package at the root also covers that package in a child scope without its own package.json', async () => {
+test('an allowed package of the root covers that package in a child scope', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['licenses'], {
             tables: stringify({

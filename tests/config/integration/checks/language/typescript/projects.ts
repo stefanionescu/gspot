@@ -1,20 +1,5 @@
 import { BASE_INSTALLED_FILES } from '#tests/config/integration/checks/samples.ts';
 
-export const REFERENCE_BUILD_FILES = {
-    '.gitignore': `node_modules/
-.venv/
-.gspot/
-`,
-    'package.json': '{"private":true,"type":"module"}\n',
-    'config/base.json':
-        '{"compilerOptions":{"composite":true,"strict":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","types":[]}}',
-    'app/src/main.ts': 'import type { Value } from "../shared/value.js"; export const port: Value = "wrong";\n',
-    'app/shared/value.d.ts': 'export type Value = number;\n',
-    'neighbor/source.ts': 'export const ignored: number = "wrong";\n',
-    'neighbor/node_modules/unrelated/package.json': '{"name":"unrelated","version":"1.0.0"}',
-    'neighbor/.venv/pyvenv.cfg': 'home = unrelated\n',
-} as const;
-
 export const AUTHORED_TSCONFIG = `{
     // The application owns its build and module settings.
     "compilerOptions": {
@@ -62,11 +47,3 @@ export const SOLUTION_PROJECT_FILES = {
     'orders/order.ts': 'export const total: number = "wrong";',
     'users/user.ts': 'import { total } from "../orders/order.js"; export const active: boolean = total;',
 };
-
-export const REFERENCE_BUILD_SETTINGS = {
-    level: 'all',
-    scopes: [
-        { path: 'app', configurations: ['typescript'] },
-        { path: 'neighbor', configurations: ['typescript'] },
-    ],
-} as const;

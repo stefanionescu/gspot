@@ -19,3 +19,5 @@ export const LINE_ENDINGS = ['lf', 'crlf'] as const;
 export const QUOTE_STYLES = ['single', 'double'] as const;
 
 export const TRAILING_COMMAS = ['all', 'es5', 'none'] as const;
+
+export const RELATIVE_PATH_PATTERN = /^(?:[^\\:\p{Cc}]|\\[()[\]{}*?!+@,])+$/u;

@@ -26,7 +26,7 @@ export type WrittenTools = {
     eslint?: Optional<ParsedEslint> | undefined;
     commitlint?:
         | {
-              types?: string[] | undefined;
+              types?: SettingValue<string[]> | undefined;
               scopes?: string[] | undefined;
               rules?: Record<string, [(typeof RULE_CONDITIONS)[number], (JsonValue | undefined)?]> | undefined;
           }

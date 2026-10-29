@@ -3,7 +3,7 @@ import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files/tracked.ts';
 import { EXECUTABLE_LAYOUTS, DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 
-const systemExecutables = EXECUTABLE_LAYOUTS[process.platform === 'win32' ? 'windows' : 'posix'];
+export const executableLayout = process.platform === 'win32' ? EXECUTABLE_LAYOUTS.windows : EXECUTABLE_LAYOUTS.posix;
 
 /**
 Convert a path to forward slashes on every system, for path patterns, stored paths, and output.
@@ -31,7 +31,7 @@ export function isInside(local: string): boolean {
 Extract the extension with its dot, in lower case. Double extensions such as '.d.ts' stay whole.
 
 @param path the path, with forward slashes.
-@returns the extension, '' without an extension.
+@returns '' without an extension.
 */
 export function extractExtension(path: string): string {
     const base = posix.basename(path);
@@ -45,9 +45,8 @@ export function extractExtension(path: string): string {
 Remove trailing separators from a written scope path.
 
 @param path the written scope folder.
-@returns the path without trailing slashes.
 */
-export function trimTrailingSlashes(path: string): string {
+export function stripTrailingSlashes(path: string): string {
     let end = path.length;
     while (end > 0 && path[end - 1] === '/') end -= 1;
     return path.slice(0, end);
@@ -68,8 +67,7 @@ export function extractParentFolder(path: string): string {
 /**
 Extract the base name without its extension. A declaration extension such as `.d.mts` counts as one.
 
-@param path the file location with its complete declaration or ordinary extension.
-@returns the file name after removing its extension and parent folders.
+@param path the file path.
 */
 export function extractBaseName(path: string): string {
     const base = posix.basename(path);
@@ -100,18 +98,7 @@ List the file names that an executable can have on this system, in the order the
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in 5 files share it.
 export function listExecutableNames(name: string): string[] {
-    return systemExecutables.executableSuffixes.map((suffix) => name + suffix);
-}
-
-/**
-Find the command folder of a Python virtual environment.
-
-@param folder the environment root.
-@returns its Scripts folder on Windows, or its bin folder elsewhere.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 6 files share it.
-export function buildVenvBinPath(folder: string): string {
-    return join(folder, systemExecutables.environmentFolder);
+    return executableLayout.executableSuffixes.map((suffix) => name + suffix);
 }
 
 /**
@@ -123,7 +110,7 @@ Locate one Python interpreter or console script inside its virtual environment.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 17 calls in 11 files share it.
 export function buildVenvExecutablePath(folder: string, name: string): string {
-    return join(buildVenvBinPath(folder), name + systemExecutables.environmentSuffix);
+    return join(join(folder, executableLayout.environmentFolder), name + executableLayout.environmentSuffix);
 }
 
 /**

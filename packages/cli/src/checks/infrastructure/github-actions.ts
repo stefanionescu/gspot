@@ -13,6 +13,8 @@ import { isMap, isSeq, isAlias, isScalar, type Scalar, parseDocument, type Docum
 import {
     ACTION_FILES,
     GITHUB_FOLDER,
+    SELF_REFERENCE_PREFIX,
+    ENCODED_DOLLAR_SUFFIX,
     SELF_REPOSITORY_MARKER,
 } from '#cli/config/checks/infrastructure/github-actions.ts';
 
@@ -47,7 +49,8 @@ function replaceReference(text: string, reference: Scalar): string {
             : token.offset;
     const replaced = token.source.replace(
         SELF_REPOSITORY_MARKER,
-        (_, prefix: string, marker: string) => prefix + (marker === '$' ? '.' : marker.replace(/24$/u, '2e')),
+        (_, prefix: string, marker: string) =>
+            prefix + (marker === '$' ? '.' : marker.replace(ENCODED_DOLLAR_SUFFIX, '2e')),
     );
     return text.slice(0, start) + replaced + text.slice(start + token.source.length);
 }
@@ -58,7 +61,12 @@ function replaceSelfReferences(text: string): string {
     let replaced = text;
     for (const value of listWorkflowReferences(document)) {
         const reference = isAlias(value) ? value.resolve(document) : value;
-        if (!isScalar(reference) || typeof reference.value !== 'string' || !reference.value.startsWith('$/')) continue;
+        if (
+            !isScalar(reference) ||
+            typeof reference.value !== 'string' ||
+            !reference.value.startsWith(SELF_REFERENCE_PREFIX)
+        )
+            continue;
         replaced = replaceReference(replaced, reference);
     }
     return replaced;
@@ -69,7 +77,6 @@ Runs actionlint. If a workflow or action uses a $/ reference, checks a copy with
 
 @param session the repository and its tools.
 @param planned the actionlint check and its files.
-@returns the check result.
 */
 export async function checkGithubActionsActionlint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const replacements = new Map<string, string>();

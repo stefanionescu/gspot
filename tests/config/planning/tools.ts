@@ -59,9 +59,9 @@ export const ARCHITECTURE_REQUIREMENTS = [
 name = "app"
 paths = ["src/**"]
 `,
-        boundary: { recommended: true, all: true },
+        boundary: { basic: true, all: true },
     },
-    { name: 'selected role defaults without modules', tables: '', boundary: { recommended: false, all: true } },
+    { name: 'selected role defaults without modules', tables: '', boundary: { basic: false, all: true } },
 ] as const;
 
 export const COVERAGE_PROVIDERS = [

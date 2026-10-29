@@ -17,12 +17,6 @@
 /pagefind/index/*
   Cache-Control: public, max-age=31536000, immutable
 
-/brand/*
-  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
-
-/tools/*
-  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
-
 /favicon.ico
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
 
@@ -31,3 +25,18 @@
 
 /open-graph.png
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/*.md
+  Content-Type: text/markdown; charset=utf-8
+
+/llms.txt
+  Content-Type: text/plain; charset=utf-8
+
+/llms-small.txt
+  Content-Type: text/plain; charset=utf-8
+
+/llms-full.txt
+  Content-Type: text/plain; charset=utf-8
+
+/_llms-txt/*
+  Content-Type: text/plain; charset=utf-8

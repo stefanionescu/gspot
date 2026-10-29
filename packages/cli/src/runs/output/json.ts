@@ -1,21 +1,26 @@
+import { LINE_BREAK } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { getValueAt } from '#cli/system/tables.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { parseToolReport } from '#cli/parsers/formats/json.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
-import { JSON_START, JSON_PREVIEW_LENGTH } from '#cli/config/runs/output/json.ts';
 
-function buildJsonSyntaxError(stdout: string): GspotError {
+import {
+    JSON_START,
+    NO_OUTPUT_MESSAGE,
+    JSON_PREVIEW_LENGTH,
+    EMPTY_FINDING_MESSAGE,
+    INVALID_FINDING_MESSAGE,
+} from '#cli/config/runs/output/json.ts';
+
+function buildJsonSyntaxError(stdout: string, cause?: unknown): GspotError {
     const first = stdout
-        .split(/\r?\n/u)
+        .split(LINE_BREAK)
         .find((line) => line.trim() !== '')
         ?.trim()
         .slice(0, JSON_PREVIEW_LENGTH);
-    const message =
-        first === undefined
-            ? 'The command printed nothing; it should print a JSON report.'
-            : `The output is not JSON. It starts with: ${first}`;
-    return new GspotError('output', message);
+    const message = first === undefined ? NO_OUTPUT_MESSAGE : `The output is not JSON. It starts with: ${first}`;
+    return new GspotError('output', message, { cause });
 }
 
 function listAt(value: unknown, path: string | undefined): unknown[] {
@@ -40,7 +45,7 @@ function setPosition(finding: Finding, base: number, line: string | undefined, c
 function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
     const { check, help, output: format } = output;
     if (sources.some((source) => source === null || typeof source !== 'object' || Array.isArray(source)))
-        throw new GspotError('output', 'The JSON report contains an invalid finding object.');
+        throw new GspotError('output', INVALID_FINDING_MESSAGE);
     const fields: Record<string, string | undefined> | undefined = format.fields;
     const getFieldValues = (name: string) =>
         (fields?.[name] ?? '')
@@ -62,8 +67,7 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
         return joined === '' ? undefined : joined;
     };
     const message = getField('message');
-    if (message === undefined)
-        throw new GspotError('output', 'The JSON report contains a finding without its mapped message.');
+    if (message === undefined) throw new GspotError('output', EMPTY_FINDING_MESSAGE);
     const file = getField('file') ?? '';
     const finding: Finding = {
         check,
@@ -83,7 +87,6 @@ Read JSON findings from the dotted `list` path. Each `children` key goes one lis
 takes it from its parent nodes.
 
 @param output the tool output to read.
-@returns the findings from a valid report.
 */
 export function parseJsonFindings(output: ToolOutput): Finding[] {
     const { output: format, stdout } = output;
@@ -91,10 +94,10 @@ export function parseJsonFindings(output: ToolOutput): Finding[] {
     if (start === -1) throw buildJsonSyntaxError(stdout);
     let parsed: unknown;
     try {
-        parsed = parseToolReport('JSON', stdout.slice(start));
+        parsed = parseToolOutput('JSON', stdout.slice(start));
     } catch (error) {
         if (!(error instanceof GspotError)) throw error;
-        throw buildJsonSyntaxError(stdout);
+        throw buildJsonSyntaxError(stdout, error);
     }
     const keys = format.children === undefined ? [] : format.children.split('.');
     return listAt(parsed, format.list).flatMap((element) =>

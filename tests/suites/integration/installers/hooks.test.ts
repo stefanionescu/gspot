@@ -1,34 +1,34 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { stringify } from '@decimalturn/toml-patch';
 import { readGitSetting } from '#cli/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { readRuntimePins } from '#tests/setup/cli/tools.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
+import { parse, stringify } from '@decimalturn/toml-patch';
+import { runtimePinsSchema } from '#tests/schemas/runner.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { MISE_TRUST, TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
-import { UNQUOTED_FINDING_LINE } from '#tests/config/integration/installers/hooks.ts';
+import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runGit, commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
-    runGspot,
-    spawnGspot,
-    applyThenInstall,
-    parseCheckReport,
-    buildInitArguments,
-} from '#tests/setup/cli/commands.ts';
+    UNQUOTED_SCRIPT,
+    HOOKS_OFF_SETTINGS,
+    UNQUOTED_FINDING_LINE,
+} from '#tests/config/integration/installers/hooks.ts';
 
 test.each(['', 'app/'])('install from %s points core.hooksPath at .gspot/hooks', async (prefix) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
-        'app/gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = false\n' }),
+        'app/gspot.toml': buildSandboxSettings([], { tables: HOOKS_OFF_SETTINGS }),
     });
 
     const root = join(sandbox.path, prefix);
@@ -39,6 +39,7 @@ test.each(['', 'app/'])('install from %s points core.hooksPath at .gspot/hooks',
     expect(installed.stdout.split('\n')).toContain(`set core.hooksPath to ${GSPOT_PATHS.hooks}`);
     expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
 });
+
 test('doctor reports hooks this clone has not installed and accepts them after install', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
@@ -77,14 +78,20 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
     }
     const ready = await spawnGspot(clone, ['check', '--only', 'bash/shellcheck']);
     expect(ready.code, ready.stdout + ready.stderr).toBe(0);
-    await writeFile(join(clone, 'scripts/b.sh'), '#!/usr/bin/env bash\necho $1\n');
+    await writeFile(join(clone, 'scripts/b.sh'), UNQUOTED_SCRIPT);
     runGitStep(clone, ['add', 'scripts/b.sh']);
-    const rejected = runGit(clone, ['commit', '-qm', 'Unquoted shell input'], environment);
+    const rejected = runCommandBlocking(['git', 'commit', '-qm', 'Unquoted shell input'], {
+        cwd: clone,
+        env: environment,
+    });
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
     expect((rejected.stdout + rejected.stderr).split('\n')).toContain(UNQUOTED_FINDING_LINE);
     await writeFile(join(clone, 'scripts/b.sh'), '#!/usr/bin/env bash\necho "${1:-ready}"\n');
     runGitStep(clone, ['add', 'scripts/b.sh']);
-    const accepted = runGit(clone, ['commit', '-qm', 'Quote shell input'], environment);
+    const accepted = runCommandBlocking(['git', 'commit', '-qm', 'Quote shell input'], {
+        cwd: clone,
+        env: environment,
+    });
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
 }
 
@@ -93,19 +100,22 @@ test('a commit with a ShellCheck finding fails through the installed hook, in th
 
     await writeRuntimePins(sandbox.path);
     commitAll(sandbox.path);
-    const initialized = await spawnGspot(sandbox.path, buildInitArguments(['bash']));
+    const initialized = await spawnGspot(sandbox.path, ['init', '--yes', '--configurations', 'bash']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const installed = await spawnGspot(sandbox.path, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    await writeFile(join(sandbox.path, 'scripts', 'b.sh'), '#!/usr/bin/env bash\necho $1\n');
+    await writeFile(join(sandbox.path, 'scripts', 'b.sh'), UNQUOTED_SCRIPT);
     runGitStep(sandbox.path, ['add', '-A']);
     const environment = { NO_COLOR: '1' };
-    const commit = runGit(sandbox.path, ['commit', '-qm', 'bad'], environment);
+    const commit = runCommandBlocking(['git', 'commit', '-qm', 'bad'], { cwd: sandbox.path, env: environment });
     expect(commit.code, commit.stdout + commit.stderr).toBe(1);
     expect((commit.stdout + commit.stderr).split('\n')).toContain(UNQUOTED_FINDING_LINE);
     await writeFile(join(sandbox.path, 'scripts/b.sh'), '#!/usr/bin/env bash\necho "$1"\n');
     runGitStep(sandbox.path, ['add', '-A']);
-    const corrected = runGit(sandbox.path, ['commit', '-qm', 'Correct shell input'], environment);
+    const corrected = runCommandBlocking(['git', 'commit', '-qm', 'Correct shell input'], {
+        cwd: sandbox.path,
+        env: environment,
+    });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     await assertCloneHooks(sandbox.path, environment);
 });
@@ -151,12 +161,12 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     await writeFile(join(linked, 'src/added.txt'), 'DEFECT\n');
     runGitStep(linked, ['add', 'src/added.txt']);
-    const blocked = runGit(linked, ['commit', '-qm', 'Defect'], environment);
+    const blocked = runCommandBlocking(['git', 'commit', '-qm', 'Defect'], { cwd: linked, env: environment });
     expect(blocked.code, blocked.stdout + blocked.stderr).toBe(1);
     expect((blocked.stdout + blocked.stderr).split('\n')).toContain('  src/added.txt');
     await writeFile(join(linked, 'src/added.txt'), 'clean\n');
     runGitStep(linked, ['add', 'src/added.txt']);
-    const accepted = runGit(linked, ['commit', '-qm', 'Clean'], environment);
+    const accepted = runCommandBlocking(['git', 'commit', '-qm', 'Clean'], { cwd: linked, env: environment });
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
 });
 
@@ -187,7 +197,7 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
                 ],
             }),
         }),
-        'nested config/gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = false\n' }),
+        'nested config/gspot.toml': buildSandboxSettings([], { tables: HOOKS_OFF_SETTINGS }),
         'source.txt': 'invalid\n',
     });
     await writeRuntimePins(sandbox.path);
@@ -200,18 +210,20 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     runGitStep(sandbox.path, ['add', '-A']);
     await writeFile(join(sandbox.path, 'source.txt'), 'corrected working tree\n');
-    const rejected = runGit(sandbox.path, ['hook', 'run', 'pre-commit']);
+    const rejected = runCommandBlocking(['git', 'hook', 'run', 'pre-commit'], { cwd: sandbox.path, env: {} });
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
     expect((rejected.stdout + rejected.stderr).split('\n')).toContain('  source.txt:1  Indexed defect');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected working tree\n');
     runGitStep(sandbox.path, ['add', 'source.txt']);
-    const corrected = runGit(sandbox.path, ['hook', 'run', 'pre-commit']);
+    const corrected = runCommandBlocking(['git', 'hook', 'run', 'pre-commit'], { cwd: sandbox.path, env: {} });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
 async function writeRuntimePins(root: string): Promise<void> {
     if (!(await isOnDisk(join(root, TOOL_PINS_FILE)))) {
-        const tools = await readRuntimePins();
+        const tools = runtimePinsSchema.parse(
+            parse(await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8')),
+        ).tools;
         await writeFile(join(root, TOOL_PINS_FILE), stringify({ tools }));
     }
     const trusted = await runCommand([...MISE_TRUST, TOOL_PINS_FILE], { cwd: root });

@@ -1,12 +1,5 @@
 import type { ReferencePage } from '../types/reference.ts';
-
-import {
-    REFERENCE_PATH,
-    MARKDOWN_ESCAPES,
-    REFERENCE_FOLDERS,
-    FLAGS_OUTSIDE_CODE,
-    HTML_BRACKET_ENTITIES,
-} from '../config/reference.ts';
+import { MARKDOWN_ESCAPES, FLAGS_OUTSIDE_CODE, HTML_BRACKET_ENTITIES } from '../config/reference.ts';
 
 /**
 Build a reference page with escaped markup and no edit link.
@@ -14,7 +7,6 @@ Build a reference page with escaped markup and no edit link.
 @param title the visible heading
 @param description the one-line summary
 @param body the Markdown text
-@returns the page and its escaped Markdown
 */
 export function buildReferencePage(title: string, description: string, body: string): ReferencePage {
     const escaped = body
@@ -28,9 +20,8 @@ Format a level-two section, or nothing for empty text.
 
 @param title the heading
 @param body the Markdown text
-@returns the heading and its text, or an empty string
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 13 calls in 4 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, buildCheckPage passes the complexity limit.
 export function formatSection(title: string, body: string): string {
     return body === '' ? '' : `\n## ${title}\n\n${body}\n`;
 }
@@ -40,22 +31,10 @@ Format a Markdown table.
 
 @param header the column titles
 @param rows the cells of each line, in Markdown; the table escapes them
-@returns the table, with a separator line under the header, or nothing without rows
+@returns the table, or nothing without rows
 */
 export function formatTable(header: readonly string[], rows: readonly (readonly string[])[]): string {
     if (rows.length === 0) return '';
     const cells = rows.map((row) => row.map((cell) => cell.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ')));
     return [header, header.map(() => '---'), ...cells].map((line) => `| ${line.join(' | ')} |`).join('\n');
-}
-
-/**
-Build the canonical route of a reference index or named page.
-
-@param folder the reference section.
-@param name the page name, or empty for the index.
-@returns the absolute site path.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in 5 files share it.
-export function formatReferencePath(folder: keyof typeof REFERENCE_FOLDERS, name: string): string {
-    return `${REFERENCE_PATH}${REFERENCE_FOLDERS[folder]}/${name === '' ? '' : name + '/'}`;
 }

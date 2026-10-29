@@ -42,7 +42,7 @@ export type StdoutReader = (chunks: AsyncIterable<Buffer>) => Promise<void>;
 export type ProcessTreeControl = {
     state: { timedOut: boolean; canceled: boolean };
     stop: () => void;
-    release: (executionFailure: unknown) => Promise<void>;
+    release: (processFailure: unknown) => Promise<void>;
 };
 
 export type RunningProcess = PromiseLike<SpawnCompletion> & { stdout: Readable };

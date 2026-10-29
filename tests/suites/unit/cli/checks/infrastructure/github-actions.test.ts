@@ -1,26 +1,27 @@
 import { join } from 'node:path';
-import { openWriter } from '#cli/write.ts';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
-import { generate } from '#cli/generation/generate.ts';
-import { findCheckCode } from '#cli/checks/registry.ts';
-import { buildVenvBinPath } from '#cli/system/paths.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { openWriter } from '#cli/repository/writer.ts';
+import { executableLayout } from '#cli/system/paths.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { stat, chmod, readFile } from 'node:fs/promises';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-import { CI_SOURCE_WORKFLOW, CI_INJECTION_SETTINGS } from '#tests/config/github-actions.ts';
+import { CALLER_WORKFLOW, CI_SOURCE_WORKFLOW, CI_INJECTION_SETTINGS } from '#tests/config/github-actions.ts';
 
 import {
     ACTIONLINT_EXITS,
@@ -46,7 +47,7 @@ test('actionlint copies root actions and unchanged actions outside .github with 
         return buildProcessResult();
     });
     const planned = planChecks(session, buildRunOptions({ only: ['github-actions/actionlint'] }))[0]!;
-    const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
+    const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['github-actions/actionlint']);
     expect(result.findings).toStrictEqual([]);
     expect(boundary).toHaveBeenCalledTimes(1);
     for (const [path, source] of Object.entries(OUTSIDE_GITHUB_ACTIONS))
@@ -59,11 +60,11 @@ test.each([...GENERATED_WORKFLOW_CHECKS])(
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['github-actions'], { tables: CI_INJECTION_SETTINGS }),
             '.github/workflows/source.yml': CI_SOURCE_WORKFLOW,
-            [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'zizmor')]: 'stub',
+            [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'zizmor')]: 'stub',
         });
         const previous = await openSession(sandbox.path);
         using writer = openWriter(sandbox.path);
-        await writeGeneratedFiles(previous, generate(previous), writer);
+        await writeGeneratedFiles(previous, generateFiles(previous), writer);
         const session = await openSession(sandbox.path);
         using _pins = fakeToolExecutables(
             ['actionlint', 'shellcheck', 'zizmor'].map((name) => getTool(session.configurationsByName.values(), name)),
@@ -106,7 +107,13 @@ test.each([...WORKFLOW_TEXT_CASES])(
             return buildProcessResult();
         });
         const [planned] = planChecks(session, { stage: 'commit', only: ['github-actions/actionlint'] });
-        const result = await runCheckCode(buildCheckSession(session), planned!, findCheckCode(planned!.check));
+        const result = await runCheckCode(
+            buildCheckSession(session),
+            planned!,
+            planned!.check.generator_outputs === undefined
+                ? CHECK_CODE[planned!.check.id]
+                : { check: checkGeneratorOutputs },
+        );
         expect(result.status, JSON.stringify(result)).toBe('passed');
         expect(run).toHaveBeenCalledTimes(1);
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(before);
@@ -119,7 +126,7 @@ test.each([...ACTIONLINT_EXITS])(
         await using sandbox = await testdir();
         const record = join(sandbox.path, 'workspace.txt');
         const executable = join(sandbox.path, 'actionlint');
-        const workflow = 'on: workflow_dispatch\njobs:\n  caller:\n    uses: $/.github/workflows/called.yml\n';
+        const workflow = CALLER_WORKFLOW;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['github-actions']),
             '.github/workflows/caller.yml': workflow,
@@ -142,7 +149,7 @@ test.each([...ACTIONLINT_EXITS])(
         const plans = planChecks(session, { stage: 'commit', only: ['github-actions/actionlint'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };
-        const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
+        const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['github-actions/actionlint']);
         expect(result.status, JSON.stringify(result)).toBe(status);
         const workspace = await readFile(record, 'utf8');
         expect(workspace).not.toBe(sandbox.path);

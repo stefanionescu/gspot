@@ -1,23 +1,29 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openWriter } from '#cli/write.ts';
-import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
+import { parse } from '@decimalturn/toml-patch';
 import { UV_TOOL } from '#cli/config/tools/uv.ts';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { openWriter } from '#cli/repository/writer.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { listMisePins } from '#cli/configurations/tools.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
+import { runtimePinsSchema } from '#tests/schemas/runner.ts';
+import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import { TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import { preparePythonLockfile } from '#cli/installers/pypi.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import { type NpmToolInstall } from '#cli/types/installers/npm.ts';
 import { prepareNpmLockfile } from '#cli/installers/npm/project.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { toolAdvisoryReportSchema } from '#tests/schemas/tool-projects.ts';
 import { readToolBinPaths, listExecutablePaths } from '#cli/tools/locate.ts';
-import { readRuntimePins, buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import { TOOL_ADVISORY_EXCEPTIONS } from '#tests/config/integration/installers/projects.ts';
 
 async function scanToolProjects(root: string, configurations: Configuration[]) {
@@ -47,16 +53,19 @@ async function scanToolProjects(root: string, configurations: Configuration[]) {
 }
 
 test('every shipped npm and Python tool lockfile has only dated accepted advisories', async () => {
-    const { bun } = await readRuntimePins();
+    const { bun } = runtimePinsSchema.parse(parse(await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8'))).tools;
     await using sandbox = await createGitSandbox({
         'package.json': JSON.stringify({ private: true, packageManager: `bun@${bun}` }),
         'gspot.toml': buildSandboxSettings(readConfigurations().keys().toArray(), { level: 'all' }),
     });
     const session = await openSession(sandbox.path);
-    const generated = generate(session);
+    const generated = generateFiles(session);
     using writer = openWriter(sandbox.path);
     await writeGeneratedFiles(session, generated, writer);
-    const install = await buildNpmToolInstall(session, writer);
+    const install = {
+        ...buildToolInstall(session, writer),
+        registryEnvironment: await readRegistryEnvironment(session.root),
+    } as NpmToolInstall;
     const projects = generated.files.filter(
         ({ path }) => path === GSPOT_PATHS.npmProject || path === GSPOT_PATHS.pythonProject,
     );
@@ -64,7 +73,7 @@ test('every shipped npm and Python tool lockfile has only dated accepted advisor
         [GSPOT_PATHS.npmProject, GSPOT_PATHS.pythonProject].toSorted((left, right) => left.localeCompare(right)),
     );
     const [uvPath = UV_TOOL] = listExecutablePaths(session.toolsRoot, UV_TOOL, {
-        searchFolders: [],
+        folders: [],
         miseBinPaths: readToolBinPaths(session),
         timeoutSeconds: session.timeoutSeconds,
     });
@@ -73,7 +82,7 @@ test('every shipped npm and Python tool lockfile has only dated accepted advisor
             project.path === GSPOT_PATHS.npmProject
                 ? await prepareNpmLockfile(install, project)
                 : await preparePythonLockfile(install, project, uvPath);
-        await writeFile(join(sandbox.path, lockfile.path), lockfile.content);
+        await writeFile(join(sandbox.path, lockfile.path), lockfile.next.bytes);
     }
     const report = await scanToolProjects(sandbox.path, session.toolConfigurations);
     const today = new Date().toISOString().slice(0, 'YYYY-MM-DD'.length);

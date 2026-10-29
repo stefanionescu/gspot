@@ -4,16 +4,19 @@ import { stringify } from '@decimalturn/toml-patch';
 import { join, dirname, delimiter } from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { COMMAND_CHECK_HELP_LINE } from '#tests/config/messages.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { CLI_BIN, applyThenInstall } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { type CiDocument, type GithubWorkflow } from '#tests/types/ci.ts';
-import { CI_CHECKS, GITHUB_PIPELINE } from '#tests/config/integration/ci.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { CI_CHECKS, GITHUB_WORKFLOW } from '#tests/config/integration/ci.ts';
 
 async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
     runGitStep(root, ['init', '-q']);
@@ -24,7 +27,7 @@ async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
 application:
   script: echo authored-job
 `
-            : GITHUB_PIPELINE;
+            : GITHUB_WORKFLOW;
     const settings = stringify({
         configurations: [],
         rules: { enabled: false },
@@ -41,7 +44,7 @@ application:
     await createFileTree(root, {
         [pipelinePath]: pipeline,
         'changed.sh': 'echo valid\n',
-        'legacy.sh': 'if then\n',
+        'legacy.sh': BROKEN_IF_SCRIPT,
     });
     await writeFile(join(root, 'gspot.toml'), settings);
     await applyThenInstall(root);
@@ -49,7 +52,7 @@ application:
 
 async function commitCiChanges(root: string, provider: 'gitlab' | 'github') {
     const base = commitAll(root, 'base');
-    await writeFile(join(root, 'changed.sh'), 'if then\n');
+    await writeFile(join(root, 'changed.sh'), BROKEN_IF_SCRIPT);
     commitAll(root, 'invalid change');
     const workflowPath = provider === 'gitlab' ? '.gitlab/ci/gspot.yml' : '.github/workflows/gspot.yml';
     const generated = Bun.YAML.parse(await readFile(join(root, workflowPath), 'utf8')) as CiDocument;
@@ -71,6 +74,7 @@ async function fakeCiMise(folder: string) {
         failure,
         '--',
     );
+    await writeProgramCommand(folder, 'gspot', 'processes/cli');
     return failure;
 }
 
@@ -106,18 +110,27 @@ test('the generated GitHub command installs gspot with empty mise state', async 
     const workflow = Bun.YAML.parse(
         await readFile(join(sandbox.path, '.github/workflows/gspot.yml'), 'utf8'),
     ) as GithubWorkflow;
-    const command = workflow.jobs['lint']!.steps.find((step) => step.name === 'Install gspot tools')!.run!;
+    const command = workflow.jobs['lint']!.steps.find((step) => step.name === 'Install gspot')!.run!;
 
-    const result = await runCommand(['bash', '-e', '-c', command.replace(/ install$/u, ' --version')], {
-        cwd: sandbox.path,
-        env: {
-            MISE_CONFIG_DIR: join(sandbox.path, 'config'),
-            MISE_DATA_DIR: join(sandbox.path, 'data'),
-            MISE_STATE_DIR: join(sandbox.path, 'state'),
-            MISE_CACHE_DIR: join(sandbox.path, 'cache'),
-            MISE_CEILING_PATHS: dirname(sandbox.path),
+    const result = await runCommand(
+        [
+            'bash',
+            '-e',
+            '-c',
+            `${command.replace('>> "$GITHUB_PATH"', '> "$GITHUB_PATH"')}\nPATH="$(paste -sd : - < "$GITHUB_PATH"):$PATH"\ngspot --version`,
+        ],
+        {
+            cwd: sandbox.path,
+            env: {
+                GITHUB_PATH: join(sandbox.path, 'github-path'),
+                MISE_CONFIG_DIR: join(sandbox.path, 'config'),
+                MISE_DATA_DIR: join(sandbox.path, 'data'),
+                MISE_STATE_DIR: join(sandbox.path, 'state'),
+                MISE_CACHE_DIR: join(sandbox.path, 'cache'),
+                MISE_CEILING_PATHS: dirname(sandbox.path),
+            },
         },
-    });
+    );
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout.trim()).toBe(cliPackage.version);
 });
@@ -136,7 +149,7 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         expect(lines.slice(start, start + 4), invalid.stdout).toStrictEqual([
             'project/syntax  failed  1 finding',
             '  changed.sh: syntax error',
-            '  help: Read the command output; this repository declares the check.',
+            COMMAND_CHECK_HELP_LINE,
             `  run again: gspot check --only project/syntax --changed ${base}`,
         ]);
         await writeFile(join(sandbox.path, 'changed.sh'), 'echo corrected\n');

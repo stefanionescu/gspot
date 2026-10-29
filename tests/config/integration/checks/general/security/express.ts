@@ -35,3 +35,12 @@ export const EXPRESS_SOURCE_FINDINGS = [
     { file: 'query-template.js', rule: 'gspot.express.raw-query-interpolation', line: 1 },
     { file: 'response-template.js', rule: 'gspot.express.res-send-raw-input', line: 1 },
 ] as const;
+
+export const EXPRESS_RESPONSE_CASES = [
+    { rule: 'unvalidated-redirect', source: 'res.redirect(req.query.next);\n', fixed: 'res.redirect("/home");\n' },
+    {
+        rule: 'stack-trace-in-response',
+        source: 'res.json({ stack: error.stack });\n',
+        fixed: 'res.json({ error: "Request failed" });\n',
+    },
+] as const;

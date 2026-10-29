@@ -1,6 +1,6 @@
 # CSS
 
-Read this rule when you change a stylesheet.
+Read this rule when you change a stylesheet or the style block of a component.
 
 ## Correctness and accessibility
 

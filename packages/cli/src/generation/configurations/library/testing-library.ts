@@ -7,20 +7,19 @@ import {
 } from '#cli/config/generation/configurations/library/testing-library.ts';
 import {
     getPreset,
+    buildPresetRules,
     convertWarningsToErrors,
-    buildPresetRuleExpression,
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 
 /**
 Apply the Testing Library presets of the frameworks in use.
 
 @param scope the planned ESLint file of the scope.
-@returns the imports and ESLint blocks for this configuration.
 */
 export function buildTestingLibraryBlocks(
-    scope: Pick<EslintScope, 'presets' | 'eslintFiles' | 'scopeDependencies'>,
+    scope: Pick<EslintScope, 'presets' | 'eslintFiles' | 'dependencies'>,
 ): ConfigurationBlocks {
-    const { presets, eslintFiles, scopeDependencies } = scope;
+    const { presets, eslintFiles, dependencies: scopeDependencies } = scope;
     const dependencies = scopeDependencies.filter((name) => name.startsWith(TESTING_LIBRARY_SCOPE));
     const presetNames = dependencies
         .map((name) => name.slice(TESTING_LIBRARY_SCOPE.length))
@@ -37,8 +36,8 @@ export function buildTestingLibraryBlocks(
                 files: eslintFiles.tests,
                 ...(block.rules !== undefined && { rules: convertWarningsToErrors(block.rules) }),
             },
-            properties: "plugins: { 'testing-library': testingLibrary }",
-            preset: buildPresetRuleExpression([['testingLibrary', preset]]),
+            calls: [{ name: 'addPlugins', args: [{ imports: { 'testing-library': 'testingLibrary' } }] }],
+            preset: buildPresetRules([['testingLibrary', preset]]),
         };
     });
     return {

@@ -1,6 +1,6 @@
 import { stringify } from 'yaml';
 import { test, expect, describe } from 'bun:test';
-import { isLockfileFresh } from '#cli/installers/npm/lockfiles.ts';
+import { isLockfileFresh, stripBunRegistryUrls } from '#cli/installers/npm/lockfiles.ts';
 
 import {
     ROOT_DEPENDENCIES,
@@ -49,4 +49,20 @@ describe.each(['bun', 'npm', 'pnpm'] as const)('%s tool lockfile', (packageManag
             });
         expect(isLockfileFresh(packageManager, content, dependencies, env)).toBe(expected);
     });
+});
+
+test('Bun registry stripping preserves every byte outside the selected tarball address', () => {
+    const source =
+        '{\n  "workspaces": {},\n  "packages": {\n    "first": ["first@1.0.0", "https://registry.npmjs.org/first/-/first-1.0.0.tgz", {}, "sha512-YQ=="],\n    "other": ["other@1.0.0", "https://other.example/other/-/other-1.0.0.tgz", {}, "sha512-YQ=="]\n  }\n}\n';
+    expect(stripBunRegistryUrls(source, LOCKFILE_REGISTRY)).toBe(
+        source.replace('https://registry.npmjs.org/first/-/first-1.0.0.tgz', ''),
+    );
+});
+
+test('a pnpm lockfile with an extra root development dependency is stale', () => {
+    const source = stringify({
+        importers: { '.': { devDependencies: { extra: { specifier: '1.0.0', version: '1.0.0' } } } },
+        packages: {},
+    });
+    expect(isLockfileFresh('pnpm', source, {}, LOCKFILE_REGISTRY)).toBe(false);
 });

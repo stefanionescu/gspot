@@ -1,7 +1,5 @@
 export const SHA1 = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 
-const INVALID_PATH_PREFIX = `100644 ${SHA1} 0\t`;
-
 export const SHA256 = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
 
 const LINE_FEED_BYTE = 10;
@@ -21,16 +19,12 @@ export const INVALID_INDEX_LINES = [
     { name: 'unsupported mode', output: `100600 ${SHA1} 0\tsource.ts\0` },
     { name: 'short object ID', output: '100644 aaaa 0\tsource.ts\0' },
     { name: 'empty path', output: `100644 ${SHA1} 0\t\0` },
-    {
-        name: 'invalid UTF-8 path',
-        message: 'Git listed a path that is not valid UTF-8.',
-        output: { prefix: INVALID_PATH_PREFIX, bytes: [INVALID_UTF8_BYTE, 0] },
-    },
 ] as const;
 
 export const BLOB_FAILURE = 'The Git object stream is incomplete or invalid.';
 
 export const INVALID_BLOBS = [
+    { name: 'wrong blob terminator', output: `${SHA1} blob 1\nxX` },
     { name: 'missing header terminator', output: `${SHA1} blob 0` },
     { name: 'wrong object identity', output: `${SHA256} blob 0\n\n` },
     { name: 'non-blob object', output: `${SHA1} tree 0\n\n` },

@@ -14,8 +14,8 @@ export const CONFIGURATION_DETECTION_LINES = [
     {
         configuration: 'docker',
         lines: [
-            'Detected by: **/Dockerfile, **/Dockerfile.*, **/*.dockerfile, **/docker-compose*.yml, **/docker-compose*.yaml, **/compose*.yml, **/compose*.yaml, !**/*.dockerignore',
-            'Files: **/Dockerfile, **/Dockerfile.*, **/*.dockerfile, **/docker-compose*.yml, **/docker-compose*.yaml, **/compose*.yml, **/compose*.yaml, **/.dockerignore, **/*.dockerignore',
+            'Detected by: **/Dockerfile, **/Dockerfile.*, **/*.dockerfile, **/docker-compose*.yml, **/docker-compose*.yaml, **/compose.{yml,yaml}, **/compose.*.{yml,yaml}, **/compose-*.{yml,yaml}, !**/*.dockerignore',
+            'Files: **/Dockerfile, **/Dockerfile.*, **/*.dockerfile, **/docker-compose*.yml, **/docker-compose*.yaml, **/compose.{yml,yaml}, **/compose.*.{yml,yaml}, **/compose-*.{yml,yaml}, **/.dockerignore, **/*.dockerignore',
         ],
     },
     {
@@ -60,6 +60,13 @@ export const PATH_IGNORES = [
 
 export const SYNTAX_CHECK_EXPLANATION = {
     kind: 'check',
+    subject: 'project/syntax',
+    level: 'basic',
+    summary: "Runs the repository's own check project/syntax.",
+    why: 'This repository runs this command as one of its checks.',
+    help: 'Read the command output; this repository declares the check.',
+    settings: [],
+    rules: [],
     check: 'project/syntax',
     stage: 'manual',
     command: ['bash', '-n', '{files}'],

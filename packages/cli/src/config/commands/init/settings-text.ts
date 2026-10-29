@@ -1,5 +1,3 @@
-import { SETTINGS_COMMANDS } from '#cli/config/generation/rules.ts';
-
 export const XCODE_DESTINATIONS = new Map<string | undefined, string>([
     ['iphoneos', 'generic/platform=iOS Simulator'],
     ['iphonesimulator', 'generic/platform=iOS Simulator'],
@@ -10,4 +8,6 @@ export const XCODE_DESTINATIONS = new Map<string | undefined, string>([
     ['xrsimulator', 'generic/platform=visionOS Simulator'],
 ]);
 
-export const PREFACE_BODY = `# gspot settings for this repository. Change them with gspot ${new Intl.ListFormat('en', { type: 'conjunction' }).format(SETTINGS_COMMANDS)}.\n\n`;
+export const PREFACE_BODY = '# Change these settings with gspot set, unset, add, remove, ignore, or unignore.';
+
+export const LEADING_COMMENTS = /^(?:#[^\n]*\n|[ \t]*\n)*/u;

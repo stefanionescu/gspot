@@ -11,7 +11,8 @@ const buildSchema = z.object({
     context: z.string().optional(),
     dockerfile: z.string().optional(),
 } satisfies SchemaShape<NonNullable<ComposeService['build']>>);
-const servicesSchema = z.object({
+
+const serviceSchema = z.object({
     image: z.string().min(1).optional(),
     build: (
         z.union([
@@ -25,25 +26,25 @@ const servicesSchema = z.object({
 } satisfies SchemaShape<NonNullable<ComposeConfiguration['services']>[string]>);
 
 export const composeSchema = z.object({
-    services: z.record(z.string(), servicesSchema).optional(),
+    services: z.record(z.string(), serviceSchema).optional(),
 } satisfies SchemaShape<ComposeConfiguration>);
 
-const vulnerabilitiesSchema = z.object({
+const vulnerabilitySchema = z.object({
     VulnerabilityID: z.string().min(1),
     PkgName: z.string().min(1),
 } satisfies SchemaShape<
     NonNullable<NonNullable<NonNullable<TrivyImageOutput['Results']>[number]['Vulnerabilities']>>[number]
 >);
 
-const secretsSchema = z.object({ RuleID: z.string().min(1), Title: z.string().min(1) } satisfies SchemaShape<
+const secretSchema = z.object({ RuleID: z.string().min(1), Title: z.string().min(1) } satisfies SchemaShape<
     NonNullable<NonNullable<TrivyImageOutput['Results']>[number]['Secrets']>[number]
 >);
 
-export const imageReportSchema = z.object({
+export const trivyImageOutputSchema = z.object({
     Results: z
         .object({
-            Vulnerabilities: vulnerabilitiesSchema.array().optional(),
-            Secrets: secretsSchema.array().optional(),
+            Vulnerabilities: vulnerabilitySchema.array().optional(),
+            Secrets: secretSchema.array().optional(),
         } satisfies SchemaShape<NonNullable<TrivyImageOutput['Results']>[number]>)
         .array()
         .optional(),

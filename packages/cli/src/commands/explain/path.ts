@@ -1,24 +1,36 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { type Session } from '#cli/types/session.ts';
+import { EVERY_CHECK } from '#cli/config/ignores.ts';
+import { planChecks } from '#cli/planning/checks.ts';
+import type { Session } from '#cli/types/session.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { type TrackedFile } from '#cli/types/repository/files.ts';
-import { findScopePath, buildArgumentPath } from '#cli/repository/scopes.ts';
-import { type Explanation, type PathExplanation } from '#cli/types/commands/explain.ts';
+import { stripControlCharacters } from '#cli/system/terminal.ts';
+import type { TrackedFile } from '#cli/types/repository/files.ts';
+import { selectScopePath, buildArgumentPath } from '#cli/repository/scopes.ts';
+import type { Explanation, PathExplanation } from '#cli/types/commands/explain.ts';
+
+import {
+    UNCHECKED_REASON,
+    REPOSITORY_COMMAND,
+    MARK_GENERATED_MESSAGE,
+    BINARY_ELIGIBLE_MESSAGE,
+    VENDORED_ELIGIBLE_MESSAGE,
+    GENERATED_ELIGIBLE_MESSAGE,
+} from '#cli/config/commands/explain.ts';
 
 function formatUncheckedKind(file: TrackedFile): string | undefined {
-    if (file.kind === 'binary') return 'binary: eligible for secrets and size checks';
-    if (file.kind === 'generated') return 'generated: eligible for secret checks and checks for stale generated files';
-    return file.kind === 'vendored' ? 'vendored: eligible for secrets, license, and security checks' : undefined;
+    if (file.kind === 'binary') return BINARY_ELIGIBLE_MESSAGE;
+    if (file.kind === 'generated') return GENERATED_ELIGIBLE_MESSAGE;
+    return file.kind === 'vendored' ? VENDORED_ELIGIBLE_MESSAGE : undefined;
 }
 
 function buildPathExplanation(session: Session, file: TrackedFile): PathExplanation {
     const { path } = file;
-    const scopePath = findScopePath(path, session.scopes);
+    const scopePath = selectScopePath(path, session.scopes);
     const scope = session.scopes.find((each) => each.path === scopePath) as Scope;
-    const checks = session.configuredChecks.filter((check) =>
+    const checks = planChecks(session, { stage: 'any' }).filter((check) =>
         listCheckedFiles(session.scopes, check).some((checkedFile) => checkedFile.path === file.path),
     );
     const covering = new Set(
@@ -50,33 +62,32 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
     const unchecked = formatUncheckedKind(file);
     if (unchecked !== undefined) report.unchecked = unchecked;
     if (report.checks.length === 0 && file.kind === 'source') {
-        report.unchecked = 'no selected check reads this file';
-        report.remedy =
-            'Mark generated or copied files linguist-generated or linguist-vendored in .gitattributes, or run gspot add <configuration>.';
+        report.unchecked = UNCHECKED_REASON;
+        report.remedy = MARK_GENERATED_MESSAGE;
     }
     return report;
 }
 
-function formatPathExplanation(report: PathExplanation): string {
-    const by = report.fileKindOrigin === undefined ? '' : ` by ${report.fileKindOrigin}`;
-    const checks = report.checks.map(
-        (check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? 'repository command'})`,
+function formatPathExplanation(explanation: PathExplanation): string {
+    const by = explanation.fileKindOrigin === undefined ? '' : ` by ${explanation.fileKindOrigin}`;
+    const checks = explanation.checks.map(
+        (check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? REPOSITORY_COMMAND})`,
     );
-    const ignores = report.ignores.map((ignore) => {
+    const ignores = explanation.ignores.map((ignore) => {
         const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
         const reason = `  ${ignore.reason}`;
-        return `  ${ignore.check ?? 'every check'}${rule}${reason}`;
+        return `  ${ignore.check ?? EVERY_CHECK}${rule}${reason}`;
     });
     const lines = [
-        `${report.path}  (scope ${report.scope}, ${report.fileKind}${by})`,
+        `${explanation.path}  (scope ${explanation.scope}, ${explanation.fileKind}${by})`,
         '',
-        ...(report.unchecked === undefined ? [] : [report.unchecked]),
-        ...(report.configurations.length === 0 ? [] : [`Checked by: ${report.configurations.join(', ')}`]),
+        ...(explanation.unchecked === undefined ? [] : [explanation.unchecked]),
+        ...(explanation.configurations.length === 0 ? [] : [`Checked by: ${explanation.configurations.join(', ')}`]),
         ...(checks.length === 0 ? [] : ['Checks:', ...checks]),
         ...(ignores.length === 0 ? [] : ['Ignores:', ...ignores]),
-        ...(report.remedy === undefined ? [] : ['', `To change this: ${report.remedy}`]),
+        ...(explanation.remedy === undefined ? [] : ['', `To change this: ${explanation.remedy}`]),
     ];
-    return `${lines.join('\n')}\n`;
+    return `${lines.map((line) => stripControlCharacters(line)).join('\n')}\n`;
 }
 
 /**
@@ -85,7 +96,7 @@ Explain a repository file or a path that the subject names.
 @param session the repository, or undefined outside a configured one.
 @param subject the file path, or what else the user typed.
 @param cwd the folder where the command starts.
-@returns the file explanation, or undefined for another subject.
+@returns undefined for another subject.
 @throws GspotError when a named path does not exist.
 */
 export function explainPath(session: Session | undefined, subject: string, cwd: string): Explanation | undefined {

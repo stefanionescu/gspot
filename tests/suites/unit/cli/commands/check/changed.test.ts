@@ -5,6 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { NO_UPSTREAM_MESSAGE } from '#tests/config/git.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildReportingCheck } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -62,9 +63,7 @@ test('--changed without an upstream names the fix, and uses the remote default b
     commitAll(sandbox.path);
     const absent = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', '--json']);
     expect(absent.code).toBe(2);
-    expect((JSON.parse(absent.stdout) as CommandFailureJson).message).toBe(
-        'No upstream or default branch is available. Run git remote set-head origin --auto once, or pass --changed <ref>.',
-    );
+    expect((JSON.parse(absent.stdout) as CommandFailureJson).message).toBe(NO_UPSTREAM_MESSAGE);
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
     runGitStep(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
     await writeFile(join(sandbox.path, 'api/source.txt'), 'changed');

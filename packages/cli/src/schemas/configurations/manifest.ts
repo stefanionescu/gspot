@@ -26,21 +26,21 @@ import {
 import {
     levelSchema,
     regexSchema,
-    nonemptyString,
     conditionSchema,
     commandCheckFields,
+    nonemptyStringSchema,
     operatingSystemSchema,
 } from '#cli/schemas/configurations/fields.ts';
 
 const fileKindSchema = z.enum(FILE_KINDS) satisfies z.ZodType<FileKind>;
 
-const optionalStringList = z.string().array().default([]) satisfies z.ZodType<string[]>;
+const stringsSchema = z.string().array().default([]) satisfies z.ZodType<string[]>;
 
 const filesSchema = z.strictObject({
-    extensions: optionalStringList,
-    filenames: optionalStringList,
-    tags: optionalStringList,
-    paths: optionalStringList,
+    extensions: stringsSchema,
+    filenames: stringsSchema,
+    tags: stringsSchema,
+    paths: stringsSchema,
     languages: z.boolean().default(false),
     prettier_plugins: z.boolean().default(false),
     eslint_plugins: z.boolean().default(false),
@@ -48,7 +48,7 @@ const filesSchema = z.strictObject({
 } satisfies SchemaShape<ParsedManifest['files']>);
 
 const selectorSchema = z.strictObject({
-    level: levelSchema.default('recommended'),
+    level: levelSchema.default('basic'),
     selector: z.string().min(1),
     message: z.string().min(1),
     paths_setting: z.string().min(1).optional(),
@@ -93,6 +93,7 @@ const configFileSchema = z
             source: posix.join(SHIPPED_CONFIG_FILES_FOLDER, configFile.source ?? configFile.target),
         };
     }) satisfies z.ZodType<ConfigFile>;
+
 const generatorOutputSchema = z.union([
     z
         .strictObject({ path: z.string() })
@@ -107,10 +108,10 @@ const generatorOutputSchema = z.union([
     })) satisfies z.ZodType<GeneratorOutput>,
 ]) satisfies z.ZodType<GeneratorOutput>;
 
-const checkFields = z.strictObject({
+const checkFieldsSchema = z.strictObject({
     ...commandCheckFields,
     name: z.string().regex(NAME_PATTERN),
-    level: levelSchema,
+    level: levelSchema.default('basic'),
     runs: z.enum(CHECK_RUNS).default('files'),
     generator_outputs: generatorOutputSchema.array().min(1).optional(),
     coverage_arguments: z.string().min(1).array().optional(),
@@ -136,13 +137,13 @@ const checkFields = z.strictObject({
     tool: z.union([z.string().min(1), z.string().min(1).array().min(1)]).optional(),
     files: filesSchema.optional(),
     cwd: z.enum(CHECK_CWD_VALUES).optional(),
-    summary: nonemptyString,
+    summary: nonemptyStringSchema,
     example: z.string().trim().min(1),
-    why: nonemptyString,
-    help: nonemptyString,
+    why: nonemptyStringSchema,
+    help: nonemptyStringSchema,
 } satisfies SchemaShape<Omit<ParsedCheck, 'tool' | 'other_tools'> & { tool?: string | string[] | undefined }>);
 
-const checkSchema = checkFields.transform(({ tool, ...check }) => {
+const checkSchema = checkFieldsSchema.transform(({ tool, ...check }) => {
     const [first, ...others] = Array.isArray(tool) ? tool : [];
     const executable = Array.isArray(tool) ? first : tool;
     return {
@@ -154,15 +155,15 @@ const checkSchema = checkFields.transform(({ tool, ...check }) => {
 
 const detectionSchema = z.strictObject({
     content: z.record(z.string().min(1), regexSchema).default({}),
-    extensions: optionalStringList,
-    filenames: optionalStringList,
-    dependencies: optionalStringList,
-    absent_dependencies: optionalStringList,
-    shebangs: optionalStringList,
+    extensions: stringsSchema,
+    filenames: stringsSchema,
+    dependencies: stringsSchema,
+    absent_dependencies: stringsSchema,
+    shebangs: stringsSchema,
     runtimes: z.enum(JAVASCRIPT_RUNTIMES).array().default([]),
-    tags: optionalStringList,
-    paths: optionalStringList,
-    project_files: optionalStringList,
+    tags: stringsSchema,
+    paths: stringsSchema,
+    project_files: stringsSchema,
 } satisfies SchemaShape<ParsedManifest['detect']>);
 
 const allLevelRulesSchema = z
@@ -170,9 +171,10 @@ const allLevelRulesSchema = z
     .min(1)
     .array()
     .transform((rules) => new Set(rules)) satisfies z.ZodType<Set<string>>;
+
 const rulesOffSchema = z.strictObject({
     rules: z.string().min(1).array().min(1),
-    reason: nonemptyString,
+    reason: nonemptyStringSchema,
     files: z.string().min(1).array().min(1).optional(),
 } satisfies SchemaShape<ParsedManifest['eslint']['rules_off'][number]>);
 
@@ -189,23 +191,23 @@ export const manifestSchema = z
             } satisfies SchemaShape<ParsedManifest['eslint']>)
             .prefault({}),
         shared_prefixes: z
-            .strictObject({ prefixes: optionalStringList, kinds: optionalStringList } satisfies SchemaShape<
+            .strictObject({ prefixes: stringsSchema, kinds: stringsSchema } satisfies SchemaShape<
                 ParsedManifest['shared_prefixes']
             >)
             .prefault({}),
         ignored_paths: z.string().min(1).array().default([]),
         route_files: z.string().min(1).array().default([]),
         generated: z.string().min(1).array().default([]),
-        allowed_words: optionalStringList,
+        allowed_words: stringsSchema,
         configuration: z.strictObject({
             name: z.string().regex(NAME_PATTERN),
             group: z.enum(GROUPS),
             title: z.string(),
-            requires: optionalStringList,
-            suggests: optionalStringList,
+            requires: stringsSchema,
+            suggests: stringsSchema,
             always_selected: z.boolean().default(false),
             when: (conditionSchema.pick({ git: true }) satisfies z.ZodType<Pick<ConditionFields, 'git'>>).optional(),
-            description: nonemptyString,
+            description: nonemptyStringSchema,
         } satisfies SchemaShape<ParsedManifest['configuration']>),
         detect: detectionSchema.optional(),
         files: filesSchema.prefault({}),
@@ -239,9 +241,7 @@ export const manifestSchema = z
             )
             .default({}),
         ruff: z
-            .strictObject({ recommended: optionalStringList, all: optionalStringList } satisfies SchemaShape<
-                ParsedManifest['ruff']
-            >)
+            .strictObject({ basic: stringsSchema, all: stringsSchema } satisfies SchemaShape<ParsedManifest['ruff']>)
             .prefault({}),
     })
     .transform(({ tool, config_file: configFiles, check, detect, ...rest }) => ({

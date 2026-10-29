@@ -7,10 +7,10 @@ export const TYPESCRIPT_DEFAULTS = {
     noEmit: true,
 } as const;
 
-export const RECOMMENDED_OPTIONS = { strict: true } as const;
+export const DEFAULT_LEVEL_OPTIONS = { strict: true } as const;
 
 export const COMPILER_OPTIONS = {
-    ...RECOMMENDED_OPTIONS,
+    ...DEFAULT_LEVEL_OPTIONS,
     noUncheckedIndexedAccess: true,
     exactOptionalPropertyTypes: true,
     noImplicitOverride: true,

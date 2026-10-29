@@ -4,11 +4,12 @@ import { isInside } from '#cli/system/paths.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { MISSING_TRACKED_FILE_MESSAGE } from '#cli/config/system/files/reads.ts';
 import { openSync, readSync, closeSync, readFileSync, realpathSync } from 'node:fs';
 
-function readFilePrefix(source: string, limit: number): Buffer {
+function readFilePrefix(path: string, limit: number): Buffer {
     const buffer = Buffer.alloc(limit);
-    const descriptor = openSync(source, 'r');
+    const descriptor = openSync(path, 'r');
     let offset = 0;
     try {
         while (offset < limit) {
@@ -66,7 +67,6 @@ Read file bytes once per run.
 
 @param reads the run cache.
 @param path the root-relative file.
-@returns the first bytes read during this run.
 */
 export function readCachedBytes(reads: ReadCache, path: string): Buffer {
     const held = reads.sources.get(path);
@@ -105,12 +105,14 @@ Read tracked UTF-8 text and refuse a missing file.
 
 @param root the repository folder.
 @param path the tracked file path.
-@returns the file text.
 */
 export function readText(root: string, path: string): string {
     const text = findText(root, path);
     if (text === undefined)
-        throw new GspotError('filesystem', `${path} is tracked but missing. Restore it or commit its deletion.`);
+        throw new GspotError(
+            'filesystem',
+            MISSING_TRACKED_FILE_MESSAGE.replace('{path}', () => path),
+        );
     return text;
 }
 
@@ -119,12 +121,14 @@ Read tracked UTF-8 text through the run cache and refuse a missing file.
 
 @param reads the run cache.
 @param path the tracked file path.
-@returns the cached file text.
 */
 export function readCachedText(reads: ReadCache, path: string): string {
     const text = findCachedText(reads, path);
     if (text === undefined)
-        throw new GspotError('filesystem', `${path} is tracked but missing. Restore it or commit its deletion.`);
+        throw new GspotError(
+            'filesystem',
+            MISSING_TRACKED_FILE_MESSAGE.replace('{path}', () => path),
+        );
     return text;
 }
 
@@ -161,7 +165,6 @@ Decode a user file, or tell the user how to fix its encoding.
 
 @param path the file to name in an encoding error.
 @param bytes the file contents to decode.
-@returns the UTF-8 text.
 */
 export function decodeUtf8Text(path: string, bytes: Buffer): string {
     const text = decodeUtf8(bytes);

@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { unlinkSync } from 'node:fs';
-import { openWriter } from '#cli/write.ts';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { openWriter } from '#cli/repository/writer.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import type { PackageFieldScenario } from '#tests/types/write.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { formatUpToDate, writeGeneratedFiles } from '#cli/generation/write.ts';
 
 import {
     TOOL_FOLDERS,
@@ -22,7 +22,7 @@ import {
 
 async function applyPackageFields(root: string, scenario: PackageFieldScenario): Promise<Map<string, string>> {
     const session = await openSession(root);
-    const generated = generate(session);
+    const generated = generateFiles(session);
     expect(generated.managedKeys).toStrictEqual(scenario.changes);
     using writer = openWriter(root);
     await writeGeneratedFiles(session, generated, writer);
@@ -51,6 +51,7 @@ test.each([...TOOL_FOLDERS])(
         expect(await isOnDisk(join(sandbox.path, folder))).toBe(false);
     },
 );
+
 test('leaving level all removes the managed commitlint field from every package.json and keeps the other fields', async () => {
     await using sandbox = await testdir({
         ...COMMITLINT_PACKAGE_FIELDS.project,
@@ -63,9 +64,9 @@ test('leaving level all removes the managed commitlint field from every package.
     const installed = await applyPackageFields(sandbox.path, COMMITLINT_PACKAGE_FIELDS);
     await writeFile(join(sandbox.path, 'app/package.json'), EDITED_COMMITLINT_PACKAGE);
     installed.set('app/package.json', EDITED_COMMITLINT_PACKAGE);
-    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { level: 'recommended' }));
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { level: 'basic' }));
     const session = await openSession(sandbox.path);
-    const generated = generate(session);
+    const generated = generateFiles(session);
     expect(generated.managedKeys).toStrictEqual(
         COMMITLINT_PACKAGE_FIELDS.changes.map((file) => ({
             path: file.path,
@@ -95,7 +96,7 @@ test('removing css drops its managed stylelint field and keeps authored fields b
     installed.set('app/package.json', EDITED_STYLELINT_PACKAGE);
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { level: 'all' }));
     const session = await openSession(sandbox.path);
-    const generated = generate(session);
+    const generated = generateFiles(session);
     expect(generated.managedKeys).toStrictEqual([
         { path: 'package.json', keys: [{ key: ['stylelint'], value: undefined }] },
         { path: 'app/child/package.json', keys: [{ key: ['stylelint'], value: undefined }] },
@@ -128,4 +129,28 @@ test('a stale generated file removed before planning produces no removal report'
     const report = await writeGeneratedFiles(session, { files: [], blocks: [], managedKeys: [] }, writer);
     expect(report).toStrictEqual({ written: [], unchanged: [], removed: [], updated: [], notes: [] });
     expect(await isOnDisk(join(sandbox.path, '.gspot/stale.txt'))).toBe(false);
+});
+
+test('one up-to-date file uses the singular message', () => {
+    expect(formatUpToDate(1)).toBe('No change: the 1 generated file is up to date.');
+});
+
+test('writing a mise project preserves its lockfile and reports a changed hook', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([]),
+        '.gspot/mise.lock': 'version = 1\n',
+    });
+    const session = await openSession(sandbox.path);
+    using writer = openWriter(sandbox.path);
+    const output = {
+        files: [
+            { path: '.gspot/mise.toml', content: '[tools]\n' },
+            { path: '.gspot/hooks/pre-commit', content: '#!/bin/sh\nexit 0\n', executable: true },
+        ],
+        blocks: [],
+        managedKeys: [],
+    };
+    const report = await writeGeneratedFiles(session, output, writer);
+    expect(await readFile(join(sandbox.path, '.gspot/mise.lock'), 'utf8')).toBe('version = 1\n');
+    expect(report.notes).toContain('Git hooks changed. Run gspot install.');
 });

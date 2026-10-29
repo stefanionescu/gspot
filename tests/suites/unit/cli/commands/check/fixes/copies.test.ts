@@ -1,8 +1,8 @@
 import * as os from 'node:os';
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
+import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -35,9 +35,11 @@ test("a fixer's {root} environment paths point into the copy during a dry run", 
         ),
     );
     planned.check.env = { SANDBOX_SETTINGS: '{root}/café settings.txt' };
-    const result = await runFixers(buildCheckSession(session), [planned], { isDryRun: true });
+    const result = await runFixers(buildCheckSession(session), [planned], { dryRun: true });
     expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
-    expect(result.diffs).toStrictEqual([buildSourceDiff('scratch corrected')]);
+    expect(result.diffs).toStrictEqual([
+        `===================================================================\n--- a/source.txt\n+++ b/source.txt\n@@ -1,1 +1,1 @@\n-original\n\\ No newline at end of file\n+scratch corrected\n\\ No newline at end of file\n`,
+    ]);
     const executionRoot = await readFile(trace, 'utf8');
     expect(executionRoot).not.toBe(sandbox.path);
     expect(await isOnDisk(executionRoot)).toBe(false);
@@ -72,12 +74,18 @@ test.each([false, true])(
         );
         planned.check.run_in_copy = true;
         planned.check.exit_codes = [3];
-        const result = await runFixers(buildCheckSession(session), [planned], { isDryRun: preview });
+        const result = await runFixers(buildCheckSession(session), [planned], { dryRun: preview });
         expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'corrected');
         expect(await readFile(join(sandbox.path, 'unowned.json'), 'utf8')).toBe('{}');
         expect(await isOnDisk(await readFile(trace, 'utf8'))).toBe(false);
-        expect(result.diffs).toStrictEqual(preview ? [buildSourceDiff('corrected')] : []);
+        expect(result.diffs).toStrictEqual(
+            preview
+                ? [
+                      `===================================================================\n--- a/source.txt\n+++ b/source.txt\n@@ -1,1 +1,1 @@\n-original\n\\ No newline at end of file\n+corrected\n\\ No newline at end of file\n`,
+                  ]
+                : [],
+        );
     },
 );
 
@@ -105,14 +113,14 @@ test('a fix in a copy refuses to overwrite a file changed while it ran, and remo
         ),
     );
     planned.check.run_in_copy = true;
-    const rejection = await captureRejection(runFixers(buildCheckSession(session), [planned], { isDryRun: false }));
+    const rejection = await captureRejection(runFixers(buildCheckSession(session), [planned], { dryRun: false }));
     expect(rejection.message).toBe('z-last.txt changed while gspot wrote it. Run the command again.');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('isolated correction');
     expect(await readFile(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
     expect(await isOnDisk(await readFile(trace, 'utf8'))).toBe(false);
     const corrected = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'));
     corrected.check.run_in_copy = true;
-    const correctedRun = await runFixers(buildCheckSession(session), [corrected], { isDryRun: false });
+    const correctedRun = await runFixers(buildCheckSession(session), [corrected], { dryRun: false });
     expect(correctedRun.results[0]).toMatchObject({
         status: 'changed',
         changed: ['source.txt'],
@@ -130,12 +138,14 @@ test('a failed dry-run fix removes its copy and keeps the source bytes', async (
     const temporary = join(sandbox.path, 'scratch');
     await mkdir(temporary);
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-    const report = await runFixers(buildCheckSession(session), [planned], { isDryRun: true });
+    const report = await runFixers(buildCheckSession(session), [planned], { dryRun: true });
     expect(report.results).toMatchObject([{ status: 'failed' }]);
     expect(await readdir(temporary)).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
     expect(report.changed).toStrictEqual(['source.txt']);
-    expect(report.diffs).toStrictEqual([buildSourceDiff('partial')]);
+    expect(report.diffs).toStrictEqual([
+        `===================================================================\n--- a/source.txt\n+++ b/source.txt\n@@ -1,1 +1,1 @@\n-original\n\\ No newline at end of file\n+partial\n\\ No newline at end of file\n`,
+    ]);
 });
 
 test.each([...COPY_FAILURES])('a failed $operation removes the copy', async ({ operation, message }) => {
@@ -150,7 +160,7 @@ test.each([...COPY_FAILURES])('a failed $operation removes the copy', async ({ o
     const temporary = join(sandbox.path, 'scratch');
     await mkdir(temporary);
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-    const error = await captureRejection(runFixers(buildCheckSession(session), [planned], { isDryRun: true }));
+    const error = await captureRejection(runFixers(buildCheckSession(session), [planned], { dryRun: true }));
     expect(error.message).toContain(message);
     expect(await readdir(temporary)).toStrictEqual([]);
     if (operation === 'copy') {
@@ -176,7 +186,7 @@ test.each([false, true])(
         );
         planned.check.run_in_copy = isolated;
         session.cancelSignal = controller.signal;
-        const execution = runFixers(buildCheckSession(session), [planned], { isDryRun: false });
+        const execution = runFixers(buildCheckSession(session), [planned], { dryRun: false });
         try {
             expect(await waitForFile(ready)).toBe(true);
             const pid = Number(await readFile(ready, 'utf8'));
@@ -185,7 +195,7 @@ test.each([false, true])(
             const result = report.results[0]!;
             await waitForExit(pid);
             expect(result).toMatchObject({
-                status: 'failed',
+                status: 'canceled',
                 note: 'sandbox/fixer was canceled.',
                 changed: ['source.txt'],
             });
@@ -199,7 +209,7 @@ test.each([false, true])(
             buildCheckSession(session),
             [planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'))],
             {
-                isDryRun: false,
+                dryRun: false,
             },
         );
         const corrected = correctedRun.results[0]!;
@@ -207,7 +217,3 @@ test.each([false, true])(
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
     },
 );
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 1 file share it.
-function buildSourceDiff(after: string): string {
-    return `===================================================================\n--- a/source.txt\n+++ b/source.txt\n@@ -1,1 +1,1 @@\n-original\n\\ No newline at end of file\n+${after}\n\\ No newline at end of file\n`;
-}

@@ -5,10 +5,11 @@ import type { Level } from '#cli/types/configurations.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { type SelectorGroup, type SelectorPaths } from '#cli/types/generation/eslint.ts';
+import { type SelectorBlock, type SelectorPaths } from '#cli/types/generation/eslint.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
 import {
+    INDEX_PATTERN,
     REEXPORT_MESSAGE,
     REEXPORT_SELECTORS,
     ENVIRONMENT_SELECTOR,
@@ -25,7 +26,7 @@ function filterDistinctLists(lists: string[][]): string[][] {
     });
 }
 
-function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
+function groupSelectors(selectors: SelectorPaths[]): SelectorBlock[] {
     const boundaries = filterDistinctLists(
         selectors.flatMap((each) => [each.files ?? [], each.except ?? []]).filter((paths) => paths.length > 0),
     );
@@ -77,18 +78,17 @@ Resolve the syntax selectors that the configurations and settings add in each pr
 @param scopes every project scope.
 @param level the selected lint rule level.
 @param reexports the export convention.
-@returns selector groups with their owning scope and excluded child projects.
 */
-export function buildSelectorGroups(
+export function buildSelectorBlocks(
     scopes: Scope[],
     level: Level,
     reexports: Settings['structure']['reexports'],
-): SelectorGroup[] {
+): SelectorBlock[] {
     const scopePaths = scopes.map((each) => each.path);
     return scopes.flatMap((scope) => {
         const prefix = escapeGlob(scope.path);
         const declarations = scope.configurations.flatMap((configuration) =>
-            configuration.eslint.selectors.filter((selector) => level === 'all' || selector.level === 'recommended'),
+            configuration.eslint.selectors.filter((selector) => level === 'all' || selector.level === 'basic'),
         );
         const applied: SelectorPaths[] = new Map(declarations.map((declaration) => [declaration.selector, declaration]))
             .values()
@@ -104,7 +104,7 @@ export function buildSelectorGroups(
             )
             .toArray();
         if (level === 'all') {
-            const except = reexports === 'index-only' ? [posix.join(prefix, '**/index.*')] : [];
+            const except = reexports === 'index-only' ? [posix.join(prefix, INDEX_PATTERN)] : [];
             applied.push(...REEXPORT_SELECTORS.map((selector) => ({ selector, message: REEXPORT_MESSAGE, except })));
         }
         applied.push(...listSettingSelectors(scope, level));

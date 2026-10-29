@@ -11,7 +11,7 @@ import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
-import { generateFile, findRuleFilePath } from '#tests/setup/cli/generated-files.ts';
+import { generateFile, getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/config/e2e/cli.ts';
 
 async function assertConflictingConfigFiles(root: string, output: string): Promise<void> {
@@ -32,10 +32,10 @@ async function assertConflictingConfigFiles(root: string, output: string): Promi
     expect(await readFile(join(root, 'CLAUDE.md'), 'utf8')).toBe(STARTING_FILES['CLAUDE.md']);
     const agents = await readFile(join(root, 'AGENTS.md'), 'utf8');
     expect(agents).toStartWith('# Team notes\n');
-    expect(agents).toContain(findRuleFilePath('engineering', 'WORKING.md'));
+    expect(agents).toContain(getRuleFilePath('engineering', 'WORKING.md'));
 }
 
-test('init replaces formatter files, keeps your notes and CLAUDE.md, and check reports findings', async () => {
+test('init replaces formatter files, keeps authored notes and CLAUDE.md, and check reports findings', async () => {
     await using sandbox = await createGspotProject();
     const { root } = sandbox;
     await createFileTree(root, STARTING_FILES);
@@ -107,7 +107,7 @@ async function prepareFormatterSandbox(installation: GspotProject) {
     return { consumerSandbox, authoredPackage };
 }
 
-test('the installed formatter reports and fixes source and keeps your package.json fields', async () => {
+test('the installed formatter reports and fixes source and keeps authored package.json fields', async () => {
     await using consumer = await createGspotProject();
     const { consumerSandbox, authoredPackage } = await prepareFormatterSandbox(consumer);
     const formatter = ['check', 'source.js', '--only', 'format/prettier', '--json'];

@@ -8,7 +8,7 @@ import { buildConfiguration } from '#tests/setup/cli/configurations.ts';
 import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
 
 import {
-    SEMGREP_ASSETS,
+    DECLARATION_ORDERS,
     CONFIGURATION_TABLE,
     EXAMPLE_MANIFEST_PATH,
     MINIMUM_VERSION_CASES,
@@ -55,19 +55,22 @@ test('an npm package name becomes the npm installer pin', () => {
     });
 });
 
-test.each([
-    { order: 'owner first', ownerFirst: true },
-    { order: 'consumer first', ownerFirst: false },
-])('a tool name links to the configuration that declares it, listed $order', async ({ ownerFirst }) => {
-    const consumer = 'configurations/infrastructure/consumer/manifest.toml';
-    const owner = 'configurations/general/owner/manifest.toml';
-    const consumed = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\n';
-    const manifest = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n';
-    const paths = ownerFirst ? [owner, consumer] : [consumer, owner];
-    const files = Object.fromEntries(paths.map((path) => [path, path === consumer ? consumed : manifest]));
-    const configurationsByName = await readTestManifests(files);
-    expect(configurationsByName.get('consumer')!.tools).toStrictEqual(configurationsByName.get('owner')!.tools);
-});
+test.each(DECLARATION_ORDERS)(
+    'a tool name links to the configuration that declares it, listed $order',
+    async ({ ownerFirst }) => {
+        const consumer = 'configurations/infrastructure/consumer/manifest.toml';
+        const owner = 'configurations/general/owner/manifest.toml';
+        const consumed = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\n';
+        const manifest = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n';
+        const paths = ownerFirst ? [owner, consumer] : [consumer, owner];
+        const files = Object.fromEntries(paths.map((path) => [path, path === consumer ? consumed : manifest]));
+        const configurationsByName = await readTestManifests(files);
+        expect(configurationsByName.get('owner')!.tools).toStrictEqual([
+            { name: 'probe', kind: 'program', system: true, installers: {} },
+        ]);
+        expect(configurationsByName.get('consumer')!.tools).toStrictEqual(configurationsByName.get('owner')!.tools);
+    },
+);
 
 test('only declared config files are loaded and each record sets its tool and scope', async () => {
     const configurationsByName = await readTestManifests(
@@ -77,7 +80,11 @@ test('only declared config files are loaded and each record sets its tool and sc
                 '\n[[config_file]]\ntarget = "other.yml"\npointer = { path = "other.yml", body = "{target}" }\n\n[[config_file]]\ntarget = "semgrep/first.yml"\ntool = "semgrep"\nper_scope = true\n\n[[config_file]]\ntarget = "semgrep/second.yml"\ntool = "semgrep"\nper_scope = true\n' +
                 '[[tool]]\nname = "semgrep"\nversion = "1.0.0"\n',
         },
-        SEMGREP_ASSETS,
+        [
+            'configurations/language/example/config-files/semgrep/first.yml',
+            'configurations/language/example/config-files/semgrep/second.yml',
+            'configurations/language/example/config-files/semgrep/not-a-pack.txt',
+        ] as const,
     );
     const configuration = configurationsByName.get('example')!;
     expect(configuration.configFiles.map(({ source, target }) => [source, target])).toStrictEqual([
@@ -97,7 +104,7 @@ test.each([...MANIFEST_INVARIANT_CASES])(
         const error = await captureRejection(
             readTestManifests({ [EXAMPLE_MANIFEST_PATH]: CONFIGURATION_TABLE + tables }),
         );
-        expect(error.message).toBe(`The configuration manifest for \`example\` is not valid:\n${message}`);
+        expect(error.message).toBe(`The configuration manifest for example is not valid:\n${message}`);
     },
 );
 
@@ -111,4 +118,11 @@ test('a mise installer with options inherits its tool record version', () => {
     ).toMatchObject({
         installers: { mise: { name: 'github:org/probe', version: '1.0.0', options: { rename_exe: 'probe' } } },
     });
+});
+
+test('a reference to an undeclared tool names the configuration and missing declaration', async () => {
+    const error = await captureRejection(
+        readTestManifests({ [EXAMPLE_MANIFEST_PATH]: CONFIGURATION_TABLE + '[[tool]]\nname = "absent"\n' }),
+    );
+    expect(error.message).toBe('The configuration manifest for example is not valid:\ntool absent has no declaration.');
 });

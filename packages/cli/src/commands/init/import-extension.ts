@@ -16,10 +16,10 @@ import { BUNDLER_PACKAGES, IMPORT_EXTENSION_SETTING } from '#cli/config/commands
 
 function detectImportExtension(
     repository: Repository,
-    scope: string,
+    scopePath: string,
     reads: ReadCache,
 ): ImportExtensionStyle | undefined {
-    const path = join(repository.root, joinScope(scope, TSCONFIG_FILE));
+    const path = join(repository.root, joinScope(scopePath, TSCONFIG_FILE));
     const options = readTsconfig(repository.root, path, reads)?.options;
     if (
         options !== undefined &&
@@ -27,7 +27,7 @@ function detectImportExtension(
     )
         return 'ts';
     return options?.moduleResolution === ts.ModuleResolutionKind.Bundler ||
-        listProjectDependencyNames(repository.dependencyFiles, scope).some((name) => BUNDLER_PACKAGES.has(name))
+        listProjectDependencyNames(repository.dependencyFiles, scopePath).some((name) => BUNDLER_PACKAGES.has(name))
         ? 'extensionless'
         : undefined;
 }

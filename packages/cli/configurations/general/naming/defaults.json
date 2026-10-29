@@ -1,7 +1,7 @@
 {
-    "groups": {
+    "lists": {
         "containers": {
-            "terms": [
+            "words": [
                 "core",
                 "common",
                 "generic",
@@ -18,7 +18,7 @@
             ]
         },
         "roles": {
-            "terms": [
+            "words": [
                 "helper",
                 "helpers",
                 "util",
@@ -28,11 +28,13 @@
                 "processor",
                 "wrapper",
                 "shim",
-                "shims"
+                "shims",
+                "shell",
+                "probe"
             ]
         },
         "marketing": {
-            "terms": [
+            "words": [
                 "advanced",
                 "enhanced",
                 "improved",
@@ -55,7 +57,7 @@
             ]
         },
         "defensive": {
-            "terms": [
+            "words": [
                 "ensure",
                 "maybe",
                 "likely",
@@ -81,13 +83,13 @@
             ]
         },
         "conjunctions": {
-            "terms": ["and", "or", "with", "when", "what", "whatever", "once", "plus"]
+            "words": ["and", "or", "with", "when", "what", "whatever", "once", "plus"]
         },
         "tests": {
-            "terms": ["test case", "testcase", "under test", "undertest", "edge case", "edge cases", "actual"]
+            "words": ["test case", "testcase", "under test", "undertest", "edge case", "edge cases", "actual"]
         },
         "folders": {
-            "terms": ["shared", "support"]
+            "words": ["shared", "support"]
         }
     },
     "languages": {

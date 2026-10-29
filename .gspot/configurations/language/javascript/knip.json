@@ -123,7 +123,7 @@
                 "tests/setup/runner/integration.ts",
                 "packages/cli/src/checks/framework/site/purgecss-process.ts",
                 "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts",
-                "docs/src/route-data.ts",
+                "docs/src/route-middleware.ts",
                 "packages/cli/src/bin.ts",
                 "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts",
                 "packages/cli/configurations/framework/site/config-files/purgecss.ts",
@@ -145,7 +145,7 @@
         },
         "docs": {
             "entry": [
-                "src/route-data.ts",
+                "src/route-middleware.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/test/**",
@@ -160,8 +160,6 @@
                 "**/*Tests.swift"
             ],
             "ignoreDependencies": [
-                "@fontsource-variable/geist",
-                "@fontsource-variable/geist-mono",
                 "satteri"
             ]
         },

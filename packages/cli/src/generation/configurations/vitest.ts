@@ -1,9 +1,6 @@
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
+import { getPreset, buildPresetRules } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 
-import {
-    getPreset,
-    buildPresetRuleExpression,
-} from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 import {
     TEST_RULE_NAMES,
     CONFIGURATION_PLUGINS,
@@ -13,7 +10,6 @@ import {
 Apply the Vitest recommended preset and the test rules to the test files.
 
 @param scope the presets and file selectors of the scope.
-@returns the imports and ESLint blocks for this configuration.
 */
 export function buildVitestBlocks(scope: Pick<EslintScope, 'presets' | 'eslintFiles'>): ConfigurationBlocks {
     const { presets, eslintFiles } = scope;
@@ -23,13 +19,14 @@ export function buildVitestBlocks(scope: Pick<EslintScope, 'presets' | 'eslintFi
             fields: {
                 files: eslintFiles.tests,
                 rules: {
+                    'sonarjs/assertions-in-tests': 'off',
                     ...preset.blocks[0].rules,
                     ...Object.fromEntries(TEST_RULE_NAMES.map((name) => [`vitest/${name}`, 'error'])),
                     'vitest/no-focused-tests': ['error', { fixable: false }],
                 },
             },
-            properties: 'plugins: { vitest }',
-            preset: buildPresetRuleExpression([['vitest', preset]]),
+            calls: [{ name: 'addPlugins', args: [{ imports: { vitest: 'vitest' } }] }],
+            preset: buildPresetRules([['vitest', preset]]),
         },
     ];
     return {

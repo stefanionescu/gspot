@@ -8,6 +8,8 @@ Read this rule when you change NestJS modules, controllers, providers, or their 
 - Validate body, query, and route parameters before using them. Configure `ValidationPipe` transformation and
   unknown-field handling for the declared input contract.
 - Do not expose password hashes, tokens, or internal fields in responses.
+- Return the value from a handler. When the handler must set a header, take `@Res({ passthrough: true })`, so
+  interceptors still run.
 
 ## Providers and lifecycle
 
@@ -31,6 +33,7 @@ Read this rule when you change NestJS modules, controllers, providers, or their 
 - Inject dependencies through constructors instead of creating them inside consumers.
 - Define the versioning contract before publishing a public API.
 - Keep request DTOs distinct from persistence entities and map between them explicitly.
+- Do not use `forwardRef`. Move what two modules both need into a third module.
 
 ## Tests
 

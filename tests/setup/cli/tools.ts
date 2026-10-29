@@ -1,25 +1,15 @@
 import { join } from 'node:path';
-import { parse } from '@decimalturn/toml-patch';
 import { open, readFile } from 'node:fs/promises';
 import type { Session } from '#cli/types/session.ts';
-import { generate } from '#cli/generation/generate.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import * as installers from '#cli/installers/install.ts';
 import type { Tool } from '#cli/types/configurations.ts';
-import type { RuntimePins } from '#tests/types/runner.ts';
-import { runtimePinsSchema } from '#tests/schemas/runner.ts';
-import { readInstallRecord } from '#cli/installers/record.ts';
-import { TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
-import { getTable, findRootScope } from '#cli/settings/scopes.ts';
-import type { NpmToolInstall } from '#cli/types/installers/npm.ts';
-import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
-import { readInstallPackageManager } from '#cli/installers/install.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
-import { listDistinctTools, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import type { ToolInstall, ToolPackageManager } from '#cli/types/installers/install.ts';
 
@@ -51,67 +41,30 @@ Build the tool install for a sandbox.
 */
 
 export function buildToolInstall(session: Session, writer: Files): ToolInstall {
-    const pins = listToolProjectPins(session.toolConfigurations);
-    return {
-        session,
-        record: readInstallRecord(session),
-        packageManager: readInstallPackageManager(session),
-        minimumReleaseAge: {
-            days: getTable(findRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
-            npmExclusions: Object.keys(pins.npm),
-            pythonExclusions: pins.python.map((pin) => pin.slice(0, pin.indexOf('=='))),
-        },
-        writer,
-        generated: generate(session),
-        tools: listDistinctTools(session.toolConfigurations),
-        misePath: null,
-        steps: [],
-    };
-}
-
-/**
-Build the npm tool install for a sandbox whose session has a package manager, with its registry settings.
-
-@param session the open sandbox.
-@param writer holds the repository lock and saves files.
-@returns the tool install with the package manager and the registry variables that the npm steps read.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 2 files share it.
-export async function buildNpmToolInstall(session: Session, writer: Files): Promise<NpmToolInstall> {
-    const install = buildToolInstall(session, writer);
-    return {
-        ...install,
-        packageManager: install.packageManager as ToolPackageManager,
-        registryEnvironment: await readRegistryEnvironment(session.root),
-    };
+    const generated = generateFiles(session);
+    const install = installers.buildToolInstall(session, writer, generated);
+    install.misePath = null;
+    return install;
 }
 
 /**
 A program pin, with an npm installer when npm names a package.
-
-@param name executable to pin.
-@param version release to pin.
-@param npm package that ships the program.
-@returns a tool with that program pinned.
 */
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 calls in 3 files share it.
-export function buildProgramPin(name: string, version: string, npm?: string): Tool {
+export function buildProgramPin(name: string, version: string, npmPackage?: string): Tool {
     return {
         name,
         kind: 'program',
         version,
-        installers: npm === undefined ? {} : { npm: { name: npm, version } },
+        installers: npmPackage === undefined ? {} : { npm: { name: npmPackage, version } },
     };
 }
 
 /**
 List the npm install folder and lockfile of the tool project that exist, to show that a command installed nothing.
-
-@param root the repository.
-@returns the paths from the repository root.
 */
-export async function listToolInstallFiles(root: string): Promise<string[]> {
+export async function listNpmInstallFiles(root: string): Promise<string[]> {
     const paths = [GSPOT_PATHS.nodeModules, `${GSPOT_FOLDER}/package-lock.json`];
     const found = await Promise.all(paths.map(async (path) => ((await isOnDisk(join(root, path))) ? [path] : [])));
     return found.flat();
@@ -129,15 +82,4 @@ export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}):
         inspections: new Map(),
         ...fields,
     };
-}
-
-/**
-Read this checkout's validated Bun and Node pins.
-
-@returns the two pinned runtime versions.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The e2e and integration tests read the runtime pins through it.
-export async function readRuntimePins(): Promise<RuntimePins['tools']> {
-    const runtimeSettings: unknown = parse(await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8'));
-    return runtimePinsSchema.parse(runtimeSettings).tools;
 }

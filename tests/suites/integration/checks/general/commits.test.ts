@@ -1,26 +1,22 @@
 import { join, posix } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
+import { LICENSE } from '#tests/config/documents.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { LICENSE, CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { test, expect, describe, beforeAll, beforeEach } from 'bun:test';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { COMMITLINT_PACKAGE } from '#tests/config/authored-config-files.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
-import {
-    runGspot,
-    spawnGspot,
-    applyThenInstall,
-    parseCheckReport,
-    buildInitArguments,
-} from '#tests/setup/cli/commands.ts';
 import {
     COMMIT_MESSAGES,
     COMMITLINT_LEVEL_RESULTS,
@@ -85,10 +81,10 @@ test('commitlint accepts exact folder-name scopes or no scope, reports bad messa
         await writeFile(draft, `${message}\n`);
         await assertDraftCheck(sandbox.path, draft);
     }
-    for (const level of ['recommended', 'all', 'recommended'] as const) {
+    for (const level of ['basic', 'all', 'basic'] as const) {
         const switched = await spawnGspot(sandbox.path, ['set', 'level', level]);
         expect(switched.code, switched.stdout + switched.stderr).toBe(0);
-        const exists = await isOnDisk(join(sandbox.path, findManifestTarget('commits', 'commitlint.json')));
+        const exists = await isOnDisk(join(sandbox.path, getManifestTarget('commits', 'commitlint.json')));
         expect(exists).toBe(level === 'all');
         const checked = await spawnGspot(sandbox.path, command);
         const expected = COMMITLINT_LEVEL_RESULTS[level];
@@ -188,14 +184,9 @@ test.each(['', 'app'])(
         const command = [join(testModules, '.bin/commitlint'), '--edit', join(sandbox.path, messageFile)];
         const before = await runCommand(command, execution);
         expect(before.code, before.stdout + before.stderr).toBe(0);
-        const initialized = await runGspot(sandbox.path, [
-            ...buildInitArguments([]),
-            '--no-configurations',
-            '--level',
-            'all',
-        ]);
+        const initialized = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations', '--level', 'all']);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        const target = `${scope === '' ? './' : '../'}${findManifestTarget('commits', 'commitlint.json')}`;
+        const target = `${scope === '' ? './' : '../'}${getManifestTarget('commits', 'commitlint.json')}`;
         expect(await readFile(join(sandbox.path, packageFile), 'utf8')).toBe(
             COMMITLINT_PACKAGE.replace('{"rules":{"type-enum":[2,"always",["special"]]}}', () =>
                 JSON.stringify({ extends: target }),
@@ -204,7 +195,7 @@ test.each(['', 'app'])(
         const mismatched = await runCommand(command, execution);
         expect(mismatched.code, mismatched.stdout + mismatched.stderr).toBe(1);
         expect(mismatched.stdout.match(/\[type-enum\]/gu)).toStrictEqual(['[type-enum]']);
-        for (const level of ['recommended', 'all']) {
+        for (const level of ['basic', 'all']) {
             const changed = await runGspot(sandbox.path, ['set', 'level', level]);
             expect(changed.code, changed.stdout + changed.stderr).toBe(0);
             const packageText = await readFile(join(sandbox.path, packageFile), 'utf8');
@@ -214,7 +205,7 @@ test.each(['', 'app'])(
                 ),
             );
             expect(JSON.parse(packageText)).toStrictEqual(expected);
-            const generatedConfig = join(sandbox.path, findManifestTarget('commits', 'commitlint.json'));
+            const generatedConfig = join(sandbox.path, getManifestTarget('commits', 'commitlint.json'));
             expect(await isOnDisk(generatedConfig)).toBe(level === 'all');
             if (level !== 'all') continue;
             const native = await runCommand([...command, '--config', generatedConfig], execution);
@@ -223,7 +214,7 @@ test.each(['', 'app'])(
         }
         await writeFile(join(sandbox.path, messageFile), 'fix: generated contract\n');
         const corrected = await runCommand(
-            [...command, '--config', join(sandbox.path, findManifestTarget('commits', 'commitlint.json'))],
+            [...command, '--config', join(sandbox.path, getManifestTarget('commits', 'commitlint.json'))],
             execution,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

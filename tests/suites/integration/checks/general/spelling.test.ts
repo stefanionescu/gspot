@@ -5,7 +5,7 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { applySandboxChanges, buildSandboxChanges, changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { changeSandbox, applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     SPELLING_SANDBOX,
@@ -92,12 +92,9 @@ test('typos reports Unicode columns in files whose names hold a space, a typo, o
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-async function runTyposCheck(sourceFiles: Record<string, string>) {
+async function runTyposCheck(files: Record<string, string>) {
     const sandbox = installedSandbox();
-    await using _sourceChange = await applySandboxChanges(
-        sandbox,
-        buildSandboxChanges(SPELLING_SANDBOX.files, sourceFiles),
-    );
+    await using _sourceChange = await applySandboxChanges(sandbox, buildSandboxChanges(SPELLING_SANDBOX.files, files));
     const checked = parseCheckReport(await spawnGspot(sandbox.root, ['check', '--only', 'spelling/typos', '--json']));
     return {
         ...checked,
@@ -110,7 +107,7 @@ async function runTyposCheck(sourceFiles: Record<string, string>) {
 
 test('typos keeps its excluded paths for a file named on the command line', async () => {
     const { root } = installedSandbox();
-    await using _change = await changeAppliedSandbox(installedSandbox(), {
+    await using _change = await changeSandbox(installedSandbox(), {
         files: { 'assets/mark.svg': `<svg><title>${TYPO.the}</title></svg>\n` },
     });
 

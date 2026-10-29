@@ -13,10 +13,17 @@ import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, TableSettings } from '#cli/types/settings/file.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
-import { convertToGlobs, listIgnoreSections } from '#cli/generation/config-files/ignore-files.ts';
 
 import {
+    convertToGlobs,
+    buildIgnoreSections,
+    listCheckIgnoreSections,
+} from '#cli/generation/config-files/ignore-files.ts';
+import {
+    KNIP_TABLE,
+    KNIP_CHECK,
     PACKAGE_RUNNERS,
+    UNQUOTED_COMMENT,
     KNIP_ESLINT_CONFIG,
     MISE_FILE_TASK_GLOBS,
     COMMAND_WORD_SEPARATORS,
@@ -24,30 +31,30 @@ import {
     KNIP_JAVASCRIPT_ENTRY_FILES,
 } from '#cli/config/generation/configurations/language/javascript/knip.ts';
 
-function selectEntryFiles(settings: Settings, scopes: Scope[], scope: string): string[] {
-    const authored = listApplicableTables(settings, scope).flatMap(
+function selectEntryFiles(settings: Settings, scopes: Scope[], scopePath: string): string[] {
+    const authored = listApplicableTables(settings, scopePath).flatMap(
         ({ table }) => (table.tools?.knip as Partial<TableSettings<'tools.knip'>> | undefined)?.entry ?? [],
     );
     const nearest = scopes
-        .filter((each) => isInScope(scope, each.path))
+        .filter((each) => isInScope(scopePath, each.path))
         .toSorted((left, right) => compareScopeDepth(right.path, left.path))
         .slice(0, 1)
         .flatMap(({ configurations, settings: scopeSettings }) => [
             ...(configurations.some((configuration) => configuration.name === JAVASCRIPT_CONFIGURATION)
                 ? KNIP_JAVASCRIPT_ENTRY_FILES
                 : []
-            ).map((pattern) => joinScopeSelector(pattern, scope)),
+            ).map((pattern) => joinScopeSelector(pattern, scopePath)),
             ...scopeSettings.test_files,
             ...(scopeSettings.tables.javascript?.script_files ?? []),
-            ...(scope === '' ? [KNIP_ESLINT_CONFIG] : []),
+            ...(scopePath === '' ? [KNIP_ESLINT_CONFIG] : []),
         ]);
     const entries: string[] = [];
     const patterns = new Set([...authored, ...nearest]);
     for (const pattern of patterns) {
         const sign = pattern.startsWith('!') ? '!' : '';
         const source = sign === '' ? pattern : pattern.slice(1);
-        if (scope === '' || source.startsWith('**/')) entries.push(pattern);
-        else if (source.startsWith(`${scope}/`)) entries.push(`${sign}${source.slice(scope.length + 1)}`);
+        if (scopePath === '' || source.startsWith('**/')) entries.push(pattern);
+        else if (source.startsWith(`${scopePath}/`)) entries.push(`${sign}${source.slice(scopePath.length + 1)}`);
     }
     return entries;
 }
@@ -61,7 +68,7 @@ function buildWorkspaces(root: string, settings: Settings, scopes: Scope[]) {
         paths.map((path) => {
             const workspace = selected.find((each) => each.path === path);
             const ignored =
-                workspace === undefined ? undefined : getTable(workspace.settings, 'tools.knip').ignore_dependencies;
+                workspace === undefined ? undefined : getTable(workspace.settings, KNIP_TABLE).ignore_dependencies;
             return [
                 path === '' ? '.' : path,
                 {
@@ -83,7 +90,7 @@ function findRunPackage(words: string[], index: number): string | undefined {
 }
 
 function listRunPackages(text: string): string[] {
-    const words = text.split(COMMAND_WORD_SEPARATORS);
+    const words = text.replaceAll(UNQUOTED_COMMENT, '$1').split(COMMAND_WORD_SEPARATORS);
     return words.flatMap((_word, index) => {
         const target = findRunPackage(words, index);
         return target === undefined ? [] : (splitIdentity(target)?.[0] ?? target);
@@ -105,16 +112,18 @@ function listFileTaskPackages(planned: PlannedConfigFile): string[] {
 /**
 Build knip.json: the workspace entry points, project selectors, and dependency exclusions.
 
-@param planned the config file with its scope, level, and target path.
-@returns the workspace entry points, project selectors, and dependency exclusions.
+@param planned the config file to build.
 */
 export function buildKnipFile(planned: PlannedConfigFile): string {
     const { scope } = planned;
     const { scopes, toolConfigurations: configurations } = planned.session;
     const { settings, root, startRunner } = planned.session;
-    const options = getTable(scope.settings, 'tools.knip');
+    const options = getTable(scope.settings, KNIP_TABLE);
     const scanner = getTable(scope.settings, 'dependencies').bun_scanner;
-    const ignoredGlobs = convertToGlobs(listIgnoreSections(planned, 'javascript/knip'));
+    const ignoredGlobs = convertToGlobs([
+        ...buildIgnoreSections(planned.session),
+        ...listCheckIgnoreSections(planned.scope.settings, KNIP_CHECK),
+    ]);
     const tools = listDistinctTools(configurations);
     const toolBinaries = [
         ...tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name),
@@ -136,7 +145,7 @@ export function buildKnipFile(planned: PlannedConfigFile): string {
                 ]),
             ],
             ignoreBinaries: [...new Set(toolBinaries)],
-            ignoreExportsUsedInFile: planned.level !== 'all',
+            ...(planned.level === 'all' ? {} : { ignoreExportsUsedInFile: true }),
             ...(externals.length > 0 && { ignoreUnresolved: externals }),
             workspaces,
         },

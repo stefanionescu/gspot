@@ -15,12 +15,12 @@ export const XCTEST_FAILURES = [
     },
     {
         failure: 'failed-test',
-        note: 'The swift/coverage check failed: Cannot measure coverage because the test run exited 65: The test runner printed no error output.',
+        note: undefined,
         tables: XCTEST_TABLES,
-        build: ['--exit', '65'],
+        build: ['--exit', '65', '--failure', 'ExampleTests.swift:3: error: -[ExampleTests testValue] : Expected true.'],
         coverage: 1,
-        code: 2,
-        status: 'error',
+        code: 1,
+        status: 'failed',
         produced: false,
     },
     {
@@ -71,7 +71,7 @@ export const SWIFT_PACKAGE_COVERAGE_FILES = [
     { filename: 'Tests/CoreTests/CoreTests.swift', summary: { lines: { count: 2, covered: 2 } } },
 ] as const;
 
-const SWIFT_TARGET_COVERAGE_REPORT = {
+const SWIFT_TARGET_COVERAGE_OUTPUT = {
     targets: [
         { name: 'App', lineCoverage: 0.6 },
         { name: 'Library', lineCoverage: 0.75 },
@@ -99,19 +99,19 @@ export const COVERAGE_LIMIT_CASES = [
     },
     {
         name: 'a target misses the shared limit',
-        report: SWIFT_TARGET_COVERAGE_REPORT,
+        report: SWIFT_TARGET_COVERAGE_OUTPUT,
         tables: '[coverage]\nlines = 70\nswift_target = []\n',
         expected: ['App covers 60% of its lines, under the limit of 70%.'],
     },
     {
         name: 'a named target overrides the shared limit',
-        report: SWIFT_TARGET_COVERAGE_REPORT,
+        report: SWIFT_TARGET_COVERAGE_OUTPUT,
         tables: '[coverage]\nlines = 70\n[[coverage.swift_target]]\nname = "App"\nlines = 60\nreason = "Required target coverage."\n',
         expected: [],
     },
     {
         name: 'no coverage limit is enabled',
-        report: SWIFT_TARGET_COVERAGE_REPORT,
+        report: SWIFT_TARGET_COVERAGE_OUTPUT,
         tables: '[coverage]\nlines = 0\nswift_target = []\n',
         expected: [],
     },

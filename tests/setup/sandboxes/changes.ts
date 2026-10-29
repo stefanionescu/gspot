@@ -1,114 +1,81 @@
+import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
-import { openWriter } from '#cli/write.ts';
-import { openSession } from '#cli/session.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { openWriter } from '#cli/repository/writer.ts';
 import type { Sandbox } from '#tests/types/sandbox.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { runGspotStep } from '#tests/setup/cli/commands.ts';
+import type { SandboxWrite } from '#tests/types/changes.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { SandboxChanges } from '#tests/types/samples.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
-import type { PreviousFile, SandboxWrite } from '#tests/types/changes.ts';
-import { runGit, runGitStep, markExecutable } from '#tests/setup/system/git.ts';
-import { rm, chmod, lstat, mkdir, rmdir, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
+import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runGitStep, markExecutable } from '#tests/setup/system/git.ts';
+import { rm, mkdir, lstat, unlink, readFile, writeFile } from 'node:fs/promises';
 
-async function readPreviousFile(path: string): Promise<PreviousFile | undefined> {
-    try {
-        const attributes = await lstat(path);
-        return attributes.isSymbolicLink()
-            ? { kind: 'symlink', target: await readlink(path) }
-            : { kind: 'file', bytes: await readFile(path), mode: attributes.mode };
-    } catch (error) {
-        if (hasErrorCode(error, 'ENOENT')) return undefined;
-        throw error;
-    }
-}
-async function listAbsentParents(cwd: string, paths: readonly string[]): Promise<string[]> {
-    const parents = new Set<string>();
-    for (const path of paths) {
-        let parent = dirname(join(cwd, path));
-        while (parent !== cwd && !(await isOnDisk(parent))) {
-            parents.add(parent);
-            parent = dirname(parent);
-        }
-    }
-    return [...parents].toSorted((a, b) => b.length - a.length);
-}
-async function restoreFiles(cwd: string, previousFiles: Map<string, PreviousFile | undefined>): Promise<void> {
-    for (const [path, saved] of previousFiles) {
-        const absolute = join(cwd, path);
-        await rm(absolute, { force: true });
-        if (saved?.kind === 'symlink') await symlink(saved.target, absolute);
-        else if (saved?.kind === 'file') {
-            await writeFile(absolute, saved.bytes);
-            await chmod(absolute, saved.mode);
-        }
-    }
-}
-async function removeParents(parents: string[]): Promise<void> {
-    for (const path of parents) {
-        try {
-            await rmdir(path);
-        } catch (error) {
-            if (hasErrorCode(error, 'ENOENT') || hasErrorCode(error, 'ENOTEMPTY')) continue;
-            throw error;
-        }
-    }
-}
-async function writeChanges(cwd: string, changes: SandboxWrite): Promise<void> {
-    for (const path of changes.removed) await rm(join(cwd, path));
+async function writeChanges(root: string, changes: SandboxWrite): Promise<void> {
+    for (const path of changes.removed) await rm(join(root, path));
     for (const [path, text] of Object.entries(changes.files)) {
-        const absolute = join(cwd, path);
+        const absolute = join(root, path);
         await mkdir(dirname(absolute), { recursive: true });
-        if (changes.previousFiles.get(path)?.kind === 'symlink') await unlink(absolute);
+        const attributes = await lstat(absolute).catch((error: unknown) => {
+            if (!hasErrorCode(error, 'ENOENT')) throw error;
+            return undefined;
+        });
+        if (attributes?.isSymbolicLink() === true) await unlink(absolute);
         await writeFile(absolute, text);
     }
-    for (const path of changes.executable) await markExecutable(cwd, path);
-    await writeFile(join(cwd, 'gspot.toml'), changes.settings);
+    for (const path of changes.executable) await markExecutable(root, path);
+    await writeFile(join(root, SETTINGS_FILE), changes.settings);
 }
 
 /**
-Change a sandbox, and restore its files on disposal, and in a Git repository its index and `HEAD` too. It saves file
-bytes and modes before the first change, so a failed change still restores them.
-
-@param sandbox the installed sandbox to change.
-@param changes the files, settings, removals, and executable bits to apply.
-@returns the disposer that restores the sandbox.
+Change a sandbox, and on disposal restore its files, its index and `HEAD` from a savedTree taken before the change, so
+a failed change still restores them.
 */
 export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {
     const cwd = sandbox.root;
-    const tree = runGit(cwd, ['write-tree']).stdout.trim();
-    const head = runGit(cwd, ['rev-parse', 'HEAD']);
-    const untracked = new Set(
-        runGit(cwd, ['ls-files', '--others', '--exclude-standard', '-z']).stdout.split('\0').filter(Boolean),
+    const index = runGitStep(cwd, ['write-tree']);
+    const head = runCommandBlocking(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: cwd, env: {} });
+    const ignored = new Set(
+        runGitStep(cwd, ['ls-files', '--others', '--ignored', '--exclude-standard', '-z']).split('\0'),
     );
-    const settingsPath = join(cwd, 'gspot.toml');
-    const previous = await readFile(settingsPath, 'utf8');
-    const base = changes.files['gspot.toml'] ?? previous;
-    const settings = [base, changes.settings].filter((text) => text !== undefined).join('\n');
-    const removed = changes.removed ?? [];
-    const executable = changes.executable ?? [];
-    const paths = [...new Set(['gspot.toml', ...removed, ...executable, ...Object.keys(changes.files)])];
-    const previousFiles = new Map<string, PreviousFile | undefined>();
-    for (const path of paths) previousFiles.set(path, await readPreviousFile(join(cwd, path)));
-    const parents = await listAbsentParents(cwd, paths);
+    const savedIndex = join(runGitStep(cwd, ['rev-parse', '--absolute-git-dir']), randomUUID());
+    const environment = { GIT_INDEX_FILE: savedIndex };
+    runGitStep(cwd, ['add', '-A'], environment);
+    const savedTree = runGitStep(cwd, ['write-tree'], environment);
+    const previous = await readFile(join(cwd, SETTINGS_FILE), 'utf8');
+    const settings = [changes.files[SETTINGS_FILE] ?? previous, changes.settings]
+        .filter((text) => text !== undefined)
+        .join('\n');
     const restore = async (): Promise<void> => {
-        if (head.code === 0) {
-            runGitStep(cwd, ['reset', '--soft', head.stdout.trim()]);
-            runGitStep(cwd, ['read-tree', tree]);
+        try {
+            const ignoredAfter = runGitStep(cwd, [
+                'ls-files',
+                '--others',
+                '--ignored',
+                '--exclude-standard',
+                '-z',
+            ]).split('\0');
+            runGitStep(cwd, ['add', '-A'], environment);
+            runGitStep(cwd, ['read-tree', '-u', '--reset', savedTree], environment);
+            if (head.code === 0) runGitStep(cwd, ['reset', '--soft', head.stdout.trim()]);
+            else if (runCommandBlocking(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: cwd, env: {} }).code === 0)
+                runGitStep(cwd, ['update-ref', '-d', 'HEAD']);
+            runGitStep(cwd, ['read-tree', index]);
+            for (const path of ignoredAfter)
+                if (path !== '' && !ignored.has(path)) await rm(join(cwd, path), { force: true });
+        } finally {
+            await unlink(savedIndex);
         }
-        for (const path of runGit(cwd, ['ls-files', '--others', '--exclude-standard', '-z']).stdout.split('\0'))
-            if (path !== '' && !untracked.has(path)) await rm(join(cwd, path), { force: true });
-        await restoreFiles(cwd, previousFiles);
-        await removeParents(parents);
     };
     try {
         await writeChanges(cwd, {
             files: changes.files,
             settings,
-            previousFiles,
-            removed,
-            executable,
+            removed: changes.removed ?? [],
+            executable: changes.executable ?? [],
         });
     } catch (error) {
         await restore();
@@ -118,25 +85,11 @@ export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): 
 }
 
 /**
-Change the sandbox for a test that applies, and apply again after the restore so the generated files match.
-*/
-export async function changeAppliedSandbox(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {
-    const change = await changeSandbox(sandbox, changes);
-    return {
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-        async [Symbol.asyncDispose]() {
-            await change[Symbol.asyncDispose]();
-            await runGspotStep(sandbox, ['apply']);
-        },
-    };
-}
-
-/**
-Write the sample files and run apply; disposal restores the files and applies again.
+Write the sample files and run apply. Disposal restores the working files, index, and current commit.
 */
 export async function applySandboxChanges(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
-    resources.use(await changeAppliedSandbox(sandbox, changes));
+    resources.use(await changeSandbox(sandbox, changes));
     await runGspotStep(sandbox, ['apply']);
     return resources.move();
 }
@@ -147,7 +100,7 @@ Write the generated files for an existing test repository.
 export async function applyGeneratedFiles(root: string): Promise<void> {
     using writer = openWriter(root);
     const session = await openSession(root);
-    await writeGeneratedFiles(session, generate(session), writer);
+    await writeGeneratedFiles(session, generateFiles(session), writer);
 }
 
 /**

@@ -29,6 +29,43 @@ const ALLOWED_NAME_FILES = {
 
 export const UNUSED_NAME_CASES = [
     {
+        name: 'a properties record whose name only a function uses is unused',
+        files: { 'source.js': 'export function requestName() {}\n' },
+        settings: {
+            configurations: ['javascript'],
+            naming: {
+                override: [
+                    {
+                        categories: ['properties'],
+                        allowed_names: ['requestName'],
+                        reason: 'The external API fixes this property name.',
+                    },
+                ],
+            },
+        },
+        messages: [
+            '[[naming.override]] record 1 allowed_names includes "requestName", which no identifier under its paths uses.',
+        ],
+    },
+    {
+        name: 'an allowed stem of an unparsable file counts as used',
+        files: { 'brokenName.js': 'export const = ;\n' },
+        settings: {
+            configurations: ['javascript'],
+            naming: {
+                override: [
+                    {
+                        categories: ['files'],
+                        allowed_names: ['brokenName'],
+                        reason: 'The external tool fixes this file name.',
+                    },
+                ],
+            },
+        },
+        messages: [],
+    },
+
+    {
         name: 'a files-only allowance names the second file in a folder',
         files: {
             'src/first.js': 'export const one = 1;\n',

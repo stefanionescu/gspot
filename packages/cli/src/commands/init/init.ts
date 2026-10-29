@@ -1,79 +1,86 @@
 import { isCI } from 'std-env';
 import { confirm } from '@clack/prompts';
-import { openSession } from '#cli/session.ts';
 import { print } from '#cli/system/terminal.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { readGitSetting } from '#cli/system/git.ts';
+import { readSettings } from '#cli/settings/read.ts';
 import type { Session } from '#cli/types/session.ts';
-import type { WritePlan } from '#cli/types/write.ts';
 import { writeSettings } from '#cli/settings/file.ts';
-import { parseSettings } from '#cli/settings/read.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
-import { openWriter, writePlans } from '#cli/write.ts';
-import { CI_FILE_LABELS } from '#cli/config/commands/ci.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
+import { readTemplate } from '#cli/commands/init/template.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
-import { selectForInit } from '#cli/commands/init/selection.ts';
+import { readRepositorySetup } from '#cli/repository/setup.ts';
 import type { SettingsFile } from '#cli/types/settings/file.ts';
+import type { WritePlan } from '#cli/types/repository/writer.ts';
+import { formatDetection } from '#cli/commands/init/detection.ts';
+import { selectForInit } from '#cli/repository/configurations.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
+import { openWriter, writePlans } from '#cli/repository/writer.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import type { RepositorySetup } from '#cli/types/repository/setup.ts';
 import type { RepositoryListing } from '#cli/types/repository/read.ts';
+import { planInitFiles, formatInitPlan } from '#cli/commands/init/plan.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
-import { readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
+import { DRY_RUN_FLAG, DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup.ts';
+import type { Files, ReadCache, FileContents } from '#cli/types/system/files.ts';
 import { listForeignDisableComments } from '#cli/commands/init/eslint-disable-comments.ts';
-import { type Files, type ReadCache, type FileContents } from '#cli/types/system/files.ts';
-import { planInitFiles, formatInitPlan, formatDetection } from '#cli/commands/init/plan.ts';
+import { FROM_OPTION, FROM_CONFLICT_MESSAGE } from '#cli/config/commands/init/template.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings-text.ts';
 import { readRepository, readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts';
 import { listCommittedPaths, readConflictingConfigFiles } from '#cli/commands/init/conflicting-config-files.ts';
 
-import {
-    REMOTE_URL_USER,
-    REMOTE_URL_SCHEME,
-    ORIGIN_URL_SETTING,
-    INIT_INSTALL_NOTES,
-} from '#cli/config/commands/init/init.ts';
 import type {
     InitJson,
     InitPlan,
     InitScan,
-    InitAnswers,
     InitOptions,
     InitPlanning,
     DetectionSummary,
 } from '#cli/types/commands/init.ts';
+import {
+    LEVEL_OPTION,
+    CANCELED_MESSAGE,
+    INIT_INSTALL_NOTES,
+    WROTE_PLAN_MESSAGE,
+    NO_TERMINAL_MESSAGE,
+    NEXT_INSTALL_MESSAGE,
+    CONFIGURATIONS_OPTION,
+    SETTINGS_EXIST_MESSAGE,
+    NO_CONFIGURATIONS_FLAG,
+    JSON_NEEDS_YES_MESSAGE,
+    NOTHING_WRITTEN_MESSAGE,
+} from '#cli/config/commands/init/init.ts';
 
 async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJson>> {
     const root = readRepositoryRoot(options.cwd);
-    if (findText(root, SETTINGS_FILE) !== undefined)
-        throw new GspotError(
-            'settings',
-            'This repository already has a gspot.toml. Run `gspot doctor` to inspect its setup and see suggested commands.',
-        );
+    if (findText(root, SETTINGS_FILE) !== undefined) throw new GspotError('settings', SETTINGS_EXIST_MESSAGE);
     const initPlan = await planInit(root, options);
     const { plan, settingsText } = initPlan;
     print(formatDetection(initPlan.detection));
     print(formatInitPlan(plan));
     const json: InitJson = { root, plan, settings: settingsText, written: false };
-    if (options.isDryRun) {
+    if (options.dryRun) {
         print(`${DRY_RUN_NOTE}\n`);
         return { text: '', json, exitCode: 0 };
     }
     const accepted = await askConfirmation({ yes: options.yes });
-    if (!accepted) return { text: 'Nothing written.\n', json, exitCode: 0 };
+    if (!accepted) return { text: NOTHING_WRITTEN_MESSAGE, json, exitCode: 0 };
     const written = await writeInitFiles(root, initPlan);
-    written.push('Next: run gspot install to install the tools and turn on the Git hooks.');
+    written.push(NEXT_INSTALL_MESSAGE);
     return { text: written.join('\n'), json: { ...json, written: true }, exitCode: 0 };
+}
+
+function assertTemplateFlags(from: string | undefined, configurations: string[] | false | undefined): void {
+    if (from === undefined || configurations === undefined) return;
+    const flag = configurations === false ? '--no-configurations' : '--configurations';
+    throw new GspotError('arguments', `--from ${FROM_CONFLICT_MESSAGE} ${flag}, or edit a copy of the file.`);
 }
 
 /**
@@ -87,24 +94,25 @@ export function registerInit(program: Command, onResult: CommandCompletion): voi
         .command('init')
         .summary(COMMAND_HELP.init.summary)
         .description(COMMAND_HELP.init.description)
+        .option(FROM_OPTION, COMMAND_HELP.init.options[FROM_OPTION])
         .option('--yes', COMMAND_HELP.init.options['--yes'])
-        .option('--dry-run', COMMAND_HELP.init.options['--dry-run'])
-        .option('--configurations <names...>', COMMAND_HELP.init.options['--configurations <names...>'])
-        .option('--no-configurations', COMMAND_HELP.init.options['--no-configurations'])
-        .addOption(new Option('--level <level>', COMMAND_HELP.init.options['--level <level>']).choices(LEVELS))
+        .option(DRY_RUN_FLAG, COMMAND_HELP.init.options[DRY_RUN_FLAG])
+        .option(CONFIGURATIONS_OPTION, COMMAND_HELP.init.options[CONFIGURATIONS_OPTION])
+        .option(NO_CONFIGURATIONS_FLAG, COMMAND_HELP.init.options[NO_CONFIGURATIONS_FLAG])
+        .addOption(new Option(LEVEL_OPTION, COMMAND_HELP.init.options[LEVEL_OPTION]).choices(LEVELS))
         .action(async (flags, command) => {
+            assertTemplateFlags(flags.from, flags.configurations);
+            const template = flags.from === undefined ? undefined : readTemplate(flags.from, process.cwd());
             if (command.getOptionValue('json') === true && flags.yes !== true && flags.dryRun !== true)
-                throw new GspotError(
-                    'arguments',
-                    '--json needs --yes or --dry-run, because gspot cannot ask while it prints JSON.',
-                );
+                throw new GspotError('arguments', JSON_NEEDS_YES_MESSAGE);
             onResult(
                 await runInitCommand({
                     cwd: process.cwd(),
                     yes: flags.yes === true,
-                    isDryRun: flags.dryRun === true,
+                    dryRun: flags.dryRun === true,
                     ...stripUndefined({
                         level: flags.level,
+                        template,
                         configurations: flags.configurations === false ? [] : flags.configurations,
                     }),
                 }),
@@ -131,7 +139,7 @@ async function openPlannedSession(
     const trackedSettings = {
         path: SETTINGS_FILE,
         executable: false,
-        symlink: false,
+        isSymlink: false,
         size: bytes.length,
         prefix: bytes,
     };
@@ -149,15 +157,9 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
     const repository = await readRepository(reads, listing, { generatedPaths: [], scopes: [], configurationsByName });
     const initConfigurations = selectForInit({ repository, configurationsByName, options });
     const repositorySetup = readRepositorySetup(reads, repository);
-    const ciProvider = detectCiProvider(root, repositorySetup);
-    const answers: InitAnswers = {
-        hooks: true,
-        rules: true,
-        ci: readLintJobs(root, repositorySetup.ci).length > 0 ? 'none' : ciProvider,
-    };
-    const draft = buildSettingsDraft(initConfigurations, answers, options);
+    const draft = buildSettingsDraft(initConfigurations, options);
     const settingsText = buildInitSettings(draft, repository, configurationsByName);
-    const settings = parseSettings(settingsText, root);
+    const settings = readSettings(settingsText, root);
     const session = await openPlannedSession(root, { reads, listing, settingsFile: { settings, text: settingsText } });
     const everySelected = listSelectedConfigurations(session.scopes);
     const applicable = session.toolConfigurations;
@@ -174,9 +176,8 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         unowned: detectedTools.filter((tool) => !tools.has(tool)),
         configurationsByName,
         hasGit: repository.hasGit,
-        ciProvider,
     };
-    const generated = generate(session);
+    const generated = generateFiles(session);
     const conflicts = readConflictingConfigFiles(root, repositorySetup, tools, generated.managedKeys);
     assertConflictingFilesCommitted(
         root,
@@ -187,32 +188,31 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         repositorySetup,
         configurations: initConfigurations,
         everySelected,
-        answers,
         conflicts,
         foreignDisableComments: listForeignDisableComments(session),
+        ...stripUndefined({ template: options.template }),
     };
     const plan = planInitFiles(planning, { settings, settingsText, requirements: applicable, generated });
-    return { detection, session, generated, plan, settingsText, read: conflicts.read };
+    return { detection, session, generated, plan, settingsText, reviewed: conflicts.reviewed };
 }
 
 async function askConfirmation({ yes }: { yes: boolean }): Promise<boolean> {
     if (yes) return true;
-    if (isCI || !(process.stdin.isTTY && process.stdout.isTTY))
-        throw new GspotError('prompt', 'There is no terminal to ask in. Pass --yes to accept the plan.');
-    const answer = await confirm({ message: 'Continue?', initialValue: true });
-    if (typeof answer !== 'boolean') throw new GspotError('prompt', 'Canceled. Nothing was written.');
+    if (isCI || !(process.stdin.isTTY && process.stderr.isTTY)) throw new GspotError('prompt', NO_TERMINAL_MESSAGE);
+    const answer = await confirm({ message: 'Continue?', initialValue: true, output: process.stderr });
+    if (typeof answer !== 'boolean') throw new GspotError('prompt', CANCELED_MESSAGE);
     return answer;
 }
 
 function deleteConflictingConfigFiles(
     writer: Files,
     deleted: InitPlan['delete'],
-    read: ReadonlyMap<string, FileContents | undefined>,
+    reviewed: ReadonlyMap<string, FileContents | undefined>,
 ): string[] {
     const kept: string[] = [];
     const plans: WritePlan[] = [];
     for (const file of deleted) {
-        const expected = read.get(file.path);
+        const expected = reviewed.get(file.path);
         if (expected === undefined) kept.push(file.path);
         else plans.push({ path: file.path, before: expected, status: 'changed' });
     }
@@ -223,21 +223,9 @@ function deleteConflictingConfigFiles(
 async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<string[]> {
     using writer = openWriter(root);
     const { session, generated } = initPlan;
-    writeSettings(writer, initPlan.settingsText, initPlan.read.get(SETTINGS_FILE));
-    const applied = await writeGeneratedFiles(session, generated, writer, { reviewed: initPlan.read });
-    const kept = deleteConflictingConfigFiles(writer, initPlan.plan.delete, initPlan.read);
+    writeSettings(writer, initPlan.settingsText, initPlan.reviewed.get(SETTINGS_FILE));
+    const applied = await writeGeneratedFiles(session, generated, writer, { reviewed: initPlan.reviewed });
+    const kept = deleteConflictingConfigFiles(writer, initPlan.plan.delete, initPlan.reviewed);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
-    return ['Wrote the plan above.', ...applied.notes.filter((note) => !INIT_INSTALL_NOTES.has(note)), ''];
-}
-
-function detectCiProvider(root: string, repositorySetup: RepositorySetup): InitAnswers['ci'] {
-    if (repositorySetup.ci.includes(GITLAB_CI_FILE)) return 'gitlab';
-    if (repositorySetup.ci.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) return 'github';
-    const remote = readGitSetting(root, ORIGIN_URL_SETTING) ?? '';
-    const host = remote.replace(REMOTE_URL_SCHEME, '').replace(REMOTE_URL_USER, '');
-    return (
-        (Object.keys(CI_FILE_LABELS) as (keyof typeof CI_FILE_LABELS)[]).find(
-            (provider) => host.startsWith(`${provider}.com:`) || host.startsWith(`${provider}.com/`),
-        ) ?? 'none'
-    );
+    return [WROTE_PLAN_MESSAGE, ...applied.notes.filter((note) => !INIT_INSTALL_NOTES.has(note)), ''];
 }

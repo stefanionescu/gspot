@@ -6,8 +6,15 @@ import type { Tool } from '#cli/types/configurations.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import { MAX_EXIT_CODE } from '#cli/config/configurations/fields.ts';
 import { TOOL_KINDS, TOOL_BUILDS } from '#cli/config/configurations/names.ts';
-import { EXTENSION_PATTERN, MINIMUM_VERSION_PATTERN } from '#cli/config/configurations/tool.ts';
 import { regexSchema, commandSchema, conditionSchema } from '#cli/schemas/configurations/fields.ts';
+
+import {
+    EXTENSION_PATTERN,
+    MINIMUM_VERSION_PATTERN,
+    NUMERIC_MINIMUM_MESSAGE,
+    SHIPPED_CHECKSUM_PATTERN,
+    INSTALLER_VERSION_MESSAGE,
+} from '#cli/config/configurations/tool.ts';
 
 const minimumVersionSchema = z
     .string()
@@ -15,18 +22,18 @@ const minimumVersionSchema = z
     .transform((minimum, context) => {
         const version = semver.coerce(minimum);
         if (version === null) {
-            context.addIssue({ code: 'custom', message: 'Use a numeric minimum version.' });
+            context.addIssue({ code: 'custom', message: NUMERIC_MINIMUM_MESSAGE });
             return z.NEVER;
         }
         return version.version;
     }) satisfies z.ZodType<string>;
 
-const installerDefinition = z.strictObject({ name: z.string(), version: z.string() } satisfies SchemaShape<{
+const installerDefinitionSchema = z.strictObject({ name: z.string(), version: z.string() } satisfies SchemaShape<{
     name: string;
     version: string;
 }>);
 
-const installerSchema = z.union([z.string(), installerDefinition]) satisfies z.ZodType<
+const installerSchema = z.union([z.string(), installerDefinitionSchema]) satisfies z.ZodType<
     string | { name: string; version: string }
 >;
 
@@ -36,13 +43,21 @@ const installerOptionsSchema = z.record(z.string(), z.union([z.string(), z.boole
 
 const miseInstallerSchema = z.union([
     z.string(),
-    installerDefinition.partial({ version: true }).extend({
+    installerDefinitionSchema.partial({ version: true }).extend({
         options: installerOptionsSchema.optional(),
+        checksums: z.record(z.string().min(1), z.string().regex(SHIPPED_CHECKSUM_PATTERN)).optional(),
     } satisfies SchemaShape<{
         options?: Record<string, string | boolean> | undefined;
+        checksums?: Record<string, string> | undefined;
     }>),
 ]) satisfies z.ZodType<
-    string | { name: string; version?: string | undefined; options?: Record<string, string | boolean> | undefined }
+    | string
+    | {
+          name: string;
+          version?: string | undefined;
+          options?: Record<string, string | boolean> | undefined;
+          checksums?: Record<string, string> | undefined;
+      }
 >;
 
 const installerFields = {
@@ -60,10 +75,12 @@ const replacementSchema = z.strictObject({
     table: z.string().min(1).optional(),
     key: z.string().min(1).optional(),
 } satisfies SchemaShape<{ file: string; table?: string | undefined; key?: string | undefined }>);
-const overridesSchema = z.strictObject({
+
+const overrideSchema = z.strictObject({
     files: z.string().min(1),
     options: z.record(z.string(), z.unknown()),
 } satisfies SchemaShape<NonNullable<Tool['prettier']>['overrides'][number]>);
+
 const replacementKeySchema = z.discriminatedUnion('pointer', [
     replacementSchema.extend({ pointer: z.literal(false).optional() } satisfies SchemaShape<{
         pointer?: false | undefined;
@@ -111,7 +128,7 @@ const toolSchema = z
             .strictObject({
                 module: z.string().min(1),
                 extensions: z.string().regex(EXTENSION_PATTERN).array().default([]),
-                overrides: overridesSchema.array().default([]),
+                overrides: overrideSchema.array().default([]),
             } satisfies SchemaShape<NonNullable<Tool['prettier']>>)
             .optional(),
         eslint: z
@@ -120,10 +137,7 @@ const toolSchema = z
             >)
             .optional(),
         requires: z.string().min(1).array().optional(),
-        when: z
-            .union([toolConditionSchema, toolConditionSchema.array().min(1)])
-            .transform((conditions) => (Array.isArray(conditions) ? conditions : [conditions]))
-            .optional(),
+        when: toolConditionSchema.array().min(1).optional(),
         replace: z.string().min(1).array().optional(),
         replace_key: replacementKeySchema
             .refine(
@@ -140,7 +154,7 @@ const toolSchema = z
             if (installer === undefined) continue;
             const version = typeof installer === 'string' ? tool.version : (installer.version ?? tool.version);
             if (version === undefined)
-                context.addIssue({ code: 'custom', path: [name], message: 'This installer needs an exact version.' });
+                context.addIssue({ code: 'custom', path: [name], message: INSTALLER_VERSION_MESSAGE });
         }
     })
     .transform(({ npm, pypi, mise, ...tool }) => {
@@ -153,7 +167,7 @@ const toolSchema = z
                     ? { name: definition, version: tool.version }
                     : { ...definition, version: definition.version ?? tool.version },
             );
-            installers[name] = name === 'npm' ? pin : { ...pin, version: pin.version };
+            installers[name] = pin;
         }
         return { ...stripUndefined(tool), installers };
     }) satisfies z.ZodType<Tool>;

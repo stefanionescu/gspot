@@ -43,3 +43,17 @@ in the projection. Regenerate consumers when the contract changes, and check omi
 handling after an upgrade.
 
 See [error customization](https://zod.dev/error-customization) and [JSON Schema](https://zod.dev/json-schema).
+
+## Schema conventions
+
+- Never call `z.promise()`, or `z.custom()` without a check function.
+- Return `false` from a `.refine()` check; never throw in it.
+- Give `.brand()` a type, such as `.brand<'UserId'>()`.
+
+### Strict schemas
+
+<!-- level: all -->
+
+- Write `z.strictObject()`, not `z.object().strict()`, and `z.enum()`, not `z.nativeEnum()`.
+- Never use `z.any()`. Describe the shape the value has.
+- Call `.meta()` last in a schema chain.

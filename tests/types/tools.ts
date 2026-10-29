@@ -15,7 +15,7 @@ export type SourceRuleCase = { name?: string; source: string; rule: string; coun
 
 export type ScriptFindingCase = {
     file: string;
-    recommended: readonly { ruleId: string | null; line: number }[];
+    everyLevel: readonly { ruleId: string | null; line: number }[];
     all?: readonly { ruleId: string | null; line: number }[];
 };
 

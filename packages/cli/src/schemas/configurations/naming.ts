@@ -11,18 +11,18 @@ const pathContainerSchema = z.strictObject({
     category: z.enum(NAMED_CATEGORIES),
 } satisfies SchemaShape<PathContainer>);
 
-const identifierCategory = z.enum(NAMED_CATEGORIES) satisfies z.ZodType<NamedCategory>;
+const identifierCategorySchema = z.enum(NAMED_CATEGORIES) satisfies z.ZodType<NamedCategory>;
 
 const sourcePathSchema = z.string().min(1).meta({ pathRole: 'source' }) satisfies z.ZodType<string>;
 
-const namingGroupSchema = z.strictObject({ terms: z.string().array() } satisfies SchemaShape<
-    NamingDefaults['groups'][string]
+const wordListSchema = z.strictObject({ words: z.string().array() } satisfies SchemaShape<
+    NamingDefaults['lists'][string]
 >);
 
 export const namingOverrideSchema = z.strictObject({
     paths: sourcePathSchema.array().min(1).optional().meta({ description: 'Where the override applies.' }),
     languages: z.string().array().optional().meta({ description: 'The languages it applies to.' }),
-    categories: identifierCategory
+    categories: identifierCategorySchema
         .array()
         .optional()
         .meta({ description: 'The kinds of name it applies to. Unknown kinds are refused.' }),
@@ -40,20 +40,22 @@ export const namingOverrideSchema = z.strictObject({
 export const writtenNamingOverrideSchema = namingOverrideSchema.extend({
     reason: z.string().min(1),
 }) satisfies z.ZodType<NamingOverride>;
-const categoriesSchema = z.strictObject({ cases: z.enum(CASE_NAMES).array() } satisfies SchemaShape<
+
+const categoryCasesSchema = z.strictObject({ cases: z.enum(CASE_NAMES).array() } satisfies SchemaShape<
     NamingDefaults['languages'][string]['categories'][string]
 >);
-const languagesSchema = z.strictObject({
-    categories: z.record(z.string(), categoriesSchema),
+
+const languageSchema = z.strictObject({
+    categories: z.record(z.string(), categoryCasesSchema),
 } satisfies SchemaShape<NamingDefaults['languages'][string]>);
 
 export const namingDefaultsSchema = z.strictObject({
     path_containers: pathContainerSchema.array(),
-    groups: z
-        .object({ folders: namingGroupSchema } satisfies SchemaShape<{ folders: NamingDefaults['groups'][string] }>)
-        .catchall(namingGroupSchema),
+    lists: z
+        .object({ folders: wordListSchema } satisfies SchemaShape<{ folders: NamingDefaults['lists'][string] }>)
+        .catchall(wordListSchema),
     allowed_names: z.string().array(),
     allowed_phrases: z.string().array(),
-    languages: z.record(z.string(), languagesSchema),
+    languages: z.record(z.string(), languageSchema),
     override: writtenNamingOverrideSchema.array(),
 } satisfies SchemaShape<NamingDefaults>);

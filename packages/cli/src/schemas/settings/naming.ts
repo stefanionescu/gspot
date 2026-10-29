@@ -1,38 +1,38 @@
 import { z } from 'zod';
-import { type SchemaShape } from '#cli/types/shapes.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { namingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
-import { nonemptyPaths, namingCategorySchema } from '#cli/schemas/settings/fields.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { type TableSettings, type WrittenNaming, type WrittenNamingOverride } from '#cli/types/settings/file.ts';
+import { nonemptyPathsSchema, namingCategorySchema } from '#cli/schemas/settings/fields.ts';
+import type { TableSettings, WrittenNaming, WrittenNamingOverride } from '#cli/types/settings/file.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
 
-import {
-    type NamingCategory,
-    type SettingLanguage,
-    type ParsedNamingOverride,
-    type ParsedNamingLanguageFields,
+import type {
+    NamingCategory,
+    SettingLanguage,
+    ParsedNamingOverride,
+    ParsedNamingLanguageFields,
 } from '#cli/types/settings/naming.ts';
 
-const namingLanguageSchema = namingCategorySchema.extend(
+const languageSchema = namingCategorySchema.extend(
     Object.fromEntries(
         NAMING_TABLE_CATEGORIES.map((category) => [category, namingCategorySchema.optional()]),
     ) as Record<NamingCategory, z.ZodOptional<typeof namingCategorySchema>>,
 ) satisfies z.ZodType<ParsedNamingLanguageFields>;
 
-const namingLanguages = Object.fromEntries(
+const languageSchemas = Object.fromEntries(
     Object.entries(NAMING_LANGUAGE_CATEGORIES).map(([language, categories]) => [
         language,
-        namingLanguageSchema.pick(
+        languageSchema.pick(
             Object.fromEntries(
                 [...Object.keys(namingCategorySchema.shape), ...categories].map((name) => [name, true]),
-            ) as Record<keyof typeof namingLanguageSchema.shape, true>,
+            ) as Record<keyof typeof languageSchema.shape, true>,
         ),
     ]),
-) as Record<SettingLanguage, typeof namingLanguageSchema>;
+) as Record<SettingLanguage, typeof languageSchema>;
 
-namingLanguageSchema.register(z.globalRegistry, { id: 'namingLanguage' });
+languageSchema.register(z.globalRegistry, { id: 'namingLanguage' });
 
-const namingLists = {
+const lists = {
     banned_words: z
         .string()
         .array()
@@ -40,7 +40,7 @@ const namingLists = {
         .meta(SETTING_DEFINITIONS['naming.banned_words']),
     override: namingOverrideSchema
         .extend({
-            paths: nonemptyPaths
+            paths: nonemptyPathsSchema
                 .default(SETTING_DEFINITIONS['naming.override.paths'].default)
                 .describe(namingOverrideSchema.shape.paths.description as string),
             languages: z
@@ -66,13 +66,13 @@ const namingLists = {
 
 export const namingSchema = z.strictObject({
     ...namingCategorySchema.shape,
-    ...namingLists,
-    typescript: namingLanguages['typescript'].optional(),
-    javascript: namingLanguages['javascript'].optional(),
-    python: namingLanguages['python'].optional(),
-    swift: namingLanguages['swift'].optional(),
-    bash: namingLanguages['bash'].optional(),
-    sql: namingLanguages['sql'].optional(),
-    css: namingLanguages['css'].optional(),
-    html: namingLanguages['html'].optional(),
+    ...lists,
+    typescript: languageSchemas['typescript'].optional(),
+    javascript: languageSchemas['javascript'].optional(),
+    python: languageSchemas['python'].optional(),
+    swift: languageSchemas['swift'].optional(),
+    bash: languageSchemas['bash'].optional(),
+    sql: languageSchemas['sql'].optional(),
+    css: languageSchemas['css'].optional(),
+    html: languageSchemas['html'].optional(),
 } satisfies SchemaShape<TableSettings<'naming'>, WrittenNaming>);

@@ -1,29 +1,37 @@
-import { openSession } from '#cli/session.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { getColors } from '#cli/system/terminal.ts';
-import type { Session } from '#cli/types/session.ts';
+import { type Session } from '#cli/types/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { readHookStatus } from '#cli/installers/hooks.ts';
 import { findSettingsSkip } from '#cli/planning/skips.ts';
-import type { StageFilter } from '#cli/types/planning.ts';
-import type { CommandResult } from '#cli/types/terminal.ts';
+import { type StageFilter } from '#cli/types/planning.ts';
+import { type CommandResult } from '#cli/types/terminal.ts';
 import { DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
-import type { RunReport, RunOptions } from '#cli/types/runs/run.ts';
-import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
+import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { isInScope, buildArgumentPath } from '#cli/repository/scopes.ts';
+import { EMPTY_BASE, CREATED_BRANCH_BASE } from '#cli/config/commands/check/tree.ts';
 import { listChecksById, assertCheckExists } from '#cli/configurations/manifests.ts';
-import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
+
+import {
+    type RunReport,
+    type RunOptions,
+    type RunFilters,
+    type CheckOptions,
+    type RevisionSource,
+} from '#cli/types/commands/check.ts';
 
 function buildHistorySelection(
     revision: RevisionSource | undefined,
     changed: RunFilters['changed'],
-): Pick<RunOptions, 'commits' | 'base' | 'shallow'> {
+): Pick<RunOptions, 'commits' | 'base' | 'shallow' | 'range'> {
     if (revision?.content === 'commit')
         return stripUndefined({
             commits: revision.commits,
+            range: revision.range,
             base: revision.base ?? changed?.reference,
             shallow: revision.shallow,
         });
@@ -40,7 +48,7 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
             stage,
             fix: options.fix,
             verbose: options.verbose,
-            isDryRun: options.isDryRun,
+            dryRun: options.dryRun,
             onProgress: options.onProgress,
             staged: staging.staged,
             changed: changed?.paths,
@@ -97,14 +105,11 @@ function assertOnlyChecks(session: Session, only: string[] | undefined): void {
                     `${id} belongs to ${owner.configuration.name}, which no scope selects. Run gspot add ${owner.configuration.name}.`,
                 );
         } else if (findSettingsSkip(settings, match.scope, match.check)?.cause === 'level')
-            throw new GspotError(
-                'arguments',
-                `${id} is off at level recommended. Run gspot set level all to turn it on.`,
-            );
+            throw new GspotError('arguments', `${id} is off at level basic. Run gspot set level all to turn it on.`);
     }
 }
 
-function warnAboutHooks(session: Session, revision: RevisionSource | undefined): void {
+function warnMissingHooks(session: Session, revision: RevisionSource | undefined): void {
     if (revision?.content === 'commit') return;
     const hooks = readHookStatus(session, {
         root: revision?.reportRoot ?? session.root,
@@ -142,7 +147,7 @@ async function readRunFilters(
 
 function formatAllFilesHeader(options: CheckOptions, revision: RevisionSource | undefined): string {
     if (revision !== undefined || options.allFiles === undefined) return '';
-    const cause = options.allFiles === 'empty-base' ? 'the base ref is empty' : 'the base is a new branch';
+    const cause = options.allFiles === 'empty-base' ? EMPTY_BASE : CREATED_BRANCH_BASE;
     return `Checked every file: ${cause}.\n`;
 }
 
@@ -153,7 +158,6 @@ Check the files of one working tree: the repository, or a copy of the staged ind
 @param options the parsed flags.
 @param cancelSignal stops the run.
 @param revision the commit or index that the copy holds, if any.
-@returns the command result.
 */
 export async function runTreeCheck(
     treeFolder: string,
@@ -167,20 +171,33 @@ export async function runTreeCheck(
         resources,
         cancelSignal,
     });
+    appendRevisionPaths(session, revision);
     assertOnlyChecks(session, options.only);
-    warnAboutHooks(session, revision);
     const filters = await readRunFilters(session, options, cancelSignal, revision);
+    warnMissingHooks(session, revision);
     const result = await runChecks(session, buildRunOptions(options, filters, revision));
     if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
-    if (revision?.dependencyNote !== undefined) result.report.notes = [revision.dependencyNote];
+    appendRevisionNotes(result.report, revision);
     const reportText =
         formatAllFilesHeader(options, revision) + formatRunReport(result.report, { verbose: options.verbose });
     const text = result.fixes
-        ? `${formatFixes(result.fixes, { isDryRun: options.isDryRun }).join('\n')}\n${reportText}`
+        ? `${formatFixes(result.fixes, { dryRun: options.dryRun }).join('\n')}\n${reportText}`
         : reportText;
     return {
-        text: options.isDryRun ? `${text}${DRY_RUN_NOTE}\n` : text,
+        text: options.dryRun ? `${text}${DRY_RUN_NOTE}\n` : text,
         json: { ...result.report, ...stripUndefined({ fixes: result.fixes }) },
         exitCode: result.report.exitCode,
     };
+}
+
+function appendRevisionPaths(session: Session, revision: RevisionSource | undefined): void {
+    const paths = revision?.unreadablePaths;
+    if (paths === undefined) return;
+    session.repository.unreadablePaths.push(...paths);
+}
+
+function appendRevisionNotes(report: RunReport, revision: RevisionSource | undefined): void {
+    const note = revision?.dependencyNote;
+    if (note === undefined) return;
+    report.notes = [...(report.notes ?? []), note];
 }

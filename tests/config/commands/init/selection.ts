@@ -5,7 +5,6 @@ export const CONFIGURATION_CHOICES = [
         configurations: undefined,
         expected: [
             'javascript',
-            'licenses',
             'commits',
             'data-files',
             'dependencies',
@@ -14,6 +13,7 @@ export const CONFIGURATION_CHOICES = [
             'engineering',
             'format',
             'gspot',
+            'licenses',
             'naming',
             'prose',
             'repository',

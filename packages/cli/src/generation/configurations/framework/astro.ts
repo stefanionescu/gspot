@@ -1,6 +1,5 @@
 import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import type { EslintScope, ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { serializePresetAccess } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
 import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 import {
@@ -11,17 +10,16 @@ import {
 } from '#cli/config/generation/configurations/framework/astro.ts';
 import {
     getPreset,
-    allowFocusableRegions,
+    buildPresetRules,
+    setFocusableRoles,
     buildArrayPresetBlocks,
     convertWarningsToErrors,
-    buildPresetRuleExpression,
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 
 /**
 Apply Astro's presets and its component parser.
 
 @param scope the selected presets and configurations.
-@returns imported bindings and unscoped block data.
 */
 export function buildAstroBlocks(
     scope: Pick<EslintScope, 'presets' | 'eslintPresets' | 'settings'>,
@@ -31,27 +29,38 @@ export function buildAstroBlocks(
         buildArrayPresetBlocks(getPreset(presets, name), 'astroPlugin', ({ parser: _parser, ...fields }) => ({
             ...fields,
             files: fields.files ?? ASTRO_FILES,
-            ...(fields.rules !== undefined && { rules: allowFocusableRegions(convertWarningsToErrors(fields.rules)) }),
+            ...(fields.rules !== undefined && {
+                rules: setFocusableRoles(convertWarningsToErrors(fields.rules)),
+            }),
         })),
     );
     blocks.push({
         fields: { files: ASTRO_FILES, rules: ASTRO_RULES },
-        properties: 'languageOptions: { parserOptions: { tsconfigRootDir: root } }',
+        calls: [
+            { name: 'setRootFolder', args: [{ value: [['languageOptions', 'parserOptions', 'tsconfigRootDir']] }] },
+        ],
     });
     if (settings.configurations.includes(TYPESCRIPT_CONFIGURATION)) {
         const preset = getPreset(eslintPresets.get(TYPESCRIPT_CONFIGURATION), 'untyped');
         const { parser: _parser, ...untyped } = preset.blocks[0];
-        const source = serializePresetAccess('tseslint', preset.source);
         blocks.push(
             {
-                fields: { files: ASTRO_FILES, rules: ASTRO_TYPED_RULES },
-                properties:
-                    "processor: 'astro/client-side-ts', languageOptions: { parserOptions: { parser: tseslint.parser, project: true, projectService: false, extraFileExtensions: ['.astro'] } }",
+                fields: {
+                    files: ASTRO_FILES,
+                    rules: ASTRO_TYPED_RULES,
+                    processor: 'astro/client-side-ts',
+                    languageOptions: {
+                        parserOptions: { project: true, projectService: false, extraFileExtensions: ['.astro'] },
+                    },
+                },
+                calls: [{ name: 'setScriptParser', args: [{ importName: 'tseslint', path: 'parser' }] }],
             },
             {
                 fields: { files: ASTRO_SCRIPT_FILES, ...untyped },
-                properties: `...${source}`,
-                preset: buildPresetRuleExpression([['tseslint', preset]]),
+                preset: {
+                    ...buildPresetRules([['tseslint', preset]]),
+                    sources: [{ importName: 'tseslint', path: preset.source, includeFields: true }],
+                },
             },
         );
     }

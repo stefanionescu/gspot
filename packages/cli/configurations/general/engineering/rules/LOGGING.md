@@ -35,12 +35,6 @@ Read this rule when you add or change logging.
   fields.
 - Do not compute expensive log arguments when the logger disables the level.
 
-### Field naming
-
-<!-- level: all -->
-
-Use `snake_case` for new event names and field keys unless an existing logging interface defines their spelling.
-
 ## Sensitive values
 
 Follow SECRETS.md. Never log personal data, raw user content, full request or response bodies, provider payloads, or

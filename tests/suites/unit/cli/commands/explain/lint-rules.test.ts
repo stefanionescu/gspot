@@ -3,7 +3,8 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     RULE_PAGES,
@@ -37,6 +38,7 @@ test.each([...RULE_PAGES])(
         });
     },
 );
+
 test('explain gives an unknown plugin rule after eslint/ the ESLint commands and no page', async () => {
     await using sandbox = await createGitSandbox({});
     const unknownEslintRule = await runGspot(sandbox.path, ['explain', 'eslint/unknown/no-such-rule', '--json']);
@@ -70,7 +72,7 @@ test('a plugin prefix with an npm scope must match a plugin that a manifest decl
     const refusal = await runGspot(sandbox.path, ['explain', 'typescript-eslint/no-explicit-any']);
     expect(refusal.code).toBe(2);
     expect(refusal.stderr).toBe(
-        'gspot cannot explain typescript-eslint/no-explicit-any. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts). Did you mean `typescript`?\n',
+        'gspot cannot explain typescript-eslint/no-explicit-any. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts). Did you mean typescript?\n',
     );
     const unknownTypescriptPrefix = await runGspot(sandbox.path, [
         'explain',
@@ -82,7 +84,7 @@ test('a plugin prefix with an npm scope must match a plugin that a manifest decl
 
 test('explain finds rule pages from the root and from a child scope', async () => {
     await using sandbox = await createGitSandbox({});
-    await createFileTree(sandbox.path, { 'gspot.toml': RULE_PAGE_SETTINGS, 'app/sample.swift': 'let value = 1\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': RULE_PAGE_SETTINGS, 'app/sample.swift': SWIFT_VALUE_SOURCE });
     const root = await runGspot(sandbox.path, ['explain', 'ruff/F401', '--json']);
     expect(root.code, root.stdout + root.stderr).toBe(0);
     expect(JSON.parse(root.stdout)).toMatchObject(ROOT_RULE_PAGE);

@@ -13,7 +13,8 @@ import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/configurations.ts';
-import { isInScope, joinScope, findScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
+import { isInScope, joinScope, selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
+import { ENCODING_CHECK, LARGE_FILES_CHECK, IGNORED_PATHS_MESSAGE } from '#cli/config/planning/files.ts';
 
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
     const prefix = joinScope(scopePath, '');
@@ -43,7 +44,9 @@ function listProjectCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, sc
               });
     if (filterNarrowedFiles(planned, scopeCheck, stripIgnoredFiles(matches, check, scope).files).length === 0)
         return [];
-    return check.runs === 'scope' ? scopeFiles : scopeFiles.filter((file) => file.kind !== 'binary');
+    return [check.runs, check.id].some((value) => ['scope', LARGE_FILES_CHECK, ENCODING_CHECK].includes(value))
+        ? scopeFiles
+        : scopeFiles.filter((file) => file.kind !== 'binary');
 }
 
 function listCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): TrackedFile[] {
@@ -70,7 +73,7 @@ function stripIgnoredFiles(files: TrackedFile[], check: Check, scope: Scope): Pi
     return {
         files: selected,
         ...(files.length > 0 && selected.length === 0
-            ? { skip: { cause: 'ignore' as const, note: 'every selected path is ignored in gspot.toml' } }
+            ? { skip: { cause: 'ignore' as const, note: IGNORED_PATHS_MESSAGE } }
             : {}),
     };
 }
@@ -101,7 +104,7 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
     const owners = check.files ?? configuration?.files;
     if (owners === undefined) return paths;
     const missing = paths.map((path): TrackedFile => {
-        const listedFile = { path, size: 0, executable: false, symlink: false };
+        const listedFile = { path, size: 0, executable: false, isSymlink: false };
         const prefix = Buffer.alloc(0);
         return classifyFile(session.root, listedFile, prefix, {
             generatedPaths: [],
@@ -123,25 +126,27 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
 List the files that the configurations of a check own, apart from the files of a project-wide run.
 
 @param scopes every scope of the session; a scope-wide run leaves out the files of its child scopes.
-@param check the plan to read.
-@returns the files that the owners of the check select.
+@param planned the plan to read.
 */
-export function listCheckedFiles(scopes: Scope[], check: PlannedCheck): TrackedFile[] {
-    const owners = check.check.files ?? check.configuration?.files;
+export function listCheckedFiles(scopes: Scope[], planned: PlannedCheck): TrackedFile[] {
+    const owners = planned.check.files ?? planned.configuration?.files;
     const children =
-        check.check.runs === 'scope'
+        planned.check.runs === 'scope'
             ? listNestedScopes(
                   scopes.map(({ path }) => path),
-                  check.scope.path,
+                  planned.scope.path,
               )
             : [];
-    const files = check.files.filter((file) => children.every((child) => !isInScope(file.path, child)));
-    return owners === undefined
-        ? []
+    const files = planned.files.filter((file) => children.every((child) => !isInScope(file.path, child)));
+    return owners === undefined ||
+        [owners.extensions, owners.filenames, owners.paths, owners.tags, owners.languages].every((values) =>
+            Array.isArray(values) ? values.length === 0 : !values,
+        )
+        ? files
         : listCoveredFiles(owners, files, {
-              configurations: check.scope.configurations,
-              scopePath: check.scope.path,
-              settings: check.scope.settings,
+              configurations: planned.scope.configurations,
+              scopePath: planned.scope.path,
+              settings: planned.scope.settings,
           });
 }
 
@@ -150,7 +155,6 @@ Check whether a general per-file check runs once at the root. A check that reads
 
 @param configuration the configuration that declares the check.
 @param check the check to inspect.
-@returns true when the check runs once for the repository.
 */
 export function isRootOnlyCheck(configuration: Configuration | undefined, check: Check): boolean {
     if (configuration === undefined) return true;
@@ -165,14 +169,14 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
 }
 
 function filterReadableFiles(planned: PlannedScope, check: Check, files: TrackedFile[]): TrackedFile[] {
-    if (check.id === 'repository/large-files') return files;
+    if (check.id === LARGE_FILES_CHECK) return files;
     const scopes = planned.session.scopes;
     return files.filter((file) => {
-        const owner = findScopePath(file.path, scopes);
+        const owner = selectScopePath(file.path, scopes);
         const scope = scopes.find((scope) => scope.path === owner) as Scope;
         if (file.size > getTable(scope.settings, 'repository').max_file_kilobytes * BYTES_PER_KILOBYTE) return false;
         return (
-            check.id === 'repository/encoding' ||
+            check.id === ENCODING_CHECK ||
             !file.tags.includes('text') ||
             file.tags.includes('symlink') ||
             isUtf8(readCachedBytes(planned.session.reads, file.path))
@@ -185,8 +189,6 @@ Select the files and deleted trigger paths of a planned check.
 
 @param planned the scope to plan.
 @param scopeCheck the check and its manifest.
-
-@returns the files and the trigger paths.
 */
 export function selectCheckFiles(
     planned: PlannedScope,
@@ -202,10 +204,11 @@ export function selectCheckFiles(
         triggerPaths.length === 0
             ? listCheckFiles(planned, scopeCheck, scopePath)
             : listScopeFiles(planned, scopePath, check.runs);
-    if (planned.options.forConfiguration !== true) files = filterReadableFiles(planned, check, files);
+    files = filterReadableFiles(planned, check, files);
     if (!keepsChildScopes) files = files.filter((file) => children.every((child) => !isInScope(file.path, child)));
     if (check.runs === 'files')
         return { ...stripIgnoredFiles(filterNarrowedFiles(planned, scopeCheck, files), check, scope), triggerPaths };
     const selected = stripIgnoredFiles(files, check, scope);
+    if (check.id === ENCODING_CHECK) triggerPaths.push(...planned.session.repository.unreadablePaths);
     return { ...selected, triggerPaths };
 }

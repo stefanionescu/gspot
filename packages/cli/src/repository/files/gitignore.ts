@@ -30,9 +30,8 @@ Build a test for paths that a tracked .gitignore ignores, or that sit inside an 
 
 @param reads the run cache.
 @param trackedPaths the tracked files of the repository.
-@returns whether Git ignores the repository-relative path.
 */
-export function buildGitignoreTest(reads: ReadCache, trackedPaths: string[]): (path: string) => boolean {
+export function buildGitignoreMatcher(reads: ReadCache, trackedPaths: string[]): (path: string) => boolean {
     const ignores: PathIgnore[] = trackedPaths
         .filter((path) => posix.basename(path) === GITIGNORE_FILE)
         .map((file) => {

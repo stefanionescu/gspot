@@ -1,7 +1,13 @@
 import { CODE_TOKENS } from '../../config/home.ts';
-import type { ExampleLine, ExampleToken } from '../../types/home.ts';
+import { type ExampleToken } from '../../types/components.ts';
 
-function tokenizeExampleLine(text: string): ExampleToken[] {
+/**
+Split one example line into syntax tokens.
+
+@param text the source line
+@returns its syntax tokens
+*/
+export function tokenizeExampleLine(text: string): ExampleToken[] {
     if (text.trimStart().startsWith('//')) return [{ text, kind: 'comment' }];
     const tokens: ExampleToken[] = [];
     let offset = 0;
@@ -14,21 +20,4 @@ function tokenizeExampleLine(text: string): ExampleToken[] {
     }
     tokens.push({ text: text === '' ? ' ' : text.slice(offset), kind: '' });
     return tokens;
-}
-
-/**
-Build the numbered syntax tokens shown in the home-page example.
-
-@param code the complete example source.
-@returns the numbered lines and their syntax tokens.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Example.astro calls it for each code sample.
-export function buildExampleLines(code: string): ExampleLine[] {
-    return code
-        .trimEnd()
-        .split('\n')
-        .map((text, index) => ({
-            number: index + 1,
-            tokens: tokenizeExampleLine(text),
-        }));
 }

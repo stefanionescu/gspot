@@ -1,7 +1,5 @@
 export const NODE_SCRIPT_PATTERNS = ['**/*.mjs', '**/*.cjs'] as const;
 
-export const PATH_SEPARATOR_PATTERN = String.raw`[\\/]`;
-
 export const REGEX_SYMBOLS = /[.*+?^${}()|[\]\\]/gu;
 
 export const ANY_DEPTH_PREFIX = /^\*\*\//u;

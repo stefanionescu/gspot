@@ -69,11 +69,13 @@ export const ZUSTAND_FILES = {
     'package.json': '{"name":"restricted-imports","private":true,"type":"module","dependencies":{"zustand":"5.0.8"}}',
     'src/widget.js': `import { create } from "zustand";
 import { readFile } from "node:fs";
-export const widget = create(() => ({ readFile }));
+import { createStore } from "zustand/vanilla";
+export const widget = create(() => ({ readFile, value: createStore(() => ({})) }));
 `,
     'src/store.js': `import { create } from "zustand";
 import { readFile } from "node:fs";
-export const store = create(() => ({ readFile }));
+import { createStore } from "zustand/vanilla";
+export const store = create(() => ({ readFile, value: createStore(() => ({})) }));
 `,
 } as const;
 

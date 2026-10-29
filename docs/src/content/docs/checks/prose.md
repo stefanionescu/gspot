@@ -4,7 +4,7 @@ description: Check spelling and prose, and allow words your project needs.
 ---
 
 The `spelling` configuration runs typos on code, comments, and documentation. The `prose` configuration runs Vale on
-documentation and comments. gspot selects both in every repository.
+documentation, and at level `all` on code comments too. gspot selects both in every repository.
 
 ## Spelling
 
@@ -28,7 +28,9 @@ Vale accepts the word too.
 
 ## Prose
 
-At level `recommended`, Vale checks ambiguous dates, link text, and image alt text. At level `all`, it adds the full
-style and the [prose limits](/reference/gspot-toml/#prose); raising one needs a reason.
+At level `basic`, Vale checks ambiguous dates, link text, and image alt text. At level `all`, it adds the full
+style and the [prose limits](/reference/gspot-toml/#prose); raising one needs a reason. At level `all`, code comments get
+the comment rules: conscious language, placeholders, merge conflict markers, session identifiers, straight quotes,
+and em dashes.
 
 The [prose configuration](/reference/configurations/prose/) lists the checks.

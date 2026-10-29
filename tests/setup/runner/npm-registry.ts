@@ -2,37 +2,38 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { REGISTRY_HOST } from '#tests/config/setup/sandboxes.ts';
 import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
-import { PACKED_PACKAGES_FILE } from '#tests/config/setup/environment.ts';
-import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/packages.ts';
+import { type NpmRegistry, type PackedPackage, type RegistryPackage } from '#tests/types/packages.ts';
 
 import {
-    REGISTRY_HOST,
     NPM_PACK_FLAGS,
     UPSTREAM_REGISTRY,
     PACKED_PUBLISH_TIME,
     GSPOT_PACKAGE_SCOPE,
-} from '#tests/config/setup/sandboxes.ts';
+    PACKED_PACKAGES_FILE,
+    AUTHENTICATION_REQUIRED_MESSAGE,
+} from '#tests/config/setup/runner.ts';
 
 /**
 Pack these npm packages into the folder and write the list the registry serves.
 */
-export async function runNpmPack(work: string, declarations: readonly RegistryPackage[]): Promise<string> {
+export async function runNpmPack(workFolder: string, declarations: readonly RegistryPackage[]): Promise<string> {
     const packages: PackedPackage[] = [];
     for (const { source, ...declaration } of declarations) {
-        const result = await runCommand(['npm', 'pack', source, ...NPM_PACK_FLAGS, '--pack-destination', work], {
-            cwd: work,
+        const result = await runCommand(['npm', 'pack', source, ...NPM_PACK_FLAGS, '--pack-destination', workFolder], {
+            cwd: workFolder,
         });
         if (result.code !== 0) throw new Error(`Package packing failed: ${result.stdout}${result.stderr}`);
         const { filename } = (JSON.parse(result.stdout) as [{ filename: string }])[0];
-        const archive = await readFile(join(work, filename));
+        const archive = await readFile(join(workFolder, filename));
         packages.push({
             ...declaration,
-            filename: join(work, filename),
+            filename: join(workFolder, filename),
             integrity: `sha512-${createHash('sha512').update(archive).digest('base64')}`,
         });
     }
-    const packagesFile = join(work, PACKED_PACKAGES_FILE);
+    const packagesFile = join(workFolder, PACKED_PACKAGES_FILE);
     await writeFile(packagesFile, JSON.stringify(packages));
     return packagesFile;
 }
@@ -42,7 +43,7 @@ async function answerRegistryRequest(
     registry: { packages: Map<string, PackedPackage>; token: string | undefined },
 ): Promise<Response> {
     if (registry.token !== undefined && request.headers.get('authorization') !== `Bearer ${registry.token}`)
-        return Response.json({ error: 'Authentication required' }, { status: 401 });
+        return Response.json({ error: AUTHENTICATION_REQUIRED_MESSAGE }, { status: 401 });
     const url = new URL(request.url);
     const pathname = decodeURIComponent(url.pathname.slice(1));
     const [name = ''] = pathname.split('/-/', 1);
@@ -74,12 +75,12 @@ function buildPackageDocument(packed: PackedPackage, tarball: string): Record<st
 Serve the packed npm packages and any extra packages that a credential test asks for.
 */
 export async function createNpmRegistry(
-    work: string,
+    workFolder: string,
     options: { packages?: readonly RegistryPackage[]; token?: string } = {},
 ): Promise<NpmRegistry> {
     const files = [join(TEST_RUN_FOLDER, PACKED_PACKAGES_FILE)];
     if (options.packages !== undefined && options.packages.length > 0)
-        files.push(await runNpmPack(work, options.packages));
+        files.push(await runNpmPack(workFolder, options.packages));
 
     const packages = new Map<string, PackedPackage>();
     for (const file of files) {
@@ -95,7 +96,7 @@ export async function createNpmRegistry(
         },
     });
     const url = `http://${REGISTRY_HOST}:${String(server.port)}`;
-    const npmrc = join(work, '.npmrc');
+    const npmrc = join(workFolder, '.npmrc');
     await writeFile(npmrc, `${GSPOT_PACKAGE_SCOPE.slice(0, -1)}:registry=${url}/\n`, { mode: 0o600 });
     const registry: NpmRegistry = {
         url,

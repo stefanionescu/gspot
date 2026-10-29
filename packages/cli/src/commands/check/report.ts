@@ -1,24 +1,30 @@
-import { formatCount } from '#cli/system/text.ts';
-import { getColors } from '#cli/system/terminal.ts';
-import { stripVTControlCharacters } from 'node:util';
-import type { FixReport } from '#cli/types/runs/fixes.ts';
+import { LINE_BREAK } from '#cli/config/text.ts';
+import { EVERY_CHECK } from '#cli/config/ignores.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
-import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
-import type { RunReport, CheckProgress } from '#cli/types/runs/run.ts';
+import { formatCount, quoteArgument } from '#cli/system/text.ts';
+import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
+import { getColors, stripControlCharacters } from '#cli/system/terminal.ts';
 import { PROGRESS_CLEAR, SHORT_HASH_LENGTH } from '#cli/config/commands/check/check.ts';
+import { type FixReport, type RunReport, type CheckProgress } from '#cli/types/commands/check.ts';
 
 import {
+    RUN_AGAIN,
+    STAGED_FILES,
+    WORKING_TREE,
     NOTE_STATUSES,
     FINDINGS_SHOWN,
-    FIXER_ERROR_MESSAGE,
+    FIXER_ERROR_PREFIX,
     CHECK_STATUS_COLORS,
+    TOOL_MISSING_MESSAGE,
+    UNCHANGED_FIX_MESSAGE,
+    UNCHANGED_PREVIEW_MESSAGE,
 } from '#cli/config/commands/check/report.ts';
 
 function formatCheckedContent(comparison: CheckProgress['comparison']): string {
-    if (comparison?.content === 'index') return 'the staged files';
+    if (comparison?.content === 'index') return STAGED_FILES;
     return comparison?.content === 'commit'
         ? `commit ${comparison.reference.slice(0, SHORT_HASH_LENGTH)}`
-        : 'the working tree';
+        : WORKING_TREE;
 }
 
 function formatUnstagedChanges(report: RunReport): string[] {
@@ -31,31 +37,33 @@ function formatLocation(finding: Finding): string {
     if (finding.file === '') return '';
     const line = finding.line === undefined ? '' : `:${String(finding.line)}`;
     const column = finding.column === undefined ? '' : `:${String(finding.column)}`;
-    return `${finding.file}${line}${column}  `;
+    return `${stripControlCharacters(finding.file)}${line}${column}  `;
 }
 
 function formatFinding(finding: Finding, next?: Finding): string[] {
     const rule =
-        finding.rule === undefined || finding.rule === finding.check ? '' : `${getColors().cyan(finding.rule)}  `;
+        finding.rule === undefined || finding.rule === finding.check
+            ? ''
+            : `${getColors().cyan(stripControlCharacters(finding.rule))}  `;
     const lines = [
-        `  ${formatLocation(finding)}${rule}${finding.message
-            .split(/\r?\n/u)
+        `  ${formatLocation(finding)}${rule}${stripControlCharacters(finding.message)
+            .split(LINE_BREAK)
             .map((line) => line.trim())
             .join(' ')}`,
     ];
     if (finding.help !== undefined && finding.help !== '' && next?.help !== finding.help)
-        lines.push(`  ${getColors().dim('help:')} ${finding.help}`);
+        lines.push(`  ${getColors().dim('help:')} ${stripControlCharacters(finding.help)}`);
     return lines;
 }
 
-function formatCheckTail(check: CheckResult): string {
-    if (NOTE_STATUSES.has(check.status)) return check.note ?? '';
-    return check.status === 'failed'
-        ? formatCount(check.findings.length, 'finding')
-        : `${formatCount(check.fileCount, 'file')}  ${(check.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s`;
+function formatCheckTail(result: CheckResult): string {
+    if (NOTE_STATUSES.has(result.status)) return result.note ?? '';
+    return result.status === 'failed'
+        ? formatCount(result.findings.length, 'finding')
+        : `${formatCount(result.fileCount, 'file')}  ${(result.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s`;
 }
 
-function formatCheckFindings(findings: readonly Finding[], { verbose }: { verbose: boolean }): string[] {
+function formatFindings(findings: readonly Finding[], { verbose }: { verbose: boolean }): string[] {
     const shown = verbose ? findings : findings.slice(0, FINDINGS_SHOWN);
     const lines = shown.flatMap((finding, index) => formatFinding(finding, shown[index + 1]));
     const hidden = findings.length - shown.length;
@@ -66,14 +74,17 @@ function formatCheckFindings(findings: readonly Finding[], { verbose }: { verbos
     return lines;
 }
 
-function formatCheck(check: CheckResult, { verbose }: { verbose: boolean }): string[] {
-    const status = getColors()[CHECK_STATUS_COLORS[check.status]](check.status);
-    const scope = check.scope === '' ? '' : `${check.scope}  `;
-    const tail = formatCheckTail(check);
-    const lines = [`${scope}${check.check}  ${status}  ${tail}`.trimEnd()];
-    if (verbose && check.command) lines.push(`  ${getColors().dim('$ ' + check.command.join(' '))}`);
-    if (check.status === 'failed') lines.push(...formatCheckFindings(check.findings, { verbose }));
-    if (check.reproduce !== undefined) lines.push(`  ${getColors().dim('run again:')} ${check.reproduce}`);
+function formatCheck(result: CheckResult, { verbose }: { verbose: boolean }): string[] {
+    const status = getColors()[CHECK_STATUS_COLORS[result.status]](result.status);
+    const scope = result.scope === '' ? '' : `${stripControlCharacters(result.scope)}  `;
+    const tail = stripControlCharacters(formatCheckTail(result));
+    const lines = [`${scope}${stripControlCharacters(result.check)}  ${status}  ${tail}`.trimEnd()];
+    if (verbose && result.command)
+        lines.push(`  ${getColors().dim('$ ' + stripControlCharacters(result.command.join(' ')))}`);
+    if (result.status === 'failed' || result.status === 'error')
+        lines.push(...formatFindings(result.findings, { verbose }));
+    if (result.reproduce !== undefined)
+        lines.push(`  ${getColors().dim(RUN_AGAIN)} ${stripControlCharacters(result.reproduce)}`);
     return lines;
 }
 
@@ -81,10 +92,10 @@ function formatIgnores(report: RunReport, { verbose }: { verbose: boolean }): st
     if (report.ignores.length === 0) return [];
     if (!verbose) return [`ignores    ${String(report.ignores.length)} (printed with --verbose)`];
     return report.ignores.map((ignore) => {
-        const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
-        const paths = ignore.paths === undefined ? '' : ` ${ignore.paths.join(' ')}`;
-        const names = ignore.names === undefined ? '' : ` names ${ignore.names.join(' ')}`;
-        return `ignore     ${ignore.check ?? 'every check'}${rule}${paths}${names}  ${getColors().dim(ignore.reason)}`;
+        const rule = ignore.rule === undefined ? '' : ` ${stripControlCharacters(ignore.rule)}`;
+        const paths = ignore.paths === undefined ? '' : ` ${stripControlCharacters(ignore.paths.join(' '))}`;
+        const names = ignore.names === undefined ? '' : ` names ${stripControlCharacters(ignore.names.join(' '))}`;
+        return `ignore     ${stripControlCharacters(ignore.check ?? EVERY_CHECK)}${rule}${paths}${names}  ${getColors().dim(stripControlCharacters(ignore.reason))}`;
     });
 }
 
@@ -100,7 +111,7 @@ function formatSummary(report: RunReport): string {
         sentences.push(`Failed: ${formatCount(failed.length, 'check')} with ${formatCount(findings, 'finding')}.`);
     if (missing + errors > 0)
         sentences.push(
-            `Could not run: ${formatCount(missing + errors, 'check')}${missing > 0 ? ' (a tool is missing; run gspot install)' : ''}.`,
+            `Could not run: ${formatCount(missing + errors, 'check')}${missing > 0 ? TOOL_MISSING_MESSAGE : ''}.`,
         );
     sentences.push(`Passed: ${formatCount(passed, 'check')}.`, `Skipped: ${formatCount(skipped, 'check')}.`);
     const text = sentences.join(' ');
@@ -110,7 +121,7 @@ function formatSummary(report: RunReport): string {
 function formatComparison(comparison: RunReport['comparison']): string {
     if (comparison === undefined) return '';
     return comparison.content === 'working-tree'
-        ? `Checked the files changed since ${comparison.reference}.\n`
+        ? `Checked the files changed since ${stripControlCharacters(comparison.reference)}.\n`
         : `Checked ${formatCheckedContent(comparison)}.\n`;
 }
 
@@ -124,17 +135,17 @@ Print failed fixer warnings, with the full diagnostics when requested.
 export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: boolean }): void {
     for (const result of fixes.results) {
         if (result.status !== 'failed') continue;
-        const note = stripVTControlCharacters(result.note);
+        const note = stripControlCharacters(result.note);
         const detail =
             note
                 .split('\n')
-                .find((line) => FIXER_ERROR_MESSAGE.test(line))
-                ?.replace(FIXER_ERROR_MESSAGE, '') ??
+                .find((line) => FIXER_ERROR_PREFIX.test(line))
+                ?.replace(FIXER_ERROR_PREFIX, '') ??
             note.split('\n', 1)[0] ??
             '';
         const failure = detail.endsWith('.') ? detail.slice(0, -1) : detail;
         process.stderr.write(
-            `${getColors().yellow('[warn]')} The ${result.check} fixer failed: ${failure}. Run gspot check --only ${result.check} --fix --verbose.\n`,
+            `${getColors().yellow('[warn]')} The ${stripControlCharacters(result.check)} fixer failed: ${failure}. Run gspot check --only ${quoteArgument(stripControlCharacters(result.check))} --fix --verbose.\n`,
         );
         if (verbose)
             process.stderr.write(
@@ -152,16 +163,30 @@ Format the check lines, the ignores, and the summary of a run.
 @param report the check results and totals.
 @param options how to show the report.
 @param options.verbose whether to show passing and skipped checks, their commands, every finding, and each ignore.
-@returns the check lines and the summary.
 */
 export function formatRunReport(report: RunReport, options: { verbose: boolean }): string {
     const { verbose } = options;
     const checks = report.checks.filter(
         (check) => verbose || (check.status !== 'passed' && check.status !== 'skipped'),
     );
-    const lines = checks.flatMap((check) => [...formatCheck(check, { verbose }), '']);
+    const grouped = new Map<string, CheckResult[]>();
+    for (const check of checks) {
+        if (check.status !== 'missing') continue;
+        const note = check.note ?? '';
+        grouped.set(note, [...(grouped.get(note) ?? []), check]);
+    }
+    const lines = checks
+        .filter((check) => check.status !== 'missing')
+        .flatMap((check) => [...formatCheck(check, { verbose }), '']);
+    for (const [note, missing] of grouped) {
+        lines.push(
+            `missing  ${missing.map((check) => stripControlCharacters([check.check, check.scope].filter(Boolean).join(' '))).join(', ')}`,
+            `  ${stripControlCharacters(note)}`,
+            '',
+        );
+    }
     lines.push(
-        ...(report.notes ?? []).map((note) => `note     ${note}`),
+        ...(report.notes ?? []).map((note) => `note     ${stripControlCharacters(note)}`),
         ...formatIgnores(report, { verbose }),
         ...formatUnstagedChanges(report),
         formatSummary(report),
@@ -171,7 +196,7 @@ export function formatRunReport(report: RunReport, options: { verbose: boolean }
 }
 
 /**
-Print the last finished check and its place in the run.
+Rewrite the progress line when stderr points to a terminal.
 
 @param progress the last finished check and its place in the run.
 */
@@ -186,22 +211,21 @@ export function printProgress(progress: CheckProgress): void {
 /**
 Format the fixes as lines: the dry-run diffs, or the changed files and the files that the fixers broke.
 
-@param fixes the fixer results, the changed and broken files, and the diffs.
+@param fixes the fixer report.
 @param options how to show the fixes.
-@param options.isDryRun whether the run shows fixes and writes nothing.
-@returns the lines that describe the fixes.
+@param options.dryRun whether the run shows fixes and writes nothing.
 */
-export function formatFixes(fixes: FixReport, options: { isDryRun: boolean }): string[] {
-    const { isDryRun } = options;
+export function formatFixes(fixes: FixReport, options: { dryRun: boolean }): string[] {
+    const { dryRun } = options;
     const count = fixes.changed.length;
-    if (isDryRun)
+    if (dryRun)
         return [
             ...fixes.diffs,
-            count === 0 ? 'No fixer changes anything.' : `${formatCount(count, 'file')} would change.`,
+            count === 0 ? UNCHANGED_PREVIEW_MESSAGE : `${formatCount(count, 'file')} would change.`,
             ...fixes.broken.map((path) => `The fixers would leave a syntax error in ${path}.`),
             '',
         ];
-    if (count === 0 && fixes.broken.length === 0) return ['No fixer changed anything.'];
+    if (count === 0 && fixes.broken.length === 0) return [UNCHANGED_FIX_MESSAGE];
     return [
         ...(count === 0
             ? []

@@ -1,33 +1,32 @@
 import { isDeepStrictEqual } from 'node:util';
-import { isTable } from '#cli/system/tables.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
-import { compareScopeDepth } from '#cli/repository/scopes.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
+import { type Settings } from '#cli/types/settings/file.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
-import type { Scope } from '#cli/types/settings/inheritance.ts';
+import { type Scope } from '#cli/types/settings/inheritance.ts';
+import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { joinScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { buildLimitRuleBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/limits.ts';
+import { PACKAGE_JSON_PATTERN } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
 
-import type {
-    EslintRuleBlock,
-    EslintBlockFields,
-    EslintRuleOptions,
-    PlannedEslintFile,
-    ScopeEslintSettings,
-} from '#cli/types/generation/eslint.ts';
-import {
-    ESLINT_CHECK,
-    CODE_LANGUAGES,
-    PACKAGE_JSON_PATTERN,
-    ESLINT_SETTINGS_TABLE,
-} from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 import {
     splitGlobs,
     buildScopeFiles,
     buildNodePatterns,
-    buildSourcePattern,
-    listNestedScopeGlobs,
 } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
+import {
+    ESLINT_CHECK,
+    CODE_LANGUAGES,
+    ESLINT_SETTINGS_TABLE,
+} from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
+import {
+    type EslintRuleBlock,
+    type EslintBlockFields,
+    type EslintRuleOptions,
+    type PlannedEslintFile,
+    type ScopeEslintSettings,
+} from '#cli/types/generation/eslint.ts';
 import {
     TYPED_LANGUAGES,
     ENVIRONMENT_RULES,
@@ -35,40 +34,21 @@ import {
     ENVIRONMENT_LANGUAGES,
     TRIVIAL_FUNCTIONS_RULE,
     TRIVIAL_FUNCTION_LIMIT,
-    RESTRICTED_IMPORT_RULES,
+    PACKAGE_JSON_RULE_PREFIX,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/settings.ts';
-
-function addRestrictedImports(options: unknown[], restricted: unknown[]): unknown[] {
-    const [first, ...rest] = options;
-    if (rest.length > 0 || !isTable(first) || Object.hasOwn(first, 'name')) return [...restricted, ...options];
-    const paths: unknown = first['paths'];
-    return [{ ...first, paths: [...restricted, ...(Array.isArray(paths) ? (paths as unknown[]) : [])] }];
-}
-
-function mergeRestrictedImports(rules: EslintRuleOptions['rules'], restricted: unknown[]): EslintRuleOptions['rules'] {
-    if (restricted.length === 0) return rules;
-    return Object.fromEntries(
-        Object.entries(rules).map(([rule, options]) => [
-            rule,
-            RESTRICTED_IMPORT_RULES.has(rule) && options.length > 0
-                ? addRestrictedImports(options, restricted)
-                : options,
-        ]),
-    );
-}
 
 /**
 Build the lint rule options and the path overrides in order, each for its own project.
 
 @param settings the parsed gspot.toml.
-@param scopes every project, whose restricted imports join its own no-restricted-imports options.
+@param scopes every project, that owns its configured rule options.
 
 @returns one option block per scope and path override, in the order they apply.
 */
 export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRuleOptions[] {
     const scopesByPath = new Map(scopes.map((scope) => [scope.path, scope]));
     const tables = listSettingsTables(settings).toSorted((first, second) =>
-        compareScopeDepth(first.scope ?? '', second.scope ?? ''),
+        compareScopeDepth(first.scope, second.scope),
     );
     const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scope = '', table }) => {
         const owner = scopesByPath.get(scope);
@@ -82,10 +62,7 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
                   {
                       scope: scope.path,
                       ...splitGlobs(['**/*']),
-                      rules: mergeRestrictedImports(
-                          settings.rules,
-                          getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports,
-                      ),
+                      rules: settings.rules,
                   },
               ],
     );
@@ -96,10 +73,7 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
                 : {
                       scope: scope.path,
                       ...splitGlobs(paths),
-                      rules: mergeRestrictedImports(
-                          rules,
-                          getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports,
-                      ),
+                      rules: rules,
                   },
         ),
     );
@@ -109,10 +83,12 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
 function buildRulesOffBlocks(scopes: Scope[]): EslintRuleBlock[] {
     return scopes.flatMap((scope) => {
         const scopePath = scope.path;
-        const excluded = listNestedScopeGlobs(
+        const excluded = listNestedScopes(
             scopes.map((each) => each.path),
             scopePath,
-        ).map((path) => `!${path}`);
+        )
+            .map((path) => joinScope(escapeGlob(path), '**'))
+            .map((path) => `!${path}`);
         return scope.configurations
             .flatMap((configuration) => configuration.eslint.rules_off)
             .map(({ files, rules }) => ({
@@ -126,7 +102,7 @@ function buildRulesOffBlocks(scopes: Scope[]): EslintRuleBlock[] {
 /**
 Build import restrictions where a scope changes the list inherited from its parent.
 
-@param planned every scope and the code selectors of the generated file.
+@param planned the planned ESLint file.
 @returns one block per changed list, excluding scopes with their own lists.
 */
 export function buildRestrictedImportBlocks(
@@ -144,10 +120,10 @@ export function buildRestrictedImportBlocks(
     });
     return restrictedScopes.map((scope) => ({
         files: buildScopeFiles(planned.eslintFiles.code, scope.path, ['**/*']),
-        ignores: listNestedScopeGlobs(
+        ignores: listNestedScopes(
             restrictedScopes.map(({ path }) => path),
             scope.path,
-        ),
+        ).map((path) => joinScope(escapeGlob(path), '**')),
         rules: {
             'no-restricted-imports': [
                 'error',
@@ -178,13 +154,17 @@ function buildEnvironmentRuleBlocks(planned: Pick<PlannedEslintFile, 'session' |
             : {
                   scope: scope.path,
                   ...splitGlobs([
-                      buildSourcePattern(...ENVIRONMENT_LANGUAGES),
+                      `**/*.{${listTaggedExtensions(...ENVIRONMENT_LANGUAGES)
+                          .map((extension) => extension.slice(1))
+                          .join(',')}}`,
                       ...buildNodePatterns(nodeFiles, scope.path),
                       ...owners.map((path) => `!${path}`),
-                      ...listNestedScopeGlobs(
+                      ...listNestedScopes(
                           environmentScopes.map(({ path }) => path),
                           scope.path,
-                      ).map((path) => `!${path}`),
+                      )
+                          .map((path) => joinScope(escapeGlob(path), '**'))
+                          .map((path) => `!${path}`),
                   ]),
                   rules: ENVIRONMENT_RULES,
               };
@@ -212,8 +192,15 @@ function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'no
         for (const [trivialFunctionStatements, languages] of groups) {
             const patterns = languages.flatMap((language) =>
                 language === 'javascript'
-                    ? [buildSourcePattern('javascript'), ...buildNodePatterns(nodeFiles, scope.path)]
-                    : buildSourcePattern(...TYPED_LANGUAGES),
+                    ? [
+                          `**/*.{${listTaggedExtensions('javascript')
+                              .map((extension) => extension.slice(1))
+                              .join(',')}}`,
+                          ...buildNodePatterns(nodeFiles, scope.path),
+                      ]
+                    : `**/*.{${listTaggedExtensions(...TYPED_LANGUAGES)
+                          .map((extension) => extension.slice(1))
+                          .join(',')}}`,
             );
             blocks.push({
                 scope: scope.path,
@@ -254,9 +241,7 @@ function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'scope
 Build the settings blocks: limit, environment, trivial-code, turned-off rule, and ignore blocks. Split each into a
 block for the code files and a block for the package.json files, and drop the blocks with no rules.
 
-@param planned every scope, the scope that owns the file, your own scripts that run on Node.js, and the ESLint file
-sets.
-@returns the lint blocks with resolved file selectors.
+@param planned the planned ESLint file.
 */
 export function splitSettingsBlocks(
     planned: Pick<PlannedEslintFile, 'session' | 'scope' | 'nodeFiles' | 'eslintFiles'>,
@@ -267,12 +252,12 @@ export function splitSettingsBlocks(
             {
                 files: buildScopeFiles(planned.eslintFiles.code, scope, includes),
                 ignores: excludes,
-                rules: Object.fromEntries(rulePairs.filter(([name]) => !name.startsWith('package-json/'))),
+                rules: Object.fromEntries(rulePairs.filter(([name]) => !name.startsWith(PACKAGE_JSON_RULE_PREFIX))),
             },
             {
                 files: buildScopeFiles([PACKAGE_JSON_PATTERN], scope, includes),
                 ignores: excludes,
-                rules: Object.fromEntries(rulePairs.filter(([name]) => name.startsWith('package-json/'))),
+                rules: Object.fromEntries(rulePairs.filter(([name]) => name.startsWith(PACKAGE_JSON_RULE_PREFIX))),
             },
         ].filter((block) => Object.keys(block.rules).length > 0);
     });

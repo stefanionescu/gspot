@@ -93,11 +93,13 @@ You can edit the other keys of that file.
 
 ## This repository
 
+- In a new clone, run `mise install`, `mise run setup`, and `mise exec -- gspot install`.
+
 - Before you commit a change under `packages/eslint-plugin/src/`, run `mise run packages:eslint-plugin:lint`.
 - Commit straight to `main`. Do not open branches or pull requests.
 - Name a tool check after its tool. Name a built-in check after what it checks.
-- A unit test runs the source in process. It may run Git and the tools of `tests/node_modules`, but makes no network
-  call.
+- A unit test runs the source in process. It may run Git, `mkfifo`, and the tools of `tests/node_modules`, but makes no
+  network call.
 - A test that installs tools, runs the packed packages, or contacts a registry belongs in `tests/suites/integration/`.
   `tests/suites/e2e/` installs the packed packages into a fresh project.
 - In unit check tests, choose the entrypoint for the assertion:
@@ -105,9 +107,10 @@ You can edit the other keys of that file.
     - Use `planSandboxCheck` with `findBuiltInCheck` when files or the read cache change after the session opens.
     - Use `runCheckCode` for a command check whose plan the test changes.
     - Use `runChecks` with `buildRunOptions` for status, notes, skip causes, or cancellation.
-    - Use `runCheckSample` for a sample that fails and passes after its fix.
-- Keep CLI calls and direct imports of check functions out of `tests/suites/unit/cli/checks/`. Exit codes, JSON output, and
-  other CLI behavior belong to `tests/suites/unit/cli/commands/`.
+    - Use `assertCheckSample` for a sample that fails and passes after its fix.
+- Keep CLI calls, and imports of the functions that the check registry names, out of `tests/suites/unit/cli/checks/`.
+  A test may import such a function when other product code imports it too. Exit codes, JSON output, and other CLI
+  behavior belong to `tests/suites/unit/cli/commands/`.
 - Give every exported function a doc comment, as the lint rules require. Write no other comments: names say what the
   code does.
 - Export a declaration where you declare it. End no file with an export list.
@@ -129,10 +132,11 @@ repository.
 - Other files take their constants from `config/` and their types from `types/`. They declare no module-level
   literal constants or types. Declare schemas only in `schemas/`, including schemas used by one file.
   A value computed at import time stays with the behavior that uses it.
-- Give each `config/`, `types/`, and `schemas/` file the path of the code that reads it. For example,
-  `packages/cli/src/config/generation/ci.ts` holds the values of `packages/cli/src/generation/ci.ts`.
-- Values that several files of one folder read go in the config file of that folder, named for their topic. Values
-  that several top-level folders read go at the top of `config/`, named for their topic.
+- Give each `config/`, `types/`, and `schemas/` file the path of the code or folder that reads it.
+  For example, `packages/cli/src/config/generation/ci.ts` holds the values of `packages/cli/src/generation/ci.ts`.
+- A value that code in other folders also reads stays with the behavior it belongs to, and the others import it.
+- Values that no one file owns go in a topic file of their folder, or at the top of `config/` when several top-level
+  folders read them. Topic files that share a word sit in a folder of that word, such as `config/files/`.
 - Write each exported type in plain TypeScript. Do not export a `z.infer` type.
 - Check the shape of each Zod object schema with `satisfies SchemaShape<T>`, and any other schema with
   `satisfies z.ZodType<T>`. Give each schema one check.
@@ -150,41 +154,52 @@ repository.
   `packages/cli/configurations/<group>/<configuration>/`, and its checks in `packages/cli/src/checks/<group>/`.
 - The code that writes a config file sits in `packages/cli/src/generation/configurations/<group>/<configuration>/`,
   named for the file it writes. gspot writes that file to `.gspot/configurations/<group>/<configuration>/`.
-- A folder of one code file merges into its parent folder. For example, the one generator of the `dependencies`
-  configuration sits in `packages/cli/src/generation/configurations/general/dependencies.ts`.
+- A folder of one code file merges into its parent folder, and this rule wins over the same-path rule. For example,
+  the one generator of the `dependencies` configuration sits in
+  `packages/cli/src/generation/configurations/general/dependencies.ts`.
+- A group folder of one code file merges into its parent too: the PostgreSQL generator sits in
+  `packages/cli/src/generation/configurations/postgres.ts`, and the translations check in
+  `packages/cli/src/checks/translations.ts`. A group folder that holds one configuration folder stays, with an
+  `[[ignore]]` record for `structure/pass-through-folders` in `gspot.toml`.
 - Code that several configurations share stays at the top of `checks/` or in `generation/config-files/`.
 - `packages/cli/src/commands/` has one file per command, `commands/<command>.ts`. A command that needs more files gets
   a folder `commands/<command>/` with the entry file `<command>.ts`.
-- A command's folder holds all the code that only that command uses. Code that a second command or a check also uses
-  sits in the folder of the thing it handles, such as `installers/` or `generation/`. No folder outside `commands/`
-  takes a command's name.
+- A command's folder holds the code that only that command uses. Code on the subject of another layer, such as Git
+  revisions, copies, settings text, or the terminal, stays in that layer even when one command calls it.
+- Code that a second command or a check also uses sits in the folder of the thing it handles, such as `installers/` or
+  `generation/`. No folder outside `commands/` takes a command's name.
 - `system/` holds the code every layer may import: access to files, processes, Git, the environment, and the terminal,
   and the pure text and value helpers that `parsers/` needs.
 - A unit test file mirrors the source file it tests, with the same name. `tests/suites/unit/<package>/<path>.test.ts` tests
-  `packages/<package>/src/<path>.ts`. A test of a whole source folder takes the folder name.
+  `packages/<package>/src/<path>.ts`. A test of a whole source folder takes the folder name, such as `tests/suites/unit/docs.test.ts` for `docs/src/`.
 - When the tests of one source file or folder pass 300 lines, they become a folder of that name with one file per
   scenario.
 - An integration test mirrors what it runs: `tests/suites/integration/checks/<group>/<configuration>.test.ts`,
   `commands/<command>.test.ts`, or `installers/<module>.test.ts`. Past 300 lines, the tests of one configuration become a
   folder with one file per tool.
 - `tests/config/` mirrors the tests. `tests/config/<path>.ts` holds the values of `tests/suites/<suite>/<path>.test.ts`, and the
-  test files of one folder may share `tests/config/<folder>.ts`.
+  test files of one folder may share a topic file inside `tests/config/<folder>/`, such as `messages.ts`.
 - `suites/` and `unit/cli/` drop out of a `tests/config/` path. Values that only the integration suites read live under
   `tests/config/integration/`.
+- In `config/`, `types/`, `schemas/` and `tests/`, move a file up until it has a neighbor, as
+  `structure/lone-files` asks. Keep the test name.
+- `tests/suites/unit/sandboxes.test.ts` tests `tests/setup/sandboxes/`.
+  `tests/suites/integration/ci.test.ts` tests `packages/cli/src/generation/ci.ts`.
+- A file of `config/`, `types/` and `schemas/` takes the name of the folder whose files read it.
+  For example, `packages/cli/src/schemas/installers/npm.ts` holds the schemas of `packages/cli/src/installers/npm/`.
+  `tests/types/` and `tests/schemas/` stay flat for that reason.
 - A value goes to `tests/config/` when a test file reads it more than once, or when two test files read it. It also goes
   there when it forms a `test.each` table with expected results, or when it has more than five lines.
 - A value read once stays at its call. RuleTester cases and the arguments of a command stay beside their call.
 - `tests/suites/` holds the `unit/`, `integration/`, and `e2e/` suites. `tests/setup/` holds the code that tests share,
-  in one subfolder per job.
+  in one subfolder per job; a job of one file, such as `matchers.ts`, sits at the top of `tests/setup/`.
 - `tests/types/` holds the types of the tests, and `tests/schemas/` the schemas that read tool output in tests.
 
 ## Dependency overrides
 
 The root `package.json` overrides keep transitive packages on security fixes.
 
-| Override                  | Version  | Advisory and reason                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `handlebars`              | `4.7.10` | [GHSA-xw65-4hp5-5hc7](https://github.com/advisories/GHSA-xw65-4hp5-5hc7) — Prevents JavaScript injection from precompiled templates; eslint-plugin-boundaries and @boundaries/elements pin 4.7.9.                                                                                                                                                                                                                                      |
-| `js-yaml@3`               | `4.3.2`  | [GHSA-hp3w-g68c-fv3c](https://github.com/advisories/GHSA-hp3w-g68c-fv3c) — Removes the unpatched sprintf-js dependency chain that @istanbuljs/load-nyc-config receives through major 3.                                                                                                                                                                                                                                                |
-| `postcss-selector-parser` | `7.1.6`  | [GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf) — Bounds flat-selector processing; PurgeCSS and postcss-nested request major 6.                                                                                                                                                                                                                                                                               |
-| `undici@7`                | `7.30.1` | [GHSA-w293-vg96-wgc3](https://github.com/advisories/GHSA-w293-vg96-wgc3), [GHSA-4qv8-2p9j-2685](https://github.com/advisories/GHSA-4qv8-2p9j-2685), [GHSA-f72v-6w45-q472](https://github.com/advisories/GHSA-f72v-6w45-q472), [GHSA-xjj6-f33q-929c](https://github.com/advisories/GHSA-xjj6-f33q-929c) — Preserves TLS validation options in BalancedPool and bounds EventSource and content-encoding handling; Miniflare pins 7.29.0. |
+| Override                    | Version  | Advisory and reason                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `postcss-selector-parser@6` | `6.1.5`  | [GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf) — Bounds flat-selector processing; postcss-nested of Starlight's Expressive Code requests major 6.                                                                                                                                                                                                                                                            |
+| `undici@7`                  | `7.30.1` | [GHSA-w293-vg96-wgc3](https://github.com/advisories/GHSA-w293-vg96-wgc3), [GHSA-4qv8-2p9j-2685](https://github.com/advisories/GHSA-4qv8-2p9j-2685), [GHSA-f72v-6w45-q472](https://github.com/advisories/GHSA-f72v-6w45-q472), [GHSA-xjj6-f33q-929c](https://github.com/advisories/GHSA-xjj6-f33q-929c) — Preserves TLS validation options in BalancedPool and bounds EventSource and content-encoding handling; Miniflare pins 7.29.0. |

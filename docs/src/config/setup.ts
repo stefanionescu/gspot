@@ -1,5 +1,6 @@
 import { SIDEBAR } from './navigation.ts';
 import { SITE_URL, DOCS_PATH } from './site.ts';
+import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { START_RUNNERS } from '#cli/config/repository/npm.ts';
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
@@ -8,17 +9,13 @@ import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/generation/ci.t
 import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/definitions/root.ts';
 import { REFERENCE_PATH, REFERENCE_FOLDERS, DISJUNCTION_FORMAT, CONJUNCTION_FORMAT } from './reference.ts';
 
-const PACKAGE_MANAGERS = {
-    bun: { label: 'Bun', lockfile: 'bun.lock' },
-    npm: { label: 'npm', lockfile: 'package-lock.json' },
-    pnpm: { label: 'pnpm', lockfile: 'pnpm-lock.yaml' },
-    yarn: { label: 'Yarn', lockfile: 'yarn.lock' },
-    mise: { label: 'mise', lockfile: undefined },
-} as const;
+const PACKAGE_MANAGERS = { bun: 'Bun', npm: 'npm', pnpm: 'pnpm', yarn: 'Yarn', mise: 'mise' } as const;
 
-export const SETUP_COMMANDS = Object.entries(PACKAGE_MANAGERS).map(([name, { label, lockfile }]) => {
+export const SETUP_COMMANDS = Object.entries(PACKAGE_MANAGERS).map(([name, label]) => {
     const { command, installCommand } = START_RUNNERS[name as keyof typeof START_RUNNERS];
-    const frozen = lockfile === 'yarn.lock' ? YARN_BERRY_INSTALL : lockfile && FROZEN_INSTALLS[lockfile];
+    const lockfile = LOCKFILES.find((file) => file.packageManager === name && 'copied' in file)?.file;
+    const frozen =
+        name === 'yarn' ? YARN_BERRY_INSTALL : lockfile && FROZEN_INSTALLS[lockfile as keyof typeof FROZEN_INSTALLS];
     return {
         label,
         start: command,
@@ -65,14 +62,17 @@ export const RELEASE_AGE_EXCLUSIONS = [
 const REFERENCE_URL = `${SITE_URL}${REFERENCE_PATH}`;
 
 export const LLMS_URL = `${SITE_URL}/llms.txt`;
-export const LLMS_COMMAND = `curl -fsSL ${LLMS_URL}`;
+
+export const CURL_COMMAND = 'curl -fsSL';
+
+export const LLMS_COMMAND = `${CURL_COMMAND} ${LLMS_URL}`;
 
 export const AGENT_PROMPT = `Set up gspot in a repository. Run ${LLMS_COMMAND} and follow its steps.`;
 
 export const AGENT_STEPS = `## Steps for coding agents
 
 Set up gspot in the repository of the user. Run each command at the root of the repository. gspot needs Git and
-Node.js ${RUNTIME_MINIMUMS.node} or newer, or Bun ${RUNTIME_MINIMUMS.bun} or newer when Bun runs it. A package manager that holds new
+Node.js ${RUNTIME_MINIMUMS.node} or newer, and Bun ${RUNTIME_MINIMUMS.bun} or newer when Bun runs it. A package manager that holds new
 releases, such as pnpm 11, needs @gspothq/cli and @gspothq/eslint-plugin in its exclusions: ${CONJUNCTION_FORMAT.format(
     RELEASE_AGE_EXCLUSIONS.map(({ label, key }) => `${key} for ${label}`),
 )}.
@@ -83,7 +83,7 @@ ${SETUP_COMMANDS.map(({ label, lines }) => `   - ${label}: \`${lines[0]}\``).joi
 
    Start the next commands with ${DISJUNCTION_FORMAT.format(SETUP_COMMANDS.map(({ start }) => `\`${start}\``))}.
 2. Ask the user which level, and wait for the answer. ${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY} Level \`all\` also
-   installs a few more tools. Suggest \`recommended\`, the default, for an existing codebase, and \`all\` for a new
+   installs a few more tools. Suggest \`basic\`, the default, for an existing codebase, and \`all\` for a new
    repository or one that agents write. The level decides which config files the plan replaces.
 3. Run \`gspot init --dry-run --level <level>\`. Show the user the plan: the configurations, the scopes, the tool
    files that gspot replaces, the Git hooks, and the CI workflow. Ask whether the plan is right, and wait for the

@@ -1,17 +1,20 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { createFileTree } from 'testdirs';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
+import { TERMS_SOURCE } from '#tests/config/typescript.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { rm, unlink, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { LITERAL_ROUTE_CASES, FUNCTION_NAME_IGNORES } from '#tests/config/commands/ignore.ts';
 
 test('an ignore without paths stops a command check and its fixer until unignore', async () => {
@@ -59,8 +62,8 @@ test('an ignore without paths stops a command check and its fixer until unignore
 test('an ignored folder covers its subfolders, and a negated file in it is still checked', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
-        'legacy scripts/nested/example.sh': 'if then\n',
-        'legacy scripts/required.sh': 'if then\n',
+        'legacy scripts/nested/example.sh': BROKEN_IF_SCRIPT,
+        'legacy scripts/required.sh': BROKEN_IF_SCRIPT,
         'entry.sh': 'echo example\n',
     });
 
@@ -111,7 +114,7 @@ test('ignore without a check keeps the paths out of every check and every config
     expect(result.stdout).toStartWith('Ignored every check for data/**.\n');
     const saved = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(saved['ignore']).toStrictEqual([{ paths: ['data/**'], reason }]);
-    const typos = await readFile(join(sandbox.path, findManifestTarget('spelling', 'typos.toml')), 'utf8');
+    const typos = await readFile(join(sandbox.path, getManifestTarget('spelling', 'typos.toml')), 'utf8');
     expect(typos).toEndWith(`  # ${reason}\n  "data/**",\n]\n`);
     const removed = await runGspot(sandbox.path, ['unignore', '--paths', 'data/**']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
@@ -124,7 +127,7 @@ test.each([...LITERAL_ROUTE_CASES])(
     async ({ folder, path, escaped, removed }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['typescript']),
-            [`${folder}/terms/page.tsx`]: 'export default function Terms() { return null; }\n',
+            [`${folder}/terms/page.tsx`]: TERMS_SOURCE,
         });
         commitAll(sandbox.path);
         const ignored = await runGspot(sandbox.path, [
@@ -149,7 +152,7 @@ test.each([...LITERAL_ROUTE_CASES])(
 );
 
 test('gspot ignore --names writes the names of a structure/trivial-functions ignore', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], { level: 'all' }),
         'main.py': '',
     });

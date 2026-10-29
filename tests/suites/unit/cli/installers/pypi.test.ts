@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { openWriter } from '#cli/write.ts';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/planning/session.ts';
+import { openWriter } from '#cli/repository/writer.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
@@ -15,11 +15,12 @@ import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { PYTHON_VERSION } from '#cli/config/installers/pypi.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import type { PythonToolProject } from '#cli/types/installers/projects.ts';
+import { type PythonToolProject } from '#cli/types/installers/pypi.ts';
+import type { MinimumReleaseAge } from '#cli/types/installers/install.ts';
 
 import {
     installPythonTools,
-    writePythonSettings,
+    readPythonSettings,
     preparePythonLockfile,
     isPythonLockfileFresh,
 } from '#cli/installers/pypi.ts';
@@ -30,6 +31,7 @@ import {
     UV_LOCKFILE_ORIGINS,
     PYTHON_TOOL_PROJECT,
     INVALID_UV_SETTINGS,
+    PYTHON_INSTALL_FILES,
     PYTHON_TOOL_LOCKFILE,
     UV_LOCKFILE_MISMATCHES,
     LOCKFILE_PASSWORD_ERROR,
@@ -38,20 +40,11 @@ import {
 const projectText = PYTHON_TOOL_PROJECT.replaceAll('{python-version}', () => PYTHON_VERSION);
 
 const pythonProject = (parse(projectText) as { project: PythonToolProject }).project;
+
 const lockfileText = PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', () => PYTHON_VERSION);
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
-function buildPythonProjectFiles(): Record<string, string> {
-    return {
-        'gspot.toml': buildSandboxSettings([]),
-        [GSPOT_PATHS.pythonProject]: projectText,
-        [GSPOT_PATHS.uvLockfile]: lockfileText,
-        'uv.toml': UV_TOML,
-    };
-}
-
 test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hides index passwords', async (step) => {
-    await using sandbox = await testdir(buildPythonProjectFiles());
+    await using sandbox = await testdir(PYTHON_INSTALL_FILES);
 
     const calls: string[][] = [];
     using _boundary = fakeCommand('unavailable-uv', (command) => {
@@ -79,7 +72,7 @@ test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hid
 });
 
 test('a successful uv run refuses a password in its new lockfile and keeps the tool project files', async () => {
-    await using sandbox = await testdir(buildPythonProjectFiles());
+    await using sandbox = await testdir(PYTHON_INSTALL_FILES);
 
     using boundary = fakeCommand('synthetic-uv', async (_command, options) => {
         await writeFile(join(options.cwd, 'uv.lock'), `${lockfileText}\n# test+password\n`);
@@ -106,7 +99,10 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
 });
 
 test('uv installs the tool project with its own Python, whatever UV_PYTHON and .python-version the repository sets', async () => {
-    await using sandbox = await testdir({ ...buildPythonProjectFiles(), '.python-version': '3.12.13\n' });
+    await using sandbox = await testdir({
+        ...PYTHON_INSTALL_FILES,
+        '.python-version': '3.12.13\n',
+    });
 
     const runs: { command: string[]; env: Record<string, string | undefined> | undefined }[] = [];
     using _boundary = fakeCommand('pinned-uv', (command, options) => {
@@ -122,6 +118,7 @@ test('uv installs the tool project with its own Python, whatever UV_PYTHON and .
         expect(env).toHaveProperty('UV_PYTHON', undefined);
     }
 });
+
 test('the uv lockfile check ignores name spelling and requirement order and refuses invalid TOML and a range', () => {
     expect(isPythonLockfileFresh(pythonProject, lockfileText, {})).toBe(true);
     expect(isPythonLockfileFresh(pythonProject, 'not valid =', {})).toBe(false);
@@ -129,6 +126,7 @@ test('the uv lockfile check ignores name spelling and requirement order and refu
     const exists = isPythonLockfileFresh(rangedProject, lockfileText, {});
     expect(exists).toBe(false);
 });
+
 test.each([...UV_LOCKFILE_MISMATCHES])('a changed %s makes the uv lockfile stale', (_name, before, after) => {
     expect(
         isPythonLockfileFresh(
@@ -151,28 +149,43 @@ test.each(INVALID_UV_SETTINGS)(
     'invalid $file $field settings name the file and field',
     async ({ file, field, text }) => {
         await using sandbox = await testdir({ [file]: text });
-        await using scratch = await testdir();
-        expect(() => writePythonSettings(sandbox.path, scratch.path, PYTHON_RELEASE_AGE)).toThrow(
+        expect(() => readPythonSettings(sandbox.path)).toThrow(
             new GspotError(
-                'filesystem',
+                'parse',
                 `${file}: ${field}: Invalid input: expected array, received string. Fix the field.`,
             ),
         );
     },
 );
 
+async function readInstalledSettings(root: string, minimumReleaseAge: MinimumReleaseAge): Promise<unknown> {
+    const settings: unknown[] = [];
+    using boundary = fakeCommand('settings-uv', (command) => {
+        const file = command[command.indexOf('--config-file') + 1];
+        if (file === undefined) throw new Error('The uv command received no settings file.');
+        settings.push(parse(readFileSync(file, 'utf8')));
+        return Promise.resolve(buildProcessResult());
+    });
+    using writer = openWriter(root);
+    await installPythonTools(
+        { ...buildToolInstall(await openSession(root), writer), minimumReleaseAge },
+        'settings-uv',
+    );
+    expect(boundary).toHaveBeenCalledTimes(2);
+    expect(settings[0]).toStrictEqual(settings[1]);
+    return settings[0];
+}
+
 test('uv.toml wins and local index paths are read relative to the repository', async () => {
-    using _clock = spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-24T15:30:00.000Z'));
-    await using sandbox = await testdir({ 'uv.toml': UV_TOML, 'pyproject.toml': PYPROJECT_UV_INDEX });
-    await using scratch = await testdir();
-    expect(writePythonSettings(sandbox.path, scratch.path, PYTHON_RELEASE_AGE)).toStrictEqual([
-        'test%2Bpassword',
-        'test+password',
-    ]);
-    const contents: unknown = parse(readFileSync(join(scratch.path, 'uv.toml'), 'utf8'));
-    expect(contents).toStrictEqual({
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([]),
+        'uv.toml': UV_TOML,
+        'pyproject.toml': PYPROJECT_UV_INDEX,
+    });
+    expect(readPythonSettings(sandbox.path).credentials).toStrictEqual(['test%2Bpassword', 'test+password']);
+    expect(await readInstalledSettings(sandbox.path, PYTHON_RELEASE_AGE)).toStrictEqual({
         'exclude-newer-package': { ruff: false, semgrep: false },
-        'exclude-newer': '2026-10-17T15:30:00.000Z',
+        'exclude-newer': '7 days',
         'index-url': 'https://alex:test%2Bpassword@example.com/simple',
         'find-links': [join(sandbox.path, 'wheels'), 'https://example.com/wheels'],
         offline: true,
@@ -180,50 +193,44 @@ test('uv.toml wins and local index paths are read relative to the repository', a
     });
 });
 
-test('project index settings apply only without uv.toml, missing or empty files give none, and an invalid uv.toml is refused', async () => {
-    using _clock = spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-24T15:30:00.000Z'));
-    await using sandbox = await testdir({ 'pyproject.toml': PYPROJECT_UV_INDEX });
-    await using scratch = await testdir();
-    expect(writePythonSettings(sandbox.path, scratch.path, PYTHON_RELEASE_AGE)).toStrictEqual([]);
-    const contents: unknown = parse(readFileSync(join(scratch.path, 'uv.toml'), 'utf8'));
-    expect(contents).toStrictEqual({
+test('project index settings apply only without uv.toml, and missing or empty files give none', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([]),
+        'pyproject.toml': PYPROJECT_UV_INDEX,
+    });
+    expect(await readInstalledSettings(sandbox.path, PYTHON_RELEASE_AGE)).toStrictEqual({
         'exclude-newer-package': { ruff: false, semgrep: false },
-        'exclude-newer': '2026-10-17T15:30:00.000Z',
+        'exclude-newer': '7 days',
         'index-url': 'https://example.com/simple',
         'find-links': [join(sandbox.path, 'wheels')],
     });
     await createFileTree(sandbox.path, { 'uv.toml': '' });
-    expect(writePythonSettings(sandbox.path, scratch.path, PYTHON_RELEASE_AGE)).toStrictEqual([]);
-    const uvSettings: unknown = parse(readFileSync(join(scratch.path, 'uv.toml'), 'utf8'));
-    expect(uvSettings).toStrictEqual({
+    expect(await readInstalledSettings(sandbox.path, PYTHON_RELEASE_AGE)).toStrictEqual({
         'exclude-newer-package': { ruff: false, semgrep: false },
-        'exclude-newer': '2026-10-17T15:30:00.000Z',
+        'exclude-newer': '7 days',
     });
     await rm(join(sandbox.path, 'uv.toml'));
     await rm(join(sandbox.path, 'pyproject.toml'));
-    expect(writePythonSettings(sandbox.path, scratch.path, PYTHON_RELEASE_AGE)).toStrictEqual([]);
-    const keptSettings: unknown = parse(readFileSync(join(scratch.path, 'uv.toml'), 'utf8'));
-    expect(keptSettings).toStrictEqual({
+    expect(await readInstalledSettings(sandbox.path, PYTHON_RELEASE_AGE)).toStrictEqual({
         'exclude-newer-package': { ruff: false, semgrep: false },
-        'exclude-newer': '2026-10-17T15:30:00.000Z',
+        'exclude-newer': '7 days',
     });
     await writeFile(join(sandbox.path, 'uv.toml'), 'find-links = [7]');
-    expect(() => writePythonSettings(sandbox.path, scratch.path, PYTHON_RELEASE_AGE)).toThrow(
+    expect(() => readPythonSettings(sandbox.path)).toThrow(
         new GspotError(
-            'filesystem',
+            'parse',
             'uv.toml: find-links.0: Invalid input: expected string, received number. Fix the field.',
         ),
     );
 });
 
-test('Python resolution excludes releases newer than the configured hold', async () => {
-    await using sandbox = await testdir();
-    await using scratch = await testdir();
-    using _clock = spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-24T15:30:00.000Z'));
-    writePythonSettings(sandbox.path, scratch.path, { ...PYTHON_RELEASE_AGE, days: 14 });
-    const contents: unknown = parse(readFileSync(join(scratch.path, 'uv.toml'), 'utf8'));
-    expect(contents).toStrictEqual({
+test('Python resolution excludes releases newer than the minimum release age', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+    expect(await readInstalledSettings(sandbox.path, { ...PYTHON_RELEASE_AGE, days: 14 })).toStrictEqual({
         'exclude-newer-package': { ruff: false, semgrep: false },
-        'exclude-newer': '2026-10-10T15:30:00.000Z',
+        'exclude-newer': '14 days',
     });
+    const saved = `${lockfileText}\n[options]\nexclude-newer-span = "P7D"\n`;
+    expect(isPythonLockfileFresh(pythonProject, saved, {}, 7)).toBe(true);
+    expect(isPythonLockfileFresh(pythonProject, saved, {}, 14)).toBe(false);
 });

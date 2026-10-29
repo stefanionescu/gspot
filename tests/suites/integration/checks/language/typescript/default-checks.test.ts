@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { appendFile } from 'node:fs/promises';
 import { test, expect, beforeAll } from 'bun:test';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     TYPESCRIPT_CASES,
@@ -19,7 +19,7 @@ beforeAll(async () => {
 });
 
 test.each([...TYPESCRIPT_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
-    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
+    await assertCheckSample(installedSandbox(), sample);
 });
 
 test('the sample TypeScript repository passes every check that init selects for it', async () => {

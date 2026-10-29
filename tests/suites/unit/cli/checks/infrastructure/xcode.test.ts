@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     LOGO_IMAGE_SET,
@@ -86,7 +86,7 @@ test.each([...UNREADABLE_RESOURCES])(
         await rm(target);
         await mkdir(target);
         session.reads.sources.delete(path);
-        const error = await captureRejection(findBuiltInCheck(check)(session, planned));
+        const error = await captureRejection(getBuiltInCheck(check)(session, planned));
         expect(error.message).toBe(`${path} could not be read. Check the file and its permissions.`);
     },
 );
@@ -233,4 +233,27 @@ test('xcode/entitlements checks the deepest scope only', async () => {
     expect(report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: `app/child/${path}`, line: 1, rule: 'entitlement' },
     ]);
+});
+
+test('xcode/app-transport-security reports arbitrary loads at its line and passes when disabled', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['xcode']),
+        'App/Info.plist': '<plist><dict>\n<key>NSAllowsArbitraryLoads</key><true/>\n</dict></plist>\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'xcode/app-transport-security')).toStrictEqual([
+        {
+            check: 'xcode/app-transport-security',
+            file: 'App/Info.plist',
+            line: 2,
+            rule: 'arbitrary-loads',
+            fixable: false,
+            message: 'NSAllowsArbitraryLoads is true, so every host may be reached without TLS.',
+            help: 'Remove the key, and add an exception for the one host that needs it.',
+        },
+    ]);
+    await writeFile(
+        join(sandbox.path, 'App/Info.plist'),
+        '<plist><dict>\n<key>NSAllowsArbitraryLoads</key><false/>\n</dict></plist>\n',
+    );
+    expect(await runSandboxCheck(sandbox.path, 'xcode/app-transport-security')).toStrictEqual([]);
 });

@@ -60,3 +60,8 @@ export const NGINX_DUMP_FILE_LINE = /^# configuration file (?<path>[^\n]+):$/gmu
 export const NGINX_EMERGENCY_MARK = '[emerg]';
 
 export const NGINX_VARIABLE_MARK = '$';
+
+export const NGINX_TABLE = 'tools.nginx';
+
+export const DOCKER_DAEMON_ERROR = /cannot connect to the docker daemon/iu;
+export const DOCKER_DAEMON_NOTE = 'Start Docker: nginx/syntax runs nginx -T in a container.';

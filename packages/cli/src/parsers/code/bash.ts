@@ -3,7 +3,6 @@ import { spliceRanges } from '#cli/system/text.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { ParseCache } from '#cli/types/parsers/code/grammars.ts';
-import { readTrapScripts, buildCommandCalls } from '#cli/parsers/code/traps.ts';
 
 import type {
     TrapScript,
@@ -13,10 +12,18 @@ import type {
     ScriptTemporaryPaths,
 } from '#cli/types/parsers/code/bash.ts';
 import {
+    findSourceLine,
+    parseTrapScripts,
+    buildCommandCalls,
+    listScriptCommands,
+    listSwallowedLines,
+} from '#cli/parsers/code/traps.ts';
+import {
     SHIFT_COMMAND,
     NOT_LINE_BREAK,
     END_OF_OPTIONS,
     REMOVE_COMMAND,
+    GETOPTS_COMMAND,
     EXPANSION_NODES,
     BASH_BRANCH_NODES,
     FOR_HEADER_FIELDS,
@@ -43,14 +50,14 @@ function findHighestParameter(node: Node): number {
             .some(
                 (command) =>
                     findFunctionNode(command)?.id === node.id &&
-                    command.childForFieldName('name')?.text === SHIFT_COMMAND,
+                    [SHIFT_COMMAND, GETOPTS_COMMAND].includes(command.childForFieldName('name')?.text ?? ''),
             )
     )
         return Infinity;
     return Math.max(0, ...positions);
 }
 
-function parseBashFunctions(syntaxRoot: Node, codeText: string): ScriptSyntax['functions'] {
+function parseBashFunctions(syntaxRoot: Node): ScriptSyntax['functions'] {
     return syntaxRoot.descendantsOfType('function_definition').flatMap((node) => {
         const name = node.childForFieldName('name')?.text;
         const body = node.childForFieldName('body');
@@ -82,7 +89,6 @@ function parseBashFunctions(syntaxRoot: Node, codeText: string): ScriptSyntax['f
                 name,
                 start: node.startPosition.row + 1,
                 end: node.endPosition.row + 1,
-                body: codeText.slice(body.startIndex + 1, body.endIndex - 1).split('\n'),
                 highestRead: findHighestParameter(node),
                 branches: controls.filter((child) => BASH_BRANCH_NODES.includes(child.type)).length,
                 nesting,
@@ -109,8 +115,8 @@ function isTemporaryValue(assignment: Node): boolean {
     return substitution?.namedChild(0)?.childForFieldName('name')?.text === TEMPORARY_FILE_COMMAND;
 }
 
-function listLocalNames(root: Node): Set<string> {
-    const declarations = root
+function listLocalNames(syntaxRoot: Node): Set<string> {
+    const declarations = syntaxRoot
         .descendantsOfType('declaration_command')
         .filter(
             (declaration) =>
@@ -131,9 +137,9 @@ function listLocalNames(root: Node): Set<string> {
     );
 }
 
-function buildScriptTemporaryPaths(root: Node): ScriptTemporaryPaths {
-    const assignments = root.descendantsOfType('variable_assignment');
-    const locals = listLocalNames(root);
+function buildScriptTemporaryPaths(syntaxRoot: Node): ScriptTemporaryPaths {
+    const assignments = syntaxRoot.descendantsOfType('variable_assignment');
+    const locals = listLocalNames(syntaxRoot);
     const counts = new Map<string, number>();
     const names = new Map<string, number>();
     for (const assignment of assignments) {
@@ -174,11 +180,11 @@ function findTemporaryPath(
 }
 
 function addRemovals(removals: Node[], cleanup: TrapCleanup): void {
-    const { lineOffset, owner, registry, lines } = cleanup;
+    const { sourceRows, owner, temporaryPaths, lines } = cleanup;
     for (const removal of removals) {
         const targets = listRemovedPaths(removal);
-        const line = lineOffset + removal.startPosition.row;
-        const paths = targets.map((argument) => findTemporaryPath(argument, owner, registry));
+        const line = findSourceLine(removal, sourceRows);
+        const paths = targets.map((argument) => findTemporaryPath(argument, owner, temporaryPaths));
         lines.set(line, [...(lines.get(line) ?? []), ...(paths.length === 0 ? [undefined] : paths)]);
     }
 }
@@ -197,14 +203,14 @@ function listRemovedPaths(command: Node): Node[] {
     return targets;
 }
 
-function listTemporaryPaths(root: Node, commands: Node[], traps: TrapScript[]): TemporaryPath[] {
-    const registry = buildScriptTemporaryPaths(root);
+function listTemporaryPaths(syntaxRoot: Node, commands: Node[], traps: TrapScript[]): TemporaryPath[] {
+    const temporaryPaths = buildScriptTemporaryPaths(syntaxRoot);
     const lines = new Map<number, Array<TemporaryPath | undefined>>(
         commands
             .filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND)
             .map((command) => [command.startPosition.row + 1, [undefined]]),
     );
-    for (const { trap, body, root: script } of traps) {
+    for (const { trap, sourceRows, syntaxRoot: script } of traps) {
         const assigned = new Set(
             script
                 .descendantsOfType('variable_assignment')
@@ -214,21 +220,21 @@ function listTemporaryPaths(root: Node, commands: Node[], traps: TrapScript[]): 
             .descendantsOfType('command')
             .filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND);
         addRemovals(removals, {
-            lineOffset: body.startPosition.row + 1,
+            sourceRows,
             owner: findFunctionNode(trap)?.id,
-            registry: {
-                ...registry,
-                variables: new Map([...registry.variables].filter(([, path]) => !assigned.has(path.name))),
+            temporaryPaths: {
+                ...temporaryPaths,
+                variables: new Map([...temporaryPaths.variables].filter(([, path]) => !assigned.has(path.name))),
             },
             lines,
         });
     }
     const safe = [...lines].filter(([, paths]) => !paths.includes(undefined));
     for (const [line, paths] of safe) {
-        const temporaryPaths = paths.filter((path): path is TemporaryPath => path !== undefined);
-        for (const path of temporaryPaths) path.cleanupLines.push(line);
+        const cleanedPaths = paths.filter((path): path is TemporaryPath => path !== undefined);
+        for (const path of cleanedPaths) path.cleanupLines.push(line);
     }
-    return registry.paths;
+    return temporaryPaths.paths;
 }
 
 /**
@@ -247,22 +253,34 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
         const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
         const codeText = spliceRanges(text, masked, comments);
 
-        const commands = tree.rootNode.descendantsOfType('command');
+        const commands = tree.rootNode
+            .descendantsOfType(['command', 'declaration_command'])
+            .filter((node) => node.type === 'command' || node.child(0)?.text === 'export');
         using resources = new DisposableStack();
-        const traps = await readTrapScripts(commands, cache, resources);
+        const traps = await parseTrapScripts(commands, cache, resources);
         const scripts = new Map(traps.map((script) => [script.trap.id, script]));
         const calls = commands.flatMap((node) => {
-            const nodeCalls = buildCommandCalls([node], 0);
+            const nodeCalls = buildCommandCalls([node]);
             const script = scripts.get(node.id);
             if (script !== undefined)
                 nodeCalls.push(
-                    ...buildCommandCalls(script.root.descendantsOfType('command'), script.body.startPosition.row),
+                    ...buildCommandCalls(
+                        script.syntaxRoot
+                            .descendantsOfType(['command', 'declaration_command'])
+                            .filter((child) => child.type === 'command' || child.child(0)?.text === 'export'),
+                        script.sourceRows,
+                    ),
                 );
             return nodeCalls;
         });
         return {
             code: codeText.split('\n'),
-            functions: parseBashFunctions(tree.rootNode, codeText),
+            commands: listScriptCommands(commands, traps),
+            swallowedLines: listSwallowedLines(tree.rootNode, traps),
+            statements: tree.rootNode.namedChildren
+                .filter((node) => node.type !== 'comment')
+                .map((node) => ({ kind: node.type, text: node.text, line: node.startPosition.row + 1 })),
+            functions: parseBashFunctions(tree.rootNode),
             calls,
             temporaryPaths: listTemporaryPaths(tree.rootNode, commands, traps),
         };
@@ -288,7 +306,7 @@ export function listCodeLines(lines: string[]): NumberedLine[] {
 Find the function that contains a Bash syntax node.
 
 @param node the syntax point to start from.
-@returns the containing function, or undefined outside a function.
+@returns undefined outside a function.
 */
 export function findFunctionNode(node: Node): Node | undefined {
     let parent = node.parent;

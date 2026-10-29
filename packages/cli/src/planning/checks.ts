@@ -1,18 +1,22 @@
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
-import { findFirstSkip } from '#cli/planning/skips.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
-import { listNestedScopes } from '#cli/repository/scopes.ts';
+import { findCachedText } from '#cli/system/files/reads.ts';
+import type { Settings } from '#cli/types/settings/file.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
+import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { getTable, findRootScope } from '#cli/settings/scopes.ts';
+import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import type { Check, ScopeCheck } from '#cli/types/configurations.ts';
+import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { findFirstSkip, findSettingsSkip } from '#cli/planning/skips.ts';
 import { isRootOnlyCheck, selectCheckFiles } from '#cli/planning/files.ts';
-import { ROOT_RUNS, COVERAGE_DIMENSIONS } from '#cli/config/planning/checks.ts';
-import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/planning.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
+import { ROOT_RUNS, COVERAGE_DIMENSIONS, COVERAGE_INI_SECTION } from '#cli/config/planning/checks.ts';
+import { type PlanOptions, type PlannedScope, type PlannedCheck, type ConfiguredCheck } from '#cli/types/planning.ts';
 
-function listScopeChecks(session: Session, scope: Scope): ScopeCheck[] {
+function listScopeChecks(settings: Settings, scope: Scope): ScopeCheck[] {
     const isRoot = scope.path === '';
     const configuredChecks = scope.configurations.flatMap((configuration) =>
         configuration.checks
@@ -20,7 +24,7 @@ function listScopeChecks(session: Session, scope: Scope): ScopeCheck[] {
             .filter((configured) => isRoot || !isRootOnlyCheck(configuration, configured.check)),
     );
     if (!isRoot) return configuredChecks;
-    const own = Object.values(session.settings.commandChecks).map((commandCheck) => ({
+    const own = Object.values(settings.commandChecks).map((commandCheck) => ({
         check: commandCheck,
     }));
     return [...configuredChecks, ...own];
@@ -39,7 +43,7 @@ function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck 
     const { session, scope, options } = planned;
     const { check, configuration } = scopeCheck;
     const isRootCheck = (ROOT_RUNS as readonly string[]).includes(check.runs);
-    const rootScope = findRootScope(session.scopes);
+    const rootScope = getRootScope(session.scopes);
     const name = getToolName(check);
     const tool = name === undefined ? undefined : getTool(session.configurationsByName.values(), name);
     const plannedCheck: PlannedCheck = {
@@ -51,6 +55,7 @@ function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck 
             tool,
             base: options.base,
             commits: options.commits,
+            range: options.range,
             messageFile: options.messageFile,
         }),
     };
@@ -81,7 +86,7 @@ function skipReplacedChecks(planned: PlannedCheck[]): PlannedCheck[] {
 
 function planScope(planned: PlannedScope, plannedRepositoryChecks: Set<string>): PlannedCheck[] {
     const checks: PlannedCheck[] = [];
-    const wanted = listScopeChecks(planned.session, planned.scope).filter((configured) =>
+    const wanted = listScopeChecks(planned.session.settings, planned.scope).filter((configured) =>
         isWanted(configured.check, planned.options),
     );
     for (const configured of wanted) {
@@ -116,16 +121,15 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
 /**
 Check whether a planned check has files, deleted trigger paths, a commit message, or pushed commits to read.
 
-@param check the plan to inspect.
-@returns whether the check has something to run over.
+@param planned the plan to inspect.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 12 calls in 6 files share it.
-export function isActive(check: PlannedCheck): boolean {
+export function isActive(planned: PlannedCheck): boolean {
     return (
-        check.files.length > 0 ||
-        check.triggerPaths.length > 0 ||
-        check.check.stage === 'message' ||
-        (check.check.runs === 'history' && (check.commits?.length ?? 0) > 0)
+        planned.files.length > 0 ||
+        planned.triggerPaths.length > 0 ||
+        planned.check.stage === 'message' ||
+        (planned.check.runs === 'history' && (planned.commits?.length ?? 0) > 0)
     );
 }
 
@@ -168,7 +172,11 @@ export function stripCoverageArguments(
         command === undefined ||
         planned.configuration === undefined ||
         !hasCoverageArguments(command, coverageArguments) ||
-        !isCoverageOff(planned.scope)
+        COVERAGE_DIMENSIONS.some(
+            (name) =>
+                command.some((word) => word.includes(`{setting:coverage.${name}}`)) &&
+                getTable(planned.scope.settings, 'coverage')[name] > 0,
+        )
     )
         return command;
     return command.filter((argument) => !hasCoverageArguments([argument], coverageArguments));
@@ -178,7 +186,6 @@ export function stripCoverageArguments(
 Check whether every coverage requirement of a scope equals zero.
 
 @param scope the resolved coverage settings.
-@returns whether the scope needs no coverage output.
 */
 export function isCoverageOff(scope: Scope): boolean {
     const coverage = getTable(scope.settings, 'coverage');
@@ -190,7 +197,6 @@ Check whether a command uses one of the declared coverage arguments.
 
 @param command the program and arguments.
 @param coverageArguments the coverage flags of the check.
-@returns whether the command requests coverage output.
 */
 export function hasCoverageArguments(
     command: readonly string[] | undefined,
@@ -201,5 +207,51 @@ export function hasCoverageArguments(
             (word) =>
                 coverageArguments?.some((argument) => word === argument || word.startsWith(`${argument}=`)) === true,
         ) === true
+    );
+}
+
+/**
+List each check that a scope runs at some stage, with no files.
+
+@param scopes the scopes of the repository.
+@param settings the authored selections, rule overrides, and stage choices.
+@returns one entry for each scope and check.
+*/
+export function listEnabledChecks(scopes: Scope[], settings: Settings): ConfiguredCheck[] {
+    const root = getRootScope(scopes);
+    const singleRuns = new Set<string>();
+    return scopes.flatMap((scope) =>
+        listScopeChecks(settings, scope).flatMap(({ check, configuration }) => {
+            if (!isWanted(check, { stage: 'any' }) || findSettingsSkip(settings, scope, check) !== undefined) return [];
+            const rootOnly = (ROOT_RUNS as readonly string[]).includes(check.runs);
+            if (rootOnly && singleRuns.has(check.id)) return [];
+            if (rootOnly) singleRuns.add(check.id);
+            const name = getToolName(check);
+            const tool =
+                name === undefined
+                    ? undefined
+                    : getTool(
+                          scopes.flatMap((each) => each.configurations),
+                          name,
+                      );
+            return [{ scope: rootOnly ? root : scope, check, ...stripUndefined({ configuration, tool }) }];
+        }),
+    );
+}
+
+/**
+Check whether the project supplies coverage.py settings.
+
+@param session the repository read cache.
+@param scope the project folder relative to the repository.
+@returns whether pytest must use the project's coverage configuration.
+*/
+export function hasProjectCoverage(session: Session, scope: string): boolean {
+    if (findCachedText(session.reads, joinScope(scope, '.coveragerc')) !== undefined) return true;
+    const pyproject = findCachedText(session.reads, joinScope(scope, PYPROJECT_TOML));
+    const project = pyproject === undefined ? undefined : parseTomlFile(joinScope(scope, PYPROJECT_TOML), pyproject);
+    if (isTable(project?.['tool']) && Object.hasOwn(project['tool'], 'coverage')) return true;
+    return ['setup.cfg', 'tox.ini'].some((name) =>
+        COVERAGE_INI_SECTION.test(findCachedText(session.reads, joinScope(scope, name)) ?? ''),
     );
 }

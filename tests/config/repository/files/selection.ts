@@ -1,3 +1,5 @@
+import { SOURCE_KIND } from '#cli/config/repository/files/classify.ts';
+
 export const MIGRATION_CASES = [
     ['', ['migrations/V1_root.sql']],
     ['app', ['app/migrations/V2_first.sql']],
@@ -39,3 +41,11 @@ export const PRETTIER_PLUGIN_CASES = [
         ['src/App.svelte', 'src/index.ts'],
     ],
 ] as const;
+
+export const TRACKED_SOURCE = {
+    kind: 'source' as const,
+    kindOrigin: SOURCE_KIND.origin,
+    tags: ['text'],
+    executable: false,
+    size: 1,
+};

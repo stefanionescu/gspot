@@ -19,7 +19,7 @@ export const INACTIVE_RULE_OPTIONS = [
         tables: '[tools.yamllint.rules.line-length]\nmax = 100\n',
         scoped: false,
         message:
-            'gspot.toml:4: tools.yamllint.rules.line-length: Unknown yamllint rule. Accepted rules: anchors, key-duplicates, truthy.',
+            'gspot.toml:4: tools.yamllint.rules.line-length: Unknown yamllint rule. Accepted rules: anchors, key-duplicates, octal-values, truthy.',
     },
     {
         configuration: 'css',

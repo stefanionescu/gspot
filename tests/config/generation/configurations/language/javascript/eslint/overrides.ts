@@ -84,7 +84,7 @@ configurations = ["zustand"]
 [scope.tools.eslint]
 restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
 [scope.zustand]
-store_files = ["state/store.js"]
+store_files = { value = ["state/store.js"], reason = "This test sets the allowed locations explicitly." }
 `;
 
 export const RESTRICTED_IMPORT_FINDINGS = [
@@ -107,3 +107,8 @@ paths = ["app/**"]
 rules = { "no-restricted-imports" = [{ paths = [{ name = "moment", message = "Use Temporal." }] }] }
 `,
 } as const;
+
+export const IGNORE_CASES = [
+    { name: 'without an ignore', ignored: false },
+    { name: 'with an ignore', ignored: true },
+];

@@ -51,10 +51,9 @@ tool = "semgrep"
 
 [[check]]
 command = ["zsh", "-n", "{file}"]
-example = "In a Zsh script, `if then` has no condition. Write a real test, such as `if [[ -f \"$file\" ]]; then print -r -- \"$file\"; fi`."
+example = "A Zsh script whose `if` block has no closing `fi` reports a parse error at the end of the file. Close the block with `fi`."
 files = { tags = ["zsh"] }
 help = "Fix the syntax at the line Zsh reports. Install zsh when the system lacks it."
-level = "recommended"
 name = "zsh-syntax"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):\\s*(?<message>.*)$" }
 stage = "commit"
@@ -67,7 +66,6 @@ example = "In a Bash script, `printf \"%s\\n\" $name` reports SC2086 because the
 exit_codes = [1]
 files = { tags = ["bash", "sh", "bats"] }
 help = "Read the SC code in the finding; `gspot explain shellcheck/SC2086` links to its page. Turn one code off with `gspot ignore bash/shellcheck --rule SC2086 --reason \"<why>\"`."
-level = "recommended"
 name = "shellcheck"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$" }
 stage = "commit"
@@ -80,7 +78,6 @@ example = "`if true;then echo hello;fi` differs from the shfmt output. Run `gspo
 files = { tags = ["bash", "sh", "bats"] }
 fix = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]
 help = "Run `gspot check --fix` to format every script, or `shfmt -w` on one file."
-level = "recommended"
 name = "shfmt"
 output = { format = "regex", pattern = "^(?:--- )?(?<file>.+?)(?:\\.orig$|:(?<line>\\d+):(?<column>\\d+): (?<message>.+)$)", message = "This script is not formatted the way shfmt formats it.", fixable = "^--- " }
 stage = "commit"
@@ -108,7 +105,6 @@ why = "Without a summary, the reader must trace the function in their head, and 
 [[check]]
 example = "A private function `_orphan` that no script calls reports a finding. Delete it, or record a hook that needs it with `gspot ignore` and a reason."
 help = "Delete the function. For a required hook entry point, run `gspot ignore bash/unused-functions --paths <file> --reason \"<why>\"`."
-level = "recommended"
 name = "unused-functions"
 runs = "scope"
 stage = "commit"
@@ -118,7 +114,6 @@ why = "A function that nothing calls still costs reading and upkeep, and it hide
 [[check]]
 example = "`_deaf one two` reports dead parameters when `_deaf` never reads its arguments. Drop them from the call, or use them in the function."
 help = "Read the argument in the function, or drop it from every call."
-level = "recommended"
 name = "unread-arguments"
 runs = "scope"
 stage = "commit"
@@ -146,7 +141,6 @@ why = "No check reads code inside a heredoc."
 [[check]]
 example = "`killall worker` reports `broad-kill`. Stop the one process by its ID, or ignore the rule for that script with a reason."
 help = "Stop one process by its ID, delete only paths the script created, and handle each failure. Accept a required cleanup with `gspot ignore bash/safety --rule <rule> --paths <glob> --reason \"<why>\"`."
-level = "recommended"
 name = "safety"
 stage = "commit"
 summary = "Finds broad process kills and recursive deletes, except traps that remove mktemp paths. At level all, also reports discarded failures."

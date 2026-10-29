@@ -3,9 +3,12 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { NO_UPSTREAM_MESSAGE } from '#tests/config/git.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { MERGE_BASE_FAILURE } from '#tests/config/repository/revisions.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
 test('staged paths of an unborn index count its unstaged edits', async () => {
@@ -16,6 +19,7 @@ test('staged paths of an unborn index count its unstaged edits', async () => {
     await writeFile(join(sandbox.path, 'source.ts'), 'export const answer = 42;\n');
     expect(await readStagedPaths(sandbox.path)).toStrictEqual({ staged: ['source.ts'], unstaged: 1 });
 });
+
 test('staged and branch comparisons keep deleted paths', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
 
@@ -26,6 +30,7 @@ test('staged and branch comparisons keep deleted paths', async () => {
     const changed = await readChangedPaths(sandbox.path, 'HEAD');
     expect(changed.paths).toStrictEqual(['source.ts']);
 });
+
 test('staged and branch comparisons keep both paths of a rename across folders', async () => {
     await using sandbox = await testdir({ 'api/source.ts': 'export {};\n', 'web/kept.ts': 'export {};\n' });
 
@@ -36,6 +41,7 @@ test('staged and branch comparisons keep both paths of a rename across folders',
     const changed = await readChangedPaths(sandbox.path, 'HEAD');
     expect(changed.paths).toStrictEqual(['api/source.ts', 'web/source.ts']);
 });
+
 test('staged paths report a broken or missing Git repository instead of an empty list', async () => {
     await using sandbox = await testdir();
     const error = await captureRejection(readStagedPaths(sandbox.path));
@@ -45,6 +51,7 @@ test('staged paths report a broken or missing Git repository instead of an empty
     const diffError = await captureRejection(readStagedPaths(sandbox.path));
     expect(diffError.message).toStartWith('Git diff failed');
 });
+
 test('a branch comparison refuses invalid references without reading them as options', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
 
@@ -52,11 +59,12 @@ test('a branch comparison refuses invalid references without reading them as opt
     const changed = await readChangedPaths(sandbox.path, 'HEAD');
     expect(changed.paths).toStrictEqual([]);
     const error = await captureRejection(readChangedPaths(sandbox.path, 'missing-reference'));
-    expect(error.message).toStartWith('Git merge-base failed');
+    expect(error.message).toStartWith(MERGE_BASE_FAILURE);
     const mergeBaseError = await captureRejection(readChangedPaths(sandbox.path, '--output=outside.txt'));
-    expect(mergeBaseError.message).toStartWith('Git merge-base failed');
+    expect(mergeBaseError.message).toStartWith(MERGE_BASE_FAILURE);
     expect(await isOnDisk(join(sandbox.path, 'outside.txt'))).toBe(false);
 });
+
 test('a new branch compares with the remote default without losing unpushed commits', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
 
@@ -88,7 +96,5 @@ test('a detached comparison without a remote default explains how to select one'
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
     runGitStep(sandbox.path, ['checkout', '--detach', '--quiet']);
     const upstreamError = await captureRejection(readChangedPaths(sandbox.path, ''));
-    expect(upstreamError.message).toBe(
-        'No upstream or default branch is available. Run git remote set-head origin --auto once, or pass --changed <ref>.',
-    );
+    expect(upstreamError.message).toBe(NO_UPSTREAM_MESSAGE);
 });

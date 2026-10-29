@@ -1,9 +1,9 @@
 import { join, dirname, relative } from 'node:path';
 import { listCheckedFiles } from '#cli/planning/files.ts';
-import { findScopePath } from '#cli/repository/scopes.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
@@ -17,7 +17,6 @@ Runs tsc on a project, or on every project that a solution tsconfig names.
 
 @param session the repository and its tools.
 @param planned the compiler check for one scope.
-@returns the check result.
 */
 export async function checkTsc(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const project = readTsconfigProject(
@@ -67,7 +66,7 @@ function removeChildScopeFindings(session: Session, planned: PlannedCheck, resul
     );
     const own = planned.scope.path;
     const findings = result.findings.filter(({ file }) => {
-        const owner = file === '' ? own : findScopePath(file, session.repository.scopeFolders);
+        const owner = file === '' ? own : selectScopePath(file, session.repository.scopeFolders);
         return owner === own || !checked.has(owner);
     });
     if (findings.length === result.findings.length) return result;

@@ -7,7 +7,6 @@ import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/lan
 Require safe changes in Drizzle queries.
 
 @param scope the planned ESLint file of the scope.
-@returns the imports and ESLint blocks for this configuration.
 */
 export function buildDrizzleBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>): ConfigurationBlocks {
     const { eslintFiles, settings } = scope;
@@ -18,7 +17,7 @@ export function buildDrizzleBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'set
                 files: eslintFiles.code,
                 rules: Object.fromEntries(DRIZZLE_RULES.map((name) => [name, rule])),
             },
-            properties: 'plugins: { drizzle: drizzlePlugin }',
+            calls: [{ name: 'addPlugins', args: [{ imports: { drizzle: 'drizzlePlugin' } }] }],
         },
     ];
     return {

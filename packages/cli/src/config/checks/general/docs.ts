@@ -1,18 +1,16 @@
 import { RUNNER_NAMES } from '#cli/config/repository/setup.ts';
 
-export const MISE_TASKS_FOLDER = '.mise/tasks';
-
 export const MARKDOWN_EXTENSIONS = ['.md', '.mdx'] as const;
 
 export const FILE_EXTENSION = /\.[a-z0-9]+$/iu;
 
 export const TRAILING_PUNCTUATION = '.,;:';
 
-export const PATH_CHARS = /^[\w./-]+$/u;
+export const PATH_CHARACTERS = /^[\w./-]+$/u;
 
 export const TOKEN_SEPARATORS = /[\s`'"()[\],;:!?<>|]+/u;
 
-export const COMMAND_FENCES = new Set(['sh', 'bash', 'console']);
+export const COMMAND_FENCES = new Set(['sh', 'bash', 'console', 'shell', 'zsh', 'shellsession']);
 
 export const PATH_TOKEN_SKIPS = [/^\.\.?\/?$/u, /^\d+\/\d+$/u, /^\//u] as const;
 
@@ -33,6 +31,15 @@ export const EMPHASIS_MARKERS = ['**', '*'] as const;
 export const RELATIVE_PATH_PREFIXES = ['./', '../'] as const;
 
 export const RUN_COMMAND = new RegExp(
-    String.raw`\b(?:${RUNNER_NAMES.join('|')}) run (?:--[\w-]+\s+)*[\w][\w:.-]*`,
+    String.raw`\b(?:${RUNNER_NAMES.join('|')}) run (?:--[\w-]+\s+)*[\w./][\w:/.-]*`,
     'gu',
 );
+
+export const MISSING_LICENSE_MESSAGE = 'The root has no LICENSE file.';
+
+export const RULES = {
+    missingTask: 'missing-task',
+    missingReadme: 'missing-readme',
+    missingLicense: 'missing-license',
+    missingPath: 'missing-path',
+} as const;

@@ -1,4 +1,4 @@
-import { posix } from 'node:path';
+import { basename } from 'node:path';
 import { isAlias } from '../syntax.ts';
 import { createRule } from '../create-rule.ts';
 import { INDEX_BASENAMES } from '../config/rules/imports.ts';
@@ -82,8 +82,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
         },
     },
     create(context, [options]) {
-        if (options.allowIndex && INDEX_BASENAMES.has(posix.basename(context.physicalFilename.replaceAll('\\', '/'))))
-            return {};
+        if (options.allowIndex && INDEX_BASENAMES.has(basename(context.physicalFilename))) return {};
         return {
             Program(node) {
                 const statements = node.body.filter((statement) => statement.type !== AST_NODE_TYPES.EmptyStatement);

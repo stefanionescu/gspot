@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rename, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
@@ -163,7 +163,7 @@ test('a bracketed file name is a path parameter, and other punctuation stays in 
     ).toStrictEqual(['app', '(group)', '@slot', '_private', '[id]']);
 });
 
-test('a file name loses one extension or the whole .d.ts suffix, and a SQL migration keeps its full name', () => {
+test('a file name drops one extension, or .d.ts as one, and a SQL migration keeps its extension', () => {
     expect(buildFileIdentifier('src/a-b.test.ts', 'typescript', []).name).toBe('a-b.test');
     expect(buildFileIdentifier('types/modules.d.ts', 'typescript', []).name).toBe('modules');
     expect(buildFileIdentifier('db/20240101010101_add_users.sql', 'sql', []).name).toBe('20240101010101_add_users.sql');
@@ -209,3 +209,13 @@ test.each(FORCED_NAME_CASES.filter(({ check }) => check === 'naming/paths'))(
         expect(await runSandboxCheck(sandbox.path, 'naming/paths')).toMatchObject([...expected]);
     },
 );
+
+test('mixed-language folders accept the union of language naming cases once', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript', 'python', 'naming'], { level: 'all' }),
+        'account-pages/entry.ts': 'export const port = 1;',
+        'account-pages/entry.py': 'port = 1\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'naming/paths');
+    expect(findings.filter(({ message }) => message.includes('account-pages'))).toStrictEqual([]);
+});

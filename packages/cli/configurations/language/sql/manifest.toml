@@ -1,7 +1,7 @@
 allowed_words = ["SQL"]
 
 [configuration]
-description = "SQL files: layout, capitalization, and references in the dialect of your database. Level `all` adds the join, cast, subquery, and `LIMIT` rules."
+description = "SQL files: layout, capitalization, and references in the dialect of your database. Level all adds the join, cast, subquery, and LIMIT rules."
 title = "SQL"
 
 [files]
@@ -39,7 +39,6 @@ example = "The query `select id from user_accounts;` reports CP01 for lowercase 
 exit_codes = [1]
 fix = ["sqlfluff", "fix", "--config", "{config_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
 help = "Run `gspot check --fix`. Turn one rule off with `gspot ignore sql/sqlfluff --rule <rule> --reason \"<why>\"`."
-level = "recommended"
 name = "sqlfluff"
 output = { format = "json", children = "violations", fields = { file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description" } }
 stage = "commit"

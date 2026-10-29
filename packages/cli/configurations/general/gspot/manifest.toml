@@ -15,7 +15,6 @@ version_command = ["--version"]
 [[check]]
 example = "A `.commitlintrc.json` while gspot runs commitlint reports a conflicting config file. Delete it, and write the rule you need in `gspot.toml`, such as `tools.commitlint.types`."
 help = "Delete the file. gspot writes the settings this tool reads; move a rule you need into gspot.toml."
-level = "recommended"
 name = "conflicting-config-files"
 runs = "once"
 stage = "commit"
@@ -25,17 +24,15 @@ why = "The tool reads only the settings gspot writes, so a rule left in the old 
 [[check]]
 example = "An edit by hand to a generated config file reports drift. Move the change into gspot.toml, then run `gspot apply`."
 help = "Change gspot.toml, then run `gspot apply`. After a merge, run `gspot apply`, followed by `gspot install`."
-level = "recommended"
 name = "generated-files"
 runs = "once"
 stage = "commit"
-summary = "Compares generated files with the settings and reports changed, missing, and stray ones, and any with merge conflict markers."
+summary = "Compares generated files with the settings and reports changed, missing, and stray ones."
 why = "A generated file that drifts from gspot.toml runs a tool with settings nobody chose."
 
 [[check]]
 example = "An `[[ignore]]` record with `paths = [\"nowhere/**\"]` that matches no file reports `unmatched-path`. Remove the record, or correct its path and keep the reason."
 help = "Remove the pattern, or correct it so that it matches a tracked file."
-level = "recommended"
 name = "unmatched-paths"
 runs = "once"
 stage = "commit"
@@ -45,7 +42,6 @@ why = "An ignore or a path setting that matches nothing misleads the next reader
 [[check]]
 example = "An `eslint-disable-next-line` comment without a reason reports a finding. Fix the code and remove the comment, or append `-- reason: ...` that explains the exception."
 help = "Fix the finding and remove the suppression, or add a reason in the syntax of the tool. Never suppress a size or complexity limit: split the code by its steps, or ask the user to raise it in gspot.toml."
-level = "recommended"
 name = "suppressions"
 runs = "once"
 stage = "commit"

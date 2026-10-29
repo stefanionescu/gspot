@@ -2,26 +2,28 @@ import { posix } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
+import { buildBaseResult } from '#cli/runs/results.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
+import { readPushedRange } from '#cli/repository/revisions/push.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/code/environment.ts';
-import { getSiblingCommand, runOverPushedCommits } from '#cli/checks/pushed-commits.ts';
+import { type CheckResult, type CheckFinding } from '#cli/types/runs/check.ts';
+import { getSiblingCommand, listPushedCommits } from '#cli/checks/pushed-commits.ts';
 import { listPythonEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
 
 import {
     ENV_KEY_LINE,
+    MISSING_KEY_RULE,
     GITLEAKS_LOG_FLAG,
-    ENV_READ_LANGUAGES,
     GITLEAKS_LOG_OPTIONS,
     GITLEAKS_STAGED_FLAG,
     GITLEAKS_STAGED_CHECK,
+    ENVIRONMENT_READ_LANGUAGES,
 } from '#cli/config/checks/general/secrets.ts';
 
 async function readEnvironmentReferences(
@@ -40,27 +42,24 @@ async function readEnvironmentReferences(
 }
 
 function listMissingEnvironmentKeys(
-    planned: PlannedCheck,
     path: string,
-    reads: EnvironmentRead[],
+    environmentReads: EnvironmentRead[],
     exampleKeys: Set<string>,
-): Finding[] {
-    const findings: Finding[] = [];
+): CheckFinding[] {
+    const findings: CheckFinding[] = [];
     const seen = new Set<string>();
-    const ordered = reads.toSorted(
+    const ordered = environmentReads.toSorted(
         (left, right) => left.line - right.line || compareText(left.key ?? '', right.key ?? ''),
     );
     for (const { key, line } of ordered) {
         if (key === undefined || exampleKeys.has(key) || seen.has(key)) continue;
         seen.add(key);
-        findings.push(
-            buildFinding(
-                planned,
-                { file: path, line },
-                'missing-key',
-                `${key} is read here and appears in no example environment file.`,
-            ),
-        );
+        findings.push({
+            file: path,
+            line,
+            rule: MISSING_KEY_RULE,
+            message: `${key} is read here and appears in no example environment file.`,
+        });
     }
     return findings;
 }
@@ -69,18 +68,19 @@ function listMissingEnvironmentKeys(
 Scans each pushed commit with Gitleaks, so a secret removed before the last commit still shows.
 
 @param session the repository and its tools.
-@param planned the Gitleaks check and commit range.
-@returns the check result.
+@param planned the configured check and selected scope files.
 */
 export async function checkSecretsGitleaksPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const command = getSiblingCommand(planned, GITLEAKS_STAGED_CHECK).filter(
         (argument) => argument !== GITLEAKS_STAGED_FLAG,
     );
-    return runOverPushedCommits(session, planned, (commit) =>
-        runCommandCheck(session, planned, {
-            command: [...command, GITLEAKS_LOG_FLAG, `${GITLEAKS_LOG_OPTIONS} ${commit} --`],
-        }),
-    );
+    const commits = await listPushedCommits(session, planned);
+    if (!Array.isArray(commits)) return commits;
+    if (commits.length === 0) return buildBaseResult(planned, session);
+    const range = planned.range ?? (await readPushedRange(session.toolsRoot, session.cancelSignal));
+    return runCommandCheck(session, planned, {
+        command: [...command, GITLEAKS_LOG_FLAG, `${GITLEAKS_LOG_OPTIONS} ${range.join(' ')} --`],
+    });
 }
 
 /**
@@ -88,10 +88,9 @@ Reports each environment variable that the code reads and no example environment
 the scope has no example environment file.
 
 @param session the repository and its tools.
-@param planned the scope to check.
-@returns the findings.
+@param planned the configured check and selected scope files.
 */
-export async function checkSecretsEnvExamples(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSecretsEnvExamples(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { env_examples: names, environment_functions: environmentFunctions } = getTable(
         planned.scope.settings,
         'secrets',
@@ -111,14 +110,14 @@ export async function checkSecretsEnvExamples(session: Session, planned: Planned
             });
         }),
     );
-    const extensions = listTaggedExtensions(...ENV_READ_LANGUAGES);
+    const extensions = listTaggedExtensions(...ENVIRONMENT_READ_LANGUAGES);
     const sourceFiles = planned.files.filter(
         (file) => file.kind === 'source' && extensions.some((extension) => file.path.endsWith(extension)),
     );
-    const findings: Finding[] = [];
+    const findings: CheckFinding[] = [];
     for (const file of sourceFiles) {
         const reads = await readEnvironmentReferences(session, file.path, environmentFunctions);
-        findings.push(...listMissingEnvironmentKeys(planned, file.path, reads, exampleKeys));
+        findings.push(...listMissingEnvironmentKeys(file.path, reads, exampleKeys));
     }
     return findings;
 }

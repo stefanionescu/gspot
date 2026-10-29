@@ -43,7 +43,7 @@ test('a Bun run reads the release age from the bunfig.toml that it gets with --c
     });
 });
 
-test('a pnpm tool lockfile reads the hold from pnpm-workspace.yaml', async () => {
+test('a pnpm tool lockfile reads the minimum release age from pnpm-workspace.yaml', async () => {
     await using sandbox = await testdir();
     const hold = prepareReleaseAge(
         sandbox.path,

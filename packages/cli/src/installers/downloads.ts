@@ -13,7 +13,10 @@ async function readBoundedArchive(response: Response, { url, name, limit }: Arch
             const { done, value } = await reader.read();
             if (done) return Buffer.concat(chunks);
             size += value.length;
-            if (size > limit) throw new GspotError('install', `${url} exceeds the size limit for ${name}.`);
+            if (size > limit) {
+                await reader.cancel();
+                throw new GspotError('install', `${url} exceeds the size limit for ${name}.`);
+            }
             chunks.push(value);
         }
     } finally {
@@ -25,8 +28,7 @@ async function readBoundedArchive(response: Response, { url, name, limit }: Arch
 Download a release archive within the install timeout and a size limit.
 
 @param install what install needs for this step.
-@param download the archive URL, what it holds for messages, and its byte limit.
-@returns the archive bytes.
+@param download the archive to fetch.
 */
 export async function downloadArchive(install: ToolInstall, download: ArchiveDownload): Promise<Buffer> {
     try {

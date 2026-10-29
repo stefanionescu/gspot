@@ -1,14 +1,18 @@
 import { GspotError } from '#cli/system/errors.ts';
+import { INDEX_LINE } from '#cli/config/parsers/git.ts';
 import type { GitFile } from '#cli/types/parsers/git.ts';
-import { readIndexFiles } from '#cli/repository/files/tracked.ts';
+import { listGitFiles } from '#cli/repository/files/tracked.ts';
+import { gitIndexFileSchema } from '#cli/schemas/parsers/git.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
 import { runGit, runGitStream, runGitForBytes } from '#cli/system/git.ts';
-import { parseGitBlobs, parseTreeFiles, stripIndexStages } from '#cli/parsers/git.ts';
+import { GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files/tracked.ts';
+import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/parsers/git.ts';
 
 import {
     GIT_HEAD_ARGUMENTS,
     GIT_BLOBS_ARGUMENTS,
     GIT_LS_TREE_ARGUMENTS,
+    UNREADABLE_HISTORY_MESSAGE,
     GIT_SYMBOLIC_HEAD_ARGUMENTS,
 } from '#cli/config/repository/revisions/files.ts';
 
@@ -18,21 +22,30 @@ Read complete index or tree entries without Git path quoting. Reject unresolved 
 @param root the folder where Git runs.
 @param source index or commit to inspect.
 @param cancelSignal stops the command.
-@returns validated entries.
+@param unreadablePaths receives names with invalid UTF-8.
 */
 export async function listRevisionFiles(
     root: string,
     source: Revision,
     cancelSignal?: AbortSignal,
+    unreadablePaths: string[] = [],
 ): Promise<GitFile[]> {
-    if (source.kind === 'index') return stripIndexStages(await readIndexFiles(root, cancelSignal));
+    if (source.kind === 'index')
+        return stripIndexStages(
+            await listGitFiles(root, GIT_INDEX_FILES_ARGUMENTS, cancelSignal, unreadablePaths).then((listed) =>
+                listed
+                    .split('\0')
+                    .filter(Boolean)
+                    .map((line) => parseListingLine(INDEX_LINE.exec(line), gitIndexFileSchema)),
+            ),
+        );
     const read = await runGitForBytes(root, [...GIT_LS_TREE_ARGUMENTS, source.hash], { cancelSignal });
     if (read.code !== 0)
         throw new GspotError(
             'git',
             `Git could not read the entries of this revision: ${read.stderr.trim()}. Resolve Git errors before checking again.`,
         );
-    return parseTreeFiles(read.stdout);
+    return parseTreeFiles(read.stdout, unreadablePaths);
 }
 
 /**
@@ -67,12 +80,11 @@ export async function visitGitBlobs(
 }
 
 /**
-Collect the validated blobs for a caller that compares several objects.
+Collect the validated blobs.
 
 @param root the folder where Git runs.
 @param requested full blob object IDs.
 @param cancelSignal stops the command.
-@returns validated object bytes.
 */
 export async function readBlobs(root: string, requested: string[], cancelSignal?: AbortSignal): Promise<Buffer[]> {
     const blobs = new Map<string, Buffer>();
@@ -92,13 +104,13 @@ Read the current commit, distinguishing an unborn branch from failed Git reads.
 
 @param root the folder where Git runs.
 @param cancelSignal stops the command.
-@returns current commit hash, or undefined for an unborn branch.
+@returns undefined for an unborn branch.
 */
 export async function readHead(root: string, cancelSignal?: AbortSignal): Promise<string | undefined> {
     const options = { cancelSignal };
     const head = await runGit(root, GIT_HEAD_ARGUMENTS, options);
     if (head.code === 0) return head.stdout.trim();
-    const failure = new GspotError('git', 'Cannot read committed Git history. Restore HEAD and check again.');
+    const failure = new GspotError('git', UNREADABLE_HISTORY_MESSAGE);
     if (head.code !== 1) throw failure;
     const symbolic = await runGit(root, GIT_SYMBOLIC_HEAD_ARGUMENTS, options);
     if (symbolic.code !== 0) throw failure;

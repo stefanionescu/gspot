@@ -1,4 +1,4 @@
-import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 
 const REPLACED_CONFIG_FILES = {
     'typos.toml': `[default.extend-words]

@@ -1,6 +1,6 @@
 import type { Stats } from 'node:fs';
 
-export type FileContents = { bytes: Buffer; mode: number; isLink?: true };
+export type FileContents = { bytes: Buffer; mode: number; isSymlink?: true };
 
 export type FileBounds = {
     root: string;

@@ -1,6 +1,5 @@
 import { createRule } from '../create-rule.ts';
-import type { RuleContext } from '../types/rules.ts';
-import type { ImportBlock } from '../types/syntax.ts';
+import { type RuleContext, type ImportBlock } from '../types/rules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -37,7 +36,7 @@ function isImportLike(node: TSESTree.Statement, sourceType: RuleContext['languag
     );
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it puts isImportLike over the complexity limit of 8.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, isImportLike passes the complexity limit.
 function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
     return (
         node?.type === AST_NODE_TYPES.CallExpression &&
@@ -65,6 +64,7 @@ function groupImportBlocks(
     }
     return blocks;
 }
+
 function mergeCommentLines(source: TSESLint.SourceCode, text: string): TSESTree.Comment[] {
     const blocks: TSESTree.Comment[] = [];
     let previous: TSESTree.Comment | undefined;

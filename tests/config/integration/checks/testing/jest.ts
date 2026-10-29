@@ -31,3 +31,5 @@ FAIL ./math.test.cjs
 
     Cannot find module './missing-test-dependency.cjs' from 'math.test.cjs'
 `;
+
+export const COVERAGE_THRESHOLD_MESSAGE = 'coverage threshold for lines (80%) not met: 66.66%';

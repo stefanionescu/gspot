@@ -1,11 +1,11 @@
 import { ESLint } from 'eslint';
 import { join, relative } from 'node:path';
-import { openSession } from '#cli/session.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
-import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
+import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import type { LintFinding, EslintConfiguration } from '#tests/types/tools.ts';
 
@@ -29,21 +29,22 @@ export async function listLintFindings(
                     line,
                 })),
         )
-        .toSorted(compareFindings);
+        .toSorted(
+            (left, right) =>
+                left.file.localeCompare(right.file) ||
+                left.line - right.line ||
+                (left.rule ?? '').localeCompare(right.rule ?? ''),
+        );
 }
 
 /**
-Link the test packages, run apply, and load the generated ESLint config file.
-
-@param sandboxRoot folder with a gspot.toml.
-@param options more ESLint options.
-@returns ESLint set up with the generated config file.
+Link the test packages, run apply in a folder with a gspot.toml, and load the generated ESLint config file.
 */
-export async function createEslint(sandboxRoot: string, options?: ESLint.Options): Promise<ESLint> {
-    runGitStep(sandboxRoot, ['init', '--quiet']);
-    await linkInstalledModules(join(sandboxRoot, 'node_modules'));
-    await runGspotStep({ root: sandboxRoot, run: runGspot }, ['apply']);
-    const session = await openSession(sandboxRoot);
+export async function createEslint(root: string, options?: Pick<ESLint.Options, 'fix'>): Promise<ESLint> {
+    runGitStep(root, ['init', '--quiet']);
+    await linkInstalledModules(join(root, 'node_modules'));
+    await runGspotStep({ root: root, run: runGspot }, ['apply']);
+    const session = await openSession(root);
     const scope = session.scopes.find((each) =>
         each.configurations.some((configuration) =>
             configuration.configFiles.some((file) => extractConfigFileName(file.file) === 'eslint'),
@@ -52,23 +53,10 @@ export async function createEslint(sandboxRoot: string, options?: ESLint.Options
     if (scope === undefined) throw new Error('The sandbox selects no ESLint config file.');
     return new ESLint({
         ...options,
-        cwd: sandboxRoot,
-        overrideConfigFile: join(sandboxRoot, findConfigFilePath(session, 'eslint', scope)),
+        cwd: root,
+        overrideConfigFile: join(root, getConfigFilePath(session, 'eslint', scope)),
         overrideConfig: { languageOptions: { parserOptions: { noWarnOnMultipleProjects: true } } },
     });
-}
-
-/**
-Order two findings by file, line, and rule.
-*/
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three files sort findings with it.
-export function compareFindings(left: LintFinding, right: LintFinding): number {
-    return (
-        left.file.localeCompare(right.file) ||
-        left.line - right.line ||
-        (left.rule ?? '').localeCompare(right.rule ?? '')
-    );
 }
 
 /**

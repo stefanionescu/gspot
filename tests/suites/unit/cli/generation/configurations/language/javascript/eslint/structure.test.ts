@@ -2,13 +2,15 @@ import { join } from 'node:path';
 import type { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
+import { LINGUIST_GENERATED_PATTERN } from '#tests/config/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { type LintFinding, type SourceRuleCase, type EslintConfiguration } from '#tests/types/tools.ts';
+import { INDEX_ONLY_REEXPORTS } from '#tests/config/generation/configurations/language/javascript/eslint/settings.ts';
 
 import {
     BARREL_CASES,
@@ -93,7 +95,7 @@ test('level all skips build output and files marked linguist-generated in .gitat
         'src/dist/check.js': 'missing();',
         'coverage/check.js': 'missing();',
         'emitted/check.js': 'missing();',
-        '.gitattributes': 'emitted/** linguist-generated\n',
+        '.gitattributes': LINGUIST_GENERATED_PATTERN,
     });
 
     const eslint = await createEslint(sandbox.path);
@@ -189,7 +191,7 @@ test.each([...LEVEL_REEXPORT_CASES])(
             ...IMPORT_FILES,
             'gspot.toml': buildSandboxSettings(['typescript'], {
                 level,
-                tables: `[structure]\nreexports = ${reexports === 'index-only' ? '{ value = "index-only", reason = "The package exports its public index files." }' : '"none"'}\n[limits]\nindex_exports = 2\n[[scope]]\npath = "app"\nconfigurations = ["typescript"]\n`,
+                tables: `[structure]\nreexports = ${reexports === 'index-only' ? INDEX_ONLY_REEXPORTS : '"none"'}\n[limits]\nindex_exports = 2\n[[scope]]\npath = "app"\nconfigurations = ["typescript"]\n`,
             }),
         });
         const eslint = await createEslint(sandbox.path);

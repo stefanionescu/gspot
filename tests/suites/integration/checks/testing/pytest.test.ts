@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     PYTEST_CASES,
@@ -18,7 +18,7 @@ import {
 const installedSandbox = shareInstalledSandbox({ install: false, ...PYTEST_SANDBOX, commands: [['uv', 'sync']] });
 
 test.each([...PYTEST_CASES])('$check reports the required coverage and passes after the fix', async (sample) => {
-    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
+    await assertCheckSample(installedSandbox(), sample);
 });
 
 test.each([...COVERAGE_LIMIT_CASES])(
@@ -26,7 +26,7 @@ test.each([...COVERAGE_LIMIT_CASES])(
     async ({ coverage, code, result }) => {
         const { root } = installedSandbox();
         const project = PYTEST_PYPROJECT.replace(', "pytest-cov==7.1.0"', '');
-        const change = await changeAppliedSandbox(installedSandbox(), {
+        const change = await changeSandbox(installedSandbox(), {
             files: {
                 'pyproject.toml': project,
                 'uv.lock': await readFile(join(root, 'uv.lock'), 'utf8'),

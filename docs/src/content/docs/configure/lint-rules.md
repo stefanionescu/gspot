@@ -10,7 +10,7 @@ gspot refuses options for an ESLint or Stylelint rule that the selected level do
 case: a rule that runs only at level `all`, or a rule that gspot loads and runs at no level:
 
 ```text
-n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level recommended.
+n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level basic.
 gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.
 ```
 
@@ -27,16 +27,15 @@ None of these settings turns a lint rule on or off, and none takes a severity; t
 
 gspot writes the options of some rules from a setting, and refuses them in these tables. Change the setting instead:
 
-| Rules                                                                                                                                                    | Setting                                                     |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `max-lines`, `max-lines-per-function`, `max-params`, `max-depth`, `max-statements`, `max-nested-callbacks`, `complexity`, `sonarjs/cognitive-complexity` | The matching key of [limits](/reference/gspot-toml/#limits) |
-| `gspot/no-trivial-functions`                                                                                                                             | `limits.trivial_function_statements`                        |
-| `gspot/no-trivial-files`, `barrel-files/avoid-barrel-files`                                                                                              | `structure.reexports`                                       |
-| `sonarjs/no-identical-functions`                                                                                                                         | `duplication.min_lines`                                     |
-| `no-restricted-imports`                                                                                                                                  | `tools.eslint.restricted_imports`                           |
-| `gspot/import-boundaries`                                                                                                                                | [Import rules](/configure/import-rules/)                    |
-| `n/file-extension-in-import`                                                                                                                             | `tools.eslint.import_extension`                             |
-| markdownlint `MD007`                                                                                                                                     | `format.indent_width`                                       |
+| Rules                                                                                                                                                    | Setting                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `max-lines`, `max-lines-per-function`, `max-params`, `max-depth`, `max-statements`, `max-nested-callbacks`, `complexity`, `sonarjs/cognitive-complexity` | The matching key of [limits](/reference/gspot-toml/#limits)                                                        |
+| `gspot/no-trivial-functions`                                                                                                                             | `limits.trivial_function_statements`                                                                               |
+| `gspot/no-trivial-files`, `barrel-files/avoid-barrel-files`                                                                                              | `structure.reexports`                                                                                              |
+| `sonarjs/no-identical-functions`                                                                                                                         | `duplication.min_lines`                                                                                            |
+| `no-restricted-imports`                                                                                                                                  | `tools.eslint.restricted_imports`                                                                                  |
+| `gspot/import-boundaries`                                                                                                                                | `javascript.import_boundaries`, see [Import rules](/configure/import-rules/#keep-relative-imports-inside-a-folder) |
+| `n/file-extension-in-import`                                                                                                                             | `tools.eslint.import_extension`                                                                                    |
 
 ## ESLint
 

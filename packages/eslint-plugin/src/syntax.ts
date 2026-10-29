@@ -28,12 +28,10 @@ function isMemberWrite(member: TSESTree.Node): boolean {
 }
 
 /**
-Identify a name or member chain that aliases a value bound in this module.
-The module never assigns the source again, so the alias keeps its value.
+Identify a direct alias of a value bound in this module.
 
 @param node the expression assigned to another name
 @param scope the expression's lexical scope
-@returns whether the expression only selects a bound value
 */
 export function isAlias(node: TSESTree.Node | null, scope: TSESLint.Scope.Scope): boolean {
     let value = unwrap(node);
@@ -52,22 +50,21 @@ export function isAlias(node: TSESTree.Node | null, scope: TSESLint.Scope.Scope)
 }
 
 /**
-Build visitors for every module specifier: imports, re-exports, import-equals declarations, and CommonJS require calls.
-This includes dynamic imports and type imports.
+Build the visitors that hand each module specifier of a file to one check: imports, re-exports, dynamic and type imports, import-equals declarations, and CommonJS require calls.
 
-@param check the check that receives each specifier node
-@returns the visitors of the rule
+@param checkSource the check that receives each specifier node.
+@returns the visitors of the rule.
 */
-export function buildSourceVisitors(check: (source: TSESTree.Node) => void): TSESLint.RuleListener {
+export function buildSourceVisitors(checkSource: (source: TSESTree.Node) => void): TSESLint.RuleListener {
     return {
         [IMPORT_SELECTOR]: ({ source }: ImportSource) => {
-            if (source !== null) check(source);
+            if (source !== null) checkSource(source);
         },
         [IMPORT_EQUALS_SELECTOR]: ({ expression }: TSESTree.TSExternalModuleReference) => {
-            check(expression);
+            checkSource(expression);
         },
         [REQUIRE_SELECTOR]: ({ arguments: [argument] }: TSESTree.CallExpression) => {
-            if (argument !== undefined) check(argument);
+            if (argument !== undefined) checkSource(argument);
         },
     };
 }

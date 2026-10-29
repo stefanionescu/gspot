@@ -37,8 +37,20 @@ export const UNTRACKED_CLOUDFLARE_FINDINGS = [
 
 export const MISSING_OPENAPI_FINDINGS = [
     {
+        check: 'openapi/stale-document',
         file: 'openapi.json',
+        line: 1,
         rule: 'missing',
+        fixable: false,
+        help: 'Run the command and commit the document it writes.',
         message: 'The file openapi.json does not exist; run bun generate.ts and commit what it writes.',
     },
 ] as const;
+
+export const CLOUDFLARE_ENV_SOURCE = 'interface CloudflareEnv {}\n';
+
+export const PROJECT_NOTES = 'Keep project notes\n';
+
+export const UNTRACKED_NOTES = 'Keep untracked notes\n';
+
+export const BINARY_OUTPUT_HEX = '00ff8047454e455241544544';

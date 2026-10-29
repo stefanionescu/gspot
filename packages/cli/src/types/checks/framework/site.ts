@@ -1,12 +1,12 @@
-import type { Finding } from '#cli/types/runs/check.ts';
+import type { CheckFinding } from '#cli/types/runs/check.ts';
 
-export type SitemapUrls = { urls: URL[]; findings: Finding[] };
+export type SitemapUrls = { urls: URL[]; findings: CheckFinding[] };
 
 export type SiteBuild = {
     cwd: string;
     command: string[];
     folder: string;
-    isBuilt: boolean;
+    built: boolean;
     failure: string;
 };
 

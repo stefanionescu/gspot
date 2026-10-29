@@ -1,14 +1,35 @@
 import { formatCount } from '#cli/system/text.ts';
+import { getTable } from '#cli/settings/scopes.ts';
+import { getValueAt } from '#cli/system/tables.ts';
+import { readHooks } from '#cli/repository/setup.ts';
 import type { Session } from '#cli/types/session.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { listExpectedPaths } from '#cli/generation/outdated.ts';
 import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { listOwnablePaths } from '#cli/generation/config-files/pointers.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
-import { type ApplyReport, type GenerationResult } from '#cli/types/generation/files.ts';
+import { type Generation, type ApplyReport } from '#cli/types/generation/files.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
-import { HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/generation/write.ts';
-import { planBlock, writePlans, planRemovals, listStrayPaths, planManagedKeys, planReplacements } from '#cli/write.ts';
+import { SCANNER_KEY, BUNFIG_FILE } from '#cli/config/generation/configurations/general/dependencies.ts';
+
+import {
+    planBlock,
+    writePlans,
+    planRemovals,
+    listStrayPaths,
+    planManagedKeys,
+    planReplacements,
+} from '#cli/repository/writer.ts';
+import {
+    MANAGED_KEYS_NOTE,
+    TOOL_PROJECT_FILES,
+    HOOKS_CHANGED_NOTE,
+    TOOLS_CHANGED_NOTE,
+    GENERATED_FILE_NOUN,
+    STALE_LOCKFILE_NOTE,
+} from '#cli/config/generation/write.ts';
 
 /**
 Say that the generated files need no change.
@@ -18,14 +39,13 @@ Say that the generated files need no change.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function formatUpToDate(count: number): string {
-    return `No change: the ${formatCount(count, 'generated file')} ${count === 1 ? 'is' : 'are'} up to date.`;
+    return `No change: the ${formatCount(count, GENERATED_FILE_NOUN)} ${count === 1 ? 'is' : 'are'} up to date.`;
 }
 
 /**
 Format generated file changes and notes for command output.
 
 @param report the applied file changes and notes.
-@returns the report text.
 */
 export function formatApplyReport(report: ApplyReport): string {
     const lines = [
@@ -38,31 +58,45 @@ export function formatApplyReport(report: ApplyReport): string {
     return `${lines.join('\n')}\n`;
 }
 
-function removeUnusedToolFolders(writer: Files, paths: ReadonlySet<string>): void {
+function deleteUnusedToolFolders(writer: Files, paths: ReadonlySet<string>, generated: Generation): void {
     for (const [path, keep] of [
         [INSTALLED_TOOL_FOLDERS.npm, paths.has(GSPOT_PATHS.npmProject)],
         [INSTALLED_TOOL_FOLDERS.python, paths.has(GSPOT_PATHS.pythonProject)],
-        [INSTALLED_TOOL_FOLDERS.vale, paths.has(GSPOT_PATHS.valeConfigFile)],
+        [
+            INSTALLED_TOOL_FOLDERS.vale,
+            generated.files.some(
+                (file) => file.path === GSPOT_PATHS.valeConfigFile && file.content.includes('Packages = '),
+            ),
+        ],
     ] as const) {
         if (!keep) writer.deleteTree(path);
     }
 }
 
-async function addInstallationNote(session: Session, generated: GenerationResult, report: ApplyReport): Promise<void> {
+async function addInstallationNote(session: Session, generated: Generation, report: ApplyReport): Promise<void> {
     const dependenciesChanged = generated.files.some(
-        (file) =>
-            report.written.includes(file.path) &&
-            (file.kind === 'lock' ||
-                file.path === GSPOT_PATHS.npmProject ||
-                file.path === GSPOT_PATHS.pythonProject ||
-                file.path === GSPOT_PATHS.miseProject),
+        (file) => report.written.includes(file.path) && TOOL_PROJECT_FILES.includes(file.path),
     );
     if (dependenciesChanged) {
-        report.notes.push(INSTALL_FIRST_NOTE);
+        report.notes.push(TOOLS_CHANGED_NOTE);
         return;
     }
     const lockfiles = await listStaleLockfiles(session, generated.files);
-    if (lockfiles.some((lockfile) => lockfile.kind !== undefined)) report.notes.push(INSTALL_MISSING_NOTE);
+    if (lockfiles.length > 0) report.notes.push(STALE_LOCKFILE_NOTE);
+}
+
+function hasUnmanagedScanner(session: Session, writer: Files): boolean {
+    for (const scope of session.scopes) {
+        if (getTable(scope.settings, 'dependencies').bun_scanner !== undefined) continue;
+        const path = joinScope(scope.path, BUNFIG_FILE);
+        const previous = writer.read(path);
+        if (
+            previous !== undefined &&
+            getValueAt(parseTomlFile(path, previous.bytes.toString('utf8')), SCANNER_KEY) !== undefined
+        )
+            return true;
+    }
+    return false;
 }
 
 /**
@@ -73,11 +107,10 @@ Plan, write, and report generated file changes under the repository writer lock.
 @param writer writes and removes files.
 @param options what the write may replace.
 @param options.reviewed the file contents that you reviewed and approved for replacement.
-@returns the file changes.
 */
 export async function writeGeneratedFiles(
     session: Session,
-    generated: GenerationResult,
+    generated: Generation,
     writer: Files,
     options?: { reviewed?: ReadonlyMap<string, FileContents | undefined> | undefined },
 ): Promise<ApplyReport> {
@@ -99,16 +132,16 @@ export async function writeGeneratedFiles(
                 bytes: Buffer.from(file.content),
                 mode: file.executable === true ? EXECUTABLE_FILE : OWNER_WRITABLE_FILE,
             },
-            expected: file.kind === 'lock' ? file.read : reviewed?.get(file.path),
+            expected: reviewed?.get(file.path),
         })),
     );
     const reviewedPlans = [...replacements, ...managedKeyPlans].map((plan) =>
         reviewed?.has(plan.path) === true ? { ...plan, before: reviewed.get(plan.path) } : plan,
     );
-    const blocks = generated.blocks.map((block) => planBlock(writer, block.path, block.block, block.style));
+    const blocks = generated.blocks.map((block) => planBlock(writer, block.path, block.body));
     const pruning = planRemovals(writer, listStrayPaths(session, paths, listOwnablePaths(session)));
     writePlans(writer, [...reviewedPlans, ...blocks, ...pruning]);
-    removeUnusedToolFolders(writer, paths);
+    deleteUnusedToolFolders(writer, paths, generated);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
     report.updated.push(
@@ -117,18 +150,22 @@ export async function writeGeneratedFiles(
     const pruned = pruning.filter((plan) => plan.status === 'changed');
     report.removed.push(...pruned.filter((plan) => plan.after === undefined).map(({ path }) => path));
     report.updated.push(...pruned.filter((plan) => plan.after !== undefined).map(({ path }) => path));
-    if ([...report.removed, ...report.written].some((path) => path.startsWith(`${GSPOT_PATHS.hooks}/`)))
+    if (
+        readHooks(session.repository).hooksPath !== GSPOT_PATHS.hooks &&
+        [...report.removed, ...report.written].some((path) => path.startsWith(`${GSPOT_PATHS.hooks}/`))
+    )
         report.notes.push(HOOKS_CHANGED_NOTE);
+    if (hasUnmanagedScanner(session, writer)) report.notes.push(MANAGED_KEYS_NOTE);
     await addInstallationNote(session, generated, report);
     return report;
 }
 
 function formatGeneratedChanges(action: string, paths: string[]): string[] {
-    const gspotCount = paths.filter((path) => path.startsWith(`${GSPOT_FOLDER}/`)).length;
-    const outside = paths.filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
+    const gspotCount = action === 'removed' ? 0 : paths.filter((path) => path.startsWith(`${GSPOT_FOLDER}/`)).length;
+    const outside = action === 'removed' ? paths : paths.filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
     const label = action.padEnd('updated  '.length);
     return [
-        ...(gspotCount === 0 ? [] : [`${label}${formatCount(gspotCount, 'generated file')}`]),
+        ...(gspotCount === 0 ? [] : [`${label}${formatCount(gspotCount, GENERATED_FILE_NOUN)}`]),
         ...outside.map((path) => `${label}${path}`),
     ];
 }

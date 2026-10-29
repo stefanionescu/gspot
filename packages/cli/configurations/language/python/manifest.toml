@@ -2,7 +2,7 @@ allowed_words = ["Python", "Ruff"]
 ignored_paths = ["**/.venv/**", "**/venv/**"]
 
 [configuration]
-description = "Python sources: lint, layout, strict types, import contracts, docstrings that match their signatures, and no unused code or dependencies."
+description = "Python sources: lint, layout, strict types, docstrings that match their signatures, and no unused code or dependencies."
 title = "Python"
 
 [detect]
@@ -93,7 +93,7 @@ pypi = "vulture"
 version = "2.16"
 
 [ruff]
-recommended = [
+basic = [
     "A",
     "ARG",
     "ASYNC",
@@ -334,7 +334,6 @@ exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
 fix = ["ruff", "check", "--no-cache", "--fix", "--quiet", "{files}"]
 help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore python/ruff --rule <rule> --reason \"<why>\"`, and add `--paths` to limit it."
-level = "recommended"
 name = "ruff"
 output = { format = "json", fields = { file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message" } }
 stage = "commit"
@@ -356,7 +355,6 @@ exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
 fix = ["ruff", "format", "--no-cache", "--quiet", "{files}"]
 help = "Run `gspot check --fix`."
-level = "recommended"
 name = "ruff-format"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): unformatted: ", fixable = "unformatted: ", message = "This file is not formatted the way Ruff formats it." }
 stage = "commit"
@@ -370,7 +368,6 @@ example = "`count: int = \"one\"` reports an incompatible type. Assign a number,
 exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
 help = "Fix the type, or narrow it where the value arrives. Accept a file that needs another dependency set with `gspot ignore python/basedpyright --paths <path> --reason \"<why>\"`."
-level = "recommended"
 name = "basedpyright"
 output = { format = "json", list = "generalDiagnostics", line_base = 0, fields = { file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message" } }
 runs = "scope"
@@ -383,7 +380,6 @@ cwd = "scope"
 example = "A docstring that documents `name` for a function that takes `path` reports a mismatch. Document `path` instead."
 files = { extensions = [".py"] }
 help = "Bring the docstring in line with the signature."
-level = "recommended"
 name = "pydoclint"
 output = { format = "grouped", file_pattern = "^(?<file>\\S.*\\.py)$", pattern = "^\\s+(?<line>\\d+): (?<rule>DOC\\d+): (?<message>.*)$" }
 stage = "commit"
@@ -397,9 +393,8 @@ env = { PYTHONDONTWRITEBYTECODE = "1" }
 example = "An import of a third-party package missing from the project dependencies reports a finding. Declare the package and update the lockfile, or remove the import."
 files = { extensions = [".py"], filenames = ["pyproject.toml"] }
 help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with `gspot ignore python/deptry --rule <rule> --reason \"<why>\"`."
-level = "recommended"
 name = "deptry"
-output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<rule>DEP\\d+) (?<message>.*)$" }
+output = { format = "regex", pattern = "^(?<file>[^:\\s][^:]*?)(?::(?<line>\\d+):(?<column>\\d+))?: (?<rule>DEP\\d+) (?<message>.*)$" }
 runs = "scope"
 stage = "push"
 summary = "Compares the imports of the project with the dependencies it declares: missing, unused, and transitive ones."

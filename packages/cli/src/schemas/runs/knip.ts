@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { type KnipOutput, type KnipSymbol } from '#cli/types/runs/output/reports.ts';
+import { type KnipOutput, type KnipSymbol } from '#cli/types/runs/output/outputs.ts';
 
 const knipSymbolSchema = z.object({
     name: z.string().min(1),
@@ -8,11 +8,12 @@ const knipSymbolSchema = z.object({
     line: z.number().int().positive().optional(),
     col: z.number().int().positive().optional(),
 } satisfies SchemaShape<KnipSymbol>);
+
 const ownersSchema = z.object({ name: z.string() } satisfies SchemaShape<
     NonNullable<KnipOutput['issues'][number]['owners']>[number]
 >);
 
-export const knipReportSchema = z.strictObject({
+export const knipOutputSchema = z.strictObject({
     issues: z
         .strictObject({
             file: z.string().min(1),

@@ -12,21 +12,21 @@ import type { BannedWord, NamingSettings, CompiledOverride } from '#cli/types/ch
 import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY } from '#cli/config/checks/general/naming/settings.ts';
 import { CATEGORY_PARENTS, SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/naming.ts';
 
-function compileOverride(rule: NamingOverride): CompiledOverride {
-    const [languages, categories, allowedNames] = [rule.languages, rule.categories, rule.allowed_names].map((names) =>
-        names === undefined || names.length === 0 ? undefined : new Set(names),
+function compileOverride(override: NamingOverride): CompiledOverride {
+    const [languages, categories, allowedNames] = [override.languages, override.categories, override.allowed_names].map(
+        (names) => (names === undefined || names.length === 0 ? undefined : new Set(names)),
     );
     return {
-        matches: buildPathMatcher(rule.paths ?? ['**']),
+        matches: buildPathMatcher(override.paths ?? ['**']),
         languages,
         categories,
         allowedNames,
-        isDigitsAllowed: rule.allow_digits === true,
-        isRepeatAllowed: rule.allow_repeated_words === true,
-        ignoredPrefix: rule.ignored_prefix === undefined ? undefined : new RegExp(rule.ignored_prefix, 'u'),
+        digitsAllowed: override.allow_digits === true,
+        repeatedWordsAllowed: override.allow_repeated_words === true,
+        ignoredPrefix: override.ignored_prefix === undefined ? undefined : new RegExp(override.ignored_prefix, 'u'),
         ignoredNames:
-            rule.ignored_names_pattern === undefined ? undefined : new RegExp(rule.ignored_names_pattern, 'u'),
-        cases: rule.cases,
+            override.ignored_names_pattern === undefined ? undefined : new RegExp(override.ignored_names_pattern, 'u'),
+        cases: override.cases,
     };
 }
 
@@ -44,35 +44,34 @@ function getNamingLimits(scopeSettings: ScopeSettings, language: string, categor
     };
 }
 
-function buildLimitsFor(scopeSettings: ScopeSettings): NamingSettings['limitsFor'] {
+function buildLimitLookup(scopeSettings: ScopeSettings): NamingSettings['limitLookup'] {
     return (language, category) => {
         const parent = CATEGORY_PARENTS[category] ?? category;
         const limits = getNamingLimits(scopeSettings, language, parent);
         return {
-            caseNames:
+            cases:
                 (scopeSettings.valuesByKey[`naming.${language}.${category}.cases`] as NamingCase[] | undefined) ??
                 limits.cases,
-            maxChars: limits.max_characters,
+            maxCharacters: limits.max_characters,
             maxWords: limits.max_words,
         };
     };
 }
 
 function compileBannedWords(
-    terms: string[],
-    origin: Pick<BannedWord, 'setting' | 'group' | 'categories'>,
+    words: string[],
+    origin: Pick<BannedWord, 'setting' | 'list' | 'categories'>,
 ): BannedWord[] {
-    return terms
+    return words
         .map((term) => ({ word: term.trim().toLowerCase(), words: splitWords(term), ...origin }))
         .filter((term) => term.words.length > 0);
 }
 
 /**
-Reads the naming settings of a scope: the shipped lists plus the repository additions, exemptions, and limits.
+Join the shipped lists with the repository's additions, exemptions, and limits.
 
 @param settings the authored repository settings.
 @param scope the scope, selected configurations, and merged settings.
-@returns the word lists, exemptions, and limits.
 */
 export function readNamingSettings(settings: Settings, scope: Scope): NamingSettings {
     const { settings: scopeSettings, configurations, path: scopePath } = scope;
@@ -80,10 +79,10 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
     const tables = listApplicableTables(settings, scopePath).map(({ table }) => table.naming);
     const bannedWords = [...new Set(tables.flatMap((table) => table?.banned_words ?? []))];
     const terms = [
-        ...Object.entries(shipped.groups).flatMap(([group, { terms }]) =>
+        ...Object.entries(shipped.lists).flatMap(([group, { words: terms }]) =>
             compileBannedWords(terms, {
                 setting: `${group} group`,
-                group,
+                list: group,
                 ...(group === 'folders' && { categories: ['folders'] }),
             }),
         ),
@@ -101,7 +100,7 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
         bannedWords: terms,
         allowedPhrases: shipped.allowed_phrases.map((phrase) => splitWords(phrase)),
         overrides,
-        limitsFor: buildLimitsFor(scopeSettings),
+        limitLookup: buildLimitLookup(scopeSettings),
     };
 }
 
@@ -109,7 +108,6 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
 Splits a name into lowercase parts: `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`; `base64` stays one word.
 
 @param name the identifier.
-@returns the lowercase words and digit groups.
 */
 export function splitWords(name: string): string[] {
     return name

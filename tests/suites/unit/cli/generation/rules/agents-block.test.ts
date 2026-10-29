@@ -2,17 +2,17 @@ import { join } from 'node:path';
 import { format } from 'prettier';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { buildAgentsBlock } from '#cli/generation/rules.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { RULE_INDEX_PATHS } from '#tests/config/generation/rules.ts';
-import { findRuleFilePath } from '#tests/setup/cli/generated-files.ts';
+import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { RULE_INDEX_PATHS, COMMANDS_HEADING, COMMIT_CHECK_LINE } from '#tests/config/generation/rules.ts';
 
 function listIndexPaths(block: string): (string | undefined)[] {
-    const index = block.slice(0, block.indexOf('## Commands'));
+    const index = block.slice(0, block.indexOf(COMMANDS_HEADING));
     return index
         .matchAll(/^- `([^`]+)`/gmu)
         .map(([, path]) => path)
@@ -37,9 +37,9 @@ test('the AGENTS.md block names the folders of a scoped rule without parentheses
 
 test('with no configurations the block still lists the general rules and the check command', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([], { rules: true }) });
-    const block = generate(await openSession(sandbox.path)).blocks.find(({ path }) => path === 'AGENTS.md')!.block;
+    const block = generateFiles(await openSession(sandbox.path)).blocks.find(({ path }) => path === 'AGENTS.md')!.body;
     expect(listIndexPaths(block)).toStrictEqual(RULE_INDEX_PATHS);
-    expect(block).toContain('Before you commit, run `mise exec -- gspot check --staged`.');
+    expect(block).toContain(COMMIT_CHECK_LINE);
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
@@ -47,15 +47,15 @@ test('with a check selected the block names the command, and an excluded file le
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['spelling'], {
             rules: true,
-            tables: `[rules]\nexclude = ["${findRuleFilePath('engineering', 'CLI.md')}"]\n`,
+            tables: `[rules]\nexclude = ["${getRuleFilePath('engineering', 'CLI.md')}"]\n`,
         }),
     });
 
-    const block = generate(await openSession(sandbox.path)).blocks.find(({ path }) => path === 'AGENTS.md')!.block;
+    const block = generateFiles(await openSession(sandbox.path)).blocks.find(({ path }) => path === 'AGENTS.md')!.body;
     expect(listIndexPaths(block)).toStrictEqual(
         RULE_INDEX_PATHS.filter((path) => path !== '.gspot/configurations/general/engineering/rules/CLI.md'),
     );
-    expect(block).toContain('Before you commit, run `mise exec -- gspot check --staged`.');
+    expect(block).toContain(COMMIT_CHECK_LINE);
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
@@ -92,9 +92,10 @@ test.each([true, false])(
             hasChecks,
             startCommand: command,
         });
-        expect(block.slice(block.indexOf('## Commands'), block.indexOf('\n## Generated files'))).toBe(
+        expect(block.slice(block.indexOf(COMMANDS_HEADING), block.indexOf('\n## Generated files'))).toBe(
             `## Commands\n\nThe rules write \`gspot\` for \`${command}\`.\n\n` +
                 (hasChecks ? `Before you commit, run \`${command} check --staged\`.\n\n` : '') +
+                `After you add code in a new language, framework or tool, run \`${command} add\`, then \`${command} install\`.\n\n` +
                 `To change \`gspot.toml\`, run \`${command} set\`, \`unset\`, \`add\`, \`remove\`, \`ignore\`, or \`unignore\`.\n` +
                 `After you edit \`gspot.toml\` by hand, run \`${command} apply\`.\n`,
         );

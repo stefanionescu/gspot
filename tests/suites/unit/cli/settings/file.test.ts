@@ -1,18 +1,21 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { openWriter } from '#cli/write.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { openWriter } from '#cli/repository/writer.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { readSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { COMMENTED_SETTINGS } from '#tests/config/settings/file.ts';
+import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 import { stat, link, symlink, readFile, writeFile } from 'node:fs/promises';
 import { setKey, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
-import { parseTomlText, writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 
 test('a TOML syntax error names the file, line and column', () => {
-    expect(() => parseTomlText('"🚦前言"=2026-04-31\n', 'gspot.toml')).toThrow('gspot.toml:1:8 is not valid TOML:');
-    expect(() => parseTomlText('level="all"\nlevel="all"\n', 'gspot.toml')).toThrow(
+    expect(() => parseTomlFile('gspot.toml', '"🚦前言"=2026-04-31\n')).toThrow('gspot.toml:1:8 is not valid TOML:');
+    expect(() => parseTomlFile('gspot.toml', 'level="all"\nlevel="all"\n')).toThrow(
         'gspot.toml:2:1 is not valid TOML:',
     );
 });
@@ -44,14 +47,14 @@ test('an edit planned from old bytes is refused, and a new plan is written', asy
     setKey(fresh.table, 'level', 'all');
     const next = buildEditedSettings(sandbox.path, fresh);
     writeSettings(writer, next.text, fresh.previous);
-    const settings = readSandboxSettings(sandbox.path).level;
+    const settings = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).level;
     expect(settings).toBe('all');
 });
 
 test('reading or editing a missing gspot.toml is refused and creates nothing', async () => {
     await using sandbox = await testdir();
-    expect(() => readSettingsFile(sandbox.path)).toThrow('Run `gspot init`');
-    expect(() => readSettingsEdit(sandbox.path)).toThrow('Run `gspot init`');
+    expect(() => readSettingsFile(sandbox.path)).toThrow('Run gspot init');
+    expect(() => readSettingsEdit(sandbox.path)).toThrow('Run gspot init');
     const missing = await captureRejection(stat(join(sandbox.path, 'gspot.toml')));
     expect(missing).toMatchObject({ code: 'ENOENT' });
 });

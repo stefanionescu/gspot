@@ -4,7 +4,7 @@ import { GIT_FOLDER } from '#cli/config/repository/files/tracked.ts';
 
 export const HADOLINT_FAILURE_THRESHOLD = 'style';
 
-export const HADOLINT_RECOMMENDED_OFF = [
+export const HADOLINT_DEFAULT_LEVEL_OFF = [
     'DL3001',
     'DL3003',
     'DL3008',
@@ -16,3 +16,7 @@ export const HADOLINT_RECOMMENDED_OFF = [
 ] as const;
 
 export const TRIVY_SKIPPED_FOLDERS = [NODE_MODULES, GSPOT_FOLDER, GIT_FOLDER] as const;
+
+export const HADOLINT_CHECK = 'docker/hadolint';
+
+export const TRIVY_TABLE = 'tools.trivy';

@@ -1,22 +1,29 @@
 import { posix } from 'node:path';
 import type { Session } from '#cli/types/session.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
-import { type Finding } from '#cli/types/runs/check.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
+import { type CheckFinding } from '#cli/types/runs/check.ts';
 import { FILENAME_TAGS } from '#cli/config/repository/files/classify.ts';
 import { SYMLINK_MODE, GIT_FILE_MODES } from '#cli/config/files/modes.ts';
-import { ASSET_FOLDER, TEXT_SUFFIXES } from '#cli/config/checks/framework/site/unused-assets.ts';
+
+import {
+    ASSET_FOLDER,
+    TEXT_EXTENSIONS,
+    UNUSED_ASSET_RULE,
+    CONVENTIONAL_ASSETS,
+    UNUSED_ASSET_MESSAGE,
+    ASSET_REFERENCE_PREFIX,
+    ASSET_REFERENCE_SUFFIX,
+} from '#cli/config/checks/framework/site/unused-assets.ts';
 
 /**
-Reports each asset that no text file in the scope or the index names.
+Report assets absent from the text files and index. Exclude files that browsers and hosts load by name.
 
 @param session the repository and its tools.
 @param planned the scope files and the tracked files.
-@returns the findings.
 */
-export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): Finding[] {
+export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): CheckFinding[] {
     const local = new Set(planned.files.map((file) => file.path));
     const paths = new Set([
         ...local,
@@ -31,7 +38,7 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
     ]);
     const texts = paths
         .values()
-        .filter((path) => TEXT_SUFFIXES.has(posix.extname(path)))
+        .filter((path) => TEXT_EXTENSIONS.has(posix.extname(path)))
         .map((path) => {
             const text = findCachedText(session.reads, path);
             return text === undefined ? undefined : { path, text };
@@ -43,20 +50,26 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
             (file) =>
                 ASSET_FOLDER.test(file.path) &&
                 !FILENAME_TAGS.has(posix.basename(file.path)) &&
-                !TEXT_SUFFIXES.has(posix.extname(file.path)),
+                !TEXT_EXTENSIONS.has(posix.extname(file.path)) &&
+                !CONVENTIONAL_ASSETS.test(file.path),
         )
         .filter((file) => {
-            const name = posix.basename(file.path);
-            return !texts.some(({ path, text }) =>
-                text.includes(local.has(path) ? name : posix.relative(extractParentFolder(path), file.path)),
+            const belowAssets = file.path.slice(
+                (ASSET_FOLDER.exec(file.path)?.index ?? 0) + (ASSET_FOLDER.exec(file.path)?.[0].length ?? 0),
+            );
+            const reference = new RegExp(
+                `${ASSET_REFERENCE_PREFIX}/?${RegExp.escape(belowAssets)}${ASSET_REFERENCE_SUFFIX}`,
+                'u',
+            );
+            return !texts.some(
+                ({ path, text }) =>
+                    reference.test(text) || text.includes(posix.relative(extractParentFolder(path), file.path)),
             );
         })
-        .map((file) =>
-            buildFinding(
-                planned,
-                { file: file.path, line: 1 },
-                'unused-asset',
-                'No page, stylesheet or script names this file.',
-            ),
-        );
+        .map((file) => ({
+            file: file.path,
+            line: 1,
+            rule: UNUSED_ASSET_RULE,
+            message: UNUSED_ASSET_MESSAGE,
+        }));
 }

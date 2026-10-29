@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Documentation: links that reach their files, anchors, and sites, and paths and commands that exist. Level `all` requires a README in every scope and a LICENSE at the root."
+description = "Documentation: links that reach their files, anchors, and sites, and paths and commands that exist. Level all requires a README in every scope and a LICENSE at the root."
 title = "Docs"
 
 [files]
@@ -21,7 +21,6 @@ tool = "lychee"
 command = ["lychee", "--config", "{config_file:lychee}", "--root-dir", "{root}/.gspot/root-links", "--offline", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
 example = "The link `[Setup](missing.md)` reports a broken link when no `missing.md` exists. Point it at the setup guide, or add that file."
 help = "Point the link at the file or heading that exists, or delete it."
-level = "recommended"
 name = "lychee"
 output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
 stage = "commit"
@@ -32,7 +31,6 @@ why = "A dead link inside the repository breaks silently, and readers hit it fir
 command = ["lychee", "--config", "{config_file:lychee}", "--root-dir", "{root}", "--scheme", "http", "--scheme", "https", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
 example = "A link that returns HTTP 404 reports a broken destination. Replace the URL with a current one, or remove the link."
 help = "Update or remove the link, or exclude the URL pattern with a reason under docs.allowed_urls."
-level = "recommended"
 name = "lychee-external"
 needs = ["network"]
 output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
@@ -43,7 +41,6 @@ why = "External links break over time; this check reports which ones did."
 [[check]]
 example = "A path in the docs that points to a deleted file reports a stale reference. Update the path and any command that uses it."
 help = "Fix the path or the task name. To keep an example code block out of the check, give it a `title=` attribute."
-level = "recommended"
 name = "missing-paths"
 runs = "once"
 stage = "commit"
@@ -58,3 +55,4 @@ name = "required-files"
 stage = "commit"
 summary = "Checks that every scope has a README.md and the root has a LICENSE."
 why = "A scope with no README leaves readers to guess what it does."
+runs = "scope"

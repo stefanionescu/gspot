@@ -20,10 +20,10 @@ describe.each([...SUPPRESSION_SYNTAX_CASES])(
             path: `source-${index.toString()}.${extension}`,
             source: `${comment}\n${body}\n`,
         }));
-        let sandbox: Awaited<ReturnType<typeof testdir>>;
+        const resources = new AsyncDisposableStack();
         let comments: readonly Finding[];
         beforeAll(async () => {
-            sandbox = await testdir();
+            const sandbox = resources.use(await testdir());
             await createFileTree(sandbox.path, {
                 'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
                 ...Object.fromEntries(sources.map(({ path, source }) => [path, source])),
@@ -31,7 +31,7 @@ describe.each([...SUPPRESSION_SYNTAX_CASES])(
             comments = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
         });
         afterAll(async () => {
-            await sandbox[Symbol.asyncDispose]();
+            await resources.disposeAsync();
         });
         test.each([...sources])('$comment is a suppression: $active', ({ active, path }) => {
             expect(

@@ -6,7 +6,6 @@ Return the value of a key for this run, and create it on the first call.
 
 @param reads the run cache.
 @param key the key, whose function creates the value.
-@returns the value from the cache, or the value that the producer builds on the first read.
 */
 export function getCachedValue<Value extends object>(reads: ReadCache, key: CacheKey<Value>): Value {
     const held = reads.values.get(key);

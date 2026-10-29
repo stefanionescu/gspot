@@ -3,118 +3,84 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { join, delimiter } from 'node:path';
-import { openSession } from '#cli/session.ts';
-import { stringify } from '@decimalturn/toml-patch';
+import { CI_PINS } from '#cli/config/generation/ci.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import { type Pipeline } from '#cli/types/generation/ci.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
-import { LINT_STEPS, SETUP_CASES, LINUX_PIPELINE, SETUP_ARGUMENTS } from '#tests/config/generation/ci.ts';
 
-async function buildPipeline(): Promise<Pipeline> {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['docs'], {
-            tables: stringify({
-                command_check: [{ id: 'project/audit', paths: ['**/*'], stage: 'manual', command: ['echo', 'sample'] }],
-            }),
-        }),
-        'README.md': '# Example\n',
-        'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
-    });
-    const session = await openSession(sandbox.path);
-    return {
-        ...LINUX_PIPELINE,
-        manualChecks: session.configuredChecks.filter(({ check }) =>
-            ['docs/lychee-external', 'project/audit'].includes(check.id),
-        ),
-        tools: session.configurationsByName.get('docs')!.tools.filter((tool) => tool.name === 'lychee'),
-    };
-}
+import {
+    LINT_STEPS,
+    CACHE_CASES,
+    SETUP_CASES,
+    INSTALL_STEP,
+    GITLAB_SCRIPT,
+    LINUX_PIPELINE,
+    SETUP_ARGUMENTS,
+} from '#tests/config/generation/ci.ts';
 
-test('the GitHub workflow has one lint job, which ends with the slow checks only when there are some', async () => {
-    const pipeline = await buildPipeline();
-
-    const workflow = parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow;
+test('the GitHub workflow installs gspot once and runs hook checks in one lint job', () => {
+    const workflow = parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow;
+    const steps = workflow.jobs['lint']!.steps;
     expect(Object.keys(workflow.jobs)).toStrictEqual(['lint']);
-    expect(workflow.jobs['lint']!.steps.map((step) => step.name)).toStrictEqual([...LINT_STEPS]);
-    const none = parse(buildGithubWorkflow({ ...pipeline, manualChecks: [] }).content) as GithubWorkflow;
-    expect(none.jobs['lint']!.steps.map((step) => step.name)).toStrictEqual(LINT_STEPS.slice(0, -1));
-});
-
-test('the Slow checks step names every slow check in one comma list', async () => {
-    const pipeline = await buildPipeline();
-    const command = "mise exec node@24 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3' -- gspot";
-    const expected = `${command} check --only 'docs/lychee-external,project/audit'`;
-    const steps = (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps;
-    expect(steps.find((step) => step.name === 'Install gspot tools')?.run).toBe(
-        `${command} install\ngit add --intent-to-add -- .gspot\ngit diff --exit-code -- .gspot`,
+    expect(steps.map((step) => step.name)).toStrictEqual([...LINT_STEPS]);
+    expect(steps.find((step) => step.name === 'Install gspot')?.run).toBe(
+        `mise install node@24 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3'
+mise bin-paths node@24 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3' >> "$GITHUB_PATH"`,
     );
-    expect(steps.find((step) => step.name === 'Slow checks')?.run).toBe(
-        `(cd ${GSPOT_FOLDER} && mise install lychee)\n${expected}\n`,
+    expect(steps.find((step) => step.name === INSTALL_STEP)?.run).toBe(
+        'gspot install\ngit add --intent-to-add -- .gspot\ngit diff --exit-code -- .gspot',
     );
-    expect(steps.find((step) => step.name === 'Lint')?.run).toBe(`${command} check --changed "\${GSPOT_CI_BASE}"\n`);
-    expect(buildGitlabWorkflow(pipeline).content).toContain(expected);
-    const script = (parse(buildGitlabWorkflow(pipeline).content) as GitlabPipeline).gspot.script;
-    const install = script.indexOf(`${command} install`);
-    expect(install).toBeGreaterThanOrEqual(0);
-    expect(script.slice(install, install + 3)).toStrictEqual([
-        `${command} install`,
-        'git add --intent-to-add -- .gspot',
-        'git diff --exit-code -- .gspot',
-    ]);
-});
-
-test('pushes run the job on the default branch only, and the slow checks only on those pushes', async () => {
-    const pipeline = await buildPipeline();
-
-    const job = (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!;
-    expect(job.if).toBe("github.event_name != 'push' || github.ref_name == github.event.repository.default_branch");
+    expect(steps.find((step) => step.name === 'Lint')?.run).toBe('gspot check --changed "${GSPOT_CI_BASE}"\n');
     expect(
-        job.steps.filter((step) => step.if === "github.event_name == 'push'").map((step) => step.name),
-    ).toStrictEqual(['Slow checks']);
+        steps.filter((step) => step.env?.['MISE_GITHUB_TOKEN'] !== undefined).map((step) => step.name),
+    ).toStrictEqual(['Install gspot']);
 });
 
-test('the cache key covers the gspot version, the tool files, and the project lockfiles, and the cache is saved before the checks', async () => {
-    const pipeline = await buildPipeline();
+test('GitLab installs gspot once, adds its bins to PATH, and checks the comparison revision', () => {
+    const script = (parse(buildGitlabWorkflow(LINUX_PIPELINE).content) as GitlabPipeline).gspot.script;
+    expect(script).toStrictEqual([...GITLAB_SCRIPT]);
+});
 
-    const steps = (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps;
+test('pushes run the GitHub job on the default branch only', () => {
+    const job = (parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow).jobs['lint']!;
+    expect(job.if).toBe("github.event_name != 'push' || github.ref_name == github.event.repository.default_branch");
+    expect(job.steps.filter((step) => step.if === "github.event_name == 'push'")).toStrictEqual([]);
+});
+
+test('the cache key covers version and lockfiles without restoring another key, and escapes apostrophes', () => {
+    const steps = (
+        parse(
+            buildGithubWorkflow({ ...LINUX_PIPELINE, lockfiles: [...LINUX_PIPELINE.lockfiles, "team's/bun.lock"] })
+                .content,
+        ) as GithubWorkflow
+    ).jobs['lint']!.steps;
     const restore = steps.find((step) => step.name === 'Restore caches')!;
     expect(restore.with?.['key']).toBe(
-        "gspot-${{ runner.os }}-${{ runner.arch }}-1.2.3-${{ hashFiles('.gspot/package.json', '.gspot/*lock*', '.gspot/pyproject.toml', '.gspot/mise.toml', '.gspot/mise.lock', 'package-lock.json', 'web/pnpm-lock.yaml') }}",
+        "gspot-${{ runner.os }}-${{ runner.arch }}-1.2.3-${{ hashFiles('.gspot/package.json', '.gspot/*lock*', '.gspot/pyproject.toml', '.gspot/mise.toml', 'package-lock.json', 'web/pnpm-lock.yaml', 'team''s/bun.lock') }}",
     );
-    expect(restore.with?.['restore-keys']).toBe('gspot-${{ runner.os }}-${{ runner.arch }}-');
+    expect(restore.with?.['restore-keys']).toBeUndefined();
+    expect(restore.with?.['path']).toBe(
+        '~/.cache/mise\n~/.local/share/mise/installs\n~/.npm/_cacache\n~/.local/share/pnpm/store\n',
+    );
     const save = steps.find((step) => step.name === 'Save caches')!;
     expect(save).toMatchObject({
-        if: `steps.${restore.id ?? ''}.outputs.cache-hit != 'true'`,
-        with: { key: `\${{ steps.${restore.id ?? ''}.outputs.cache-primary-key }}`, path: restore.with?.['path'] },
+        if: "steps.cache.outputs.cache-hit != 'true'",
+        with: { key: '${{ steps.cache.outputs.cache-primary-key }}', path: restore.with?.['path'] },
     });
 });
 
-test('only the steps that install tools receive the GitHub token for mise', async () => {
-    const pipeline = await buildPipeline();
-
-    const workflow = parse(
-        buildGithubWorkflow({
-            ...pipeline,
-            manualChecks: pipeline.manualChecks.filter(({ check }) => check.id === 'docs/lychee-external'),
-        }).content,
-    ) as GithubWorkflow;
-    const tokenSteps = Object.entries(workflow.jobs).flatMap(([job, { steps }]) =>
-        steps
-            .filter((step) => step.env?.['MISE_GITHUB_TOKEN'] !== undefined)
-            .map((step) => `${job}: ${step.name ?? ''}`),
-    );
-    expect(tokenSteps).toStrictEqual(['lint: Install gspot tools', 'lint: Slow checks']);
-});
-
-test('a Swift scope adds a macOS job, each job names its system, and the Linux job uses the Linux runner', async () => {
-    const pipeline = await buildPipeline();
+test('a Swift scope adds a macOS job, each job names its system, and the Linux job uses the Linux runner', () => {
+    const pipeline = LINUX_PIPELINE;
 
     const workflow = parse(
         buildGithubWorkflow({ ...pipeline, hasSwift: true, linuxRunner: 'linux-large' }).content,
@@ -130,11 +96,11 @@ test('a Swift scope adds a macOS job, each job names its system, and the Linux j
 test.each([...SETUP_CASES])(
     'the %s job keeps setup exit %i and literal arguments before gspot',
     async (provider, setupExit) => {
-        const pipeline = await buildPipeline();
+        const pipeline = LINUX_PIPELINE;
         await using sandbox = await createGitSandbox({ '.gspot/version': '1.2.3' });
         runGitStep(sandbox.path, ['add', '.gspot/version']);
         const commands = join(sandbox.path, 'commands.log');
-        const bin = await writeProgramCommand(sandbox.path, 'bin/mise', 'fakes/exec');
+        const bin = await writeProgramCommand(sandbox.path, 'bin/mise', 'fakes/tool');
         await writeProgramCommand(sandbox.path, 'bin/gspot', 'fakes/tool', '--log-arguments', commands, '--');
         await writeProgramCommand(
             sandbox.path,
@@ -152,8 +118,6 @@ test.each([...SETUP_CASES])(
         );
         const setupPipeline = {
             ...pipeline,
-            manualChecks: [],
-            tools: [],
             setupCommand: [join(bin, 'project setup'), ...SETUP_ARGUMENTS],
         };
         const script =
@@ -164,7 +128,10 @@ test.each([...SETUP_CASES])(
                 : (parse(buildGitlabWorkflow(setupPipeline).content) as GitlabPipeline).gspot.script;
         const result = await runCommand(['bash', '-e', '-c', script.join('\n')], {
             cwd: sandbox.path,
-            env: { PATH: `${bin}${delimiter}${readEnvironmentVariable('PATH') ?? ''}` },
+            env: {
+                PATH: `${bin}${delimiter}${readEnvironmentVariable('PATH') ?? ''}`,
+                GITHUB_PATH: join(sandbox.path, 'github-path'),
+            },
         });
         expect(result.code, result.stdout + result.stderr).toBe(setupExit);
         expect(result.stdout).toBe('setup out\n');
@@ -187,7 +154,7 @@ test('without a setup command, CI installs the locked dependencies of each proje
         'uv.lock': 'version = 1\n',
         'web/package.json': '{"private":true,"packageManager":"pnpm@10.30.0","dependencies":{"next":"16.0.0"}}',
         'web/pnpm-lock.yaml': "lockfileVersion: '9.0'\n",
-        'web/next.config.ts': 'export default {};\n',
+        'web/next.config.ts': EMPTY_DEFAULT_SOURCE,
         'main.py': 'value = 1\n',
         'web/app/page.tsx': 'export default function Page() { return null; }\n',
     });
@@ -200,4 +167,52 @@ test('without a setup command, CI installs the locked dependencies of each proje
         '(cd web && mise exec node@24 pnpm@10.30.0 -- pnpm install --frozen-lockfile)',
         '(cd web && npx --no -- next typegen)',
     ]);
+});
+
+test.each(CACHE_CASES)('the $system cache names only the selected tool stores at system paths', ({ system, paths }) => {
+    const workflow = parse(
+        buildGithubWorkflow({
+            ...LINUX_PIPELINE,
+            operatingSystems: [system],
+            packageManagers: ['npm', 'pnpm', 'yarn', 'bun', 'uv'],
+        }).content,
+    ) as GithubWorkflow;
+    expect(workflow.jobs['lint']!.steps.find((step) => step.name === 'Restore caches')?.with?.['path']).toBe(paths);
+});
+
+test('the GitHub workflow pins each action to a full commit and names its version in a comment', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: '[ci]\nenabled = true\nprovider = "github"\n' }),
+    });
+    const content = generateFiles(await openSession(sandbox.path)).files.find(
+        ({ path }) => path === '.github/workflows/gspot.yml',
+    )!.content;
+    const workflow = parse(content) as GithubWorkflow;
+    const actions = Object.values(workflow.jobs).flatMap(({ steps }) => steps.filter(({ uses }) => uses !== undefined));
+    const lines = content.split('\n').filter((line) => /\buses:/u.test(line));
+    expect(actions.map(({ uses }) => uses?.split('@', 1)[0])).toStrictEqual([
+        'actions/checkout',
+        'actions/cache/restore',
+        'jdx/mise-action',
+        'actions/cache/save',
+    ]);
+    expect(lines).toHaveLength(actions.length);
+    for (const line of lines)
+        expect(line).toMatch(/^\s+(?:- )?uses: [\w.-]+\/[\w./-]+@[0-9a-f]{40} # v\d+(?:\.\d+)*$/u);
+});
+
+test('the hand-written tests workflow uses the action pins and mise version that gspot writes', async () => {
+    const workflow = parse(
+        await readFile(join(REPOSITORY_ROOT, '.github/workflows/tests.yml'), 'utf8'),
+    ) as GithubWorkflow;
+    const actions = Object.values(workflow.jobs).flatMap(({ steps }) => steps.filter(({ uses }) => uses !== undefined));
+    expect(actions.map(({ uses }) => uses)).toStrictEqual([
+        `${CI_PINS.actions.checkout.name}@${CI_PINS.actions.checkout.sha}`,
+        `${CI_PINS.actions.mise.name}@${CI_PINS.actions.mise.sha}`,
+        `actions/cache@${CI_PINS.actions.restoreCache.sha}`,
+    ]);
+    expect(CI_PINS.actions.saveCache.sha).toBe(CI_PINS.actions.restoreCache.sha);
+    expect(actions.find(({ uses }) => uses?.startsWith('jdx/mise-action@') === true)?.with?.['version']).toBe(
+        CI_PINS.mise.version,
+    );
 });

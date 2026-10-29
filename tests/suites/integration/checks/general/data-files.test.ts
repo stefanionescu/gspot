@@ -5,12 +5,13 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { UNCLOSED_SEQUENCE } from '#tests/config/yaml.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     FILES_CASES,
@@ -36,7 +37,7 @@ async function assertYamlFiles(root: string, rule?: string): Promise<void> {
 const installedSandbox = shareInstalledSandbox(FILES_SANDBOX);
 
 test.each([...FILES_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
-    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
+    await assertCheckSample(installedSandbox(), sample);
 });
 
 test('v8r validates a staged JSON file with a non-ASCII path against its schema', async () => {
@@ -51,7 +52,7 @@ test('v8r validates a staged JSON file with a non-ASCII path against its schema'
         },
     });
     await using _change = await applySandboxChanges(installedSandbox(), {
-        files: { 'settings/café.json': JSON.stringify({ count: 'invalid' }), '.v8rrc.yml': 'invalid: [\n' },
+        files: { 'settings/café.json': JSON.stringify({ count: 'invalid' }), '.v8rrc.yml': UNCLOSED_SEQUENCE },
         settings: stringify({
             tools: {
                 v8r: { schema: [{ paths: ['settings/café.json'], url: `${server.url.href}schema.json` }] },

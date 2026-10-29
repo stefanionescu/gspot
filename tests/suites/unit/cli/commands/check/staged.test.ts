@@ -3,19 +3,23 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
+import { NOTES_MARKDOWN } from '#tests/config/documents.ts';
 import { createFileTree, type TestdirResult } from 'testdirs';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { DEPENDENCY_FILES_MESSAGE } from '#tests/config/messages.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { rmSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { STAGED_PACKAGE_JSON } from '#tests/config/commands/check/staged.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { stat, chmod, mkdir, unlink, readFile, writeFile } from 'node:fs/promises';
+import { SCRIPT_SPACES, STAGED_PACKAGE_JSON, UPPERCASE_NOTES_MARKDOWN } from '#tests/config/commands/check/staged.ts';
 
 async function createCaseClashingSandbox(): Promise<TestdirResult> {
     const sandbox = await createGitSandbox({});
@@ -35,8 +39,8 @@ async function createCaseClashingSandbox(): Promise<TestdirResult> {
         runGitStep(sandbox.path, ['add', '-A']);
         runGitStep(sandbox.path, ['commit', '-qm', 'base']);
         for (const [path, text] of [
-            ['docs/Notes.md', '# Notes\n'],
-            ['docs/NOTES.md', '# NOTES\n'],
+            ['docs/Notes.md', NOTES_MARKDOWN],
+            ['docs/NOTES.md', UPPERCASE_NOTES_MARKDOWN],
         ]) {
             await writeFile(join(sandbox.path, '.git', 'staged-blob'), text!);
             const hash = runGitStep(sandbox.path, ['hash-object', '-w', '.git/staged-blob']);
@@ -90,7 +94,7 @@ test('a staged check reads index bytes and file modes, converts no line endings,
     expect(await isOnDisk(join(sandbox.path, 'created.txt'))).toBe(false);
 });
 
-test('a staged check copies the locked dependencies and leaves the working tree as it was', async () => {
+test('a staged check reuses the locked dependencies and isolates source edits', async () => {
     await using sandbox = await createGitSandbox({});
     const lockfile = JSON.stringify({
         name: STAGED_PACKAGE_JSON.name,
@@ -102,7 +106,7 @@ test('a staged check copies the locked dependencies and leaves the working tree 
         '--name',
         'dependency',
         '--write',
-        'node_modules/dependency/stamp.txt=snapshot output',
+        'source.txt=snapshot output',
     );
     await createFileTree(sandbox.path, {
         '.gitignore': `${GSPOT_FOLDER}/\nnode_modules/\n`,
@@ -147,7 +151,7 @@ test('a staged check keeps each Python scope config and reports the installed de
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     runGitStep(sandbox.path, ['add', '-A']);
-    const previous = await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')));
+    const previous = await readFile(join(sandbox.path, getManifestTarget('python', 'basedpyright.json')));
     const commandArguments = ['check', '--staged', '--only', 'gspot/generated-files', '--json'];
     const checked = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
@@ -158,18 +162,16 @@ test('a staged check keeps each Python scope config and reports the installed de
         { file: `${GSPOT_FOLDER}/package-lock.json`, rule: 'missing' },
         { file: GSPOT_PATHS.uvLockfile, rule: 'missing' },
     ]);
-    const contents = await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')));
+    const contents = await readFile(join(sandbox.path, getManifestTarget('python', 'basedpyright.json')));
     expect(contents).toStrictEqual(previous);
     await writeFile(join(sandbox.path, 'child/pyproject.toml'), project + '# Unstaged project change.\n');
     const rerun = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(rerun.code, rerun.stdout + rerun.stderr).toBe(1);
-    expect(rerun.report.notes).toStrictEqual([
-        'The dependency files in the working tree differ from the checked revision; the checks used the installed dependencies.',
-    ]);
+    expect(rerun.report.notes).toStrictEqual([DEPENDENCY_FILES_MESSAGE]);
     expect(rerun.report.checks.flatMap((check) => check.findings)).toStrictEqual(
         checked.report.checks.flatMap((check) => check.findings),
     );
-    const compilerSettings = await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')));
+    const compilerSettings = await readFile(join(sandbox.path, getManifestTarget('python', 'basedpyright.json')));
     expect(compilerSettings).toStrictEqual(previous);
 });
 
@@ -187,7 +189,7 @@ test.skipIf(isCaseFolding())('staged paths that differ only by letter case keep 
         Object.fromEntries(
             report.checks.flatMap(({ findings }) => findings.map(({ file, message }) => [file, message])),
         ),
-    ).toStrictEqual({ 'docs/Notes.md': '# Notes\n', 'docs/NOTES.md': '# NOTES\n' });
+    ).toStrictEqual({ 'docs/Notes.md': NOTES_MARKDOWN, 'docs/NOTES.md': UPPERCASE_NOTES_MARKDOWN });
 });
 
 test.skipIf(!isCaseFolding())(
@@ -209,10 +211,10 @@ test.skipIf(!isCaseFolding())(
 test('staged checks use index bytes and settings on an unborn branch while preserving unstaged edits', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK });
-    await createFileTree(sandbox.path, { 'gspot.toml': settings, 'script with spaces.sh': 'if then\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': settings, 'script with spaces.sh': BROKEN_IF_SCRIPT });
     runGitStep(sandbox.path, ['add', '-A']);
     const index = runGitStep(sandbox.path, ['ls-files', '--stage', '-z']);
-    await writeFile(join(sandbox.path, 'script with spaces.sh'), 'echo repaired only in the working tree\n');
+    await writeFile(join(sandbox.path, SCRIPT_SPACES), 'echo repaired only in the working tree\n');
     await writeFile(join(sandbox.path, 'gspot.toml'), 'invalid working settings');
     const commandArguments = ['check', '--staged', '--only', 'project/bash-syntax', '--json'];
     const failed = parseCheckReport(await runGspot(sandbox.path, commandArguments));
@@ -223,24 +225,22 @@ test('staged checks use index bytes and settings on an unborn branch while prese
         {
             reproduce: 'gspot check --only project/bash-syntax --staged',
             findings: [
-                { file: 'script with spaces.sh', line: 1, message: "syntax error near unexpected token `then'" },
-                { file: 'script with spaces.sh', line: 1, message: "`if then'" },
+                { file: SCRIPT_SPACES, line: 1, message: "syntax error near unexpected token `then'" },
+                { file: SCRIPT_SPACES, line: 1, message: "`if then'" },
             ],
         },
     ]);
     expect(runGitStep(sandbox.path, ['ls-files', '--stage', '-z'])).toBe(index);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe('invalid working settings');
-    expect(await readFile(join(sandbox.path, 'script with spaces.sh'), 'utf8')).toBe(
-        'echo repaired only in the working tree\n',
-    );
+    expect(await readFile(join(sandbox.path, SCRIPT_SPACES), 'utf8')).toBe('echo repaired only in the working tree\n');
     await writeFile(join(sandbox.path, 'gspot.toml'), settings);
-    runGitStep(sandbox.path, ['add', 'gspot.toml', 'script with spaces.sh']);
-    await writeFile(join(sandbox.path, 'script with spaces.sh'), 'if then\n');
+    runGitStep(sandbox.path, ['add', 'gspot.toml', SCRIPT_SPACES]);
+    await writeFile(join(sandbox.path, SCRIPT_SPACES), BROKEN_IF_SCRIPT);
     const passed = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     expect(passed.report.checks[0]?.status).toBe('passed');
     expect(passed.report.comparison?.reference).not.toBe(failedReport.comparison?.reference);
-    expect(await readFile(join(sandbox.path, 'script with spaces.sh'), 'utf8')).toBe('if then\n');
+    expect(await readFile(join(sandbox.path, SCRIPT_SPACES), 'utf8')).toBe(BROKEN_IF_SCRIPT);
 });
 
 test('staged checks read an indexed file when its working file is missing', async () => {
@@ -251,11 +251,11 @@ test('staged checks read an indexed file when its working file is missing', asyn
 
     runGitStep(sandbox.path, ['add', '-A']);
     const commandArguments = ['check', '--staged', '--only', 'project/bash-syntax', '--json'];
-    await unlink(join(sandbox.path, 'script with spaces.sh'));
+    await unlink(join(sandbox.path, SCRIPT_SPACES));
     const ran = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(ran.code, ran.stdout + ran.stderr).toBe(0);
     expect(ran.report.checks[0]).toMatchObject({ status: 'passed', fileCount: 1 });
-    expect(await isOnDisk(join(sandbox.path, 'script with spaces.sh'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, SCRIPT_SPACES))).toBe(false);
 });
 
 test('a staged check reads the pushed commits of the repository, not of the index copy', async () => {
@@ -264,7 +264,7 @@ test('a staged check reads the pushed commits of the repository, not of the inde
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     runGitStep(sandbox.path, ['add', '-A']);
     runGitStep(sandbox.path, ['commit', '-qm', 'chore: start']);
-    await writeFile(join(sandbox.path, 'notes.md'), '# Notes\n');
+    await writeFile(join(sandbox.path, 'notes.md'), NOTES_MARKDOWN);
     runGitStep(sandbox.path, ['add', '-A']);
     runGitStep(sandbox.path, ['commit', '-qm', 'Pushed already']);
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);

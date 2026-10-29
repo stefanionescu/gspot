@@ -3,7 +3,6 @@
 actionlint
 ajv
 astro-check
-axe
 Bash
 Bun
 certifi
@@ -77,6 +76,7 @@ shellcheck
 ShellCheck
 shfmt
 Simple
+styl
 stylelint
 Stylelint
 stylelint-config-standard
@@ -88,6 +88,7 @@ TypeScript
 typescript-eslint
 typos
 udid
+USAGE
 v8r
 vale
 Vale

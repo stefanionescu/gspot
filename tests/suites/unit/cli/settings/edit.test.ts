@@ -3,9 +3,9 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { getValueAt } from '#cli/system/tables.ts';
-import { SCHEMA_DIRECTIVE } from '#cli/config/settings/file.ts';
+import { SCHEMA_DIRECTIVE } from '#cli/config/settings/text.ts';
 import { localDateSchema } from '#cli/schemas/settings/fields.ts';
-import { setKey, deleteKey, getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
+import { setKey, removeKey, getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import { DATED_IGNORE, SEMGREP_IGNORE, INITIAL_SETTINGS, SCOPE_SETTING_WRITES } from '#tests/config/settings/edit.ts';
 
 test('an edit writes the new ignore as a table and keeps the authored comment', async () => {
@@ -17,7 +17,7 @@ test('an edit writes the new ignore as a table and keeps the authored comment', 
     const proposed = buildEditedSettings(sandbox.path, edit);
     expect(proposed.text).toBe(
         `${SCHEMA_DIRECTIVE}\n` +
-            '# Authored selection.\nconfigurations = ["security"]\n\n[[ignore]]\ncheck = "security/semgrep"\nrule = "js/file-system-race"\npaths = ["sample.js"]\nreason = "The sandbox owns its temporary files."\n',
+            '# Authored selection.\nconfigurations = ["security",]\n\n[[ignore]]\ncheck = "security/semgrep"\nrule = "js/file-system-race"\npaths = ["sample.js"]\nreason = "The sandbox owns its temporary files."\n\n',
     );
     expect(proposed.settings.ignore).toStrictEqual([SEMGREP_IGNORE]);
     await writeFile(path, proposed.text);
@@ -33,10 +33,10 @@ test('setting a nested key, then deleting it, removes the empty table', async ()
     const addedEdit = readSettingsEdit(sandbox.path);
     setKey(addedEdit.table, 'limits.bash.file_lines', 100);
     const written = buildEditedSettings(sandbox.path, addedEdit).text;
-    expect(written).toBe(`${INITIAL_SETTINGS}\n[limits.bash]\nfile_lines = 100\n`);
+    expect(written).toBe(`${INITIAL_SETTINGS}\n[limits]\nbash = {file_lines = 100}\n`);
     await writeFile(path, written);
     const removedEdit = readSettingsEdit(sandbox.path);
-    deleteKey(removedEdit.table, 'limits.bash.file_lines');
+    removeKey(removedEdit.table, 'limits.bash.file_lines');
     const removed = buildEditedSettings(sandbox.path, removedEdit).text;
     expect(removed).toBe(INITIAL_SETTINGS);
 });
@@ -49,7 +49,7 @@ test.each([...SCOPE_SETTING_WRITES])(
         const edit = readSettingsEdit(sandbox.path);
         setKey(getScopeTable(edit.table, 'api'), 'limits.function_lines', 20);
         const result = buildEditedSettings(sandbox.path, edit);
-        expect(result.settings.scopes['api']?.limits).toMatchObject({ file_lines: 100, function_lines: 20 });
+        expect(result.settings.scopes.get('api')?.limits).toMatchObject({ file_lines: 100, function_lines: 20 });
         await writeFile(join(sandbox.path, 'gspot.toml'), result.text);
         expect(readSettingsEdit(sandbox.path).table['scope']).toMatchObject([
             { path: 'api', limits: { file_lines: 100, function_lines: 20 } },
@@ -65,23 +65,18 @@ test('changing an until date in place rewrites it and keeps its comment', async 
     until.setUTCDate(21);
     const result = buildEditedSettings(sandbox.path, input);
     expect(result.changed).toBe(true);
-    expect(result.text).toBe(DATED_IGNORE.replace('2099-05-20', '2099-05-21').replace('\n#', '\n\n#'));
+    expect(result.text).toBe(DATED_IGNORE.replace('2099-05-20', '2099-05-21'));
 });
 
-test('an invalid edited value reports its line in the edited gspot.toml', async () => {
+test('an invalid edit reports the setting without inventing a saved line', async () => {
     await using sandbox = await testdir();
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
         `${INITIAL_SETTINGS}# Authored limits.\n[limits]\nfile_lines = 100\n`,
     );
-    const valid = readSettingsEdit(sandbox.path);
-    setKey(valid.table, 'limits.function_lines', 20);
-    const line = buildEditedSettings(sandbox.path, valid).text.split('\n').indexOf('function_lines = 20') + 1;
     const invalid = readSettingsEdit(sandbox.path);
     setKey(invalid.table, 'limits.function_lines', 'long');
-    expect(() => buildEditedSettings(sandbox.path, invalid)).toThrow(
-        `gspot.toml:${String(line)}: limits.function_lines:`,
-    );
+    expect(() => buildEditedSettings(sandbox.path, invalid)).toThrow('limits.function_lines:');
 });
 
 test('reordering keys does not change the file', async () => {

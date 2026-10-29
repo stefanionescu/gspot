@@ -1,19 +1,20 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { SIMULATOR_DESTINATION } from '#tests/config/xcode.ts';
+import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { simulateOperatingSystem } from '#tests/setup/system/platform.ts';
-import { SWIFT_PACKAGE, SWIFT_PACKAGE_HEADER } from '#tests/config/swift.ts';
 import { SWIFT_BUILD_COMMANDS } from '#cli/config/checks/language/swift/cache.ts';
-import { planSwiftBuild, getScopeBuildFolder } from '#cli/checks/language/swift/cache.ts';
+import { XCTEST_SOURCE, SWIFT_PACKAGE, SWIFT_PACKAGE_HEADER } from '#tests/config/swift.ts';
+import { planSwiftBuild, readRepositoryCacheFolder } from '#cli/checks/language/swift/cache.ts';
 import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/checks/language/swift/cache.ts';
 
 test.each(['default', 'platform=macOS'])(
@@ -30,7 +31,7 @@ test.each(['default', 'platform=macOS'])(
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, 'swift/build');
         for (const purpose of ['compile', 'analyze', 'coverage'] as const) {
-            const folder = getScopeBuildFolder(session.toolsRoot, '', purpose);
+            const folder = join(readRepositoryCacheFolder(session.toolsRoot), 'swift', 'root', purpose);
             expect(planSwiftBuild(session, input, purpose)).toStrictEqual({
                 kind: 'xcode',
                 purpose,
@@ -44,7 +45,7 @@ test.each(['default', 'platform=macOS'])(
                     '-scheme',
                     'App',
                     '-destination',
-                    destination === 'default' ? 'generic/platform=iOS Simulator' : destination,
+                    destination === 'default' ? SIMULATOR_DESTINATION : destination,
                     '-derivedDataPath',
                     join(folder, 'derived'),
                     'CODE_SIGNING_ALLOWED=NO',
@@ -53,6 +54,7 @@ test.each(['default', 'platform=macOS'])(
         }
     },
 );
+
 test.each([...SWIFT_PROJECT_SELECTION_CASES])(
     'the swift/build plan $name',
     async ({ scope, tables, files, project, argument }) => {
@@ -66,14 +68,15 @@ test.each([...SWIFT_PROJECT_SELECTION_CASES])(
         expect(plan.commandArguments[plan.commandArguments.indexOf(container) + 1]).toBe(argument);
     },
 );
+
 test.each([...SWIFT_BUILD_PURPOSES])(
     'Swift $purpose skips without swift.xcode_project or Package.swift, then builds the package once Package.swift exists',
     async ({ purpose, check }) => {
-        using _host = simulateOperatingSystem('darwin');
+        using _host = fakePlatform('darwin');
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['swift']),
             'App.xcodeproj/project.pbxproj': '',
-            'ExampleTests/Example.swift': 'import XCTest\n',
+            'ExampleTests/Example.swift': XCTEST_SOURCE,
         });
 
         const session = await openSession(sandbox.path);
@@ -97,14 +100,16 @@ test.each([...SWIFT_BUILD_PURPOSES])(
                 note: 'Set swift.xcode_project or add Package.swift in this scope.',
             },
         ]);
-        expect(await isOnDisk(getScopeBuildFolder(session.toolsRoot, input.scope.path, purpose))).toBe(false);
+        expect(await isOnDisk(join(readRepositoryCacheFolder(session.toolsRoot), 'swift', 'root', purpose))).toBe(
+            false,
+        );
         await createFileTree(sandbox.path, {
             'Package.swift': SWIFT_PACKAGE_HEADER,
         });
         const checkedSession = await openSession(sandbox.path);
         const packageInput = planSandboxCheck(checkedSession, 'swift/build');
         const plan = planSwiftBuild(checkedSession, packageInput, purpose);
-        const folder = getScopeBuildFolder(checkedSession.toolsRoot, '', purpose);
+        const folder = join(readRepositoryCacheFolder(checkedSession.toolsRoot), 'swift', 'root', purpose);
         const scratch = join(folder, 'package');
         expect(plan).toStrictEqual({
             kind: 'package',

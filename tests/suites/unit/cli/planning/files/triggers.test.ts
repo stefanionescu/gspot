@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { type Session } from '#cli/types/session.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { type Check } from '#cli/types/configurations.ts';
@@ -15,10 +15,17 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { mkdir, unlink, readFile, appendFile } from 'node:fs/promises';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
-import { TSC_PUSH_OPTIONS, TWO_SCOPES_SETTINGS, LOCKFILE_TRIGGER_NAMES } from '#tests/config/planning/files.ts';
+
+import {
+    TSC_PUSH_OPTIONS,
+    LAST_FILE_CHANGES,
+    TWO_SCOPES_SETTINGS,
+    LOCKFILE_TRIGGER_NAMES,
+    PROJECT_FINDING_MESSAGE,
+} from '#tests/config/planning/files.ts';
 
 async function replaceChildScopeChecks(session: Session): Promise<void> {
     if (await isOnDisk(join(session.root, '.git/info/exclude')))
@@ -28,7 +35,7 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
         `${GSPOT_FOLDER}/mock-tsc`,
         'fakes/tool',
         '--line',
-        'Project finding',
+        PROJECT_FINDING_MESSAGE,
         '--exit',
         '1',
     );
@@ -50,44 +57,44 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
     }
 }
 
-test.each([
-    ['delete', 'staged'],
-    ['rename', 'changed'],
-])(`a %s of the last file of a project runs only that project's check with %s files`, async (operation, selection) => {
-    await using sandbox = await testdir({
-        'gspot.toml': TWO_SCOPES_SETTINGS,
-        'api/source.ts': 'export {};\n',
-        'web/kept.ts': 'export {};\n',
-    });
+test.each(LAST_FILE_CHANGES)(
+    `a %s of the last file of a project runs only that project's check with %s files`,
+    async (operation, selection) => {
+        await using sandbox = await testdir({
+            'gspot.toml': TWO_SCOPES_SETTINGS,
+            'api/source.ts': 'export {};\n',
+            'web/kept.ts': 'export {};\n',
+        });
 
-    commitAll(sandbox.path);
-    runGitStep(
-        sandbox.path,
-        operation === 'delete' ? ['rm', 'api/source.ts'] : ['mv', 'api/source.ts', 'web/source.ts'],
-    );
-    await mkdir(join(sandbox.path, 'api'), { recursive: true });
-    const session = await openSession(sandbox.path);
-    await replaceChildScopeChecks(session);
-    const selected =
-        selection === 'staged' ? await readStagedPaths(sandbox.path) : await readChangedPaths(sandbox.path, 'HEAD');
-    const revision = 'staged' in selected ? { staged: selected.staged } : { changed: selected.paths };
-    const planned = planChecks(session, { ...TSC_PUSH_OPTIONS, ...revision });
-    const api = planned.find((check) => check.scope.path === 'api')!;
-    expect(api.files).toStrictEqual([]);
-    expect(api.triggerPaths).toStrictEqual(['api/source.ts']);
-    const fileChecks = planChecks(session, { ...TSC_PUSH_OPTIONS, only: ['data-files/v8r'], ...revision });
-    expect(fileChecks.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
-    expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
-        operation === 'delete' ? [] : ['web/source.ts'],
-    );
-    const result = await runChecks(session, buildRunOptions({ ...TSC_PUSH_OPTIONS, ...revision }));
-    expect(result.report.exitCode).toBe(1);
-    const active = result.report.checks.filter((check) => check.status !== 'skipped');
-    expect(active.map((check) => check.scope)).toStrictEqual(operation === 'delete' ? ['api'] : ['api', 'web']);
-    expect(active.map((check) => check.findings.map(({ message }) => message))).toStrictEqual(
-        active.map(() => ['Project finding']),
-    );
-});
+        commitAll(sandbox.path);
+        runGitStep(
+            sandbox.path,
+            operation === 'delete' ? ['rm', 'api/source.ts'] : ['mv', 'api/source.ts', 'web/source.ts'],
+        );
+        await mkdir(join(sandbox.path, 'api'), { recursive: true });
+        const session = await openSession(sandbox.path);
+        await replaceChildScopeChecks(session);
+        const selected =
+            selection === 'staged' ? await readStagedPaths(sandbox.path) : await readChangedPaths(sandbox.path, 'HEAD');
+        const revision = 'staged' in selected ? { staged: selected.staged } : { changed: selected.paths };
+        const planned = planChecks(session, { ...TSC_PUSH_OPTIONS, ...revision });
+        const api = planned.find((check) => check.scope.path === 'api')!;
+        expect(api.files).toStrictEqual([]);
+        expect(api.triggerPaths).toStrictEqual(['api/source.ts']);
+        const fileChecks = planChecks(session, { ...TSC_PUSH_OPTIONS, only: ['data-files/v8r'], ...revision });
+        expect(fileChecks.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
+        expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
+            operation === 'delete' ? [] : ['web/source.ts'],
+        );
+        const result = await runChecks(session, buildRunOptions({ ...TSC_PUSH_OPTIONS, ...revision }));
+        expect(result.report.exitCode).toBe(1);
+        const active = result.report.checks.filter((check) => check.status !== 'skipped');
+        expect(active.map((check) => check.scope)).toStrictEqual(operation === 'delete' ? ['api'] : ['api', 'web']);
+        expect(active.map((check) => check.findings.map(({ message }) => message))).toStrictEqual(
+            active.map(() => [PROJECT_FINDING_MESSAGE]),
+        );
+    },
+);
 
 test('a fixer of a deleted trigger path restores it, and a dry run leaves it deleted', async () => {
     await using sandbox = await testdir({
@@ -104,13 +111,14 @@ test('a fixer of a deleted trigger path restores it, and a dry run leaves it del
     const api = planChecks(session, { ...TSC_PUSH_OPTIONS, changed: paths }).find(
         (check) => check.scope.path === 'api',
     )!;
-    const preview = await runFixers(buildCheckSession(session), [api], { isDryRun: true });
+    const preview = await runFixers(buildCheckSession(session), [api], { dryRun: true });
     expect(preview.changed).toStrictEqual(['api/source.ts']);
     expect(await isOnDisk(join(sandbox.path, 'api/source.ts'))).toBe(false);
-    const applied = await runFixers(buildCheckSession(session), [api], { isDryRun: false });
+    const applied = await runFixers(buildCheckSession(session), [api], { dryRun: false });
     expect(applied.changed).toStrictEqual(['api/source.ts']);
     expect(await readFile(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
 });
+
 test('a deleted file from another language does not trigger a TypeScript project', async () => {
     await using sandbox = await testdir({ 'gspot.toml': TWO_SCOPES_SETTINGS, 'api/kept.ts': 'export {};\n' });
 
@@ -123,6 +131,7 @@ test('a deleted file from another language does not trigger a TypeScript project
     expect(planned.flatMap((check) => check.files)).toStrictEqual([]);
     expect(planned.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
 });
+
 test(`deleting a file of a child scope runs only the child project's check`, async () => {
     await using sandbox = await testdir({
         'gspot.toml':
@@ -148,7 +157,8 @@ configurations = []
     ).toStrictEqual([['api/nested', ['api/nested/removed.ts']]]);
     expect(planned.find((check) => check.scope.path === 'api')?.files).toStrictEqual([]);
 });
-test.each(['gspot.toml', findManifestTarget('docs', 'lychee.toml')])(
+
+test.each(['gspot.toml', getManifestTarget('docs', 'lychee.toml')])(
     'a change to %s re-runs docs/lychee in every scope and keeps its path ignores',
     async (path) => {
         await using sandbox = await testdir({
@@ -171,7 +181,8 @@ test.each(['gspot.toml', findManifestTarget('docs', 'lychee.toml')])(
         ]);
     },
 );
-test('dependencies/osv-scanner runs only when a declared trigger file changes', async () => {
+
+test('dependencies/osv-scanner runs only when a trigger file changes', async () => {
     await using sandbox = await testdir({
         ...Object.fromEntries(
             LOCKFILE_TRIGGER_NAMES.flatMap((filename) => [

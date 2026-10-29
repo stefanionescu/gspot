@@ -32,8 +32,10 @@ import {
     BUILD_SOURCE_FOLDER,
     DERIVED_DATA_FOLDER,
     SCOPE_FOLDER_PREFIX,
+    XCODE_SCHEME_MESSAGE,
     SWIFT_BUILD_COMMANDS,
     XCODE_WORKSPACE_FLAG,
+    NO_SWIFT_PROJECT_NOTE,
     XCODE_DESTINATION_FLAG,
     XCODE_WORKSPACE_SUFFIX,
     PACKAGE_SCRATCH_FOLDER,
@@ -57,7 +59,7 @@ function readBuildSources(root: string, paths: string[]): Map<string, FileConten
     return wantedFiles;
 }
 
-function pruneSources(folder: string, files: Files, wantedFiles: Map<string, FileContents>): void {
+function deleteStaleSources(folder: string, files: Files, wantedFiles: Map<string, FileContents>): void {
     const wantedFolders = new Set(
         wantedFiles.keys().flatMap((path) => {
             const segments = path.split('/');
@@ -93,33 +95,14 @@ function openBuildCache(folder: string): Files {
 }
 
 /**
-Return the cache folder owned by one checkout, shared by all of its build tools.
+Return the cache folder of one repository, which all of its build tools share.
 
-@param root the repository checkout.
-@returns its cache folder.
+@param root the folder whose canonical path identifies the shared build cache.
 */
-export function readCheckoutCacheFolder(root: string): string {
+export function readRepositoryCacheFolder(root: string): string {
     const canonicalRoot = realpathSync(root);
     const digest = createHash('sha256').update(canonicalRoot).digest('hex');
     return join(readCacheFolder(), digest);
-}
-
-/**
-Computes the build folder for a scope and tool.
-
-@param root the installed checkout.
-@param scope the scope path.
-@param purpose the tool whose outputs stay separate.
-@returns the cache folder path.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 3 files share it.
-export function getScopeBuildFolder(root: string, scope: string, purpose: SwiftBuildPurpose): string {
-    return join(
-        readCheckoutCacheFolder(root),
-        SWIFT_BUILD_FOLDER,
-        scope === '' ? ROOT_BUILD_FOLDER : `${SCOPE_FOLDER_PREFIX}${Buffer.from(scope).toString('hex')}`,
-        purpose,
-    );
 }
 
 /**
@@ -127,15 +110,21 @@ Plans the build of a scope: the command, its folder, and its log path.
 
 @param session the repository and its tools.
 @param planned the scope and its Swift settings.
-@param purpose the tool whose build needs its own cache, compile by default.
-@returns the command, build folder, and log path.
+@param purpose the tool whose build needs its own cache.
 */
 export function planSwiftBuild(
     session: Session,
     planned: PlannedCheck,
     purpose: Exclude<SwiftBuildPurpose, 'periphery'> = 'compile',
 ): SwiftBuildPlan {
-    const folder = getScopeBuildFolder(session.toolsRoot, planned.scope.path, purpose);
+    const folder = join(
+        readRepositoryCacheFolder(session.toolsRoot),
+        SWIFT_BUILD_FOLDER,
+        planned.scope.path === ''
+            ? ROOT_BUILD_FOLDER
+            : `${SCOPE_FOLDER_PREFIX}${Buffer.from(planned.scope.path).toString('hex')}`,
+        purpose,
+    );
     const log = join(folder, BUILD_LOG);
     const {
         xcode_project: project,
@@ -144,7 +133,7 @@ export function planSwiftBuild(
     } = getTable(planned.scope.settings, 'swift');
     if (project === undefined) {
         if (!session.repository.files.some(({ path }) => path === joinScope(planned.scope.path, PACKAGE_SWIFT)))
-            throw new GspotError('skip', 'Set swift.xcode_project or add Package.swift in this scope.');
+            throw new GspotError('skip', NO_SWIFT_PROJECT_NOTE);
         const scratch = join(folder, PACKAGE_SCRATCH_FOLDER);
         return {
             folder,
@@ -155,8 +144,7 @@ export function planSwiftBuild(
             commandArguments: [SWIFT_PROGRAM, ...SWIFT_BUILD_COMMANDS[purpose].package, SCRATCH_PATH_FLAG, scratch],
         };
     }
-    if (scheme === undefined)
-        throw new GspotError('settings', 'Set swift.xcode_scheme for the configured Xcode project.');
+    if (scheme === undefined) throw new GspotError('settings', XCODE_SCHEME_MESSAGE);
     const container = project.endsWith(XCODE_WORKSPACE_SUFFIX) ? XCODE_WORKSPACE_FLAG : XCODE_PROJECT_FLAG;
     const commandArguments = [
         XCODEBUILD_PROGRAM,
@@ -189,7 +177,7 @@ export function prepareBuild(root: string, files: TrackedFile[], folder: string)
         root,
         files.map((file) => file.path),
     );
-    pruneSources(folder, cache, wantedFiles);
+    deleteStaleSources(folder, cache, wantedFiles);
     cache.createFolder(BUILD_SOURCE_FOLDER, PRIVATE_FOLDER);
     for (const [path, next] of wantedFiles) {
         const cached = cache.read(path);

@@ -1,15 +1,16 @@
 import type { Session } from '#cli/types/session.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
-import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import type { ScriptFunction } from '#cli/types/parsers/code/bash.ts';
 import { MAIN_FUNCTION } from '#cli/config/checks/language/bash/scripts.ts';
 
 import {
     WORD,
+    RULES,
     VAGUE_WORDS,
-    BASH_DOC_SECTIONS,
+    DOC_SECTIONS,
+    CAMEL_CASE_SPLIT,
     LEADING_UNDERSCORES,
     SHELLCHECK_TOOL_COMMENT,
 } from '#cli/config/checks/language/bash/doc-comments.ts';
@@ -27,7 +28,9 @@ function findCommentBlock(lines: string[], start: number): string[] {
 }
 
 function hasWordsBeyondName(name: string, summary: string): boolean {
-    const nameWords = new Set(name.replace(LEADING_UNDERSCORES, '').split('_'));
+    const nameWords = new Set(
+        name.replace(LEADING_UNDERSCORES, '').replace(CAMEL_CASE_SPLIT, '_').toLowerCase().split('_'),
+    );
     const words = summary
         .matchAll(WORD)
         .map((match) => match[0].toLowerCase())
@@ -39,28 +42,28 @@ function hasWordsBeyondName(name: string, summary: string): boolean {
 function validateDocComment(
     scriptFunction: ScriptFunction,
     block: string[],
-): Required<Pick<Finding, 'rule' | 'message'>> | undefined {
+): Required<Pick<CheckFinding, 'rule' | 'message'>> | undefined {
     const first = block[0];
     if (first === undefined)
         return {
-            rule: 'missing-comment',
+            rule: RULES.missingComment,
             message: `${scriptFunction.name} has no comment above it; write "# ${scriptFunction.name}: what it does".`,
         };
     const head = `# ${scriptFunction.name}: `;
     if (!first.startsWith(head) || first.length <= head.length)
         return {
-            rule: 'summary-line',
+            rule: RULES.summaryLine,
             message: `The comment above ${scriptFunction.name} does not open with "# ${scriptFunction.name}: ...".`,
         };
     if (!hasWordsBeyondName(scriptFunction.name, first.slice(head.length)))
         return {
-            rule: 'vague-summary',
+            rule: RULES.vagueSummary,
             message: `The summary of ${scriptFunction.name} says nothing beyond its name.`,
         };
-    const positions = BASH_DOC_SECTIONS.map((section) => block.indexOf(section)).filter((position) => position >= 0);
+    const positions = DOC_SECTIONS.map((section) => block.indexOf(section)).filter((position) => position >= 0);
     if (positions.some((position, index) => index > 0 && position <= (positions[index - 1] ?? -1)))
         return {
-            rule: 'section-order',
+            rule: RULES.sectionOrder,
             message: `Order the doc sections of ${scriptFunction.name} as Globals, Arguments, Outputs, Returns.`,
         };
     return undefined;
@@ -71,9 +74,8 @@ Reports each function without a summary line, with a vague summary, or with doc 
 
 @param session the repository and its tools.
 @param planned the scope scripts to read.
-@returns the findings.
 */
-export async function checkBashDocComments(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkBashDocComments(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) => {
         return file.functions.flatMap((scriptFunction) => {
@@ -81,7 +83,14 @@ export async function checkBashDocComments(session: Session, planned: PlannedChe
             const found = validateDocComment(scriptFunction, findCommentBlock(file.lines, scriptFunction.start));
             return found === undefined
                 ? []
-                : [buildFinding(planned, { file: file.path, line: scriptFunction.start }, found.rule, found.message)];
+                : [
+                      {
+                          file: file.path,
+                          line: scriptFunction.start,
+                          rule: found.rule,
+                          message: found.message,
+                      },
+                  ];
         });
     });
 }

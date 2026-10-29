@@ -4,43 +4,40 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { type ApplyReport } from '#cli/types/generation/files.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { UPDATED_AGENTS } from '#tests/config/commands/contents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import { openWriter, writePlans, planReplacements } from '#cli/write.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
-import { SETTINGS_FILE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
-import { INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/generation/write.ts';
-import { findRuleFilePath, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { runGit, commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { runGspot, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
-import { FORMAT_SETTINGS, RULES_WRITTEN_FILES, PRETTIER_PATH_IGNORE } from '#tests/config/commands/apply/writes.ts';
+import { getRuleFilePath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { TOOLS_CHANGED_NOTE, STALE_LOCKFILE_NOTE } from '#cli/config/generation/write.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function writeStrayFile(root: string): void {
-    using writer = openWriter(root);
-
-    writePlans(
-        writer,
-        planReplacements(writer, [
-            { path: `${GSPOT_FOLDER}/obsolete/old.txt`, next: { bytes: Buffer.from('installed\n'), mode: 0o644 } },
-        ]),
-    );
-}
+import {
+    FORMAT_SETTINGS,
+    RULES_WRITTEN_FILES,
+    PRETTIER_PATH_IGNORE,
+    PRETTIER_ADDED_IGNORE,
+    PRETTIER_INITIAL_IGNORE,
+} from '#tests/config/commands/apply/writes.ts';
 
 test('apply leaves generated files writable, keeps their bytes, and deletes a stray owned file and its folder', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true }),
     });
 
-    writeStrayFile(sandbox.path);
+    await createFileTree(sandbox.path, { [`${GSPOT_FOLDER}/obsolete/old.txt`]: 'installed\n' });
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code).toBe(0);
     expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/obsolete/old.txt`))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/obsolete`))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(true);
     const written = (JSON.parse(applied.stdout) as ApplyReport).written;
-    const rulePath = findRuleFilePath('engineering', 'WORKING.md');
+    const rulePath = getRuleFilePath('engineering', 'WORKING.md');
     expect(written).toStrictEqual([...RULES_WRITTEN_FILES]);
     const bytes = await readFile(join(sandbox.path, rulePath), 'utf8');
     const attributes = await stat(join(sandbox.path, rulePath));
@@ -56,7 +53,8 @@ test('apply leaves generated files writable, keeps their bytes, and deletes a st
     expect(pruned.code).toBe(0);
     expect(await isOnDisk(join(sandbox.path, rulePath))).toBe(false);
 });
-test('apply removes a stray directory link without following it', async () => {
+
+test('apply removes a stray link to a folder without following it', async () => {
     await using sandbox = await testdir({
         'project/gspot.toml': buildSandboxSettings([]),
         'outside/old.txt': 'outside bytes\n',
@@ -64,7 +62,7 @@ test('apply removes a stray directory link without following it', async () => {
 
     const root = join(sandbox.path, 'project');
     runGitStep(root, ['init', '--quiet']);
-    writeStrayFile(root);
+    await createFileTree(root, { [`${GSPOT_FOLDER}/obsolete/old.txt`]: 'installed\n' });
     await rm(join(root, `${GSPOT_FOLDER}/obsolete`), { recursive: true });
     await symlink('../../outside', join(root, `${GSPOT_FOLDER}/obsolete`));
     expect(await runGspot(root, ['apply'])).toHaveProperty('code', 0);
@@ -77,15 +75,18 @@ test('a fresh Git clone keeps the committed generated files byte for byte and mo
     await using clone = await testdir();
     await createFileTree(original.path, { 'entry.sh': 'echo example\n' });
     commitAll(original.path);
-    const initialized = await runGspot(original.path, buildInitArguments(['bash']));
+    const initialized = await runGspot(original.path, ['init', '--yes', '--configurations', 'bash']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const reconciled = await runGspot(original.path, ['apply', '--json']);
     expect(reconciled.code, reconciled.stdout + reconciled.stderr).toBe(0);
     commitAll(original.path);
-    const cloned = runGit(original.path, ['clone', '--quiet', '--no-local', original.path, clone.path]);
+    const cloned = runCommandBlocking(['git', 'clone', '--quiet', '--no-local', original.path, clone.path], {
+        cwd: original.path,
+        env: {},
+    });
     expect(cloned.code, cloned.stderr).toBe(0);
     using files = openFiles(clone.path);
-    const config = findManifestTarget('bash', 'shellcheckrc');
+    const config = getManifestTarget('bash', 'shellcheckrc');
     const initial = files.read(config)!;
     const applied = await runGspot(clone.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -98,9 +99,10 @@ test('a fresh Git clone keeps the committed generated files byte for byte and mo
     const repeated = await runGspot(clone.path, ['apply', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     expect((JSON.parse(repeated.stdout) as ApplyReport).written).toStrictEqual([]);
-    const unchanged = runGit(clone.path, ['diff', '--exit-code']);
+    const unchanged = runCommandBlocking(['git', 'diff', '--exit-code'], { cwd: clone.path, env: {} });
     expect(unchanged.code, unchanged.stdout + unchanged.stderr).toBe(0);
 });
+
 test('apply rewrites an edited generated file, deletes unknown files in .gspot, and leaves gspot.toml as it was', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']), 'entry.sh': 'echo example\n' });
 
@@ -110,7 +112,7 @@ test('apply rewrites an edited generated file, deletes unknown files in .gspot, 
     const settingsPath = join(sandbox.path, 'gspot.toml');
     const settings = await readFile(settingsPath, 'utf8');
     await writeFile(join(sandbox.path, 'added.py'), 'print("example")\n');
-    const generated = join(sandbox.path, findManifestTarget('bash', 'shellcheckrc'));
+    const generated = join(sandbox.path, getManifestTarget('bash', 'shellcheckrc'));
     const edited = `${await readFile(generated, 'utf8')}# Authored after installation.\n`;
     await chmod(generated, 0o644);
     await writeFile(generated, edited);
@@ -121,6 +123,7 @@ test('apply rewrites an edited generated file, deletes unknown files in .gspot, 
     expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/authored.txt`))).toBe(false);
     expect(await readFile(settingsPath, 'utf8')).toBe(settings);
 });
+
 test('removing rules from a fresh clone removes the managed AGENTS.md block', async () => {
     await using sandbox = await createGitSandbox({});
     const source = join(sandbox.path, 'source');
@@ -135,34 +138,43 @@ test('removing rules from a fresh clone removes the managed AGENTS.md block', as
     await writeFile(join(checkout, 'gspot.toml'), buildSandboxSettings([]));
     const removed = await runGspot(checkout, ['apply']);
     expect(removed.code).toBe(0);
-    expect(removed.stdout).toContain('updated  AGENTS.md');
+    expect(removed.stdout).toContain(UPDATED_AGENTS);
     expect(removed.stdout).not.toContain('removed  AGENTS.md');
     expect(await readFile(join(checkout, 'AGENTS.md'), 'utf8')).toBe(authored);
 });
-test('an ignore of every path of a check drops the check, its tool, and its config files', async () => {
+
+test('an ignore of every path skips the check and keeps its configured tool and files', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': FORMAT_SETTINGS, 'sample.json': '{"value":1}\n' });
     const initial = await runGspot(sandbox.path, ['apply', '--json']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
+    expect(await readFile(join(sandbox.path, '.prettierignore'), 'utf8')).toBe(PRETTIER_INITIAL_IGNORE);
     await writeFile(join(sandbox.path, 'gspot.toml'), FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
     const removed = await runGspot(sandbox.path, ['apply', '--json']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const report = JSON.parse(removed.stdout) as ApplyReport;
-    expect(report.written).toStrictEqual([findManifestTarget('spelling', 'typos.toml'), GSPOT_PATHS.npmProject]);
-    expect(report.removed).toStrictEqual([
-        findManifestTarget('format', 'prettier.json'),
-        '.prettierignore',
-        'prettier.config.mjs',
-    ]);
+    expect(report.written).toStrictEqual(['.prettierignore']);
+    expect(await readFile(join(sandbox.path, '.prettierignore'), 'utf8')).toBe(
+        PRETTIER_INITIAL_IGNORE + PRETTIER_ADDED_IGNORE,
+    );
+    expect(report.removed).toStrictEqual([]);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toContain('prettier');
+    expect(await isOnDisk(join(sandbox.path, getManifestTarget('format', 'prettier.json')))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, 'prettier.config.mjs'))).toBe(true);
     const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'format/prettier', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(checked.report.checks).toMatchObject([{ check: 'format/prettier', status: 'skipped', cause: 'ignore' }]);
     const repeated = await runGspot(sandbox.path, ['apply', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     const settled = JSON.parse(repeated.stdout) as ApplyReport;
+    expect(settled.unchanged.filter((path) => path === '.prettierignore')).toStrictEqual(['.prettierignore']);
+    expect(await readFile(join(sandbox.path, '.prettierignore'), 'utf8')).toBe(
+        PRETTIER_INITIAL_IGNORE + PRETTIER_ADDED_IGNORE,
+    );
     expect({ written: settled.written, removed: settled.removed }).toStrictEqual({ written: [], removed: [] });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
     expect(await readFile(join(sandbox.path, 'sample.json'), 'utf8')).toBe('{"value":1}\n');
 });
+
 test('a failed version pin write in apply leaves the old version', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
@@ -182,8 +194,9 @@ test('a failed version pin write in apply leaves the old version', async () => {
     );
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.versionPin), 'utf8')).toBe('0.0.1\n');
 });
+
 test('apply leaves a settings file without a schema directive unchanged', async () => {
-    const settings = buildSandboxSettings([]).replace(SCHEMA_DIRECTIVE_LINE, '');
+    const settings = buildSandboxSettings([]);
     await using sandbox = await createGitSandbox({ [SETTINGS_FILE]: settings });
 
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run']);
@@ -206,8 +219,8 @@ test('repeated apply names a missing lockfile without reporting changed tools', 
     });
     const first = await runGspot(sandbox.path, ['apply', '--json']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
-    expect((JSON.parse(first.stdout) as ApplyReport).notes).toContain(INSTALL_FIRST_NOTE);
+    expect((JSON.parse(first.stdout) as ApplyReport).notes).toContain(TOOLS_CHANGED_NOTE);
     const repeated = await runGspot(sandbox.path, ['apply', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect((JSON.parse(repeated.stdout) as ApplyReport).notes).toStrictEqual([INSTALL_MISSING_NOTE]);
+    expect((JSON.parse(repeated.stdout) as ApplyReport).notes).toStrictEqual([STALE_LOCKFILE_NOTE]);
 });

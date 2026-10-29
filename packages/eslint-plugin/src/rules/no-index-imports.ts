@@ -23,7 +23,7 @@ export const noIndexImports = createRule<[], 'index'>({
         messages: { index: 'Import the owning module instead of the index "{{source}}".' },
     },
     create(context) {
-        const check = (node: TSESTree.Node): void => {
+        const checkSource = (node: TSESTree.Node): void => {
             const source = ASTUtils.getStringIfConstant(node);
             if (
                 source === null ||
@@ -35,7 +35,7 @@ export const noIndexImports = createRule<[], 'index'>({
             context.report({ node, messageId: 'index', data: { source } });
         };
         return {
-            ...buildSourceVisitors(check),
+            ...buildSourceVisitors(checkSource),
             CallExpression(node) {
                 const [argument] = node.arguments;
                 if (
@@ -46,7 +46,7 @@ export const noIndexImports = createRule<[], 'index'>({
                 )
                     return;
                 if (MODULE_MOCK_METHODS.get(node.callee.object.name)?.has(node.callee.property.name) === true)
-                    check(argument);
+                    checkSource(argument);
             },
         };
     },

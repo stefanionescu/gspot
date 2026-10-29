@@ -1,59 +1,125 @@
 import { statSync } from 'node:fs';
+import type { Node } from '@pgsql/types';
 import { fileURLToPath } from 'node:url';
-import { isTable } from '#cli/system/tables.ts';
 import { join, posix, relative } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import type { Parsed } from '#cli/types/shapes.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { buildFinding } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import type { Finding } from '#cli/types/runs/check.ts';
 import { parseCheckedFile } from '#cli/checks/syntax.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import { SYNTAX_RULE } from '#cli/config/checks/syntax.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { parseToolReport } from '#cli/parsers/formats/json.ts';
-import type { SpawnResult } from '#cli/types/system/processes.ts';
+import type { CheckFinding } from '#cli/types/runs/check.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import { getNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
-import type { SupabaseProjectFile } from '#cli/types/checks/platform/supabase.ts';
+import type { SqlStatement, SqlNodeFields } from '#cli/types/parsers/code/sql.ts';
 import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { formatOutputTail, assertToolFindings } from '#cli/runs/command/output.ts';
-import { denoLintReportSchema, supabaseProjectFileSchema } from '#cli/schemas/checks/supabase.ts';
+import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/checks/supabase.ts';
+import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/checks/platform/supabase.ts';
 
 import {
+    RULES,
     DENO_LOCATION,
     SHARED_PREFIX,
+    DENO_LINT_NAME,
     FILE_URL_PREFIX,
     DENO_CONFIG_FLAG,
     DENO_CONFIG_FILES,
     DENO_LINT_COMMAND,
     DENO_CHECK_COMMAND,
     FUNCTION_ENTRYPOINT,
+    DENO_IMPORT_MAP_FLAG,
     SERVICE_ROLE_KEY_TAGS,
     SUPABASE_PROJECT_FILE,
     SERVICE_ROLE_KEY_NAMES,
+    SERVICE_ROLE_KEY_MESSAGE,
+    DENO_CHECK_FAILED_MESSAGE,
     SERVICE_ROLE_KEY_EXTENSIONS,
 } from '#cli/config/checks/platform/supabase.ts';
 
-function listStringConstants(value: unknown): string[] {
-    if (Array.isArray(value)) return value.flatMap((child) => listStringConstants(child));
-    if (!isTable(value)) return [];
-    return Object.entries(value).flatMap(([key, child]) => {
-        const literal =
-            key === 'A_Const' && isTable(child) && isTable(child['sval']) ? child['sval']['sval'] : undefined;
-        return typeof literal === 'string' ? [literal, ...listStringConstants(child)] : listStringConstants(child);
-    });
+function listEqualityBuckets(expression: SqlNodeFields['A_Expr']): string[] {
+    for (const [column, value] of [
+        [expression.lexpr, expression.rexpr],
+        [expression.rexpr, expression.lexpr],
+    ]) {
+        if (listNodeFields(getNodeFields(column, 'ColumnRef')?.fields, 'String').at(-1)?.sval !== 'bucket_id') continue;
+        const name = getNodeFields(value, 'A_Const')?.sval?.sval;
+        if (name !== undefined) return [name];
+    }
+    return [];
 }
 
-function buildDenoJsonArguments(root: string, folder: string): string[] {
+function listMembershipBuckets(expression: SqlNodeFields['A_Expr']): string[] {
+    if (listNodeFields(getNodeFields(expression.lexpr, 'ColumnRef')?.fields, 'String').at(-1)?.sval !== 'bucket_id')
+        return [];
+    let values: Node[] | undefined;
+    if (expression.kind === 'AEXPR_IN') values = getNodeFields(expression.rexpr, 'List')?.items;
+    if (expression.kind === 'AEXPR_OP_ANY') values = getNodeFields(expression.rexpr, 'A_ArrayExpr')?.elements;
+    return listNodeFields(values, 'A_Const').flatMap((literal) => literal.sval?.sval ?? []);
+}
+
+function listBucketConditions(node: Node | undefined): string[] {
+    const boolean = getNodeFields(node, 'BoolExpr');
+    if (boolean !== undefined) {
+        if (boolean.boolop === 'NOT_EXPR') return [];
+        return (boolean.args ?? []).flatMap((child) => listBucketConditions(child));
+    }
+    const expression = getNodeFields(node, 'A_Expr');
+    if (expression === undefined || listNodeFields(expression.name, 'String')[0]?.sval !== '=') return [];
+    return expression.kind === 'AEXPR_OP' ? listEqualityBuckets(expression) : listMembershipBuckets(expression);
+}
+
+function removePolicies(
+    fields: SqlNodeFields['DropStmt'],
+    policies: Map<string, SqlNodeFields['CreatePolicyStmt']>,
+): void {
+    if (fields.removeType !== 'OBJECT_POLICY') return;
+    for (const names of listNodeFields(fields.objects, 'List')) {
+        const path = listNodeFields(names.items, 'String').map(({ sval }) => sval);
+        if (path[0] === 'storage' && path[1] === 'objects' && path[2] !== undefined) policies.delete(path[2]);
+    }
+}
+
+function updatePolicy(
+    statement: SqlStatement<'CreatePolicyStmt' | 'AlterPolicyStmt'>,
+    policies: Map<string, SqlNodeFields['CreatePolicyStmt']>,
+): void {
+    const fields = statement.fields;
+    const { table, policy_name: name } = fields;
+    if (table?.schemaname !== 'storage' || table.relname !== 'objects' || name === undefined) return;
+    if (statement.kind === 'CreatePolicyStmt') policies.set(name, fields);
+    else if (policies.has(name)) policies.set(name, { ...policies.get(name), ...fields });
+}
+
+function listCoveredBuckets(statements: SqlStatement[]): Set<string> {
+    const policies = new Map<string, SqlNodeFields['CreatePolicyStmt']>();
+    for (const statement of statements) {
+        if (statement.kind === 'DropStmt') removePolicies(statement.fields, policies);
+        if (statement.kind === 'CreatePolicyStmt' || statement.kind === 'AlterPolicyStmt')
+            updatePolicy(statement, policies);
+    }
+    return new Set(
+        [...policies.values()].flatMap((policy) =>
+            [policy.qual, policy.with_check].flatMap((node) => listBucketConditions(node)),
+        ),
+    );
+}
+
+function buildDenoJsonArguments(root: string, folder: string, importMap: string | undefined): string[] {
     const path = DENO_CONFIG_FILES.map((name) => join(root, folder, name)).find(
         (configPath) => statSync(configPath, { throwIfNoEntry: false }) !== undefined,
     );
-    return path === undefined ? [] : [DENO_CONFIG_FLAG, path];
+    if (path !== undefined) return [DENO_CONFIG_FLAG, path];
+    return importMap === undefined ? [] : [DENO_IMPORT_MAP_FLAG, join(root, importMap)];
 }
 
 function normalizeDenoPath(root: string, locator: string): string {
@@ -62,28 +128,54 @@ function normalizeDenoPath(root: string, locator: string): string {
     return local === '' || !isInside(local) ? path : local;
 }
 
-function parseDenoCheckError(session: Session, planned: PlannedCheck, entrypoint: string, stderr: string): Finding {
+function parseDenoCheckError(session: Session, entrypoint: string, stderr: string): CheckFinding {
     const output = stripVTControlCharacters(stderr);
     const place = DENO_LOCATION.exec(output)?.groups;
     const file = place?.['file'] === undefined ? entrypoint : normalizeDenoPath(session.root, place['file']);
-    const first = output.split('\n').find((line) => line.trim() !== '') ?? 'The deno check command failed.';
-    return buildFinding(planned, { file, line: Number(place?.['line'] ?? 1) }, 'type-error', first.trim());
+    const first = output.split('\n').find((line) => line.trim() !== '') ?? DENO_CHECK_FAILED_MESSAGE;
+    return {
+        file,
+        line: Number(place?.['line'] ?? 1),
+        rule: 'type-error',
+        message: first.trim(),
+    };
 }
 
 function readSupabaseProjectFile(
     session: Session,
     planned: PlannedCheck,
-): Parsed<SupabaseProjectFile, Finding> | undefined {
+): Parsed<SupabaseProjectFile, CheckFinding> | undefined {
     const local = joinScope(planned.scope.path, SUPABASE_PROJECT_FILE);
     const text = findCachedText(session.reads, local);
     return text === undefined
         ? undefined
-        : parseCheckedFile(planned, local, () => parseTomlFile(local, text, supabaseProjectFileSchema));
+        : parseCheckedFile(local, () => parseTomlFile(local, text, supabaseProjectFileSchema));
 }
 
-function listFunctionEntrypoints(planned: PlannedCheck): string[] {
+function addConfiguredFunctions(
+    planned: PlannedCheck,
+    functions: NonNullable<SupabaseProjectFile['functions']>,
+    entrypoints: Map<string, FunctionEntrypoint>,
+): void {
     const base = getTable(planned.scope.settings, 'supabase').functions_folder;
-    const entrypoints = new Map<string, string>();
+    for (const [name, settings] of Object.entries(functions).filter(([name]) => !name.startsWith(SHARED_PREFIX))) {
+        const folder = posix.join(base, name);
+        const path =
+            settings.entrypoint === undefined
+                ? entrypoints.get(folder)?.path
+                : joinScope(planned.scope.path, posix.join(posix.dirname(SUPABASE_PROJECT_FILE), settings.entrypoint));
+        if (path === undefined) continue;
+        const importMap =
+            settings.import_map === undefined
+                ? undefined
+                : joinScope(planned.scope.path, posix.join(posix.dirname(SUPABASE_PROJECT_FILE), settings.import_map));
+        entrypoints.set(folder, { path, importMap });
+    }
+}
+
+function listDefaultEntrypoints(planned: PlannedCheck): Map<string, FunctionEntrypoint> {
+    const base = getTable(planned.scope.settings, 'supabase').functions_folder;
+    const entrypoints = new Map<string, FunctionEntrypoint>();
     for (const { path } of planned.files) {
         const folder = posix.dirname(path);
         if (
@@ -93,102 +185,92 @@ function listFunctionEntrypoints(planned: PlannedCheck): string[] {
             posix.basename(folder).startsWith(SHARED_PREFIX)
         )
             continue;
-        if (!entrypoints.has(folder)) entrypoints.set(folder, path);
+        if (!entrypoints.has(folder)) entrypoints.set(folder, { path });
     }
-    return entrypoints.values().toArray();
+    return entrypoints;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-async function runDenoCommand(
-    session: CheckSession,
+function listFunctionEntrypoints(
     planned: PlannedCheck,
-    command: readonly string[],
-    folder: string,
-): Promise<SpawnResult> {
-    const commandArguments = [
-        ...command.slice(0, -1),
-        ...buildDenoJsonArguments(session.root, folder),
-        ...command.slice(-1),
-    ];
-    return await runCheckTool(session, planned, commandArguments, {
-        cwd: join(session.root, planned.scope.path),
-    });
+    project: SupabaseProjectFile | undefined,
+): FunctionEntrypoint[] {
+    const base = getTable(planned.scope.settings, 'supabase').functions_folder;
+    const entrypoints = listDefaultEntrypoints(planned);
+    if (project?.functions !== undefined) addConfiguredFunctions(planned, project.functions, entrypoints);
+    if (entrypoints.size === 0) throw new GspotError('skip', `No edge function under ${base}.`);
+    return entrypoints.values().toArray();
 }
 
 /**
 Reports each storage bucket that no migration policy on storage.objects names.
 
 @param session the repository and its tools.
-@param planned the scope with config.toml and migrations.
-@returns the findings.
+@param planned the configured check and selected scope files.
 */
-export async function checkSupabaseStoragePolicies(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSupabaseStoragePolicies(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const parsed = readSupabaseProjectFile(session, planned);
     if (parsed === undefined) return [];
     if ('error' in parsed) return [parsed.error];
-    const at = { file: joinScope(planned.scope.path, SUPABASE_PROJECT_FILE), line: 1 };
+    const place = { file: joinScope(planned.scope.path, SUPABASE_PROJECT_FILE), line: 1 };
     const migrations = await readParsedMigrations(session, planned);
-    const policies = migrations
-        .flatMap((migration) => migration.statements)
-        .flatMap((statement) =>
-            statement.kind === 'CreatePolicyStmt' &&
-            statement.fields.table?.schemaname === 'storage' &&
-            statement.fields.table.relname === 'objects'
-                ? [statement.fields]
-                : [],
-        );
-    const policed = new Set(policies.flatMap((fields) => listStringConstants([fields.qual, fields.with_check])));
+    const policed = listCoveredBuckets(migrations.flatMap((migration) => migration.statements));
     return (parsed.value.storage?.buckets === undefined ? [] : Object.keys(parsed.value.storage.buckets))
         .filter((bucket) => !policed.has(bucket))
-        .map((bucket) =>
-            buildFinding(
-                planned,
-                at,
-                'bucket-policy',
-                `The bucket ${bucket} has no policy on storage.objects in any migration.`,
-            ),
-        );
+        .map((bucket) => ({
+            ...place,
+            rule: RULES.bucketPolicy,
+            message: `The bucket ${bucket} has no policy on storage.objects in any migration.`,
+        }));
+}
+
+async function runDenoFunction(
+    session: CheckSession,
+    planned: PlannedCheck,
+    run: { command: readonly string[]; entrypoint: FunctionEntrypoint; target: string },
+) {
+    const folder = posix.dirname(run.entrypoint.path);
+    const command = [
+        ...run.command,
+        ...buildDenoJsonArguments(session.root, folder, run.entrypoint.importMap),
+        join(session.root, run.target),
+    ];
+    return runCheckTool(session, planned, command, { cwd: join(session.root, planned.scope.path) });
 }
 
 /**
 Runs deno lint on each edge function.
 
 @param session the repository and its tools.
-@param planned the scope files to lint.
-@returns the findings.
+@param planned the configured check and selected scope files.
 */
-export async function checkSupabaseDenoLint(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
-    const findings: Finding[] = [];
-    for (const entrypoint of listFunctionEntrypoints(planned)) {
-        const folder = posix.dirname(entrypoint);
-        const result = await runDenoCommand(
-            session,
-            planned,
-            [...DENO_LINT_COMMAND, join(session.root, folder)],
-            folder,
-        );
+export async function checkSupabaseDenoLint(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+    const findings: CheckFinding[] = [];
+    const parsed = readSupabaseProjectFile(session, planned);
+    if (parsed !== undefined && 'error' in parsed) return [parsed.error];
+    for (const entrypoint of listFunctionEntrypoints(planned, parsed?.value)) {
+        const result = await runDenoFunction(session, planned, {
+            command: DENO_LINT_COMMAND,
+            entrypoint,
+            target: posix.dirname(entrypoint.path),
+        });
         if (result.code !== 0 && result.stdout.trim() === '')
             throw new Error(
                 formatOutputTail(result, `deno lint stopped with exit ${String(result.code)} and no report.`),
             );
-        const report = parseToolReport('deno lint', result.stdout, denoLintReportSchema);
-        const broken = report.errors.map((error) =>
-            buildFinding(
-                planned,
-                { file: normalizeDenoPath(session.root, error.file_path), line: 1 },
-                'syntax',
-                error.message,
-            ),
-        );
-        const found = report.diagnostics.map((reported) =>
-            buildFinding(
-                planned,
-                { file: normalizeDenoPath(session.root, reported.filename), line: reported.range.start.line },
-                reported.code,
-                reported.message,
-            ),
-        );
-        findings.push(...assertToolFindings(result, [...broken, ...found], 'deno lint'));
+        const report = parseToolOutput(DENO_LINT_NAME, result.stdout, denoLintOutputSchema);
+        const broken = report.errors.map((error) => ({
+            file: normalizeDenoPath(session.root, error.file_path),
+            line: 1,
+            rule: SYNTAX_RULE,
+            message: error.message,
+        }));
+        const found = report.diagnostics.map((reported) => ({
+            file: normalizeDenoPath(session.root, reported.filename),
+            line: reported.range.start.line,
+            rule: reported.code,
+            message: reported.message,
+        }));
+        findings.push(...assertToolFindings(result, [...broken, ...found], DENO_LINT_NAME));
     }
     return findings;
 }
@@ -197,20 +279,19 @@ export async function checkSupabaseDenoLint(session: CheckSession, planned: Plan
 Reports the first type error of each edge function, from deno check on its entry file.
 
 @param session the repository and its tools.
-@param planned the scope files to check.
-@returns the findings.
+@param planned the configured check and selected scope files.
 */
-export async function checkSupabaseDenoCheck(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
-    const findings: Finding[] = [];
-    for (const entrypoint of listFunctionEntrypoints(planned)) {
-        const folder = posix.dirname(entrypoint);
-        const result = await runDenoCommand(
-            session,
-            planned,
-            [...DENO_CHECK_COMMAND, join(session.root, entrypoint)],
-            folder,
-        );
-        if (result.code !== 0) findings.push(parseDenoCheckError(session, planned, entrypoint, result.stderr));
+export async function checkSupabaseDenoCheck(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+    const findings: CheckFinding[] = [];
+    const parsed = readSupabaseProjectFile(session, planned);
+    if (parsed !== undefined && 'error' in parsed) return [parsed.error];
+    for (const entrypoint of listFunctionEntrypoints(planned, parsed?.value)) {
+        const result = await runDenoFunction(session, planned, {
+            command: DENO_CHECK_COMMAND,
+            entrypoint,
+            target: entrypoint.path,
+        });
+        if (result.code !== 0) findings.push(parseDenoCheckError(session, entrypoint.path, result.stderr));
     }
     return findings;
 }
@@ -219,10 +300,9 @@ export async function checkSupabaseDenoCheck(session: CheckSession, planned: Pla
 Reports privileged Supabase keys outside edge functions and test files.
 
 @param session the repository and its tools.
-@param planned the scope files and allowed paths.
-@returns the findings.
+@param planned the configured check and selected scope files.
 */
-export function checkSupabaseServiceRoleKey(session: Session, planned: PlannedCheck): Finding[] {
+export function checkSupabaseServiceRoleKey(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = getTable(planned.scope.settings, 'supabase').functions_folder;
     const tests = planned.scope.settings.test_files;
     const isAllowed = buildPathMatcher([`${folder}/**`, ...tests]);
@@ -236,11 +316,17 @@ export function checkSupabaseServiceRoleKey(session: Session, planned: PlannedCh
     return files.flatMap((file) =>
         readCachedText(session.reads, file.path)
             .split('\n')
-            .flatMap((text, index): Finding[] => {
+            .flatMap((text, index): CheckFinding[] => {
                 if (!SERVICE_ROLE_KEY_NAMES.some((name) => text.includes(name))) return [];
-                const message =
-                    'This file names a privileged Supabase key, which bypasses row level security, outside the paths allowed to hold it.';
-                return [buildFinding(planned, { file: file.path, line: index + 1 }, 'service-role-key', message)];
+                const message = SERVICE_ROLE_KEY_MESSAGE;
+                return [
+                    {
+                        file: file.path,
+                        line: index + 1,
+                        rule: RULES.serviceRoleKey,
+                        message: message,
+                    },
+                ];
             }),
     );
 }

@@ -1,15 +1,9 @@
 import { z } from 'zod';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { unwrapSettingSchema } from '#cli/settings/schemas.ts';
+import { TRAILING_PERIOD } from '#cli/config/text.ts';
 import type { SettingsError } from '#cli/types/settings/file.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { TomlSyntax } from '#cli/types/parsers/formats/toml.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function unwrapValueSchema(schema: z.ZodType | undefined): z.ZodType | undefined {
-    const inner = schema === undefined ? undefined : unwrapSettingSchema(schema);
-    return inner instanceof z.ZodUnion ? (inner.options[0] as z.ZodType) : inner;
-}
+import { getSettingType, unwrapSettingSchema } from '#cli/settings/schema-lookup.ts';
 
 function formatValueAdvice(
     schema: z.ZodType | undefined,
@@ -18,9 +12,10 @@ function formatValueAdvice(
 ): string {
     const issue = error.issues.find((issue) => issue.code === 'invalid_value');
     if (issue !== undefined) return issue.values.map(String).join(' or ');
-    const inner = unwrapValueSchema(schema);
+    let inner = schema === undefined ? undefined : unwrapSettingSchema(schema);
+    if (inner instanceof z.ZodUnion) inner = inner.options[0] as z.ZodType;
     if (inner instanceof z.ZodNumber) return `a whole number of ${String(inner.minValue ?? 0)} or more`;
-    const description = setting.description.replace(/\.$/u, '');
+    const description = setting.description.replace(TRAILING_PERIOD, '');
     return `a valid ${setting.type} value${description === '' ? '' : ': ' + description}`;
 }
 
@@ -32,7 +27,6 @@ Describe an invalid setting value for a command or a saved settings file.
 @param validation the schema and its failed validation.
 @param validation.schema the setting validator.
 @param validation.error the failed validation.
-@returns the shared value error sentence.
 */
 export function formatSettingValueError(
     value: string,
@@ -47,18 +41,6 @@ export function formatSettingValueError(
     return `The value ${value} is not valid for ${setting.name}. ${guidance}`;
 }
 
-function getValueType(schema: z.ZodType | undefined): Setting['type'] {
-    if (schema instanceof z.ZodArray) return 'list';
-    if (schema instanceof z.ZodNumber) return 'number';
-    if (schema instanceof z.ZodBoolean) return 'boolean';
-    return schema instanceof z.ZodObject || schema instanceof z.ZodRecord ? 'table' : 'string';
-}
-
-function displayValue(value: unknown): string {
-    if (typeof value === 'string') return value;
-    return value === undefined ? 'undefined' : JSON.stringify(value);
-}
-
 /**
 Format a file value with the same sentence used by set, retaining custom validation guidance.
 
@@ -71,13 +53,17 @@ export function formatFileValueError(schema: z.ZodType | undefined, issue: z.cor
     if (schema === undefined || issue.message.startsWith('needs ')) return issue.message;
     const validation = schema.safeParse(value);
     if (validation.success) return issue.message;
-    const inner = unwrapValueSchema(schema);
+    let inner = unwrapSettingSchema(schema);
+    if (inner instanceof z.ZodUnion) inner = inner.options[0] as z.ZodType;
     const setting = {
         name: issue.path.map(String).join('.'),
-        type: getValueType(inner),
-        description: schema.description ?? inner?.description ?? '',
+        type: getSettingType(schema).type,
+        description: schema.description ?? inner.description ?? '',
     };
-    return formatSettingValueError(displayValue(value), setting, { schema, error: validation.error });
+    return formatSettingValueError(value === undefined ? 'undefined' : JSON.stringify(value), setting, {
+        schema,
+        error: validation.error,
+    });
 }
 
 /**
@@ -85,12 +71,12 @@ Locate a settings error at its written key, array item, or nearest enclosing tab
 
 @param error the key and its validation sentence.
 @param syntax the source keys and their positions.
-@returns the file, source line, key, and sentence.
+@param file the path that the message starts with.
 */
-export function formatSettingsError(error: SettingsError, syntax: TomlSyntax): string {
+export function formatSettingsError(error: SettingsError, syntax: TomlSyntax, file: string): string {
     const source = syntax.pathNodes
         .filter((node) => node.path.every((key, index) => key === error.path[index]))
         .toSorted((left, right) => right.path.length - left.path.length)[0];
     const line = source?.node.loc.start.line ?? 1;
-    return `${SETTINGS_FILE}:${String(line)}: ${error.path.map(String).join('.')}: ${error.message}`;
+    return `${file}:${String(line)}: ${error.path.map(String).join('.')}: ${error.message}`;
 }

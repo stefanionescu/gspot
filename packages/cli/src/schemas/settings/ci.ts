@@ -1,20 +1,17 @@
 import { z } from 'zod';
-import { type SchemaShape } from '#cli/types/shapes.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
+import type { Settings, WrittenSettings } from '#cli/types/settings/file.ts';
 import { CI_PROVIDERS, GITHUB_ONLY_CI_KEYS } from '#cli/config/settings/ci.ts';
-import { type Settings, type WrittenSettings } from '#cli/types/settings/file.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { commandSchema, operatingSystemSchema } from '#cli/schemas/configurations/fields.ts';
 
 export const ciFields = {
-    enabled: z
-        .boolean()
-        .default(SETTING_DEFINITIONS['ci.enabled'].default)
-        .describe(SETTING_DEFINITIONS['ci.enabled'].description),
+    enabled: z.boolean().default(SETTING_DEFINITIONS['ci.enabled'].default).meta(SETTING_DEFINITIONS['ci.enabled']),
     provider: z
         .enum(CI_PROVIDERS)
         .default(SETTING_DEFINITIONS['ci.provider'].default)
-        .describe(SETTING_DEFINITIONS['ci.provider'].description),
-    setup_command: commandSchema.optional().describe(SETTING_DEFINITIONS['ci.setup_command'].description),
+        .meta(SETTING_DEFINITIONS['ci.provider']),
+    setup_command: commandSchema.optional().meta(SETTING_DEFINITIONS['ci.setup_command']),
     operating_systems: operatingSystemSchema
         .array()
         .min(1)

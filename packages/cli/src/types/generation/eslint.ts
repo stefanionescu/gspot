@@ -25,6 +25,7 @@ export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<s
 export type EslintRuleOptions = PathExpressions & { scope: string; rules: NonNullable<EslintSettings['rules']> };
 
 export type BlockWriter = {
+    runtimes?: EslintRuntime[];
     applied: Set<string>;
     allLevelRules: Set<string>;
     level: Level;
@@ -32,7 +33,7 @@ export type BlockWriter = {
     ruleOptions: EslintRuleOptions[];
 };
 
-export type SelectorGroup = {
+export type SelectorBlock = {
     scope?: string;
     ignoredScopes?: string[];
     files?: (string | string[])[];
@@ -73,9 +74,10 @@ export type EslintRuntime = PathExpressions & {
     runtime: string;
 };
 
-export type EslintFileMatcher = string | { component: (typeof COMPONENT_CONFIGURATIONS)[number] } | { runtime: number };
+type EslintFileMatcher = string | { component: (typeof COMPONENT_CONFIGURATIONS)[number] } | { runtime: number };
 
 export type EslintBlockFields = {
+    [field: string]: unknown;
     files?: readonly (EslintFileMatcher | EslintFileMatcher[])[];
     ignores?: string[];
     basePath?: string;
@@ -126,7 +128,16 @@ export type PlannedEslintFile = {
     configurations: Configuration[];
 };
 
-export type EslintRuleExpression = { expression: string; rules: Record<string, unknown> | undefined };
+type EslintPresetSource = { importName: string; path: string; includeFields?: boolean };
+
+export type EslintPresetRules = { sources: EslintPresetSource[]; rules: Record<string, unknown> | undefined };
+
+export type EslintCallArgument =
+    | { importName: string; path?: string }
+    | { value: unknown }
+    | { imports: Readonly<Record<string, string | readonly [string, string]>> };
+
+type EslintCall = { name: string; args: readonly EslintCallArgument[] };
 
 export type EslintLevelRules = {
     code: Record<string, unknown>;
@@ -144,19 +155,20 @@ export type EslintImportBoundaryRule = [
 
 export type PlannedEslintBlock = {
     fields: EslintBlockFields;
-    properties?: string;
-    preset?: EslintRuleExpression;
+    calls?: readonly EslintCall[];
+    preset?: EslintPresetRules;
     scope?: { path: string; excluded: string[] };
     label: string;
 };
 
 export type EslintScope = {
-    scopePath: string;
+    projectPath: string;
+    path: string;
     settings: ScopeSettings;
     eslintFiles: EslintFiles;
     presets: EslintPresets | undefined;
     eslintPresets: Map<string, EslintPresets>;
-    scopeDependencies: string[];
+    dependencies: string[];
     sourceFiles: string[];
     projects: string[];
 };
@@ -170,8 +182,9 @@ export type ConfigurationScopeBlocks = {
 };
 
 export type PluginRuleBlock = {
+    fields?: EslintBlockFields;
     imports: EslintPlugins;
-    properties: string;
+    calls: readonly EslintCall[];
     files: 'code' | 'tests' | readonly string[];
     ignoresTests?: true;
     rules: Readonly<Record<string, unknown>>;

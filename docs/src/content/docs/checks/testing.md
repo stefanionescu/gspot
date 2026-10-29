@@ -6,7 +6,7 @@ description: Run your tests before every push and fail when coverage drops under
 gspot runs your test suite as a check at the push stage, and the check fails when coverage falls below the limits you
 set. Keep the test runner and its dependencies in your own project.
 
-At level `recommended`, the coverage checks set no minimum. At level `all`, lines, branches, functions, and statements
+At level `basic`, the coverage checks set no minimum. At level `all`, lines, branches, functions, and statements
 need 80%. A limit you set holds at both levels. For a test runner without a configuration, write a [command
 check](/configure/command-checks/).
 

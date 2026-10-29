@@ -7,6 +7,6 @@ export type RepositoryReadOptions = {
     configurationsByName: Map<string, Configuration>;
 };
 
-export type RepositoryListing = Pick<Repository, 'root' | 'hasGit' | 'index' | 'attributes'> & {
+export type RepositoryListing = Pick<Repository, 'root' | 'hasGit' | 'index' | 'attributes' | 'unreadablePaths'> & {
     files: (ListedFile & { prefix: Buffer })[];
 };

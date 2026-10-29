@@ -1,6 +1,7 @@
-# Cloudflare Workers
+# Cloudflare
 
-Read this rule when code runs on Cloudflare Workers.
+Read this rule when code runs on Cloudflare Workers or Pages, or when you change a Wrangler file, `_headers`, or
+`_redirects`.
 
 ## Global variables
 
@@ -24,6 +25,13 @@ Read this rule when code runs on Cloudflare Workers.
 
 - Keep `.wrangler/` and `.dev.vars*` out of Git.
 - Deploy through a task. When CI deploys, its job runs the same task.
+- Write `_headers` as blocks of a path line and indented `Name: value` lines. Give the `/*` block
+  `X-Content-Type-Options: nosniff`, a `Referrer-Policy`, and `X-Frame-Options: DENY` or `SAMEORIGIN`, or a
+  `Content-Security-Policy` with `frame-ancestors`.
+- Write each `_redirects` rule as a source that starts with `/` or `https://`, a destination, and an optional status of
+  200, 301, 302, 303, 307, or 308, with no `!`.
+- After you change a binding in the Wrangler file, run `wrangler types`, and commit the file that
+  `cloudflare.types_file` names.
 
 See the Cloudflare [Node process support](https://developers.cloudflare.com/workers/runtime-apis/nodejs/process/) and
 [binding access](https://developers.cloudflare.com/workers/runtime-apis/bindings/).

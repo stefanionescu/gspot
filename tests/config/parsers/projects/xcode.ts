@@ -36,3 +36,5 @@ export const PROJECT_SYNTAX_CASES = [
         ),
     },
 ] as const;
+
+export const FIRST_GROUP_SWIFT_PATH = '/repo/First Group/Shared.swift';

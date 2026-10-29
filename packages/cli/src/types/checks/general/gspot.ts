@@ -1,11 +1,9 @@
-import type { TrackedFile } from '#cli/types/repository/files.ts';
-
 export type SuppressionSyntax = {
-    covers: (file: TrackedFile) => boolean;
+    covered: ReadonlySet<string>;
     tool: string;
     marker: RegExp;
     inlineMarker: RegExp;
-    readReason: (text: string) => string | undefined;
+    extractReason: (text: string) => string | undefined;
     forbidden: boolean;
     separator: RegExp | undefined;
     allRules: RegExp | undefined;

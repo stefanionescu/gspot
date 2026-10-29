@@ -42,7 +42,7 @@ test('a TOML syntax error is a GspotError that names the file and keeps the pars
     expect(() => openTomlFile('apps/api/bunfig.toml', '[install\n')).toThrow(
         matchFields<GspotError>({
             name: 'GspotError',
-            code: 'filesystem',
+            code: 'parse',
             message:
                 'apps/api/bunfig.toml:1:9 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
             cause: expect.any(Error),
@@ -70,13 +70,13 @@ test('TOML edits keep dates, array order and keys named like object properties',
     const text = document.getText();
     expect(text).toStartWith(source);
     expect(Reflect.get(Bun.TOML.parse(text), 'metadata')).toStrictEqual({ entries: values });
-    expect(document.getValue(['copied'])).toBeInstanceOf(Date);
+    expect(document.getValue(['copied'])).toStrictEqual(new Date('2026-10-06T00:00:00Z'));
 });
 
 test('TOML schema failures name the source file and the field', () => {
     expect(() => parseTomlFile('package.toml', 'name = 42', packageJsonSchema)).toThrow(
         matchFields<GspotError>({
-            code: 'filesystem',
+            code: 'parse',
             message: 'package.toml: name: Invalid input: expected string, received number. Fix the field.',
         }),
     );

@@ -27,3 +27,5 @@ export const GIT_HOOK_REPORT = {
     indexKept: true,
     workingBytes: 'working\n',
 } as const;
+
+export const SELECTED_SOURCE = 'selected source';

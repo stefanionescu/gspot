@@ -1,11 +1,11 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { parse } from '@decimalturn/toml-patch';
 import { getValueAt } from '#cli/system/tables.ts';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { generateFile, findManifestTarget, findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
+import { generateFile, getManifestTarget, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
 import {
     CHILD_MIGRATIONS,
@@ -19,7 +19,7 @@ test.each([...SQUAWK_VERSION_CASES])(
     async (through, expected) => {
         const text = await generateFile(
             buildSandboxSettings(['postgres'], { tables: `[postgres]\nfrozen_through = "${through}"\n` }),
-            findManifestTarget('postgres', 'squawk.toml'),
+            getManifestTarget('postgres', 'squawk.toml'),
             SQUAWK_MIGRATION_FILES,
         );
         expect(getValueAt(parse(text), ['excluded_paths'])).toStrictEqual(expected);
@@ -32,8 +32,8 @@ test('the Squawk config file of a Postgres child scope excludes the frozen migra
         'gspot.toml': buildSandboxSettings([], { level: 'all', tables: CHILD_POSTGRES_SCOPE_TABLES }),
     });
     const session = await openSession(sandbox.path);
-    const path = findConfigFilePath(session, 'squawk', 'app');
-    const text = generate(session).files.find((file) => file.path === path)!.content;
+    const path = getConfigFilePath(session, 'squawk', 'app');
+    const text = generateFiles(session).files.find((file) => file.path === path)!.content;
     expect(getValueAt(parse(text), ['excluded_paths'])).toStrictEqual([
         'app/migrations/V2_first.sql',
         'migrations/V1_root.sql',
@@ -44,7 +44,7 @@ test('the Squawk config file of a Postgres child scope excludes the frozen migra
 test('the Squawk config file of a Postgres scope assumes that each migration runs in a transaction', async () => {
     const text = await generateFile(
         buildSandboxSettings(['postgres']),
-        findManifestTarget('postgres', 'squawk.toml'),
+        getManifestTarget('postgres', 'squawk.toml'),
         SQUAWK_MIGRATION_FILES,
     );
     expect(getValueAt(parse(text), ['assume_in_transaction'])).toBe(true);

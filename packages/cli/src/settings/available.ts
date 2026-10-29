@@ -1,30 +1,24 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { mergeValue } from '#cli/settings/inherit.ts';
-import { unwrapSettingSchema } from '#cli/settings/schemas.ts';
 import { SETTING_LANGUAGES } from '#cli/config/settings/naming.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 import { LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
-import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/inheritance.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
+import { getSettingType, unwrapSettingSchema } from '#cli/settings/schema-lookup.ts';
+import { TABLE_KEY_SEGMENTS, SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/inheritance.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
-import { type Setting, type SettingDefault, type AvailableSettings } from '#cli/types/settings/inheritance.ts';
+import type { Setting, SettingDefault, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 
 import {
-    PATH_ROLES,
     BUILD_SCRIPT,
     OPENNEXT_PACKAGE,
     OVERRIDING_GROUPS,
     OPENNEXT_TYPE_DEFAULTS,
 } from '#cli/config/settings/available.ts';
-
-function getSchemaPathRole(schema: z.core.JSONSchema.JSONSchema): unknown {
-    if (schema['path_role'] !== undefined) return schema['path_role'];
-    return typeof schema.items === 'object' && !Array.isArray(schema.items) ? schema.items['path_role'] : undefined;
-}
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function isScalarConflict(previous: SettingDefault, configuration: Configuration, setting: Setting): boolean {
@@ -82,25 +76,6 @@ function addConfigurationSettings(
         addDefault(availableSettings, configuration, { ...setting, default: value });
 }
 
-function convertSchemaType(type: z.core.JSONSchema.JSONSchema['type']): Setting['type'] {
-    if (type === 'array') return 'list';
-    if (type === 'object') return 'table';
-    if (['number', 'integer'].includes(type as string)) return 'number';
-    if (type === 'string' || type === 'boolean') return type;
-    throw new Error(`The setting schema has no supported value type: ${String(type)}.`);
-}
-
-function getSettingType(schema: z.ZodType): Pick<Setting, 'type' | 'path_role'> {
-    const document = z.toJSONSchema(schema, { io: 'input' });
-    const input = document.anyOf?.find((value) => typeof value === 'object' && value.type !== undefined) ?? document;
-    const pathRole = getSchemaPathRole(input);
-    const allowedRole = PATH_ROLES.find((role) => role === pathRole);
-    return {
-        type: pathRole !== undefined && input.type === 'string' ? 'path' : convertSchemaType(input.type),
-        ...(allowedRole !== undefined && { path_role: allowedRole }),
-    };
-}
-
 const ROOT_SETTINGS: Setting[] = Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).map<Setting>(
     ([name, schema]) => {
         const value = schema.parse(undefined);
@@ -140,27 +115,26 @@ Build the known settings in the order of the selected configurations. Framework,
 configurations override single-value defaults.
 
 @param configurations the manifests of the selection, in order.
-@param level picks the recommended or all defaults.
-@returns the settings, their defaults, and the conflicts found on the way.
+@param level picks the defaults of the configured level.
 */
 export function buildAvailableSettings(configurations: Configuration[], level: Level): AvailableSettings {
     const availableSettings: AvailableSettings = { settings: new Map(), defaults: new Map(), errors: [] };
     for (const setting of ROOT_SETTINGS) {
         availableSettings.settings.set(setting.name, setting);
-        availableSettings.defaults.set(setting.name, { value: setting.default, configuration: 'gspot default' });
+        availableSettings.defaults.set(setting.name, { value: setting.default, configuration: SHIPPED_DEFAULT_ORIGIN });
     }
     for (const [language, { categories }] of Object.entries(readNamingDefaults().languages))
         for (const [category, { cases }] of Object.entries(categories))
             availableSettings.defaults.set(`naming.${language}.${category}.cases`, {
                 value: cases,
-                configuration: 'gspot default',
+                configuration: SHIPPED_DEFAULT_ORIGIN,
             });
     for (const configuration of configurations) addConfigurationSettings(availableSettings, configuration, level);
     addToolSettings(availableSettings, configurations);
     return availableSettings;
 }
 
-function addSchemaSettings(settings: Map<string, Setting[]>, schema: z.ZodType, name: string): void {
+function addSchemaSettings(settingsByConfiguration: Map<string, Setting[]>, schema: z.ZodType, name: string): void {
     const definition = schema.meta();
     const owners = definition?.['configurations'] as readonly string[] | undefined;
     if (owners === undefined) return;
@@ -172,9 +146,9 @@ function addSchemaSettings(settings: Map<string, Setting[]>, schema: z.ZodType, 
         description: schema.description ?? '',
     };
     for (const owner of owners) {
-        const held = settings.get(owner) ?? [];
+        const held = settingsByConfiguration.get(owner) ?? [];
         held.push(setting);
-        settings.set(owner, held);
+        settingsByConfiguration.set(owner, held);
     }
 }
 

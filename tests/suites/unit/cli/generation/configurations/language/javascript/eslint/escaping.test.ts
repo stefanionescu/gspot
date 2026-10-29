@@ -1,43 +1,43 @@
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { ESCAPED_SCOPE_CONFIGURATIONS } from '#tests/config/generation/configurations/language/javascript/eslint/escaping.ts';
 
-async function parseScopeShape(scope: string): Promise<string> {
+async function parseScopeShape(scopePath: string): Promise<string> {
     let shape: string;
     await using sandbox = await testdir();
-    const child = `${scope}/child`;
+    const child = `${scopePath}/child`;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(ESCAPED_SCOPE_CONFIGURATIONS, {
             rules: true,
             tables: stringify({
                 scope: [
-                    { path: scope, configurations: ESCAPED_SCOPE_CONFIGURATIONS },
+                    { path: scopePath, configurations: ESCAPED_SCOPE_CONFIGURATIONS },
                     { path: child, configurations: ESCAPED_SCOPE_CONFIGURATIONS },
                 ],
             }),
         }),
-        [`${scope}/source.js`]: 'export const value = 1;',
+        [`${scopePath}/source.js`]: 'export const value = 1;',
         [`${child}/source.js`]: 'export const value = 2;',
     });
     const session = await openSession(sandbox.path);
-    const output = generate(session);
-    const file = output.files.find((each) => each.path === findManifestTarget('javascript', 'eslint/eslint.mjs'))!;
+    const output = generateFiles(session);
+    const file = output.files.find((each) => each.path === getManifestTarget('javascript', 'eslint/eslint.mjs'))!;
     const tree = await parseSource('javascript', file.content);
     try {
         expect(tree.rootNode.hasError).toBe(false);
         shape = tree.rootNode.toString();
         const literals = tree.rootNode
             .descendantsOfType('string')
-            .filter((node) => node.text.includes(scope === 'example' ? scope : 'throw 1'))
+            .filter((node) => node.text.includes(scopePath === 'example' ? scopePath : 'throw 1'))
             .map((node): unknown => JSON.parse(node.text));
-        expect(literals).toContain(`${scope}/**/*`);
+        expect(literals).toContain(`${scopePath}/**/*`);
         expect(literals).toContain(`${child}/**/*`);
         expect(literals).toContain(`${child}/**`);
     } finally {

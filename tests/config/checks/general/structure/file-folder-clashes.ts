@@ -1,4 +1,4 @@
-import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 
 export const FILE_FOLDER_CLASH_CASES = [
     {

@@ -1,5 +1,3 @@
-import { type TemporaryPath, type ScriptFunction } from '#cli/types/parsers/code/bash.ts';
-
 export const BASH_COMMENT_CASES = [
     ['echo "a # b" # c', 'echo "a # b"'],
     ["printf '#'", "printf '#'"],
@@ -112,7 +110,7 @@ second() { local tmp=$(mktemp); trap 'rm -rf "$tmp"' RETURN; }
             { name: 'tmp', line: 2, cleanupLines: [2] },
         ],
     },
-] satisfies { name: string; source: string; expected: TemporaryPath[] }[];
+];
 
 export const FORWARDING_CALL_CASES = [
     { source: 'consume "$@"\n', count: 1, forwards: true },
@@ -128,9 +126,12 @@ export const FORWARDING_CALL_CASES = [
 export const TRAP_CALLS = [
     { name: 'trap', count: 2, line: 1, forwards: false },
     { name: '_cleanup', count: 0, line: 1, forwards: false },
+    { name: 'EXIT', count: 0, line: 1, forwards: false },
     { name: 'trap', count: 2, line: 2, forwards: false },
+    { name: 'EXIT', count: 0, line: 2, forwards: false },
     { name: '_quoted', count: 0, line: 2, forwards: false },
     { name: 'trap', count: 2, line: 3, forwards: false },
+    { name: 'EXIT', count: 0, line: 3, forwards: false },
 ] as const;
 
 export const QUOTED_TRAP_CALLS = [
@@ -141,12 +142,11 @@ export const QUOTED_TRAP_CALLS = [
     { source: 'trap "cleanup $(name)" EXIT', counts: [] },
 ] as const;
 
-export const BASH_FUNCTIONS: ScriptFunction[] = [
+export const BASH_FUNCTIONS = [
     {
         name: '_one',
         start: 2,
         end: 4,
-        body: ['', '    echo 1', ''],
         highestRead: 0,
         branches: 0,
         nesting: 0,
@@ -156,10 +156,15 @@ export const BASH_FUNCTIONS: ScriptFunction[] = [
         name: 'main',
         start: 6,
         end: 8,
-        body: ['', '    _one "$@"', ''],
         highestRead: Infinity,
         branches: 0,
         nesting: 0,
         assignments: 0,
     },
 ];
+
+export const CONTINUED_TRAP_SOURCE = String.raw`tmp=$(mktemp -d)
+trap "\
+rm -rf -- \"\$tmp\"; \
+false || :" EXIT
+`;

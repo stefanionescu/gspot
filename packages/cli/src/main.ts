@@ -8,7 +8,6 @@ import { registerApply } from '#cli/commands/apply.ts';
 import { registerUnset } from '#cli/commands/unset.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
 import { registerRemove } from '#cli/commands/remove.ts';
-import { isJsonRequested } from '#cli/system/runtime.ts';
 import { registerInit } from '#cli/commands/init/init.ts';
 import { registerInstall } from '#cli/commands/install.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
@@ -19,15 +18,21 @@ import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { registerDoctor } from '#cli/commands/doctor/doctor.ts';
 import { assertVersionPin } from '#cli/repository/version-pin.ts';
 import { registerExplain } from '#cli/commands/explain/explain.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { WHITESPACE_RUN, TRAILING_PERIOD } from '#cli/config/text.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
+import { printError, printResult, setOutputOptions } from '#cli/system/terminal.ts';
 import { Command, type Argument, CommanderError } from '@commander-js/extra-typings';
-import { printError, printResult, isColorAllowed, setOutputOptions } from '#cli/system/terminal.ts';
 
 import {
+    HELP_FLAG,
     CODE_MARK,
+    USAGE_LINE,
     GIT_COMMANDS,
     GLOBAL_OPTIONS,
+    HELP_ERROR_CODE,
     HELP_TERM_WIDTH,
+    NEEDS_GIT_MESSAGE,
     EXIT_CODE_SPACING,
     COMMAND_SUGGESTION,
     PROGRAM_EXIT_CODES,
@@ -39,7 +44,7 @@ import {
 
 function formatArgumentError(error: CommanderError, programHelp: string): string {
     const { message } = error;
-    if (error.code === 'commander.help') return programHelp;
+    if (error.code === HELP_ERROR_CODE) return programHelp;
     if (error.code === 'commander.unknownCommand') {
         const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
         const suggestion = COMMAND_SUGGESTION.exec(message)?.[1];
@@ -61,9 +66,9 @@ function printFailure(error: unknown, programHelp: string): number {
         return EXIT_ERROR;
     }
     const detail = (error instanceof Error ? error.message : String(error))
-        .replaceAll(/\s+/gu, ' ')
+        .replaceAll(WHITESPACE_RUN, ' ')
         .trim()
-        .replace(/\.$/u, '');
+        .replace(TRAILING_PERIOD, '');
     const message = `gspot stopped because of an internal error: ${detail}. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.`;
     printError({ error: 'unexpected', message });
     return EXIT_ERROR;
@@ -99,7 +104,7 @@ function formatProgramHelp(program: Command): string {
         ([flags, description]) => `  ${flags.padEnd(HELP_TERM_WIDTH)}${description}`,
     );
     return [
-        'Usage: gspot <command> [options]',
+        USAGE_LINE,
         program.description(),
         sections.join('\n\n'),
         `Options:\n${options.join('\n')}`,
@@ -109,16 +114,16 @@ function formatProgramHelp(program: Command): string {
 }
 
 /**
-Build the CLI with every command. Runs and the command reference both use it.
+Build the CLI with every command.
 
 @param onResult receives the result of the command that ran.
-@returns the Commander program.
 */
 export function buildProgram(onResult: CommandCompletion): Command {
     const program: Command = new Command('gspot')
         .description(cliPackage.description)
+        .enablePositionalOptions()
         .version(cliPackage.version, '--version', GLOBAL_OPTIONS['--version'])
-        .helpOption('-h, --help', GLOBAL_OPTIONS['-h, --help'])
+        .helpOption(HELP_FLAG, GLOBAL_OPTIONS[HELP_FLAG])
         .helpCommand(false)
         .exitOverride();
     program.configureOutput({ writeErr: () => {} });
@@ -138,7 +143,7 @@ export function buildProgram(onResult: CommandCompletion): Command {
     for (const command of program.commands) {
         const help = COMMAND_HELP[command.name() as keyof typeof COMMAND_HELP];
         command.helpGroup(help.group);
-        command.helpOption('-h, --help', GLOBAL_OPTIONS['-h, --help']);
+        command.helpOption(HELP_FLAG, GLOBAL_OPTIONS[HELP_FLAG]);
         command.option('--json', help.options['--json']);
         command.addHelpText(
             'after',
@@ -161,19 +166,24 @@ export async function runProgram(commandArguments: string[]): Promise<number> {
     const program = buildProgram((value) => {
         result = value;
     });
-    setOutputOptions({ json: isJsonRequested(commandArguments), color: isColorAllowed() });
+    const separator = commandArguments.indexOf('--');
+    const options = separator === -1 ? commandArguments : commandArguments.slice(0, separator);
+    setOutputOptions({
+        isJson: options.includes('--json'),
+        colored:
+            [undefined, ''].includes(readEnvironmentVariable('NO_COLOR')) &&
+            [process.stderr.isTTY, process.stdout.isTTY].every((tty: unknown) => tty === true),
+    });
+    if (options.includes('--version')) {
+        printResult({ text: cliPackage.version, json: { version: cliPackage.version }, exitCode: 0 });
+        return 0;
+    }
     program.hook('preAction', (_program, command) => {
         if (GIT_COMMANDS.has(command.name()) && !isGitRepository(process.cwd()))
-            throw new GspotError('git', 'gspot needs a Git repository. Run git init, then gspot init.');
+            throw new GspotError('git', NEEDS_GIT_MESSAGE);
         if (VERSION_PIN_COMMANDS.has(command.name())) assertVersionPin(readRepositoryRoot(process.cwd()));
     });
     try {
-        if (commandArguments[0] === '--version' && commandArguments.length > 1)
-            throw new CommanderError(
-                EXIT_ERROR,
-                'commander.unknownOption',
-                `error: unknown option '${commandArguments[1] as string}'`,
-            );
         await program.parseAsync(commandArguments, { from: 'user' });
         printResult(result);
         return result.exitCode;

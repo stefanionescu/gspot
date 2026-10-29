@@ -6,10 +6,6 @@ Read this rule when you change Python dependencies, lockfiles, or package layout
 
 Update lockfiles only when the task includes dependency maintenance.
 
-## Imports
-
-- Keep imports inside the `[[import_rule]]` records of `gspot.toml`; `structure/import-rules` checks them.
-
 ## Packages and architecture
 
 <!-- level: all -->

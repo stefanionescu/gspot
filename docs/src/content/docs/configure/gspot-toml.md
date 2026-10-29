@@ -38,7 +38,7 @@ In the file, the selection reads:
 
 ```toml title="gspot.toml"
 configurations = ["bash"]
-level = "recommended"
+level = "basic"
 ```
 
 Framework lint rules follow your dependencies. For example, a NestJS project that uses `@nestjs/swagger` also gets the
@@ -46,14 +46,47 @@ Swagger lint rules.
 
 ## Start from another repository
 
-Copy the `gspot.toml` of a repository whose setup you want, and the files that its settings name: ESLint plugin
-modules, Semgrep rule files, and command check scripts. Delete the `[[scope]]` records of folders that this
-repository does not have. Then run `gspot apply` and `gspot install`. `gspot doctor` lists the configurations that
-this repository needs. `gspot check` reports old tool settings files, and each path that matches nothing with its
-line in `gspot.toml`; delete those lines, then run `gspot apply`.
+Start a repository from the setup of another one with the path of its `gspot.toml`:
 
-To share lint rules across repositories, publish them as an ESLint plugin package, install it, and name a module that
-re-exports it in `[[tools.eslint.plugins]]`.
+```shell
+gspot init --from ../api/gspot.toml --dry-run
+gspot init --from ../api/gspot.toml
+gspot install
+```
+
+init selects the configurations of that file and the ones it detects here. It copies the settings that fit any
+repository: the level, limits and their reasons, naming, formatting, prose, coverage, and lint rule lists. It also
+copies word lists, the switches of `[hooks]` and `[rules]`, and each ignore of a whole check or lint rule.
+
+The plan lists under `left out` each setting that belongs to the other repository:
+
+- Settings and records that name paths, such as `test_files` and `[[scope]]`.
+- Settings and command checks that run code.
+- Settings that describe that repository, such as `tools.eslint.import_extension`.
+- `ci.enabled` and `ci.provider`, because CI stays off until you run `gspot set ci.enabled true`.
+- Ignores with paths, names, or a date.
+
+What init reads here wins over the file: the formatting of an existing Prettier, EditorConfig, or Ruff file.
+`--level` wins over the level of the file.
+
+init selects each configuration of the file even when this repository has none of its files yet, so its rules reach
+your coding agent before the first file. Its checks report `no matching files` until the files exist. To drop one,
+run `gspot remove <name> --reason "<why>"`.
+
+init copies the file once. A later change to it does not reach this repository.
+
+To share a setup with a team, keep its `gspot.toml` in a repository that everyone clones, and start each new
+repository from it. To use one file without a clone, download it first, at a commit:
+
+```shell
+curl -fsSL -o ../team.toml https://raw.githubusercontent.com/acme/policies/<commit>/gspot.toml
+gh api "repos/acme/policies/contents/gspot.toml?ref=<commit>" -H "Accept: application/vnd.github.raw" > ../team.toml
+gspot init --from ../team.toml
+```
+
+Your own ESLint plugins, Semgrep rule files, and command checks stay behind with their files. To share ESLint rules,
+publish them as an ESLint plugin package, install it, and name a module that re-exports it in
+`[[tools.eslint.plugins]]`. Copy Semgrep rule files and command check scripts with their lines in `gspot.toml`.
 
 ## The level
 
@@ -61,15 +94,15 @@ re-exports it in `[[tools.eslint.plugins]]`.
 gspot set level all
 ```
 
-[Levels](/start/concepts/#levels) define `recommended` and `all`. Neither enables experimental or preview lint rules.
+[Levels](/start/concepts/#levels) define `basic` and `all`. Neither enables experimental or preview lint rules.
 
 ## Change a setting
 
-| Command                           | What it does                                                                                                        |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `gspot set <setting> <value>`     | Writes your value. Your first written list replaces the shipped list; a scope list adds to its written parent list. |
-| `gspot unset <setting>`           | Removes your value and its reason, so the default takes effect again.                                               |
-| `gspot unset <setting> <item...>` | Removes list items from your list.                                                                                  |
+| Command                           | What it does                                                          |
+| --------------------------------- | --------------------------------------------------------------------- |
+| `gspot set <setting> <value>`     | Writes your value. Your first written value replaces the shipped one. |
+| `gspot unset <setting>`           | Removes your value and its reason, so the default takes effect again. |
+| `gspot unset <setting> <item...>` | Removes list items or table keys from your value.                     |
 
 To change a setting in one folder only, see [Settings in a scope](/configure/monorepos/#settings-in-a-scope).
 
@@ -119,7 +152,7 @@ javascript variable "helperCommand": "helper" is banned (roles group).
 This complete example accepts that exact variable name in one file:
 
 ```toml title="gspot.toml"
-configurations = ["javascript", "naming"]
+configurations = ["javascript"]
 level = "all"
 
 [[naming.override]]
@@ -134,8 +167,9 @@ keep their checks.
 
 ## Edit the file by hand
 
-Records that no command writes, such as `[[scope]]`, `[[command_check]]`, `[[import_rule]]`, `[[naming.override]]`, and
-`[[tools.eslint.plugins]]`, take a hand edit. gspot checks a hand edit as it checks a command.
+The records that no command writes, `[[scope]]`, `[[command_check]]`, and `[[import_rule]]`, take a hand edit.
+`gspot ignore` writes `[[ignore]]` records. `gspot set` writes any other list of tables, such as
+`tools.eslint.plugins`, whole, as one inline TOML list. gspot checks a hand edit as it checks a command.
 
 gspot.toml uses TOML 1.0. Keep each inline table on one line. See [Editors](/use/editors/#validate-gspottoml) to
 validate it.

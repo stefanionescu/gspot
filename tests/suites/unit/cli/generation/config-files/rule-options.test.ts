@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { INACTIVE_RULE_OPTIONS } from '#tests/config/generation/config-files/rule-options.ts';
@@ -18,7 +18,7 @@ test.each([...INACTIVE_RULE_OPTIONS])(
             'source.js': 'export const total = 1;\n',
             'web/README.md': '# Web\n',
         });
-        const error = await captureRejection(openSession(sandbox.path).then((session) => generate(session)));
+        const error = await captureRejection(openSession(sandbox.path).then((session) => generateFiles(session)));
         expect(error.message).toBe(message);
     },
 );

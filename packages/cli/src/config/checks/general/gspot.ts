@@ -1,11 +1,11 @@
-const APPLY_HELP = 'Run gspot apply to write it again; to change what it holds, change gspot.toml.';
+const APPLY_HELP = 'Run gspot apply.';
 
 export const GENERATED_FILE_FINDINGS = {
     changed: { message: 'This generated file differs from what gspot.toml generates.', help: APPLY_HELP },
     missing: { message: 'This generated file is missing.', help: APPLY_HELP },
     stray: {
         message: 'gspot wrote this file, and no selected configuration writes it now.',
-        help: 'Delete the file, or add the configuration that generates it.',
+        help: 'Run gspot apply to delete it.',
     },
 } as const;
 
@@ -23,6 +23,12 @@ export const EXPIRED_IGNORE_HELP =
 
 export const NEGATED_PATTERN = /^!/u;
 
-export const UNESCAPED_GROUP = /(?<!\\)[()[\]]/u;
+export const UNESCAPED_BRACKET = /(?<!\\)[()[\]]/u;
 
-export const GROUP_HELP = String.raw` If a folder name holds ( ) [ ], escape each with a backslash in a TOML literal string, such as 'app/\(legal\)/**'.`;
+export const BRACKET_HELP = String.raw` If a folder name holds ( ) [ ], escape each with a backslash in a TOML literal string, such as 'app/\(legal\)/**'.`;
+
+export const RULES = {
+    expiredIgnore: 'expired-ignore',
+    unmatchedPath: 'unmatched-path',
+    conflictingConfigFile: 'conflicting-config-file',
+} as const;

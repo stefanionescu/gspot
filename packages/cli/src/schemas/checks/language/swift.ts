@@ -25,7 +25,7 @@ const linesSchema = z.object({
 const summarySchema = z.object({
     lines: linesSchema,
 } satisfies SchemaShape<SwiftCoverage['data'][number]['files'][number]['summary']>);
-const filesSchema = z.object({
+const fileSchema = z.object({
     filename: z.string(),
     summary: summarySchema,
 } satisfies SchemaShape<SwiftCoverage['data'][number]['files'][number]>);
@@ -33,7 +33,7 @@ const filesSchema = z.object({
 export const swiftCoverageSchema = z.object({
     data: z
         .object({
-            files: filesSchema.array(),
+            files: fileSchema.array(),
         } satisfies SchemaShape<SwiftCoverage['data'][number]>)
         .array(),
 } satisfies SchemaShape<SwiftCoverage>);

@@ -12,3 +12,5 @@ export const SVELTE_CHECK_COMMAND = [
 ] as const;
 
 export const SVELTE_TSCONFIG_FLAG = '--tsconfig';
+
+export const SVELTE_CHECK_RULE = 'svelte-check';

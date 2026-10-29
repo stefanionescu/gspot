@@ -11,7 +11,7 @@ let package = Package(
 `;
 
 export const PYTHON_IMPORT_RULES = `[python]
-externals = ["folder_paths"]
+externals = { value = ["folder_paths"], reason = "The host application supplies this module at runtime." }
 
 [[import_rule]]
 name = "core"
@@ -59,3 +59,8 @@ export const SWIFT_IMPORT_FILES = {
 
 export const REFUSAL_HELP =
     'Move the code, move that rule above this one, or list the rules it may import in can_import.';
+
+export const UNCOVERED_FILE_MESSAGE =
+    'No [[import_rule]] covers this file. Add a path that matches it to an import rule, or record an [[ignore]] for structure/import-rules with its paths and a reason.';
+
+export const SWIFTPM_DEFAULT_FOLDERS = ['Sources', 'Source', 'src', 'srcs'] as const;

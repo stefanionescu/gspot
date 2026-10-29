@@ -169,3 +169,7 @@ command = ["true"]
 paths = ["tests/**"]
 stage = "manual"
 `;
+
+export const SRC_MISSING_MESSAGE = 'src/missing.ts names no tracked file or folder.';
+
+export const SRC_GONE_MESSAGE = 'src/gone.ts names no tracked file or folder.';

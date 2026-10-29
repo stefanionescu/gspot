@@ -8,3 +8,5 @@ reason = "This sandbox exercises tools without the npm editor checker."
 check = "format/prettier"
 reason = "This sandbox exercises tools without the npm formatter."
 `;
+
+export const TWO_WORDS = 'two words';

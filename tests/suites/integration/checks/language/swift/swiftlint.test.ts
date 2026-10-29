@@ -1,23 +1,26 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { CLEAN_SWIFT } from '#tests/config/samples.ts';
+import { CLEAN_SWIFT } from '#tests/config/swift.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import type { LinterJsonFinding } from '#tests/types/tools.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { SWIFT_SANDBOX } from '#tests/config/integration/checks/language/swift/samples.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { SWIFT_SANDBOX } from '#tests/config/integration/checks/language/swift/sandboxes.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
 
 import {
     CAST_SWIFT,
     XCTEST_SCOPES,
     PARSER_SOURCE,
+    PARAMETER_LIMIT_CASE,
     CORRECTED_PARSER_SOURCE,
 } from '#tests/config/integration/checks/language/swift/swiftlint.ts';
 
@@ -42,15 +45,15 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     },
 );
 
-async function prepareSwiftScope(scope: string) {
+async function prepareSwiftScope(scopePath: string) {
     await using resources = new AsyncDisposableStack();
     const sandbox = resources.use(await createGitSandbox({}));
     const root = sandbox.path;
-    const prefix = scope === '' ? '' : `${scope}/`;
+    const prefix = scopePath === '' ? '' : `${scopePath}/`;
     await createFileTree(root, {
-        'gspot.toml': buildSandboxSettings(scope === '' ? ['swift'] : [], {
+        'gspot.toml': buildSandboxSettings(scopePath === '' ? ['swift'] : [], {
             level: 'all',
-            scopes: scope === '' ? [] : [{ path: scope, configurations: ['swift'] }],
+            scopes: scopePath === '' ? [] : [{ path: scopePath, configurations: ['swift'] }],
         }),
         [`${prefix}Sources/Value.swift`]: CORRECTED_PARSER_SOURCE,
         [`${prefix}AppTests/Value.swift`]: PARSER_SOURCE,
@@ -161,5 +164,35 @@ test.skipIf(!hasToolBuild('swiftlint'))(
         expect(corrected.report.checks).toMatchObject([
             { check: 'swift/swiftlint', scope: 'ios', status: 'passed', findings: [] },
         ]);
+    },
+);
+
+test.skipIf(!hasToolBuild('swiftlint')).each(['default', 8] as const)(
+    'SwiftLint counts parameters with maximum %s',
+    async (supplied) => {
+        const scenario = PARAMETER_LIMIT_CASE;
+        await using sandbox = await createGitSandbox({});
+        const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, scenario, supplied);
+        const result = runCommandBlocking(
+            [
+                'swiftlint',
+                'lint',
+                '--config',
+                getManifestTarget('swift', 'swiftlint.yml'),
+                '--reporter',
+                'json',
+                '--quiet',
+                '--no-cache',
+                scenario.file,
+            ],
+            { cwd: sandbox.path },
+        );
+        const findings = JSON.parse(result.stdout) as LinterJsonFinding[];
+        expect(result.code, result.stdout + result.stderr).toBe(
+            maximum === defaultMaximum ? scenario.failureStatus : 0,
+        );
+        expect(findings.filter((finding) => finding.rule_id === 'function_parameter_count')).toMatchObject(
+            maximum === defaultMaximum ? [scenario.finding] : [],
+        );
     },
 );

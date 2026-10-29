@@ -12,9 +12,9 @@ check weaker needs a reason beside it. gspot writes the config files from `gspot
 | --------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | Use a configuration                                 | `gspot add <configuration>`                                                        | [gspot.toml](/configure/gspot-toml/#choose-configurations)         |
 | Stop using a configuration                          | `gspot remove <configuration> --reason "<why>"`                                    | [gspot.toml](/configure/gspot-toml/#choose-configurations)         |
-| Run more or fewer checks                            | `gspot set level all` or `gspot set level recommended`                             | [Levels](/start/concepts/#levels)                                  |
+| Run more or fewer checks                            | `gspot set level all` or `gspot unset level`                                       | [Levels](/start/concepts/#levels)                                  |
 | Give one folder its own configurations and settings | A `[[scope]]` record, then `--scope <path>` on `add`, `remove`, `set`, and `unset` | [Monorepos](/configure/monorepos/)                                 |
-| Start from another repository's setup               | Copy its gspot.toml and the files its settings name, then run gspot apply          | [gspot.toml](/configure/gspot-toml/#start-from-another-repository) |
+| Start from another repository's setup               | `gspot init --from <path>/gspot.toml`                                              | [gspot.toml](/configure/gspot-toml/#start-from-another-repository) |
 
 ## Change what a check reports
 
@@ -65,3 +65,5 @@ gspot decides these, so every repository at one level and one gspot version runs
 - **Tool versions.** Each gspot release pins them.
 - **Rules for other tools of your own:** Vale styles and Stylelint plugins, for example. Write the rule for Semgrep, or run
   the tool as a command check.
+
+The hooks run the code of the repository as you; see [Trust](/start/concepts/#trust).

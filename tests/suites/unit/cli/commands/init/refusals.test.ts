@@ -1,26 +1,29 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { WRITER_LOCK_FILE } from '#cli/config/write.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
+import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { WRITER_LOCK_FILE } from '#cli/config/repository/writer.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PRESERVE_SOURCE } from '#tests/config/commands/contents.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { UNCOMMITTED_FORMAT_CASES } from '#tests/config/commands/init/conflicting-config-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { UNCOMMITTED_FORMAT_CASES } from '#tests/config/commands/init/refusals.ts';
+import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {
     await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
 
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, [...buildInitArguments([]), '--configurations', 'bassh']);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'bassh']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout + result.stderr).toBe(
-        'There is no configuration called `bassh`. Did you mean `bash`? Run `gspot list configurations` to see the available configurations.\n',
+        'There is no configuration called bassh. Did you mean bash? See https://generativespotting.com/reference/configurations/ for the available configurations.\n',
     );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -28,19 +31,10 @@ test('init with an unknown configuration exits 2 and writes nothing', async () =
 test('init refuses an unreadable package.json before writing', async () => {
     await using sandbox = await createGitSandbox({ 'package.json': '{', 'source.ts': 'export {};\n' });
 
-    const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, buildInitArguments([]));
-    expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stdout).toBe('');
-    expect(result.stderr).toBe('package.json:1:2 is not valid JSON: CloseBraceExpected. Fix the file.\n');
-    const structured = await runGspot(sandbox.path, [...buildInitArguments([]), '--json']);
-    expect(structured.code).toBe(2);
-    expect(structured.stderr).toBe('');
-    expect(JSON.parse(structured.stdout)).toStrictEqual({
-        error: 'filesystem',
-        message: 'package.json:1:2 is not valid JSON: CloseBraceExpected. Fix the file.',
+    await assertRefusalWithoutWrites(sandbox.path, ['init', '--yes'], {
+        error: 'parse',
+        message: PACKAGE_JSON_ERROR,
     });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('init in a repository that already has gspot.toml exits 2 and changes nothing', async () => {
@@ -50,15 +44,11 @@ test('init in a repository that already has gspot.toml exits 2 and changes nothi
     });
 
     commitAll(sandbox.path);
-    const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, [...buildInitArguments([]), '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(JSON.parse(result.stdout)).toStrictEqual({
+    await assertRefusalWithoutWrites(sandbox.path, ['init', '--yes'], {
         error: 'settings',
         message:
-            'This repository already has a gspot.toml. Run `gspot doctor` to inspect its setup and see suggested commands.',
+            'This repository already has a gspot.toml. Run gspot add to add newly detected configurations, or gspot doctor to inspect its setup.',
     });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('init --json without --yes names --yes before reading the repository', async () => {
@@ -73,10 +63,11 @@ test('init --json without --yes names --yes before reading the repository', asyn
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
-test('init without a terminal names --yes once and writes only after --yes', async () => {
-    await using sandbox = await createGitSandbox({ 'control.txt': 'preserve this source\n' });
 
-    const commandArguments = buildInitArguments([]).filter((argument) => argument !== '--yes');
+test('init without a terminal names --yes once and writes only after --yes', async () => {
+    await using sandbox = await createGitSandbox({ 'control.txt': PRESERVE_SOURCE });
+
+    const commandArguments = ['init', '--yes'].filter((argument) => argument !== '--yes');
     const before = await readTree(sandbox.path);
     const refused = await runGspot(sandbox.path, commandArguments);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
@@ -87,15 +78,16 @@ test('init without a terminal names --yes once and writes only after --yes', asy
     const writtenVersion = await readFile(join(sandbox.path, GSPOT_PATHS.versionPin), 'utf8');
     expect(writtenVersion.trim()).toBe(cliPackage.version);
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(true);
-    expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe('preserve this source\n');
+    expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe(PRESERVE_SOURCE);
 });
+
 test('a linked .gspot folder stops init, and nothing outside changes', async () => {
     await using sandbox = await testdir({ 'project/entry.sh': 'echo example\n', 'outside/sentinel': 'authored\n' });
     const project = join(sandbox.path, 'project');
     runGitStep(project, ['init', '--quiet']);
     const outside = join(sandbox.path, 'outside');
     await symlink(outside, join(project, GSPOT_FOLDER));
-    const refused = await runGspot(project, buildInitArguments(['bash']));
+    const refused = await runGspot(project, ['init', '--yes', '--configurations', 'bash']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stderr).toBe(
         `A parent of ${WRITER_LOCK_FILE} is a link or is not a folder. Choose a folder without links.\n`,
@@ -112,7 +104,10 @@ test.each(UNCOMMITTED_FORMAT_CASES)('init refuses to replace $path absent from H
     const before = await readTree(sandbox.path);
     for (const isDryRun of [true, false]) {
         const result = await runGspot(sandbox.path, [
-            ...buildInitArguments(['javascript']),
+            'init',
+            '--yes',
+            '--configurations',
+            'javascript',
             ...(isDryRun ? ['--dry-run'] : []),
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(2);
@@ -127,9 +122,9 @@ test.each(UNCOMMITTED_FORMAT_CASES)('init refuses to replace $path absent from H
 
 async function prepareUncommittedFormat(
     root: string,
-    variant: (typeof UNCOMMITTED_FORMAT_CASES)[number],
+    scenario: (typeof UNCOMMITTED_FORMAT_CASES)[number],
 ): Promise<void> {
-    const { state, path, original, changed } = variant;
+    const { state, path, original, changed } = scenario;
     if (state === 'unborn Git') runGitStep(root, ['init', '-q']);
     else if (state === 'untracked') commitAll(root);
     await writeFile(join(root, path), original);

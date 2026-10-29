@@ -9,35 +9,23 @@ import {
 } from '#cli/config/system/files/names.ts';
 
 /**
-Check that every segment of a path can name a file on every system that gspot supports.
-
-@param path a repository-relative path with forward slashes.
-@returns whether every segment has text, avoids dot segments and device names, and holds no character that Windows refuses.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
-export function isPortablePath(path: string): boolean {
-    return path
-        .split('/')
-        .every(
-            (segment) =>
-                !RESERVED_SEGMENTS.has(segment) &&
-                !UNSAFE_CHARACTERS.test(segment) &&
-                !UNSAFE_PATH_END.test(segment) &&
-                !DEVICE_NAME.test(segment),
-        );
-}
-
-/**
 Split a path into segments, and refuse an empty, dot, parent, or null segment.
 
 @param path a repository-relative file with forward slashes.
-@returns the segments of the path.
 */
 export function splitSystemPath(path: string): string[] {
     const segments = path.split('/');
     const isUnsafe =
         process.platform === 'win32'
-            ? !isPortablePath(path)
+            ? !path
+                  .split('/')
+                  .every(
+                      (segment) =>
+                          !RESERVED_SEGMENTS.has(segment) &&
+                          !UNSAFE_CHARACTERS.test(segment) &&
+                          !UNSAFE_PATH_END.test(segment) &&
+                          !DEVICE_NAME.test(segment),
+                  )
             : segments.some((segment) => RESERVED_SEGMENTS.has(segment) || segment.includes('\0'));
     if (isUnsafe)
         throw new GspotError(

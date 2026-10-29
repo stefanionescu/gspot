@@ -2,17 +2,18 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { getTool } from '#cli/configurations/tools.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { type Tool } from '#cli/types/configurations.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { VERSION_OUTPUTS } from '#tests/config/tools/versions.ts';
+import { UNCLOSED_SEQUENCE } from '#tests/config/yaml.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { VERSION_OUTPUTS, SYSTEM_BASH_VERSIONS, PROGRAM_VERSION_STATES } from '#tests/config/tools/versions.ts';
 
 test('an npm tool is the version its package holds, whatever it prints', async () => {
     await using sandbox = await testdir();
@@ -23,7 +24,7 @@ test('an npm tool is the version its package holds, whatever it prints', async (
 });
 
 test('a program of the tool project reports its version from the gspot folder, past a config file in the repository', async () => {
-    await using sandbox = await testdir({ '.teller.yml': 'invalid: [\n' });
+    await using sandbox = await testdir({ '.teller.yml': UNCLOSED_SEQUENCE });
     await fakeNpmPackage(sandbox.path, {
         name: 'teller',
         version: '5.0.1',
@@ -112,24 +113,24 @@ test('a command reads each version once and the next session reads it again', as
     expect(await readFile(join(sandbox.path, 'calls.txt'), 'utf8')).toBe('..');
 });
 
-test.each([
-    ['3.2.57', 'outdated'],
-    ['5.2.0', 'system'],
-] as const)('a system bash that prints %s is %s against the 4.4 minimum', async (version, state) => {
-    await using sandbox = await testdir();
-    using _which = fakeExecutableLookup(process.execPath);
-    const tool: Tool = {
-        name: 'bash',
-        kind: 'program',
-        system: true,
-        min_version: '4.4',
-        installers: {},
-        version_command: buildProgramArguments('fakes/tool', '--line', `GNU bash, version ${version}(1)-release`),
-        version_pattern: String.raw`version (\d+\.\d+(?:\.\d+)?)`,
-    };
-    const inspection = inspectTool(buildToolSearch(sandbox.path), tool);
-    expect(inspection).toMatchObject({ state, found: version, minimumVersion: '4.4' });
-});
+test.each([...SYSTEM_BASH_VERSIONS])(
+    'a system bash that prints %s is %s against the 4.4 minimum',
+    async (version, state) => {
+        await using sandbox = await testdir();
+        using _which = fakeExecutableLookup(process.execPath);
+        const tool: Tool = {
+            name: 'bash',
+            kind: 'program',
+            system: true,
+            min_version: '4.4',
+            installers: {},
+            version_command: buildProgramArguments('fakes/tool', '--line', `GNU bash, version ${version}(1)-release`),
+            version_pattern: String.raw`version (\d+\.\d+(?:\.\d+)?)`,
+        };
+        const inspection = inspectTool(buildToolSearch(sandbox.path), tool);
+        expect(inspection).toMatchObject({ state, found: version, minimumVersion: '4.4' });
+    },
+);
 
 test.each(['gitleaks', 'next'])('the %s pin is outdated below its minimum version and accepted at it', async (name) => {
     await using sandbox = await testdir();
@@ -148,19 +149,25 @@ test.each(['gitleaks', 'next'])('the %s pin is outdated below its minimum versio
     }
 });
 
-test.each([
-    ['0.9.0', 'ok'],
-    ['0.8.0', 'outdated'],
-] as const)('a wrapper with its own version runs program %s and reports %s', async (version, state) => {
-    await using sandbox = await testdir({
-        [`${GSPOT_PATHS.nodeModules}/wrapper/package.json`]: '{"name":"wrapper","version":"0.7.0"}',
-    });
+test.each([...PROGRAM_VERSION_STATES])(
+    'a wrapper with its own version runs program %s and reports %s',
+    async (version, state) => {
+        await using sandbox = await testdir({
+            [`${GSPOT_PATHS.nodeModules}/wrapper/package.json`]: '{"name":"wrapper","version":"0.7.0"}',
+        });
 
-    await writeProgramCommand(sandbox.path, `${GSPOT_PATHS.nodeModules}/.bin/wrapped`, 'fakes/tool', '--line', version);
-    const tool = buildProgramPin('wrapped', '0.10.0');
-    tool.min_version = '0.9.0';
-    tool.installers['npm'] = { name: 'wrapper', version: '0.7.0' };
-    const inspection = inspectTool(buildToolSearch(sandbox.path), tool);
-    expect(inspection.found).toBe(version);
-    expect(inspection.state).toBe(state);
-});
+        await writeProgramCommand(
+            sandbox.path,
+            `${GSPOT_PATHS.nodeModules}/.bin/wrapped`,
+            'fakes/tool',
+            '--line',
+            version,
+        );
+        const tool = buildProgramPin('wrapped', '0.10.0');
+        tool.min_version = '0.9.0';
+        tool.installers['npm'] = { name: 'wrapper', version: '0.7.0' };
+        const inspection = inspectTool(buildToolSearch(sandbox.path), tool);
+        expect(inspection.found).toBe(version);
+        expect(inspection.state).toBe(state);
+    },
+);

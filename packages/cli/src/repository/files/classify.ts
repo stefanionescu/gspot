@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
@@ -20,6 +21,7 @@ import type {
 } from '#cli/types/repository/files.ts';
 import {
     TEXT_TAG,
+    SET_STATE,
     SET_VALUES,
     LFS_FILTER,
     SCRIPT_TAG,
@@ -28,7 +30,7 @@ import {
     SHEBANG_TAG,
     SOURCE_KIND,
     NOTICE_FILE,
-    UNSET_VALUE,
+    UNSET_STATE,
     BANNER_BYTES,
     LICENSE_FILE,
     SHEBANG_TAGS,
@@ -36,7 +38,6 @@ import {
     LICENSE_TAGS,
     FILENAME_TAGS,
     DOTENV_PREFIX,
-    ATTRIBUTE_SET,
     TEXT_ATTRIBUTE,
     ENV_SPLIT_FLAG,
     SHEBANG_PREFIX,
@@ -73,7 +74,7 @@ function findAttributeKind(attributes: Record<string, string> | undefined): File
     if (generated !== undefined && SET_VALUES.has(generated)) return { kind: 'generated', origin: GITATTRIBUTES_FILE };
     const vendored = attributes[VENDORED_ATTRIBUTE];
     if (vendored !== undefined && SET_VALUES.has(vendored)) return { kind: 'vendored', origin: GITATTRIBUTES_FILE };
-    const isBinary = attributes[TEXT_ATTRIBUTE] === UNSET_VALUE || attributes[FILTER_ATTRIBUTE] === LFS_FILTER;
+    const isBinary = attributes[TEXT_ATTRIBUTE] === UNSET_STATE || attributes[FILTER_ATTRIBUTE] === LFS_FILTER;
     return isBinary ? { kind: 'binary', origin: GITATTRIBUTES_FILE } : undefined;
 }
 
@@ -94,10 +95,10 @@ function findGeneratedKind(path: string, prefix: Buffer): FileClassification | u
 }
 
 function classifyManagedDocument(root: string, file: ListedFile, prefix: Buffer): FileClassification {
-    if (file.symlink || !file.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
+    if (file.isSymlink || !file.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
         return SOURCE_KIND;
     const text = readText(root, file.path);
-    const authored = stripBlock(text, { path: file.path, style: 'markdown' });
+    const authored = stripBlock(text, { path: file.path });
     return authored === text || authored.trim() !== ''
         ? SOURCE_KIND
         : { kind: 'generated', origin: KIND_ORIGINS.gspot };
@@ -111,7 +112,7 @@ function classifyKind(
     const { path } = listed;
     const configured = findConfiguredKind(path, rules);
     if (configured) return configured;
-    if (isBinary && rules.attributes.get(path)?.[TEXT_ATTRIBUTE] !== ATTRIBUTE_SET)
+    if (isBinary && rules.attributes.get(path)?.[TEXT_ATTRIBUTE] !== SET_STATE)
         return { kind: 'binary', origin: KIND_ORIGINS.content };
     if (isLicenseFile(path)) return { kind: 'vendored', origin: KIND_ORIGINS.license };
     const managed = findGeneratedKind(path, prefix);
@@ -162,7 +163,6 @@ function listPointers(path: string, files: ConfigFile[]): string[] {
 Check whether the first lines of a file hold the gspot header.
 
 @param text the start of a file.
-@returns whether the text holds the gspot header.
 */
 export function hasGeneratedHeader(text: string): boolean {
     const lines = text.split('\n', HEADER_LINES_CHECKED);
@@ -171,7 +171,7 @@ export function hasGeneratedHeader(text: string): boolean {
 
 function parseShebang(firstLine: string): string | undefined {
     if (!firstLine.startsWith(SHEBANG_PREFIX)) return undefined;
-    const tokens = firstLine.slice(SHEBANG_PREFIX.length).trim().split(/\s+/u);
+    const tokens = firstLine.slice(SHEBANG_PREFIX.length).trim().split(WHITESPACE_RUN);
     let index = 0;
     if (tokens[index]?.endsWith(ENV_EXECUTABLE_SUFFIX) === true) index += 1;
     if (tokens[index] === ENV_SPLIT_FLAG) index += 1;
@@ -186,7 +186,6 @@ Build the inventory entry of a tracked file: its kind, where the kind comes from
 @param file the tracked listing item.
 @param prefix the first bytes of the file.
 @param rules the generated and vendored paths to match.
-@returns the tracked file.
 */
 export function classifyFile(root: string, file: ListedFile, prefix: Buffer, rules: FileKindRules): TrackedFile {
     const tagged = tagFile(file, prefix);
@@ -205,7 +204,7 @@ function tagFile(file: ListedFile, prefix: Buffer): FileTags {
     const extension = extractExtension(file.path);
     const base = posix.basename(file.path);
     const flags: [boolean, string][] = [
-        [file.symlink, 'symlink'],
+        [file.isSymlink, 'symlink'],
         [LOCKFILES.some((lockfile) => lockfile.file === base), 'lockfile'],
         [base.startsWith(DOCKERFILE_NAME) || extension === DOCKERFILE_EXTENSION, 'dockerfile'],
         [base.startsWith(DOTENV_PREFIX), 'dotenv'],
@@ -238,7 +237,6 @@ export function listTaggedExtensions(...tags: string[]): string[] {
 Resolve generated paths of the configurations each scope selects.
 
 @param selected the configurations of each written scope.
-@returns the generated paths, with the configuration that declares each.
 */
 export function listConfigurationGeneratedPaths(selected: Map<string, Configuration[]>): GeneratedPaths[] {
     return selected
@@ -262,7 +260,6 @@ export function listConfigurationGeneratedPaths(selected: Map<string, Configurat
 List the tracked paths that the current inventory classifies as generated.
 
 @param files the files of the current repository read.
-@returns the paths tagged as generated by the inventory.
 */
 export function listGeneratedPaths(files: TrackedFile[]): ReadonlySet<string> {
     return new Set(files.filter(({ kind }) => kind === 'generated').map(({ path }) => path));

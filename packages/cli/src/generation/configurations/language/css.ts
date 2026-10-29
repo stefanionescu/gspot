@@ -9,67 +9,45 @@ import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { assertRuleOptionsRun } from '#cli/generation/config-files/rule-options.ts';
 
 import {
+    STYLELINT_CHECK,
     TAILWIND_AT_RULES,
     STYLELINT_COMPONENTS,
     CSS_MODULES_OVERRIDE,
     STYLELINT_BASE_RULES,
-    STYLELINT_RECOMMENDED_OFF,
     STYLELINT_RULE_NAMES_FILE,
+    STYLELINT_DEFAULT_LEVEL_OFF,
 } from '#cli/config/generation/configurations/language/css.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function dropPickedRules(
-    rules: Record<string, unknown>,
-    picked: Record<string, unknown>,
-    off: string[],
-): Record<string, unknown> {
-    return Object.fromEntries(
-        Object.entries(rules).filter(([rule]) => !off.includes(rule) && picked[rule] === undefined),
-    );
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function buildFunctionRules(functions: readonly string[]): Record<string, unknown> {
-    return {
-        'function-no-unknown': [true, { ignoreFunctions: functions }],
-        'declaration-property-value-no-unknown': [
-            true,
-            { ignoreProperties: { '/.*/': functions.map((name) => String.raw`/\b${name}\(/`) } },
-        ],
-    };
-}
-
-function buildComponentOverrides(
-    configurations: string[],
-    tailwindFunctions: string[],
-    picked: Record<string, unknown>,
-    off: string[],
-) {
-    return configurations
-        .flatMap((name) => STYLELINT_COMPONENTS[name] ?? [])
-        .map((override) => {
-            const { files, ignorePseudoClasses } = override;
-            const functions = override.functions === undefined ? [] : [...override.functions, ...tailwindFunctions];
-            const rules: Record<string, unknown> = {
-                'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses }],
-                ...(functions.length > 0 && {
-                    ...buildFunctionRules(functions),
-                    'value-keyword-case': ['lower', { ignoreFunctions: override.functions }],
-                }),
-            };
-            return {
-                files,
-                customSyntax: override.customSyntax,
-                rules: dropPickedRules(rules, picked, off),
-            };
-        });
+function buildComponentOverrides(tailwindFunctions: string[], picked: Record<string, unknown>, offRules: string[]) {
+    return STYLELINT_COMPONENTS.map((override) => {
+        const { files, ignorePseudoClasses } = override;
+        const functions = override.functions === undefined ? [] : [...override.functions, ...tailwindFunctions];
+        const rules: Record<string, unknown> = {
+            'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses }],
+            ...(functions.length > 0 && {
+                'function-no-unknown': [true, { ignoreFunctions: functions }],
+                'declaration-property-value-no-unknown': [
+                    true,
+                    { ignoreProperties: { '/.*/': functions.map((name) => String.raw`/\b${name}\(/`) } },
+                ],
+                'value-keyword-case': ['lower', { ignoreFunctions: override.functions }],
+            }),
+        };
+        return {
+            files,
+            customSyntax: override.customSyntax,
+            rules: Object.fromEntries(
+                Object.entries(rules).filter(([rule]) => !offRules.includes(rule) && picked[rule] === undefined),
+            ),
+        };
+    });
 }
 
 function buildCssModulesOverrides(
     planned: PlannedConfigFile,
     tailwindAtRules: readonly string[],
     picked: Record<string, unknown>,
-    off: string[],
+    offRules: string[],
 ) {
     const scope = planned.scope.path;
     const hasModules = planned.session.repository.files.some(
@@ -83,7 +61,9 @@ function buildCssModulesOverrides(
     return [
         {
             files: [...CSS_MODULES_OVERRIDE.files],
-            rules: dropPickedRules(rules, picked, off),
+            rules: Object.fromEntries(
+                Object.entries(rules).filter(([rule]) => !offRules.includes(rule) && picked[rule] === undefined),
+            ),
         },
     ];
 }
@@ -91,27 +71,27 @@ function buildCssModulesOverrides(
 /**
 Build stylelint.json: the CSS lint presets and rules for this level.
 
-@param planned the config file with its scope, level, and target path.
-@returns the CSS lint presets and rules for this level.
+@param planned the config file to build.
 */
 export function buildStylelintFile(planned: PlannedConfigFile): string {
     const { scope } = planned;
     const { dependencyFiles } = planned.session.repository;
-    const { configurations } = scope.settings;
     const options = getTable(scope.settings, 'tools.stylelint');
     const isAll = planned.level === 'all';
     const scopeDependencies = listProjectDependencyNames(dependencyFiles, scope.path);
     const ruleNamesFile = buildAssetPath(STYLELINT_RULE_NAMES_FILE);
     const stylelintRuleNames = nameListSchema.parse(JSON.parse(readFileSync(ruleNamesFile, 'utf8'))).names;
 
-    const off = listIgnoredRules(planned.scope, 'css/stylelint');
+    const off = listIgnoredRules(planned.scope, STYLELINT_CHECK);
     const activeRules = new Set(
-        [...stylelintRuleNames, 'function-no-unknown'].filter((rule) => isAll || !STYLELINT_RECOMMENDED_OFF.has(rule)),
+        [...stylelintRuleNames, 'function-no-unknown'].filter(
+            (rule) => isAll || !STYLELINT_DEFAULT_LEVEL_OFF.has(rule),
+        ),
     );
     assertRuleOptionsRun({
         configured: Object.keys(options.rules),
         running: activeRules,
-        higher: STYLELINT_RECOMMENDED_OFF,
+        allLevelRules: STYLELINT_DEFAULT_LEVEL_OFF,
         level: planned.level,
     });
     const picked = options.rules;
@@ -119,20 +99,25 @@ export function buildStylelintFile(planned: PlannedConfigFile): string {
     const tailwindAtRules = isTailwind ? TAILWIND_AT_RULES : [];
     const tailwindFunctions = isTailwind ? ['theme'] : [];
     const overrides = [
-        ...buildComponentOverrides(configurations, tailwindFunctions, picked, off),
+        ...buildComponentOverrides(tailwindFunctions, picked, off),
         ...buildCssModulesOverrides(planned, tailwindAtRules, picked, off),
     ];
     const syntaxRules = isTailwind
         ? {
               'at-rule-no-unknown': [true, { ignoreAtRules: tailwindAtRules }],
-              ...buildFunctionRules(tailwindFunctions),
+
+              'function-no-unknown': [true, { ignoreFunctions: tailwindFunctions }],
+              'declaration-property-value-no-unknown': [
+                  true,
+                  { ignoreProperties: { '/.*/': tailwindFunctions.map((name) => String.raw`/\b${name}\(/`) } },
+              ],
           }
         : {};
     const document = {
         extends: 'stylelint-config-standard',
         rules: Object.assign(
             { ...STYLELINT_BASE_RULES, ...syntaxRules },
-            Object.fromEntries((isAll ? [] : [...STYLELINT_RECOMMENDED_OFF]).map((rule) => [rule, null])),
+            Object.fromEntries((isAll ? [] : [...STYLELINT_DEFAULT_LEVEL_OFF]).map((rule) => [rule, null])),
             picked,
             Object.fromEntries(off.map((rule) => [rule, null])),
         ),

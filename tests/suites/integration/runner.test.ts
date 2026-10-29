@@ -6,6 +6,7 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { LATER_TEST_MESSAGE } from '#tests/config/setup/programs.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 
@@ -19,8 +20,8 @@ test.each(['fresh', 'stale-cli', 'stale-plugin'])(
                 process.execPath,
                 'test',
                 '--preload',
-                ...buildProgramArguments('runner/preload'),
-                ...buildProgramArguments('runner/environment.test'),
+                join(REPOSITORY_ROOT, 'tests/setup/runner/integration.ts'),
+                ...buildProgramArguments('runner/environment'),
             ],
             { cwd: REPOSITORY_ROOT, env: { TEST_RUN_FOLDER: sandbox.path } },
         );
@@ -43,14 +44,19 @@ test.skipIf(isWindows)('SIGINT disposes integration resources and exits before t
             process.execPath,
             'test',
             '--preload',
-            ...buildProgramArguments('runner/preload'),
-            ...buildProgramArguments('runner/interrupt.test'),
+            join(REPOSITORY_ROOT, 'tests/setup/runner/integration.ts'),
+            ...buildProgramArguments('runner/interrupt'),
         ],
         { cwd: REPOSITORY_ROOT, env: { TMPDIR: join(sandbox.path, 'temp'), TEST_RUN_FOLDER: sandbox.path } },
     );
     expect(child.code, child.stdout + child.stderr).toBe(130);
-    expect(child.stdout + child.stderr).not.toContain('Later test ran');
-    expect(await readdir(join(sandbox.path, 'temp'))).toStrictEqual([]);
+    expect(child.stdout + child.stderr).not.toContain(LATER_TEST_MESSAGE);
+    const paths = await readdir(sandbox.path);
+    expect(paths.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+        'packages.json',
+        'temp',
+        'tool-paths.txt',
+    ]);
 });
 
 async function writeRunFolder(root: string, state: string): Promise<void> {

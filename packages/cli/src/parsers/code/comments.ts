@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import { CST, Lexer } from 'yaml';
 import { visit } from 'unist-util-visit';
+import type { Node } from 'web-tree-sitter';
 import { extractExtension } from '#cli/system/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { listSqlTokens } from '#cli/parsers/code/sql.ts';
@@ -15,7 +16,11 @@ import type { CommentParser, SourceComment } from '#cli/types/parsers/code/comme
 import { getTomlRange, parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 
 import {
+    MDX_ESM,
+    MDX_COMMENT,
+    TSX_LANGUAGES,
     COMMENT_NODES,
+    ASTRO_EXTENSION,
     HTML_COMMENT_END,
     BLOCK_COMMENT_END,
     ASTRO_FRONT_MATTER,
@@ -87,9 +92,13 @@ function parseYamlComments(text: string): SourceComment[] {
 
 function parseSqlComments(text: string): SourceComment[] {
     const comments: SourceComment[] = [];
+    let position = 0;
+    let line = 1;
     for (const { start, end, kind } of listSqlTokens(text)) {
+        line += text.slice(position, start).split('\n').length - 1;
+        position = start;
         if (kind !== 'line-comment' && kind !== 'block-comment') continue;
-        comments.push(buildComment(text, start, end, getPosition(text, start).line));
+        comments.push(buildComment(text, start, end, line));
     }
     return comments;
 }
@@ -113,24 +122,27 @@ function parseTomlComments(text: string, path: string): SourceComment[] {
 
 async function parseComponentComments(text: string, path: string): Promise<SourceComment[]> {
     const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
-    const front = path.endsWith('.astro') ? ASTRO_FRONT_MATTER.exec(text) : null;
+    const front = path.endsWith(ASTRO_EXTENSION) ? ASTRO_FRONT_MATTER.exec(text) : null;
     const markup = front === null ? text : masked.slice(0, front[0].length) + text.slice(front[0].length);
     const tree = await parseSource('html', markup);
-    let script: string;
+    const comments: SourceComment[] = [];
     try {
-        const regions = tree.rootNode
-            .descendantsOfType('script_element')
-            .flatMap((node) => node.namedChildren.filter((child) => child.type === 'raw_text'))
-            .map((node) => ({ start: node.startIndex, end: node.endIndex }));
+        for (const element of tree.rootNode.descendantsOfType('script_element')) {
+            comments.push(...parseComponentScript(element, text, path, masked));
+        }
         if (front !== null) {
             const start = text.indexOf('\n') + 1;
-            regions.unshift({ start, end: start + (front[1] as string).length });
+            comments.push(
+                ...parseJavascriptComments(
+                    spliceRanges(masked, text, [{ start, end: start + (front[1] as string).length }]),
+                    `${path}.ts`,
+                ),
+            );
         }
-        script = spliceRanges(masked, text, regions);
     } finally {
         tree.delete();
     }
-    return [...parseJavascriptComments(script, `${path}.ts`), ...(await parseGrammarComments('html', markup))].toSorted(
+    return [...comments, ...(await parseGrammarComments('html', markup))].toSorted(
         (left, right) => left.line - right.line,
     );
 }
@@ -145,18 +157,19 @@ const COMMENT_PARSERS = new Map<string, CommentParser>([
     ['.sql', parseSqlComments],
     ['.pgsql', parseSqlComments],
     ['.psql', parseSqlComments],
-    ['.html', parseGrammarComments.bind(undefined, 'html')],
-    ['.htm', parseGrammarComments.bind(undefined, 'html')],
-    ...['.md', '.mdx'].map((extension): [string, CommentParser] => [
+    ['.html', (text) => parseGrammarComments('html', text)],
+    ['.htm', (text) => parseGrammarComments('html', text)],
+    ...['.md'].map((extension): [string, CommentParser] => [
         extension,
-        (text) =>
-            parseSyntaxComments('html', extractMarkdownHtml(text).replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->'), text),
+        (text) => parseGrammarComments('html', text, extractMarkdownHtml(text)),
     ]),
-    ['.css', parseGrammarComments.bind(undefined, 'css')],
+    ['.mdx', parseMdxComments],
+    ['.css', (text) => parseGrammarComments('css', text)],
 ]);
 
-async function parseSyntaxComments(grammar: GrammarName, source: string, text: string): Promise<SourceComment[]> {
-    const tree = await parseSource(grammar, source);
+async function parseGrammarComments(grammar: GrammarName, text: string, source = text): Promise<SourceComment[]> {
+    const parsed = grammar === 'html' ? source.replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->') : source;
+    const tree = await parseSource(grammar, parsed);
     try {
         return tree.rootNode
             .descendantsOfType([...COMMENT_NODES])
@@ -164,19 +177,6 @@ async function parseSyntaxComments(grammar: GrammarName, source: string, text: s
     } finally {
         tree.delete();
     }
-}
-
-/**
-Read comments in one explicit grammar.
-
-@param grammar the tree-sitter language to use.
-@param text the source contents.
-@returns comments in source order.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The comment parsers table and 3 other calls share it.
-export async function parseGrammarComments(grammar: GrammarName, text: string): Promise<SourceComment[]> {
-    const parsed = grammar === 'html' ? text.replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->') : text;
-    return parseSyntaxComments(grammar, parsed, text);
 }
 
 /**
@@ -191,12 +191,12 @@ export function stripCommentEnd(text: string): string {
 }
 
 /**
-Read comment text and line locations for suppression discovery.
+Read the text and line of each comment.
 
 @param path the file, whose name selects the syntax.
 @param text the source contents.
 @param tags the file tags, which identify scripts without a known extension.
-@returns comments in source order, with whether each occupies its line alone.
+@returns comments in source order.
 */
 export async function parseComments(path: string, text: string, tags: readonly string[]): Promise<SourceComment[]> {
     const lowerPath = path.toLowerCase();
@@ -213,4 +213,75 @@ export async function parseComments(path: string, text: string, tags: readonly s
     }
     const parser = COMMENT_PARSERS.get(extractExtension(path));
     return parser === undefined ? [] : parser(text, path);
+}
+
+/**
+Replace comments with spaces while preserving source offsets and line breaks.
+
+@param grammar the grammar of the source.
+@param text the source contents.
+@returns source text with comment contents masked.
+*/
+export async function maskGrammarComments(grammar: GrammarName | 'sql', text: string): Promise<string> {
+    const ranges: TextRange[] = [];
+    if (grammar === 'sql') {
+        ranges.push(
+            ...[...listSqlTokens(text)].filter((token) => ['line-comment', 'block-comment'].includes(token.kind)),
+        );
+    } else {
+        const tree = await parseSource(grammar, text);
+        try {
+            for (const node of tree.rootNode.descendantsOfType([...COMMENT_NODES]))
+                ranges.push({ start: node.startIndex, end: node.endIndex });
+        } finally {
+            tree.delete();
+        }
+    }
+    return maskCommentRanges(text, ranges);
+}
+
+function parseMdxComments(text: string): SourceComment[] {
+    let masked = text;
+    const ranges: TextRange[] = [];
+    visit(fromMarkdown(text), (node) => {
+        if (node.type !== 'code' && node.type !== 'inlineCode') return;
+        const { start, end } = node.position as SourcePosition;
+        ranges.push({ start: start.offset, end: end.offset });
+    });
+    const blank = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
+    masked = spliceRanges(masked, blank, ranges).replaceAll(MDX_ESM, (segment) =>
+        segment.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length)),
+    );
+    return [...masked.matchAll(MDX_COMMENT)].map((match) => {
+        const start = match.index;
+        const comment = buildComment(text, start, start + match[0].length, getPosition(text, start).line);
+        return { ...comment, text: match[0].slice(1, -1) };
+    });
+}
+
+function maskCommentRanges(text: string, ranges: TextRange[]): string {
+    let position = 0;
+    const pieces: string[] = [];
+    for (const { start, end } of ranges.toSorted((left, right) => left.start - right.start)) {
+        if (start < position) continue;
+        pieces.push(
+            text.slice(position, start),
+            text.slice(start, end).replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length)),
+        );
+        position = end;
+    }
+    return pieces.join('') + text.slice(position);
+}
+
+function parseComponentScript(element: Node, text: string, path: string, masked: string): SourceComment[] {
+    const comments: SourceComment[] = [];
+    const language = element.namedChildren
+        .find((node) => node.type === 'start_tag')
+        ?.text.match(/\blang\s*=\s*["'](?<language>[^"']+)["']/u)?.groups?.['language'];
+    const extension = TSX_LANGUAGES.includes(language ?? '') ? 'tsx' : 'ts';
+    for (const node of element.namedChildren.filter((child) => child.type === 'raw_text')) {
+        const script = spliceRanges(masked, text, [{ start: node.startIndex, end: node.endIndex }]);
+        comments.push(...parseJavascriptComments(script, `${path}.${extension}`));
+    }
+    return comments;
 }

@@ -1,8 +1,8 @@
 import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -12,7 +12,7 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { sep, parse, dirname, resolve, relative } from 'node:path';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { SVELTE_PROJECTS, SVELTE_CHECK_OUTPUT, SVELTE_CHECK_FINDINGS } from '#tests/config/checks/framework/svelte.ts';
 
 async function runSvelteCheck(stdout: string, options: { scope?: string } = {}): Promise<Finding[]> {
@@ -24,7 +24,7 @@ async function runSvelteCheck(stdout: string, options: { scope?: string } = {}):
     await fakeNpmTool(sandbox.path, 'svelte-check');
     using _run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ code: 1, stdout }));
     const session = await openSession(sandbox.path);
-    return await findBuiltInCheck('svelte/svelte-check')(
+    return await getBuiltInCheck('svelte/svelte-check')(
         session,
         planSandboxCheck(session, 'svelte/svelte-check', { scope }),
     );
@@ -51,17 +51,22 @@ test.each([...SVELTE_PROJECTS])(
             runtimePath = commandArguments[commandArguments.indexOf('--tsconfig') + 1] ?? '';
             const config = tsconfigSchema.parse(JSON.parse(readFileSync(runtimePath, 'utf8')));
 
-            // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
-            const fromSandbox = (path: string): string => {
-                const found = relative(sandbox.path, resolve(dirname(runtimePath), path));
-                return convertToPosixPath(found);
-            };
             seen.push({
                 cwd: convertToPosixPath(relative(sandbox.path, options.cwd)),
                 insideSandbox: runtimePath.startsWith(sandbox.path),
-                typeRoots: config.compilerOptions!.typeRoots!.map((path) => fromSandbox(path)),
-                extends: config.extends === undefined ? null : fromSandbox(config.extends),
-                include: config.include === undefined ? null : config.include.map((path) => fromSandbox(path)),
+                typeRoots: config.compilerOptions!.typeRoots!.map((path) =>
+                    convertToPosixPath(relative(sandbox.path, resolve(dirname(runtimePath), path))),
+                ),
+                extends:
+                    config.extends === undefined
+                        ? null
+                        : convertToPosixPath(relative(sandbox.path, resolve(dirname(runtimePath), config.extends))),
+                include:
+                    config.include === undefined
+                        ? null
+                        : config.include.map((path) =>
+                              convertToPosixPath(relative(sandbox.path, resolve(dirname(runtimePath), path))),
+                          ),
             });
             return Promise.resolve(buildProcessResult());
         });
@@ -87,7 +92,7 @@ test('svelte-check errors and warnings become findings at one-based positions wi
     );
 });
 
-test('file-name separators follow the current platform', async () => {
+test('file-name separators follow the platform', async () => {
     const findings = await runSvelteCheck(
         SVELTE_CHECK_OUTPUT.replace('src/Count.svelte', String.raw`src\\Count.svelte`),
     );

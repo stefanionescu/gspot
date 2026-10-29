@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildConfiguration } from '#tests/setup/cli/configurations.ts';
+import { selectConfigurations, listSelectedConfigurations } from '#cli/configurations/select.ts';
 
 test('adds required configurations, dependencies first, in order of first mention', () => {
     const configurationsByName = new Map([
@@ -23,7 +23,17 @@ test('an unknown configuration names the near matches', () => {
         matchFields<GspotError>({
             code: 'arguments',
             message:
-                'There is no configuration called `bassh`. Did you mean `bash`? Run `gspot list configurations` to see the available configurations.',
+                'There is no configuration called bassh. Did you mean bash? See https://generativespotting.com/reference/configurations/ for the available configurations.',
         }),
     );
+});
+
+test('configurations selected in several scopes appear once in first-seen order', () => {
+    const bash = buildConfiguration('bash');
+    const typescript = buildConfiguration('typescript');
+    const selected = listSelectedConfigurations([
+        { configurations: [bash, typescript] },
+        { configurations: [typescript, bash] },
+    ]);
+    expect(selected.map(({ name }) => name)).toStrictEqual(['bash', 'typescript']);
 });

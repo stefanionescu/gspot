@@ -1,10 +1,12 @@
+import { parse } from 'yaml';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
-import { generate } from '#cli/generation/generate.ts';
-import { CLEAN_SWIFT } from '#tests/config/samples.ts';
+import { CLEAN_SWIFT } from '#tests/config/swift.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
+import type { SwiftlintOutput } from '#tests/types/swift.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
+import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/checks/infrastructure/xcode.ts';
 import { SWIFT_PROJECT_SETTINGS } from '#tests/config/generation/configurations/language/swift.ts';
 
@@ -18,12 +20,12 @@ test("SwiftFormat reads each scope's Swift version from Package.swift", async ()
         'nested/Package.swift': '// swift-tools-version:6.3.2\nimport PackageDescription\n',
     });
     const session = await openSession(sandbox.path);
-    const outputs = generate(session).files;
-    expect(outputs.find((file) => file.path === findConfigFilePath(session, 'swiftformat'))?.content).toContain(
+    const outputs = generateFiles(session).files;
+    expect(outputs.find((file) => file.path === getConfigFilePath(session, 'swiftformat'))?.content).toContain(
         '--swiftversion 5.9\n',
     );
     expect(
-        outputs.find((file) => file.path === findConfigFilePath(session, 'swiftformat', 'nested'))?.content,
+        outputs.find((file) => file.path === getConfigFilePath(session, 'swiftformat', 'nested'))?.content,
     ).toContain('--swiftversion 6.3.2\n');
 });
 
@@ -42,12 +44,12 @@ test('SwiftFormat uses the Xcode project you choose in each scope', async () => 
     };
     await using sandbox = await testdir(files);
     const session = await openSession(sandbox.path);
-    const outputs = generate(session).files;
-    expect(outputs.find((file) => file.path === findConfigFilePath(session, 'swiftformat'))?.content).toContain(
+    const outputs = generateFiles(session).files;
+    expect(outputs.find((file) => file.path === getConfigFilePath(session, 'swiftformat'))?.content).toContain(
         '--swiftversion 6.0\n',
     );
     expect(
-        outputs.find((file) => file.path === findConfigFilePath(session, 'swiftformat', 'nested'))?.content,
+        outputs.find((file) => file.path === getConfigFilePath(session, 'swiftformat', 'nested'))?.content,
     ).toContain('--swiftversion 5.5\n');
     expect(outputs.map(({ path }) => path).filter((path) => path.includes('disabled'))).toStrictEqual([]);
 });
@@ -63,11 +65,35 @@ test.each(['lf', 'crlf'] as const)('SwiftFormat writes the %s line ending you se
     });
 
     const session = await openSession(sandbox.path);
-    const files = generate(session).files;
-    expect(files.find((file) => file.path === findConfigFilePath(session, 'swiftformat'))!.content).toContain(
+    const files = generateFiles(session).files;
+    expect(files.find((file) => file.path === getConfigFilePath(session, 'swiftformat'))!.content).toContain(
         `--linebreaks ${ending}\n`,
     );
-    expect(files.find((file) => file.path === findConfigFilePath(session, 'swiftformat', 'child'))!.content).toContain(
+    expect(files.find((file) => file.path === getConfigFilePath(session, 'swiftformat', 'child'))!.content).toContain(
         `--linebreaks ${ending === 'lf' ? 'crlf' : 'lf'}\n`,
     );
 });
+
+test.each(['basic', 'all'] as const)(
+    'SwiftLint keeps configured limits and level-specific rules at %s',
+    async (level) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['swift'], {
+                level,
+                tables: '[limits]\nfunction_lines = 17\nfile_lines = 190\n',
+            }),
+            'Value.swift': CLEAN_SWIFT,
+        });
+        const session = await openSession(sandbox.path);
+        const text = generateFiles(session).files.find(
+            (file) => file.path === getConfigFilePath(session, 'swiftlint'),
+        )!.content;
+        const document = parse(text) as SwiftlintOutput;
+        expect(document.function_body_length).toStrictEqual(level === 'all' ? { warning: 17, error: 17 } : undefined);
+        expect(document.file_length).toStrictEqual(
+            level === 'all' ? { warning: 190, error: 190, ignore_comment_only_lines: true } : undefined,
+        );
+        expect(document.opt_in_rules.includes('force_unwrapping')).toBe(level === 'all');
+        expect(document.disabled_rules.includes('file_length')).toBe(level === 'basic');
+    },
+);

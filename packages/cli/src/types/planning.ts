@@ -11,9 +11,9 @@ export type Skip = { cause: SkipCause; note: string };
 export type Host = { platform: string; arch: string };
 
 export type PlanOptions = {
-    forConfiguration?: boolean;
     base?: string;
     commits?: string[];
+    range?: string[];
     shallow?: boolean;
     stage: StageFilter | 'any';
     staged?: string[];
@@ -34,14 +34,18 @@ export type PlannedScope = {
 
 export type SettingsSkip = { cause: 'level' | 'ignore' | 'setting'; note: string };
 
-export type PlannedCheck = {
-    base?: string;
-    commits?: string[];
+export type ConfiguredCheck = {
     scope: Scope;
     check: Check;
     configuration?: Configuration;
-    files: TrackedFile[];
     tool?: Tool;
+};
+
+export type PlannedCheck = ConfiguredCheck & {
+    base?: string;
+    commits?: string[];
+    range?: string[];
+    files: TrackedFile[];
     skip?: Skip;
     triggerPaths: string[];
     messageFile?: string;

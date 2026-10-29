@@ -23,9 +23,25 @@ export const CI_FILE_NOTES = {
     [GITLAB_WORKFLOW]: `add include: [{ local: ${GITLAB_WORKFLOW} }] to .gitlab-ci.yml`,
 } as const;
 
-export const DETECTION_LABEL_WIDTH = 20;
+export const GSPOT_FOLDER_NOTE = 'generated files and version pin';
 
-export const DETECTION_GAP_WIDTH = 3;
+export const UNREAD_SUBMODULE_MESSAGE = 'submodule; init does not read it';
 
-export const UNCHECKED_FILES_SHOWN = 5;
-export const ANY_FILE_GLOB = /^\*+(?:\/\*+)*$/u;
+export const LINT_FOLDER_MESSAGE = 'a folder of lint scripts; check remaining references before deleting it';
+
+export const DELETED_RULES_NOTE = '(your own rules in them do not carry over; read them with git show HEAD:<path>)';
+
+export const LINT_FOLDERS_HEADING = 'lint folders; delete when nothing calls them';
+
+export const CHANGE_LATER_MESSAGE = 'Change the hooks and rules later with gspot set hooks.enabled or rules.enabled.';
+
+export const TOOL_PIN_NOUN = 'tool pin';
+
+export const NPM_PIN_NOUN = 'pinned npm tool';
+
+export const PYTHON_PIN_NOUN = 'pinned Python tool';
+
+export const CI_FILE_NOTE = 'existing CI file';
+
+export const CI_OFF_MESSAGE =
+    'CI is off. To turn it on, run gspot set ci.enabled true; for GitLab, also run gspot set ci.provider gitlab.';

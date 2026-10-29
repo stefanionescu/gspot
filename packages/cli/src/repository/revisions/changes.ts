@@ -7,6 +7,8 @@ import { GIT_UNTRACKED_FILES_ARGUMENTS } from '#cli/config/repository/files/trac
 import {
     ORIGIN_HEAD,
     HEAD_SUFFIX,
+    NO_UPSTREAM_MESSAGE,
+    HISTORY_CUT_MESSAGE,
     GIT_SHALLOW_ARGUMENTS,
     GIT_UPSTREAM_ARGUMENTS,
     REMOTE_HEAD_FIELD_COUNT,
@@ -28,12 +30,13 @@ async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promis
         return isHead ? [[name, target] as [string, string]] : [];
     });
 }
+
 /**
 Read the upstream or remote default branch.
 
 @param root the folder where Git runs.
 @param cancelSignal stops the Git reads.
-@returns the branch, or an empty string without one.
+@returns an empty string without a branch.
 */
 export async function readDefaultRef(root: string, cancelSignal?: AbortSignal): Promise<string> {
     const head = await readGitText(root, GIT_HEAD_NAME_ARGUMENTS, { cancelSignal });
@@ -46,13 +49,13 @@ export async function readDefaultRef(root: string, cancelSignal?: AbortSignal): 
     const preferred = heads.find(([name]) => name === ORIGIN_HEAD) ?? (heads.length === 1 ? heads[0] : undefined);
     return preferred?.[1] ?? '';
 }
+
 /**
 Read the merge base between a comparison branch and `HEAD`.
 
 @param root the folder where Git runs.
 @param compared the comparison branch.
 @param cancelSignal stops the Git reads.
-@returns the shared base commit.
 */
 export async function readMergeBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<string> {
     const base = await runGit(root, [...GIT_MERGE_BASE_ARGUMENTS, compared, 'HEAD'], {
@@ -60,7 +63,7 @@ export async function readMergeBase(root: string, compared: string, cancelSignal
     });
     if (base.code === 0) return base.stdout.trim();
     const shallow = await readGitText(root, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
-    const help = shallow.trim() === 'true' ? ' History is cut; run git fetch --unshallow.' : '';
+    const help = shallow.trim() === 'true' ? HISTORY_CUT_MESSAGE : '';
     throw new GspotError('git', `Git merge-base failed for ${compared}: ${base.stderr.trim()}.${help}`);
 }
 
@@ -81,12 +84,11 @@ export async function readStagedPaths(root: string, cancelSignal?: AbortSignal):
 }
 
 /**
-Read the files and commits that changed after a ref, for `gspot check --changed`.
+Read the files and commits that changed after a ref.
 
 @param root the folder where Git runs.
 @param reference the git ref to compare against.
 @param cancelSignal stops the Git commands.
-@returns the changed paths, and the commits after the merge base.
 */
 export async function readChangedPaths(
     root: string,
@@ -95,10 +97,7 @@ export async function readChangedPaths(
 ): Promise<ChangedPaths> {
     const compared = reference === '' ? await readDefaultRef(root, cancelSignal) : reference;
     if (compared === '') {
-        throw new GspotError(
-            'git',
-            'No upstream or default branch is available. Run git remote set-head origin --auto once, or pass --changed <ref>.',
-        );
+        throw new GspotError('git', NO_UPSTREAM_MESSAGE);
     }
     const merged = await readMergeBase(root, compared, cancelSignal);
     const committed = await readGitPaths(root, [...GIT_DIFF_NAMES_ARGUMENTS, merged, '--'], { cancelSignal });

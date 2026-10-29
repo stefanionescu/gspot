@@ -36,7 +36,7 @@ export const TSCONFIG_READ_ERRORS = [
     },
 ] as const;
 
-export const RECOMMENDED_COMPILER_OPTIONS = {
+export const DEFAULT_LEVEL_TSCONFIG = {
     compilerOptions: {
         strict: true,
         noUncheckedIndexedAccess: true,
@@ -66,5 +66,7 @@ export const ALL_LEVEL_OPTION_FINDINGS = [
     },
 ] as const;
 
-export const IMPLICIT_RETURNS_IGNORE =
-    '[[ignore]]\ncheck = "typescript/tsconfig"\nrule = "noImplicitReturns"\nreason = "Returns are checked separately."\n';
+export const MISSING_TSCONFIG_MESSAGE =
+    'Add a tsconfig.json to this scope. ESLint and tsc read the TypeScript files through it.';
+
+export const COUNT_NUMBER_SOURCE = 'export const count: number = 1;\n';

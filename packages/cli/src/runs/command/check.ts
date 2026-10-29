@@ -1,6 +1,5 @@
 import { join, relative } from 'node:path';
 import { createCopy } from '#cli/runs/copy/files.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { listOtherTools } from '#cli/planning/tools.ts';
@@ -11,25 +10,22 @@ import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import type { ProcessFailure } from '#cli/types/tools/run.ts';
-import { stripCoverageArguments } from '#cli/planning/checks.ts';
 import { buildCommandLines } from '#cli/runs/command/batches.ts';
-import type { TemporaryFolder } from '#cli/types/system/files.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
-import { buildBaseResult, mergeCheckResults } from '#cli/runs/report.ts';
+import { buildBaseResult, mergeCheckResults } from '#cli/runs/results.ts';
 import { PYTHON_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
 import type { CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
-import { PYTHON_ENVIRONMENT_CHECKS } from '#cli/config/runs/command/check.ts';
-import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/uv.ts';
+import { hasProjectCoverage, stripCoverageArguments } from '#cli/planning/checks.ts';
+import { runToolProcess, buildOtherToolEnvironment } from '#cli/runs/command/tool.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/runs/command/output.ts';
-import { runToolProcess, readToolAvailability, buildOtherToolEnvironment } from '#cli/runs/command/tool.ts';
+import { listCopyPythonArguments, buildCopyPythonEnvironment, findMissingProjectEnvironment } from '#cli/tools/uv.ts';
 
 import type {
     FolderRun,
     CommandRun,
-    CommandGroup,
+    CommandBatch,
     CommandSetup,
     Substitutions,
     CommandLaunch,
@@ -75,6 +71,7 @@ async function runCommands(
                 ...failure,
                 duration: Math.round(performance.now() - started),
                 command: commandArguments,
+                findings: state.findings,
             };
         const parsed = parseCommandFindings(planned, result, { cwd, root: state.root }, { verbose });
         if (parsed.findings === undefined)
@@ -84,6 +81,7 @@ async function runCommands(
                 duration: Math.round(performance.now() - started),
                 note: parsed.note,
                 command: commandArguments,
+                findings: state.findings,
             };
         addCommandLine(planned, tool, { commandLine, result, findings: parsed.findings }, state);
     }
@@ -113,13 +111,23 @@ async function runInFolder(run: FolderRun): Promise<CheckResult> {
     const { session, planned, tool, command, toolPath, setup, base, options, configFiles } = run;
     using copy =
         options.copyRoot === undefined && planned.check.run_in_copy === true
-            ? await createCommandCopy(planned, { session, root: session.root, command, configFiles })
+            ? await createCopy({
+                  root: session.root,
+                  paths: [...listCopyFiles(session, planned, command), ...configFiles],
+                  dependencies: [],
+                  cancelSignal: session.cancelSignal,
+              })
             : undefined;
     const folder = options.copyRoot ?? copy?.path;
     const commandSetup =
         folder === undefined
             ? prepareCommand(planned, { session, command, setup, toolPath })
-            : prepareCommandIn(folder, planned, { session, command, toolPath, options });
+            : prepareCommand(planned, {
+                  session: session,
+                  command: command,
+                  setup: buildCommandSetup(session, planned, { options: options, root: folder }),
+                  toolPath: toolPath,
+              });
     commandSetup.env = buildOtherToolEnvironment(
         session,
         listOtherTools(planned.scope, planned.check, command),
@@ -145,70 +153,13 @@ function findMissingOtherTool(
 ): ProcessFailure | undefined {
     for (const name of listOtherTools(planned.scope, planned.check, command)) {
         const required = getTool(session.configurationsByName.values(), name);
-        const availability = readToolAvailability(session, cwd, required);
+        const availability = buildToolAvailability(
+            required,
+            inspectTool({ ...session, cwd: cwd, miseBinPaths: session.readMiseBinPaths() }, required),
+        );
         if ('status' in availability) return availability;
     }
     return undefined;
-}
-
-/**
-Copy a check's source, dependencies and config files into a temporary folder.
-
-@param planned the check to run.
-@param copy the repository, the folder to copy from, the command, and config files.
-@param copy.session the repository and its tools.
-@param copy.root the folder to copy from: the repository, or a copy of it.
-@param copy.command the executable and authored arguments.
-@param copy.configFiles the config files that the check code lists.
-@returns the disposable temporary folder.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
-export async function createCommandCopy(
-    planned: PlannedCheck,
-    {
-        session,
-        root,
-        command,
-        configFiles,
-    }: { session: Session; root: string; command: string[]; configFiles: string[] },
-): Promise<TemporaryFolder> {
-    return createCopy({
-        root,
-        paths: [...listCopyFiles(session, planned, command), ...configFiles],
-        dependencies: [],
-        cancelSignal: session.cancelSignal,
-    });
-}
-
-/**
-Prepare a check command in another working folder.
-
-@param folder the working copy of the repository.
-@param planned the check to run.
-@param expansion the repository, command, tool, and implementation overrides.
-@param expansion.session the repository and its tools.
-@param expansion.command the executable and authored arguments.
-@param expansion.toolPath the resolved executable path.
-@param expansion.options the implementation overrides.
-@returns the command expanded for that folder.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 2 files share it.
-export function prepareCommandIn(
-    folder: string,
-    planned: PlannedCheck,
-    {
-        session,
-        command,
-        toolPath,
-        options,
-    }: { session: Session; command: string[]; toolPath: string; options: CheckRunOptions },
-): CommandLaunch {
-    return prepareCommand(planned, {
-        session,
-        command,
-        setup: buildCommandSetup(session, planned, { options, root: folder }),
-        toolPath,
-    });
 }
 
 /**
@@ -216,10 +167,9 @@ Resolves the working folder and expands the tool environment values.
 
 @param session the repository and its settings.
 @param planned the check and its files.
-@param setup the overrides from the check code, and the folder where the command runs.
+@param setup the overrides and the folder of the run.
 @param setup.options the overrides from the check code.
 @param setup.root the repository, or the copy of it that the command runs in.
-@returns the paths and environment for the tool.
 */
 export function buildCommandSetup(
     session: Session,
@@ -281,7 +231,6 @@ Expands a check or fix command into file batches that fit the command line.
 @param expansion.command the executable and the arguments as declared.
 @param expansion.setup the working paths and tool variables.
 @param expansion.toolPath the resolved executable path.
-@returns the working folder and command batches.
 */
 export function prepareCommand(
     planned: PlannedCheck,
@@ -303,24 +252,12 @@ export function prepareCommand(
     };
 }
 
-function findMissingProjectEnvironment(session: Session, planned: PlannedCheck): ProcessFailure | undefined {
-    if (!PYTHON_ENVIRONMENT_CHECKS.has(planned.check.id)) return undefined;
-    const scope = planned.scope.path;
-    const project = joinScope(scope, PYPROJECT_TOML);
-    if (session.repository.files.every((file) => file.path !== project)) return undefined;
-    using files = openFiles(session.toolsRoot);
-    return files.readStats(joinScope(scope, PYTHON_ENVIRONMENT_FOLDER))?.isDirectory() === true
-        ? undefined
-        : { status: 'missing', note: 'The project environment .venv is missing. Run uv sync, then check again.' };
-}
-
 /**
 Finds the tool and runs the expanded commands of a check.
 
 @param session the repository and its tools.
 @param planned the check to run.
 @param options the command and copy folder overrides.
-@returns the check result.
 */
 export async function runCommandCheck(
     session: CheckSession,
@@ -329,22 +266,22 @@ export async function runCommandCheck(
 ): Promise<CheckResult> {
     const tool = planned.tool as Tool;
     const base = buildBaseResult(planned, session);
-    const environment = findMissingProjectEnvironment(session, planned);
-    if (environment !== undefined) return { ...base, ...environment };
+    const missingEnvironment = findMissingProjectEnvironment(session, planned);
+    if (missingEnvironment !== undefined) return { ...base, ...missingEnvironment };
     const setup = buildCommandSetup(session, planned, { options, root: session.root });
-    const command = [
-        ...(stripCoverageArguments(planned, options) as string[]),
-        ...listCopyPythonArguments(tool, setup.env),
-    ];
+    const command = buildToolCommand(session, planned, options, setup.env);
     const { cwd } = setup;
     const configFiles = options.listConfigFiles?.(session, planned) ?? [];
     const missing = findMissingConfigFile(planned, { session, command, base, configFiles });
     if (missing !== undefined) return missing;
-    const availability = readToolAvailability(session, cwd, tool);
+    const availability = buildToolAvailability(
+        tool,
+        inspectTool({ ...session, cwd: cwd, miseBinPaths: session.readMiseBinPaths() }, tool),
+    );
     if ('status' in availability) return { ...base, ...availability };
-    const companion = findMissingOtherTool(session, planned, command, cwd);
-    return companion === undefined
-        ? runInFolder({
+    const otherToolFailure = findMissingOtherTool(session, planned, command, cwd);
+    return otherToolFailure === undefined
+        ? await runInFolder({
               session,
               planned,
               tool,
@@ -355,26 +292,45 @@ export async function runCommandCheck(
               options,
               configFiles,
           })
-        : { ...base, ...companion };
+        : { ...base, ...otherToolFailure };
 }
 
 /**
-Runs each command group and merges the findings, keeping earlier findings when a later run fails.
+Run each command batch and merge the findings, keeping earlier findings when a later run fails.
 
 @param session the repository and tools.
 @param planned the check to run.
-@param groups the files and command of each run.
+@param batches the files and command of each run.
 @returns the merged result, or the first failure with the findings so far.
 */
-export async function runCommandGroups(
+export async function runCommandBatches(
     session: CheckSession,
     planned: PlannedCheck,
-    groups: CommandGroup[],
+    batches: CommandBatch[],
 ): Promise<CheckResult> {
     let merged = buildBaseResult(planned, session);
-    for (const { files, command } of groups) {
+    for (const { files, command } of batches) {
         merged = mergeCheckResults(merged, await runCommandCheck(session, { ...planned, files }, { command }));
         if (!RAN_STATUSES.has(merged.status)) break;
     }
     return merged;
+}
+
+function buildToolCommand(
+    session: Session,
+    planned: PlannedCheck,
+    options: CheckRunOptions,
+    environment: Record<string, string>,
+): string[] {
+    const command = [
+        ...(stripCoverageArguments(planned, options) as string[]),
+        ...listCopyPythonArguments(planned.tool as Tool, environment),
+    ];
+    if (
+        planned.check.id === 'pytest/coverage' &&
+        options.command === undefined &&
+        hasProjectCoverage(session, planned.scope.path)
+    )
+        return command.filter((argument) => !argument.startsWith('--cov-config='));
+    return command;
 }

@@ -39,10 +39,10 @@ RUN npm ci --omit=dev
 FROM node:24-bookworm-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
-COPY --chown=node:node package.json ./
-COPY --from=dependencies --chown=node:node /app/node_modules ./node_modules
-COPY --from=build --chown=node:node /app/dist ./dist
-USER node
+COPY --chown=1000:1000 package.json ./
+COPY --from=dependencies --chown=1000:1000 /app/node_modules ./node_modules
+COPY --from=build --chown=1000:1000 /app/dist ./dist
+USER 1000:1000
 CMD ["node", "dist/main.js"]
 ```
 
@@ -87,6 +87,8 @@ The application's shutdown limit fits the orchestrator's grace period.
 
 ## Runtime
 
+- The final stage runs as a numeric user other than root, such as `USER 1000:1000`, the `node` user of the Node.js
+  images.
 - Durable state lives in explicit volumes or external storage. Environment-specific values arrive at runtime. A
   production Node.js service sets `NODE_ENV=production` where the runtime expects it.
 - Expose only the required ports, and bind private local services to localhost. Never add Linux capabilities, public

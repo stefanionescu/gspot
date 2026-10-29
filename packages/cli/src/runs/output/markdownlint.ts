@@ -1,8 +1,8 @@
 import { resolve } from 'node:path';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { parseToolReport } from '#cli/parsers/formats/json.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
-import { markdownlintReportSchema } from '#cli/schemas/runs/markdownlint.ts';
+import { markdownlintOutputSchema } from '#cli/schemas/runs/markdownlint.ts';
 
 /**
 Read the findings in the markdownlint JSON report.
@@ -12,7 +12,7 @@ Read the findings in the markdownlint JSON report.
 */
 export function parseMarkdownlintFindings(output: ToolOutput): Finding[] {
     const { check, stdout, help, cwd } = output;
-    const reports = parseToolReport('Markdownlint', stdout, markdownlintReportSchema);
+    const reports = parseToolOutput('Markdownlint', stdout, markdownlintOutputSchema);
     return reports.map((report) => ({
         check,
         file: resolve(cwd, report.fileName),

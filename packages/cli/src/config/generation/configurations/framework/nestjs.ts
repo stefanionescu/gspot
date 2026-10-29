@@ -8,3 +8,7 @@ export const NESTJS_INJECTABLE_FILTER_PATHS = [
     String.raw`\.test\.`,
     String.raw`\.spec\.`,
 ] as const;
+
+export const SWAGGER_PACKAGE = '@nestjs/swagger';
+
+export const TS_PATTERN = '**/*.ts';

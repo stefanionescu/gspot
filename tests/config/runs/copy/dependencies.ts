@@ -44,3 +44,14 @@ export const WORKSPACE_LOCK_FILES = {
     'packages/two/node_modules/owned/value.js': 'export const value = 2;',
     '.gitignore': 'node_modules/\n',
 } as const;
+
+export const VALUE_ONE_LINE = 'export const value = 1;';
+
+export const DECLARATION_COPY_FILES = {
+    'project/.gitignore': 'types/generated.d.ts\n',
+    'project/tsconfig.json': '{"include":["src/**/*.ts","types/*.d.ts","../outside.d.ts"]}',
+    'project/src/main.ts': 'export const value = 1;\n',
+    'project/types/generated.d.ts': 'declare const generated: string;\n',
+    'project/types/kept.d.ts': 'declare const kept: number;\n',
+    'outside.d.ts': 'declare const outside: boolean;\n',
+};

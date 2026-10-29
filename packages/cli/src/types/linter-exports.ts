@@ -13,4 +13,4 @@ export type PrettierModule = {
 export type EslintRuleModule = { builtinRules: Map<string, unknown> };
 export type GlobalsModule = { default: Record<string, Record<string, boolean>> };
 
-export type TestsManifest = { devDependencies: Record<string, string> };
+export type TestsPackageJson = { devDependencies: Record<string, string> };

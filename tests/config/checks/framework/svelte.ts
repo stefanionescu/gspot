@@ -35,6 +35,7 @@ export const SVELTE_CHECK_FINDINGS = [
         rule: 'TS2322',
         message: "Type 'string' is not assignable to type 'number'.",
         fixable: false,
+        help: 'Fix each warning and error svelte-check prints; both fail the check.',
     },
     {
         check: 'svelte/svelte-check',
@@ -44,5 +45,6 @@ export const SVELTE_CHECK_FINDINGS = [
         rule: 'a11y_missing_attribute',
         message: '`<img>` element should have an alt attribute',
         fixable: false,
+        help: 'Fix each warning and error svelte-check prints; both fail the check.',
     },
 ] as const;

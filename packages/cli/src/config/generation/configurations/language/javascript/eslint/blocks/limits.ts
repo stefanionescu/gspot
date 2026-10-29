@@ -6,7 +6,7 @@ export const ESLINT_LIMIT_RULES = {
         limit: 'function_lines',
         options: { skipBlankLines: true, skipComments: true, IIFEs: true },
     },
-    'max-params': { limit: 'function_parameters', options: { countVoidThis: false } },
+    'max-params': { limit: 'function_parameters' },
     'max-depth': { limit: 'block_nesting' },
     'max-statements': { limit: 'function_statements' },
     'max-nested-callbacks': { limit: 'callback_nesting' },

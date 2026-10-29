@@ -6,7 +6,7 @@ export const CONFIG_FILE_PLACEHOLDER = /\{config_file:(?<name>[a-z0-9-]+)\}/gu;
 
 export const POINTER_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
 
-export const LEVEL_PLACEHOLDER = /\{level:(?<recommended>[^{}:]+):(?<all>[^{}:]+)\}/gu;
+export const LEVEL_PLACEHOLDER = /\{level:(?<defaultLevel>[^{}:]+):(?<all>[^{}:]+)\}/gu;
 
 export const SCOPE_PLACEHOLDER = '{scope}';
 

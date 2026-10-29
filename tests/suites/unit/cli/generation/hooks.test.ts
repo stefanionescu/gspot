@@ -1,30 +1,28 @@
-import cliPackage from '#cli-package';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { selectStartRunner } from '#cli/repository/npm/package-manager.ts';
-import { createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { chmod, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
+import { createGitSandbox, createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { HOOK_CASES, START_COMMANDS, HOOK_LEVEL_CASES } from '#tests/config/generation/hooks.ts';
 
 test.each([...HOOK_LEVEL_CASES])(
-    'at level $level, gspot writes check hooks and guarded Git LFS hooks',
+    'at level $level, gspot writes check hooks without unused Git LFS hooks',
     async ({ level, hooks }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([], { level, tables: HOOKS_SETTINGS }),
         });
-        const written = generate(await openSession(sandbox.path)).files.filter((file) =>
+        const written = generateFiles(await openSession(sandbox.path)).files.filter((file) =>
             file.path.startsWith(`${GSPOT_PATHS.hooks}/`),
         );
         expect(written.map((file) => file.path)).toStrictEqual(hooks.map((name) => `${GSPOT_PATHS.hooks}/${name}`));
@@ -57,11 +55,10 @@ test.each(
         const files = buildHookFiles(
             selectStartRunner(root),
             HOOK_CASES.map(([name]) => name),
+            { hasLfsFiles: false },
         );
         expect(files.map((file) => file.path)).toStrictEqual(
-            [...HOOK_CASES.map(([name]) => name), 'post-checkout', 'post-commit', 'post-merge'].map(
-                (name) => `${GSPOT_PATHS.hooks}/${name}`,
-            ),
+            HOOK_CASES.map(([name]) => name).map((name) => `${GSPOT_PATHS.hooks}/${name}`),
         );
         await writeProgramCommand(
             sandbox.path,
@@ -76,6 +73,8 @@ test.each(
         for (const [index, [name, commandArguments]] of HOOK_CASES.entries()) {
             const file = files[index]!;
             expect(file).toMatchObject({ executable: true });
+            expect(file.content).toContain(`${selectStartRunner(root).command} check --hook ${name}`);
+            if (folder === '') continue;
             const path = join(sandbox.path, name);
             await writeFile(path, file.content);
             await chmod(path, 0o755);
@@ -105,6 +104,7 @@ test('a hook says how to install mise when mise is missing', async () => {
     const hook = buildHookFiles(
         selectStartRunner(sandbox.path),
         HOOK_CASES.map(([name]) => name),
+        { hasLfsFiles: false },
     ).find((file) => file.path.endsWith('pre-commit'))!;
     const path = join(sandbox.path, 'pre-commit');
     await writeFile(path, hook.content);
@@ -116,14 +116,12 @@ test('a hook says how to install mise when mise is missing', async () => {
         stdin: '',
     });
     expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stderr).toBe(
-        `mise is not installed. Install mise, then run: mise install. Install gspot with: mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@${cliPackage.version}\n`,
-    );
+    expect(result.stderr).toBe('Install mise, then run: mise install.\n');
 });
 
 test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, and the other LFS hooks run git lfs', async () => {
     await using sandbox = await createLfsRepository();
-    const hooks = generate(await openSession(sandbox.path)).files.filter((file) =>
+    const hooks = generateFiles(await openSession(sandbox.path)).files.filter((file) =>
         file.path.startsWith(`${GSPOT_PATHS.hooks}/`),
     );
     expect(hooks.map((file) => file.path)).toStrictEqual(
@@ -172,17 +170,25 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
     ]);
 });
 
-test('an LFS hook passes when git-lfs is absent', async () => {
+test.each(['pre-push', 'post-merge'])('%s exits before reading input when git-lfs is absent', async (name) => {
     await using sandbox = await testdir();
-    const hook = buildHookFiles(selectStartRunner(sandbox.path), []).find(({ path }) => path.endsWith('/post-merge'))!;
+    const hook = buildHookFiles(selectStartRunner(sandbox.path), ['pre-push'], { hasLfsFiles: true }).find(({ path }) =>
+        path.endsWith(`/${name}`),
+    )!;
     await createFileTree(sandbox.path, { [hook.path]: hook.content });
     const path = join(sandbox.path, hook.path);
     await chmod(path, 0o755);
+    const readMarker = join(sandbox.path, 'read-input');
+    const bin = await writeProgramCommand(sandbox.path, 'bin/cat', 'fakes/tool', '--mark', readMarker);
     const command = isWindows ? [Bun.which('sh')!, path, '0'] : [path, '0'];
     const missing = await runCommand(command, {
         cwd: sandbox.path,
-        env: { PATH: join(sandbox.path, 'empty') },
+        env: { PATH: bin },
         stdin: '',
     });
-    expect(missing.code, missing.stdout + missing.stderr).toBe(0);
+    expect(await Bun.file(readMarker).exists()).toBe(false);
+    expect(missing.code, missing.stdout + missing.stderr).toBe(2);
+    expect(missing.stderr).toBe(
+        'This repository uses Git LFS. Install git-lfs, then run git lfs install --skip-repo.\n',
+    );
 });

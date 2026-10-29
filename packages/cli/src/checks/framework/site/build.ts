@@ -1,19 +1,19 @@
 import { join, relative } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
-import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
+import { type CheckFinding } from '#cli/types/runs/check.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { compareText, quoteCommand } from '#cli/system/text.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { type SiteBuild } from '#cli/types/checks/framework/site.ts';
+import { BUILD_RULE, UNBUILT_SITE_NOTE } from '#cli/config/checks/framework/site/build.ts';
 
 const SITE_BUILDS = { create: () => new Map<string, Promise<SiteBuild>>() };
 
@@ -29,7 +29,7 @@ async function runSiteBuild(session: CheckSession, planned: PlannedCheck, copyRo
         throw new Error(`The build output folder is a link: ${convertToPosixPath(relative(copyRoot, folder))}`);
     const isBuilt = built?.isDirectory() === true;
     const failure = result.code === 0 ? `It wrote no ${folderPath} folder.` : formatOutputTail(result);
-    return { cwd, command, folder, isBuilt, failure };
+    return { cwd, command, folder, built: isBuilt, failure };
 }
 
 function readSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<SiteBuild> {
@@ -50,7 +50,6 @@ function readSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<Si
 List every file under a folder as sorted relative paths.
 
 @param folder the build output to walk.
-@returns the relative paths.
 */
 export function listBuiltFiles(folder: string): string[] {
     const root = realpathSync.native(folder);
@@ -74,11 +73,10 @@ Read the site build of this run, which the first caller runs, and skip the check
 
 @param session the repository and its tools.
 @param planned the scope to build.
-@returns the built site, when the build succeeded.
 */
 export async function readSuccessfulBuild(session: CheckSession, planned: PlannedCheck): Promise<SiteBuild> {
     const build = await readSiteBuild(session, planned);
-    if (!build.isBuilt) throw new GspotError('skip', 'The site did not build.');
+    if (!build.built) throw new GspotError('skip', UNBUILT_SITE_NOTE);
     return build;
 }
 
@@ -87,17 +85,16 @@ Reports a build command that fails or writes no build folder.
 
 @param session the repository and its tools.
 @param planned the scope to build.
-@returns the findings.
 */
-export async function checkSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSiteBuild(session, planned);
-    if (build.isBuilt) return [];
+    if (build.built) return [];
     return [
-        buildFinding(
-            planned,
-            { file: '', line: 1 },
-            'build',
-            `${quoteCommand(build.command)} did not build the site.\n${build.failure}`,
-        ),
+        {
+            file: '',
+            line: 1,
+            rule: BUILD_RULE,
+            message: `${quoteCommand(build.command)} did not build the site.\n${build.failure}`,
+        },
     ];
 }

@@ -9,3 +9,5 @@ export const GLOB_SPECIAL_CHARACTERS = /[\\*?{}[\]()!+@,]/gu;
 export const TRAILING_SLASH = /\/$/u;
 
 export const LEADING_SLASH = /^\//u;
+
+export const PATH_SEPARATOR_PATTERN = String.raw`[/\\]`;

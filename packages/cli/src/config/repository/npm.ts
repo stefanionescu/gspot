@@ -3,9 +3,13 @@ export const PACKAGE_MANAGER_HASH_SUFFIX = '+sha';
 export const YARN_BERRY_MAJOR = 2;
 
 export const NPM_TOOL = 'npm';
+
 export const LOCAL_PATH_PREFIX = './';
+
 export const PATHS_BASE_OPTION = 'pathsBasePath';
+
 export const PACKAGE_MANAGERS = ['npm', 'bun', 'pnpm', 'yarn'] as const;
+
 export const START_RUNNERS = {
     npm: {
         command: 'npm exec --no -- gspot',
@@ -33,3 +37,11 @@ export const START_RUNNERS = {
         installCommand: 'mise use --pin --tool-option allow_low_downloads=true npm:<package>@<version>',
     },
 } as const;
+
+export const PNPM_WORKSPACE_FILE = 'pnpm-workspace.yaml';
+
+export const LERNA_FILE = 'lerna.json';
+
+export const RUSH_FILE = 'rush.json';
+
+export const IMPORT_CONDITIONS = new Set(['node', 'import', 'default']);

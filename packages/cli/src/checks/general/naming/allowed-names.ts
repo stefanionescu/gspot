@@ -1,20 +1,22 @@
 import type { Session } from '#cli/types/session.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
-import type { Finding } from '#cli/types/runs/check.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { groupFilesByScope } from '#cli/repository/scopes.ts';
+import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import type { FileNames } from '#cli/types/checks/general/naming.ts';
+import { UNUSED_RECORD_RULE } from '#cli/config/checks/general/naming/allowed-names.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/checks/general/naming/source-names.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/general/naming/paths.ts';
 
 async function readSourceNames(session: Session, planned: PlannedCheck): Promise<FileNames[]> {
     const files: FileNames[] = [];
     const containers = readNamingDefaults().path_containers;
-    const filesByScope = groupFilesByScope(planned.files, session.repository.scopeFolders);
+    const filesByScope = Map.groupBy(planned.files, (file) =>
+        selectScopePath(file.path, session.repository.scopeFolders),
+    );
     for (const scope of session.scopes) {
         const named = listNamedFiles({ ...planned, scope, files: filesByScope.get(scope.path) ?? [] });
         for (const { file, language } of named) {
@@ -29,7 +31,7 @@ async function readSourceNames(session: Session, planned: PlannedCheck): Promise
             files.push({
                 path: file.path,
                 stem: stem.name,
-                declarations: error === undefined ? identifiers.map((identifier) => identifier.name) : undefined,
+                declarations: error === undefined ? identifiers : [],
                 folders,
             });
         }
@@ -42,9 +44,8 @@ Reports allowed names in root naming overrides that match no code or path name.
 
 @param session the repository and its tools.
 @param planned the settings and tracked files.
-@returns the findings.
 */
-export async function checkNamingAllowedNames(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkNamingAllowedNames(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = await readSourceNames(session, { ...planned, files: session.repository.files });
     const folders = files.flatMap((file) => file.folders).filter((identifier) => identifier.category === 'folders');
     return session.settings.naming.override.flatMap((override, index) => {
@@ -53,12 +54,15 @@ export async function checkNamingAllowedNames(session: Session, planned: Planned
             files
                 .filter((file) => matches(file.path))
                 .flatMap((file) => {
-                    if (file.declarations === undefined) return [];
-                    if (override.categories === undefined)
-                        return [file.stem, ...file.folders.map((identifier) => identifier.name), ...file.declarations];
-                    return override.categories.includes('files')
-                        ? [...file.declarations, file.stem]
-                        : file.declarations;
+                    const declarations = file.declarations
+                        .filter(
+                            (identifier) =>
+                                override.categories === undefined || override.categories.includes(identifier.category),
+                        )
+                        .map((identifier) => identifier.name);
+                    return override.categories === undefined || override.categories.includes('files')
+                        ? [file.stem, ...declarations]
+                        : declarations;
                 }),
         );
         if (override.categories === undefined || override.categories.includes('folders')) {
@@ -68,13 +72,10 @@ export async function checkNamingAllowedNames(session: Session, planned: Planned
         }
         return (override.allowed_names ?? [])
             .filter((name) => !sourceNames.has(name))
-            .map((name) =>
-                buildFinding(
-                    planned,
-                    { file: SETTINGS_FILE },
-                    'unused-record',
-                    `[[naming.override]] record ${String(index + 1)} allowed_names includes "${name}", which no identifier under its paths uses.`,
-                ),
-            );
+            .map((name) => ({
+                file: SETTINGS_FILE,
+                rule: UNUSED_RECORD_RULE,
+                message: `[[naming.override]] record ${String(index + 1)} allowed_names includes "${name}", which no identifier under its paths uses.`,
+            }));
     });
 }

@@ -1,19 +1,28 @@
 import { CLI_REFERENCE } from './cli.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { SCHEMA_FILE } from '#cli/config/files/names.ts';
+import { formatTable, formatSection, buildReferencePage } from './markdown.ts';
 import type { CliReference, ReferencePage, SettingsSchema } from '../types/reference.ts';
-import { formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
 
 import {
-    MAP_KEY_NAME,
+    DEFS_PREFIX,
+    SENTENCE_END,
+    REFERENCE_PATH,
     ANGLE_BRACKETS,
+    SETTINGS_OPENING,
+    NAME_PLACEHOLDER,
+    REFERENCE_FOLDERS,
+    TOP_LEVEL_HEADING,
     SCHEMA_TYPE_LABELS,
+    BANNED_NAME_MESSAGE,
     HEADING_ID_STRIPPED,
     LISTED_VALUES_LIMIT,
     TABLE_HEADING_LEVEL,
+    SETTINGS_DESCRIPTION,
     CATEGORY_PLACEHOLDER,
     LANGUAGE_PLACEHOLDER,
     REASONED_VALUE_LABEL,
+    MONOREPOS_SCOPE_MESSAGE,
 } from '../config/reference.ts';
 
 function getSchemaNode(schema: SettingsSchema, subschema: SettingsSchema | boolean): SettingsSchema {
@@ -22,14 +31,14 @@ function getSchemaNode(schema: SettingsSchema, subschema: SettingsSchema | boole
     while (node.$ref !== undefined) {
         const { $ref: reference, ...local } = node;
         const schemas = schema.$defs as Record<string, SettingsSchema>;
-        const definition = schemas[reference.slice('#/$defs/'.length)] as SettingsSchema;
+        const definition = schemas[reference.slice(DEFS_PREFIX.length)] as SettingsSchema;
         node = { ...definition, ...local };
     }
     return node;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function isReasonedValue(node: SettingsSchema): boolean {
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, formatAcceptedValue passes the complexity limit.
+function isReasonedSchema(node: SettingsSchema): boolean {
     return (
         node.type === 'object' &&
         node.properties !== undefined &&
@@ -42,7 +51,7 @@ function isReasonedValue(node: SettingsSchema): boolean {
 
 function formatAcceptedValue(schema: SettingsSchema, subschema: SettingsSchema | boolean): string {
     const node = getSchemaNode(schema, subschema);
-    if (isReasonedValue(node)) return REASONED_VALUE_LABEL;
+    if (isReasonedSchema(node)) return REASONED_VALUE_LABEL;
     if (node.const !== undefined)
         return [`\`${JSON.stringify(node.const)}\``, node.description].filter((text) => text !== undefined).join(': ');
     if (node.enum !== undefined)
@@ -74,27 +83,32 @@ function listSchemaProperties(
     const fixed =
         shape.properties === undefined
             ? []
-            : Object.entries(shape.properties).map(([name, child]) => ({
-                  name,
-                  node: getSchemaNode(schema, child),
-                  required: required.has(name),
-              }));
+            : Object.entries(shape.properties)
+                  .map(([name, child]) => ({
+                      name,
+                      node: getSchemaNode(schema, child),
+                      required: required.has(name),
+                  }))
+                  .filter(
+                      ({ node }) =>
+                          node.not === undefined || typeof node.not !== 'object' || Object.keys(node.not).length > 0,
+                  );
     const recordShape =
         typeof shape.additionalProperties === 'object' ? getSchemaNode(schema, shape.additionalProperties) : undefined;
     return recordShape?.properties === undefined
         ? fixed
-        : [...fixed, { name: MAP_KEY_NAME, node: recordShape, required: false }];
+        : [...fixed, { name: NAME_PLACEHOLDER, node: recordShape, required: false }];
 }
 
 function formatDefaults(variants: CliReference['settings']): string {
     return variants
         .map(({ setting, owners }) => {
-            const recommended = setting.default;
-            const all = setting.default_all ?? recommended;
-            const shown = recommended === undefined ? 'unset' : `\`${JSON.stringify(recommended)}\``;
-            const display = isDeepStrictEqual(recommended, all)
+            const defaultLevel = setting.default;
+            const all = setting.default_all ?? defaultLevel;
+            const shown = defaultLevel === undefined ? 'unset' : `\`${JSON.stringify(defaultLevel)}\``;
+            const display = isDeepStrictEqual(defaultLevel, all)
                 ? shown
-                : `recommended: ${shown}; all: \`${JSON.stringify(all)}\``;
+                : `basic: ${shown}; all: \`${JSON.stringify(all)}\``;
             return display + (variants.length > 1 ? ' (' + owners.join(', ') + ')' : '');
         })
         .join('; ');
@@ -114,7 +128,7 @@ function formatSetting(key: string, { node, required }: { node: SettingsSchema; 
         ...new Set(variants.flatMap(({ setting }) => (setting.reason_when === undefined ? [] : setting.reason_when))),
     ];
     const accepted = formatAcceptedValue(CLI_REFERENCE.schema, node);
-    const sentence = accepted.charAt(0).toUpperCase() + accepted.slice(1) + (/[.\n]$/u.test(accepted) ? '' : '.');
+    const sentence = accepted.charAt(0).toUpperCase() + accepted.slice(1) + (SENTENCE_END.test(accepted) ? '' : '.');
     const schemaDefault = node.default === undefined ? 'unset' : `\`${JSON.stringify(node.default)}\``;
     const presence = required ? 'Required.' : `Default: ${formatDefaults(variants) || schemaDefault}.`;
     return (
@@ -125,16 +139,20 @@ function formatSetting(key: string, { node, required }: { node: SettingsSchema; 
     );
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in this file share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, its test repeats at each call.
 function isSettingValue(schema: SettingsSchema, node: SettingsSchema): boolean {
-    return isReasonedValue(node) || listSchemaProperties(schema, node).length === 0;
+    return isReasonedSchema(node) || listSchemaProperties(schema, node).length === 0;
 }
 
-function formatSettingKeys(prefix: string, keys: ReturnType<typeof listSchemaProperties>, level: number): string {
+function formatSettingKeys(
+    prefix: string,
+    keys: ReturnType<typeof listSchemaProperties>,
+    headingLevel: number,
+): string {
     return keys
         .map(({ name, node, required }) => {
             const key = prefix === '' ? name : `${prefix}.${name}`;
-            const heading = `<h${String(level)} id="${key.replaceAll(ANGLE_BRACKETS, '')}"><code>${key}</code></h${String(level)}>`;
+            const heading = `<h${String(headingLevel)} id="${key.replaceAll(ANGLE_BRACKETS, '')}"><code>${key}</code></h${String(headingLevel)}>`;
             return `${heading}\n\n${formatSetting(key, { node, required })}\n`;
         })
         .join('\n');
@@ -151,7 +169,7 @@ function listVariantTables(schema: SettingsSchema, node: SettingsSchema): Return
     });
 }
 
-function formatVariantSection(schema: SettingsSchema, key: string, node: SettingsSchema, level: number) {
+function formatVariantSection(schema: SettingsSchema, key: string, node: SettingsSchema, headingLevel: number) {
     const languages = listVariantTables(schema, node);
     if (languages.length === 0) return '';
     const pattern = `${key}.${LANGUAGE_PLACEHOLDER}`;
@@ -159,7 +177,7 @@ function formatVariantSection(schema: SettingsSchema, key: string, node: Setting
     const categorizedLanguages = categories.filter(([, tables]) => tables.length > 0);
     const languageNames = languages.map(({ name }) => `\`${name}\``).join(', ');
     return (
-        `\n${'#'.repeat(level)} \`${pattern}\`\n\n` +
+        `\n${'#'.repeat(headingLevel)} \`${pattern}\`\n\n` +
         `The keys of \`[${key}]\` for one language: ${languageNames}. ` +
         `A key you leave out takes the value of \`[${key}]\`.\n` +
         (categorizedLanguages.length === 0
@@ -177,7 +195,7 @@ function formatVariantSection(schema: SettingsSchema, key: string, node: Setting
     );
 }
 
-function formatSettingTable(key: string, subschema: SettingsSchema | boolean, level: number): string {
+function formatSettingTable(key: string, subschema: SettingsSchema | boolean, headingLevel: number): string {
     const { schema } = CLI_REFERENCE;
     const node = getSchemaNode(schema, subschema);
     const children = listSchemaProperties(schema, node);
@@ -185,17 +203,15 @@ function formatSettingTable(key: string, subschema: SettingsSchema | boolean, le
     const variants = new Set(listVariantTables(schema, node).map(({ name }) => name));
     const header = node.type === 'array' ? `[[${key}]]` : `[${key}]`;
     return (
-        `\n${'#'.repeat(level)} ${header}\n\n` +
+        `\n${'#'.repeat(headingLevel)} ${header}\n\n` +
         (node.description === undefined ? '' : `${node.description}\n\n`) +
-        (key === 'naming'
-            ? 'See [Accept a banned name](/configure/gspot-toml/#accept-a-banned-name) for an exact-name override.\n\n'
-            : '') +
-        (keys.length === 0 ? '' : `${formatSettingKeys(key, keys, level + 1)}\n`) +
+        (key === 'naming' ? BANNED_NAME_MESSAGE : '') +
+        (keys.length === 0 ? '' : `${formatSettingKeys(key, keys, headingLevel + 1)}\n`) +
         children
             .filter((child) => !isSettingValue(schema, child.node) && !variants.has(child.name))
-            .map((child) => formatSettingTable(`${key}.${child.name}`, child.node, level + 1))
+            .map((child) => formatSettingTable(`${key}.${child.name}`, child.node, headingLevel + 1))
             .join('') +
-        formatVariantSection(schema, key, node, level + 1)
+        formatVariantSection(schema, key, node, headingLevel + 1)
     );
 }
 
@@ -211,7 +227,7 @@ function formatScopeSection(subschema: SettingsSchema | boolean): string {
     return (
         `\n## ${node.type === 'array' ? '[[scope]]' : '[scope]'}\n\n` +
         (node.description === undefined ? '' : `${node.description}\n\n`) +
-        'See [Monorepos](/configure/monorepos/) for how a scope inherits settings.\n\n' +
+        MONOREPOS_SCOPE_MESSAGE +
         formatSettingKeys(
             'scope',
             children.filter((child) => isSettingValue(schema, child.node)),
@@ -221,13 +237,13 @@ function formatScopeSection(subschema: SettingsSchema | boolean): string {
     );
 }
 
-function findSettingPath(schema: SettingsSchema, key: string): { path: string[]; node: SettingsSchema } {
+function getSettingPath(schema: SettingsSchema, key: string): { path: string[]; node: SettingsSchema } {
     let node = schema;
     const path: string[] = [];
     for (const segment of key.split('.')) {
         const children = listSchemaProperties(schema, node);
         const child =
-            children.find(({ name }) => name === segment) ?? children.find(({ name }) => name === MAP_KEY_NAME);
+            children.find(({ name }) => name === segment) ?? children.find(({ name }) => name === NAME_PLACEHOLDER);
         if (child === undefined) throw new Error(`The gspot.toml schema has no setting ${key}.`);
         path.push(child.name);
         node = child.node;
@@ -239,17 +255,16 @@ function findSettingPath(schema: SettingsSchema, key: string): { path: string[];
 Link a setting to its row, or a table or record to its heading, on the gspot.toml pages.
 
 @param key the dotted key, such as format.indent_style or import_rule
-@returns the Markdown link
 */
-export function linkSetting(key: string): string {
+export function formatSettingLink(key: string): string {
     const { schema } = CLI_REFERENCE;
-    const { path, node } = findSettingPath(schema, key);
+    const { path, node } = getSettingPath(schema, key);
     const name = path.join('.');
     const header = node.type === 'array' ? `[[${name}]]` : `[${name}]`;
     const anchor = isSettingValue(schema, node)
         ? name.replaceAll(ANGLE_BRACKETS, '')
         : header.toLowerCase().replaceAll(HEADING_ID_STRIPPED, '');
-    return `[\`${key}\`](${formatReferencePath('settings', '')}#${anchor})`;
+    return `[\`${key}\`](${REFERENCE_PATH}${REFERENCE_FOLDERS.settings}/#${anchor})`;
 }
 
 /**
@@ -268,10 +283,10 @@ export function buildSettingsPage(): ReferencePage {
     const topLevelKeys = roots.filter((child) => isSettingValue(schema, child.node));
     const page = buildReferencePage(
         'Settings',
-        'Every key, accepted value, and default of gspot.toml.',
-        'Every key of `gspot.toml`, its accepted values, and its default. See [gspot.toml](/configure/gspot-toml/) to change them.\n\n' +
+        SETTINGS_DESCRIPTION,
+        SETTINGS_OPENING +
             `The [JSON Schema](/${SCHEMA_FILE}) describes every key.\n` +
-            formatSection('Top-level keys', formatSettingKeys('', topLevelKeys, TABLE_HEADING_LEVEL + 1)) +
+            formatSection(TOP_LEVEL_HEADING, formatSettingKeys('', topLevelKeys, TABLE_HEADING_LEVEL + 1)) +
             sections.join(''),
     );
     page.data.tableOfContents = { maxHeadingLevel: TABLE_HEADING_LEVEL };

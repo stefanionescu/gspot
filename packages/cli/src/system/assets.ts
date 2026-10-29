@@ -23,7 +23,6 @@ export function buildAssetPath(path: string): string {
 List the asset paths under a prefix, relative to the package, sorted.
 
 @param prefix the start of the paths, such as `configurations/`.
-@returns the paths.
 */
 export function listAssets(prefix: string): string[] {
     const folder = join(packageFolder, prefix);

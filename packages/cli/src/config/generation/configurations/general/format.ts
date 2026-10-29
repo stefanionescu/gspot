@@ -7,6 +7,8 @@ export const EDITORCONFIG_FIXED_SECTIONS = {
 
 export const UNREPRESENTABLE_SELECTOR = /[\r\n]|[!+?*@]\(/u;
 
-export const PRETTIER_FIXED_OPTIONS = { arrowParens: 'always', embeddedLanguageFormatting: 'off' } as const;
+export const PRETTIER_FIXED_OPTIONS = { embeddedLanguageFormatting: 'off' } as const;
 
 export const DEFAULT_QUOTES = { prettier: 'single', ruff: 'double' } as const;
+
+export const EDITORCONFIG_ROOT_LINE = 'root = true\n\n';

@@ -118,11 +118,6 @@ os.environ.get("OTHER");
     'notes.txt': 'Bun.env.TEXT; $readEnv("TEXT");\n',
 } as const;
 
-export const READER_PROJECT_TABLES = `[secrets]
-env_examples = ["example.env"]
-environment_functions = ["config.$env", "$readEnv", "read_env"]
-`;
-
 export const SCOPE_READER_PROJECT_FILES = {
     '.env.example': 'APP_MISSING=example\n',
     'source.ts': 'root_env("ROOT_MISSING");\n',
@@ -146,3 +141,30 @@ path = "sibling"
 [scope.secrets]
 env_examples = [".env.example"]
 `;
+
+export const ENVIRONMENT_TEXT_CASES = [
+    {
+        name: 'JSX text that spells process.env is not a read',
+        files: { '.env.example': '# Example keys\n', 'source.tsx': 'export const view = <p>process.env.SECRET</p>;\n' },
+        changed: { 'source.tsx': 'export const view = <p>{process.env.SECRET}</p>;\n' },
+        findings: [
+            {
+                file: 'source.tsx',
+                rule: 'missing-key',
+                message: 'SECRET is read here and appears in no example environment file.',
+            },
+        ],
+    },
+    {
+        name: 'a key listed as a commented line counts as listed',
+        files: { '.env.example': '# TOKEN=example\n', 'source.ts': 'process.env.TOKEN;\n' },
+        changed: { '.env.example': '# Other keys\n' },
+        findings: [
+            {
+                file: 'source.ts',
+                rule: 'missing-key',
+                message: 'TOKEN is read here and appears in no example environment file.',
+            },
+        ],
+    },
+] as const;

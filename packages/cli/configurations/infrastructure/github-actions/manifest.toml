@@ -31,7 +31,6 @@ example = "A workflow expression with the unknown context `${{ unknown.value }}`
 exit_codes = [1]
 files = { paths = ["**/.github/workflows/*.{yml,yaml}"], kinds = ["source", "generated"] }
 help = "Fix the line actionlint names."
-level = "recommended"
 name = "actionlint"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<message>.*?) \\[(?<rule>[a-z-]+)\\]$" }
 stage = "commit"
@@ -44,7 +43,6 @@ command = ["zizmor", "--offline", "--no-progress", "--format", "github", "--conf
 example = "A workflow that puts pull request text straight into a shell command reports `template-injection`. Pass the text through a step environment variable, and quote its expansion."
 exit_codes = [11, 12, 13, 14]
 help = "Apply the fix zizmor names, or turn one audit off with `gspot ignore github-actions/zizmor --rule <rule> --reason \"<why>\"`."
-level = "recommended"
 name = "zizmor"
 output = { format = "regex", pattern = "^::(?:warning|error|notice) file=(?<file>[^,]+),line=(?<line>\\d+),title=(?<rule>[^:]+)::(?<message>.*)$" }
 stage = "commit"

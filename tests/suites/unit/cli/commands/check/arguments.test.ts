@@ -3,9 +3,10 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { ALL_FILES_BASES, NAMING_SCOPE_SETTINGS } from '#tests/config/commands/check/arguments.ts';
 
@@ -138,7 +139,12 @@ test.each([false, true])('run again resolves a scope from the calling folder (st
 });
 
 test('--staged keeps every stage while --hook pre-commit runs only commit checks', async () => {
-    const definitions = (['commit', 'push', 'manual'] as const).map((stage) => buildPassingCheck(stage));
+    const definitions = (['commit', 'push', 'manual'] as const).map((stage) => ({
+        id: `sandbox/${stage}`,
+        command: buildProgramCommand('fakes/tool'),
+        paths: ['source.txt'],
+        stage: stage,
+    }));
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: definitions }) }),
         'source.txt': 'input',
@@ -173,7 +179,18 @@ test('--staged keeps every stage while --hook pre-commit runs only commit checks
 
 test('a manual check runs only when --only names it', async () => {
     const files = {
-        'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [buildPassingCheck('manual')] }) }),
+        'gspot.toml': buildSandboxSettings([], {
+            tables: stringify({
+                command_check: [
+                    {
+                        id: `sandbox/manual`,
+                        command: buildProgramCommand('fakes/tool'),
+                        paths: ['source.txt'],
+                        stage: 'manual',
+                    },
+                ],
+            }),
+        }),
         'source.txt': 'input',
     };
     await using sandbox = await createGitSandbox(files);
@@ -231,18 +248,8 @@ test('a staged change to gspot.toml alone rechecks every file a configuration ch
     expect(checked.report.checks[0]?.findings).toMatchObject([{ file: 'db/report.sql', rule: 'file-lines' }]);
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function buildPassingCheck(stage: 'commit' | 'push' | 'manual') {
-    return {
-        id: `sandbox/${stage}`,
-        command: buildProgramCommand('fakes/tool'),
-        paths: ['source.txt'],
-        stage,
-    };
-}
-
 test.each([...ALL_FILES_BASES])(
-    'an explicit full-run base reports its cause: $message',
+    'a --changed base that checks every file reports its cause: $message',
     async ({ reference, message }) => {
         const files = {
             'gspot.toml': buildSandboxSettings([], {

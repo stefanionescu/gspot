@@ -1,12 +1,12 @@
 import { createRule } from '../create-rule.ts';
-import { FUNCTION_TYPES } from '../config/syntax.ts';
-import type { FunctionNode } from '../types/syntax.ts';
-import type { TrivialFunctionsOptions } from '../types/rules.ts';
+import { FUNCTION_NODES } from '../config/syntax.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { type FunctionNode, type TrivialFunctionsOptions } from '../types/rules.ts';
 
 import {
-    TYPE_ONLY,
+    ONE_STATEMENT,
     OPTIONS_SCHEMA,
+    TYPE_DECLARATIONS,
     FUNCTION_SELECTOR,
     INLINE_VALUE_PARENTS,
     EXECUTABLE_DECLARATIONS,
@@ -29,16 +29,16 @@ function listChildNodes(
 }
 
 function countStatements(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
-    if (TYPE_ONLY.has(node.type)) return 0;
+    if (TYPE_DECLARATIONS.has(node.type)) return 0;
     if ('declare' in node && node.declare) return 0;
     const isExpressionBody =
-        FUNCTION_TYPES.has(node.type) && (node as FunctionNode).body.type !== AST_NODE_TYPES.BlockStatement;
+        FUNCTION_NODES.has(node.type) && (node as FunctionNode).body.type !== AST_NODE_TYPES.BlockStatement;
     const isStatement = node.type.endsWith('Statement') && !NON_EXECUTABLE_STATEMENTS.has(node.type);
     const own = Number(isExpressionBody || isStatement || EXECUTABLE_DECLARATIONS.has(node.type));
     return listChildNodes(node, visitorKeys).reduce((total, child) => total + countStatements(child, visitorKeys), own);
 }
 
-function findOutermostValue(node: TSESTree.Expression): TSESTree.Expression {
+function getOutermostValue(node: TSESTree.Expression): TSESTree.Expression {
     let value = node;
     while (isTransparentExpression(value.parent)) value = value.parent;
     return value;
@@ -65,7 +65,7 @@ function isValueSlot(value: TSESTree.Expression): boolean {
 
 function isInlineValue(node: FunctionNode): boolean {
     if (node.type === AST_NODE_TYPES.FunctionDeclaration || node.id !== null) return false;
-    const value = findOutermostValue(node);
+    const value = getOutermostValue(node);
     return INLINE_VALUE_PARENTS.has(value.parent.type) || isValueSlot(value);
 }
 
@@ -97,7 +97,7 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
                 context.report({
                     node,
                     messageId: 'trivial',
-                    data: { statements: count === 1 ? '1 statement' : `${String(count)} statements` },
+                    data: { statements: count === 1 ? ONE_STATEMENT : `${String(count)} statements` },
                 });
             },
         };

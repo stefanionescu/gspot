@@ -5,15 +5,14 @@ import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/lan
 
 import {
     getPreset,
-    convertPresetWarnings,
     buildArrayPresetBlocks,
+    convertWarningsToErrors,
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 
 /**
 Apply the Vue presets, accessibility lint rules, and component parsing.
 
 @param scope the planned ESLint file of the scope.
-@returns the imports and ESLint blocks for this configuration.
 */
 export function buildVueBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>): ConfigurationBlocks {
     const { presets, settings } = scope;
@@ -21,7 +20,10 @@ export function buildVueBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>)
     const accessibility = getPreset(presets, 'accessibility');
     const isTyped = settings.configurations.includes(TYPESCRIPT_CONFIGURATION);
     const blocks: ConfigurationBlocks['blocks'] = [
-        ...buildArrayPresetBlocks(recommended, 'vuePlugin', convertPresetWarnings),
+        ...buildArrayPresetBlocks(recommended, 'vuePlugin', (block) => {
+            const { parser: _parser, ...fields } = block;
+            return { ...fields, ...(block.rules !== undefined && { rules: convertWarningsToErrors(block.rules) }) };
+        }),
         ...buildArrayPresetBlocks(accessibility, 'vueAccessibility', (block) => {
             const { parser: _parser, ...fields } = block;
             return { ...fields, files: VUE_FILES };
@@ -29,6 +31,7 @@ export function buildVueBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>)
         {
             fields: {
                 files: VUE_FILES,
+                languageOptions: { parserOptions: { extraFileExtensions: ['.vue'], sourceType: 'module' } },
                 rules: {
                     ...(isTyped && {
                         'vue/define-props-declaration': 'error',
@@ -37,7 +40,15 @@ export function buildVueBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>)
                     ...VUE_RULES,
                 },
             },
-            properties: `languageOptions: { parser: vueParser, parserOptions: { ${isTyped ? 'parser: { ts: tseslint.parser, typescript: tseslint.parser },' : ''} extraFileExtensions: ['.vue'], sourceType: 'module' } }`,
+            calls: [
+                {
+                    name: 'setComponentParser',
+                    args: [
+                        { importName: 'vueParser' },
+                        ...(isTyped ? [{ importName: 'tseslint', path: 'parser' }] : []),
+                    ],
+                },
+            ],
         },
     ];
     return {

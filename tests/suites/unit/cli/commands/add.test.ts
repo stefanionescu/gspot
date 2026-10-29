@@ -1,16 +1,20 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
+import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { readSettings } from '#cli/settings/read.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { listToolInstallFiles } from '#tests/setup/cli/tools.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { CONFIGURATIONS_SETTINGS } from '#tests/config/toml.ts';
+import { listNpmInstallFiles } from '#tests/setup/cli/tools.ts';
 import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
-import { readSandboxSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     API_SCOPE_FILES,
@@ -29,14 +33,14 @@ test('add --scope writes the scope list and applies it without an npm install', 
     commitAll(sandbox.path);
     const initial = await runGspot(sandbox.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, findManifestTarget('bash', 'shellcheckrc')))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(false);
     using npm = recordNpmCommands();
     const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { written, removed, notes } = JSON.parse(result.stdout) as ApplyReport;
     expect({ written, removed, notes }).toStrictEqual({
         written: [
-            ...BASH_CONFIG_FILE_NAMES.map((file) => findManifestTarget('bash', file)),
+            ...BASH_CONFIG_FILE_NAMES.map((file) => getManifestTarget('bash', file)),
             GSPOT_PATHS.miseProject,
             GSPOT_PATHS.pythonProject,
         ],
@@ -44,17 +48,17 @@ test('add --scope writes the scope list and applies it without an npm install', 
         notes: [TOOLS_CHANGED_NOTE],
     });
     expect(npm.commands).toStrictEqual([]);
-    const saved = readSandboxSettings(sandbox.path);
-    expect(saved.scopes['api']!.configurations).toStrictEqual(['bash']);
+    const saved = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
+    expect(saved.scopes.get('api')!.configurations).toStrictEqual(['bash']);
     expect(saved.configurations).toStrictEqual(['markdown']);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, findManifestTarget('bash', 'shellcheckrc')))).toBe(true);
-    expect(await listToolInstallFiles(sandbox.path)).toStrictEqual([]);
+    expect(await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(true);
+    expect(await listNpmInstallFiles(sandbox.path)).toStrictEqual([]);
 });
 
 test('add security exits 2, names gspot set level, and writes nothing', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true }),
         'source.py': 'PORT = 8080\n',
     });
@@ -83,7 +87,7 @@ test.each([false, true])(
 );
 
 test('add names every unknown configuration before changing the settings', async () => {
-    const text = 'configurations = []\n';
+    const text = CONFIGURATIONS_SETTINGS;
     await using sandbox = await createGitSandbox({ 'gspot.toml': text });
     const result = await runGspot(sandbox.path, ['add', 'not-a-real-config-a', 'not-a-real-config-b']);
     expect(result.code).toBe(2);
@@ -97,6 +101,75 @@ test('add names only added configurations in a mixed request', async () => {
     const result = await runGspot(sandbox.path, ['add', 'bash', 'markdown']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout.split('\n', 1)[0]).toBe('Added markdown. bash is already selected.');
-    const settings = readSandboxSettings(sandbox.path).configurations;
+    const settings = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).configurations;
     expect(settings).toStrictEqual(['bash', 'markdown']);
+});
+
+test('add names a repeated configuration once and saves it once', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['python']) });
+    const result = await runGspot(sandbox.path, ['add', 'pytest', 'pytest']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout.split('\n', 1)[0]).toBe('Added pytest.');
+    expect(
+        readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).configurations,
+    ).toStrictEqual(['python', 'pytest']);
+});
+
+test('add with no names puts Python and FastAPI in their project scope', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown']),
+        'py/pyproject.toml': '[project]\nname = "api"\nversion = "1.0.0"\ndependencies = ["fastapi"]\n',
+        'py/main.py': 'PORT = 8080\n',
+    });
+    const result = await runGspot(sandbox.path, ['add', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const settings = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
+    expect(settings.configurations).toStrictEqual(['markdown']);
+    expect(settings.scopes.get('py')?.configurations).toContain('python');
+    expect(settings.scopes.get('py')?.configurations).toContain('fastapi');
+    const report = JSON.parse(result.stdout) as { changed: boolean; summary: string };
+    expect(report.changed).toBe(true);
+    expect(report.summary).toContain('to scope py');
+});
+
+test('add skips an explicitly removed configuration and writes nothing when nothing is new', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml':
+            'configurations = []\nremoved_configurations = { value = ["python"], reason = "External tooling checks Python." }\n',
+        'main.py': 'PORT = 8080\n',
+    });
+    const before = await readTree(sandbox.path);
+    const result = await runGspot(sandbox.path, ['add']);
+    expect(result).toStrictEqual({
+        code: 0,
+        stdout: 'No change: gspot.toml selects every configuration the code needs.\n',
+        stderr: '',
+    });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test('add without names refuses --scope and writes nothing', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const before = await readTree(sandbox.path);
+    const result = await runGspot(sandbox.path, ['add', '--scope', '.']);
+    expect(result).toStrictEqual({
+        code: 2,
+        stdout: '',
+        stderr: '--scope needs configuration names. Run gspot add without --scope to detect every project.\n',
+    });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test('add --scope on a project folder writes its scope record', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python']),
+        'py/pyproject.toml': '[project]\nname = "api"\nversion = "1.0.0"\n',
+        'py/main.py': 'PORT = 8080\n',
+    });
+    const result = await runGspot(sandbox.path, ['add', 'fastapi', '--scope', 'py']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(
+        readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).scopes.get('py')
+            ?.configurations,
+    ).toStrictEqual(['fastapi']);
 });

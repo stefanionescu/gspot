@@ -23,7 +23,6 @@ example = "A misspelled word reports a finding. Correct it, and for a file name,
 exit_codes = [2]
 fix = ["typos", "--isolated", "--config", "{config_file:typos}", "--force-exclude", "--no-check-filenames", "--locale", "en", "--write-changes", "--color", "never", "{files}"]
 help = "Fix the spelling, or write the real name and its reason in the `spelling.allowed_words` setting."
-level = "recommended"
 name = "typos"
 output = { format = "typos" }
 stage = "commit"

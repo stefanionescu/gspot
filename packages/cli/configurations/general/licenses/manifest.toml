@@ -21,7 +21,6 @@ version = "5.5.5"
 example = "A dependency with a license outside `licenses.allowed` reports a finding for that version. Replace it, or write a `[[licenses.allowed_package]]` record with its name, version, and the license in a reason."
 files = { filenames = ["package.json", "pyproject.toml"] }
 help = "Replace the package, or write a [[licenses.allowed_package]] record by hand with its name, exact version, and a reason naming the license."
-level = "recommended"
 name = "allowed"
 runs = "once"
 stage = "push"

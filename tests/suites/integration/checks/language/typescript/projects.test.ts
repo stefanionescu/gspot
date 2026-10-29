@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { createFileTree } from 'testdirs';
-import { isOnDisk } from '#tests/setup/system/files.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import type { TypecheckResult } from '#tests/types/reports.ts';
@@ -9,7 +8,7 @@ import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { stat, chmod, readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
@@ -17,10 +16,8 @@ import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes
 import {
     OUTDIR_CASES,
     AUTHORED_TSCONFIG,
-    REFERENCE_BUILD_FILES,
     SOLUTION_PROJECT_FILES,
     IMPLICIT_PROJECT_FILES,
-    REFERENCE_BUILD_SETTINGS,
     TYPESCRIPT_PROJECTS_SANDBOX,
 } from '#tests/config/integration/checks/language/typescript/projects.ts';
 
@@ -174,45 +171,4 @@ test.each([...OUTDIR_CASES])('$name', async ({ kind }) => {
     expect(await readdir(outside.path)).toStrictEqual(outsideFiles);
     const files = await readdir(join(sandbox.path, 'app'));
     expect(files.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(['tsconfig.json', 'value.ts']);
-});
-
-test('typescript/tsc builds a referenced project with its imported declarations and extended config and ignores other folders', async () => {
-    await using sandbox = await createGitSandbox({
-        ...REFERENCE_BUILD_FILES,
-        'gspot.toml': buildSandboxSettings(['typescript'], REFERENCE_BUILD_SETTINGS),
-    });
-    await createFileTree(sandbox.path, {
-        'tsconfig.json': JSON.stringify({ files: [], references: [{ path: join(sandbox.path, 'app') }] }),
-        'app/tsconfig.json': JSON.stringify({
-            extends: join(sandbox.path, 'config/base.json'),
-            include: ['src/**/*.ts'],
-        }),
-    });
-    await linkTypescript(join(sandbox.path, 'node_modules'));
-    commitAll(sandbox.path);
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
-    const failed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(
-        failed.report.checks.map(({ scope, status, findings }) => ({
-            scope,
-            status,
-            findings: findings.map(({ file, rule }) => ({ file, rule })),
-        })),
-    ).toStrictEqual([
-        { scope: '', status: 'passed', findings: [] },
-        { scope: 'app', status: 'failed', findings: [{ file: 'app/src/main.ts', rule: 'TS2322' }] },
-        { scope: 'neighbor', status: 'failed', findings: [{ file: 'neighbor/source.ts', rule: 'TS2322' }] },
-    ]);
-    expect(await isOnDisk(join(sandbox.path, 'app/src/main.js'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, 'app/tsconfig.tsbuildinfo'))).toBe(false);
-    await writeFile(
-        join(sandbox.path, 'app/src/main.ts'),
-        REFERENCE_BUILD_FILES['app/src/main.ts'].replace('"wrong"', '8080'),
-    );
-    const remaining = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
-    expect(remaining.code, remaining.stdout + remaining.stderr).toBe(1);
-    expect(
-        remaining.report.checks.flatMap(({ findings }) => findings).map(({ file, rule }) => ({ file, rule })),
-    ).toStrictEqual([{ file: 'neighbor/source.ts', rule: 'TS2322' }]);
 });

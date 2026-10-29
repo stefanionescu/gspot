@@ -29,6 +29,8 @@ require_command() {
 
 ## Processes and privilege
 
+Never run `killall` or `pkill`, which stop every process that matches a name.
+
 Treat process names as advisory information, never authorization. Stop and restart paths kill only process ids that the
 owning script family recorded, found through the service manager, a `PID` file, or `pgrep -x`, never `ps | grep`. A
 script that starts background jobs saves every `PID`, waits for each job, captures its status, and writes its output to
@@ -132,18 +134,16 @@ require_env() {
 ## Temporary files, locks, and cleanup
 
 Create temporary paths with `mktemp` or `mktemp -d` under the system location or a dedicated project folder, never with
-predictable names. Register cleanup immediately after creation. Put downloaded, copied, or generated content in a
-temporary file, validate it with the real parser, and replace the destination with `mv`. The file keeps the restrictive
-permissions `mktemp` gave it unless deployment needs others. Remove failed artifacts unless the script documents keeping
-them. Acquire a lock atomically with `mkdir` on a folder that stores the holder `PID`, or with `noclobber` redirection,
-never with a `test` followed by a create.
+predictable names. Put downloaded, copied, or generated content in a temporary file, validate it with the real parser,
+and replace the destination with `mv`. The file keeps the restrictive permissions `mktemp` gave it unless deployment
+needs others. Remove failed artifacts unless the script documents keeping them. Acquire a lock atomically with `mkdir`
+on a folder that stores the holder `PID`, or with `noclobber` redirection, never with a `test` followed by a create.
 
 Stop commands remove only what the script created. Validate a cleanup path from input or persistent state against its
 permitted root. Reject empty values, `/`, the repository root, `$HOME`, symlinks, and anything outside the folder the
 script created.
 
-Keep a `mktemp -d` result exactly. Never widen the path to its neighbors. Do not hide a failure with `|| true`. Handle
-it, or let it stop the script.
+Keep a `mktemp -d` result exactly. Never widen the path to its neighbors.
 
 ```bash
 downloaded_file="$(mktemp "${config_file}.XXXXXX")" || exit 1

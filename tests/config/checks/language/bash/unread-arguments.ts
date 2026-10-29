@@ -1,4 +1,4 @@
-import { BASH_HEADER } from '#tests/config/samples.ts';
+import { BASH_HEADER } from '#tests/config/bash.ts';
 
 export const UNREAD_ARGUMENT_CASES = [
     {

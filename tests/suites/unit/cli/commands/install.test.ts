@@ -4,9 +4,10 @@ import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { TOOL_PROJECTS_MESSAGE } from '#tests/config/messages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { FAILED_NPM_VERSION, OUTDATED_TOOL_PROJECTS } from '#tests/config/commands/install.ts';
 
 test('apply starts no npm, and install reports a failed npm version lookup in text and JSON', async () => {
@@ -88,9 +89,35 @@ test.each([...OUTDATED_TOOL_PROJECTS])(
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect(JSON.parse(refused.stdout)).toStrictEqual({
             error: 'install',
-            message: 'The tool projects in .gspot do not match gspot.toml. Run gspot apply first.',
+            message: TOOL_PROJECTS_MESSAGE,
         });
         expect(spawned).not.toHaveBeenCalled();
         expect(await readTree(sandbox.path)).toStrictEqual(before);
     },
 );
+
+test('install stopped by SIGINT reports cancellation once and exits 130', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown']),
+        'README.md': '# Example\n',
+    });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const before = await readTree(sandbox.path);
+    const listeners = process.listenerCount('SIGINT');
+    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((_command, options) => {
+        process.emit('SIGINT');
+        expect(options.cancelSignal?.aborted).toBe(true);
+        return Promise.reject(new Error('Installation canceled.'));
+    });
+    const result = await runGspot(sandbox.path, ['install', '--json']);
+    expect(result.code).toBe(130);
+    expect(result.stderr).toBe('');
+    expect(JSON.parse(result.stdout)).toStrictEqual({
+        error: 'canceled',
+        message: 'Installation stopped before every tool was installed.',
+        exitCode: 130,
+    });
+    expect(process.listenerCount('SIGINT')).toBe(listeners);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});

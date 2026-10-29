@@ -5,9 +5,15 @@ import { pathToFileURL } from 'node:url';
 import { readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { PUSH_CONTENT } from '#tests/config/setup/sandboxes.ts';
-import { selectPush, readPushedCommits } from '#cli/repository/revisions/push.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { preparePushRepository, prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { MERGE_BASE_FAILURE } from '#tests/config/repository/revisions.ts';
+import { readPushedCommits, readPushedRevisions } from '#cli/repository/revisions/push.ts';
+
+import {
+    createGitSandbox,
+    preparePushRepository,
+    prepareNestedRepository,
+} from '#tests/setup/sandboxes/repositories.ts';
 
 test('push comparison tells a missing upstream from an upstream whose commit is gone', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
@@ -22,8 +28,9 @@ test('push comparison tells a missing upstream from an upstream whose commit is 
     expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
     runGitStep(sandbox.path, ['update-ref', '-d', 'refs/heads/upstream']);
     const error = await captureRejection(readPushedCommits(sandbox.path));
-    expect(error.message).toStartWith('Git merge-base failed');
+    expect(error.message).toStartWith(MERGE_BASE_FAILURE);
 });
+
 test('push comparison reports an unborn or broken HEAD instead of inventing a base', async () => {
     await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
 
@@ -33,6 +40,7 @@ test('push comparison reports an unborn or broken HEAD instead of inventing a ba
     const historyError = await captureRejection(readPushedCommits(sandbox.path));
     expect(historyError.message).toContain('Cannot read committed Git history');
 });
+
 test.each(['origin', undefined, 'file:///unused', '/unused'] as const)(
     'the pre-push remote %p picks the remote-tracking branch that a new branch compares with',
     async (remote) => {
@@ -45,7 +53,7 @@ test.each(['origin', undefined, 'file:///unused', '/unused'] as const)(
         ] as const)
             runGitStep(sandbox.path, ['update-ref', `refs/remotes/${name}/main`, commit]);
         const protocol = `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`;
-        const selected = await selectPush(sandbox.path, protocol, remote);
+        const selected = await readPushedRevisions(sandbox.path, protocol, remote);
         expect(selected.revisions[0]?.commits).toStrictEqual(remote === 'origin' ? [reviewed] : []);
         expect(selected.revisions[0]?.paths).toStrictEqual(remote === 'origin' ? ['changed.sh'] : []);
         expect(runGitStep(sandbox.path, ['rev-parse', 'HEAD'])).toBe(broken);
@@ -56,6 +64,7 @@ test.each(['origin', undefined, 'file:///unused', '/unused'] as const)(
             expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
     },
 );
+
 test('a shallow clone reports incomplete history and skips commits the remote already has', async () => {
     await using sandbox = await testdir();
     const source = join(sandbox.path, 'source');
@@ -73,16 +82,17 @@ test('a shallow clone reports incomplete history and skips commits the remote al
     const checkout = join(sandbox.path, 'checkout');
     runGitStep(checkout, ['remote', 'add', 'unseen', pathToFileURL(source).href]);
     const protocol = `refs/heads/reviewed ${reviewed} refs/heads/new ${'0'.repeat(reviewed.length)}\n`;
-    const unobserved = await selectPush(checkout, protocol, 'unseen');
+    const unobserved = await readPushedRevisions(checkout, protocol, 'unseen');
     expect(unobserved.revisions[0]).toMatchObject({ commits: [reviewed], shallow: true });
     expect(unobserved.revisions[0]?.paths).toStrictEqual(['changed.sh', 'gspot.toml', 'legacy.sh']);
-    const advertised = await selectPush(checkout, protocol);
+    const advertised = await readPushedRevisions(checkout, protocol);
     expect(advertised.revisions[0]).toMatchObject({ commits: [], paths: [], shallow: false });
     runGitStep(checkout, ['fetch', '--unshallow']);
-    const unseen = await selectPush(checkout, protocol, 'unseen');
+    const unseen = await readPushedRevisions(checkout, protocol, 'unseen');
     expect(unseen.revisions[0]).toMatchObject({ commits: [reviewed, base], shallow: false });
     expect(runGitStep(source, ['branch', '--show-current'])).toBe(branch);
 });
+
 test('a gspot.toml below the Git root keeps paths relative to its folder for updated and new branches', async () => {
     await using sandbox = await testdir();
     const { project, base, commitId } = await prepareNestedRepository(sandbox.path);
@@ -90,12 +100,12 @@ test('a gspot.toml below the Git root keeps paths relative to its folder for upd
         runGitStep(sandbox.path, ['diff', '--name-status', base, commitId, '--', 'nested settings/source.txt']),
     ).toBe('M\tnested settings/source.txt');
     const protocol = `refs/heads/main ${commitId} refs/heads/main ${base}\n`;
-    const updated = await selectPush(project, protocol);
+    const updated = await readPushedRevisions(project, protocol);
     expect(updated.revisions[0]?.paths).toStrictEqual(['source.txt']);
     runGitStep(sandbox.path, ['config', 'remote.example.fetch', '+refs/heads/*:refs/remotes/example/*']);
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/example/main', base]);
     const createdRef = `refs/heads/new ${commitId} refs/heads/new ${'0'.repeat(commitId.length)}\n`;
-    const created = await selectPush(project, createdRef, 'example');
+    const created = await readPushedRevisions(project, createdRef, 'example');
     expect(created.revisions[0]?.paths).toStrictEqual(['source.txt']);
     expect(await readFile(join(project, 'source.txt'), 'utf8')).toBe('working');
 });

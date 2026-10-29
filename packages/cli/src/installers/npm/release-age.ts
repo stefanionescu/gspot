@@ -7,8 +7,7 @@ import type { PackageManager } from '#cli/types/repository/npm/package-manager.t
 import { MINUTES_PER_DAY, SECONDS_PER_DAY, RELEASE_AGE_FILES } from '#cli/config/installers/npm/release-age.ts';
 
 /**
-Add the minimum release age to the lockfile run of the tool project. npm takes flags, and pnpm reads a settings file in
-the folder it runs in. Bun reads the file of writeBunReleaseAge.
+Set the minimum release age for the tool project lockfile. Pass flags to npm and write local settings for pnpm and Bun.
 
 @param runFolder the temporary folder that the package manager runs in.
 @param command the arguments to run.

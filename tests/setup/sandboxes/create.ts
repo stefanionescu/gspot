@@ -3,25 +3,20 @@ import { format } from 'prettier';
 import { afterAll, beforeAll } from 'bun:test';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { readFile, writeFile } from 'node:fs/promises';
 import type { Level } from '#cli/types/configurations.ts';
-import { rm, readFile, writeFile } from 'node:fs/promises';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkPackages } from '#tests/setup/sandboxes/node-modules.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
-import { readCheckoutCacheFolder } from '#cli/checks/language/swift/cache.ts';
+import { runGspot, spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
+import { SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/config/setup/sandboxes.ts';
 import { type Sandbox, type SandboxPlan, type InstalledSandboxPlan } from '#tests/types/sandbox.ts';
-import { runGspot, spawnGspot, runGspotStep, buildInitArguments } from '#tests/setup/cli/commands.ts';
-import { BASH_SANDBOX, SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/config/setup/sandboxes.ts';
 
-/**
-Name the installed npm in the root package.json, as a repository at level all must.
-
-@param root the sandbox folder with a package.json.
-*/
-export async function pinSandboxNpm(root: string): Promise<void> {
+async function pinSandboxNpm(root: string): Promise<void> {
     const npm = await runCommand(['npm', '--version'], { cwd: root });
     const path = join(root, 'package.json');
     const packageJson = JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
@@ -52,22 +47,17 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
     if (plan.dependencies !== undefined) await pinSandboxNpm(root);
 }
 
-async function createSandboxFolder(resources: AsyncDisposableStack): Promise<string> {
-    const folder = resources.use(await testdir());
-    resources.defer(() => rm(readCheckoutCacheFolder(folder.path), { recursive: true, force: true }));
-    return folder.path;
-}
-
 /**
 Build one isolated sandbox whose commands run in the current process.
 */
 export async function createSandbox(plan: SandboxPlan): Promise<Sandbox & AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
-    const root = await createSandboxFolder(resources);
+    const { path: root } = resources.use(await testdir());
     await writeSandbox(root, plan);
     commitAll(root);
+    for (const path of plan.executable ?? []) await markExecutable(root, path);
     await writeFile(
-        join(root, 'gspot.toml'),
+        join(root, SETTINGS_FILE),
         buildSandboxSettings([...plan.configurations], { level: plan.level ?? 'all' }),
     );
     const owned = resources.move();
@@ -104,7 +94,7 @@ export function shareInstalledSandbox(plan: InstalledSandboxPlan): () => Sandbox
     const resources = new AsyncDisposableStack();
     let sandbox: Sandbox;
     beforeAll(async () => {
-        const root = await createSandboxFolder(resources);
+        const { path: root } = resources.use(await testdir());
         await prepareInstalledSandbox(root, plan);
         sandbox = { root, run: spawnGspot };
     });
@@ -124,7 +114,13 @@ export async function initSandbox(
         install?: false;
     },
 ): Promise<ProcessOutput> {
-    const initialized = await runGspotStep(sandbox, [...buildInitArguments([...options.configurations]), '--json']);
+    const initialized = await runGspotStep(sandbox, [
+        'init',
+        '--yes',
+        '--configurations',
+        ...options.configurations,
+        '--json',
+    ]);
     if (options.level !== undefined) await runGspotStep(sandbox, ['set', 'level', options.level]);
     const excluded = options.without ?? [];
     for (const configuration of excluded)
@@ -136,22 +132,4 @@ export async function initSandbox(
         ]);
     if (options.install !== false) await runGspotStep(sandbox, ['install']);
     return initialized;
-}
-
-/**
-Create the Bash sandbox once for a test file and remove it after the tests of that file.
-*/
-export function shareBashSandbox(): () => Sandbox {
-    let sandbox: Sandbox & AsyncDisposable;
-    beforeAll(async () => {
-        sandbox = await createSandbox(BASH_SANDBOX);
-        for (const path of Object.keys(BASH_SANDBOX.files)) {
-            if (!path.endsWith('.sh')) continue;
-            await markExecutable(sandbox.root, path);
-        }
-    });
-    afterAll(async () => {
-        await sandbox[Symbol.asyncDispose]();
-    });
-    return () => sandbox;
 }

@@ -8,6 +8,7 @@ import {
     LLMS_FILE,
     SKILL_FILE,
     SETUP_SKILL,
+    INDEX_SUFFIX,
     SKILLS_FOLDER,
     SKILLS_SCHEMA,
     NOT_FOUND_PAGE,
@@ -24,7 +25,7 @@ home page, which wraps itself in StarlightPage, an empty ID.
 */
 export function buildMarkdownCopyPath(id: string): string | undefined {
     if (id === NOT_FOUND_PAGE) return undefined;
-    const path = id.endsWith('/index') ? id.slice(0, -'/index'.length) : id;
+    const path = id.endsWith(INDEX_SUFFIX) ? id.slice(0, -INDEX_SUFFIX.length) : id;
     return path === '' ? `/${MARKDOWN_COPY_FILE}` : `/${path}/${MARKDOWN_COPY_FILE}`;
 }
 

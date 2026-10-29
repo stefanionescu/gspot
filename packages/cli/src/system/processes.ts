@@ -1,6 +1,6 @@
 import { statSync } from 'node:fs';
 import { onExit } from 'signal-exit';
-import { execa, execaSync } from 'execa';
+import { execa, execaSync, type Options } from 'execa';
 import type { ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
@@ -21,12 +21,16 @@ import type {
 } from '#cli/types/system/processes.ts';
 import {
     FAILED_CODE,
+    OUTPUT_LIMIT,
     MISSING_CODE,
+    TASKKILL_FLAGS,
     PATHEXT_DEFAULT,
     PATH_SEPARATORS,
-    TASKKILL_OPTIONS,
     TASKKILL_PROGRAM,
+    TASKKILL_PID_FLAG,
     TASKKILL_GONE_CODE,
+    EMPTY_COMMAND_MESSAGE,
+    PROCESS_CLEANUP_MESSAGE,
     EXIT_CLEANUP_MILLISECONDS,
     OUTPUT_CLOSE_MILLISECONDS,
 } from '#cli/config/system/processes.ts';
@@ -46,17 +50,8 @@ function buildExecaOptions(options: SpawnOptions, executable: string) {
         buffer: true,
         stripFinalNewline: false,
         reject: false,
-        maxBuffer: Infinity,
+        maxBuffer: OUTPUT_LIMIT,
         killSignal: 'SIGKILL' as const,
-    };
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function buildAsyncExecaOptions(options: AsyncSpawnOptions, executable: string) {
-    return {
-        ...buildExecaOptions(options, executable),
-        ...(options.cancelSignal !== undefined && { cancelSignal: options.cancelSignal }),
-        detached: process.platform !== 'win32',
     };
 }
 
@@ -70,14 +65,13 @@ function isExecutableAbsent(executable: string, cwd: string): boolean {
     );
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function isUnfinished(result: SpawnCompletion): boolean {
-    return result.exitCode === undefined || result.code !== undefined || result.cause !== undefined;
-}
-
 function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult {
     const isMissing = result.code === 'ENOENT';
-    const isUnfinishedResult = isUnfinished(result);
+    const isUnfinishedResult = [
+        result.exitCode === undefined,
+        result.code !== undefined,
+        result.cause !== undefined,
+    ].includes(true);
     const errored = result.failed && isUnfinishedResult;
     const code = isMissing ? MISSING_CODE : (result.exitCode ?? FAILED_CODE);
     const messages: (string | undefined)[] = [result.stderr];
@@ -106,7 +100,7 @@ function stopProcessTree(child: ChildProcess, termination: ProcessTermination): 
     termination.stopped = true;
     try {
         if (process.platform === 'win32') {
-            const result = execaSync(TASKKILL_PROGRAM, ['/pid', String(child.pid), ...TASKKILL_OPTIONS], {
+            const result = execaSync(TASKKILL_PROGRAM, [TASKKILL_PID_FLAG, String(child.pid), ...TASKKILL_FLAGS], {
                 reject: false,
                 timeout: OUTPUT_CLOSE_MILLISECONDS,
             });
@@ -161,7 +155,7 @@ function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
     return {
         state,
         stop: stopTree,
-        async release(executionFailure: unknown) {
+        async release(processFailure: unknown) {
             await exitCleanup;
             clearTimeout(timer);
             clearTimeout(termination.drainTimer);
@@ -170,12 +164,9 @@ function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
             child.removeListener('exit', startExitCleanup);
             for (const stream of streams) stream.removeListener('error', stopTree);
             if (termination.failure === undefined || isGroupGone(termination.failure, child)) return;
-            throw executionFailure === undefined
+            throw processFailure === undefined
                 ? termination.failure
-                : new AggregateError(
-                      [executionFailure, termination.failure],
-                      'Tool execution and process cleanup failed.',
-                  );
+                : new AggregateError([processFailure, termination.failure], PROCESS_CLEANUP_MESSAGE);
         },
     };
 }
@@ -186,19 +177,19 @@ async function finishProcess(
     started: number,
     completion: PromiseLike<SpawnCompletion>,
 ): Promise<SpawnResult> {
-    let executionFailure: unknown;
+    let processFailure: unknown;
     try {
         const result = await completion;
-        if (result.failed) executionFailure = new Error(result.shortMessage);
+        if (result.failed) processFailure = new Error(result.shortMessage);
         return { ...buildSpawnResult(result, started), ...supervision.state };
     } catch (error) {
-        executionFailure = error;
+        processFailure = error;
         supervision.stop();
         const result = await child;
         if (result.code === 'ENOENT') return { ...buildSpawnResult(result, started), ...supervision.state };
         throw error;
     } finally {
-        await supervision.release(executionFailure);
+        await supervision.release(processFailure);
     }
 }
 
@@ -219,7 +210,7 @@ async function readProcessOutput(
 
 function findMissingExecutable(command: readonly string[], cwd: string, started: number): SpawnResult | undefined {
     const executable = command[0];
-    if (executable === undefined) throw new Error('An empty command cannot run.');
+    if (executable === undefined) throw new Error(EMPTY_COMMAND_MESSAGE);
     if (!isExecutableAbsent(executable, cwd)) return undefined;
     return buildSpawnResult(
         {
@@ -242,20 +233,29 @@ function watchProcess(child: WatchedProcess, options: AsyncSpawnOptions): Proces
     return supervision;
 }
 
+function launchProcess(command: readonly string[], options: AsyncSpawnOptions, output: Pick<Options, 'buffer'>) {
+    const [executable, ...commandArguments] = command as readonly [string, ...string[]];
+    const child = execa(executable, commandArguments, {
+        ...buildExecaOptions(options, executable),
+        ...output,
+        ...(options.cancelSignal !== undefined && { cancelSignal: options.cancelSignal }),
+        detached: process.platform !== 'win32',
+    });
+    const supervision = watchProcess(child, options);
+    return { child, supervision };
+}
+
 /**
 Run a supervised process tree and capture its text.
 
 @param command executable and literal arguments.
 @param options where and how the process runs.
-@returns captured output and termination status.
 */
 export async function spawnProcess(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
     const started = performance.now();
     const missing = findMissingExecutable(command, options.cwd, started);
     if (missing !== undefined) return missing;
-    const [executable, ...commandArguments] = command as readonly [string, ...string[]];
-    const child = execa(executable, commandArguments, buildAsyncExecaOptions(options, executable));
-    const supervision = watchProcess(child, options);
+    const { child, supervision } = launchProcess(command, options, {});
     return finishProcess(child, supervision, started, child);
 }
 
@@ -265,7 +265,7 @@ Run a supervised process tree and read its output bytes.
 @param command executable and literal arguments.
 @param options where and how the process runs.
 @param readStdout reads the output bytes.
-@returns output and termination status, with empty stdout when the callback reads it.
+@returns an empty stdout when the callback reads it.
 */
 export async function streamProcess(
     command: readonly string[],
@@ -275,21 +275,15 @@ export async function streamProcess(
     const started = performance.now();
     const missing = findMissingExecutable(command, options.cwd, started);
     if (missing !== undefined) return missing;
-    const [executable, ...commandArguments] = command as readonly [string, ...string[]];
-    const child = execa(executable, commandArguments, {
-        ...buildAsyncExecaOptions(options, executable),
-        buffer: { stdout: false },
-    });
-    const supervision = watchProcess(child, options);
+    const { child, supervision } = launchProcess(command, options, { buffer: { stdout: false } });
     return finishProcess(child, supervision, started, readProcessOutput(child, options, readStdout));
 }
 
 /**
-Run a process and wait. Git commands and version checks use it.
+Run a process and wait.
 
 @param command executable and literal arguments.
 @param options where and how the process runs.
-@returns captured output and termination status.
 */
 export function spawnProcessBlocking(command: readonly string[], options: SpawnOptions): SpawnResult {
     const started = performance.now();

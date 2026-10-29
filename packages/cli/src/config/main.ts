@@ -33,4 +33,23 @@ export const VERSION_PIN_COMMANDS: ReadonlySet<string> = new Set([
     'install',
 ]);
 
-export const GIT_COMMANDS: ReadonlySet<string> = new Set(['init', 'install', 'apply', 'check']);
+export const GIT_COMMANDS: ReadonlySet<string> = new Set([
+    'init',
+    'install',
+    'apply',
+    'check',
+    'set',
+    'unset',
+    'add',
+    'remove',
+    'ignore',
+    'unignore',
+]);
+
+export const USAGE_LINE = 'Usage: gspot <command> [options]';
+
+export const HELP_FLAG = '-h, --help';
+
+export const NEEDS_GIT_MESSAGE = 'gspot needs a Git repository. Run git init, then gspot init.';
+
+export const HELP_ERROR_CODE = 'commander.help';

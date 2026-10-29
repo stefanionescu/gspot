@@ -1,5 +1,8 @@
-import type { SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
-import type { COVERAGE_DIMENSIONS } from '#cli/config/planning/checks.ts';
+import { type SchemaShape } from '#cli/types/shapes.ts';
+import type { TableValues } from '#cli/types/settings/file.ts';
+import { type ParsedTools } from '#cli/types/settings/tools.ts';
+import { type SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
+import { type COVERAGE_DIMENSIONS } from '#cli/config/planning/checks.ts';
 
 type AllowedPackage = { name: string; version: string; reason: string };
 
@@ -48,3 +51,5 @@ export type ConfigurationTables = {
     };
     zustand: { store_files: string[] };
 };
+
+export type ToolTableSchemas = Pick<SchemaShape<TableValues>, `tools.${keyof ParsedTools}`>;

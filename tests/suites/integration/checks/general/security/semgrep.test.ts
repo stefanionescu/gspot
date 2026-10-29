@@ -4,19 +4,21 @@ import { test, expect, describe } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import type { Sandbox } from '#tests/types/sandbox.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
 import type { Level } from '#cli/types/configurations.ts';
+import { CAFE_SCRIPT_PATH } from '#tests/config/paths.ts';
 import type { SandboxChanges } from '#tests/types/samples.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { applySandboxChanges, buildSandboxChanges, changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { changeSandbox, applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     SEMGREP_CHECK,
     SEMGREP_SANDBOX,
     SEMGREP_PROJECT_FILES,
-} from '#tests/config/integration/checks/general/security/samples.ts';
+} from '#tests/config/integration/checks/general/security/sandbox.ts';
 import {
     SWIFT_SAMPLE,
     REPOSITORY_RULE,
@@ -33,36 +35,36 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
     const installedSandbox = shareInstalledSandbox(SEMGREP_SANDBOX);
 
     test('Semgrep reports a Bash file it cannot parse as a finding at its position', async () => {
-        await checkUnparsableBash(installedSandbox());
+        await assertUnparsableBash(installedSandbox());
     });
 
-    test('the Bash and Swift Semgrep rules report piped downloads, eval, always-accessible keychain items, and MD5, and pass after the fix', async () => {
-        await checkLanguageRules(installedSandbox());
+    test('the Bash and Swift rules report piped downloads, eval, always-accessible keychain items, and MD5, and pass after the fix', async () => {
+        await assertLanguageRules(installedSandbox());
     });
 
-    test.each(['recommended', 'all'] as const)(
-        '%s Semgrep rules report raw inputs once, accept documented forms, and pass after fixes',
+    test.each(['basic', 'all'] as const)(
+        '%s rules report raw inputs once, accept documented forms, and pass after fixes',
         async (level) => {
-            await checkPlatformRules(installedSandbox(), level);
+            await assertPlatformRules(installedSandbox(), level);
         },
     );
 
-    test('an authored Semgrep rule file reports a finding through security/semgrep and passes after the fix', async () => {
-        await checkAuthoredRules(installedSandbox());
+    test('an authored rule file reports a finding through security/semgrep and passes after the fix', async () => {
+        await assertAuthoredRules(installedSandbox());
     });
 
     test.each([...NEXT_CONFIG_CASES])(
-        'the Next.js Semgrep rules report exactly the expected lines of next.config: $name',
+        'the Next.js rules report exactly the expected lines of next.config: $name',
         async (row) => {
-            await checkNextjsOptions(installedSandbox(), row);
+            await assertNextjsOptions(installedSandbox(), row);
         },
     );
 });
 
-async function checkUnparsableBash(sandbox: Sandbox): Promise<void> {
+async function assertUnparsableBash(sandbox: Sandbox): Promise<void> {
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['bash', 'security']),
-        'scripts/café build.sh': 'if then\n',
+        'scripts/café build.sh': BROKEN_IF_SCRIPT,
     };
     await using _sourceChange = await applyStagedSandboxChanges(
         sandbox,
@@ -71,13 +73,13 @@ async function checkUnparsableBash(sandbox: Sandbox): Promise<void> {
     const malformed = parseCheckReport(await spawnGspot(sandbox.root, SEMGREP_CHECK));
     expect(malformed.code, malformed.stdout + malformed.stderr).toBe(1);
     expect(malformed.report.checks).toMatchObject([...MALFORMED_SEMGREP_RESULTS]);
-    await writeFile(join(sandbox.root, 'scripts/café build.sh'), 'printf "%s\\n" ready\n');
+    await writeFile(join(sandbox.root, CAFE_SCRIPT_PATH), 'printf "%s\\n" ready\n');
     const corrected = parseCheckReport(await spawnGspot(sandbox.root, SEMGREP_CHECK));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ check: 'security/semgrep', status: 'passed', findings: [] }]);
 }
 
-async function checkLanguageRules(sandbox: Sandbox): Promise<void> {
+async function assertLanguageRules(sandbox: Sandbox): Promise<void> {
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['bash', 'swift', 'security'], { level: 'all' }),
         'script.sh': BASH_DOWNLOAD_SAMPLE,
@@ -102,7 +104,7 @@ async function checkLanguageRules(sandbox: Sandbox): Promise<void> {
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
 }
 
-async function checkPlatformRules(sandbox: Sandbox, level: Level): Promise<void> {
+async function assertPlatformRules(sandbox: Sandbox, level: Level): Promise<void> {
     const sourceFiles = {
         'package.json': SEMGREP_PROJECT_FILES['package.json'],
         'tsconfig.json': SEMGREP_PROJECT_FILES['tsconfig.json'],
@@ -149,7 +151,7 @@ async function checkPlatformRules(sandbox: Sandbox, level: Level): Promise<void>
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 }
 
-async function checkAuthoredRules(sandbox: Sandbox): Promise<void> {
+async function assertAuthoredRules(sandbox: Sandbox): Promise<void> {
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['typescript', 'security'], {
             tables: stringify({ tools: { semgrep: { rule_files: ['security/own.yml'] } } }),
@@ -175,7 +177,7 @@ async function checkAuthoredRules(sandbox: Sandbox): Promise<void> {
     expect(corrected.report.checks).toMatchObject([{ check: 'security/semgrep', status: 'passed', findings: [] }]);
 }
 
-async function checkNextjsOptions(
+async function assertNextjsOptions(
     sandbox: Sandbox,
     { source, expected }: (typeof NEXT_CONFIG_CASES)[number],
 ): Promise<void> {
@@ -199,7 +201,7 @@ async function checkNextjsOptions(
 
 async function applyStagedSandboxChanges(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
-    resources.use(await changeAppliedSandbox(sandbox, changes));
+    resources.use(await changeSandbox(sandbox, changes));
     runGitStep(sandbox.root, ['add', '--all']);
     await runGspotStep(sandbox, ['apply']);
     return resources.move();

@@ -1,17 +1,34 @@
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 
 export const { homepage: SITE_URL } = cliPackage;
+
 export const DESCRIPTION =
     'gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.';
+
 export const REPOSITORY_URL = 'https://github.com/stefanionescu/gspot';
+
 export const DOCS_PATH = '/start/overview/';
+
 export const EDIT_URL = `${REPOSITORY_URL}/edit/main/docs/`;
+
 export const FAVICON = '/favicon.ico';
+
 export const APPLE_TOUCH_ICON = '/apple-touch-icon.png';
+
 export const SOCIAL_IMAGE = '/open-graph.png';
+
 export const SOCIAL_IMAGE_ALT = 'The gspot name and logo.';
+
 export const SOCIAL_IMAGE_SIZE = { width: 1200, height: 630 } as const;
+
 export const FONT_PACKAGES = ['geist', 'geist-mono'] as const;
+
 export const FIRST_PAINT_ELEMENT = 'article-end';
+
 export const THEME_STORAGE_KEY = 'starlight-theme';
+
 export const THEME_SWITCH_LABELS = { dark: 'Switch to light theme', light: 'Switch to dark theme' } as const;
+
+export const { license: LICENSE } = cliPackage;
+
+export const NPM_URL = `https://www.npmjs.com/package/${cliPackage.name}`;

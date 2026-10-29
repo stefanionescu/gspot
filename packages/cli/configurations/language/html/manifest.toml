@@ -23,7 +23,6 @@ tool = "html-validate"
 command = ["html-validate", "--config", "{config_file:html-validate}", "--formatter", "json", "{files}"]
 example = "An `<img src=\"logo.png\">` without alternative text reports a finding. Add `alt` text, or leave it empty for a decorative image."
 help = "Change the markup the way the rule page says. Turn one rule off with `gspot ignore html/html-validate --rule <rule> --reason \"<why>\"`."
-level = "recommended"
 name = "html-validate"
 output = { format = "json", children = "messages", fields = { file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message" } }
 stage = "commit"

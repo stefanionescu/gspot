@@ -1,14 +1,9 @@
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 
 export const SETTINGS_FILE = 'gspot.toml';
 
-export const SCHEMA_DIRECTIVE = `#:schema ./${GSPOT_PATHS.settingsSchema}`;
-
-export const SCHEMA_DIRECTIVE_LINE = /^#:schema [^\n]*\n?/u;
-
-export const PARSE_CONTEXT_LINES = 3;
 export const SETTINGS_EXAMPLES = [
-    { level: 'recommended' },
+    { level: 'all' },
     { configurations: ['typescript', 'nextjs', 'markdown'] },
     { test_files: ['tests/**/*.test.ts'] },
     { scope: [{ path: 'services/api', configurations: ['python', 'fastapi'] }] },
@@ -63,6 +58,7 @@ export const SETTINGS_EXAMPLES = [
     { tool_timeout_seconds: 300 },
     { import_rule: [{ name: 'core', paths: ['src/core/**'] }] },
 ] as const;
+
 export const NAMED_FINDING_CHECKS: ReadonlySet<string> = new Set(['structure/trivial-functions', 'python/vulture']);
 
 export const GSPOT_FOLDER_PATH = new RegExp(`^\\${GSPOT_FOLDER}(?:/|$)`, 'iu');
@@ -71,3 +67,17 @@ export const SCOPE_PATH_MESSAGES = {
     portable: String.raw`Use folder names that work on every system: no empty or dot segment, no \ : < > " | ? * or control character, no name that ends in a dot or a space, and no device name such as nul.`,
     gspot: `gspot writes its own files in ${GSPOT_FOLDER}. Choose a scope folder outside it.`,
 } as const;
+
+export const NO_CHECK_PATHS_MESSAGE = 'An ignore without check needs paths.';
+
+export const NO_CHECK_RULE_MESSAGE = 'An ignore without check cannot name a rule. Add the check that owns the rule.';
+
+export const NO_SETTINGS_MESSAGE = 'There is no gspot.toml here. Run gspot init to create one.';
+
+export const SETTINGS_ENCODING_MESSAGE = 'gspot.toml must contain valid UTF-8 text.';
+
+export const COMMAND_CHECK_ID = /^[^\s,]+$/u;
+
+export const TOML_FORMAT = { inlineTableStart: 1, bracketSpacing: false, trailingComma: false } as const;
+
+export const SETTINGS_PREFACE = /^(?:#:schema[^\n]*\n)?(?:# Change these settings[^\n]*\n)?/u;

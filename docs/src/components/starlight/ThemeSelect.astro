@@ -1,9 +1,9 @@
 ---
 import { Icon } from '@astrojs/starlight/components';
-import { THEME_SWITCH_LABELS } from '../../config/site.ts';
+import { THEME_STORAGE_KEY, THEME_SWITCH_LABELS } from '../../config/site.ts';
 ---
 
-<theme-toggle>
+<theme-toggle data-storage-key={THEME_STORAGE_KEY} data-light-label={THEME_SWITCH_LABELS.light}>
     <button type="button" class="theme-toggle" aria-label={THEME_SWITCH_LABELS.dark} title={THEME_SWITCH_LABELS.dark}>
         <span class="moon">
             <Icon name="moon" size="1.25rem" />
@@ -15,23 +15,27 @@ import { THEME_SWITCH_LABELS } from '../../config/site.ts';
 </theme-toggle>
 
 <script>
-    import { THEME_STORAGE_KEY, THEME_SWITCH_LABELS } from '../../config/site.ts';
 
     class ThemeToggle extends HTMLElement {
         connectedCallback(): void {
             const button = this.querySelector('button') as HTMLButtonElement;
             const root = document.documentElement;
-            const updateLabel = (): void => {
-                const text = THEME_SWITCH_LABELS[root.dataset['theme'] === 'light' ? 'light' : 'dark'];
+            const darkLabel = button.title;
+            const refreshLabel = (): void => {
+                const text = root.dataset['theme'] === 'light' ? (this.dataset['lightLabel'] as string) : darkLabel;
                 button.setAttribute('aria-label', text);
                 button.title = text;
             };
-            updateLabel();
+            refreshLabel();
             button.addEventListener('click', () => {
                 const next = root.dataset['theme'] === 'light' ? 'dark' : 'light';
                 root.dataset['theme'] = next;
-                updateLabel();
-                localStorage.setItem(THEME_STORAGE_KEY, next);
+                refreshLabel();
+                try {
+                    localStorage.setItem((this.dataset['storageKey'] as string), next);
+                } catch (error) {
+                    if (!(error instanceof DOMException)) throw error;
+                }
             });
         }
     }

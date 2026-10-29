@@ -1,7 +1,8 @@
+import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
+import { EXTENSION_PATTERN } from '#cli/config/configurations/tool.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { buildPathMatcher, includeFolderContents } from '#cli/system/matchers.ts';
-import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 
 import {
     CODE_LANGUAGES,
@@ -14,12 +15,6 @@ import {
     type EslintBlockFields,
 } from '#cli/types/generation/eslint.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
-function isComponentConfiguration(name: string): name is (typeof COMPONENT_CONFIGURATIONS)[number] {
-    const names: readonly string[] = COMPONENT_CONFIGURATIONS;
-    return names.includes(name);
-}
-
 /**
 Calculate the exact file sets that base blocks and the blocks of every framework share.
 
@@ -28,7 +23,9 @@ Calculate the exact file sets that base blocks and the blocks of every framework
 */
 export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
     const { scopes, nodeFiles } = groups;
-    const source = buildSourcePattern(...CODE_LANGUAGES);
+    const source = `**/*.{${listTaggedExtensions(...CODE_LANGUAGES)
+        .map((extension) => extension.slice(1))
+        .join(',')}}`;
     const codeExtensions = listTaggedExtensions(...CODE_LANGUAGES);
     const selected = groups.components.flatMap(({ name, tools }) =>
         tools
@@ -43,27 +40,33 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
         '',
     );
     const code = [source, ...components, ...node];
-    const typescript = buildSourcePattern('typescript');
-    const javascript = buildSourcePattern('javascript');
+    const typescript = `**/*.{${listTaggedExtensions('typescript')
+        .map((extension) => extension.slice(1))
+        .join(',')}}`;
+    const javascript = `**/*.{${listTaggedExtensions('javascript')
+        .map((extension) => extension.slice(1))
+        .join(',')}}`;
     return {
         code,
         typescript: [typescript],
         typed: [
             typescript,
             ...selected.map(({ pattern, configuration }): EslintFiles['typed'][number] =>
-                isComponentConfiguration(configuration) ? [pattern, { component: configuration }] : pattern,
+                (COMPONENT_CONFIGURATIONS as readonly string[]).includes(configuration)
+                    ? [pattern, { component: configuration as (typeof COMPONENT_CONFIGURATIONS)[number] }]
+                    : pattern,
             ),
         ],
         javascript: [javascript, ...node],
         tests: scopes.flatMap(({ scope, tests }) =>
             buildTestFiles(listCodeTestFiles(tests), code).map(([test, pattern]) => [
                 test,
-                buildScopeGlob(scope),
+                joinScope(escapeGlob(scope), '**/*'),
                 pattern,
             ]),
         ),
         scripts: scopes.flatMap(({ scope, scripts }) =>
-            scripts.flatMap((script) => code.map((pattern) => [script, buildScopeGlob(scope), pattern])),
+            scripts.flatMap((script) => code.map((pattern) => [script, joinScope(escapeGlob(scope), '**/*'), pattern])),
         ),
     };
 }
@@ -78,54 +81,25 @@ export function listCodeTestFiles(testFiles: string[]): string[] {
     const extensions = listTaggedExtensions(...CODE_LANGUAGES, ...COMPONENT_CONFIGURATIONS, 'astro');
     return testFiles.filter((pattern) => {
         const extension = extractExtension(pattern);
-        return extension === '' || !/^\.[a-z0-9]+$/u.test(extension) || extensions.includes(extension);
+        return extension === '' || !EXTENSION_PATTERN.test(extension) || extensions.includes(extension);
     });
-}
-
-/**
-Select one literal scope with a source pattern.
-
-@param scope the repository-relative project folder.
-@param pattern the pattern within that folder.
-@returns the escaped scope joined with the pattern.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function buildScopeGlob(scope: string, pattern = '**/*'): string {
-    return joinScope(escapeGlob(scope), pattern);
-}
-
-/**
-Build one ESLint brace glob for the source extensions of the languages.
-
-@param languages the inventory language tags.
-
-@returns the repository-relative file pattern.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 10 calls in 5 files share it.
-export function buildSourcePattern(...languages: string[]): string {
-    return `**/*.{${listTaggedExtensions(...languages)
-        .map((extension) => extension.slice(1))
-        .join(',')}}`;
 }
 
 /**
 Escape detected Node paths for glob selectors within one project scope.
 
 @param paths your repository-relative Node files.
-@param scope the folder that owns these sources.
-
+@param scopePath the folder that owns these sources.
 @returns literal file patterns that cannot select neighboring filenames.
 */
-export function buildNodePatterns(paths: string[], scope: string): string[] {
-    return paths.filter((path) => isInScope(path, scope)).map((path) => escapeGlob(path));
+export function buildNodePatterns(paths: string[], scopePath: string): string[] {
+    return paths.filter((path) => isInScope(path, scopePath)).map((path) => escapeGlob(path));
 }
 
 /**
-Split globs into readable includes and excludes for blocks and runtime tests.
+Split globs into includes and excludes.
 
 @param patterns your own or generated paths, with a leading ! for an exclusion.
-
-@returns the expanded include and exclude globs.
 */
 export function splitGlobs(patterns: string[]): PathExpressions {
     const included = includeFolderContents(patterns);
@@ -139,34 +113,21 @@ export function splitGlobs(patterns: string[]): PathExpressions {
 Intersect file selectors with root-relative patterns and one literal project scope.
 
 @param files the source selectors.
-@param scope the project folder.
+@param scopePath the project folder.
 @param paths the repository-relative path patterns.
-@returns the intersections of the code, project, and your own path selectors.
 */
 export function buildScopeFiles(
     files: NonNullable<EslintBlockFields['files']>,
-    scope: string,
+    scopePath: string,
     paths: (string | string[])[],
 ): NonNullable<EslintBlockFields['files']> {
     return files.flatMap((file) =>
         paths.map((path) => [
             ...(Array.isArray(file) ? file : [file]),
-            buildScopeGlob(scope),
+            joinScope(escapeGlob(scopePath), '**/*'),
             ...(Array.isArray(path) ? path : [path]),
         ]),
     );
-}
-
-/**
-Exclude nested scopes with the same literal escaping used for includes.
-
-@param paths the project folders.
-@param scope the parent folder.
-@returns the child scope globs.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 4 files share it.
-export function listNestedScopeGlobs(paths: string[], scope: string): string[] {
-    return listNestedScopes(paths, scope).map((path) => buildScopeGlob(path, '**'));
 }
 
 /**

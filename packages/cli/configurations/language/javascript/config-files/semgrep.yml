@@ -54,8 +54,10 @@ rules:
           category: security
     - id: gspot.javascript.jwt-verify-without-algorithms
       patterns:
-          - pattern: jwt.verify($TOKEN, $SECRET)
-          - pattern-not: 'jwt.verify($TOKEN, $SECRET, {algorithms: ...})'
+          - pattern-either:
+                - pattern: jwt.verify($TOKEN, $SECRET)
+                - pattern: jwt.verify($TOKEN, $SECRET, $OPTIONS, ...)
+          - pattern-not: 'jwt.verify($TOKEN, $SECRET, {..., algorithms: ..., ...}, ...)'
       message: Require the expected JWT signing algorithms when verifying a token.
           Pass an algorithms option that matches the signing contract.
       languages:
@@ -78,9 +80,11 @@ rules:
               - CWE-345
           category: security
     - id: gspot.javascript.interpolated-exec
-      pattern: execSync(`...${$VAR}...`)
-      message: Template literal interpolation in execSync() is a command injection
-          vector. Use execFileSync() with an argument array instead.
+      pattern-either:
+          - pattern: execSync(`...${$VAR}...`, ...)
+          - pattern: exec(`...${$VAR}...`, ...)
+      message: Interpolation in execSync() or exec() allows command injection.
+          Use execFileSync() or execFile() with an argument array instead.
       languages:
           - typescript
           - javascript

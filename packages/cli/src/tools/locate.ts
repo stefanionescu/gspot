@@ -1,10 +1,11 @@
 import which from 'which';
 import { statSync } from 'node:fs';
-import { TOOL_ENV } from '#cli/config/tools/run.ts';
+import { LINE_BREAK } from '#cli/config/text.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { type Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Files } from '#cli/types/system/files.ts';
+import { TOOL_ENVIRONMENT } from '#cli/config/tools/run.ts';
 import { listMisePins } from '#cli/configurations/tools.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
@@ -12,7 +13,7 @@ import type { ExecutableSearch } from '#cli/types/tools/inspection.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
-import { buildVenvBinPath, convertToPosixPath, listExecutableNames } from '#cli/system/paths.ts';
+import { executableLayout, convertToPosixPath, listExecutableNames } from '#cli/system/paths.ts';
 
 import {
     MISE_TOOL,
@@ -23,17 +24,31 @@ import {
 } from '#cli/config/tools/locate.ts';
 
 function listSearchFolders(root: string, options: ExecutableSearch): string[] {
-    const { searchFolders, toolFolderKind } = options;
+    const { folders: searchFolders, toolFolderKind } = options;
     if (toolFolderKind === 'npm') return [join(root, GSPOT_FOLDER, NPM_BIN_FOLDER)];
-    if (toolFolderKind === 'python') return [buildVenvBinPath(join(root, GSPOT_PATHS.pythonEnvironment))];
+    if (toolFolderKind === 'python')
+        return [join(join(root, GSPOT_PATHS.pythonEnvironment), executableLayout.environmentFolder)];
     return [...new Set(searchFolders)].flatMap((folder) => [
         join(folder, NPM_BIN_FOLDER),
-        buildVenvBinPath(join(folder, PYTHON_ENVIRONMENT_FOLDER)),
+        join(
+            join(
+                join(
+                    join(
+                        join(join(folder, PYTHON_ENVIRONMENT_FOLDER), PYTHON_ENVIRONMENT_FOLDER),
+                        PYTHON_ENVIRONMENT_FOLDER,
+                    ),
+                    PYTHON_ENVIRONMENT_FOLDER,
+                ),
+                PYTHON_ENVIRONMENT_FOLDER,
+            ),
+            executableLayout.environmentFolder,
+        ),
     ]);
 }
 
 function isExecutablePresent(files: Files, root: string, path: string): boolean {
-    if (!isInGspotFolder(root, path)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
+    if (!convertToPosixPath(relative(root, path)).startsWith(`${GSPOT_FOLDER}/`))
+        return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
         files.readCanonicalPath(convertToPosixPath(relative(root, path)));
         return true;
@@ -43,14 +58,14 @@ function isExecutablePresent(files: Files, root: string, path: string): boolean 
     }
 }
 
-function listMiseExecutablePaths(cwd: string, name: string, timeoutSeconds: number): string[] {
+function listSystemExecutablePaths(cwd: string, name: string, timeoutSeconds: number): string[] {
     const paths = which.sync(name, { nothrow: true, all: true }) ?? [];
     const mise = which.sync(MISE_TOOL, { nothrow: true });
     return paths.flatMap((path) => {
         if (mise === null || basename(dirname(path)) !== MISE_LAUNCHER_FOLDER) return [path];
         const result = spawnProcessBlocking([mise, MISE_WHICH, name], {
             cwd: cwd,
-            env: TOOL_ENV,
+            env: TOOL_ENVIRONMENT,
             timeoutSeconds,
         });
         const selected = result.stdout.trim();
@@ -82,7 +97,6 @@ Ask mise for the program folders of the tools that the mise tool project pins.
 @param root the folder with the managed mise settings.
 @param toolNames the mise tools to find.
 @param timeoutSeconds the limit for the mise query.
-@returns the executable folders that mise installed.
 */
 export function readMiseBinPaths(root: string, toolNames: string[], timeoutSeconds: number): string[] {
     if (
@@ -95,9 +109,9 @@ export function readMiseBinPaths(root: string, toolNames: string[], timeoutSecon
     const result = spawnProcessBlocking(command, {
         cwd: join(root, GSPOT_FOLDER),
         timeoutSeconds,
-        env: TOOL_ENV,
+        env: TOOL_ENVIRONMENT,
     });
-    return result.code === 0 ? result.stdout.trim().split(/\r?\n/u).filter(Boolean) : [];
+    return result.code === 0 ? result.stdout.trim().split(LINE_BREAK).filter(Boolean) : [];
 }
 
 /**
@@ -120,28 +134,15 @@ export function listExecutablePaths(
     const programs = (options.miseBinPaths ?? [])
         .flatMap((folder) => listExecutableNames(name).map((file) => join(folder, file)))
         .filter((path) => statSync(path, { throwIfNoEntry: false }) !== undefined);
-    return [...programs, ...found, ...listMiseExecutablePaths(root, name, options.timeoutSeconds)];
+    return [...programs, ...found, ...listSystemExecutablePaths(root, name, options.timeoutSeconds)];
 }
 
 /**
 Ask mise for the program folders of the mise tools that the selected configurations pin.
 
-@param session the configurations of the run, the working tree with the installed tools, and the time limit.
-@returns the executable folders that mise installed.
+@param session the run whose mise tools to find.
 */
 export function readToolBinPaths(session: Pick<Session, 'scopes' | 'toolsRoot' | 'timeoutSeconds'>): string[] {
     const pins = listMisePins(listSelectedConfigurations(session.scopes));
     return readMiseBinPaths(session.toolsRoot, [...new Set(pins.map((pin) => pin.name))], session.timeoutSeconds);
-}
-
-/**
-Check whether a path sits inside the gspot folder, where the npm and Python tool projects live.
-
-@param root the repository root.
-@param path the absolute path.
-@returns whether the path sits inside the gspot folder.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
-export function isInGspotFolder(root: string, path: string): boolean {
-    return convertToPosixPath(relative(root, path)).startsWith(`${GSPOT_FOLDER}/`);
 }

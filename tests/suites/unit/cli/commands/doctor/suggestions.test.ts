@@ -3,13 +3,20 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
+import { NEEDS_GIT_MESSAGE } from '#tests/config/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { type DoctorReport } from '#cli/types/commands/doctor.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/authored-config-files.ts';
-import { REMOVE_SUGGESTIONS, REMOVED_CONFIGURATION_SUGGESTIONS } from '#tests/config/commands/doctor/suggestions.ts';
+
+import {
+    REMOVE_SUGGESTIONS,
+    CI_PREFERENCE_CASES,
+    REMOVED_CONFIGURATION_CASES,
+} from '#tests/config/commands/doctor/suggestions.ts';
 
 test('doctor names Git setup for commitlint and apply --dry-run refuses outside Git', async () => {
     await using sandbox = await testdir({
@@ -21,7 +28,7 @@ test('doctor names Git setup for commitlint and apply --dry-run refuses outside 
     expect(preview.code).toBe(2);
     expect(JSON.parse(preview.stdout)).toStrictEqual({
         error: 'git',
-        message: 'gspot needs a Git repository. Run git init, then gspot init.',
+        message: NEEDS_GIT_MESSAGE,
     });
     const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
     expect((JSON.parse(doctor.stdout) as DoctorReport).suggestions.unowned).toStrictEqual([
@@ -29,6 +36,7 @@ test('doctor names Git setup for commitlint and apply --dry-run refuses outside 
     ]);
     expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(COMMITLINT_PACKAGE);
 });
+
 test('doctor leaves undetected CSS out of suggestions for a selected Next.js scope', async () => {
     await using sandbox = await testdir({
         'app/.keep': '',
@@ -42,24 +50,28 @@ test('doctor leaves undetected CSS out of suggestions for a selected Next.js sco
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect((JSON.parse(result.stdout) as DoctorReport).suggestions.suggested).toStrictEqual([]);
 });
-test('doctor suggests gspot set level all for a commitlint field in package.json at level recommended', async () => {
+
+test('doctor suggests gspot set level all for a commitlint field in package.json at level basic', async () => {
     await using sandbox = await createGitSandbox({
         'package.json': COMMITLINT_PACKAGE,
-        'gspot.toml': buildSandboxSettings([], { level: 'recommended' }),
+        'gspot.toml': buildSandboxSettings([], { level: 'basic' }),
     });
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect((JSON.parse(result.stdout) as DoctorReport).suggestions.unowned).toStrictEqual([
         {
             path: 'package.json',
-            note: 'no applicable commitlint check at level recommended',
+            note: 'no applicable commitlint check at level basic',
             command: 'gspot set level all',
         },
     ]);
 });
+
 test('doctor recognizes managed Stylelint fields in every selected scope', async () => {
     await using sandbox = await createGitSandbox({
         ...STYLELINT_FILES,
+        'app/child/style.css': '.child { color: red; }\n',
+        'other/style.css': '.other { color: blue; }\n',
         'gspot.toml': buildSandboxSettings(['css'], {
             level: 'all',
             scopes: [{ path: 'app' }, { path: 'app/child' }, { path: 'other' }],
@@ -76,6 +88,7 @@ test('doctor recognizes managed Stylelint fields in every selected scope', async
         expect(document.stylelint).toStrictEqual({ extends: './.stylelintrc.yml' });
     }
 });
+
 test('doctor leaves the tool projects in .gspot out of detection, detects python from your pyproject.toml, and lists a submodule', async () => {
     await using sandbox = await createGitSandbox({});
     const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
@@ -104,6 +117,7 @@ test('doctor leaves the tool projects in .gspot out of detection, detects python
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(JSON.parse(result.stdout)).toMatchObject({ submodules: [path] });
 });
+
 test('doctor detects installed test frameworks and suggests no other runner', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['nestjs']);
@@ -131,6 +145,7 @@ test('doctor detects installed test frameworks and suggests no other runner', as
     ]);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
+
 test('doctor suggests a remove command per scope after detection evidence goes, and changes nothing', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash'], {
@@ -152,11 +167,11 @@ test('doctor suggests a remove command per scope after detection evidence goes, 
     const missing = await runGspot(sandbox.path, ['doctor', '--json']);
     const missingText = await runGspot(sandbox.path, ['doctor']);
     expect((JSON.parse(missing.stdout) as DoctorReport).suggestions.undetected).toStrictEqual([...REMOVE_SUGGESTIONS]);
-    expect(missingText.stdout.split('\n\n').find((block) => block.startsWith('selected, but no matching'))).toBe(
+    expect(missingText.stdout.split('\n\n').find((block) => block.startsWith('selected, but no'))).toBe(
         [
-            'selected, but no matching files found',
-            '  bash                               no detection evidence in root; remove it if you no longer need it    gspot remove bash --reason "<why>"',
-            '  python                             no detection evidence in api app; remove it if you no longer need it gspot remove python --scope \'api app\' --reason "<why>"',
+            'selected, but no files yet',
+            '  bash                               no files in root yet; remove it if none are planned    gspot remove bash --reason "<why>"',
+            '  python                             no files in api app yet; remove it if none are planned gspot remove python --scope \'api app\' --reason "<why>"',
         ].join('\n'),
     );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
@@ -174,7 +189,7 @@ test('doctor suggests a remove command per scope after detection evidence goes, 
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
 });
 
-test.each([...REMOVED_CONFIGURATION_SUGGESTIONS])(
+test.each([...REMOVED_CONFIGURATION_CASES])(
     'doctor skips removed configurations and keeps detection evidence outside their scopes: $name',
     async ({ options, files, expected }) => {
         const settings = buildSandboxSettings([], { rules: true, ...options });
@@ -186,5 +201,20 @@ test.each([...REMOVED_CONFIGURATION_SUGGESTIONS])(
         ]);
         expect(suggestions.detected.map(({ configuration }) => configuration)).toContain('python');
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+    },
+);
+
+test.each([...CI_PREFERENCE_CASES])(
+    'with CI off, doctor names the commands for the CI of $name',
+    async ({ tracked, untracked, remote, ci }) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings([]),
+            ...Object.fromEntries(tracked.map((file) => [file, '{}\n'])),
+        });
+        if (tracked.length > 0) runGitStep(sandbox.path, ['add', '--', ...tracked]);
+        if (untracked !== '') await createFileTree(sandbox.path, { [untracked]: '{}\n' });
+        runGitStep(sandbox.path, ['config', 'remote.origin.url', remote]);
+        const result = await runGspot(sandbox.path, ['doctor', '--json']);
+        expect((JSON.parse(result.stdout) as DoctorReport).ci).toBe(ci);
     },
 );

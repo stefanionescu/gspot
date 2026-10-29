@@ -24,3 +24,5 @@ export const FROZEN_MIGRATION_CASES = [
     { through: 'none', frozen: [] },
     { through: 'all', frozen: FROZEN_MIGRATION_PATHS },
 ] as const;
+
+export const SELECT_SQL = 'SELECT 2';

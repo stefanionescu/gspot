@@ -3,9 +3,6 @@
     "private": true,
     "description": "Test suites for gspot.",
     "type": "module",
-    "dependencies": {
-        "@gspothq/eslint-plugin": "workspace:*"
-    },
     "devDependencies": {
         "@clack/prompts": "1.8.0",
         "@commitlint/cli": "21.2.3",
@@ -14,6 +11,7 @@
         "@eslint-react/eslint-plugin": "5.28.0",
         "@eslint/js": "10.0.1",
         "@gspothq/cli": "workspace:*",
+        "@gspothq/eslint-plugin": "workspace:*",
         "@nestjs/common": "11.2.3",
         "@nestjs/core": "11.2.3",
         "@next/eslint-plugin-next": "16.4.2",
@@ -36,7 +34,7 @@
         "eslint-import-resolver-typescript": "4.4.5",
         "eslint-plugin-astro": "3.2.1",
         "eslint-plugin-barrel-files": "3.0.1",
-        "eslint-plugin-boundaries": "7.2.0",
+        "eslint-plugin-boundaries": "7.2.1",
         "eslint-plugin-drizzle": "0.2.3",
         "eslint-plugin-expo": "1.2.1",
         "eslint-plugin-i18next": "6.1.5",

@@ -5,18 +5,19 @@ import { readFile, writeFile } from 'node:fs/promises';
 import type { GspotProject } from '#tests/types/packages.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { GUIDE_READ_MARKDOWN } from '#tests/config/documents.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { PROSE_CHECK, SWIFT_CHECK } from '#tests/config/e2e/languages.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
-import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 
 async function prepareLanguages(installation: GspotProject): Promise<void> {
     const { online } = installation;
     await createFileTree(installation.root, {
         'entry.py': 'answer = "example"\n',
         'script.sh': '#!/usr/bin/env bash\necho example\n',
-        'guide.md': '# Guide\n\nRead the guide.\n',
+        'guide.md': GUIDE_READ_MARKDOWN,
     });
     await initSandbox(online, { configurations: ['bash', 'python', 'swift'] });
     const vocabulary = await online.run(installation.root, [
@@ -32,12 +33,12 @@ async function prepareLanguages(installation: GspotProject): Promise<void> {
 test('gspot installed from npm runs Vale and the built-in Swift naming check, reports their findings, and passes after the fixes', async () => {
     await using installation = await createGspotProject();
     await prepareLanguages(installation);
-    expect(await runCheckSample(installation.offline, PROSE_CHECK)).toStrictEqual(buildExpectedSummary(PROSE_CHECK));
+    await assertCheckSample(installation.offline, PROSE_CHECK);
     const level = await installation.online.run(installation.root, ['set', 'level', 'all']);
     expect(level.code, level.stdout + level.stderr).toBe(0);
-    expect(await runCheckSample(installation.offline, SWIFT_CHECK)).toStrictEqual(buildExpectedSummary(SWIFT_CHECK));
+    await assertCheckSample(installation.offline, SWIFT_CHECK);
     const vocabulary = await readFile(
-        join(installation.root, findManifestTarget('prose', 'styles/config/vocabularies/words/accept.txt')),
+        join(installation.root, getManifestTarget('prose', 'styles/config/vocabularies/words/accept.txt')),
         'utf8',
     );
     const acceptedWords = vocabulary.trim().split('\n');

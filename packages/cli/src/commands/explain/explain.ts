@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
-import { openSession } from '#cli/session.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { findText } from '#cli/system/files/reads.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
 import type { Command } from '@commander-js/extra-typings';
@@ -21,8 +21,14 @@ import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { listCheckIds, readConfigurations } from '#cli/configurations/manifests.ts';
 
-const eslintRuleText = readFileSync(buildAssetPath(ESLINT_RULE_NAMES_FILE), 'utf8');
-const eslintRuleNames = new Set(nameListSchema.parse(JSON.parse(eslintRuleText)).names);
+let eslintRuleNames: Set<string> | undefined;
+
+function hasEslintRule(name: string): boolean {
+    if (eslintRuleNames !== undefined) return eslintRuleNames.has(name);
+    const text = readFileSync(buildAssetPath(ESLINT_RULE_NAMES_FILE), 'utf8');
+    eslintRuleNames = new Set(nameListSchema.parse(JSON.parse(text)).names);
+    return eslintRuleNames.has(name);
+}
 
 function formatUnknownSubject(session: Session | undefined, subject: string): string {
     const subjects = [
@@ -47,14 +53,14 @@ function explainSlashed(
     const slash = subject.indexOf('/');
     const tool = subject.slice(0, slash);
     const rule = subject.slice(slash + 1);
-    if (tool === ESLINT_MANIFEST_TOOL && !rule.includes('/') && !eslintRuleNames.has(rule)) return undefined;
+    if (tool === ESLINT_MANIFEST_TOOL && !rule.includes('/') && !hasEslintRule(rule)) return undefined;
     return explainLintRule(tool, rule);
 }
 
 function explainNamed(session: Session | undefined, subject: string): Explanation | undefined {
     const named = explainSetting(session, subject) ?? explainConfiguration(session, subject);
     if (named !== undefined) return named;
-    return eslintRuleNames.has(subject) ? explainLintRule(ESLINT_MANIFEST_TOOL, subject) : undefined;
+    return hasEslintRule(subject) ? explainLintRule(ESLINT_MANIFEST_TOOL, subject) : undefined;
 }
 
 async function runExplainCommand(cwd: string, subject: string): Promise<CommandResult> {
@@ -62,7 +68,7 @@ async function runExplainCommand(cwd: string, subject: string): Promise<CommandR
 
     const session = findText(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
 
-    const result = explain(session, subject, cwd);
+    const result = explainSubject(session, subject, cwd);
     return {
         text: result.text,
         json: { ...result.facts, kind: result.kind, subject: result.subject },
@@ -70,7 +76,7 @@ async function runExplainCommand(cwd: string, subject: string): Promise<CommandR
     };
 }
 
-function explain(session: Session | undefined, subject: string, cwd: string): Explanation {
+function explainSubject(session: Session | undefined, subject: string, cwd: string): Explanation {
     const file = explainPath(session, subject, cwd);
     if (file !== undefined && (subject.startsWith('./') || subject.startsWith('../'))) return file;
     let explanation: Explanation | undefined;

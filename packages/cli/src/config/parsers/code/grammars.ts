@@ -14,7 +14,7 @@ export const GRAMMAR_EXTENSIONS: Readonly<Record<string, readonly string[]>> = {
     tsx: ['.tsx'],
     python: ['.py', '.pyi'],
     swift: ['.swift'],
-    bash: ['.sh', '.bash', '.zsh', '.bats'],
+    bash: ['.sh', '.bash', '.zsh', '.ksh', '.bats'],
 };
 
 export const GRAMMAR_FILE_EXTENSION = '.wasm';

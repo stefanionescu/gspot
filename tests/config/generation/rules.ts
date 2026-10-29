@@ -10,7 +10,6 @@ export const RULE_INDEX_PATHS = [
     '.gspot/configurations/general/prose/rules/WRITING.md',
     '.gspot/configurations/general/engineering/rules/TALKING.md',
     '.gspot/configurations/general/commits/rules/GIT.md',
-    '.gspot/configurations/general/data-files/rules/YAML.md',
     '.gspot/configurations/general/dependencies/rules/DEPENDENCIES.md',
     '.gspot/configurations/general/docs/rules/DOCS.md',
     '.gspot/configurations/general/engineering/rules/CLI.md',
@@ -25,3 +24,7 @@ export const RULE_INDEX_PATHS = [
     '.gspot/configurations/general/secrets/rules/SECRETS.md',
     '.gspot/configurations/general/security/rules/SECURITY.md',
 ];
+
+export const COMMANDS_HEADING = '## Commands';
+
+export const COMMIT_CHECK_LINE = 'Before you commit, run `mise exec -- gspot check --staged`.';

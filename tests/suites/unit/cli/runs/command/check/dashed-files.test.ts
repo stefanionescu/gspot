@@ -1,11 +1,12 @@
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { FILE_LINE_PATTERN } from '#tests/config/runs/command.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each(['{file}', '{files}'])(
     '%s keeps filenames beginning with a dash out of tool options',
@@ -31,7 +32,7 @@ test.each(['{file}', '{files}'])(
                             stage: 'commit',
                             output: {
                                 format: 'regex',
-                                pattern: String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$`,
+                                pattern: FILE_LINE_PATTERN,
                             },
                         },
                     ],

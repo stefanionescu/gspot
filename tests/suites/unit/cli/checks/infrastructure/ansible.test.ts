@@ -7,7 +7,7 @@ import { COMMAND_PLAYBOOK } from '#tests/config/ansible.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { findBuiltInCheck, planSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
+import { getBuiltInCheck, planSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 
 test('each Ansible project lints its own files and not those of a nested project', async () => {
     await using sandbox = await testdir({
@@ -25,19 +25,16 @@ test('each Ansible project lints its own files and not those of a nested project
     });
     const input = planSandboxCheck(session, 'ansible/ansible-lint');
     const run = resources.use(
-        spyOn(processes, 'spawnProcess').mockImplementation((command) =>
+        spyOn(processes, 'spawnProcess').mockImplementation(() =>
             Promise.resolve(
                 buildProcessResult({
                     code: 2,
-                    stdout: command
-                        .filter((argument) => argument.endsWith('site.yml'))
-                        .map((file) => `${file}:1: command-instead-of-module: Use an Ansible module.`)
-                        .join('\n'),
+                    stdout: 'site.yml:1: command-instead-of-module: Use an Ansible module.',
                 }),
             ),
         ),
     );
-    const findings = await findBuiltInCheck('ansible/ansible-lint')(session, input);
+    const findings = await getBuiltInCheck('ansible/ansible-lint')(session, input);
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'infra/site.yml', rule: 'command-instead-of-module' },
         { file: 'infra/edge/site.yml', rule: 'command-instead-of-module' },
@@ -48,7 +45,7 @@ test('each Ansible project lints its own files and not those of a nested project
             files: command.filter((argument) => argument.endsWith('site.yml')),
         })),
     ).toStrictEqual([
-        { cwd: join(sandbox.path, 'infra'), files: ['site.yml'] },
-        { cwd: join(sandbox.path, 'infra', 'edge'), files: ['site.yml'] },
+        { cwd: join(sandbox.path, 'infra'), files: [] },
+        { cwd: join(sandbox.path, 'infra', 'edge'), files: [] },
     ]);
 });

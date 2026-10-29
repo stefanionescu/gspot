@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -183,7 +183,7 @@ test('React component variables may take PascalCase, and destructured names keep
     ]);
 });
 
-test('domain names customer, news and supported pass while whole banned terms are reported', async () => {
+test('domain names customer, news and supported pass, and names that hold a banned word are reported', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { level: 'all' }),
         'orders.js':

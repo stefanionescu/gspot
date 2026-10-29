@@ -11,7 +11,7 @@ export type ProcessCapture = Pick<
     'stdout' | 'stderr' | 'exitCode' | 'kill' | 'exited'
 >;
 
-export type ChildCapture = AsyncDisposable & { output: Promise<string>; errors: Promise<string> };
+export type ChildCapture = AsyncDisposable & { stdout: Promise<string>; stderr: Promise<string> };
 
 export type ProcessBackend = {
     name: string;

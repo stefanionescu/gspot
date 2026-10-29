@@ -61,12 +61,14 @@ check again. An accepted advisory needs an [ignore with a reason](/use/ignore/).
 
 ## Lockfiles and package managers
 
-These checks read the project files at push, without the network:
+These checks read the project files, without the network:
 
-| Check                              | Reports                                                                                        |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `dependencies/stale-lockfile`      | A `package.json` whose dependencies differ from what its npm, pnpm, or Bun lockfile records.   |
-| `dependencies/package-manager-pin` | A `packageManager` field that names another version than the mise pin of that package manager. |
+| Check                              | Stage             | Reports                                                                                                                             |
+| ---------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `dependencies/stale-lockfile`      | push              | A `package.json` whose dependencies differ from what its npm, pnpm, or Bun lockfile records.                                        |
+| `dependencies/package-manager-pin` | push              | A `packageManager` field that names another version than the mise pin of that package manager.                                      |
+| `dependencies/lockfiles`           | commit            | Lockfile downloads that do not use HTTPS or an allowed registry host, and a scope that holds the lockfiles of two package managers. |
+| `dependencies/syncpack`            | push, level `all` | A dependency that two workspace packages resolve to different versions.                                                             |
 
 For a stale lockfile, run the install of your package manager, such as `bun install`, and commit the lockfile.
 

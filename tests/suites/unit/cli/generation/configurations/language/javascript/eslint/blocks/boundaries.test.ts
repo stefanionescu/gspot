@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { APP_SCOPE_SETTINGS } from '#tests/config/toml.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { type EslintConfiguration } from '#tests/types/tools.ts';
@@ -118,10 +119,7 @@ test.each([...LEVELS])(
         await using sandbox = await testdir();
         const settings = buildSandboxSettings(['typescript'], {
             level,
-            tables: `[[scope]]
-path = "app"
-configurations = ["typescript"]
-`,
+            tables: APP_SCOPE_SETTINGS,
         });
         await createFileTree(sandbox.path, {
             'gspot.toml': settings,

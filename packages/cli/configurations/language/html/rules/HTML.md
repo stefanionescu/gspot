@@ -18,6 +18,7 @@ Read this rule when you change HTML or an HTML template.
 
 - Use `defer` or `type="module"` for scripts that do not need to block parsing.
 - Load scripts from files. Write no inline `<script>` code, `on*` event handler attributes, or `javascript:` URLs.
+  Structured data in `<script type="application/ld+json">` stays inline.
 
 ## Templates and copy
 

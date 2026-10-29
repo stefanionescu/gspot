@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GITHUB_WORKFLOW } from '#cli/config/generation/ci.ts';
@@ -8,9 +9,9 @@ import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
-import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
-import { CI_SOURCE_WORKFLOW, CI_INJECTION_SETTINGS } from '#tests/config/github-actions.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { CALLER_WORKFLOW, CI_SOURCE_WORKFLOW, CI_INJECTION_SETTINGS } from '#tests/config/github-actions.ts';
 
 import {
     COMPOSITE_ACTION,
@@ -78,11 +79,7 @@ test('the generated GitHub workflow passes actionlint', async () => {
 });
 
 test('actionlint reports a missing required input of a same-repository reusable workflow and keeps the authored files', async () => {
-    const workflow = `on: workflow_dispatch
-jobs:
-  caller:
-    uses: $/.github/workflows/called.yml
-`;
+    const workflow = CALLER_WORKFLOW;
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['github-actions']),
         '.github/workflows/caller.yml': workflow,

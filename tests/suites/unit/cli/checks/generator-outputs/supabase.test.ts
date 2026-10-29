@@ -1,11 +1,11 @@
 import executables from 'which';
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -15,24 +15,24 @@ import { DATABASE_SCHEMAS, SUPABASE_TYPES_OUTPUT } from '#tests/config/checks/ge
 
 async function prepareSupabaseCheck(
     root: string,
-    scope: string,
+    scopePath: string,
     result: Awaited<ReturnType<typeof processes.spawnProcess>>,
     schemas?: readonly string[],
 ) {
     using resources = new DisposableStack();
 
-    const prefix = scope === '' ? '' : `${scope}/`;
+    const prefix = scopePath === '' ? '' : `${scopePath}/`;
     const schemasLine = schemas === undefined ? '' : `schemas = ${JSON.stringify(schemas)}\n`;
     await createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['supabase'], {
-            scopes: scope === '' ? [] : [{ path: scope, configurations: ['supabase'] }],
-            tables: `[${scope === '' ? '' : 'scope.'}supabase]\ntypes_file = "${prefix}database.ts"\n${schemasLine}`,
+            scopes: scopePath === '' ? [] : [{ path: scopePath, configurations: ['supabase'] }],
+            tables: `[${scopePath === '' ? '' : 'scope.'}supabase]\ntypes_file = "${prefix}database.ts"\n${schemasLine}`,
         }),
         [`${prefix}supabase/config.toml`]: 'project_id = "types-sample"\n',
     });
     const runStaleTypesCheck = async () => {
         const result = await runChecks(await openSession(root), buildRunOptions({ only: ['supabase/stale-types'] }));
-        return result.report.checks.find((check) => check.scope === scope)!;
+        return result.report.checks.find((check) => check.scope === scopePath)!;
     };
     const bin = await writeProgramCommand(root, 'bin/supabase', 'fakes/tool');
     await writeProgramCommand(root, 'bin/docker', 'fakes/tool');

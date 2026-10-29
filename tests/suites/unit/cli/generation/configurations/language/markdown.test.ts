@@ -3,12 +3,12 @@ import { test, expect } from 'bun:test';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { generateFile, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { generateFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
-test('Markdown refuses options for a rule disabled at the selected level', async () => {
+test('gspot refuses markdownlint options for a rule it runs at no level', async () => {
     const generated = generateFile(
         buildSandboxSettings(['markdown'], { tables: '[tools.markdownlint.rules.MD013]\nline_length = 100\n' }),
-        findManifestTarget('markdown', 'markdownlint.jsonc'),
+        getManifestTarget('markdown', 'markdownlint.jsonc'),
         { 'source.md': '# Sample\n' },
     );
     const generatedError = await captureRejection(generated);
@@ -23,7 +23,7 @@ test.each([...LEVELS])('%s turns on MD041 and MD025 only at level all and keeps 
 names = ["Widget"]
 `,
         }),
-        findManifestTarget('markdown', 'markdownlint.jsonc'),
+        getManifestTarget('markdown', 'markdownlint.jsonc'),
         { 'source.md': '# Widget\n' },
     );
     const config = parse(content) as Record<string, unknown>;

@@ -4,6 +4,7 @@ import { findMissingBuild } from '#cli/configurations/tools.ts';
 import type { Tool, Check } from '#cli/types/configurations.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
+import { NO_HISTORY_MESSAGE } from '#cli/config/planning/skips.ts';
 import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import type { Host, Skip, PlannedCheck, PlannedScope, SettingsSkip } from '#cli/types/planning.ts';
@@ -29,10 +30,10 @@ function findTagSkip(tags: string[] | undefined, scopePath: string, files: Repos
     return marked ? undefined : { cause: 'condition', note: `Needs files marked ${tags.join(' or ')} in this scope.` };
 }
 
-function findConditionSkip(check: PlannedCheck, repository: Repository): Skip | undefined {
-    const { configuration, git, dependencies, tags } = { ...check.configuration?.when, ...check.check.when };
-    const scope = check.scope.path;
-    if (configuration !== undefined && !check.scope.settings.configurations.includes(configuration))
+function findConditionSkip(planned: PlannedCheck, repository: Repository): Skip | undefined {
+    const { configuration, git, dependencies, tags } = { ...planned.configuration?.when, ...planned.check.when };
+    const scope = planned.scope.path;
+    if (configuration !== undefined && !planned.scope.settings.configurations.includes(configuration))
         return {
             cause: 'condition',
             note: `Needs the ${configuration} configuration, which this scope does not select.`,
@@ -43,7 +44,7 @@ function findConditionSkip(check: PlannedCheck, repository: Repository): Skip | 
     if (skip !== undefined || git !== true || repository.hasGit) return skip;
     return {
         cause: 'condition',
-        note: 'This folder is not a Git repository, so the check has no history to read.',
+        note: NO_HISTORY_MESSAGE,
     };
 }
 
@@ -68,7 +69,6 @@ function findEmptySetting(scope: Scope, check: Check): string | undefined {
 Check whether a setting holds no value: unset, false, an empty string, or a table of empty lists.
 
 @param value the resolved setting.
-@returns whether the setting holds no value.
 */
 export function isSettingEmpty(value: unknown): boolean {
     if (typeof value === 'object' && value !== null) return Object.values(value).flat().length === 0;
@@ -82,7 +82,7 @@ Skip checks for other systems, or for tools with no build for this system.
 @param check the check to read.
 @param tool the tool and its pin.
 @param host the system and architecture.
-@returns the system skip, or undefined when this system can run the check.
+@returns undefined when this system can run the check.
 */
 export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host): Skip | undefined {
     if (check.operating_systems && !(check.operating_systems as readonly string[]).includes(host.platform))
@@ -117,11 +117,10 @@ Find the reason that the settings turn a check off.
 @param settings the validated gspot.toml.
 @param scope the settings of the project folder.
 @param check the check and its project prerequisites.
-@returns the skip reason, or undefined for an active check.
+@returns undefined for an active check.
 */
 export function findSettingsSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
-    if (settings.level !== 'all' && check.level !== 'recommended')
-        return { cause: 'level', note: 'off at level recommended' };
+    if (settings.level !== 'all' && check.level !== 'basic') return { cause: 'level', note: 'off at level basic' };
     const ignored = findIgnoreSkip(scope, check);
     if (ignored !== undefined) return ignored;
     const ruleFiles = findConfigFileSkip(settings, scope, check);
@@ -135,18 +134,13 @@ Find the first reason that a planned check cannot run.
 
 @param check the plan to test.
 @param planned what planning reads.
-@param planned.session the repository.
-@param planned.options the parsed flags.
-@param planned.host the system name and architecture.
-
-@returns the first skip, or undefined when the check can run.
+@returns undefined when the check can run.
 */
 export function findFirstSkip(check: PlannedCheck, planned: PlannedScope): Skip | undefined {
-    const { session, options, host } = planned;
+    const { session, host } = planned;
     const settings = session.settings;
     const selected = findSettingsSkip(settings, check.scope, check.check);
     if (selected !== undefined) return selected;
-    if (options.forConfiguration === true) return undefined;
     const condition = findConditionSkip(check, session.repository);
     if (condition !== undefined) return condition;
     return findSystemSkip(check.check, check.tool, host);

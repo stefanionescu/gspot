@@ -1,4 +1,8 @@
 export type ErrorCode =
+    | 'parse'
+    | 'runtime'
+    | 'unexpected'
+    | 'canceled'
     | 'filesystem'
     | 'settings'
     | 'configuration'

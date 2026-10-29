@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'node:url';
 import starlight from '@astrojs/starlight';
-import { defineConfig } from 'astro/config';
 import { writeAgentFiles } from './src/agents.ts';
 import starlightLlmsTxt from 'starlight-llms-txt';
 import { pruneUnusedStyles } from './src/styles.ts';
@@ -9,6 +8,7 @@ import { CLI_REFERENCE } from './src/reference/cli.ts';
 import { SCHEMA_FILE } from '#cli/config/files/names.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
 import { LLMS_PAGES, AGENT_STEPS } from './src/config/setup.ts';
+import { defineConfig, passthroughImageService } from 'astro/config';
 
 import {
     FAVICON,
@@ -26,6 +26,7 @@ import {
 
 export default defineConfig({
     site: SITE_URL,
+    image: { service: passthroughImageService() },
     prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
     vite: {
         resolve: {
@@ -59,7 +60,7 @@ export default defineConfig({
         },
         starlight({
             title: 'gspot',
-            routeMiddleware: './src/route-data.ts',
+            routeMiddleware: './src/route-middleware.ts',
             favicon: FAVICON,
             plugins: [
                 starlightLlmsTxt({

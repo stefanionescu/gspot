@@ -6,4 +6,4 @@ export const SWIFTPM_TARGET_FOLDERS: Readonly<Record<string, readonly string[]>>
     plugin: ['Plugins'],
 };
 
-export const SWIFT_MODULE_NAME_CHARACTERS = /\W/gu;
+export const NON_WORD_CHARACTERS = /\W/gu;

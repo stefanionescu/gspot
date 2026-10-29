@@ -1,35 +1,39 @@
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
+import { PYVENV_HOME } from '#tests/config/python.ts';
 import { type RuffConfigFile } from '#tests/types/tools.ts';
-import { generateFile, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { generateFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 test('python.import_folders reach the basedpyright search paths', async () => {
     const config = JSON.parse(
         await generateFile(
             buildSandboxSettings(['python'], { tables: '[python]\nimport_folders = ["vendor/host"]\n' }),
-            findManifestTarget('python', 'basedpyright.json'),
+            getManifestTarget('python', 'basedpyright.json'),
             { 'main.py': 'VALUE = 1\n' },
         ),
     ) as { extraPaths: string[] };
     expect(config.extraPaths).toStrictEqual(['../../../..', '../../../../vendor/host']);
 });
-test.each(['recommended', 'all'] as const)(
+
+test.each(['basic', 'all'] as const)(
     'basedpyright reports import cycles and implicit overrides at level all only (%s)',
     async (level) => {
         const config = JSON.parse(
             await generateFile(
                 buildSandboxSettings(['python'], { level }),
-                findManifestTarget('python', 'basedpyright.json'),
+                getManifestTarget('python', 'basedpyright.json'),
                 { 'main.py': 'VALUE = 1\n' },
             ),
         ) as Record<string, unknown>;
         const expected = level === 'all' ? 'error' : 'none';
+        expect(config['typeCheckingMode']).toBe(level === 'basic' ? 'recommended' : 'all');
         expect([config['reportImportCycles'], config['reportImplicitOverride']]).toStrictEqual([expected, expected]);
     },
 );
+
 test('basedpyright reads the uv environment of a project with a tracked uv.lock, whether .venv exists yet or not', async () => {
-    const basedpyrightPath = findManifestTarget('python', 'basedpyright.json');
+    const basedpyrightPath = getManifestTarget('python', 'basedpyright.json');
     const locked = JSON.parse(
         await generateFile(buildSandboxSettings(['python']), basedpyrightPath, {
             'example.py': 'value = 1\n',
@@ -41,28 +45,22 @@ test('basedpyright reads the uv environment of a project with a tracked uv.lock,
     const unlocked = JSON.parse(
         await generateFile(buildSandboxSettings(['python']), basedpyrightPath, {
             'example.py': 'value = 1\n',
-            '.venv/pyvenv.cfg': 'home = /usr/bin\n',
+            '.venv/pyvenv.cfg': PYVENV_HOME,
         }),
     ) as { venv?: string };
     expect(unlocked.venv).toBeUndefined();
 });
 
-test('the removed Python import path setting is refused', () => {
-    expect(validateSettingsText('configurations = ["python"]\n[python]\nextra_paths = []\n')).toStrictEqual([
-        'gspot.toml:3: python.extra_paths: `extra_paths` is not a gspot.toml setting. See generativespotting.com/reference/gspot-toml/ for every key.',
-    ]);
-});
-
 test('Ruff selects the pytest and FastAPI families only when selected, and adds no per-file ignores', async () => {
     const defaults = parse(
-        await generateFile(buildSandboxSettings(['python']), findManifestTarget('python', 'ruff.toml'), {
+        await generateFile(buildSandboxSettings(['python']), getManifestTarget('python', 'ruff.toml'), {
             'example.py': 'value = 1\n',
         }),
     ) as RuffConfigFile;
     expect(defaults.lint.select.filter((code) => /^(?:AIR|DJ|FAST|NPY|PT)/u.test(code))).toStrictEqual([]);
     expect(defaults.lint['per-file-ignores']).toBeUndefined();
     const tested = parse(
-        await generateFile(buildSandboxSettings(['python', 'pytest']), findManifestTarget('python', 'ruff.toml'), {
+        await generateFile(buildSandboxSettings(['python', 'pytest']), getManifestTarget('python', 'ruff.toml'), {
             'example.py': 'value = 1\n',
         }),
     ) as RuffConfigFile;
@@ -88,7 +86,7 @@ test('Ruff selects the pytest and FastAPI families only when selected, and adds 
     ]);
     expect(tested.lint['per-file-ignores']).toBeUndefined();
     const served = parse(
-        await generateFile(buildSandboxSettings(['python', 'fastapi']), findManifestTarget('python', 'ruff.toml'), {
+        await generateFile(buildSandboxSettings(['python', 'fastapi']), getManifestTarget('python', 'ruff.toml'), {
             'example.py': 'value = 1\n',
         }),
     ) as RuffConfigFile;
@@ -102,7 +100,7 @@ test('ignores of one test path share one Ruff per-file-ignores list', async () =
             buildSandboxSettings(['python', 'pytest'], {
                 tables: '[[ignore]]\ncheck = "python/ruff"\nrule = "S101"\npaths = ["**/test_*.py"]\nreason = "The sandbox uses deliberate assertions."\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/test_*.py"]\nreason = "Samples are documented by their names."\n',
             }),
-            findManifestTarget('python', 'ruff.toml'),
+            getManifestTarget('python', 'ruff.toml'),
             { 'example.py': 'value = 1\n' },
         ),
     ) as RuffConfigFile;
@@ -111,13 +109,13 @@ test('ignores of one test path share one Ruff per-file-ignores list', async () =
 
 test('Ruff formats with double quotes unless format.quotes is written, while Prettier keeps single quotes', async () => {
     const files = { 'example.py': 'value = 1\n', 'entry.js': 'export const value = 1;\n' };
-    const ruffPath = findManifestTarget('python', 'ruff.toml');
+    const ruffPath = getManifestTarget('python', 'ruff.toml');
     const unset = parse(await generateFile(buildSandboxSettings(['python']), ruffPath, files)) as RuffConfigFile;
     expect(unset.format['quote-style']).toBe('double');
     const prettier = JSON.parse(
         await generateFile(
             buildSandboxSettings(['python', 'javascript']),
-            findManifestTarget('format', 'prettier.json'),
+            getManifestTarget('format', 'prettier.json'),
             files,
         ),
     ) as Record<string, unknown>;
@@ -136,7 +134,7 @@ test('Ruff takes its style from a format override that names every Python file',
     const tables =
         '[format]\nprint_width = 120\n[[format.override]]\npaths = ["**/*.py"]\nquotes = "single"\nprint_width = 88\n';
     const ruff = parse(
-        await generateFile(buildSandboxSettings(['python'], { tables }), findManifestTarget('python', 'ruff.toml'), {
+        await generateFile(buildSandboxSettings(['python'], { tables }), getManifestTarget('python', 'ruff.toml'), {
             'example.py': 'value = 1\n',
         }),
     ) as RuffConfigFile & { 'line-length': number };
@@ -150,7 +148,7 @@ test('Ruff takes its pylint and mccabe limits from [limits.python]', async () =>
             buildSandboxSettings(['python'], {
                 tables: '[limits.python]\nfunction_statements = 12\nfunction_parameters = 4\nfunction_branches = 6\nfunction_returns = 3\ncyclomatic_complexity = 7\n',
             }),
-            findManifestTarget('python', 'ruff.toml'),
+            getManifestTarget('python', 'ruff.toml'),
             { 'example.py': 'value = 1\n' },
         ),
     ) as RuffConfigFile;

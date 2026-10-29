@@ -64,4 +64,4 @@ export type ParsedFindings = { findings: Finding[]; note?: undefined } | { findi
 
 export type OutputCheck = Pick<PlannedCheck, 'check' | 'tool'>;
 
-export type CommandGroup = { files: TrackedFile[]; command: string[] };
+export type CommandBatch = { files: TrackedFile[]; command: string[] };

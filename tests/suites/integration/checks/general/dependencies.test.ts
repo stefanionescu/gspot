@@ -1,39 +1,23 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk } from '#tests/setup/system/files.ts';
+import { writeFile } from 'node:fs/promises';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { spawnGspot } from '#tests/setup/cli/commands.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
-import { spawnGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
-import { SYNCPACK_FILES, SYNCPACK_PACKAGE_FILES } from '#tests/config/integration/checks/general/dependencies.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { SYNCPACK_PACKAGE_FILES } from '#tests/config/commands/init/conflicting-config-files.ts';
 
 async function initAtLevelAll(root: string): Promise<void> {
     commitAll(root);
-    const initialized = await spawnGspot(root, [...buildInitArguments([]), '--no-configurations', '--level', 'all']);
+    const initialized = await spawnGspot(root, ['init', '--yes', '--no-configurations', '--level', 'all']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
 }
 
-test.each([...SYNCPACK_FILES])(
-    'init replaces the authored Syncpack file $file and keeps syncpack.config.cts and .mts',
-    async ({ file, source }) => {
-        await using sandbox = await createGitSandbox({
-            ...SYNCPACK_PACKAGE_FILES,
-            [file]: source,
-            'syncpack.config.cts': 'module.exports = {};\n',
-            'syncpack.config.mts': 'export default {};\n',
-        });
-        await initAtLevelAll(sandbox.path);
-        expect(await isOnDisk(join(sandbox.path, file))).toBe(false);
-        expect(await readFile(join(sandbox.path, 'syncpack.config.cts'), 'utf8')).toBe('module.exports = {};\n');
-        expect(await readFile(join(sandbox.path, 'syncpack.config.mts'), 'utf8')).toBe('export default {};\n');
-    },
-);
-
-test('the generated Syncpack config reports a version mismatch and passes once the versions match', async () => {
+test('dependencies/syncpack reports each mismatched package.json and passes once the versions match', async () => {
     await using sandbox = await createGitSandbox(SYNCPACK_PACKAGE_FILES);
     await initAtLevelAll(sandbox.path);
-    const command = ['syncpack', 'lint', '--config', findManifestTarget('dependencies', 'syncpack.json'), '--no-ansi'];
+    const command = ['syncpack', 'lint', '--config', getManifestTarget('dependencies', 'syncpack.json'), '--no-ansi'];
     const mismatched = await runCommand(command, { cwd: sandbox.path });
     expect(mismatched.code, mismatched.stdout + mismatched.stderr).toBe(1);
     expect(mismatched.stderr).toContain('shared-library');

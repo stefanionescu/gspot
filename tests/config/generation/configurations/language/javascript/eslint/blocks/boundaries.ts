@@ -1,7 +1,7 @@
 export const IMPORT_RULE_CASES = [
-    { level: 'recommended', declarations: 'none' },
-    { level: 'recommended', declarations: 'root' },
-    { level: 'recommended', declarations: 'scoped' },
+    { level: 'basic', declarations: 'none' },
+    { level: 'basic', declarations: 'root' },
+    { level: 'basic', declarations: 'scoped' },
     { level: 'all', declarations: 'none' },
     { level: 'all', declarations: 'root' },
     { level: 'all', declarations: 'scoped' },
@@ -76,7 +76,7 @@ export const TEST_IMPORT_CASES = [
 ] as const;
 
 export const ENVIRONMENT_TABLES = `[structure]
-environment_readers = ["config/**", "app/src/env/**", "literal/config/**"]
+environment_readers = { value = ["config/**", "app/src/env/**", "literal/config/**"], reason = "This test sets the allowed locations explicitly." }
 
 [[scope]]
 path = "app"

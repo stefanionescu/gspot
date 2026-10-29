@@ -2,18 +2,20 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
-import { WRITER_LOCK_FILE } from '#cli/config/write.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { PIN_MESSAGE } from '#tests/config/version-pin.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { startCommand } from '#tests/setup/system/processes.ts';
+import { spawnCommand } from '#tests/setup/system/processes.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { readTree, isOnDisk } from '#tests/setup/system/files.ts';
+import { WRITER_LOCK_FILE } from '#cli/config/repository/writer.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { ROOT_EDITORCONFIG } from '#tests/config/commands/contents.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { LINKED_FILE_CASES } from '#tests/config/commands/apply/refusals.ts';
 
 test('a broken managed block stops apply before generated files change', async () => {
@@ -33,9 +35,10 @@ Unclosed instructions.
         'AGENTS.md has incomplete or repeated gspot block markers. Fix the markers, then run gspot apply.\n',
     );
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(authored);
-    const exists = await isOnDisk(join(sandbox.path, findManifestTarget('bash', 'shellcheckrc')));
+    const exists = await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')));
     expect(exists).toBe(false);
 });
+
 test('apply refuses an empty writer lock left after a crash and names the lock to delete', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
@@ -54,7 +57,7 @@ test.each([['a live process', undefined], ...(isWindows ? [] : [['process 1', '1
     async (_, holder) => {
         await using sandbox = await createGitSandbox({});
         const command = buildProgramCommand('fakes/tool', '--wait');
-        await using sleeper = holder === undefined ? startCommand(command, { cwd: sandbox.path }) : undefined;
+        await using sleeper = holder === undefined ? spawnCommand(command, { cwd: sandbox.path }) : undefined;
         const lock = holder ?? `${String(sleeper!.child.pid)}:held`;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings([]),
@@ -68,11 +71,12 @@ test.each([['a live process', undefined], ...(isWindows ? [] : [['process 1', '1
         expect(await readFile(join(sandbox.path, WRITER_LOCK_FILE), 'utf8')).toBe(lock);
     },
 );
+
 test('apply --json prints one error object when an unowned file blocks generation', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'entry.sh': 'echo example\n',
-        '.editorconfig': 'root = true\n',
+        '.editorconfig': ROOT_EDITORCONFIG,
     });
     const refused = await runGspot(sandbox.path, ['apply', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
@@ -81,8 +85,9 @@ test('apply --json prints one error object when an unowned file blocks generatio
         error: 'writing',
         message: 'gspot did not overwrite these files: .editorconfig. Move them aside, then run the command again.',
     });
-    expect(await readFile(join(sandbox.path, '.editorconfig'), 'utf8')).toBe('root = true\n');
+    expect(await readFile(join(sandbox.path, '.editorconfig'), 'utf8')).toBe(ROOT_EDITORCONFIG);
 });
+
 test('a malformed reason reports a settings error and apply preserves the authored settings', async () => {
     await using sandbox = await createGitSandbox({});
     const source = buildSandboxSettings(['site'], {
@@ -102,6 +107,7 @@ test('a malformed reason reports a settings error and apply preserves the author
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(source);
     expect(await isOnDisk(join(sandbox.path, GSPOT_FOLDER))).toBe(false);
 });
+
 test.each([...LINKED_FILE_CASES])(
     'apply --dry-run refuses a $path that links outside the repository and writes nothing',
     async ({ path, outside, files, message }) => {

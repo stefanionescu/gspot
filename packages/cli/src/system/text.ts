@@ -7,7 +7,6 @@ Select up to SIMILAR_NAME_LIMIT names close enough to look like a typo, closest 
 
 @param name the text as typed.
 @param names the names that exist.
-@returns the closest names.
 */
 export function selectSimilarNames(name: string, names: string[]): string[] {
     const lower = name.toLowerCase();
@@ -26,16 +25,15 @@ export function selectSimilarNames(name: string, names: string[]): string[] {
 }
 
 /**
-Format names as code spans with commas, and count the rest past the limit.
+Join names with commas, and count the rest past the limit.
 
 @param names the names to list.
-@returns the list text.
 */
 export function formatCodeList(names: readonly string[]): string {
     const shown = names.slice(0, LIST_LIMIT);
     const rest = names.length - shown.length;
     const more = rest > 0 ? ` and ${String(rest)} more` : '';
-    return shown.map((name) => `\`${name}\``).join(', ') + more;
+    return shown.join(', ') + more;
 }
 
 /**
@@ -80,7 +78,6 @@ Get the line and column of an offset in a text, both from one.
 
 @param text the source for counting line breaks before the offset.
 @param offset the index into it.
-@returns the one-based line and column.
 */
 export function getPosition(text: string, offset: number): TextPosition {
     const before = text.slice(0, offset);
@@ -118,7 +115,6 @@ Replace ranges of one text with the same ranges of another text of the same leng
 @param base the text outside the ranges.
 @param overlay the text inside the ranges.
 @param ranges the start and end offsets, in order.
-@returns the joined text.
 */
 export function spliceRanges(base: string, overlay: string, ranges: readonly TextRange[]): string {
     const pieces: string[] = [];

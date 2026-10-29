@@ -1,3 +1,5 @@
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+
 export const DEPTRY_FIRST_PARTY_FLAG = '--known-first-party';
 
 export const DEPTRY_COMMAND = ['deptry', '.', '--no-ansi'] as const;
@@ -36,3 +38,24 @@ export const VULTURE_FINDING =
 export const VULTURE_COMMAND = ['vulture'] as const;
 
 export const VULTURE_DEAD_CODE = 3;
+
+export const NO_LOCKFILE_NOTE = 'This check needs uv.lock, poetry.lock, or pdm.lock in this scope.';
+
+export const REQUIREMENTS_FILE_MESSAGE =
+    'A hand-kept requirements file is a second owner of the dependencies. Export it from the lockfile and declare it generated, or delete it.';
+
+export const PIP_INSTALL_MESSAGE = 'Add the package to pyproject.toml and install it from the lockfile.';
+
+export const NO_PYPROJECT_NOTE = 'This scope has no pyproject.toml for deptry to read.';
+
+export const RULES = {
+    functionLines: 'function-lines',
+    requirementsFile: 'requirements-file',
+    pipInstall: 'pip-install',
+    placeholderDocstring: 'placeholder-docstring',
+    unreachableCode: 'unreachable-code',
+} as const;
+
+export const DEPTRY_GSPOT_EXCLUDE = String.raw`(^|.*[/\\])${RegExp.escape(GSPOT_FOLDER)}([/\\]|$)`;
+
+export const REQUIREMENTS_FOLDER_FILE = /(?:^|\/)requirements\/[^/]+\.txt$/u;

@@ -1,16 +1,14 @@
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
+import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 import {
-    REACT_FILES,
-    CONFIGURATION_PLUGINS,
-} from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
-import {
     getPreset,
-    addRuleOptions,
-    buildPresetRuleExpression,
+    mergeRuleOptions,
+    buildPresetRules,
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 import {
     NEXT_RULES,
+    REACT_FILES,
     REFRESH_RULE,
     NEXT_ERROR_HOCS,
     NEXT_SERVER_FILES,
@@ -21,12 +19,11 @@ import {
 Apply the Next.js presets and the pages and JSX settings.
 
 @param scope the planned ESLint file of the scope.
-@returns the imports and ESLint blocks for this configuration.
 */
 export function buildNextjsBlocks(
-    scope: Pick<EslintScope, 'presets' | 'eslintFiles' | 'scopePath' | 'sourceFiles'>,
+    scope: Pick<EslintScope, 'presets' | 'eslintFiles' | 'projectPath' | 'sourceFiles'>,
 ): ConfigurationBlocks {
-    const { presets, eslintFiles, scopePath, sourceFiles } = scope;
+    const { presets, eslintFiles, projectPath: scopePath, sourceFiles } = scope;
     const recommended = getPreset(presets, 'recommended');
     const refresh = getPreset(presets, 'refresh');
     const prefix = scopePath === '' ? '' : `${scopePath}/`;
@@ -41,14 +38,17 @@ export function buildNextjsBlocks(
                         ? NEXT_RULES['@next/next/no-html-link-for-pages']
                         : 'off',
                     ...refresh.blocks[0].rules,
-                    [REFRESH_RULE]: addRuleOptions(refresh.blocks[0].rules?.[REFRESH_RULE], {
+                    [REFRESH_RULE]: mergeRuleOptions(refresh.blocks[0].rules?.[REFRESH_RULE], {
                         extraHOCs: [...NEXT_ERROR_HOCS],
                     }),
                     '@next/next/no-async-client-component': NEXT_RULES['@next/next/no-async-client-component'],
                 },
             },
-            properties: `plugins: { '@next/next': nextPlugin }, settings: { next: { rootDir: root + '/' + ${JSON.stringify(scopePath)} } }`,
-            preset: buildPresetRuleExpression([
+            calls: [
+                { name: 'addPlugins', args: [{ imports: { '@next/next': 'nextPlugin' } }] },
+                { name: 'setRootFolder', args: [{ value: [['settings', 'next', 'rootDir']] }, { value: scopePath }] },
+            ],
+            preset: buildPresetRules([
                 ['nextPlugin', recommended],
                 ['reactRefresh', refresh],
             ]),

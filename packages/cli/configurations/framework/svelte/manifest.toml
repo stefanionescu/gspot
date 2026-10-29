@@ -1,7 +1,7 @@
 route_files = ["+page.*", "+layout.*", "+server.*", "+error.*"]
 
 [configuration]
-description = "Svelte components: markup and script rules, HTML injection checks at both levels, and DOM and typing rules at level all."
+description = "Svelte components: markup and script rules, HTML injection and DOM checks at both levels, and typing rules at level all."
 requires = ["javascript"]
 suggests = ["typescript", "css"]
 title = "Svelte"
@@ -56,13 +56,12 @@ embeddedLanguageFormatting = "auto"
 
 [eslint]
 required_tools = ["eslint-plugin-svelte", "svelte-eslint-parser"]
-all_level_rules = ["svelte/no-useless-mustaches", "svelte/prefer-const", "svelte/no-dom-manipulating", "svelte/require-event-dispatcher-types"]
+all_level_rules = ["svelte/no-useless-mustaches", "svelte/prefer-const", "svelte/require-event-dispatcher-types"]
 
 [[check]]
 example = "A component containing `<img src={source} />` reports `a11y_missing_attribute`. Give the image a text alternative, such as `<img src={source} alt={caption} />`."
 help = "Fix each warning and error svelte-check prints; both fail the check."
 instead_of = "typescript/tsc"
-level = "recommended"
 name = "svelte-check"
 runs = "scope"
 stage = "push"

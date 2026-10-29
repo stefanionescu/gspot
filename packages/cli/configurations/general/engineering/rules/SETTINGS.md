@@ -7,12 +7,15 @@ Read this rule when you change how a program reads its settings or environment.
 - A missing or invalid value stops startup. The message names the variable and never prints its value.
 - Parse booleans from an explicit accepted set, numbers with bounds, URLs through the URL parser, and lists with a
   declared separator. Treat an empty required value as missing.
+- When the project keeps an env example, such as `.env.example`, list in it each key that code reads, with an empty
+  value and a comment on what it holds. Sort the keys.
 
 ## Reading settings
 
 <!-- level: all -->
 
-- Each process reads the environment in one module and passes the values in.
+- Each process reads the environment in one module and passes the values in. When `structure.environment_readers`
+  lists files, read the environment only in them.
 - Parse each value once at startup and expose a typed, immutable settings object.
 - Do not add a hierarchy or a generic settings module for one value.
 

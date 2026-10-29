@@ -14,25 +14,20 @@ import { type spawnProcess } from '#cli/system/processes.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { UNPINNED_NPM_MESSAGE } from '#tests/config/setup/system/fakes.ts';
 
 /**
 Replace one child command and run the others normally.
-
-@param name the executable to replace.
-@param result function that returns the fake run.
-@returns a spy whose disposal restores how commands run.
 */
-export function fakeCommand(name: string, result: typeof spawnProcess): Mock<typeof spawnProcess> {
+export function fakeCommand(name: string, spawn: typeof spawnProcess): Mock<typeof spawnProcess> {
     const runProcess = processes.spawnProcess;
     return spyOn(processes, 'spawnProcess').mockImplementation((command, options) =>
-        command[0] === name ? result(command, options) : runProcess(command, options),
+        command[0] === name ? spawn(command, options) : runProcess(command, options),
     );
 }
 
 /**
 Record each npm command that gspot starts, other than npm --version, and run it as usual.
-
-@returns a spy whose commands list holds the recorded npm commands, and whose disposal restores command execution.
 */
 export function recordNpmCommands(): Mock<typeof spawnProcess> & { commands: string[][] } {
     const runProcess = processes.spawnProcess;
@@ -46,9 +41,6 @@ export function recordNpmCommands(): Mock<typeof spawnProcess> & { commands: str
 
 /**
 Fake the lookup and version output of these tools.
-
-@param tools the tools whose pinned versions the fakes print.
-@returns the disposable mocks.
 */
 export function fakeToolExecutables(tools: Tool[]): DisposableStack {
     const resources = new DisposableStack();
@@ -73,21 +65,16 @@ export function fakeToolExecutables(tools: Tool[]): DisposableStack {
 }
 
 /**
-Write a Unix and a Windows command that runs one of the test programs with fixed arguments.
-
-@param folder folder that gets the command.
-@param name the command path inside the folder, without a Windows suffix.
-@param program the test program.
-@param programArguments the fixed arguments, before the arguments the command receives.
-@returns the folder of the command, to put on `PATH`.
+Write a Unix and a Windows command that runs one of the test programs with fixed arguments before the ones it gets.
+Name it without the Windows suffix, and return the folder to put on `PATH`.
 */
 export async function writeProgramCommand(
     folder: string,
-    name: string,
+    path: string,
     program: ProgramName,
     ...programArguments: string[]
 ): Promise<string> {
-    const target = join(folder, name);
+    const target = join(folder, path);
     const command = buildProgramCommand(program, ...programArguments);
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, `#!/bin/sh\nexec ${command.map((word) => quoteArgument(word)).join(' ')} "$@"\n`);
@@ -104,7 +91,7 @@ export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
     const declaration = getTool(readConfigurations().values(), tool);
     const installer = declaration.installers['npm'];
     if (installer === undefined) throw new Error(`The tool ${tool} has no npm installer.`);
-    if (declaration.version === undefined) throw new Error('The npm package fake requires a pinned tool version.');
+    if (declaration.version === undefined) throw new Error(UNPINNED_NPM_MESSAGE);
     await fakeNpmPackage(root, {
         name: installer.name,
         version: declaration.version,
@@ -132,7 +119,6 @@ export async function fakeNpmPackage(
 Make executable lookup return one path, or the path a function picks for each name.
 
 @param path the path, or a function of the name; when the function gives undefined, the real lookup runs.
-@returns the mock.
 */
 export function fakeExecutableLookup(
     path: string | null | ((name: string) => string | null | undefined),
@@ -152,9 +138,6 @@ export function fakeExecutableLookup(
 
 /**
 Mark each stream as a terminal or not, and restore the streams when the scope ends.
-
-@param terminals each stream with its terminal flag.
-@returns a resource that restores the old values.
 */
 export function fakeTerminals(
     terminals: readonly (readonly [NodeJS.ReadStream | NodeJS.WriteStream, boolean])[],

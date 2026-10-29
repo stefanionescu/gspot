@@ -6,4 +6,4 @@ export type IgnoreRemoval = {
     everywhere: number;
 };
 
-export type IgnoreTarget = { noMatch: string; removed: string };
+export type IgnoreTarget = { unmatched: string; removed: string };

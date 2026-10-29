@@ -1,9 +1,5 @@
 export const NPMRC_REFUSALS = [
     {
-        source: 'registry=https://alex:100%@registry.example.com/\n',
-        message: 'A registry URL in the .npmrc files is not valid.',
-    },
-    {
         source: 'registry=https://u:pa%zz@host/\n',
         message: 'A registry URL in the .npmrc files is not valid.',
     },

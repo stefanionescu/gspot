@@ -1,32 +1,44 @@
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { openSession } from '#cli/session.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { type CommandArgument } from '#cli/types/runs/command.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { prepareCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
-import { expandCommand, listCopyFiles, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
-import { SHFMT_INDENT_CASES, GENERATE_ARGUMENTS, WORKSPACE_SCOPE_CASES } from '#tests/config/runs/command.ts';
 
-async function writeListSetting(root: string, placeholder: string, generate: readonly string[]): Promise<void> {
+import {
+    expandCommand,
+    listCopyFiles,
+    replacePlaceholders,
+    buildFileCommandLines,
+} from '#cli/runs/command/placeholders.ts';
+import {
+    CAFE_SOURCE_PATH,
+    SHFMT_INDENT_CASES,
+    GENERATE_ARGUMENTS,
+    WORKSPACE_SCOPE_CASES,
+} from '#tests/config/runs/command.ts';
+
+async function writeListSetting(root: string, placeholder: string, generateCommand: readonly string[]): Promise<void> {
     const command = [
         ...buildProgramCommand('checks/arguments', '--equals', JSON.stringify(GENERATE_ARGUMENTS), '--'),
         placeholder,
     ];
     const tables = stringify({
-        openapi: { document: 'openapi.json', generate_command: [...generate] },
+        openapi: { document: 'openapi.json', generate_command: [...generateCommand] },
         command_check: [{ id: 'sandbox/arguments', command, paths: ['openapi.json'], stage: 'push' }],
     });
     await createFileTree(root, { 'gspot.toml': buildSandboxSettings(['openapi'], { tables }), 'openapi.json': '{}\n' });
 }
 
-test('a whole list setting expands into separate command arguments, keeping empty and multiword ones', async () => {
+test('a list setting expands into one command argument per value, keeping empty and multiword ones', async () => {
     await using sandbox = await createGitSandbox({});
     await writeListSetting(sandbox.path, '{setting:openapi.generate_command}', GENERATE_ARGUMENTS);
     const result = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json']));
@@ -118,8 +130,8 @@ test('a Markdown command run in a copy keeps the config files its manifest write
     const planned = planChecks(session, { stage: 'commit', only: ['markdown/markdownlint'] })[0]!;
     expect(listCopyFiles(session, planned, planned.check.command!)).toStrictEqual([
         'README.md',
-        findManifestTarget('markdown', 'markdownlint-cli2.mjs'),
-        findManifestTarget('markdown', 'markdownlint.jsonc'),
+        getManifestTarget('markdown', 'markdownlint-cli2.mjs'),
+        getManifestTarget('markdown', 'markdownlint.jsonc'),
     ]);
     expect(() => listCopyFiles(session, planned, ['markdownlint-cli2', '{config_file:absent}'])).toThrow(
         'Check markdown/markdownlint names {config_file:absent} and no configuration writes it.',
@@ -168,7 +180,7 @@ test('per-file commands keep the arguments after the file', async () => {
     expect(result.code, result.stderr).toBe(0);
     const call = JSON.parse(result.stdout) as { arguments: string[]; environment: Record<string, string | null> };
     expect({ arguments: call.arguments, environment: call.environment }).toStrictEqual({
-        arguments: ['inputs/café source.txt', 'config', '--quiet'],
+        arguments: [CAFE_SOURCE_PATH, 'config', '--quiet'],
         environment: { TOOL_RELEASE: 'v3.4.0' },
     });
 });
@@ -195,3 +207,35 @@ test.each([...SHFMT_INDENT_CASES])(
         expect(command.commandArguments[command.commandArguments.indexOf('-i') + 1]).toBe(expected);
     },
 );
+
+test('scalar placeholders select generated pointers, scope, boolean settings and the chosen level', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: 'app' }] }),
+        'app/main.swift': 'let value = 1\n',
+        'prettier.config.mjs': `// ${GENERATED_HEADER_TEXT}\nexport default {};\n`,
+    });
+    let session = await openSession(sandbox.path);
+    let planned = planChecks(session, { stage: 'all', only: ['swift/swiftlint'] }).find(
+        ({ scope }) => scope.path === 'app',
+    )!;
+    const substitutions = { scope: 'app', files: [], root: sandbox.path, indent: 4 };
+    expect(replacePlaceholders(session, planned, '{pointer:prettier.config.mjs}', substitutions)).toBe(
+        'prettier.config.mjs',
+    );
+    expect(replacePlaceholders(session, planned, '{level:moderate:production}', substitutions)).toBe('moderate');
+    session.settings.level = 'all';
+    expect(replacePlaceholders(session, planned, '{level:moderate:production}', substitutions)).toBe('production');
+    planned.scope.settings.valuesByKey['enabled'] = true;
+    expect(replacePlaceholders(session, planned, '{setting:enabled}', substitutions)).toBe('true');
+    expect(replacePlaceholders(session, planned, '{scope}', { ...substitutions, scope: '' })).toBe('.');
+    await createFileTree(sandbox.path, {
+        'app/prettier.config.mjs': `// ${GENERATED_HEADER_TEXT}\nexport default {};\n`,
+    });
+    session = await openSession(sandbox.path);
+    planned = planChecks(session, { stage: 'all', only: ['swift/swiftlint'] }).find(
+        ({ scope }) => scope.path === 'app',
+    )!;
+    expect(replacePlaceholders(session, planned, '{pointer:prettier.config.mjs}', substitutions)).toBe(
+        'app/prettier.config.mjs',
+    );
+});

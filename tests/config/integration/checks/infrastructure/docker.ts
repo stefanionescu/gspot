@@ -1,5 +1,3 @@
-import type { ScopeFindingFiles } from '#tests/types/reports.ts';
-
 export const DOCKER_SANDBOX = {
     install: false,
     configurations: ['docker'],
@@ -74,9 +72,9 @@ paths = ["app/**"]
 reason = "This test exercises scoped advisory exceptions."
 `;
 
-export const TRIVY_SCOPE_RESULTS: ScopeFindingFiles[] = [
-    { scope: '', status: 'failed', files: ['Dockerfile'] },
-    { scope: 'app', status: 'passed', files: [] },
-    { scope: 'app/child', status: 'passed', files: [] },
-    { scope: 'sibling', status: 'failed', files: ['sibling/Dockerfile'] },
+export const TRIVY_SCOPE_RESULTS = [
+    { scope: '', status: 'failed' as const, files: ['Dockerfile'] },
+    { scope: 'app', status: 'passed' as const, files: [] },
+    { scope: 'app/child', status: 'passed' as const, files: [] },
+    { scope: 'sibling', status: 'failed' as const, files: ['sibling/Dockerfile'] },
 ];

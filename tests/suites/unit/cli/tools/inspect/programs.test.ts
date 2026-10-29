@@ -74,7 +74,7 @@ test('a program on PATH wins over an unrelated mise shim', async () => {
     expect(inspection.path).toBe(active);
 });
 
-async function installMiseTsc(root: string, status: number) {
+async function fakeMiseTsc(root: string, status: number) {
     const executable = join(root, 'mise/installs/tsc/5.9.3', isWindows ? 'tsc.cmd' : 'tsc');
     await writeProgramCommand(
         root,
@@ -97,7 +97,7 @@ async function installMiseTsc(root: string, status: number) {
         '--exit',
         String(status),
     );
-    const fakes = new DisposableStack();
+    using fakes = new DisposableStack();
     fakes.use(overrideEnvironment({ MISE_DATA_DIR: join(root, 'mise') }));
     fakes.use(
         fakeExecutableLookup((name) =>
@@ -106,15 +106,14 @@ async function installMiseTsc(root: string, status: number) {
     );
     const paths = listExecutablePaths(join(root, 'work'), 'tsc', {
         timeoutSeconds: SETTING_DEFINITIONS['tool_timeout_seconds'].default,
-        searchFolders: [join(root, 'work')],
+        folders: [join(root, 'work')],
     });
-    fakes.dispose();
     return { executable, paths };
 }
 
 test('mise finds the program of the repository, and it runs from a copy', async () => {
     await using sandbox = await testdir({ 'work/.keep': '', 'copy/.keep': '' });
-    const { executable, paths } = await installMiseTsc(sandbox.path, 0);
+    const { executable, paths } = await fakeMiseTsc(sandbox.path, 0);
     expect(paths).toStrictEqual([executable]);
     const result = await runTool([executable], {
         timeoutSeconds: SETTING_DEFINITIONS['tool_timeout_seconds'].default,
@@ -125,7 +124,7 @@ test('mise finds the program of the repository, and it runs from a copy', async 
 
 test('mise finds no program when its lookup exits 1', async () => {
     await using sandbox = await testdir({ 'work/.keep': '', 'copy/.keep': '' });
-    const { paths } = await installMiseTsc(sandbox.path, 1);
+    const { paths } = await fakeMiseTsc(sandbox.path, 1);
     expect(paths).toStrictEqual([]);
 });
 

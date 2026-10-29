@@ -4,24 +4,21 @@ import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/definitio
 
 /**
 Describe each level, count its shipped checks, and list the tools it adds.
-
-@returns one row for each level
 */
 export function buildLevelRows(): { level: string; description: string; count: number; tools: string }[] {
     const { checks } = CLI_REFERENCE;
-    const recommended = checks.filter(({ check }) => check.level === 'recommended');
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-    const listToolNames = (levelChecks: typeof checks) =>
-        new Set(levelChecks.flatMap(({ check }) => (check.tool === undefined ? [] : check.tool)));
-    const recommendedTools = listToolNames(recommended);
-    const allLevelTools = [...listToolNames(checks)]
-        .filter((tool) => !recommendedTools.has(tool))
+    const defaultLevelChecks = checks.filter(({ check }) => check.level === 'basic');
+    const defaultLevelTools = new Set(
+        defaultLevelChecks.flatMap(({ check }) => (check.tool === undefined ? [] : check.tool)),
+    );
+    const allLevelTools = [...new Set(checks.flatMap(({ check }) => (check.tool === undefined ? [] : check.tool)))]
+        .filter((tool) => !defaultLevelTools.has(tool))
         .toSorted((first, second) => first.localeCompare(second));
     return [
         {
-            level: 'recommended',
-            description: `${LEVEL_SUMMARY} ${LEVEL_ADVICE.recommended}`,
-            count: recommended.length,
+            level: 'basic',
+            description: `${LEVEL_SUMMARY} ${LEVEL_ADVICE.basic}`,
+            count: defaultLevelChecks.length,
             tools: '—',
         },
         {

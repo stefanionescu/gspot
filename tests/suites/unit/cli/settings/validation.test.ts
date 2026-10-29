@@ -2,12 +2,13 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { parseTomlText } from '#cli/settings/file.ts';
-import { parseSettings } from '#cli/settings/read.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { buildSettingsText } from '#cli/settings/text.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { buildSettingsText } from '#cli/settings/text/build.ts';
+import { SCHEMA_DIRECTIVE } from '#cli/config/settings/text.ts';
 import { listAllowedRules } from '#cli/settings/import-rules.ts';
-import { REVIEWED_REASON } from '#tests/config/settings/samples.ts';
+import { REVIEWED_REASON } from '#tests/config/settings/reasons.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 
@@ -20,16 +21,17 @@ import {
     REFUSED_SCOPE_FOLDERS,
     BOUNDARY_IMPORT_RULES,
     INVALID_SETTING_MESSAGES,
+    SWIFT_TARGET_REASON_CASES,
 } from '#tests/config/settings/validation.ts';
 
-test.each([...INVALID_SETTING_MESSAGES])('settings diagnostics locate $name', ({ text, message }) => {
+test.each([...INVALID_SETTING_MESSAGES])('settings errors locate $name', ({ text, message }) => {
     using sandbox = createTemporaryFolder();
-    expect(() => parseSettings(text, sandbox.path)).toThrow(new GspotError('settings', message));
+    expect(() => readSettings(text, sandbox.path)).toThrow(new GspotError('settings', message));
 });
 
 test('an import rule may import the rules above it, and a rule below is refused', () => {
     using sandbox = createTemporaryFolder();
-    const settings = parseSettings(ORDERED_IMPORT_RULES, sandbox.path);
+    const settings = readSettings(ORDERED_IMPORT_RULES, sandbox.path);
     expect(settings.import_rule).toStrictEqual([
         { name: 'storage', paths: ['storage/**'] },
         { name: 'app', paths: ['app/**'] },
@@ -37,78 +39,81 @@ test('an import rule may import the rules above it, and a rule below is refused'
     ]);
     expect(listAllowedRules(settings.import_rule, 1)).toStrictEqual(['app', 'storage']);
     expect(settings.written).not.toHaveProperty('import_rule.1.can_import');
-    expect(() =>
-        parseSettings(ORDERED_IMPORT_RULES.replace('paths = ["app/**"]', 'paths = [3]'), sandbox.path),
-    ).toThrow('import_rule.1.paths.0');
+    expect(() => readSettings(ORDERED_IMPORT_RULES.replace('paths = ["app/**"]', 'paths = [3]'), sandbox.path)).toThrow(
+        'import_rule.1.paths.0',
+    );
 });
 
 test('can_import lists exact rules and names only declared rules', () => {
     using sandbox = createTemporaryFolder();
-    const settings = parseSettings(BOUNDARY_IMPORT_RULES, sandbox.path);
+    const settings = readSettings(BOUNDARY_IMPORT_RULES, sandbox.path);
     expect(settings.import_rule[1]).toStrictEqual({
         name: 'app',
         paths: ['app/**'],
         can_import: ['storage'],
     });
     expect(() =>
-        parseSettings(
+        readSettings(
             BOUNDARY_IMPORT_RULES.replace('can_import = ["storage"]', 'can_import = ["missing"]'),
             sandbox.path,
         ),
     ).toThrow('import_rule.1.can_import.0: There is no import rule named missing.');
 });
+
 test('an ignore without check needs paths and takes no rule', () => {
     using sandbox = createTemporaryFolder();
     const reason = 'Product photos and facts are data, not code.';
-    const settings = parseSettings(`[[ignore]]\npaths = ["assets/products/**"]\nreason = "${reason}"\n`, sandbox.path);
+    const settings = readSettings(`[[ignore]]\npaths = ["assets/products/**"]\nreason = "${reason}"\n`, sandbox.path);
     expect(settings.ignore).toStrictEqual([{ paths: ['assets/products/**'], reason }]);
-    expect(() => parseSettings(`[[ignore]]\nreason = "${reason}"\n`, sandbox.path)).toThrow(
+    expect(() => readSettings(`[[ignore]]\nreason = "${reason}"\n`, sandbox.path)).toThrow(
         'An ignore without check needs paths.',
     );
     expect(() =>
-        parseSettings(`[[ignore]]\nrule = "no-console"\npaths = ["a/**"]\nreason = "${reason}"\n`, sandbox.path),
+        readSettings(`[[ignore]]\nrule = "no-console"\npaths = ["a/**"]\nreason = "${reason}"\n`, sandbox.path),
     ).toThrow('An ignore without check cannot name a rule.');
 });
+
 test.each([...UNTIL_DATE_CASES])('$name: the until date of an ignore must be a TOML date', (row) => {
     using sandbox = createTemporaryFolder();
     const source = `configurations = ["bash"]\n[[ignore]]\ncheck="bash/shellcheck"\nreason="${REVIEWED_REASON}"\nuntil=${row.literal}\n`;
-    const written = parseTomlText(source, 'dates.toml');
+    const written = parseTomlFile('dates.toml', source);
     expect(settingsSchema.safeParse(written).success).toBe(row.valid);
     if (!row.valid) return;
-    const settings = parseSettings(source, sandbox.path);
+    const settings = readSettings(source, sandbox.path);
     expect(settings.ignore[0]?.until?.toISOString()).toBe(row.date);
-    const output = buildSettingsText(source, written, settingsSchema.shape.format.parse(written['format']));
-    expect(output).toContain(`until = ${row.date}`);
+    const output = buildSettingsText('', source, written);
+    expect(output).toContain(`until=${row.date}`);
     const parsed = buildSettingsText(
-        output,
-        parseTomlText(output, 'dates.toml'),
-        settingsSchema.shape.format.parse(parseTomlText(output, 'dates.toml')['format']),
+        '',
+        output.slice(SCHEMA_DIRECTIVE.length + 1),
+        parseTomlFile('dates.toml', output),
     );
     expect(parsed).toBe(output);
 });
 
 test.each([...UNSAFE_SCOPE_PATHS])('scope refuses the path %s', (path) => {
     using sandbox = createTemporaryFolder();
-    expect(() => parseSettings(stringify({ scope: [{ path }] }), sandbox.path)).toThrow(
+    expect(() => readSettings(stringify({ scope: [{ path }] }), sandbox.path)).toThrow(
         'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
     );
 });
 
 test.each([...REFUSED_SCOPE_FOLDERS])('scope refuses the folder $path', ({ path, message }) => {
     using sandbox = createTemporaryFolder();
-    expect(() => parseSettings(stringify({ scope: [{ path }] }), sandbox.path)).toThrow(message);
+    expect(() => readSettings(stringify({ scope: [{ path }] }), sandbox.path)).toThrow(message);
 });
 
 test('relative folders with spaces, percent signs and Unicode are accepted', async () => {
     const path = 'apps/café 100%';
     await using sandbox = await testdir({ [`${path}/source.ts`]: 'export const count = 1;\n' });
 
-    const settings = Object.keys(parseSettings(stringify({ scope: [{ path }] }), sandbox.path).scopes);
+    const settings = [...readSettings(stringify({ scope: [{ path }] }), sandbox.path).scopes.keys()];
     expect(settings).toStrictEqual([path]);
 });
+
 test('zero and false tool options are kept as values', () => {
     using sandbox = createTemporaryFolder();
-    const settings = parseSettings(
+    const settings = readSettings(
         stringify({
             configurations: ['javascript'],
             tools: { eslint: { rules: { 'id-length': [{ min: 0, properties: false }] } } },
@@ -123,7 +128,7 @@ test.each(['ordinary', 'constructor', 'prototype', 'toString'])(
     (key) => {
         using sandbox = createTemporaryFolder();
         expect(() =>
-            parseSettings(
+            readSettings(
                 `configurations = ["commits"]\n[tools.commitlint.rules]\n"${key}" = ["invalid"]\n`,
                 sandbox.path,
             ),
@@ -142,7 +147,7 @@ test.each([...REFUSED_RULE_OPTIONS])(
 
 test.each(['line-length', 'foo-bar'])('yamllint refuses options for an unsupported rule: %s', (rule) => {
     using sandbox = createTemporaryFolder();
-    expect(() => parseSettings(`[tools.yamllint.rules]\n${rule} = { max = 100 }\n`, sandbox.path)).toThrow(
+    expect(() => readSettings(`[tools.yamllint.rules]\n${rule} = { max = 100 }\n`, sandbox.path)).toThrow(
         `tools.yamllint.rules.${rule}: Unknown yamllint rule. Accepted rules:`,
     );
 });
@@ -151,7 +156,7 @@ test.each([...SETTING_RULE_OPTIONS])(
     'options for $rule are refused with $setting',
     ({ tables, path, line, rule, setting }) => {
         using sandbox = createTemporaryFolder();
-        expect(() => parseSettings('configurations = ["javascript", "markdown"]\n' + tables, sandbox.path)).toThrow(
+        expect(() => readSettings('configurations = ["javascript", "markdown"]\n' + tables, sandbox.path)).toThrow(
             `gspot.toml:${String(line)}: ${path}: gspot writes the options of ${rule} from ${setting}. Change that setting instead: gspot set ${setting} <value>, with --reason when you raise it.`,
         );
     },
@@ -160,7 +165,7 @@ test.each([...SETTING_RULE_OPTIONS])(
 test('options for import boundaries direct the reader to import_rule records', () => {
     using sandbox = createTemporaryFolder();
     expect(() =>
-        parseSettings(
+        readSettings(
             'configurations = ["javascript"]\n[tools.eslint.rules]\n"gspot/import-boundaries" = [{}]\n',
             sandbox.path,
         ),
@@ -181,7 +186,7 @@ test.each(['constructor', 'toString', 'prototype'])(
 test('names in an ignore is refused for a check whose findings name no definition', () => {
     using sandbox = createTemporaryFolder();
     expect(() =>
-        parseSettings(
+        readSettings(
             '[[ignore]]\ncheck = "python/ruff"\nnames = ["read"]\npaths = ["interfaces.py"]\nreason = "The framework calls these by name."\n',
             sandbox.path,
         ),
@@ -195,9 +200,28 @@ test.each(['latest', 'v20240101', 'V', '20240101__init.sql'])(
     (through) => {
         using sandbox = createTemporaryFolder();
         expect(() =>
-            parseSettings(`configurations = ["postgres"]\n[postgres]\nfrozen_through = "${through}"\n`, sandbox.path),
+            readSettings(`configurations = ["postgres"]\n[postgres]\nfrozen_through = "${through}"\n`, sandbox.path),
         ).toThrow(
-            `gspot.toml:3: postgres.frozen_through: The value ${through} is not valid for postgres.frozen_through. Use a valid string value: The last migration version that has run everywhere (none, all, or a version); Squawk skips those migrations, and they may not change.`,
+            `gspot.toml:3: postgres.frozen_through: The value "${through}" is not valid for postgres.frozen_through. Use a valid string value: The last migration version that has run everywhere (none, all, or a version); Squawk skips those migrations, and they may not change.`,
         );
     },
 );
+
+test.each(SWIFT_TARGET_REASON_CASES)('a Swift target validates $name', ({ lines, reason, errors }) => {
+    const text = `configurations = ["swift"]\n[coverage]\nlines = 80\n[[coverage.swift_target]]\nname = "App"\nlines = ${String(lines)}${reason}\n`;
+    expect(validateSettingsText(text)).toStrictEqual([...errors]);
+});
+
+test('a scope path that names a file is refused', async () => {
+    await using sandbox = await testdir({ 'README.md': '# Example\n' });
+    expect(validateSettingsText('[[scope]]\npath = "README.md"\n', sandbox.path)).toStrictEqual([
+        'gspot.toml:2: scope.0.path: The scope README.md names a file. Name a folder under the repository root.',
+    ]);
+});
+
+test('a rule file path that names a folder is refused', async () => {
+    await using sandbox = await testdir({ rules: {} });
+    expect(validateSettingsText('[tools.semgrep]\nrule_files = ["rules"]\n', sandbox.path)).toStrictEqual([
+        'gspot.toml:2: tools.semgrep.rule_files.0: rules names no file. Point rule_files at a file, relative to the repository root.',
+    ]);
+});

@@ -1,29 +1,29 @@
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path/posix';
+import { escapeGlob } from '#cli/system/paths.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { MISE_SCRIPT_PATH } from '#cli/config/files/names.ts';
+import { MISE_TASKS_GLOB } from '#cli/config/files/names.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
+import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations/names.ts';
 import { NODE_SHEBANG_TAG } from '#cli/config/repository/files/classify.ts';
 import type { ConfigFile, Configuration } from '#cli/types/configurations.ts';
 import { eslintPresetsSchema } from '#cli/schemas/configurations/eslint-presets.ts';
 import { type EslintPresets, type PlannedEslintFile } from '#cli/types/generation/eslint.ts';
-import { buildLevelRules } from '#cli/generation/configurations/language/javascript/eslint/blocks/base.ts';
+import { buildFilePatterns } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
+import { BASE_RULES } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
 import { buildRuleOptions } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/configurations/language/javascript/eslint/presets.ts';
+import { buildScopeLimitRules } from '#cli/generation/configurations/language/javascript/eslint/blocks/limits.ts';
 
 import {
     BASE_SELECTORS,
     CODE_LANGUAGES,
 } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
-import {
-    buildScopeGlob,
-    buildFilePatterns,
-    buildSourcePattern,
-} from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 
 const PRESET_ASSET_PATHS = new Set(listAssets(CONFIGURATIONS_FOLDER));
 
@@ -51,7 +51,6 @@ function readEslintPresets(session: PlannedConfigFile['session']): Map<string, E
 Collect what the ESLint config file of one scope needs: its file patterns, presets, and rule options.
 
 @param planned the config file to build.
-@returns the scopes, presets, and rule options of the ESLint file.
 */
 export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslintFile {
     const { session, scope, configFile } = planned;
@@ -59,7 +58,11 @@ export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslin
     const { scopes } = session;
     const repositorySettings = session.settings;
     const { level } = repositorySettings;
-    const isRecognized = buildPathMatcher([buildSourcePattern(...CODE_LANGUAGES)]);
+    const isRecognized = buildPathMatcher([
+        `**/*.{${listTaggedExtensions(...CODE_LANGUAGES)
+            .map((extension) => extension.slice(1))
+            .join(',')}}`,
+    ]);
     const nodeFiles = session.repository.files
         .filter((file) => !isRecognized(file.path) && file.kind === 'source' && file.tags.includes(NODE_SHEBANG_TAG))
         .map((file) => file.path);
@@ -72,7 +75,7 @@ export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslin
             tests: each.settings.test_files,
             scripts: [
                 ...(each.settings.tables.javascript?.script_files ?? []),
-                buildScopeGlob(each.path, MISE_SCRIPT_PATH),
+                joinScope(escapeGlob(each.path), MISE_TASKS_GLOB),
             ],
         })),
     });
@@ -83,7 +86,14 @@ export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslin
         projects: session.repository.files
             .filter((file) => basename(file.path) === TSCONFIG_FILE)
             .map((file) => file.path),
-        levelRules: buildLevelRules(settings, level === 'all' ? BASE_SELECTORS : []),
+        levelRules: {
+            code: {
+                ...BASE_RULES,
+                'no-restricted-syntax': ['error', ...(level === 'all' ? BASE_SELECTORS : [])],
+                ...buildScopeLimitRules(settings).code,
+            },
+            javascript: buildScopeLimitRules(settings).javascript,
+        },
         blockWriter: {
             applied: new Set(),
             allLevelRules: new Set(

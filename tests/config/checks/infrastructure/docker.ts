@@ -10,6 +10,8 @@ export const COMPOSE_PAIRING_CASES = [
 const REQUIRED_DOCKERIGNORE = '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n';
 
 export const DOCKERIGNORE_ALLOWLISTS = [
+    { text: `${REQUIRED_DOCKERIGNORE}!.env\n`, missing: ['.env'] },
+    { text: `${REQUIRED_DOCKERIGNORE}!**/.env\n`, missing: ['.env', '**/.env'] },
     { text: '*\n', missing: [] },
     { text: '**\n', missing: [] },
     { text: '**/*\n', missing: [] },
@@ -205,6 +207,10 @@ export const DOCKERIGNORE_CASES = [
 export const NGINX_COMPOSE = 'services: {app: {image: nginx:1.27.2}}\n';
 
 export const COMPOSE_SOURCES = [
+    {
+        name: 'a local build beside a registry image',
+        source: 'services: {app: {build: ., image: example/web:dev}, proxy: {image: nginx:1.27.2}}',
+    },
     {
         name: 'an inherited service mapping',
         source: `x-base: &base

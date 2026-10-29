@@ -1,13 +1,15 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { open, stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { planSwiftBuild, getScopeBuildFolder } from '#cli/checks/language/swift/cache.ts';
-import { runSandboxCheck, findBuiltInCheck, planSandboxCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
+import { UNEXPECTED_PLAN_MESSAGE } from '#tests/config/checks/language/swift/messages.ts';
+import { planSwiftBuild, readRepositoryCacheFolder } from '#cli/checks/language/swift/cache.ts';
+import { runSandboxCheck, getBuiltInCheck, planSandboxCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
 
 test('Swift build side effects stay in the source copy and do not reach later runs', async () => {
     using resources = new DisposableStack();
@@ -15,7 +17,7 @@ test('Swift build side effects stay in the source copy and do not reach later ru
     await using sandbox = await testdir();
 
     await using prepared = await prepareSwiftCheck(sandbox, 'swift/build', {
-        'Sources/Value.swift': 'let value = 1\n',
+        'Sources/Value.swift': SWIFT_VALUE_SOURCE,
     });
 
     const previous = join(sandbox.path, 'Sources/Value.swift');
@@ -37,21 +39,22 @@ test('Swift build side effects stay in the source copy and do not reach later ru
             return buildProcessResult();
         }),
     );
-    expect(await findBuiltInCheck('swift/build')(prepared.session, initial)).toStrictEqual([]);
+    expect(await getBuiltInCheck('swift/build')(prepared.session, initial)).toStrictEqual([]);
     expect(await runSandboxCheck(sandbox.path, 'swift/build')).toStrictEqual([]);
-    expect(sources).toStrictEqual(['let value = 1\n', 'let value = 1\n']);
+    expect(sources).toStrictEqual([SWIFT_VALUE_SOURCE, SWIFT_VALUE_SOURCE]);
     expect(artifacts).toStrictEqual([
         [false, false],
         [false, false],
     ]);
     for (const [, options] of run.mock.calls) expect(options.cwd).not.toBe(sandbox.path);
     await using originalFile = await open(previous, 'r');
-    expect(await originalFile.readFile('utf8')).toBe('let value = 1\n');
+    expect(await originalFile.readFile('utf8')).toBe(SWIFT_VALUE_SOURCE);
     const afterStats = await originalFile.stat();
     expect(afterStats.mode).toBe(mode);
     expect(await isOnDisk(join(sandbox.path, 'Package.resolved'))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, 'Generated'))).toBe(false);
 });
+
 test('Periphery build side effects stay in its source copy and findings name the repository source paths', async () => {
     using resources = new DisposableStack();
 
@@ -71,13 +74,14 @@ test('Periphery build side effects stay in its source copy and findings name the
             return buildProcessResult({ code: 1, stdout: `${cwd}/Main.swift:1:5: warning: Property unused is unused` });
         }),
     );
-    expect(await findBuiltInCheck('swift/periphery')(prepared.session, input)).toMatchObject([
+    expect(await getBuiltInCheck('swift/periphery')(prepared.session, input)).toMatchObject([
         { file: 'Main.swift', line: 1, column: 5, rule: 'unused' },
     ]);
     expect(sources).toStrictEqual(['let unused = 1\n']);
     expect(run.mock.calls[0]?.[1].cwd).not.toBe(sandbox.path);
     expect(await isOnDisk(join(sandbox.path, 'Package.resolved'))).toBe(false);
 });
+
 test('concurrent Swift compilation and Periphery keep separate source and build folders', async () => {
     using resources = new DisposableStack();
 
@@ -102,15 +106,15 @@ test('concurrent Swift compilation and Periphery keep separate source and build 
     try {
         expect(
             await Promise.all([
-                findBuiltInCheck('swift/build')(prepared.session, compile),
-                findBuiltInCheck('swift/periphery')(session, periphery),
+                getBuiltInCheck('swift/build')(prepared.session, compile),
+                getBuiltInCheck('swift/periphery')(session, periphery),
             ]),
         ).toStrictEqual([[], []]);
         expect(new Set(folders).size).toBe(2);
         const compilePlan = planSwiftBuild(prepared.session, compile);
-        const peripheryFolder = getScopeBuildFolder(session.toolsRoot, periphery.scope.path, 'periphery');
+        const peripheryFolder = join(readRepositoryCacheFolder(session.toolsRoot), 'swift', 'root', 'periphery');
         expect(compilePlan.folder).not.toBe(peripheryFolder);
-        if (compilePlan.kind !== 'package') throw new Error('Expected a Swift package build.');
+        if (compilePlan.kind !== 'package') throw new Error(UNEXPECTED_PLAN_MESSAGE);
         expect(compilePlan.scratch).not.toBe(peripheryFolder);
         expect(folders).toContain(join(peripheryFolder, 'source'));
     } finally {

@@ -1,5 +1,8 @@
+import { escapeGlob } from '#cli/system/paths.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { TRPC_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
+import { listCodeTestFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import { CODE_LANGUAGES } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
 import type {
@@ -8,12 +11,6 @@ import type {
     PlannedEslintFile,
     EslintBoundaryPolicy,
 } from '#cli/types/generation/eslint.ts';
-import {
-    buildScopeGlob,
-    buildNodePatterns,
-    listCodeTestFiles,
-    buildSourcePattern,
-} from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import {
     TEMPLATE_OPEN,
     TEST_IMPORT_POLICY,
@@ -117,12 +114,11 @@ function buildBoundarySettings({
 /**
 Build one boundary block from the root modules and the project tests.
 
-@param planned the scopes, level, and Node script paths to cover.
-
+@param planned the scopes and the files to cover.
 @returns one classification block and its ordered dependency policies.
 */
-export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintBlock[] {
-    const { session, nodeFiles } = planned;
+export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>): EslintBlock[] {
+    const { session, eslintFiles } = planned;
     const { settings, scopes } = session;
     const importRules = settings.import_rule;
     const codeLanguages: readonly string[] = CODE_LANGUAGES;
@@ -136,7 +132,7 @@ export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' |
     const serverFiles = [
         ...new Set(trpcScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.tables.trpc?.server_files ?? [])),
     ];
-    const trpcPaths = serverFiles.length === 0 ? [] : trpcScopes.map(({ path }) => buildScopeGlob(path));
+    const trpcPaths = serverFiles.length === 0 ? [] : trpcScopes.map(({ path }) => joinScope(escapeGlob(path), '**/*'));
     if (!isEnforceTests && importRules.length === 0 && trpcPaths.length === 0) return [];
     const tests = listCodeTestFiles([
         ...new Set(javascriptScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.test_files)),
@@ -145,7 +141,7 @@ export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' |
     const boundaries = { importRules, tests, enforceTests: isEnforceTests, hasFixedPolicies, trpcPaths, serverFiles };
     return [
         {
-            files: [buildSourcePattern(...CODE_LANGUAGES), ...buildNodePatterns(nodeFiles, '')],
+            files: eslintFiles.code,
             settings: buildBoundarySettings(boundaries),
             rules: {
                 'boundaries/dependencies': [

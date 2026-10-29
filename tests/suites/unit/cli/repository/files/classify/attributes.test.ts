@@ -1,13 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/planning/session.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 
 import {
@@ -15,6 +16,7 @@ import {
     ATTRIBUTE_FILES,
     CLASSIFICATION_FILES,
     TYPE_DECLARATION_FILES,
+    LINGUIST_GENERATED_LINE,
     CLEARED_ATTRIBUTE_KINDS,
 } from '#tests/config/repository/files/classify.ts';
 
@@ -61,7 +63,7 @@ test('.gitattributes wins, then the files configurations declare, then banners, 
     expect(files.get('generated/x.ts')?.kindOrigin).toBe('.gitattributes');
     expect(files.get('types.ts')).toMatchObject({ kind: 'generated', kindOrigin: 'banner' });
     expect(files.get('vendor/types.ts')).toMatchObject({ kind: 'generated', kindOrigin: 'banner' });
-    expect(files.get('vendor/lib.js')).toMatchObject({ kind: 'vendored', kindOrigin: 'directory' });
+    expect(files.get('vendor/lib.js')).toMatchObject({ kind: 'vendored', kindOrigin: 'folder' });
     expect(files.get('assets/a.bin')).toMatchObject({ kind: 'binary', kindOrigin: '.gitattributes' });
     expect(files.get('src/a.ts')).toMatchObject({ kind: 'source', kindOrigin: 'default' });
 });
@@ -79,7 +81,7 @@ test('a folder without Git does not read Git attributes', async () => {
 test('.git/info/attributes marks a file generated while the working .gitattributes holds invalid UTF-8', async () => {
     await using sandbox = await createGitSandbox({});
     await createFileTree(sandbox.path, {
-        '.git/info/attributes': '*.ts linguist-generated\n',
+        '.git/info/attributes': LINGUIST_GENERATED_LINE,
         'source.ts': 'export {};\n',
     });
     await writeFile(join(sandbox.path, '.gitattributes'), Buffer.from([0xff, 0x0a]));
@@ -104,7 +106,7 @@ test('Git attribute reads honor later and nested overrides', async () => {
 
 test('Git info attributes override the tracked .gitattributes until removed', async () => {
     await using sandbox = await createGitSandbox({
-        '.gitattributes': '*.ts linguist-generated\n',
+        '.gitattributes': LINGUIST_GENERATED_LINE,
         'source.ts': 'export const source = 1;\n',
         'control.ts': 'export const control = 2;\n',
     });

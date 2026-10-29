@@ -16,7 +16,7 @@
         ],
         "inserted_lines": [5]
     },
-    "rejected_summary": "Failed: 2 checks with 5 findings. Passed: 12 checks. Skipped: 7 checks.",
+    "rejected_summary": "Failed: 2 checks with 5 findings.",
     "findings": [
         {
             "check": "javascript/eslint",
@@ -57,7 +57,6 @@
             "message": "This comment turns off every rule, including the size limits. Name the rules and give a reason."
         }
     ],
-    "passed": "Passed: 14 checks. Skipped: 7 checks.",
     "issues": [
         {
             "title": "No await.",

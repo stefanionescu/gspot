@@ -1,23 +1,25 @@
 import type { Session } from '#cli/types/session.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
-import type { Finding } from '#cli/types/runs/check.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
+import { filterSourceConfigurations } from '#cli/configurations/select.ts';
 import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
-import { listCodeFiles, buildFolderTree, listSourceExtensions } from '#cli/checks/general/structure/folder-tree.ts';
+import { LONE_FILE_RULE } from '#cli/config/checks/general/structure/lone-files.ts';
+import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';
 
 /**
 Reports each leaf folder that holds only one code file.
 
 @param _session the repository and its tools.
 @param planned the scope files.
-@returns the findings.
 */
-export function checkStructureLoneFiles(_session: Session, planned: PlannedCheck): Finding[] {
+export function checkStructureLoneFiles(_session: Session, planned: PlannedCheck): CheckFinding[] {
     const files = listCodeFiles(planned);
     const tree = buildFolderTree(planned.files);
-    const extensions = listSourceExtensions(planned);
+    const extensions = filterSourceConfigurations(planned.scope.configurations).flatMap(
+        (configuration) => configuration.files.extensions,
+    );
     const isRouteFile = buildPathMatcher(
         planned.scope.configurations.flatMap((configuration) => configuration.route_files),
     );
@@ -39,12 +41,12 @@ export function checkStructureLoneFiles(_session: Session, planned: PlannedCheck
             )
                 return [];
             return [
-                buildFinding(
-                    planned,
-                    { file: `${folder}/${only.name}`, line: 1 },
-                    'lone-file',
-                    `The folder ${folder}/ holds only ${only.name}.`,
-                ),
+                {
+                    file: `${folder}/${only.name}`,
+                    line: 1,
+                    rule: LONE_FILE_RULE,
+                    message: `The folder ${folder}/ holds only ${only.name}.`,
+                },
             ];
         });
 }

@@ -135,13 +135,15 @@ Commit first, so you can go back.
 
 1. Copy the list under "Generated files" in the managed block of `AGENTS.md`, the part between the gspot markers. It
    names every file gspot writes outside `.gspot/` and each key it sets in your files.
-2. Run `gspot set rules.enabled false`, `gspot set ci.enabled false`, and `gspot set hooks.enabled false`, then
-   `gspot install`. gspot deletes the rules, its `AGENTS.md` managed block, the CI workflow, and the hook scripts, and
-   `gspot install` removes `core.hooksPath`. If Husky, Lefthook, or your own hooks run gspot, delete those lines.
+2. Run `gspot set rules.enabled false` and `gspot set ci.enabled false`. gspot deletes the rules, its `AGENTS.md`
+   managed block, and the CI workflow. Then run `git config --unset core.hooksPath`. If Husky, Lefthook, or your own
+   hooks run gspot, delete those lines.
 3. Restore your earlier config files from Git, such as `git show <commit>:.eslintrc.json`, or set up the tools you want.
-4. Delete the files and keys from step 1, the managed blocks in `.gitignore` and `.gitattributes`, `gspot.toml`, and
-   `.gspot/`.
+4. Run `mise trust --untrust .gspot/mise.toml`. Then delete the files and keys from step 1, the managed block in
+   `.gitattributes` and the blank line above it, `gspot.toml`, and `.gspot/`.
 5. Remove the package: `bun remove @gspothq/cli`, the remove command of your package manager, or
    `mise unuse npm:@gspothq/cli`.
 
 Review the diff. To undo, go back to the first commit and run `gspot install`.
+
+The hooks run the code of the repository as you; see [Trust](/start/concepts/#trust).

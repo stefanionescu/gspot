@@ -1,14 +1,31 @@
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 
-export const CACHED_PATHS = [
-    '~/.npm/_cacache',
-    '~/.bun/install/cache',
-    '~/.cache/uv',
-    '~/.cache/mise',
-    '~/.local/share/mise/installs',
-    '~/.local/share/pnpm/store',
-    '~/.yarn/berry/cache',
-] as const;
+export const CACHED_PATHS = {
+    linux: {
+        mise: ['~/.cache/mise', '~/.local/share/mise/installs'],
+        npm: ['~/.npm/_cacache'],
+        pnpm: ['~/.local/share/pnpm/store'],
+        yarn: ['~/.cache/yarn', '~/.yarn/berry/cache'],
+        bun: ['~/.bun/install/cache'],
+        uv: ['~/.cache/uv'],
+    },
+    macos: {
+        mise: ['~/Library/Caches/mise', '~/.local/share/mise/installs'],
+        npm: ['~/.npm/_cacache'],
+        pnpm: ['~/Library/pnpm/store'],
+        yarn: ['~/Library/Caches/Yarn', '~/.yarn/berry/cache'],
+        bun: ['~/.bun/install/cache'],
+        uv: ['~/.cache/uv'],
+    },
+    windows: {
+        mise: ['~/AppData/Local/mise'],
+        npm: ['~/AppData/Local/npm-cache/_cacache'],
+        pnpm: ['~/AppData/Local/pnpm/store'],
+        yarn: ['~/AppData/Local/Yarn/Cache', '~/AppData/Local/Yarn/Berry/cache'],
+        bun: ['~/.bun/install/cache'],
+        uv: ['~/AppData/Local/uv/cache'],
+    },
+} as const;
 
 export const GITHUB_WORKFLOW = '.github/workflows/gspot.yml';
 
@@ -56,7 +73,6 @@ export const CI_CACHE_FILES = [
     `${GSPOT_FOLDER}/*lock*`,
     GSPOT_PATHS.pythonProject,
     GSPOT_PATHS.miseProject,
-    GSPOT_PATHS.miseLockfile,
 ] as const;
 
 export const CI_JOB_NAME = 'lint';
@@ -77,8 +93,6 @@ export const GITHUB_BASE_EXPRESSION =
 export const GITHUB_PUSH_CONDITION =
     "github.event_name != 'push' || github.ref_name == github.event.repository.default_branch";
 
-export const GITHUB_SLOW_CONDITION = "github.event_name == 'push'";
-
 export const GITHUB_EVENTS = { push: { branches: ['**'] }, pull_request: {}, merge_group: {} } as const;
 
 export const GITHUB_CONCURRENCY = {
@@ -93,9 +107,6 @@ export const GITLAB_RULES = [
     { if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH', interruptible: false },
 ] as const;
 
-export const GITLAB_MANUAL_CONDITION =
-    '[ "${CI_PIPELINE_SOURCE:-}" = "push" ] && [ "${CI_COMMIT_BRANCH:-}" = "${CI_DEFAULT_BRANCH:-}" ]';
-
 export const CI_NODE = 'node@24';
 
 export const CI_STEP_NAMES = {
@@ -107,7 +118,7 @@ export const CI_STEP_NAMES = {
     install: 'Install gspot tools',
     saveCache: 'Save caches',
     check: 'Lint',
-    slow: 'Slow checks',
+    gspot: 'Install gspot',
 } as const;
 
 export const FROZEN_INSTALLS = {
@@ -124,3 +135,7 @@ export const YARN_BERRY_INSTALL = ['yarn', 'install', '--immutable'] as const;
 export const NEXT_TYPEGEN_LINE = 'npx --no -- next typegen';
 
 export const CI_DIFF_LINES = ['git add --intent-to-add -- .gspot', 'git diff --exit-code -- .gspot'] as const;
+
+export const CI_INSTALL_COMMAND = 'gspot install';
+
+export const CI_CHECK_COMMAND = `gspot check --changed "\${${CI_BASE_VARIABLE}}"`;

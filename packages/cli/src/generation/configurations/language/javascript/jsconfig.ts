@@ -2,18 +2,19 @@ import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { getValueAt } from '#cli/system/tables.ts';
 import { join, dirname, relative } from 'node:path';
-import { findScopePath } from '#cli/repository/scopes.ts';
 import { JSCONFIG_FILE } from '#cli/config/files/names.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import type { TypeScriptConfiguration } from '#cli/types/parsers/projects/tsconfig.ts';
+import type { ParsedTsconfig } from '#cli/types/parsers/projects/tsconfig.ts';
 import { convertToGlobs, buildIgnoreSections } from '#cli/generation/config-files/ignore-files.ts';
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
 import {
-    JAVASCRIPT_IMPORTS,
+    STANDALONE_OPTIONS,
     JAVASCRIPT_OPTIONS,
     JAVASCRIPT_EXTENSIONS,
     SOURCE_SELECTION_FIELDS,
@@ -24,11 +25,11 @@ import {
 function buildExtendedExclude(
     planned: PlannedConfigFile,
     paths: { prefix: string; owner: string; ignoredGlobs: string[] },
-    authored: TypeScriptConfiguration,
+    authored: ParsedTsconfig,
 ): string[] {
     const { root, reads } = planned.session;
     const generatedFolder = join(root, dirname(planned.targetPath));
-    const chain = [paths.owner, ...authored.extendedConfigurationFiles];
+    const chain = [paths.owner, ...authored.extendedTsconfigFiles];
     const declaring = chain
         .map((file) => ({
             file,
@@ -43,10 +44,10 @@ function buildExtendedExclude(
               return convertToPosixPath(relative(generatedFolder, excludedPath));
           })
         : [];
-    return [...paths.ignoredGlobs.map((path) => `${paths.prefix}${path}`), ...inherited];
+    return [...paths.ignoredGlobs, ...inherited];
 }
 
-function listTrackedDeclarationFiles(planned: PlannedConfigFile, authored: TypeScriptConfiguration): string[] {
+function listTrackedDeclarationFiles(planned: PlannedConfigFile, authored: ParsedTsconfig): string[] {
     const { root } = planned.session;
     const tracked = new Set(planned.session.repository.files.map((file) => file.path));
     const generatedFolder = join(root, dirname(planned.targetPath));
@@ -68,7 +69,7 @@ function hasExtensionlessSources(planned: PlannedConfigFile, importStyle: string
             (file) =>
                 file.kind === 'source' &&
                 file.tags.includes('javascript') &&
-                findScopePath(file.path, planned.session.scopes) === scope,
+                selectScopePath(file.path, planned.session.scopes) === scope,
         )
     );
 }
@@ -76,25 +77,31 @@ function hasExtensionlessSources(planned: PlannedConfigFile, importStyle: string
 /**
 Build jsconfig.json: the JavaScript type-checking project and its scoped source selectors.
 
-@param planned the config file with its scope, level, and target path.
-@returns the JavaScript type-checking project and its scoped source selectors.
+@param planned the config file to build.
 */
 export function buildJsconfigFile(planned: PlannedConfigFile): string {
     const { root, reads } = planned.session;
     const { targetPath: target } = planned;
     const scope = planned.scope.path;
-    const importStyle = getTable(planned.scope.settings, 'tools.eslint').import_extension;
+    const importStyle = getTable(planned.scope.settings, ESLINT_SETTINGS_TABLE).import_extension;
     const ignoredGlobs = convertToGlobs(
         buildIgnoreSections(planned.session).filter((section) => planned.level !== 'all' || section.key !== 'build'),
     );
-    const excluded = [...new Set([...ignoredGlobs, ...JAVASCRIPT_IGNORED_GLOBS])];
+    const rootPrefix = convertToPosixPath(relative(dirname(target), '.')) + '/';
+    const scopePrefix = convertToPosixPath(relative(dirname(target), scope)) + '/';
+    const excluded = [...new Set([...ignoredGlobs, ...JAVASCRIPT_IGNORED_GLOBS])]
+        .filter((path) => !path.startsWith('!'))
+        .flatMap((path) => {
+            if (path.startsWith('**/')) return [`${scopePrefix}${path}`];
+            return scope === '' || path.startsWith(`${scope}/`) ? [`${rootPrefix}${path}`] : [];
+        });
     const jsconfigOwner = readTsconfig(root, join(root, scope, JSCONFIG_FILE), reads);
     const owner = jsconfigOwner === undefined ? TSCONFIG_FILE : JSCONFIG_FILE;
     const authored = jsconfigOwner ?? readTsconfig(root, join(root, scope, owner), reads);
     const prefix = convertToPosixPath(relative(dirname(target), scope)) + '/';
     const compilerOptions: Record<string, unknown> = {
         ...JAVASCRIPT_OPTIONS,
-        jsx: JAVASCRIPT_IMPORTS.jsx,
+        jsx: STANDALONE_OPTIONS.jsx,
         noImplicitAny: planned.level === 'all',
     };
     const jsconfig: Record<string, unknown> = { compilerOptions };
@@ -105,8 +112,8 @@ export function buildJsconfigFile(planned: PlannedConfigFile): string {
     if (!hasSourceSelection)
         jsconfig['include'] = JAVASCRIPT_EXTENSIONS.map((extension) => `${prefix}**/*.${extension}`);
     if (authored === undefined) {
-        Object.assign(compilerOptions, JAVASCRIPT_IMPORTS, isExtensionless ? JAVASCRIPT_BUNDLED_IMPORTS : {});
-        jsconfig['exclude'] = excluded.map((path) => `${prefix}${path}`);
+        Object.assign(compilerOptions, STANDALONE_OPTIONS, isExtensionless ? JAVASCRIPT_BUNDLED_IMPORTS : {});
+        jsconfig['exclude'] = excluded;
         return JSON.stringify(jsconfig, null, JSON_INDENT);
     }
     jsconfig['extends'] = `${prefix}${owner}`;

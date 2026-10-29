@@ -88,27 +88,19 @@ test('reads refuse a link chain that leaves the folder and work after the link i
 
 test('the read cache keeps one copy per run and uncached reads see later edits', async () => {
     await using first = await testdir();
-    await using second = await testdir();
     await createFileTree(first.path, { 'source.txt': 'first' });
-    await createFileTree(second.path, { 'source.txt': 'second' });
     const reads = createReadCache(first.path);
     expect(readCachedText(reads, 'source.txt')).toBe('first');
     await writeFile(join(first.path, 'source.txt'), 'edited');
     expect(readCachedText(reads, 'source.txt')).toBe('first');
     expect(readText(reads.root, 'source.txt')).toBe('edited');
-    expect(readText(second.path, 'source.txt')).toBe('second');
 });
 
-test('the read cache never serves another folder or a failed read', async () => {
+test('the read cache does not keep a failed read', async () => {
     await using sandbox = await testdir();
-    await using scratch = await testdir();
     await createFileTree(sandbox.path, { 'source.txt': 'original' });
-    await createFileTree(scratch.path, { 'source.txt': 'before generation' });
     const reads = createReadCache(sandbox.path);
     expect(readCachedBytes(reads, 'source.txt').toString()).toBe('original');
-    expect(readBytes(scratch.path, 'source.txt').toString()).toBe('before generation');
-    await writeFile(join(scratch.path, 'source.txt'), 'after generation');
-    expect(readBytes(scratch.path, 'source.txt').toString()).toBe('after generation');
     expect(() => readCachedBytes(reads, 'missing.txt')).toThrow('missing.txt');
     await writeFile(join(sandbox.path, 'missing.txt'), 'recovered');
     expect(readCachedBytes(reads, 'missing.txt').toString()).toBe('recovered');

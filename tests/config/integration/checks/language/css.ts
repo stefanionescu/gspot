@@ -13,19 +13,17 @@ export const STYLESHEETS = {
 `,
 } as const;
 
-const ROOT_STYLELINT_RULES = `[tools.stylelint.rules]
+export const ROOT_STYLELINT_RULES = `[tools.stylelint.rules]
 color-hex-length = "short"
 `;
 
-const APP_STYLELINT_SCOPE = `[[scope]]
+export const APP_STYLELINT_SCOPE = `[[scope]]
 path = "app"
 
 configurations = []
 [scope.tools.stylelint.rules]
 color-hex-length = "long"
 `;
-
-export const STYLELINT_TABLES = `${ROOT_STYLELINT_RULES}${APP_STYLELINT_SCOPE}`;
 
 export const ALL_LEVEL_STYLELINT_TABLES = `${ROOT_STYLELINT_RULES}number-max-precision = 0
 ${APP_STYLELINT_SCOPE}`;

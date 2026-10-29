@@ -5,7 +5,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { type Level } from '#cli/types/configurations.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, compareFindings, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { type LintFinding, type ScriptFindingCase, type EslintConfiguration } from '#tests/types/tools.ts';
 
 import {
@@ -186,11 +186,15 @@ test.each([...PACKAGE_MANAGER_LEVELS])(
 function buildExpectedFindings(cases: readonly ScriptFindingCase[], level: Level): LintFinding[] {
     return cases
         .flatMap((row) =>
-            [...row.recommended, ...(level === 'all' ? (row.all ?? []) : [])].map(({ ruleId, line }) => ({
+            [...row.everyLevel, ...(level === 'all' ? (row.all ?? []) : [])].map(({ ruleId, line }) => ({
                 file: row.file,
                 rule: ruleId,
                 line,
             })),
         )
-        .toSorted(compareFindings);
+        .toSorted((left, right) => {
+            if (left.file !== right.file) return left.file.localeCompare(right.file);
+            if (left.line !== right.line) return left.line - right.line;
+            return (left.rule ?? '').localeCompare(right.rule ?? '');
+        });
 }

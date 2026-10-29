@@ -1,16 +1,17 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { createFileTree } from 'testdirs';
-import { openSession } from '#cli/session.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { type RunOptions } from '#cli/types/runs/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { LOWERCASE_SELECT_SQL } from '#tests/config/sql.ts';
+import { type RunOptions } from '#cli/types/commands/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { FIX_LINTER_CASES } from '#tests/config/commands/check/fixes/passes.ts';
 import { runGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { SQL_COMMAND_CHECK, SQL_SEARCH_ARGUMENTS } from '#tests/config/commands/samples.ts';
@@ -78,7 +79,7 @@ test('after --fix, the checks read the fixed file and other files stay as they w
                     command: buildProgramCommand('fakes/tool'),
                     paths: ['query.sql'],
                     stage: 'commit',
-                    fix: buildProgramCommand('fakes/tool', '--text', 'select 1;\n', '{files}'),
+                    fix: buildProgramCommand('fakes/tool', '--text', LOWERCASE_SELECT_SQL, '{files}'),
                     output: { format: 'none' },
                 },
                 { ...SQL_COMMAND_CHECK, command: buildProgramCommand('checks/search', ...SQL_SEARCH_ARGUMENTS) },
@@ -101,7 +102,7 @@ test('after --fix, the checks read the fixed file and other files stay as they w
         { check: 'project/correct-sql', status: 'passed', findings: [] },
         { check: 'project/read-sql', status: 'passed', findings: [] },
     ]);
-    expect(await readFile(join(sandbox.path, 'query.sql'), 'utf8')).toBe('select 1;\n');
+    expect(await readFile(join(sandbox.path, 'query.sql'), 'utf8')).toBe(LOWERCASE_SELECT_SQL);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     expect(await readFile(join(sandbox.path, 'notes.txt'), 'utf8')).toBe('Authored notes.\n');
 });
@@ -178,7 +179,7 @@ test('a fixer that fails midway leaves the later fixers to run in order and keep
     );
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(2);
     expect(fixed.report.failed).toStrictEqual(['sandbox/first']);
-    expect(await readFile(join(sandbox.path, 'order.log'), 'utf8')).toBe('first\nsecond\nthird\nsecond\nthird\n');
+    expect(await readFile(join(sandbox.path, 'order.log'), 'utf8')).toBe('first\nsecond\nthird\n');
     for (const name of ['first', 'second', 'third'])
         expect(await readFile(join(sandbox.path, `${name}.txt`), 'utf8')).toBe('fixed\n');
 });

@@ -2,10 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/configurations/names.ts';
+import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { PROSE_SANDBOX } from '#tests/config/integration/samples.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { GUIDE_READ_MARKDOWN, SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/documents.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { PACKAGE_STYLE_CASES } from '#tests/config/integration/checks/general/prose/scopes.ts';
 
@@ -52,8 +53,8 @@ test('a Vale ignore with a lint rule and a path keeps findings in other files', 
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': settings,
-            'guide.md': '# Schedule\n\nRelease on 03/04/2026.\n',
-            'archive.md': '# Schedule\n\nRelease on 03/04/2026.\n',
+            'guide.md': SCHEDULE_RELEASE_MARKDOWN,
+            'archive.md': SCHEDULE_RELEASE_MARKDOWN,
         },
     });
 
@@ -108,13 +109,7 @@ test.each([...LEVELS])(
             findings.map(([line, rule]) => ({ file: path, line, rule })),
         );
         expect(listFindingRows(checked.report)).toStrictEqual(level === 'all' ? expected : []);
-        await writeFile(
-            join(root, path),
-            `# Guide
-
-Read the guide.
-`,
-        );
+        await writeFile(join(root, path), GUIDE_READ_MARKDOWN);
         const corrected = parseCheckReport(await spawnGspot(root, ['check', path, '--only', 'prose/vale', '--json']));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.report.checks).toMatchObject([{ scope: '', status: 'passed', findings: [] }]);

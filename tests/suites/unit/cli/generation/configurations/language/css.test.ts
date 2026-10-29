@@ -1,15 +1,19 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import stylelint, { type Config } from 'stylelint';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { type StylelintConfigFile } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { findManifestTarget, findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
-import { STYLELINT_SCOPE_FILES } from '#tests/config/generation/configurations/language/css.ts';
+import { getManifestTarget, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
-test('Vue and Svelte stylesheet rules stay inside their scopes', async () => {
+import {
+    STYLELINT_SCOPE_FILES,
+    COMPONENT_SYNTAX_OVERRIDES,
+} from '#tests/config/generation/configurations/language/css.ts';
+
+test('every CSS scope selects Vue, Svelte and Astro syntax only for matching extensions', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['css'], {
             level: 'all',
@@ -19,10 +23,10 @@ test('Vue and Svelte stylesheet rules stay inside their scopes', async () => {
     });
 
     const session = await openSession(sandbox.path);
-    const outputs = generate(session).files;
+    const outputs = generateFiles(session).files;
     const documents = Object.fromEntries(
         ['', 'vue', 'svelte', 'mixed'].map((scope) => {
-            const output = outputs.find((file) => file.path === findConfigFilePath(session, 'stylelint', scope))!;
+            const output = outputs.find((file) => file.path === getConfigFilePath(session, 'stylelint', scope))!;
             return [scope, JSON.parse(output.content) as StylelintConfigFile];
         }),
     );
@@ -32,13 +36,8 @@ test('Vue and Svelte stylesheet rules stay inside their scopes', async () => {
             document.overrides?.map(({ files, customSyntax }) => ({ files, customSyntax })),
         ]),
     );
-    expect(documents['']!.overrides).toBeUndefined();
-    expect(overrides['vue']).toStrictEqual([{ files: ['**/*.vue'], customSyntax: 'postcss-html' }]);
-    expect(overrides['svelte']).toStrictEqual([{ files: ['**/*.svelte'], customSyntax: 'postcss-html' }]);
-    expect(overrides['mixed']).toStrictEqual([
-        { files: ['**/*.vue'], customSyntax: 'postcss-html' },
-        { files: ['**/*.svelte'], customSyntax: 'postcss-html' },
-    ]);
+    for (const scope of ['', 'vue', 'svelte', 'mixed'])
+        expect(overrides[scope]).toStrictEqual(COMPONENT_SYNTAX_OVERRIDES);
 });
 
 test("your Stylelint rule options reach each scope's file", async () => {
@@ -53,10 +52,10 @@ test("your Stylelint rule options reach each scope's file", async () => {
     });
 
     const session = await openSession(sandbox.path);
-    const generated = generate(session);
+    const generated = generateFiles(session);
     expect(generated.files.filter(({ path }) => path.endsWith('/stylelint.json'))).toHaveLength(1);
     for (const scope of ['', 'child']) {
-        const target = findConfigFilePath(session, 'stylelint', scope);
+        const target = getConfigFilePath(session, 'stylelint', scope);
         const file = generated.files.find(({ path }) => path === target)!;
         const config = JSON.parse(file.content) as Config;
         expect(config.rules!['color-hex-length']).toBe('long');
@@ -74,17 +73,17 @@ test("your Stylelint rule options reach each scope's file", async () => {
     }
 });
 
-test('recommended refuses Stylelint options for a rule it does not run and for an unknown rule', async () => {
+test('level basic refuses Stylelint options for a rule it does not run and for an unknown rule', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['css'], {
-            level: 'recommended',
+            level: 'basic',
             tables: '[tools.stylelint.rules]\ncolor-hex-length = "long"\nnumber-max-precision = 0\nunknown-rule = true\n',
         }),
         'source.css': 'a { color: #fff; }',
     });
     const session = await openSession(sandbox.path);
-    expect(() => generate(session)).toThrow(
-        'number-max-precision runs only at level all. gspot sets options only for the rules that run at level recommended.\ngspot runs unknown-rule at no level, so it takes no options.',
+    expect(() => generateFiles(session)).toThrow(
+        'number-max-precision runs only at level all. gspot sets options only for the rules that run at level basic.\ngspot runs unknown-rule at no level, so it takes no options.',
     );
 });
 
@@ -94,7 +93,7 @@ test('an inactive core Stylelint rule is refused without blaming a missing plugi
         'source.css': 'a { color: red; }',
     });
     const session = await openSession(sandbox.path);
-    expect(() => generate(session)).toThrow('gspot runs color-named at no level, so it takes no options.');
+    expect(() => generateFiles(session)).toThrow('gspot runs color-named at no level, so it takes no options.');
 });
 
 test('a scope with CSS Modules files accepts composes, :global, and @value in them only', async () => {
@@ -103,21 +102,21 @@ test('a scope with CSS Modules files accepts composes, :global, and @value in th
         'button.module.css': '.base {\n    color: red;\n}\n',
     });
 
-    const output = generate(await openSession(sandbox.path)).files.find(
-        (file) => file.path === findManifestTarget('css', 'stylelint.json'),
+    const output = generateFiles(await openSession(sandbox.path)).files.find(
+        (file) => file.path === getManifestTarget('css', 'stylelint.json'),
     )!;
     const config = JSON.parse(output.content) as Config;
     const code =
         '@value primary: red;\n\n.button {\n    composes: base from "./base.module.css";\n}\n\n:global(.dark) .button {\n    color: blue;\n}\n';
     const rules = new Set(['property-no-unknown', 'selector-pseudo-class-no-unknown', 'at-rule-no-unknown']);
-    async function lintRules(codeFilename: string): Promise<string[]> {
+    async function listReportedRules(codeFilename: string): Promise<string[]> {
         const result = await stylelint.lint({ code, codeFilename, config, configBasedir: testModules });
         return result.results
             .flatMap(({ warnings }) => warnings.map(({ rule }) => rule))
             .filter((rule) => rules.has(rule));
     }
-    expect(await lintRules(`${sandbox.path}/button.module.css`)).toStrictEqual([]);
-    const defaultFindings = await lintRules(`${sandbox.path}/plain.css`);
+    expect(await listReportedRules(`${sandbox.path}/button.module.css`)).toStrictEqual([]);
+    const defaultFindings = await listReportedRules(`${sandbox.path}/plain.css`);
     expect(defaultFindings.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'at-rule-no-unknown',
         'property-no-unknown',

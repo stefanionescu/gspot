@@ -26,11 +26,11 @@ configurations = ["naming", "typescript"]
 [rules]
 enabled = false
 
-[naming]
-banned_words = ["discardedword"]
-
 [[scope]]
 path = "app"
+
+[naming]
+banned_words = ["discardedword"]
 `,
     },
     {
@@ -44,7 +44,7 @@ enabled = false
 
 [[scope]]
 path = "app"
-naming.banned_words = ["discardedword"]
+naming = {banned_words = ["discardedword"]}
 `,
     },
 ] as const;
@@ -74,14 +74,18 @@ export const SET_REFUSALS = [
     [
         'an undeclared scope',
         ['set', 'limits.file_lines', '100', '--scope', 'web'],
-        'gspot.toml has no [[scope]] with path = "web". Add one, or leave out --scope.',
+        'There is no project scope web. Name a project folder or a written scope.',
     ],
     [
         'an invalid level',
         ['set', 'level', 'everything'],
-        'The value everything is not valid for level. Use recommended or all.',
+        'The value everything is not valid for level. Use basic or all.',
     ],
-    ['an ignore', ['set', 'ignore', 'bash/shellcheck'], 'Run gspot ignore <check> --reason "<why>" to add an ignore.'],
+    [
+        'an ignore',
+        ['set', 'ignore', 'bash/shellcheck'],
+        'Use gspot ignore to add an ignore, or gspot unignore to remove one.',
+    ],
     [
         'another record list',
         ['set', 'command_check', 'lint'],
@@ -93,8 +97,8 @@ export const KEPT_SETTING_CHANGES = [
     [
         'set',
         ['set', 'limits.bash.file_lines', '200', '--reason', 'Generated scripts need this limit.'],
-        '[limits.bash]\nfile_lines = { value = 200, reason = "Generated scripts need this limit." }',
-        'Set limits.bash.file_lines to 200.  # Generated scripts need this limit.  (was 140 from configuration structure)\nnote     No selected check reads limits.bash.file_lines at level recommended.',
+        '[limits]\nbash = {file_lines = {value = 200, reason = "Generated scripts need this limit."}}',
+        'Set limits.bash.file_lines to 200.  # Generated scripts need this limit.  (was 140 from configuration structure)\nnote     No selected check reads limits.bash.file_lines at level basic.',
     ],
     [
         'ignore',
@@ -114,7 +118,7 @@ enabled = false
 
 export const NO_CHANGE_COMMANDS = [
     ['unset level', ['unset', 'level']],
-    ['set level recommended', ['set', 'level', 'recommended']],
+    ['set level basic', ['set', 'level', 'basic']],
 ] as const;
 
 export const UNKNOWN_SETTING_KEYS = [
@@ -126,7 +130,7 @@ export const UNKNOWN_SETTING_KEYS = [
     {
         key: 'tools.v8r.unknown_key',
         message:
-            'No selected configuration has the setting tools.v8r.unknown_key. The settings that exist under that table are `schema`.',
+            'No selected configuration has the setting tools.v8r.unknown_key. The settings that exist under that table are schema.',
     },
 ] as const;
 
@@ -169,3 +173,8 @@ allowed_unlisted_pages = { value = ["private/index.html"], reason = "The private
 `;
 
 export const REFUSAL_FILES = { 'gspot.toml': COMMAND_VALUE_SETTINGS, 'control.txt': 'preserve\n' } as const;
+
+export const VALUE_VALIDATION_CASES = [
+    { name: 'without a reason', hasReason: false },
+    { name: 'with a reason', hasReason: true },
+] as const;

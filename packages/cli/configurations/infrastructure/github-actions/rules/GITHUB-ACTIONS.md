@@ -19,6 +19,17 @@ Read this rule when you change a GitHub Actions workflow or action.
 - Read secrets through `${{ secrets.NAME }}` into an `env` for the one step that needs them. Never write them to files
   that outlive the step.
 
+## Security
+
+- Pin every action from another repository to a full commit SHA, with its version in a comment:
+  `uses: actions/checkout@<sha> # v5.0.0`.
+- Set `permissions:` at the top of each workflow to the least that its jobs need, such as `contents: read`. Widen it
+  only in the job that needs more.
+- Give every `actions/checkout` step `persist-credentials: false`. A later step that pushes gets its token through
+  `env`.
+- Write no `${{ }}` expression inside `run:`. Pass the value through the step's `env`, and read it as a quoted shell
+  variable, such as `"${HEAD_REF}"`.
+
 ## Scripts
 
 - Declare the shell required by the script. The explicit Bash shell in GitHub Actions turns on `-e` and `pipefail`, but

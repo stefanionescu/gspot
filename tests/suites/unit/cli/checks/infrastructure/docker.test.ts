@@ -1,10 +1,10 @@
 import { testdir } from 'testdirs';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
+import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
-import { findCheckCode } from '#cli/checks/registry.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
@@ -48,11 +48,11 @@ test.each([...COMPOSE_PAIRING_CASES])(
         resources.use(fakes);
         const toolRun = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult()));
         const planned = planChecks(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
-        const result = await runCheckCode(buildCheckSession(session), planned, findCheckCode(planned.check));
+        const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['docker/compose']);
         expect(result.findings).toStrictEqual([]);
         expect(result.status).toBe('passed');
         expect(toolRun.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([
-            ['compose', '-f', base, '-f', override, 'config', '--quiet', '--no-env-resolution'],
+            ['compose', '-f', base, '-f', override, 'config', '--quiet', '--no-interpolate', '--no-env-resolution'],
         ]);
     },
 );
@@ -85,7 +85,7 @@ test.each([...DOCKERIGNORE_ALLOWLISTS])(
 );
 
 test.each([...DOCKERIGNORE_CASES])(
-    `docker/dockerignore requires an ignore file with the entries of each scope's configurations: $name`,
+    "docker/dockerignore requires an ignore file with the patterns of each scope's configurations: $name",
     async ({ configurations, options, files, findings: expectedFindings }) => {
         await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(configurations, options), ...files });
 
@@ -128,7 +128,7 @@ test(`docker/trivy-image fails with Trivy's error text when Trivy exits 1`, asyn
 });
 
 test.each([...INVALID_COMPOSE_SOURCES])(
-    'docker/trivy-image fails on $name in compose.yaml before it runs Trivy',
+    'docker/trivy-image reports syntax for $name in compose.yaml before it runs Trivy',
     async ({ source, message }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['docker']),
@@ -136,8 +136,8 @@ test.each([...INVALID_COMPOSE_SOURCES])(
         });
 
         using scan = spyOn(processes, 'spawnProcess');
-        const scanError = await captureRejection(runSandboxCheck(sandbox.path, 'docker/trivy-image'));
-        expect(scanError.message).toBe(message);
+        const findings = await runSandboxCheck(sandbox.path, 'docker/trivy-image');
+        expect(findings).toMatchObject([{ file: 'compose.yaml', rule: 'syntax', message }]);
         expect(scan).not.toHaveBeenCalled();
     },
 );

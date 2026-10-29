@@ -7,5 +7,8 @@ export const LYCHEE_MDX_EXPRESSION = '%7B[^/]*%7D';
 export const LYCHEE_NOTES = [
     '# This file stops lychee from reading a lychee.toml in the folder where it runs.',
     '# Allow a URL with the docs.allowed_urls setting.',
-    '# A link that starts with / starts at the repository root, as on GitHub; in a site, it names a route.',
 ];
+
+export const LYCHEE_ROOT_NOTE = '# A link that starts with / starts at the repository root, as on GitHub.';
+
+export const LYCHEE_SITE_NOTE = '# A link that starts with / names a route of the site, so lychee skips it.';

@@ -1,22 +1,18 @@
 import { REACT_RULES } from '#cli/config/generation/configurations/framework/react.ts';
+import { REACT_FILES } from '#cli/config/generation/configurations/framework/nextjs.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { serializePresetAccess } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
+import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 import {
-    REACT_FILES,
-    CONFIGURATION_PLUGINS,
-} from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
-import {
     getPreset,
+    buildPresetRules,
     convertWarningsToErrors,
-    buildPresetRuleExpression,
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 
 /**
 Apply the React, hooks, and refresh lint rules for the JSX mode.
 
 @param scope the presets of the scope.
-@returns the imports and ESLint blocks for this configuration.
 */
 export function buildReactBlocks(scope: Pick<EslintScope, 'presets'>): ConfigurationBlocks {
     const { presets } = scope;
@@ -35,12 +31,32 @@ export function buildReactBlocks(scope: Pick<EslintScope, 'presets'>): Configura
                     ...REACT_RULES,
                 },
             },
-            properties: `plugins: { 'react-hooks': reactHooks, '@eslint-react': react, 'react-refresh': reactRefresh }, languageOptions: ${serializePresetAccess('react', recommended.source)}.languageOptions, settings: ${serializePresetAccess('react', recommended.source)}.settings`,
-            preset: buildPresetRuleExpression([
-                ['react', recommended],
-                ['reactHooks', hooks],
-                ['reactRefresh', refresh],
-            ]),
+            calls: [
+                {
+                    name: 'addPlugins',
+                    args: [
+                        {
+                            imports: {
+                                'react-hooks': 'reactHooks',
+                                '@eslint-react': 'react',
+                                'react-refresh': 'reactRefresh',
+                            },
+                        },
+                    ],
+                },
+            ],
+            preset: {
+                ...buildPresetRules([
+                    ['react', recommended],
+                    ['reactHooks', hooks],
+                    ['reactRefresh', refresh],
+                ]),
+                sources: [
+                    { importName: 'react', path: recommended.source, includeFields: true },
+                    { importName: 'reactHooks', path: hooks.source },
+                    { importName: 'reactRefresh', path: refresh.source },
+                ],
+            },
         },
     ];
     return {

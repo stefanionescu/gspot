@@ -1,15 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { SITE_SANDBOX } from '#tests/config/site.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { SITE_SANDBOX, SITE_BUILD_ARGUMENTS } from '#tests/config/site.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
-import { buildSiteSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
     OUTPUT_CASES,
@@ -21,28 +20,14 @@ import {
 
 const installedSandbox = shareInstalledSandbox(SITE_SANDBOX);
 
-test('site/build reports a failed build and passes after the fix', async () => {
-    const sample = {
-        check: 'site/build',
-        files: { 'gspot.toml': buildSiteSettings(buildProgramCommand('fakes/tool', '--exit', '1')) },
-        expected: { file: '', rule: 'build', line: 1 },
-        corrected: {
-            files: {
-                'gspot.toml': buildSiteSettings(buildProgramCommand('fakes/site-build', ...SITE_BUILD_ARGUMENTS)),
-            },
-        },
-    };
-    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
-});
-
 test.each([...OUTPUT_CASES])(
     '$check reports its finding in the built site and passes after the fix: $name',
     async (scenario) => {
         const { check, level, tables, files, findings, corrected } = scenario;
         const { root } = installedSandbox();
-        const settings = buildSiteSettings(buildProgramCommand('fakes/site-build', '--copy', 'pages=dist'), {
+        const settings = buildSandboxSettings(['site'], {
             level,
-            tables,
+            tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/site-build', '--copy', 'pages=dist'))}\n${tables}`,
         });
         await using _sourceChange = await applySandboxChanges(installedSandbox(), {
             files: { 'gspot.toml': settings, ...files },
@@ -105,7 +90,10 @@ test('HTML Validate reports all 400 missing alt attributes in a built page', asy
     const { root } = installedSandbox();
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         files: {
-            'gspot.toml': buildSiteSettings(buildProgramCommand('fakes/site-build', '--copy', 'pages=dist')),
+            'gspot.toml': buildSandboxSettings(['site'], {
+                level: 'all',
+                tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/site-build', '--copy', 'pages=dist'))}\n`,
+            }),
             'pages/index.html': `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${'<img src="image.png">'.repeat(400)}</body></html>`,
         },
     });

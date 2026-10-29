@@ -1,6 +1,8 @@
 # React Native
 
-Read this rule when you change a React Native or Expo app. Read REACT.md first.
+Read this rule when you change a React Native or Expo app.
+
+Read REACT.md first.
 
 ## Components and touch
 
@@ -9,10 +11,17 @@ Read this rule when you change a React Native or Expo app. Read REACT.md first.
 - Do not read `Dimensions` at module load. Use `useWindowDimensions`, which follows rotation and split view.
 - Respect the safe area on every screen, through the safe area context.
 
+### Touch conventions
+
+<!-- level: all -->
+
+- Use `Pressable` for a touch target, not a `Touchable` component.
+
 ## Lists
 
 - Keep `renderItem` and the row component stable: define them outside the render, or memoize them.
 - Give a list of fixed row height `getItemLayout`, so it scrolls to an index without measuring.
+- Render a list that can grow with `FlatList` or `SectionList`, never with `.map` inside a `ScrollView`.
 
 ## Styles
 
@@ -33,6 +42,7 @@ Read this rule when you change a React Native or Expo app. Read REACT.md first.
 ## Native data and secrets
 
 - The bundle holds no secret. A key that ships in the app belongs to everyone who downloads it.
+- Keep a token, a password, or another secret in the secure store of the platform, never in `AsyncStorage`.
 - Ask for a permission at the moment the feature needs it, and handle the refusal.
 - Validate a deep link before it navigates or acts. A link supplies input from outside.
 

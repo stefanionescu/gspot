@@ -1,8 +1,20 @@
 import plugin from '#eslint-plugin/plugin.ts';
+import { formatTable, buildReferencePage } from './markdown.ts';
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
 import type { PluginRule, ReferencePage } from '../types/reference.ts';
-import { formatTable, buildReferencePage, formatReferencePath } from './markdown.ts';
-import { FIRST_SENTENCE, REFERENCE_FOLDERS, CONJUNCTION_FORMAT, SCHEMA_TYPE_LABELS } from '../config/reference.ts';
+
+import {
+    REFERENCE_PATH,
+    FIRST_SENTENCE,
+    PURPOSE_HEADING,
+    REFERENCE_FOLDERS,
+    NO_CONFIG_MESSAGE,
+    CONJUNCTION_FORMAT,
+    SCHEMA_TYPE_LABELS,
+    NO_OPTIONS_MESSAGE,
+    ESLINT_FIX_MESSAGE,
+    DEFAULT_OPTION_DESCRIPTION,
+} from '../config/reference.ts';
 
 function formatRuleOptions({
     schema,
@@ -21,13 +33,13 @@ function formatRuleOptions({
                 `\`${name}\``,
                 SCHEMA_TYPE_LABELS[type] ?? type,
                 value === undefined ? 'Unset' : `\`${JSON.stringify(value)}\``,
-                shape.description ?? 'See the example.',
+                shape.description ?? DEFAULT_OPTION_DESCRIPTION,
             ];
         });
     return (
-        formatTable(['Option', 'Type', 'Default', 'What it does'], rows) ||
+        formatTable(['Option', 'Type', 'Default', PURPOSE_HEADING], rows) ||
         schemas.flatMap((option) => option.description ?? []).join('\n\n') ||
-        'This rule has no options.'
+        NO_OPTIONS_MESSAGE
     );
 }
 
@@ -38,7 +50,7 @@ function listRuleConfigs(name: string): string[] {
 }
 
 function formatRuleConfigs(configs: string[]): string {
-    if (configs.length === 0) return 'No config turns it on; turn it on in your ESLint config.';
+    if (configs.length === 0) return NO_CONFIG_MESSAGE;
     const names = CONJUNCTION_FORMAT.format(configs.map((config) => `\`${config}\``));
     return configs.length === 1 ? `The ${names} config turns it on.` : `The ${names} configs turn it on.`;
 }
@@ -53,7 +65,7 @@ export function listPluginRules(): PluginRule[] {
         .toSorted(([left], [right]) => left.localeCompare(right))
         .map(([name, rule]) => ({
             name: `${PLUGIN_PREFIX}/${name}`,
-            link: formatReferencePath('eslintPlugin', name),
+            link: `${REFERENCE_PATH}${REFERENCE_FOLDERS['eslintPlugin']}/${name === '' ? '' : name + '/'}`,
             configs: listRuleConfigs(name),
             summary: (FIRST_SENTENCE.exec(rule.meta.docs.description)?.[0] ?? rule.meta.docs.description).trim(),
         }));
@@ -69,8 +81,7 @@ export function buildPluginPages(): Map<string, ReferencePage> {
         Object.entries(plugin.rules).map(([name, rule]) => {
             const docs = rule.meta.docs;
             const facts =
-                formatRuleConfigs(listRuleConfigs(name)) +
-                (rule.meta.fixable === undefined ? '' : ' `eslint --fix` fixes it.');
+                formatRuleConfigs(listRuleConfigs(name)) + (rule.meta.fixable === undefined ? '' : ESLINT_FIX_MESSAGE);
             const optionsBody = formatRuleOptions(rule.meta);
             const body = `${docs.description}\n\n${facts}\n\n## Why\n\n${docs.why}\n\n## What to do\n\n${docs.fix}\n\n## Example\n\n${docs.example}\n\n## Options\n\n${optionsBody}\n`;
             return [

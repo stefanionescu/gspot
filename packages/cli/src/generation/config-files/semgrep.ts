@@ -10,7 +10,6 @@ Build a Semgrep config file: drop the rules whose packages the scope does not de
 at the configured folders.
 
 @param planned the config file to build.
-@returns the Semgrep rules as YAML.
 */
 export function buildSemgrepFile(planned: PlannedConfigFile): string {
     const { scope, configFile } = planned;

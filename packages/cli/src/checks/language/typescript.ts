@@ -1,26 +1,31 @@
 import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { type Finding } from '#cli/types/runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { isProjectChecked } from '#cli/checks/tsc/compiler.ts';
+import { type CheckFinding } from '#cli/types/runs/check.ts';
+import { claimProjectCheck } from '#cli/checks/tsc/compiler.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
-import { TSCONFIG_NAME } from '#cli/config/checks/language/typescript.ts';
 import { selectRequiredTsconfigOptions } from '#cli/checks/tsc/scope-tsconfig.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { TYPESCRIPT_TAG, PARENT_TSCONFIG_SKIP } from '#cli/config/checks/tsc/compiler.ts';
+
+import {
+    OPTION_HELP,
+    TSCONFIG_NAME,
+    STRICT_FAMILY_OPTIONS,
+    MISSING_TSCONFIG_RULE,
+    MISSING_TSCONFIG_MESSAGE,
+} from '#cli/config/checks/language/typescript.ts';
 
 /**
 Reports each required compiler option that a scope tsconfig leaves off.
 
 @param session the repository and its tools.
 @param planned the scope to check.
-@returns the findings.
 */
-export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck): Finding[] {
+export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck): CheckFinding[] {
     const project = readTsconfigProject(
         session.root,
         planned.scope.path,
@@ -33,12 +38,11 @@ export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck)
             : convertToPosixPath(relative(session.root, project.path));
     if (project === undefined && planned.files.some((file) => file.tags.includes(TYPESCRIPT_TAG)))
         return [
-            buildFinding(
-                planned,
-                { file: scopeTsconfig },
-                'missing',
-                'Add a tsconfig.json to this scope. ESLint and tsc read the TypeScript files through it.',
-            ),
+            {
+                file: scopeTsconfig,
+                rule: MISSING_TSCONFIG_RULE,
+                message: MISSING_TSCONFIG_MESSAGE,
+            },
         ];
     const tsconfigPaths = new Set([
         scopeTsconfig,
@@ -53,7 +57,7 @@ export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck)
     });
     const unchecked = projects.filter(
         ({ path }) =>
-            !isProjectChecked(session.reads, {
+            !claimProjectCheck(session.reads, {
                 check: planned.check.id,
                 path: join(session.root, path),
                 scope: planned.scope.path,
@@ -62,12 +66,17 @@ export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck)
     );
     if (projects.length > 0 && unchecked.length === 0) throw new GspotError('skip', PARENT_TSCONFIG_SKIP);
     return unchecked.flatMap(({ path, parsed }) =>
-        Object.keys(required)
-            .filter((option) => parsed.options[option] !== true)
-            .map((option) =>
-                buildFinding(planned, { file: path }, option, `${option} is not on in this tsconfig.`, {
-                    help: 'Turn this compiler option on in this tsconfig.',
-                }),
-            ),
+        [
+            ...Object.keys(required).filter((option) => parsed.options[option] !== true),
+            ...(required['strict'] === true
+                ? STRICT_FAMILY_OPTIONS.filter((option) => parsed.options[option] === false)
+                : []),
+        ].map((option) => ({
+            file: path,
+            rule: option,
+            message: `${option} is not on in this tsconfig.`,
+
+            help: OPTION_HELP,
+        })),
     );
 }

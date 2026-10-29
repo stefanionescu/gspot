@@ -1,18 +1,19 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
-import { openSession } from '#cli/session.ts';
 import { rm, writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { type KnipConfigFile } from '#tests/types/tools.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { generateFile, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { HOST_MODULE } from '#tests/config/generation/configurations/language/javascript/samples.ts';
+import { generateFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { HOST_MODULE } from '#tests/config/generation/configurations/language/javascript/paths.ts';
 
 import {
     KNIP_ARGUMENTS,
@@ -24,7 +25,7 @@ import {
     KNIP_COMPONENT_FILES,
 } from '#tests/config/generation/configurations/language/javascript/knip.ts';
 
-const knipArguments = [...KNIP_ARGUMENTS, '--config', findManifestTarget('javascript', 'knip.json'), '--include'];
+const knipArguments = [...KNIP_ARGUMENTS, '--config', getManifestTarget('javascript', 'knip.json'), '--include'];
 
 const check = readConfigurations()
     .get('javascript')!
@@ -38,12 +39,12 @@ test('Knip finds unused framework component files and uses the entry points of e
     });
     const configuration = await generateFile(
         settings,
-        findManifestTarget('javascript', 'knip.json'),
+        getManifestTarget('javascript', 'knip.json'),
         KNIP_COMPONENT_FILES,
     );
     await createFileTree(sandbox.path, {
         ...KNIP_COMPONENT_FILES,
-        [findManifestTarget('javascript', 'knip.json')]: configuration,
+        [getManifestTarget('javascript', 'knip.json')]: configuration,
     });
     await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
     const result = await runCommand([...knipArguments, 'files'], { cwd: sandbox.path });
@@ -76,12 +77,12 @@ test("Knip ignores gspot's tool packages and reports your unused dependencies", 
     };
     const configuration = await generateFile(
         buildSandboxSettings(['javascript'], { level: 'all' }),
-        findManifestTarget('javascript', 'knip.json'),
+        getManifestTarget('javascript', 'knip.json'),
         files,
     );
     await createFileTree(sandbox.path, {
         ...files,
-        [findManifestTarget('javascript', 'knip.json')]: configuration,
+        [getManifestTarget('javascript', 'knip.json')]: configuration,
     });
     await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
     const result = await runCommand([...knipArguments, 'dependencies'], { cwd: sandbox.path });
@@ -123,11 +124,11 @@ test('Knip treats script configuration files as entries and ignores pointer file
     });
 
     const session = await openSession(sandbox.path);
-    const generated = generate(session).files;
+    const generated = generateFiles(session).files;
     const pointers = generated.filter(({ path }) =>
         ['eslint.config.mjs', 'prettier.config.mjs', '.markdownlint.jsonc'].includes(basename(path)),
     );
-    const configuration = generated.find(({ path }) => path === findManifestTarget('javascript', 'knip.json'))!;
+    const configuration = generated.find(({ path }) => path === getManifestTarget('javascript', 'knip.json'))!;
     await createFileTree(
         sandbox.path,
         Object.fromEntries([configuration, ...pointers].map(({ path, content }) => [path, content])),
@@ -154,8 +155,8 @@ test("Knip gets each scope's test_files as entry points without sibling leaks", 
     });
 
     const session = await openSession(sandbox.path);
-    const content = generate(session).files.find(
-        ({ path }) => path === findManifestTarget('javascript', 'knip.json'),
+    const content = generateFiles(session).files.find(
+        ({ path }) => path === getManifestTarget('javascript', 'knip.json'),
     )!.content;
     const { workspaces } = JSON.parse(content) as KnipConfigFile;
     const globsByWorkspace = Object.fromEntries(Object.entries(workspaces).map(([name, { entry }]) => [name, entry]));
@@ -174,7 +175,7 @@ test('Knip workspaces come from package workspaces, your entries and the configu
         tables: '[tools.knip]\nentry = ["cli.js"]\n[[scope]]\npath = "api"\n\nconfigurations = ["javascript"]\n[scope.tools.knip]\nentry = ["api/serve.js"]\n[[scope]]\npath = "lib"\n\nconfigurations = ["javascript"]\n',
     });
     const knip = JSON.parse(
-        await generateFile(settings, findManifestTarget('javascript', 'knip.json'), files),
+        await generateFile(settings, getManifestTarget('javascript', 'knip.json'), files),
     ) as KnipConfigFile;
     const globsByWorkspace = Object.fromEntries(
         Object.entries(knip.workspaces).map(([name, { entry }]) => [name, entry]),
@@ -186,7 +187,7 @@ test('Knip workspaces come from package workspaces, your entries and the configu
         web: shared,
     });
     const withoutEntrypoints = JSON.parse(
-        await generateFile(buildSandboxSettings(['javascript']), findManifestTarget('javascript', 'knip.json'), files),
+        await generateFile(buildSandboxSettings(['javascript']), getManifestTarget('javascript', 'knip.json'), files),
     ) as KnipConfigFile;
     expect(
         Object.fromEntries(Object.entries(withoutEntrypoints.workspaces).map(([name, { entry }]) => [name, entry])),
@@ -195,13 +196,14 @@ test('Knip workspaces come from package workspaces, your entries and the configu
 
 test('Knip keeps a declared package that a mise file task runs through a package runner', async () => {
     const knip = JSON.parse(
-        await generateFile(buildSandboxSettings(['javascript']), findManifestTarget('javascript', 'knip.json'), {
+        await generateFile(buildSandboxSettings(['javascript']), getManifestTarget('javascript', 'knip.json'), {
             'package.json': JSON.stringify({
                 private: true,
                 devDependencies: { wrangler: '4.0.0', 'left-pad': '1.3.0' },
             }),
             'main.js': 'export const value = 1;\n',
-            '.mise/tasks/deploy': '#!/usr/bin/env bash\nbunx wrangler@4 deploy\n',
+            '.mise/tasks/deploy':
+                '#!/usr/bin/env bash\n# npx left-pad\necho "#" issue#4; bunx wrangler@4 deploy # npx left-pad\n',
             'mise-tasks/typecheck': '#!/usr/bin/env bash\nnpx --yes undeclared-tool\n',
         }),
     ) as { ignoreDependencies: string[] };
@@ -213,10 +215,10 @@ test('Knip keeps a declared package that a mise file task runs through a package
 test('javascript.externals reach the Knip unresolved imports', async () => {
     const settings = buildSandboxSettings(['javascript'], {
         level: 'all',
-        tables: `[javascript]\nexternals = ["${HOST_MODULE}"]\n`,
+        tables: `[javascript]\nexternals = { value = ["${HOST_MODULE}"], reason = "The host provides this module." }\n`,
     });
     const files = { 'package.json': '{"private":true,"type":"module"}\n', 'web/src/a.js': '' };
-    const knip = JSON.parse(await generateFile(settings, findManifestTarget('javascript', 'knip.json'), files)) as {
+    const knip = JSON.parse(await generateFile(settings, getManifestTarget('javascript', 'knip.json'), files)) as {
         ignoreUnresolved?: string[];
     };
     expect(knip.ignoreUnresolved).toStrictEqual([HOST_MODULE]);
@@ -227,11 +229,11 @@ test('Knip treats script patterns and the ESLint import chain as used entries', 
         'gspot.toml': buildSandboxSettings(['javascript']),
         'package.json': '{"private":true,"type":"module"}',
         'scripts/check-notes.mjs': 'console.log("checked");\n',
-        'tools/lint/plugin.mjs': 'export default {};\n',
+        'tools/lint/plugin.mjs': EMPTY_DEFAULT_SOURCE,
         'eslint.config.mjs': 'import plugin from "./tools/lint/plugin.mjs"; export default [plugin];\n',
     });
-    const content = generate(await openSession(sandbox.path)).files.find(
-        ({ path }) => path === findManifestTarget('javascript', 'knip.json'),
+    const content = generateFiles(await openSession(sandbox.path)).files.find(
+        ({ path }) => path === getManifestTarget('javascript', 'knip.json'),
     )!;
     await createFileTree(sandbox.path, { [content.path]: content.content });
     await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));

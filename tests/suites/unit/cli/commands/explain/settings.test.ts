@@ -3,40 +3,43 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { SETTING_REASON } from '#tests/config/commands/set.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
+    NAMING_LIMITS,
     REASON_VALUES,
+    SCOPE_ROOT_MESSAGE,
     REASON_EXPLANATIONS,
     SCOPE_SETTING_EXPLANATION,
 } from '#tests/config/commands/explain/settings.ts';
 
-test.each([
-    { key: 'naming.swift.max_characters', shipped: 40, child: 38 },
-    { key: 'naming.sql.max_words', shipped: 7, child: 7 },
-])("explain shows each scope's default and value naming limit: $key", async ({ key, shipped, child }) => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['naming'], {
-            level: 'all',
-            scopes: [{ path: 'app' }],
-            tables: '[scope.naming.swift]\nmax_characters = 38\n',
-        }),
-        'entry.sh': 'echo example\n',
-        'app/entry.sh': 'echo example\n',
-    });
+test.each(NAMING_LIMITS)(
+    "explain shows each scope's default and value naming limit: $key",
+    async ({ key, shipped, child }) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['naming'], {
+                level: 'all',
+                scopes: [{ path: 'app' }],
+                tables: '[scope.naming.swift]\nmax_characters = 38\n',
+            }),
+            'entry.sh': 'echo example\n',
+            'app/entry.sh': 'echo example\n',
+        });
 
-    const explained = await runGspot(sandbox.path, ['explain', key, '--json']);
-    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    expect(JSON.parse(explained.stdout)).toMatchObject({
-        kind: 'setting',
-        scopes: [
-            { scope: '', default: shipped, value: shipped },
-            { scope: 'app', default: shipped, value: child },
-        ],
-    });
-});
+        const explained = await runGspot(sandbox.path, ['explain', key, '--json']);
+        expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+        expect(JSON.parse(explained.stdout)).toMatchObject({
+            kind: 'setting',
+            scopes: [
+                { scope: '', default: shipped, value: shipped },
+                { scope: 'app', default: shipped, value: child },
+            ],
+        });
+    },
+);
+
 test('a setting explanation lists settings set only in scopes and each inherited value', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
@@ -69,6 +72,7 @@ test('explain reads an inherited limits.function_lines value and its reason, and
     });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
+
 test.each([...REASON_VALUES])(
     'explain $key shows the value of each scope and asks for a reason only where the value loosens the default',
     async (row) => {
@@ -96,6 +100,7 @@ test.each([...REASON_VALUES])(
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     },
 );
+
 test('a neutral format setting stays settable without a reason', async () => {
     const key = 'format.indent_style';
     await using sandbox = await createGitSandbox({
@@ -145,7 +150,7 @@ test('explain tells you to write a record list by hand, not with gspot set', asy
     const explained = await runGspot(sandbox.path, ['explain', 'import_rule']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     expect(explained.stdout.split('\n').slice(4)).toStrictEqual([
-        'Scope: root',
+        SCOPE_ROOT_MESSAGE,
         'Shipped default: []',
         'Current value: [] (from configuration structure)',
         'Change it: write [[import_rule]] records by hand in gspot.toml, then run gspot apply.',
@@ -153,7 +158,7 @@ test('explain tells you to write a record list by hand, not with gspot set', asy
     ]);
 });
 
-test.each(['recommended', 'all'] as const)('set and explain report whether a limit runs at level %s', async (level) => {
+test.each(['basic', 'all'] as const)('set and explain report whether a limit runs at level %s', async (level) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { level }),
         'script.sh': 'printf ready\n',
@@ -166,15 +171,13 @@ test.each(['recommended', 'all'] as const)('set and explain report whether a lim
         'The script keeps one operation together.',
     ]);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-    const note = 'note     No selected check reads limits.bash.function_lines at level recommended.';
-    if (level === 'recommended') expect(changed.stdout.split('\n')).toContain(note);
+    const note = 'note     No selected check reads limits.bash.function_lines at level basic.';
+    if (level === 'basic') expect(changed.stdout.split('\n')).toContain(note);
     else expect(changed.stdout).not.toContain('No selected check reads');
     const explained = await runGspot(sandbox.path, ['explain', 'limits.bash.function_lines']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     expect(explained.stdout).toContain(
-        level === 'recommended'
-            ? 'Read by: bash/function-size (off at level recommended)'
-            : 'Read by: bash/function-size',
+        level === 'basic' ? 'Read by: bash/function-size (off at level basic)' : 'Read by: bash/function-size',
     );
     if (level === 'all') expect(explained.stdout).not.toContain('off at level');
     const machine = await runGspot(sandbox.path, ['explain', 'limits.bash.function_lines', '--json']);
@@ -183,9 +186,7 @@ test.each(['recommended', 'all'] as const)('set and explain report whether a lim
         scopes: [
             {
                 scope: '',
-                readBy: [
-                    level === 'recommended' ? 'bash/function-size (off at level recommended)' : 'bash/function-size',
-                ],
+                readBy: [level === 'basic' ? 'bash/function-size (off at level basic)' : 'bash/function-size'],
             },
         ],
     });
@@ -199,8 +200,8 @@ test('explain shows a setting that no scope accepts, such as level, only at the 
     const explained = await runGspot(sandbox.path, ['explain', 'level']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     expect(explained.stdout.split('\n').slice(4)).toStrictEqual([
-        'Scope: root',
-        'Shipped default: "recommended"',
+        SCOPE_ROOT_MESSAGE,
+        'Shipped default: "basic"',
         'Current value: "all" (from gspot.toml)',
         'Change it: gspot set level <value> [--reason "<why>"]',
         'Back to the default: gspot unset level',

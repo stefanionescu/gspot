@@ -94,7 +94,6 @@ exceptions:
   - eslint\-plugin\-zod
   - Zod
   - vertica
-  - axe
   - optin
   - IIF
   - next\-intl
@@ -107,6 +106,8 @@ exceptions:
   - Simple
   - certifi
   - writeable
+  - styl
+  - USAGE
   - API
   - CLI
   - HTTP

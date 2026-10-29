@@ -1,14 +1,15 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { type Session } from '#cli/types/session.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { listOtherTools, listCheckTools } from '#cli/planning/tools.ts';
+import { ZERO_COVERAGE_SETTINGS } from '#tests/config/planning/settings.ts';
 
 import {
     NODE_REQUIREMENTS,
@@ -18,7 +19,7 @@ import {
 } from '#tests/config/planning/tools.ts';
 
 test.each([...NODE_REQUIREMENTS])(
-    'the needed tools include Node only when an npm tool needs it: $name',
+    'the tools include Node only when an npm tool needs it: $name',
     async ({ configurations, tables, files, needs, skips }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(configurations, { tables }),
@@ -35,7 +36,7 @@ test.each([...NODE_REQUIREMENTS])(
 );
 
 test.each(ARCHITECTURE_REQUIREMENTS.flatMap((requirement) => LEVELS.map((level) => ({ ...requirement, level }))))(
-    'eslint-plugin-boundaries is needed for $name only at the levels that use it: $level',
+    'eslint-plugin-boundaries is a tool of $name only at the levels that use it: $level',
     async ({ tables, boundary, level }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], {
@@ -94,7 +95,7 @@ describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...r
 test('omitting coverage keeps unrelated system libraries required by another configuration', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript', 'vitest'], {
-            tables: '[coverage]\nlines = 0\nbranches = 0\nfunctions = 0\nstatements = 0\n',
+            tables: ZERO_COVERAGE_SETTINGS,
         }),
         'math.test.js': '',
     });
@@ -119,4 +120,26 @@ test('omitting coverage keeps unrelated system libraries required by another con
     };
     const companions = listOtherTools(scope, check, ['vitest', 'run']);
     expect(companions).toStrictEqual([...INDEPENDENT_LIBRARIES]);
+});
+
+test('a check installs the peer packages required by its tool', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['data-files']), 'config.json': '{}\n' });
+    const planned = planChecks(await openSession(sandbox.path), { stage: 'push', only: ['data-files/v8r'] });
+    expect(planned.map((check) => ({ check: check.check.id, tools: listCheckTools(check) }))).toStrictEqual([
+        { check: 'data-files/v8r', tools: ['v8r', 'node', 'ajv'] },
+    ]);
+});
+
+test('Prettier plugins join the selected tools even though checks do not name them', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['astro', 'svelte']),
+        'page.astro': '<p>Page</p>\n',
+        'Page.svelte': '<p>Page</p>\n',
+    });
+    const session = await openSession(sandbox.path);
+    expect(
+        session.toolConfigurations
+            .flatMap(({ tools }) => tools.filter(({ prettier }) => prettier !== undefined).map(({ name }) => name))
+            .toSorted((left, right) => left.localeCompare(right)),
+    ).toStrictEqual(['prettier-plugin-astro', 'prettier-plugin-svelte']);
 });

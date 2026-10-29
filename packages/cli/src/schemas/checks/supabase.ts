@@ -8,12 +8,20 @@ const storageSchema = z.object({ buckets: z.record(z.string(), z.unknown()).opti
 
 export const supabaseProjectFileSchema = z.object({
     storage: storageSchema.optional(),
+    functions: z
+        .record(
+            z.string(),
+            z.object({ entrypoint: z.string().optional(), import_map: z.string().optional() } satisfies SchemaShape<
+                NonNullable<SupabaseProjectFile['functions']>[string]
+            >),
+        )
+        .optional(),
 } satisfies SchemaShape<SupabaseProjectFile>);
 const startSchema = z.object({ line: z.number().int().positive() } satisfies SchemaShape<
     DenoLintOutput['diagnostics'][number]['range']['start']
 >);
 
-export const denoLintReportSchema = z.object({
+export const denoLintOutputSchema = z.object({
     diagnostics: z
         .object({
             filename: z.string(),

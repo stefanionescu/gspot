@@ -6,3 +6,5 @@ export const OSV_SCANNER_NOTES = [
 export const BUNFIG_FILE = 'bunfig.toml';
 
 export const SCANNER_KEY = ['install', 'security', 'scanner'] as const;
+
+export const OSV_SCANNER_CHECK = 'dependencies/osv-scanner';

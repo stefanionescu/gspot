@@ -6,6 +6,7 @@ import { type EslintConfiguration } from '#tests/types/tools.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { INDEX_ONLY_REEXPORTS } from '#tests/config/generation/configurations/language/javascript/eslint/settings.ts';
 
 import {
     MOBILE_FILES,
@@ -16,7 +17,7 @@ import {
     HTML_INJECTION_CASES,
 } from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/frameworks.ts';
 
-test('Vue, Svelte and Astro files parse in their scopes, and a plain scope gets none of their rules', async () => {
+test('Vue, Svelte and Astro files parse in their scopes, and a scope without them gets none of their rules', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'vue', 'svelte', 'astro'], {
             level: 'all',
@@ -55,7 +56,7 @@ test('Vue, Svelte and Astro files parse in their scopes, and a plain scope gets 
 });
 
 test.each([...HTML_INJECTION_CASES])(
-    '$configuration reports raw HTML and accepts text, and a plain JavaScript file gets no such rule',
+    '$configuration reports raw HTML and accepts text, and a JavaScript file gets no such rule',
     async (component) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], {
@@ -122,7 +123,7 @@ test.each(['none', 'index-only'])(
                 level: 'all',
                 rules: true,
                 tables: `[structure]
-reexports = ${reexports === 'index-only' ? '{ value = "index-only", reason = "The package exports its public index files." }' : '"none"'}
+reexports = ${reexports === 'index-only' ? INDEX_ONLY_REEXPORTS : '"none"'}
 [[scope]]
 path = "app"
 configurations = ["nextjs"]

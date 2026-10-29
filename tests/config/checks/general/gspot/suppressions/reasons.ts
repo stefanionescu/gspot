@@ -97,8 +97,11 @@ export const SUPPRESSION_REASONS = [
 ] as const;
 
 export const SWIFT_REASON_CASES = [
-    { directive: 'swiftformat:disable blockComments', rule: 'swiftformat-no-reason' },
-    { directive: 'periphery:ignore', rule: 'periphery-no-reason' },
+    { tool: 'swiftformat', directive: 'swiftformat:disable blockComments', rule: 'swiftformat-no-reason' },
+    { tool: 'periphery', directive: 'periphery:ignore', rule: 'periphery-no-reason' },
 ] as const;
 
 export const TYPESCRIPT_SUPPRESSIONS = ['ignore', 'expect-error', 'nocheck'] as const;
+
+export const SUPPRESSION_HELP =
+    'Fix the finding and remove the suppression, or add a reason in the syntax of the tool. Never suppress a size or complexity limit: split the code by its steps, or ask the user to raise it in gspot.toml.';

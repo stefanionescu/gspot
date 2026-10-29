@@ -6,23 +6,20 @@ import { localDateSchema } from '#cli/schemas/settings/fields.ts';
 import {
     SCHEMA_URL,
     HIDDEN_FACT_KEYS,
-    TABLE_DESCRIPTIONS,
+    SCHEMA_DESCRIPTION,
     JSON_SCHEMA_DIALECT,
+    LOCAL_DATE_DESCRIPTION,
 } from '#cli/config/settings/json-schema.ts';
 
 /**
 Build the editor schema for this gspot version.
-
-@returns the JSON Schema document.
 */
 export function buildJsonSchema(): z.core.JSONSchema.JSONSchema {
     const converted = z.toJSONSchema(settingsSchema, {
         io: 'input',
         reused: 'ref',
         unrepresentable: ({ zodSchema }) =>
-            zodSchema === localDateSchema
-                ? { description: 'An unquoted TOML date in YYYY-MM-DD form, such as 2026-11-08.' }
-                : 'throw',
+            zodSchema === localDateSchema ? { description: LOCAL_DATE_DESCRIPTION } : 'throw',
         override: ({ zodSchema, jsonSchema }) => {
             if (zodSchema instanceof z.ZodArray && jsonSchema.$ref !== undefined) jsonSchema.type = 'array';
             for (const key of HIDDEN_FACT_KEYS) Reflect.deleteProperty(jsonSchema, key);
@@ -35,18 +32,11 @@ export function buildJsonSchema(): z.core.JSONSchema.JSONSchema {
                 Object.assign(jsonSchema, { examples: definition['examples'] });
         },
     });
-    const properties = Object.entries(converted.properties as Record<string, z.core.JSONSchema.JSONSchema>).map<
-        [string, z.core.JSONSchema.JSONSchema]
-    >(([name, node]) => {
-        const description = node.description ?? TABLE_DESCRIPTIONS[name];
-        return [name, description === undefined ? node : { ...node, description }];
-    });
     return {
         $schema: JSON_SCHEMA_DIALECT,
         $id: SCHEMA_URL,
         title: SETTINGS_FILE,
-        description: 'The settings of gspot for one repository.',
+        description: SCHEMA_DESCRIPTION,
         ...converted,
-        properties: Object.fromEntries(properties),
     };
 }

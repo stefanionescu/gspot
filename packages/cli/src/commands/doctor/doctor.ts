@@ -1,15 +1,15 @@
 import { join } from 'node:path';
-import { openSession } from '#cli/session.ts';
+import { readGitSetting } from '#cli/system/git.ts';
 import { getColors } from '#cli/system/terminal.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import type { Session } from '#cli/types/session.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { readHookStatus } from '#cli/installers/hooks.ts';
 import type { Command } from '@commander-js/extra-typings';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { CI_FILE_LABELS } from '#cli/config/commands/ci.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
@@ -22,12 +22,19 @@ import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { findMissingBuild, listDistinctTools } from '#cli/configurations/tools.ts';
-import { VERSION_GAP, COLUMN_WIDTHS, TOOL_STATE_COLORS, SUGGESTION_SECTIONS } from '#cli/config/commands/doctor.ts';
+import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
-function isToolAvailable(inspection: ToolInspection): inspection is ToolInspection & { path: string } {
-    return AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined;
-}
+import {
+    VERSION_GAP,
+    CI_OFF_NOTES,
+    COLUMN_WIDTHS,
+    CI_FILE_LABELS,
+    REMOTE_URL_USER,
+    TOOL_STATE_COLORS,
+    REMOTE_URL_SCHEME,
+    ORIGIN_URL_SETTING,
+    SUGGESTION_SECTIONS,
+} from '#cli/config/commands/doctor.ts';
 
 function formatToolVersion(tool: ToolInspection): string {
     const found = tool.found ?? '';
@@ -40,8 +47,7 @@ function formatToolVersion(tool: ToolInspection): string {
 function formatTools(tools: ToolInspection[]): string[] {
     const width = Math.max(...tools.map((tool) => formatToolVersion(tool).length)) + VERSION_GAP;
     return tools.map((tool) => {
-        const isBroken = !isToolAvailable(tool);
-        const tail = isBroken ? [tool.note, tool.help].filter((text) => text !== undefined).join(' ') : tool.path;
+        const tail = !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined ? (tool.note ?? '') : tool.path;
         const label = getColors()[TOOL_STATE_COLORS[tool.state]](tool.state.padEnd(COLUMN_WIDTHS.label));
         return `  ${label} ${formatToolVersion(tool).padEnd(width)} ${tail}`.trimEnd();
     });
@@ -110,19 +116,40 @@ function inspectScopeTools(session: Session): ToolInspection[] {
         .toSorted((left, right) => compareText(left.name, right.name));
 }
 
-function buildDoctorReport(session: Session, versionPin: string | undefined): DoctorReport {
+function detectCiProvider(root: string, paths: string[]): keyof typeof CI_OFF_NOTES | undefined {
+    if (paths.includes(GITLAB_CI_FILE)) return 'gitlab';
+    if (paths.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) return 'github';
+    const remote = readGitSetting(root, ORIGIN_URL_SETTING) ?? '';
+    const host = remote.replace(REMOTE_URL_SCHEME, '').replace(REMOTE_URL_USER, '');
+    return (Object.keys(CI_OFF_NOTES) as (keyof typeof CI_OFF_NOTES)[]).find(
+        (provider) => host.startsWith(`${provider}.com:`) || host.startsWith(`${provider}.com/`),
+    );
+}
+
+function formatCiState(session: Session): string {
+    const ci = session.settings.ci;
+    if (ci?.enabled === true) return CI_FILE_LABELS[ci.provider];
+    const provider = detectCiProvider(
+        session.root,
+        session.repository.files.map((file) => file.path),
+    );
+    return provider === undefined ? 'none' : CI_OFF_NOTES[provider];
+}
+
+function buildDoctorReport(session: Session, pin: string | undefined): DoctorReport {
     const tools = inspectScopeTools(session);
-    const { settings } = session;
     const hooks = readHookStatus(session, session.repository);
-    const version = buildDoctorVersion(session, versionPin);
+    const version = buildDoctorVersion(session, pin);
     const isBroken =
-        !hooks.ready || tools.some((tool) => !isToolAvailable(tool)) || version.installCommand !== undefined;
+        !hooks.ready ||
+        tools.some((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined) ||
+        version.installCommand !== undefined;
     return {
         submodules: listSubmodulePaths(session.repository.index),
         tools,
         suggestions: listSuggestions(session),
         hooks: hooks.text,
-        ci: settings.ci?.enabled === true ? CI_FILE_LABELS[settings.ci.provider] : 'none',
+        ci: formatCiState(session),
         ruleFiles: selectRuleFiles(session).length,
         version,
         exitCode: isBroken ? EXIT_FINDINGS : 0,
@@ -131,10 +158,16 @@ function buildDoctorReport(session: Session, versionPin: string | undefined): Do
 
 function formatDoctorReport(report: DoctorReport): string {
     const lines = [
-        ...formatTools(report.tools.filter((tool) => !isToolAvailable(tool))),
-        `tools: ${String(report.tools.filter(isToolAvailable).length)} ready`,
+        ...formatTools(
+            report.tools.filter((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined),
+        ),
+        ...(report.tools.some((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined)
+            ? ['Run gspot install to install the missing or outdated tools.']
+            : []),
+        `tools: ${String(report.tools.filter((tool) => AVAILABLE_TOOL_STATES.has(tool.state) && tool.path !== undefined).length)} ready`,
         '',
         ...formatSuggestions(report.suggestions),
+        ...(report.suggestions.detected.length === 0 ? [] : ['Run gspot add to add the detected configurations.', '']),
         `hooks: ${report.hooks}`,
         ...report.submodules.map((path) => `submodule  ${path} (contents are not read)`),
         `ci: ${report.ci}`,

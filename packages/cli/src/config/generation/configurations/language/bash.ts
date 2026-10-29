@@ -19,3 +19,5 @@ export const SHELLCHECK_CHECKS = [
     'check-set-e-suppressed',
     'check-unassigned-uppercase',
 ] as const;
+
+export const SHELLCHECK_CHECK = 'bash/shellcheck';

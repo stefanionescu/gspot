@@ -91,7 +91,6 @@ example = "`value as! NSString` reports `force_cast`. Use `as?` and handle the f
 files = { extensions = [".swift"] }
 fix = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
 help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore swift/swiftlint --rule <rule> --reason \"<why>\"`."
-level = "recommended"
 name = "swiftlint"
 output = { format = "json", fields = { file = "file", line = "line", column = "character", rule = "rule_id", message = "reason" } }
 stage = "commit"
@@ -105,7 +104,6 @@ exit_codes = [1]
 files = { extensions = [".swift"] }
 fix = ["swiftformat", "--quiet", "--config", "{config_file:swiftformat}", "{files}"]
 help = "Run `gspot check --fix`."
-level = "recommended"
 name = "swiftformat"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?:error|warning): \\((?<rule>\\w+)\\) (?<message>.*)$" }
 stage = "commit"
@@ -115,7 +113,6 @@ why = "One layout everywhere keeps a diff about the change and not about where a
 [[check]]
 example = "Assigning a string to an `Int` variable fails the build. Correct the value or the type."
 help = "Fix the first compiler error; later ones often come from the same mistake."
-level = "recommended"
 name = "build"
 needs = ["build"]
 operating_systems = ["macos", "linux"]
@@ -127,7 +124,6 @@ why = "Swift checks types only during a build."
 [[check]]
 example = "An import that no compiled Swift source uses reports a finding. Remove the import."
 help = "Remove what the rule names. List an import that the analyzer flags in error under `tools.swiftlint.always_keep_imports`."
-level = "recommended"
 name = "swiftlint-analyze"
 needs = ["build"]
 operating_systems = ["macos"]
@@ -140,7 +136,6 @@ why = "An unused import slows the build and hides the real dependencies, and a c
 [[check]]
 example = "A declaration that nothing references reports unused code. Delete it, and rebuild."
 help = "Delete the declaration, or mark it with a periphery:ignore comment that says who uses it."
-level = "recommended"
 name = "periphery"
 needs = ["build"]
 runs = "scope"
@@ -153,7 +148,6 @@ why = "People read, maintain, and migrate dead code without knowing that nothing
 example = "`throw XCTSkip()` in a Swift test reports a missing reason. Restore the test, or give a reason such as `throw XCTSkip(\"Requires the hardware test device\")`."
 files = { tags = ["swift-test"] }
 help = "Write why the test stays off and what turns it on again, or delete it."
-level = "recommended"
 name = "skip-reasons"
 stage = "commit"
 summary = "Checks that skip calls and disabled traits name a nonempty reason, and unavailable tests carry an explanation."
@@ -163,7 +157,6 @@ why = "A skipped test with no reason stays off, because nobody can tell when to 
 example = "A Swift target reports 85% line coverage against a 90% minimum. Add a test that exercises its uncovered lines, then rerun the target."
 files = { extensions = [".swift"] }
 help = "Add tests for the target, or lower its minimum with a reason."
-level = "recommended"
 name = "coverage"
 needs = ["build"]
 operating_systems = ["macos", "linux"]

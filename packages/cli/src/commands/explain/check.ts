@@ -8,9 +8,10 @@ import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations/names.ts';
 import type { CheckFacts, Explanation } from '#cli/types/commands/explain.ts';
-import { getTool, getToolName, extractRulePrefix } from '#cli/configurations/tools.ts';
+import type { Tool, Check, ScopeCheck, Configuration } from '#cli/types/configurations.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
-import { type Tool, type Check, type ScopeCheck, type Configuration } from '#cli/types/configurations.ts';
+import { getTool, getToolName, hasRuleOutput, extractRulePrefix } from '#cli/configurations/tools.ts';
+import { REPOSITORY_COMMAND, RUN_IN_COPY_MESSAGE, SELECTED_YES_MESSAGE } from '#cli/config/commands/explain.ts';
 
 function findRulePlugin(prefix: string, configurationsByName: Map<string, Configuration>): Tool | undefined {
     return configurationsByName
@@ -52,7 +53,7 @@ function buildCheckFacts(
     const crashPattern =
         toolName === undefined ? undefined : getTool(configurationsByName.values(), toolName).crash_pattern;
     return {
-        source: configuration === undefined ? 'repository command' : `${configuration.name} configuration`,
+        source: configuration === undefined ? REPOSITORY_COMMAND : `${configuration.name} configuration`,
         settings,
         rules,
         crashPattern,
@@ -76,7 +77,7 @@ function formatRepositoryUse(
     if (session && configuration !== undefined)
         lines.push(
             isConfigurationSelected(session.scopes, configuration.name)
-                ? 'Selected in this repository: yes'
+                ? SELECTED_YES_MESSAGE
                 : `Selected in this repository: no (gspot add ${configuration.name})`,
         );
     return lines;
@@ -100,10 +101,10 @@ function formatCheckExplanation(
         ...Object.entries(minVersions).map(([name, version]) => `Needs ${name} ${version} or newer`),
         '',
         `Turn it off for some paths: gspot ignore ${quoteArgument(check.id)} --paths "<glob>" --reason "<why>"`,
-        ...(check.command
+        ...(hasRuleOutput(check)
             ? [`Turn one of its rules off: gspot ignore ${quoteArgument(check.id)} --rule <rule> --reason "<why>"`]
             : []),
-        ...(check.run_in_copy === true ? ['Runs on a copy of the selected files in a temporary folder.'] : []),
+        ...(check.run_in_copy === true ? [RUN_IN_COPY_MESSAGE] : []),
         ...(settings.length === 0
             ? []
             : [`Settings that change it: ${settings.join(', ')} (gspot set <setting> <value>)`]),
@@ -118,7 +119,7 @@ Explain a shipped check or a command check.
 
 @param session the repository, or undefined outside one.
 @param checkId the check ID to explain.
-@returns the explanation, or undefined when no check has the ID.
+@returns undefined when no check has the ID.
 */
 export function explainCheck(session: Session | undefined, checkId: string): Explanation | undefined {
     const configurationsByName = readConfigurations();
@@ -164,7 +165,7 @@ Explain one lint rule: its page, and how to turn it off or change its options.
 
 @param tool the command or plugin prefix.
 @param rule the ID without its prefix, such as no-console.
-@returns the explanation, or undefined when no check runs the tool.
+@returns undefined when no check runs the tool.
 */
 export function explainLintRule(tool: string, rule: string): Explanation | undefined {
     const configurationsByName = readConfigurations();

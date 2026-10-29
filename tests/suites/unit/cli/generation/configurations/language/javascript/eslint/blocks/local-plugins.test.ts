@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { generateFile, findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
+import { generateFile, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
 import {
     LOCAL_PLUGIN,
@@ -38,7 +38,7 @@ test('a scope plugin reaches its scope, and an inherited root plugin writes one 
         ),
     ).toStrictEqual(SCOPE_PLUGIN_FINDINGS);
     const session = await openSession(sandbox.path);
-    const generated = await readFile(join(sandbox.path, findConfigFilePath(session, 'eslint')), 'utf8');
+    const generated = await readFile(join(sandbox.path, getConfigFilePath(session, 'eslint')), 'utf8');
     expect(generated.matchAll(/"local\/no-forbidden"\s*:/gu).toArray()).toHaveLength(1);
     expect(generated.matchAll(/"scoped\/no-forbidden"\s*:/gu).toArray()).toHaveLength(1);
 });

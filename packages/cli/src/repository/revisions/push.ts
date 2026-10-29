@@ -4,6 +4,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { HASH_PATTERN } from '#cli/config/git.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
 import { readMergeBase, readDefaultRef } from '#cli/repository/revisions/changes.ts';
 import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
@@ -17,30 +18,36 @@ import {
     type PushedRevisions,
 } from '#cli/types/repository/revisions.ts';
 import {
+    NOT_FLAG,
     TREE_SUFFIX,
     PEEL_SUFFIX,
     ABSENT_HASH,
-    REMOTES_OPTION,
+    REMOTES_FLAG,
+    NON_COMMIT_REASON,
     GIT_LOG_ARGUMENTS,
+    DELETED_REF_REASON,
     GIT_TREE_ARGUMENTS,
     GIT_PEEL_ARGUMENTS,
+    PEEL_FAILURE_MESSAGE,
     GIT_REMOTE_ARGUMENTS,
     GIT_REV_LIST_ARGUMENTS,
+    INVALID_PUSH_INPUT_MESSAGE,
     GIT_ROOT_COMMITS_ARGUMENTS,
     GIT_SHALLOW_FILE_ARGUMENTS,
     MISSING_PUSH_REVISION_MESSAGE,
 } from '#cli/config/repository/revisions/push.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function isHashPair(localHash: string, remoteHash: string): boolean {
-    return HASH_PATTERN.test(localHash) && HASH_PATTERN.test(remoteHash) && localHash.length === remoteHash.length;
-}
-
 function parsePushLine(line: string): PushLine {
-    const [localRef, localHash, remoteRef, remoteHash, ...verbatim] = line.trim().split(/\s+/u);
+    const [localRef, localHash, remoteRef, remoteHash, ...verbatim] = line.trim().split(WHITESPACE_RUN);
     const hasRefs = verbatim.length === 0 && localRef !== undefined && remoteRef !== undefined;
-    if (!hasRefs || localHash === undefined || remoteHash === undefined || !isHashPair(localHash, remoteHash))
-        throw new GspotError('git', 'Invalid Git pre-push input. Supply every local and remote ref/object pair.');
+    if (
+        !hasRefs ||
+        localHash === undefined ||
+        remoteHash === undefined ||
+        ![localHash, remoteHash].every((hash) => HASH_PATTERN.test(hash)) ||
+        localHash.length !== remoteHash.length
+    )
+        throw new GspotError('git', INVALID_PUSH_INPUT_MESSAGE);
     return { localRef, localHash, remoteRef, remoteHash };
 }
 
@@ -69,7 +76,7 @@ async function readPeeledCommits(
         cancelSignal,
         stdin: hashes.map((hash) => `${hash}${PEEL_SUFFIX}`).join('\n') + '\n',
     });
-    if (responses.length !== hashes.length) throw new GspotError('git', 'Git did not resolve every pushed object.');
+    if (responses.length !== hashes.length) throw new GspotError('git', PEEL_FAILURE_MESSAGE);
     return new Map(
         hashes.flatMap((requested, index): [string, string | undefined][] => {
             const [hash, type] = (responses[index] as string).split(' ') as [string, string];
@@ -94,7 +101,7 @@ async function readComparison(search: PushSearch, hash: string, remoteHash: stri
         const changed = await readGitPaths(root, [...GIT_DIFF_NAMES_ARGUMENTS, previous, hash, '--'], { cancelSignal });
         return { base: previous, changed, range: [hash, `^${previous}`] };
     }
-    const range = [hash, '--not', search.remote === undefined ? REMOTES_OPTION : `${REMOTES_OPTION}=${search.remote}`];
+    const range = [hash, NOT_FLAG, search.remote === undefined ? REMOTES_FLAG : `${REMOTES_FLAG}=${search.remote}`];
     const changed = await readGitPaths(root, [...GIT_LOG_ARGUMENTS, ...range, '--'], { cancelSignal });
     return { base: await readPushBase(root, cancelSignal), changed, range };
 }
@@ -111,6 +118,7 @@ async function buildRevision(search: PushSearch, line: PushLine, hash: string): 
         tree: tree.trim(),
         refs: [line.localRef],
         commits: history,
+        range,
         shallow: history.some((commit) => boundaries.has(commit)),
         ...(selected !== undefined && { paths: selected }),
     };
@@ -130,15 +138,15 @@ function addRevision(pushed: PushedRevisions, revision: PushRevision): void {
     duplicate.commits = [...new Set([...duplicate.commits, ...revision.commits])];
 }
 
-async function selectLine(search: PushSearch, pushed: PushedRevisions, line: PushLine): Promise<void> {
+async function addPushLine(search: PushSearch, pushed: PushedRevisions, line: PushLine): Promise<void> {
     if (ABSENT_HASH.test(line.localHash)) {
-        pushed.skipped.push({ ref: line.remoteRef, hash: line.localHash, reason: 'deleted ref' });
+        pushed.skipped.push({ ref: line.remoteRef, hash: line.localHash, reason: DELETED_REF_REASON });
         return;
     }
     assertCommitPresent(search.commits, line.localHash);
     const commit = search.commits.get(line.localHash);
     if (commit === undefined) {
-        pushed.skipped.push({ ref: line.localRef, hash: line.localHash, reason: 'non-commit object' });
+        pushed.skipped.push({ ref: line.localRef, hash: line.localHash, reason: NON_COMMIT_REASON });
         return;
     }
     addRevision(pushed, await buildRevision(search, line, commit));
@@ -152,15 +160,14 @@ async function readPushBase(root: string, cancelSignal?: AbortSignal): Promise<s
 }
 
 /**
-Resolve the exact objects that the Git pre-push input names, before source checks run.
+Resolve the exact objects that the Git pre-push input names.
 
 @param root the folder where Git runs.
 @param input the lines that Git writes to the pre-push hook.
 @param remote the name or address that the hook gets.
 @param cancelSignal stops the Git commands.
-@returns the pushed revisions with their commits, and the updates no check applies to.
 */
-export async function selectPush(
+export async function readPushedRevisions(
     root: string,
     input: string,
     remote?: string,
@@ -181,7 +188,7 @@ export async function selectPush(
         boundaries: isShallow ? await readShallowBoundaries(root, cancelSignal) : new Set<string>(),
     };
     const result: PushedRevisions = { revisions: [], skipped: [] };
-    for (const line of lines) await selectLine(context, result, line);
+    for (const line of lines) await addPushLine(context, result, line);
     return result;
 }
 
@@ -190,7 +197,6 @@ Read the commits after the push base.
 
 @param root the folder where Git runs.
 @param cancelSignal stops the Git commands.
-@returns the commits, or the Git error.
 */
 export async function readPushedCommits(
     root: string,
@@ -204,4 +210,17 @@ export async function readPushedCommits(
     return listed.code === 0
         ? listed.stdout.split('\n').filter(Boolean)
         : { error: `Cannot select commit messages: ${listed.stderr.trim()}` };
+}
+
+/**
+Read the revision range for checks of outgoing commits.
+
+@param root the Git repository.
+@param cancelSignal cancellation for Git reads.
+@returns the revision arguments, or no arguments without a current commit.
+*/
+export async function readPushedRange(root: string, cancelSignal?: AbortSignal): Promise<string[]> {
+    if ((await readHead(root, cancelSignal)) === undefined) return [];
+    const base = await readPushBase(root, cancelSignal);
+    return [`${base}..HEAD`];
 }

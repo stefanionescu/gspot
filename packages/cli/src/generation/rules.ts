@@ -8,12 +8,12 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { trimTrailingSlashes } from '#cli/system/paths.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { detectConditions } from '#cli/repository/detect.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listRuleFiles } from '#cli/configurations/manifests.ts';
 import { type Repository } from '#cli/types/repository/files.ts';
-import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
+import { GROUPS, GROUP_LABELS } from '#cli/config/configurations/names.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { type Level, type Configuration } from '#cli/types/configurations.ts';
 import type { RuleFile, RuleSection, ShippedRule, AgentsBlockContent } from '#cli/types/generation/rules.ts';
@@ -22,10 +22,16 @@ import {
     FIRST_READ,
     BLANK_LINE,
     RULES_HEADING,
+    EDIT_KEYS_LINE,
+    FIRST_READ_LINE,
+    COMMANDS_HEADING,
+    RULE_INDEX_LINES,
     ALL_LEVEL_MARKER,
     MARKDOWN_HEADING,
+    GSPOT_FOLDER_LINE,
     SETTINGS_COMMANDS,
     RULE_OPENING_PREFIX,
+    GENERATED_FILES_HEADING,
 } from '#cli/config/generation/rules.ts';
 
 function listConfigurationRules(configurations: Configuration[], repository: Repository): ShippedRule[] {
@@ -51,7 +57,7 @@ function buildLevelRuleText(text: string, level: Level): string {
         through = cut.end;
     }
     output.push(text.slice(through));
-    return output.join('');
+    return output.join('').trimEnd() + '\n';
 }
 
 function groupIndexLines(files: RuleFile[]): [string, string[]][] {
@@ -67,18 +73,20 @@ function groupIndexLines(files: RuleFile[]): [string, string[]][] {
         list.push(`\`${file.target}\`${scope}: ${sentence}`);
         rows.set(label, list);
     }
-    return [...rows];
+    return GROUPS.flatMap((group) => {
+        const label = GROUP_LABELS[group];
+        const lines = rows.get(label);
+        return lines === undefined ? [] : [[label, lines.toSorted(compareText)] as [string, string[]]];
+    });
 }
 
 function formatRulesIndex(files: RuleFile[]): string[] {
     return [
-        'Read these rules first:',
+        FIRST_READ_LINE,
         '',
         ...FIRST_READ.map((path) => `- \`${GSPOT_PATHS.configurations}/${path}\``),
         '',
-        'Read a rule below when its sentence fits your task.',
-        'A rule marked `in <folder>/` applies only to files in that folder.',
-        'A more specific rule wins over a general one.',
+        ...RULE_INDEX_LINES,
         '',
         ...groupIndexLines(files).flatMap(([label, paths]) => [
             `## ${label}`,
@@ -127,7 +135,6 @@ Select the shared rules and the configuration rules at the level. Leave out the 
 and the ones that the level leaves empty.
 
 @param session the repository and its settings.
-@returns each rule with its content and path.
 */
 export function selectRuleFiles(session: Pick<Session, 'settings' | 'scopes' | 'repository'>): RuleFile[] {
     const { repository } = session;
@@ -141,7 +148,7 @@ export function selectRuleFiles(session: Pick<Session, 'settings' | 'scopes' | '
     const selected: RuleFile[] = [];
     const shipped = listConfigurationRules(configurations, repository).filter(({ path }) =>
         rules.exclude.every(
-            (excluded) => !isInScope(`${GSPOT_PATHS.configurations}/${path}`, trimTrailingSlashes(excluded)),
+            (excluded) => !isInScope(`${GSPOT_PATHS.configurations}/${path}`, stripTrailingSlashes(excluded)),
         ),
     );
     for (const { source, path, group } of shipped) {
@@ -164,8 +171,6 @@ Build the managed block for the rules.
 @param block.hasChecks whether any configuration runs a check.
 @param block.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
 @param block.startCommand the command that starts gspot.
-
-@returns the heading, rule index, and instructions for changing settings.
 */
 export function buildAgentsBlock({
     files,
@@ -183,24 +188,26 @@ export function buildAgentsBlock({
         RULES_HEADING,
         '',
         ...index,
-        '## Commands',
+        COMMANDS_HEADING,
         '',
         `The rules write \`gspot\` for \`${startCommand}\`.`,
         '',
         ...(hasChecks ? [`Before you commit, run \`${startCommand} check --staged\`.`, ''] : []),
+        `After you add code in a new language, framework or tool, run \`${startCommand} add\`, then \`${startCommand} install\`.`,
+        '',
         `To change \`gspot.toml\`, run ${formatSettingsCommands(startCommand)}.`,
         `After you edit \`gspot.toml\` by hand, run \`${startCommand} apply\`.`,
         '',
-        '## Generated files',
+        GENERATED_FILES_HEADING,
         '',
         `Do not edit these files. Change \`gspot.toml\`, then run \`${startCommand} apply\`.`,
         '',
-        '- every file under `.gspot/`',
+        GSPOT_FOLDER_LINE,
         ...outside,
         ...managedKeys.flatMap(({ path, keys }) => [
             '',
             `gspot also sets ${keys.length === 1 ? 'one key' : 'these keys'} in \`${path}\`: ${keys.map((key) => '`' + key + '`').join(' and ')}.`,
-            'You can edit the other keys of that file.',
+            EDIT_KEYS_LINE,
         ]),
     ];
     return (hasOwnTitle ? lines.map((line) => line.replace(MARKDOWN_HEADING, '#$1 ')) : lines).join('\n');
@@ -210,7 +217,6 @@ export function buildAgentsBlock({
 Check whether Markdown text has a top heading, outside code blocks.
 
 @param text the text of AGENTS.md outside the gspot block.
-@returns whether a level-one heading exists.
 */
 export function hasTopHeading(text: string): boolean {
     let isFound = false;

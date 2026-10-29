@@ -134,9 +134,9 @@ export const OUTPUT_CASES = [
         },
     },
     {
-        name: 'selectors at level recommended',
+        name: 'selectors at level basic',
         check: 'site/purgecss',
-        level: 'recommended',
+        level: 'basic',
         tables: `
 [tools.purgecss]
 safelist = { value = ["reviewed"], reason = "The script adds this reviewed class at runtime." }

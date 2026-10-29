@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { COMPOSITE_INDEX_CASES } from '#tests/config/checks/database/postgres/foreign-key-indexes.ts';
 
 test.each([...COMPOSITE_INDEX_CASES])(
@@ -34,12 +34,16 @@ test('foreign-key-indexes reports a foreign key column that no index leads with 
             'CREATE TABLE teams (id bigint PRIMARY KEY);\nCREATE TABLE members (id bigint PRIMARY KEY, team_id bigint REFERENCES teams (id));\n',
     });
     expect(await runSandboxCheck(sandbox.path, 'postgres/foreign-key-indexes')).toStrictEqual([
-        matchFields({
+        {
+            check: 'postgres/foreign-key-indexes',
+            fixable: false,
+            help: getShippedCheck('postgres/foreign-key-indexes').help,
+            column: 1,
             file: 'migrations/1_members.sql',
             line: 2,
             rule: 'foreign-key-index',
             message: 'public.members (team_id) is a foreign key and no index leads with these columns.',
-        }),
+        },
     ]);
     await writeFile(
         join(sandbox.path, 'migrations/2_index.sql'),

@@ -4,15 +4,11 @@ import type { Session } from '#cli/types/session.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { PBXPROJ, SWIFT_EXTENSION } from '#cli/config/files/names.ts';
+import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import type { SwiftModule } from '#cli/types/checks/general/structure.ts';
+import { PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/files/names.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
-import { isInFolders, parseProjectSources } from '#cli/parsers/projects/xcode.ts';
-
-import {
-    SWIFTPM_TARGET_FOLDERS,
-    SWIFT_MODULE_NAME_CHARACTERS,
-} from '#cli/config/checks/general/structure/swift-modules.ts';
+import { NON_WORD_CHARACTERS, SWIFTPM_TARGET_FOLDERS } from '#cli/config/checks/general/structure/swift-modules.ts';
 
 function findStringArgument(call: Node, label: string): string | undefined {
     const argument = call
@@ -22,7 +18,7 @@ function findStringArgument(call: Node, label: string): string | undefined {
     return value?.type === 'line_string_literal' ? (value.childForFieldName('text')?.text ?? '') : undefined;
 }
 
-function findDefaultFolder(folders: readonly string[], packageFolder: string, swiftFiles: string[]): string {
+function selectDefaultFolder(folders: readonly string[], packageFolder: string, swiftFiles: string[]): string {
     const present = folders.find((folder) =>
         swiftFiles.some((file) => file.startsWith(`${posix.join(packageFolder, folder)}/`)),
     );
@@ -43,7 +39,7 @@ async function listPackageModules(session: Session, path: string, swiftFiles: st
             const folder = posix.join(
                 packageFolder,
                 findStringArgument(call, 'path') ??
-                    posix.join(findDefaultFolder(folders, packageFolder, swiftFiles), name),
+                    posix.join(selectDefaultFolder(folders, packageFolder, swiftFiles), name),
             );
             return [{ name, files: swiftFiles.filter((file) => file.startsWith(`${folder}/`)) }];
         });
@@ -55,16 +51,20 @@ async function listPackageModules(session: Session, path: string, swiftFiles: st
 function listXcodeModules(session: Session, path: string, swiftFiles: string[]): SwiftModule[] {
     const project = parseProjectSources(readCachedText(session.reads, path), path);
     return project.targets.map((target) => ({
-        name: target.name.replaceAll(SWIFT_MODULE_NAME_CHARACTERS, '_'),
-        files: swiftFiles.filter((file) => target.sources.includes(file) || isInFolders(file, target.folders)),
+        name: target.name.replaceAll(NON_WORD_CHARACTERS, '_'),
+        files: swiftFiles.filter(
+            (file) =>
+                target.sources.includes(file) ||
+                target.folders.some(({ path, excluded }) => file.startsWith(path) && !excluded.has(file)),
+        ),
     }));
 }
 
 /**
-List the Swift modules that the repository builds, each with its Swift files.
+Read the files owned by each SwiftPM or Xcode module.
 
-@param session the repository and its tools.
-@returns the modules of every Package.swift target and every Xcode native target.
+@param session the repository and cached project files.
+@returns modules and their source paths.
 */
 export async function listSwiftModules(session: Session): Promise<SwiftModule[]> {
     const paths = session.repository.files.map((file) => file.path);
@@ -74,7 +74,7 @@ export async function listSwiftModules(session: Session): Promise<SwiftModule[]>
     return [
         ...modules.flat(),
         ...paths
-            .filter((path) => path.endsWith(PBXPROJ))
+            .filter((path) => path.endsWith(PBXPROJ_SUFFIX))
             .flatMap((path) => listXcodeModules(session, path, swiftFiles)),
     ];
 }

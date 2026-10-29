@@ -170,15 +170,6 @@ export const AUTHORED_JSCONFIG_CASES = [
     { name: 'with an authored jsconfig', authored: true },
 ] as const;
 
-export const IMPORTED_AMBIENT_FILES = {
-    'base.json':
-        '{"compilerOptions":{"strict":true,"types":[],"allowJs":true,"checkJs":true,"noEmit":true,"baseUrl":".","paths":{"shared-api":["types/api.d.ts"]}}}',
-    'types/api.d.ts': 'export declare const amount: number;\n',
-    'apps/web/jsconfig.json': '{"extends":"../../base.json","files":["src/main.js"]}',
-    'apps/web/src/main.js': 'import { amount } from "shared-api"; export const total = amount.toFixed();\n',
-    'sibling/bad.js': 'unknownValue();\n',
-} as const;
-
 export const JSCONFIG_SANDBOX = { configurations: ['javascript'], level: 'all', files: BASE_INSTALLED_FILES } as const;
 
 export const OWN_TYPESCRIPT_RESULTS = [
@@ -236,3 +227,5 @@ export const KNIP_FOLDER_FILES = {
     'docs/package.json': '{"name":"docs","private":true,"type":"module","main":"index.js"}',
     'docs/index.js': 'console.log("docs");\n',
 } as const;
+
+export const AUTHORED_CACHE = 'Preserve this cache.\n';

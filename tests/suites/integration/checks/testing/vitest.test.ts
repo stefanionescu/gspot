@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rm, writeFile } from 'node:fs/promises';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { createFileTree, type TestdirResult } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import vitestPackage from 'vitest/package.json' with { type: 'json' };
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { COVERAGE_ZERO_LIMITS } from '#tests/config/integration/checks/testing/samples.ts';

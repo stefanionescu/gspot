@@ -46,3 +46,12 @@ export const SWIFT_ACCESSOR_NODES = new Set([
     'willset_clause',
     'didset_clause',
 ]);
+
+export const FUNCTION_LABEL = 'function';
+
+export const ONE_STATEMENT = '1 statement';
+
+export const TRIVIAL_FILE_MESSAGE =
+    'This file only imports, re-exports, or renames code. Import from the module that defines it, and delete this file.';
+
+export const RULES = { trivialFunction: 'trivial-function', trivialFile: 'trivial-file' } as const;

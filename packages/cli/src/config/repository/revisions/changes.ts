@@ -26,3 +26,8 @@ export const GIT_DIFF_NAMES_ARGUMENTS = ['diff', '--relative', '--name-only', '-
 export const GIT_SHALLOW_ARGUMENTS = ['rev-parse', '--is-shallow-repository'] as const;
 
 export const REMOTE_HEAD_FIELD_COUNT = 2;
+
+export const NO_UPSTREAM_MESSAGE =
+    'No upstream or default branch is available. Run git remote set-head origin --auto once, or pass --changed <ref>.';
+
+export const HISTORY_CUT_MESSAGE = ' History is cut; run git fetch --unshallow.';

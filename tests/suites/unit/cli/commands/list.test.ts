@@ -1,14 +1,15 @@
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 import {
+    OFF_BY_IGNORE,
     LIST_SCOPE_ROWS,
     LIST_SCOPE_SETTINGS,
     SHFMT_IGNORE_SETTINGS,
@@ -32,7 +33,7 @@ test('list shows selected settings and available configurations', async () => {
     const named = new Set(['bash/shellcheck', 'bash/shfmt', 'structure/shared-prefixes']);
     expect(checks.filter(({ name }) => named.has(name))).toStrictEqual([
         { name: 'bash/shellcheck', scope: '', state: 'on' },
-        { name: 'bash/shfmt', scope: '', state: 'off (ignore)' },
+        { name: 'bash/shfmt', scope: '', state: OFF_BY_IGNORE },
         { name: 'structure/shared-prefixes', scope: '', state: 'off (level)' },
     ]);
     expect(
@@ -51,7 +52,7 @@ test('list shows selected settings and available configurations', async () => {
     const listedSettings = await runGspot(sandbox.path, ['list', 'settings', '--json']);
     expect(listedSettings.code, listedSettings.stdout + listedSettings.stderr).toBe(0);
     const rows = (JSON.parse(listedSettings.stdout) as SettingsListJson).settings;
-    expect(rows.find((row) => row.key === 'level')?.value).toBe('recommended');
+    expect(rows.find((row) => row.key === 'level')?.value).toBe('basic');
     const invalid = await runGspot(sandbox.path, ['list', 'unknown']);
     expect(invalid.code).toBe(2);
     expect(invalid.stdout + invalid.stderr).toBe(
@@ -100,8 +101,8 @@ test('the text check list puts the states of all scopes in one row', async () =>
     const checks = selected.flatMap((configuration) => configuration.checks);
     expect(checks.filter((check) => check.name === 'bash/shfmt')).toStrictEqual([
         { name: 'bash/shfmt', scope: '', state: 'on' },
-        { name: 'bash/shfmt', scope: 'api', state: 'off (ignore)' },
-        { name: 'bash/shfmt', scope: 'api/worker', state: 'off (ignore)' },
+        { name: 'bash/shfmt', scope: 'api', state: OFF_BY_IGNORE },
+        { name: 'bash/shfmt', scope: 'api/worker', state: OFF_BY_IGNORE },
     ]);
     const human = await runGspot(sandbox.path, ['list']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
@@ -114,7 +115,7 @@ test('the text check list puts the states of all scopes in one row', async () =>
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test('checks that run at the root appear once when selected in several child scopes', async () => {
+test('checks that run at the root appear once when selected in two child scopes', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             scopes: [
@@ -191,4 +192,12 @@ test('the text settings list shortens long values', async () => {
         'generated-long-name-two/**',
     ]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test('list without gspot.toml refuses the command and writes nothing', async () => {
+    await using sandbox = await createGitSandbox({});
+    await assertRefusalWithoutWrites(sandbox.path, ['list'], {
+        error: 'settings',
+        message: 'There is no gspot.toml here. Run gspot init to create one.',
+    });
 });

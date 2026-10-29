@@ -2,20 +2,22 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     ROOT_PORT_SOURCE,
     CHILD_PORT_SOURCE,
+    COUNT_NUMBER_SOURCE,
     TSCONFIG_READ_ERRORS,
+    DEFAULT_LEVEL_TSCONFIG,
+    MISSING_TSCONFIG_MESSAGE,
     MISSING_TSCONFIG_FINDINGS,
     ALL_LEVEL_OPTION_FINDINGS,
-    RECOMMENDED_COMPILER_OPTIONS,
 } from '#tests/config/checks/language/typescript.ts';
 
 test.each([...TSCONFIG_READ_ERRORS])(
@@ -32,6 +34,7 @@ test.each([...TSCONFIG_READ_ERRORS])(
         expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
     },
 );
+
 test('a scope needs no tsconfig of its own but still checks one that is added', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['typescript']) });
 
@@ -44,6 +47,7 @@ test('a scope needs no tsconfig of its own but still checks one that is added', 
     await writeFile(join(sandbox.path, 'tsconfig.json'), STRICT_TSCONFIG_TEXT);
     expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
 });
+
 test('a nested tsconfig inherits strict from the tsconfig an npm package names, and strict: false is reported in both files', async () => {
     const filename = 'strict.json';
     await using sandbox = await testdir({
@@ -59,13 +63,13 @@ test('a nested tsconfig inherits strict from the tsconfig an npm package names, 
 
     const session = await openSession(sandbox.path);
     const input = planSandboxCheck(session, 'typescript/tsconfig');
-    const inherited = await findBuiltInCheck('typescript/tsconfig')(session, input);
+    const inherited = await getBuiltInCheck('typescript/tsconfig')(session, input);
     expect(inherited.filter((finding) => finding.rule === 'strict')).toStrictEqual([]);
     await writeFile(
         join(sandbox.path, 'apps/web/tsconfig.json'),
         '{"extends":"@example/config","compilerOptions":{"strict":false}}',
     );
-    expect(await findBuiltInCheck('typescript/tsconfig')(session, input)).toStrictEqual(inherited);
+    expect(await getBuiltInCheck('typescript/tsconfig')(session, input)).toStrictEqual(inherited);
     const overridden = await runSandboxCheck(sandbox.path, 'typescript/tsconfig');
     expect(
         overridden
@@ -76,10 +80,11 @@ test('a nested tsconfig inherits strict from the tsconfig an npm package names, 
         { check: 'typescript/tsconfig', file: 'apps/web/tsconfig.json', rule: 'strict' },
     ]);
 });
-test('level recommended does not require noImplicitReturns and noPropertyAccessFromIndexSignature, and level all does', async () => {
+
+test('level basic does not require noImplicitReturns and noPropertyAccessFromIndexSignature, and level all does', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'recommended' }),
-        'tsconfig.json': JSON.stringify(RECOMMENDED_COMPILER_OPTIONS),
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'basic' }),
+        'tsconfig.json': JSON.stringify(DEFAULT_LEVEL_TSCONFIG),
     });
     expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['typescript'], { level: 'all' }));
@@ -90,6 +95,7 @@ test('level recommended does not require noImplicitReturns and noPropertyAccessF
     await writeFile(join(sandbox.path, 'tsconfig.json'), STRICT_TSCONFIG_TEXT);
     expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
 });
+
 test(`a scope's framework compiler options are required in its tsconfig`, async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript'], {
@@ -122,6 +128,7 @@ test(`a scope's framework compiler options are required in its tsconfig`, async 
         }),
     ).toStrictEqual([]);
 });
+
 test('a covering ancestor tsconfig is checked once and a child-only project keeps its own check', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript'], {
@@ -135,13 +142,13 @@ test('a covering ancestor tsconfig is checked once and a child-only project keep
     const session = await openSession(sandbox.path);
 
     expect(
-        await findBuiltInCheck('typescript/tsconfig')(
+        await getBuiltInCheck('typescript/tsconfig')(
             session,
             planSandboxCheck(session, 'typescript/tsconfig', { scope: 'app', paths: ['app/source.ts'] }),
         ),
     ).toMatchObject([{ file: 'tsconfig.json', rule: 'strict', message: 'strict is not on in this tsconfig.' }]);
     expect(() =>
-        findBuiltInCheck('typescript/tsconfig')(session, planSandboxCheck(session, 'typescript/tsconfig')),
+        getBuiltInCheck('typescript/tsconfig')(session, planSandboxCheck(session, 'typescript/tsconfig')),
     ).toThrow(
         expect.objectContaining({
             name: 'GspotError',
@@ -151,10 +158,10 @@ test('a covering ancestor tsconfig is checked once and a child-only project keep
     );
     const reopened = await openSession(sandbox.path);
     expect(
-        await findBuiltInCheck('typescript/tsconfig')(reopened, planSandboxCheck(reopened, 'typescript/tsconfig')),
+        await getBuiltInCheck('typescript/tsconfig')(reopened, planSandboxCheck(reopened, 'typescript/tsconfig')),
     ).toMatchObject([{ file: 'tsconfig.json', rule: 'strict', message: 'strict is not on in this tsconfig.' }]);
     expect(() =>
-        findBuiltInCheck('typescript/tsconfig')(
+        getBuiltInCheck('typescript/tsconfig')(
             reopened,
             planSandboxCheck(reopened, 'typescript/tsconfig', { scope: 'app' }),
         ),
@@ -166,6 +173,7 @@ test('a covering ancestor tsconfig is checked once and a child-only project keep
         }),
     );
 });
+
 test('a child excluded from the root project is its own compiler project', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript'], {
@@ -181,7 +189,7 @@ test('a child excluded from the root project is its own compiler project', async
             check: 'typescript/tsconfig',
             file: 'app/tsconfig.json',
             rule: 'missing',
-            message: 'Add a tsconfig.json to this scope. ESLint and tsc read the TypeScript files through it.',
+            message: MISSING_TSCONFIG_MESSAGE,
             help: 'Turn on the reported compiler option in your tsconfig.',
             fixable: false,
         },
@@ -195,13 +203,13 @@ test.each(['', 'app'])(
     async (scope) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['typescript'], { scopes: [{ path: 'app' }] }),
-            [scope === '' ? 'source.ts' : 'app/source.ts']: 'export const count: number = 1;\n',
+            [scope === '' ? 'source.ts' : 'app/source.ts']: COUNT_NUMBER_SOURCE,
         });
         expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig', { scope })).toMatchObject([
             {
                 file: scope === '' ? 'tsconfig.json' : 'app/tsconfig.json',
                 rule: 'missing',
-                message: 'Add a tsconfig.json to this scope. ESLint and tsc read the TypeScript files through it.',
+                message: MISSING_TSCONFIG_MESSAGE,
             },
         ]);
         await writeFile(join(sandbox.path, scope, 'tsconfig.json'), STRICT_TSCONFIG_TEXT);
@@ -213,13 +221,24 @@ test('a solution tsconfig leaves compiler option checks to its referenced projec
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript']),
         'tsconfig.json': '{"files":[],"references":[{"path":"./tsconfig.app.json"}]}',
-        'tsconfig.app.json': JSON.stringify(RECOMMENDED_COMPILER_OPTIONS),
-        'source.ts': 'export const count: number = 1;\n',
+        'tsconfig.app.json': JSON.stringify(DEFAULT_LEVEL_TSCONFIG),
+        'source.ts': COUNT_NUMBER_SOURCE,
     });
     expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
     await writeFile(join(sandbox.path, 'tsconfig.app.json'), JSON.stringify({ compilerOptions: { strict: false } }));
     const findings = await runSandboxCheck(sandbox.path, 'typescript/tsconfig');
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'tsconfig.app.json', rule: 'strict' },
+    ]);
+});
+
+test('strict requires explicitly disabled members of the strict family', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript']),
+        'tsconfig.json': STRICT_TSCONFIG_TEXT.replace('"strict":true', '"strict":true,"strictNullChecks":false'),
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'typescript/tsconfig');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'tsconfig.json', rule: 'strictNullChecks' },
     ]);
 });

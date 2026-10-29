@@ -1,11 +1,12 @@
+import { dirname, relative } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getTable, findParentScope } from '#cli/settings/scopes.ts';
+import { escapeGlob, convertToPosixPath } from '#cli/system/paths.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
-import { buildRelativeTarget } from '#cli/generation/config-files/pointers.ts';
 import type { EslintPlugins, EslintBlockFields } from '#cli/types/generation/eslint.ts';
-import { buildScopeGlob } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
 function listPluginRecords(scopes: Scope[]) {
@@ -26,7 +27,6 @@ List the import of each plugin module, keyed by its rule prefix, as the generate
 @param scopes every project and its settings.
 @param targetPath the generated ESLint file, which imports each module by a path relative to it.
 @param shipped the plugins that gspot loads, whose prefixes your plugins may not take.
-@returns the imports of your plugins.
 */
 export function listLocalPlugins(scopes: Scope[], targetPath: string, shipped: EslintPlugins): EslintPlugins {
     const records = listPluginRecords(scopes);
@@ -47,7 +47,10 @@ export function listLocalPlugins(scopes: Scope[], targetPath: string, shipped: E
                     'settings',
                     `tools.eslint.plugins: ${name} is the rule prefix of a plugin that gspot loads. Choose another name.`,
                 );
-            return [name, [`localPlugin${String(index)}`, buildRelativeTarget(targetPath, path)] as const];
+            const relativePath = convertToPosixPath(relative(dirname(targetPath), path));
+            const target =
+                relativePath.startsWith('./') || relativePath.startsWith('../') ? relativePath : `./${relativePath}`;
+            return [name, [`localPlugin${String(index)}`, target] as const];
         }),
     );
 }
@@ -57,11 +60,10 @@ Build one block per plugin record that turns its rules on as errors for the code
 
 @param scopes every project and its settings.
 @param codeFiles the code file patterns of the ESLint file.
-@returns the rule blocks of your plugins.
 */
 export function buildLocalPluginBlocks(scopes: Scope[], codeFiles: string[]): EslintBlockFields[] {
     return listPluginRecords(scopes).map(({ name, rules, scope }) => ({
-        files: scope === '' ? codeFiles : codeFiles.map((pattern) => [pattern, buildScopeGlob(scope)]),
+        files: scope === '' ? codeFiles : codeFiles.map((pattern) => [pattern, joinScope(escapeGlob(scope), '**/*')]),
         rules: Object.fromEntries(
             Object.entries(rules).map(([rule, options]) => [`${name}/${rule}`, ['error', ...options]]),
         ),

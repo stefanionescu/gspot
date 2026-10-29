@@ -1,11 +1,10 @@
-import type { Session } from '#cli/types/session.ts';
-import type { CheckResult } from '#cli/types/runs/check.ts';
-import type { HookName } from '#cli/types/generation/files.ts';
-import type { CanceledCommandJson } from '#cli/types/terminal.ts';
-import type { FixReport, FixResult } from '#cli/types/runs/fixes.ts';
-import type { StageFilter, PlannedCheck } from '#cli/types/planning.ts';
-import type { RunReport, RunOptions, CheckProgress } from '#cli/types/runs/run.ts';
-import type { PushInput, StagedPaths, ChangedPaths, PushedRevisions } from '#cli/types/repository/revisions.ts';
+import { type CheckResult } from '#cli/types/runs/check.ts';
+import { type HookName } from '#cli/types/generation/files.ts';
+import { type IgnoreRecord } from '#cli/types/settings/file.ts';
+import { type CanceledCommandJson } from '#cli/types/terminal.ts';
+import { type Session, type CheckSession } from '#cli/types/session.ts';
+import { type PlanOptions, type StageFilter, type PlannedCheck } from '#cli/types/planning.ts';
+import { type StagedPaths, type ChangedPaths, type PushedRevisions } from '#cli/types/repository/revisions.ts';
 
 type CheckedRevision = { hash: string; refs: string[]; commits: string[]; shallow: boolean; report: RunReport };
 
@@ -34,7 +33,7 @@ export type CheckOptions = {
     push?: PushInput;
     base?: string;
     fix: boolean;
-    isDryRun: boolean;
+    dryRun: boolean;
     stage?: StageFilter;
     messageFile?: string;
     verbose: boolean;
@@ -56,10 +55,11 @@ export type RevisionSource = (
           reference: string;
           base?: string;
           commits: string[];
+          range?: string[];
           shallow: boolean;
           changed?: string[];
       }
-) & { dependencyNote?: string };
+) & { dependencyNote?: string; unreadablePaths?: string[] };
 
 export type CheckFlags = {
     json?: boolean;
@@ -80,7 +80,7 @@ export type FinishedRun = {
     started: Date;
     planned: PlannedCheck[];
     active: PlannedCheck[];
-    ran: CheckResult[];
+    results: CheckResult[];
     fixes: FixReport | undefined;
 };
 
@@ -94,3 +94,51 @@ export type ReproduceOptions = {
 export type PathBytes = Map<string, Buffer | undefined>;
 
 export type FixRounds = { results: FixResult[]; before: PathBytes; after: PathBytes };
+
+type PushInput = { stdin: string; remote?: string };
+
+export type FixReport = { results: FixResult[]; changed: string[]; broken: string[]; diffs: string[] };
+
+export type FixResult = { check: string; changed: string[] } & (
+    | { status: 'changed' | 'unchanged' | 'skipped' }
+    | { status: 'failed' | 'canceled'; note: string }
+);
+
+export type CheckProgress = { finished: number; total: number; comparison: RunReport['comparison'] };
+
+export type PlanAfterFixes = { session: CheckSession; planned: PlannedCheck[]; fixes: FixReport | undefined };
+
+export type Run = {
+    session: CheckSession;
+    options: RunOptions;
+};
+
+export type RunOptions = PlanOptions & {
+    stage: StageFilter;
+    onProgress?: (progress: CheckProgress) => void;
+    dryRun: boolean;
+    comparison?: NonNullable<RunReport['comparison']>;
+    unstagedChanges?: number;
+    cwd: string;
+    pathArguments: string[];
+    push?: PushInput | undefined;
+    fix: boolean;
+    verbose?: boolean;
+};
+
+export type RunReport = {
+    notes?: string[];
+    comparison?: { content: 'working-tree' | 'index' | 'commit'; reference: string };
+    version: string;
+    stage: StageFilter;
+    started: string;
+    duration: number;
+    checks: readonly CheckResult[];
+    ignores: readonly (Omit<IgnoreRecord, 'until'> & { until?: string })[];
+    unstagedChanges: number;
+    partial: boolean;
+    failed: readonly string[];
+    exitCode: number;
+};
+
+export type RunResult = { report: RunReport; planned: PlannedCheck[]; fixes?: FixReport };

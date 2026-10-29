@@ -1,12 +1,13 @@
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
+import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/inheritance.ts';
+import { UNDER_TABLE, AT_TOP_LEVEL } from '#cli/config/settings/validation/keys.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
-import { type Settings, type SettingsError, type SettingsTable } from '#cli/types/settings/file.ts';
+import type { Settings, SettingsError, SettingsTable } from '#cli/types/settings/file.ts';
 import type { Setting, WrittenSetting, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 
 import {
     findSetting,
-    getSettingTable,
     listWrittenKeys,
     getWrittenSetting,
     listSettingsTables,
@@ -14,24 +15,19 @@ import {
     listApplicableTables,
 } from '#cli/settings/inherit.ts';
 
-function formatLooseningError(
-    key: string,
-    written: WrittenSetting,
-    shipped: unknown,
-    scope: string | undefined,
-): string {
+function formatLooseningError(key: string, written: WrittenSetting, shipped: unknown, scopePath: string): string {
     const shown = shipped === undefined ? 'default' : `default ${JSON.stringify(shipped)}`;
-    const scopeFlag = scope === undefined ? '' : ` --scope ${quoteArgument(scope)}`;
+    const scopeFlag = scopePath === '' ? '' : ` --scope ${quoteArgument(scopePath)}`;
     const value = JSON.stringify(written.value);
     const argument = typeof written.value === 'string' ? written.value : value;
-    return `\`${key} = ${value}\` is looser than the shipped ${shown}, so it needs a reason. Run: gspot set ${quoteArgument(key)} ${quoteArgument(argument)}${scopeFlag} --reason "<why>"`;
+    return `${key} = ${value} is looser than the shipped ${shown}, so it needs a reason. Run: gspot set ${quoteArgument(key)} ${quoteArgument(argument)}${scopeFlag} --reason "<why>"`;
 }
 
 function validateWrittenReason(
     key: string,
     written: WrittenSetting,
     setting: Setting,
-    scope: string | undefined,
+    scopePath: string,
     shipped: unknown,
 ): SettingsError[] {
     const isLoose = isLoosening(setting, written.value, shipped);
@@ -41,12 +37,12 @@ function validateWrittenReason(
             : [
                   {
                       path: key.split('.'),
-                      message: `\`${key}\` does not loosen the default. Write it as a plain value, without a reason.`,
+                      message: `${key} does not loosen the default. Write it as a plain value, without a reason.`,
                   },
               ];
     if (!isLoose) return [];
     if (setting.type !== 'list')
-        return [{ path: key.split('.'), message: formatLooseningError(key, written, shipped, scope) }];
+        return [{ path: key.split('.'), message: formatLooseningError(key, written, shipped, scopePath) }];
     return Array.isArray(written.value)
         ? [
               {
@@ -61,15 +57,15 @@ function validateWrittenKey(
     availableSettings: AvailableSettings,
     settings: Settings,
     table: SettingsTable,
-    scope: string | undefined,
+    scopePath: string,
     key: string,
 ): SettingsError[] {
     const match = findSetting(availableSettings, key);
     if (!match) return [{ path: key.split('.'), message: formatUnknownSetting(availableSettings, key) }];
     const written = getWrittenSetting(table, key);
     if (!written) return [];
-    const shipped = findSettingDefault(availableSettings, settings, match, scope)?.value;
-    return validateWrittenReason(key, written, match.setting, scope, shipped);
+    const shipped = findSettingDefault(availableSettings, settings, match, scopePath)?.value;
+    return validateWrittenReason(key, written, match.setting, scopePath, shipped);
 }
 
 function listUnsettledConflicts(
@@ -79,7 +75,7 @@ function listUnsettledConflicts(
 ): SettingsError[] {
     const errors: SettingsError[] = [];
     const availableByScope = [
-        { selected: availableSettings, scope: undefined, path: ['configurations'] as KeyPath },
+        { selected: availableSettings, scope: '', path: ['configurations'] as KeyPath },
         ...[...scopeAvailable].map(([scope, selected], index) => ({
             selected,
             scope,
@@ -95,6 +91,14 @@ function listUnsettledConflicts(
     return errors;
 }
 
+function formatUnknownLimitSetting(key: string, settings: string[]): string {
+    const limits = settings.filter((name) => name.startsWith('limits.'));
+    const near = selectSimilarNames(key, limits);
+    return near.length === 0
+        ? `${key} is not a limit any check reads. The limits that exist are ${formatCodeList(limits.map((name) => name.slice('limits.'.length)))}.`
+        : `${key} is not a limit. Did you mean ${formatCodeList(near)}?`;
+}
+
 /**
 Name an unknown setting, and list the closest keys in the same table.
 
@@ -104,23 +108,21 @@ Name an unknown setting, and list the closest keys in the same table.
 */
 export function formatUnknownSetting(availableSettings: AvailableSettings, key: string): string {
     const all = availableSettings.settings.keys().toArray();
-    if (key.startsWith('limits.')) {
-        const limits = all.filter((name) => name.startsWith('limits.'));
-        return `\`${key}\` is not a limit any check reads. The limits that exist are ${formatCodeList(limits.map((name) => name.slice('limits.'.length)))}.`;
-    }
-    const prefix = key.includes('.') ? getSettingTable(key) : '';
+    if (key.startsWith('limits.')) return formatUnknownLimitSetting(key, all);
+    const depth = key.startsWith('tools.') ? TABLE_KEY_SEGMENTS : 1;
+    const prefix = key.includes('.') ? key.split('.').slice(0, depth).join('.') : '';
     const keys = all
         .filter((name) => (prefix === '' ? !name.includes('.') : name.startsWith(`${prefix}.`)))
         .map((name) => (prefix === '' ? name : name.slice(prefix.length + 1)));
     const near = selectSimilarNames(prefix === '' ? key : key.slice(prefix.length + 1), keys);
     const rest = keys.filter((each) => !near.includes(each));
     const suggestions = [...near, ...rest];
-    const place = prefix === '' ? 'at the top level' : 'under that table';
+    const place = prefix === '' ? AT_TOP_LEVEL : UNDER_TABLE;
     return `No selected configuration has the setting ${key}. ${
         suggestions.length === 0
             ? `No setting exists ${place}.`
             : `The settings that exist ${place} are ${formatCodeList(suggestions)}.`
-    } Run \`gspot list settings\` to see every one.`;
+    } Run gspot list settings to see every one.`;
 }
 
 /**
@@ -130,7 +132,7 @@ Validate every written key against the known settings and the loosening rule.
 @param settings the parsed gspot.toml.
 @param scopeAvailable the settings of each scope by path, which its own table uses.
 @param general the settings of general configurations that repository evidence can select.
-@returns the errors in plain English, empty when the settings pass validation.
+@returns empty when the settings pass validation.
 */
 export function validateKeys(
     availableSettings: AvailableSettings,
@@ -146,7 +148,7 @@ export function validateKeys(
         errors: availableSettings.errors,
     };
     for (const { table, scope, path } of listSettingsTables(settings)) {
-        const active = scope === undefined ? everywhere : (scopeAvailable.get(scope) as AvailableSettings);
+        const active = scope === '' ? everywhere : (scopeAvailable.get(scope) as AvailableSettings);
         const selectedAvailable: AvailableSettings = {
             settings: new Map([...general.settings, ...active.settings]),
             defaults: new Map([...general.defaults, ...active.defaults]),

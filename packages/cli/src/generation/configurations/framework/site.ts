@@ -5,8 +5,7 @@ import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 /**
 Build purgecss-safelist.json: the selectors of the scope that PurgeCSS keeps, which purgecss.mjs reads.
 
-@param planned the config file with its scope, level, and target path.
-@returns the JSON list of selectors.
+@param planned the config file to build.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildPurgecssSafelist(planned: PlannedConfigFile): string {

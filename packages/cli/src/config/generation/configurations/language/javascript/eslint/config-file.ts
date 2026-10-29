@@ -4,15 +4,11 @@ export const ESLINT_FUNCTIONS_FILE = 'functions.mjs';
 
 export const GLOBALS_IMPORT = ['globals', 'globals'] as const;
 
-export const PATH_JOIN_IMPORT = ['{ join }', 'node:path'] as const;
-
 export const CONFIGURATION_BLOCKS_SUFFIX = 'Blocks';
 
 export const NAME_HYPHEN = /-(?<letter>[a-z0-9])/gu;
 
 export const ESLINT_BASE_LABEL = 'javascript';
-
-export const PACKAGE_JSON_PATTERN = '**/package.json';
 
 export const PRESETS_AFTER_CONFIGURATIONS = [
     ['packageJson', 'packageJson'],
@@ -31,11 +27,7 @@ export const ESLINT_CHECK = 'javascript/eslint';
 
 export const ESLINT_INDENT = ' '.repeat(JSON_INDENT);
 
-export const IMPORT_BOUNDARIES_RULE = 'gspot/import-boundaries';
-
 export const COMPONENT_CONFIGURATIONS = ['vue', 'svelte'] as const;
-
-export const RUNTIME_DECLARATIONS = 'runtimeDeclarations';
 
 export const CODE_LANGUAGES = ['javascript', 'typescript'] as const;
 
@@ -76,3 +68,33 @@ export const BASE_SELECTORS = [
         message: 'Log a stable message and pass the values as fields.',
     },
 ] as const;
+
+export const PLUGIN_RECORD_HELP = ' For a rule of your own, add a [[tools.eslint.plugins]] record.';
+
+export const ESLINT_FUNCTIONS = [
+    'buildBlock',
+    'readPreset',
+    'mergePreset',
+    'mergePresetRules',
+    'setLevelRules',
+    'addPlugins',
+    'setRootFolder',
+    'setImportLookup',
+    'setBoundaryLookup',
+    'setRuntime',
+    'setComponentParser',
+    'setScriptParser',
+    'setJestGlobals',
+    'buildRuntimeMatcher',
+    'stripRuntimeGlobals',
+    'buildComponentMatcher',
+    'importAstroPlugin',
+    'importSvelteParser',
+] as const;
+
+export const IMPORT_NAME_PUNCTUATION = /[{}\s]/gu;
+
+export const ESLINT_PLUGIN_IMPORTERS = new Map([
+    ['eslint-plugin-astro', 'importAstroPlugin'],
+    ['svelte-eslint-parser', 'importSvelteParser'],
+]);

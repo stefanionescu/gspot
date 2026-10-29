@@ -1,21 +1,18 @@
 import { REACT_NATIVE_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { REACT_FILES } from '#cli/config/generation/configurations/framework/nextjs.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
+import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 import {
-    REACT_FILES,
-    CONFIGURATION_PLUGINS,
-} from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
-import {
     getPreset,
-    allowFocusableRegions,
-    buildPresetRuleExpression,
+    buildPresetRules,
+    setFocusableRoles,
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 
 /**
 Apply the accessibility lint rules to the React DOM files.
 
 @param scope the planned ESLint file of the scope.
-@returns the imports and ESLint blocks for this configuration.
 */
 export function buildReactDomBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>): ConfigurationBlocks {
     const { presets, settings } = scope;
@@ -25,10 +22,12 @@ export function buildReactDomBlocks(scope: Pick<EslintScope, 'presets' | 'settin
         blocks.push({
             fields: {
                 files: REACT_FILES,
-                ...(preset.blocks[0].rules !== undefined && { rules: allowFocusableRegions(preset.blocks[0].rules) }),
+                ...(preset.blocks[0].rules !== undefined && {
+                    rules: setFocusableRoles(preset.blocks[0].rules),
+                }),
             },
-            properties: "plugins: { 'jsx-a11y-x': accessibility }",
-            preset: buildPresetRuleExpression([['accessibility', preset]]),
+            calls: [{ name: 'addPlugins', args: [{ imports: { 'jsx-a11y-x': 'accessibility' } }] }],
+            preset: buildPresetRules([['accessibility', preset]]),
         });
     }
     return {

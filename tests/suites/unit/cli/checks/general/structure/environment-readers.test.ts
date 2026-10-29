@@ -1,18 +1,20 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { expectSampleFix } from '#tests/setup/cli/samples.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
-    BASH_ENV_READ_CASES,
+    OS_VALUE_SOURCE,
     PYTHON_ENVIRONMENT_SOURCE,
+    BASH_ENVIRONMENT_READ_CASES,
 } from '#tests/config/checks/general/structure/environment-readers.ts';
 
 test('Swift environment reads outside the env files are reported; comments and strings are not', async () => {
@@ -35,7 +37,7 @@ let spaced = ProcessInfo . processInfo . environment
         `${sandbox.path}/gspot.toml`,
         buildSandboxSettings(['swift'], {
             level: 'all',
-            tables: '[structure]\nenvironment_readers = ["Sources/Environment.swift"]\n',
+            tables: '[structure]\nenvironment_readers = { value = ["Sources/Environment.swift"], reason = "These paths own environment access for this project." }\n',
         }),
     );
     const result = await runSandboxCheck(sandbox.path, 'structure/environment-readers');
@@ -47,7 +49,7 @@ let spaced = ProcessInfo . processInfo . environment
         `${sandbox.path}/gspot.toml`,
         buildSandboxSettings(['swift'], {
             level: 'all',
-            tables: '[structure]\nenvironment_readers = ["Sources/Screen.swift"]\n',
+            tables: '[structure]\nenvironment_readers = { value = ["Sources/Screen.swift"], reason = "These paths own environment access for this project." }\n',
         }),
     );
     expect(await runSandboxCheck(sandbox.path, 'structure/environment-readers')).toStrictEqual([]);
@@ -57,9 +59,9 @@ test('Python reads through os aliases are reported; shadowed and unrelated names
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
-            tables: '[structure]\nenvironment_readers = ["environment.py"]\n',
+            tables: '[structure]\nenvironment_readers = { value = ["environment.py"], reason = "These paths own environment access for this project." }\n',
         }),
-        'environment.py': 'import os\nVALUE = os.environ["KEY"]\n',
+        'environment.py': OS_VALUE_SOURCE,
         'main.py': PYTHON_ENVIRONMENT_SOURCE,
     });
     const initial = await runChecks(
@@ -87,10 +89,10 @@ test('each scope uses its own environment readers', async () => {
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['python'] }],
-            tables: '[structure]\nenvironment_readers = ["environment.py"]\n[scope.structure]\nenvironment_readers = ["app/environment.py"]\n',
+            tables: '[structure]\nenvironment_readers = { value = ["environment.py"], reason = "These paths own environment access for this project." }\n[scope.structure]\nenvironment_readers = { value = ["app/environment.py"], reason = "These paths own environment access for this project." }\n',
         }),
-        'environment.py': 'import os\nVALUE = os.environ["KEY"]\n',
-        'main.py': 'import os\nVALUE = os.environ["KEY"]\n',
+        'environment.py': OS_VALUE_SOURCE,
+        'main.py': OS_VALUE_SOURCE,
         'app/environment.py': 'import os\nVALUE = os.getenv("KEY")\n',
         'app/main.py': 'from os import getenv as read\nVALUE = read("KEY")\n',
     });
@@ -106,9 +108,10 @@ test('each scope uses its own environment readers', async () => {
     ]);
 });
 
-test.each([...BASH_ENV_READ_CASES])(
+test.each([...BASH_ENVIRONMENT_READ_CASES])(
     '$check reports $expected.rule in $expected.file and passes after the fix',
     async (sample) => {
-        await expectSampleFix(BASH_SANDBOX, sample);
+        await using sandbox = await createSandbox(BASH_SANDBOX);
+        await assertCheckSample(sandbox, sample, BASH_SANDBOX.cleanSource);
     },
 );

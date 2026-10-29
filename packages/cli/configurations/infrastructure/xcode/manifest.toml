@@ -24,7 +24,6 @@ command = ["plutil", "-lint", "{files}"]
 example = "A plist with an unclosed dictionary fails plutil. Close the dictionary element."
 files = { extensions = [".plist", ".entitlements"] }
 help = "Fix the element plutil names."
-level = "recommended"
 name = "plutil"
 output = { format = "regex", pattern = "^(?<file>[^:]+): \\(?(?<message>(?!OK$).+?)\\)?$" }
 stage = "commit"
@@ -35,7 +34,6 @@ why = "A broken plist fails the build or, worse, ships an app whose settings sil
 example = "A catalog string that lacks a required locale reports a finding. Add the translation, or mark the string as not translated."
 files = { extensions = [".xcstrings"] }
 help = "Add the translation, or mark the string as not translated in the catalog."
-level = "recommended"
 name = "xcstrings"
 runs = "scope"
 stage = "commit"
@@ -46,7 +44,6 @@ why = "A string with no translation shows its source language in the middle of a
 example = "A `Contents.json` that names a missing `icon.png` reports a finding. Add the image beside it, or remove the reference."
 files = { paths = ["**/*.xcassets/**"], extensions = [".swift"] }
 help = "Add the image or delete the asset."
-level = "recommended"
 name = "assets"
 runs = "scope"
 stage = "commit"
@@ -68,7 +65,6 @@ why = "An asset nobody names ships in the app for nothing."
 example = "A Swift file in no target reports a finding. Add the file to a target, or delete it."
 files = { extensions = [".swift"], paths = ["**/project.pbxproj"] }
 help = "Add the file to a target, or delete it."
-level = "recommended"
 name = "files-without-target"
 runs = "scope"
 stage = "commit"
@@ -79,7 +75,6 @@ why = "Xcode never compiles a Swift file that belongs to no target, so it breaks
 example = "An `.entitlements` key missing from `xcode.allowed_entitlements` reports a finding. Remove it, or add it to that list."
 files = { extensions = [".entitlements"] }
 help = "Remove the entitlement, or add it to xcode.allowed_entitlements."
-level = "recommended"
 name = "entitlements"
 runs = "scope"
 stage = "commit"
@@ -91,7 +86,6 @@ why = "Each entitlement grants the app a system capability, so a new one needs i
 example = "An Info.plist with `NSAllowsArbitraryLoads` reports a finding. Remove the key, and add an exception only for a host that needs one."
 files = { extensions = [".plist"] }
 help = "Remove the key, and add an exception for the one host that needs it."
-level = "recommended"
 name = "app-transport-security"
 runs = "scope"
 stage = "commit"

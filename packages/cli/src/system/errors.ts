@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 import type { ErrorCode } from '#cli/types/system/errors.ts';
+import { WRITE_FAILURE_CODES } from '#cli/config/system/errors.ts';
 
 export class GspotError extends Error {
     readonly code: ErrorCode;
@@ -43,13 +44,12 @@ Validate fields from a user file, and name the file and failing fields.
 @param path the file whose fields need validation.
 @param value the parsed file contents.
 @param schema the fields and constraints to check.
-@returns the validated fields.
 */
 export function parseFileFields<Value>(path: string, value: unknown, schema: z.ZodType<Value>): Value {
     const parsed = schema.safeParse(value);
     if (!parsed.success)
         throw new GspotError(
-            'filesystem',
+            'parse',
             `${path}: ${parsed.error.issues.flatMap((issue) => formatZodIssue(issue)).join('; ')}. Fix the field.`,
             { cause: parsed.error },
         );
@@ -66,4 +66,21 @@ Check whether an operation failed with an operating-system error code.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 25 calls in 13 files share it.
 export function hasErrorCode(error: unknown, code: string): boolean {
     return error instanceof Error && 'code' in error && error.code === code;
+}
+
+/**
+Describe a denied file mutation with the path and retain its original cause.
+
+@param path the affected path.
+@param error the operating-system failure.
+@returns the contextual permission failure, or the original error.
+*/
+export function buildWriteError(path: string, error: unknown): unknown {
+    if (WRITE_FAILURE_CODES.some((code) => hasErrorCode(error, code)))
+        return new GspotError(
+            'filesystem',
+            `Cannot write ${path}. Check its permissions and whether the filesystem is read-only, then run the command again.`,
+            { cause: error },
+        );
+    return error;
 }

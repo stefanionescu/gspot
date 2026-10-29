@@ -1,3 +1,5 @@
+export const BASEDPYRIGHT_LEVELS = { basic: 'recommended', all: 'all' } as const;
+
 export const BASEDPYRIGHT_ALL_LEVEL_OPTIONS = {
     reportImportCycles: 'error',
     reportImplicitOverride: 'error',
@@ -95,3 +97,9 @@ export const RUFF_ALWAYS_OFF = [
     'RUF023',
     'W191',
 ] as const;
+
+export const RUFF_TABLE = 'tools.ruff';
+
+export const RUFF_CHECK = 'python/ruff';
+
+export const BASEDPYRIGHT_CHECK = 'python/basedpyright';

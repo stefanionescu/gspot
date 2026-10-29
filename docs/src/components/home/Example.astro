@@ -2,16 +2,26 @@
 import ExampleRun from './ExampleRun.astro';
 import InlineText from '../InlineText.astro';
 import example from '../../config/example.json';
-import { buildExampleLines } from './example.ts';
+import { tokenizeExampleLine } from './example.ts';
 
 const beforeLines = example.agent.files
-    .flatMap(({ content }) => buildExampleLines(content))
+    .flatMap(({ content }) =>
+        content
+            .trimEnd()
+            .split('\n')
+            .map((text, index) => ({ number: index + 1, tokens: tokenizeExampleLine(text) })),
+    )
     .map((line) => ({
         ...line,
         issue: example.issues.findIndex(({ lines }) => lines.includes(line.number)) + 1,
     }));
 const afterLines = example.fix.files
-    .flatMap(({ content }) => buildExampleLines(content))
+    .flatMap(({ content }) =>
+        content
+            .trimEnd()
+            .split('\n')
+            .map((text, index) => ({ number: index + 1, tokens: tokenizeExampleLine(text) })),
+    )
     .map((line) => ({
         ...line,
         inserted: example.fix.inserted_lines.includes(line.number),
@@ -88,5 +98,5 @@ const afterLines = example.fix.files
             <code class="inline-code">pay</code> now waits for the charge, and a failed payment reaches the caller.
         </p>
     </figure>
-    <ExampleRun status="passed" summary={example.passed} />
+    <ExampleRun status="passed" />
 </div>

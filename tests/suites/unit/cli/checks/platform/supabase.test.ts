@@ -1,10 +1,10 @@
 import { join, posix } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -33,11 +33,8 @@ test('supabase/deno-lint runs in each scope folder on each edge function of its 
         'apps/api/edge/_shared/index.ts': 'export {};\n',
     });
 
-    using resources = new DisposableStack();
-    const session = await openFakeToolSession(sandbox.path, ['deno'], resources);
-    using run = spyOn(processes, 'spawnProcess').mockResolvedValue(
-        buildProcessResult({ stdout: '{"diagnostics":[],"errors":[]}' }),
-    );
+    using deno = await prepareDenoSession(sandbox.path);
+    const { session, run } = deno;
     expect(await runSandboxCheck(session.root, 'supabase/deno-lint', { scope: '' })).toStrictEqual([]);
     expect(await runSandboxCheck(session.root, 'supabase/deno-lint', { scope: 'apps/api' })).toStrictEqual([]);
     expect(run.mock.calls.map(([command, options]) => ({ cwd: options.cwd, target: command.at(-1) }))).toStrictEqual([
@@ -87,7 +84,7 @@ test.each([1, 2])(
 );
 
 test.each([...STORAGE_POLICIES])(
-    "a storage policy counts only a real bucket_id = 'name' condition on storage.objects: $name",
+    "a storage policy counts a bucket_id = 'name' condition on storage.objects, not a lookalike: $name",
     async ({ sql, allowed }) => {
         await using sandbox = await testdir();
         const settings = buildSandboxSettings(['supabase'], {
@@ -235,3 +232,50 @@ test('supabase/storage-policies reports nothing without a config.toml', async ()
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['supabase']) });
     expect(await runSandboxCheck(sandbox.path, 'supabase/storage-policies')).toStrictEqual([]);
 });
+
+test('a configured edge entrypoint and import map reach Deno, unless deno.json takes precedence', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['supabase']),
+        'supabase/config.toml':
+            '[functions.greet]\nentrypoint = "./functions/greet/main.ts"\nimport_map = "./imports.json"\n',
+        'supabase/functions/greet/main.ts': 'export {};',
+        'supabase/imports.json': '{}',
+    });
+    using deno = await prepareDenoSession(sandbox.path);
+    const { session, run } = deno;
+    expect(await runSandboxCheck(session.root, 'supabase/deno-lint')).toStrictEqual([]);
+    expect(run.mock.calls.at(-1)?.[0]).toContain(join(sandbox.path, 'supabase/functions/greet'));
+    expect(run.mock.calls.at(-1)?.[0]).toContain('--import-map');
+    expect(run.mock.calls.at(-1)?.[0]).toContain(join(sandbox.path, 'supabase/imports.json'));
+    await writeFile(join(sandbox.path, 'supabase/functions/greet/deno.json'), '{}');
+    expect(await runSandboxCheck(session.root, 'supabase/deno-check')).toStrictEqual([]);
+    expect(run.mock.calls.at(-1)?.[0]).toContain(join(sandbox.path, 'supabase/functions/greet/main.ts'));
+    expect(run.mock.calls.at(-1)?.[0]).toContain('--config');
+    expect(run.mock.calls.at(-1)?.[0]).not.toContain('--import-map');
+});
+
+test('Deno checks skip a scope with no edge functions', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['supabase']),
+        'supabase/config.toml': '',
+    });
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(sandbox.path, ['deno'], resources);
+    for (const name of ['supabase/deno-lint', 'supabase/deno-check']) {
+        const result = await runChecks(session, buildRunOptions({ only: [name] }));
+        expect(result.report.checks[0]).toMatchObject({ status: 'skipped' });
+        expect(JSON.stringify(result.report.checks[0])).toContain('No edge function under supabase/functions.');
+    }
+});
+
+async function prepareDenoSession(root: string) {
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(root, ['deno'], resources);
+    const run = resources.use(
+        spyOn(processes, 'spawnProcess').mockResolvedValue(
+            buildProcessResult({ stdout: '{"diagnostics":[],"errors":[]}' }),
+        ),
+    );
+    const owned = resources.move();
+    return { session, run, [Symbol.dispose]: owned[Symbol.dispose].bind(owned) };
+}

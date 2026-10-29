@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
+import { TYPE_ERROR_MESSAGE } from '#tests/config/typescript.ts';
 import astroPackage from 'astro/package.json' with { type: 'json' };
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -50,7 +51,7 @@ test('ESLint, astro check, and Prettier each report a finding in one Astro proje
             line: 2,
             column: 7,
             rule: 'ts(2322)',
-            message: "Type 'string' is not assignable to type 'number'.",
+            message: TYPE_ERROR_MESSAGE,
         },
     ]);
     await writeFile(join(root, ASTRO_PAGE_PATH), ASTRO_PAGE.replace('<h1>{title}</h1>', '<h1>{title}</h1   >'));

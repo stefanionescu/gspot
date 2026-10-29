@@ -10,10 +10,10 @@ import { findToolProjectPackage } from '#cli/configurations/tools.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
-import { MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/inspect.ts';
 import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 import type { InstalledDependency } from '#cli/types/repository/npm/installed-packages.ts';
 import type { ToolSearch, InspectedTool, ToolInspection } from '#cli/types/tools/inspection.ts';
+import { INSTALL_HELP, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/inspect.ts';
 import { readToolProjectPackage, findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
 
 function buildInstallHelp(tool: Tool): string {
@@ -21,7 +21,7 @@ function buildInstallHelp(tool: Tool): string {
     if (toolProjectPackage !== undefined || tool.system !== true) {
         return toolProjectPackage === undefined && which.sync(MISE_TOOL, { nothrow: true }) === null
             ? `Install mise (${MISE_INSTALL_URL}), or install ${tool.name} ${tool.version ?? ''} yourself.`
-            : 'Run gspot install.';
+            : INSTALL_HELP;
     }
     return tool.install_help ?? `Install ${tool.name}.`;
 }
@@ -37,9 +37,9 @@ function inspectLibraryCommand(inspected: InspectedTool, command: string[]): Too
     const { root, cwd, tool, timeoutSeconds } = inspected;
     const program = command[0] as string;
     const commandArguments = command.slice(1);
-    const [path] = listExecutablePaths(root, program, { timeoutSeconds, searchFolders: [cwd, root] });
+    const [path] = listExecutablePaths(root, program, { timeoutSeconds, folders: [cwd, root] });
     return path === undefined
-        ? buildMissingInspection(inspected)
+        ? inspected.missing
         : inspectExecutablePath({ ...inspected, tool: { ...tool, version_command: commandArguments } }, path);
 }
 
@@ -57,14 +57,8 @@ function inspectLibrary(inspected: InspectedTool): ToolInspection {
         installed = { path, version: readToolProjectPackage(files, root, path)?.version };
     }
     return installed?.version === undefined
-        ? buildMissingInspection(inspected)
+        ? inspected.missing
         : buildLibraryInspection(inspected, installed.path, installed.version);
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
-function buildMissingInspection(inspected: InspectedTool): ToolInspection {
-    const { tool, help, want } = inspected;
-    return { name: tool.name, state: 'missing', help, ...stripUndefined({ want }) };
 }
 
 function inspectExecutablePath(inspected: InspectedTool, path: string): ToolInspection {
@@ -92,11 +86,11 @@ function inspectProjectExecutable(inspected: InspectedTool): ToolInspection | un
     if (tool.system !== true) return undefined;
     const toolProjectPackage = findToolProjectPackage(tool);
     if (toolProjectPackage === undefined) return undefined;
-    const [project] = listRepositoryExecutablePaths(root, tool.name, { searchFolders: [cwd, root] });
+    const [project] = listRepositoryExecutablePaths(root, tool.name, { folders: [cwd, root] });
     if (project !== undefined) return inspectExecutablePath(inspected, project);
     const [toolProjectPath] = listExecutablePaths(root, tool.name, {
         timeoutSeconds,
-        searchFolders: [cwd, root],
+        folders: [cwd, root],
         toolFolderKind: toolProjectPackage.kind,
     });
     if (toolProjectPath !== undefined)
@@ -113,14 +107,14 @@ function inspectExecutable(inspected: InspectedTool): ToolInspection {
     if (project !== undefined) return project;
     const isExternal = tool.system === true;
     const search = isExternal
-        ? { searchFolders: [cwd, root] }
+        ? { folders: [cwd, root] }
         : {
-              searchFolders: [join(root, GSPOT_FOLDER), cwd, root],
+              folders: [join(root, GSPOT_FOLDER), cwd, root],
               miseBinPaths,
               toolFolderKind: findToolProjectPackage(tool)?.kind,
           };
     const [path] = listExecutablePaths(root, tool.name, { timeoutSeconds, ...search });
-    return path === undefined ? buildMissingInspection(inspected) : inspectExecutablePath(inspected, path);
+    return path === undefined ? inspected.missing : inspectExecutablePath(inspected, path);
 }
 
 /**
@@ -128,7 +122,6 @@ Explain why the required tool cannot run.
 
 @param tool the tool to explain.
 @param inspection the observed installation.
-@returns the install note, with the next step.
 */
 export function formatUnavailableNote(tool: Tool, inspection: ToolInspection): string {
     const help = inspection.help ?? buildInstallHelp(tool);
@@ -143,7 +136,6 @@ Inspect one tool, and reuse an inspection from earlier in this run.
 
 @param search where to search, with the run cache.
 @param tool the tool to inspect.
-@returns the tool path, version, and availability.
 */
 export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
     const { root, inspections } = search;
@@ -152,13 +144,16 @@ export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
     const cached = inspections.get(key);
     if (cached) return cached;
     const toolsRoot = search.toolsRoot ?? root;
+    const help = buildInstallHelp(tool);
+    const want = tool.system === true ? undefined : tool.version;
     const inspected: InspectedTool = {
         root: toolsRoot,
         cwd: isInside(relative(root, cwd)) ? join(toolsRoot, relative(root, cwd)) : cwd,
         tool,
-        help: buildInstallHelp(tool),
+        help,
+        missing: { name: tool.name, state: 'missing', help, ...stripUndefined({ want }) },
         timeoutSeconds: search.timeoutSeconds,
-        want: tool.system === true ? undefined : tool.version,
+        want,
         miseBinPaths: search.miseBinPaths,
     };
     const inspection = tool.kind === 'library' ? inspectLibrary(inspected) : inspectExecutable(inspected);
@@ -172,7 +167,6 @@ Resolve a usable executable, or a failure with the next step.
 
 @param tool the tool and its pin.
 @param inspection the resolved path, version, and install command.
-@returns the executable path, or the unavailable status and its message.
 */
 export function buildToolAvailability(tool: Tool, inspection: ToolInspection): ToolAvailability {
     if (AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined) return { path: inspection.path };

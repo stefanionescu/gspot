@@ -1,11 +1,12 @@
 import { NODE_MODULES } from '#cli/config/files/names.ts';
-import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
+import { GENERATED_HEADER_MARK } from '#cli/config/generation/header.ts';
 
-export const UNSET_VALUE = 'unset';
+export const UNSET_STATE = 'unset';
 
 export const EXTENSION_TAGS: Readonly<Record<string, readonly string[]>> = {
     '.sh': ['shell', 'bash', 'text'],
     '.bash': ['shell', 'bash', 'text'],
+    '.ksh': ['shell', 'ksh', 'text'],
     '.zsh': ['shell', 'zsh', 'text'],
     '.bats': ['shell', 'bats', 'text'],
     '.py': ['python', 'text'],
@@ -60,11 +61,11 @@ export const LICENSE_TAGS = new Set(['text', 'markdown']);
 export const KIND_ORIGINS = {
     default: 'default',
     gspot: 'gspot',
-    buildLauncher: 'build wrapper',
+    buildLauncher: 'build launcher',
     banner: 'banner',
     content: 'content',
     license: 'license',
-    vendoredFolder: 'directory',
+    vendoredFolder: 'folder',
 } as const;
 
 export const BUILD_LAUNCHERS = new Set(['gradlew', 'gradlew.bat', 'mvnw', 'mvnw.cmd']);
@@ -81,7 +82,7 @@ export const GENERATOR_OUTPUT_BANNERS = [
 
 export const SOURCE_KIND = { kind: 'source', origin: KIND_ORIGINS.default } as const;
 
-export const ATTRIBUTE_SET = 'set';
+export const SET_STATE = 'set';
 
 export const VENDORED_FOLDERS: ReadonlySet<string> = new Set([
     'vendor',
@@ -114,6 +115,7 @@ export const INTERPRETER_DIALECTS: ReadonlyMap<string, string> = new Map<string,
     ['sh', 'sh'],
     ['dash', 'sh'],
     ['zsh', 'zsh'],
+    ['ksh', 'ksh'],
     ['bats', 'bats'],
 ]);
 
@@ -127,7 +129,7 @@ export const TEXT_TAG = 'text';
 
 export const HEADER_LINES_CHECKED = 3;
 
-export const GENERATED_HEADER_LINE = new RegExp(String.raw`^(?:#|//)\s*${RegExp.escape(GENERATED_HEADER_TEXT)}`, 'u');
+export const GENERATED_HEADER_LINE = new RegExp(String.raw`^(?:#|//)\s*${RegExp.escape(GENERATED_HEADER_MARK)}\b`, 'u');
 
 export const SHEBANG_PREFIX = '#!';
 

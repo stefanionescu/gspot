@@ -1,12 +1,12 @@
 import { posix } from 'node:path';
-import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { getTool } from '#cli/configurations/tools.ts';
-import { findScopePath } from '#cli/repository/scopes.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import { LINE_BREAK, DIGITS_ONLY } from '#cli/config/text.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
@@ -98,7 +98,7 @@ function parseEditorWidths(fields: Record<string, string>): PrettierOptions {
 function parseEditorconfigSections(text: string): EditorconfigSection[] {
     const sections: EditorconfigSection[] = [];
     let fields: Record<string, string> | undefined;
-    for (const line of text.split(/\r?\n/u)) {
+    for (const line of text.split(LINE_BREAK)) {
         if (EDITORCONFIG_COMMENT.test(line)) continue;
         const section = EDITORCONFIG_SECTION.exec(line);
         if (section !== null) {
@@ -151,13 +151,13 @@ export function parsePrettierFile(path: string, text: string): PrettierOptions |
 
 function readFormatOptions(
     root: string,
-    scope: string,
+    scopePath: string,
     dependencies: Record<string, string>,
     prettierFiles: string[],
 ): PrettierOptions | null {
-    const folder = posix.join(root, scope);
+    const folder = posix.join(root, scopePath);
     const editorconfig = readEditorconfig(folder);
-    const packagePath = posix.join(scope, PACKAGE_JSON);
+    const packagePath = posix.join(scopePath, PACKAGE_JSON);
     const packageJson = findText(folder, PACKAGE_JSON);
     const packageOptions = packageJson === undefined ? undefined : parseJsonFile(packagePath, packageJson)['prettier'];
     const prettierFile = prettierFiles
@@ -171,7 +171,7 @@ function readFormatOptions(
     const options =
         prettierFile === undefined
             ? stripUndefined(parseFileFields(packagePath, packageFields, prettierSettingsSchema))
-            : parsePrettierFile(posix.join(scope, prettierFile.path), prettierFile.text);
+            : parsePrettierFile(posix.join(scopePath, prettierFile.path), prettierFile.text);
     return { ...PRETTIER_DEFAULTS, ...editorconfig, ...options };
 }
 
@@ -183,7 +183,7 @@ Read the formatting options of one scope that init sets up.
 @param selection.selected the configurations selected in the scope.
 @param draft the configurations and the template.
 @param repository the root and the tracked files.
-@returns the formatting table, with the template values kept.
+@returns the formatting table that this scope's formatter files give.
 */
 export function readScopeFormat(
     { scope, selected }: ScopeConfigurations,
@@ -197,14 +197,14 @@ export function readScopeFormat(
         scope,
         Object.fromEntries(
             repository.dependencyFiles
-                .filter((dependencyFile) => findScopePath(dependencyFile.path, draft.scopes) === scope)
+                .filter((dependencyFile) => selectScopePath(dependencyFile.path, draft.scopes) === scope)
                 .flatMap((dependencyFile) => Object.entries(dependencyFile.dependencies)),
         ),
         getTool([format], 'prettier').replace as string[],
     );
     const quotes = convertQuotes(options?.singleQuote);
     const hasPython = repository.files.some(
-        (file) => file.path.endsWith(PYTHON_EXTENSION) && findScopePath(file.path, draft.scopes) === scope,
+        (file) => file.path.endsWith(PYTHON_EXTENSION) && selectScopePath(file.path, draft.scopes) === scope,
     );
     const overrides = buildFormatOverrides(options, { root: posix.join(repository.root, scope), quotes, hasPython });
     if (options === null) return overrides.length === 0 ? {} : { format: { override: overrides } };

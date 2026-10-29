@@ -15,9 +15,9 @@ import {
 } from '#tests/config/runs/output/json.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in this file share it.
-function parseJsonReport(check: string, output: unknown, stdout: string): Finding[] {
+function parseJsonReport(checkId: string, output: unknown, stdout: string): Finding[] {
     return parseJsonFindings({
-        check,
+        check: checkId,
         output: outputSchema.parse(output),
         stdout,
         text: stdout,
@@ -36,7 +36,7 @@ test('a flat JSON list maps its fields to a finding', () => {
     expect(parseJsonReport('nginx/gixy', output, stdout)).toStrictEqual([...FLAT_JSON_FINDINGS]);
 });
 
-test('a nested list reads the file from the item and the rest from the child', () => {
+test('a nested list reads the file from the outer object and the rest from each nested object', () => {
     const stdout = `noise\n${JSON.stringify({
         files: [{ filepath: 'a.sql', violations: [{ start_line_no: 3, code: 'LT01', description: 'Spacing.' }] }],
     })}`;
@@ -44,7 +44,7 @@ test('a nested list reads the file from the item and the rest from the child', (
     expect([finding?.file, finding?.line, finding?.rule]).toStrictEqual(['a.sql', 3, 'LT01']);
 });
 
-test('an item without its nested list has no findings, as Trivy reports a clean file', () => {
+test('an outer object without its nested list has no findings, as Trivy reports a clean file', () => {
     const stdout = JSON.stringify({ files: [{ filepath: 'clean.sql' }] });
     expect(parseJsonReport('sql/sqlfluff', NESTED_LIST_FORMAT, stdout)).toStrictEqual([]);
 });

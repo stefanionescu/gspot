@@ -1,17 +1,16 @@
-import type { Check } from '#cli/types/configurations.ts';
 import { FAILED_RUN } from '#tests/config/runs/samples.ts';
 
 export const BASE_CHECK = {
     id: 'sandbox/diagnostic',
     command: ['tool'],
-    level: 'recommended',
-    stage: 'commit',
-    runs: 'files',
+    level: 'basic' as const,
+    stage: 'commit' as const,
+    runs: 'files' as const,
     summary: '',
     why: '',
     help: '',
-    output: { format: 'lines' },
-} satisfies Check;
+    output: { format: 'lines' as const },
+};
 
 export const LOCATED_CHECK = {
     ...BASE_CHECK,
@@ -112,3 +111,24 @@ export const ASTRO_CHECK_OUTPUT = [
     '',
     ASTRO_CHECK_SUMMARY,
 ].join('\n');
+
+export const FILE_LINE_PATTERN = String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$`;
+
+export const CAFE_SOURCE_PATH = 'inputs/café source.txt';
+
+export const CRASH_TAIL_CASES = [
+    {
+        name: 'frames after the cause',
+        stdout: '',
+        stderr: 'Error: Cannot find package example\n    at load (loader.js:1:2)\n    at start (main.js:2:3)',
+        expected: 'Error: Cannot find package example',
+        verbose: 'Error: Cannot find package example\n    at load (loader.js:1:2)\n    at start (main.js:2:3)',
+    },
+    {
+        name: 'frames at the start of both streams',
+        stdout: '    at output (stdout.js:1:2)\nError: stdout cause',
+        stderr: '    at error (stderr.js:2:3)\nError: stderr cause',
+        expected: 'Error: stderr cause\nError: stdout cause',
+        verbose: 'at error (stderr.js:2:3)\nError: stderr cause\nat output (stdout.js:1:2)\nError: stdout cause',
+    },
+] as const;

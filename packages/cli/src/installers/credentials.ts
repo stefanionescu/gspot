@@ -5,6 +5,7 @@ import type { SpawnResult } from '#cli/types/system/processes.ts';
 import {
     REDACTED,
     URL_CREDENTIALS,
+    EMPTY_OUTPUT_MESSAGE,
     INSTALL_OUTPUT_LIMIT,
     LOCKFILE_URL_PASSWORD,
 } from '#cli/config/installers/credentials.ts';
@@ -28,7 +29,6 @@ export function assertCredentialFreeLockfile(lockfile: string, credentials: stri
 Read both encoded and decoded passwords from a registry or proxy URL.
 
 @param url the registry or proxy address as written in your settings.
-@returns the password forms to keep out of generated lockfiles and messages.
 */
 export function extractUrlPasswords(url: string): string[] {
     if (!URL.canParse(url)) return [];
@@ -52,7 +52,7 @@ export function redactInstallOutput(result: Pick<SpawnResult, 'stdout' | 'stderr
     let output = `${result.stdout}\n${result.stderr}`;
     for (const secret of secrets) output = output.replaceAll(secret, REDACTED);
     output = output.replace(URL_CREDENTIALS, `$1${REDACTED}@`).trim();
-    if (output === '') return 'The command printed no output.';
+    if (output === '') return EMPTY_OUTPUT_MESSAGE;
     return output.length > INSTALL_OUTPUT_LIMIT
         ? `[Earlier output omitted]\n${output.slice(-INSTALL_OUTPUT_LIMIT)}`
         : output;

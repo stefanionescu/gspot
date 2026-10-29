@@ -13,14 +13,8 @@ import type {
     MiseToolPin,
     Configuration,
     ToolProjectPins,
-    VersionedInstaller,
     ToolProjectPackage,
 } from '#cli/types/configurations.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function findMiseInstaller(tool: Tool): VersionedInstaller | undefined {
-    return tool.system === true ? undefined : tool.installers['mise'];
-}
 
 /**
 Get the name that a config-file placeholder uses for a config file.
@@ -35,22 +29,10 @@ export function extractConfigFileName(file: string): string {
 }
 
 /**
-Check whether gspot installs a tool through mise or a pinned tool project.
-
-@param tool the declaration to read.
-@returns whether gspot uses one of its installers.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The docs reference calls it, and findMiseInstaller stays private to this file.
-export function isInstalledByGspot(tool: Tool): boolean {
-    return findToolProjectPackage(tool) !== undefined || findMiseInstaller(tool) !== undefined;
-}
-
-/**
 List the tools that mise installs, apart from those in the npm and Python tool projects, and add uv when a Python
 tool project needs it.
 
 @param configurations the configurations in use.
-@returns the name and version of each mise tool.
 */
 export function listMisePins(configurations: Configuration[]): MiseToolPin[] {
     const tools = listDistinctTools(configurations);
@@ -78,21 +60,24 @@ export function getUvPin(): MiseToolPin {
 Find the mise pin of one tool: its version, its systems, and its backend options.
 
 @param tool the tool to read.
-@returns the mise pin, or undefined when mise does not install the tool.
+@returns undefined when mise does not install the tool.
 */
 export function findMisePin(tool: Tool): MiseToolPin | undefined {
-    const isExcluded = findToolProjectPackage(tool) !== undefined;
-    const pin = isExcluded ? undefined : findMiseInstaller(tool);
+    if (tool.system === true || findToolProjectPackage(tool) !== undefined) return undefined;
+    const pin = tool.installers['mise'];
     return pin === undefined
         ? undefined
-        : { name: pin.name, version: pin.version, ...stripUndefined({ options: pin.options }) };
+        : {
+              name: pin.name,
+              version: pin.version,
+              ...stripUndefined({ options: pin.options, checksums: pin.checksums }),
+          };
 }
 
 /**
 List the npm and Python tool project pins of the configurations.
 
 @param configurations the configurations in use.
-@returns the npm and Python pins.
 */
 export function listToolProjectPins(configurations: Configuration[]): ToolProjectPins {
     const npm: [string, string][] = [];
@@ -146,7 +131,7 @@ export function getTool(configurations: Iterable<Configuration>, name: string): 
 Get the tool that a check names, or the first word of its command.
 
 @param check the validated check.
-@returns the executable, or undefined for a built-in check without a tool.
+@returns undefined for a built-in check without a tool.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 5 files share it.
 export function getToolName(check: Check): string | undefined {
@@ -154,14 +139,14 @@ export function getToolName(check: Check): string | undefined {
 }
 
 /**
-Find the npm or Python package that installs a tool. Generated projects and lookup both use it.
+Find the npm or Python package that installs a tool.
 
 @param tool the tool to read.
-@returns the package to install, or undefined when the system or mise gives the tool.
+@returns undefined when the system or mise gives the tool.
 */
 export function findToolProjectPackage(tool: Tool): ToolProjectPackage | undefined {
     const python = tool.installers['pypi'];
-    if (tool.system !== true && python?.version !== undefined)
+    if (tool.system !== true && python !== undefined)
         return { kind: 'python', name: python.name, version: python.version };
     const npm = tool.installers['npm'];
     if (npm?.version === undefined) return undefined;
@@ -177,7 +162,6 @@ export function findToolProjectPackage(tool: Tool): ToolProjectPackage | undefin
 List the exact npm package names that the configurations declare.
 
 @param configurations the configurations in use.
-@returns the names, for tool-only package detection.
 */
 export function listNpmToolNames(configurations: Iterable<Configuration>): Set<string> {
     return new Set(
@@ -195,7 +179,7 @@ Find the build that a tool lacks on a system such as Windows or arm64 Linux.
 
 @param tool the tool with its builds.
 @param host the system name and architecture.
-@returns the words for the missing build, or undefined when the tool has a build.
+@returns undefined when the tool has a build.
 */
 export function findMissingBuild(tool: Tool, host: Host): string | undefined {
     if (tool.builds === undefined) return undefined;
@@ -210,10 +194,25 @@ export function findMissingBuild(tool: Tool, host: Host): string | undefined {
 Read the plugin prefix of a qualified lint rule.
 
 @param rule the rule name, optionally prefixed by its plugin.
-@returns the prefix before the last slash, or undefined for an unqualified rule.
+@returns undefined for an unqualified rule.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 2 files share it.
 export function extractRulePrefix(rule: string): string | undefined {
     const slash = rule.lastIndexOf('/');
     return slash === -1 ? undefined : rule.slice(0, slash);
+}
+
+/**
+Tell whether the output of a check names the lint rule of each finding.
+
+@param check the output format and field mappings to inspect.
+@returns whether each finding of the check holds a rule.
+*/
+export function hasRuleOutput(check: Check): boolean {
+    const { output } = check;
+    if (['semgrep', 'knip', 'markdownlint'].includes(output.format)) return true;
+    if (output.format === 'json') return output.fields?.rule !== undefined;
+    if (output.format === 'regex' || output.format === 'grouped')
+        return output.fields?.rule !== undefined || output.pattern.includes('(?<rule>');
+    return false;
 }

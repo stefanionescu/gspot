@@ -10,7 +10,6 @@ List the selected checks that read a limit and whether its rules run at this lev
 @param settings the repository level and ignores.
 @param scope the selected configurations and settings of one folder.
 @param key the setting whose consumers to find.
-@returns the selected readers and their state.
 */
 export function listSettingReaders(settings: Settings, scope: Scope, key: string): SettingReader[] {
     if (!key.startsWith('limits.')) return [];

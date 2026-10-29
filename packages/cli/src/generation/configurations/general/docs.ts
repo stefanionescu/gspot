@@ -6,6 +6,8 @@ import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 
 import {
     LYCHEE_NOTES,
+    LYCHEE_ROOT_NOTE,
+    LYCHEE_SITE_NOTE,
     LYCHEE_ROOT_LINKS,
     LYCHEE_MDX_EXPRESSION,
     LYCHEE_REPOSITORY_LINKS,
@@ -14,15 +16,19 @@ import {
 /**
 Build lychee.toml: a note on why the file exists, and the lychee link exclusions as TOML.
 
-@param planned the config file with its scope, level, and target path.
-@returns a note on why the file exists, and the lychee link exclusions as TOML.
+@param planned the config file to build.
 */
 export function buildLycheeFile(planned: PlannedConfigFile): string {
     const { configurations, settings } = planned.scope;
 
     const exclude = [...getTable(settings, 'docs').allowed_urls, LYCHEE_MDX_EXPRESSION];
-    const document = configurations.some((configuration) => configuration.name === SITE_CONFIGURATION)
+    const isSite = configurations.some((configuration) => configuration.name === SITE_CONFIGURATION);
+    const document = isSite
         ? { exclude: [...exclude, LYCHEE_ROOT_LINKS] }
         : { exclude, remap: [`${LYCHEE_ROOT_LINKS} ${LYCHEE_REPOSITORY_LINKS}`] };
-    return [...LYCHEE_NOTES, stringifyToml(document, CONFIG_FILE_TOML_FORMAT)].join('\n');
+    return [
+        ...LYCHEE_NOTES,
+        isSite ? LYCHEE_SITE_NOTE : LYCHEE_ROOT_NOTE,
+        stringifyToml(document, CONFIG_FILE_TOML_FORMAT),
+    ].join('\n');
 }

@@ -28,3 +28,13 @@ export const VERSION_OUTPUTS = [
         note: undefined,
     },
 ] as const;
+
+export const SYSTEM_BASH_VERSIONS = [
+    ['3.2.57', 'outdated'],
+    ['5.2.0', 'system'],
+] as const;
+
+export const PROGRAM_VERSION_STATES = [
+    ['0.9.0', 'ok'],
+    ['0.8.0', 'outdated'],
+] as const;

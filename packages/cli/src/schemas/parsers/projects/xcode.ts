@@ -4,12 +4,7 @@ import type { PbxElement } from '#cli/types/parsers/projects/xcode.ts';
 
 const buildSettingsSchema = z.object({
     SDKROOT: z.string().optional(),
-    SWIFT_VERSION: (
-        (z.union([z.string(), z.number()]) satisfies z.ZodType<string | number>).transform(String) satisfies z.ZodType<
-            string,
-            string | number
-        >
-    ).optional(),
+    SWIFT_VERSION: z.string().optional(),
 } satisfies SchemaShape<NonNullable<PbxElement['buildSettings']>>);
 
 const pbxRecordSchema = z.object({

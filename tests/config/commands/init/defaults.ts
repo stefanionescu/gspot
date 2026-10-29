@@ -1,7 +1,7 @@
 export const DEFAULT_CASES = [
     {
         name: `defaults are omitted`,
-        source: `level="recommended"
+        source: `level="basic"
 removed_configurations=[]
 tool_timeout_seconds=600
 [hooks]
@@ -10,8 +10,7 @@ enabled=false
 indent_style="space"
 indent_width=4
 `,
-        expected: `
-`,
+        expected: ``,
     },
     {
         name: `scope restores default after parent override`,
@@ -32,13 +31,14 @@ indent_width = 2
 
 [[scope]]
 path = "app"
-format.indent_width = 4
+format = {indent_width = 4}
 
 [[scope]]
 path = "app/worker"
 
 [[scope]]
 path = "notes"
+
 `,
     },
     {
@@ -53,14 +53,15 @@ path="app/worker"
 limits.python.file_lines=300
 `,
         expected: `[limits]
-file_lines = { value = 500, reason = "Reviewed root files need this ceiling." }
+file_lines = {value = 500, reason = "Reviewed root files need this ceiling."}
 
 [[scope]]
 path = "app"
-limits.python.file_lines = 300
+limits = {python = {file_lines = 300}}
 
 [[scope]]
 path = "app/worker"
+
 `,
     },
 ] as const;

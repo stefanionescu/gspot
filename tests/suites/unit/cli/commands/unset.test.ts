@@ -1,10 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { parse } from '@decimalturn/toml-patch';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { BUN_SCANNER_SETTINGS } from '#tests/config/toml.ts';
 import { UNSET_REFUSALS } from '#tests/config/commands/unset.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...UNSET_REFUSALS])(
     'unset $commandArguments exits 2 and leaves gspot.toml as it was',
@@ -19,10 +21,10 @@ test.each([...UNSET_REFUSALS])(
     },
 );
 
-test('unset leaves the Bun scanner in bunfig.toml after its setting goes', async () => {
+test('unset removes the scanner setting and keeps bunfig.toml', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
-            tables: 'dependencies.bun_scanner = "@socketsecurity/bun-security-scanner"\n',
+            tables: BUN_SCANNER_SETTINGS,
         }),
         'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
     });
@@ -31,6 +33,9 @@ test('unset leaves the Bun scanner in bunfig.toml after its setting goes', async
     const previous = await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8');
     const unset = await runGspot(sandbox.path, ['unset', 'dependencies.bun_scanner']);
     expect(unset.code, unset.stdout + unset.stderr).toBe(0);
+    expect(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'))).not.toHaveProperty(
+        'dependencies.bun_scanner',
+    );
     expect(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8')).toBe(previous);
     const repeated = await runGspot(sandbox.path, ['apply']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);

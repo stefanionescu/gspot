@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Structure rules that no standard linter ships: `[[import_rule]]` for Python and Swift imports and for files outside every rule, and at level `all`, lone files, pass-through folders, shared name prefixes, file and folder clashes, long files, trivial functions, Swift `do` blocks without `catch`, and environment reads outside the environment readers."
+description = "Layout rules for code: import rules for Python and Swift, and the files that no import rule covers. Level all adds lone files, pass-through folders, shared name prefixes, file and folder clashes, long files, trivial functions, bare Swift do blocks, and environment reads outside the environment readers."
 title = "Structure"
 
 [files]
@@ -10,7 +10,6 @@ languages = true
 example = "With `[[import_rule]]` records, a Python file under `app/` that imports `storage.models` from a rule it may not import reports `refused-import`. A code file that no rule covers reports `uncovered-file`."
 files = { extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".py", ".pyi", ".swift"], kinds = ["source"] }
 help = "Move the code into a rule that may import it, move that rule above, list the rule in `can_import`, or add the file to the paths of a rule."
-level = "recommended"
 name = "import-rules"
 runs = "scope"
 stage = "commit"
@@ -65,7 +64,7 @@ level = "all"
 name = "long-files"
 runs = "scope"
 stage = "commit"
-summary = "Checks the code line count of each file against the limit for its language."
+summary = "Checks the code line count of each Python, SQL and shell file against limits.<language>.file_lines. ESLint and SwiftLint count the other languages."
 why = "A long file hides independent responsibilities from the reader."
 
 [[check]]

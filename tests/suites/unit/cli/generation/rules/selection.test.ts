@@ -1,12 +1,12 @@
 import { testdir } from 'testdirs';
-import { openSession } from '#cli/session.ts';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { type Level } from '#cli/types/configurations.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { test, expect, describe, beforeAll } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { RUNTIME_RULE_CASES } from '#tests/config/generation/rules.ts';
-import { findRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 
 async function generateRuleFiles(level: Level, files: Record<string, string>): Promise<Map<string, string>> {
@@ -19,7 +19,7 @@ async function generateRuleFiles(level: Level, files: Record<string, string>): P
     });
 
     const session = await openSession(sandbox.path);
-    const output = generate(session);
+    const output = generateFiles(session);
     return new Map(
         output.files
             .filter((file) => file.path.includes('/rules/') && file.path.endsWith('.md'))
@@ -65,19 +65,19 @@ test('an always-selected configuration installs its rule file once', async () =>
 });
 
 describe('which rule files gspot writes', () => {
-    let recommended: ReadonlyMap<string, string>;
+    let defaultLevel: ReadonlyMap<string, string>;
 
     let all: ReadonlyMap<string, string>;
 
     beforeAll(async () => {
-        recommended = await generateRuleFiles('recommended', {});
+        defaultLevel = await generateRuleFiles('basic', {});
         all = await generateRuleFiles('all', {});
     });
 
     test('a rule file whose sections are all for level all is written only at all', () => {
-        expect(recommended.has(findRuleFilePath('naming', 'NAMING.md'))).toBe(false);
-        expect(all.has(findRuleFilePath('naming', 'NAMING.md'))).toBe(true);
-        expect(recommended.has(findRuleFilePath('engineering', 'WORKING.md'))).toBe(true);
+        expect(defaultLevel.has(getRuleFilePath('naming', 'NAMING.md'))).toBe(false);
+        expect(all.has(getRuleFilePath('naming', 'NAMING.md'))).toBe(true);
+        expect(defaultLevel.has(getRuleFilePath('engineering', 'WORKING.md'))).toBe(true);
     });
 
     test('rule files that need a file or a dependency are written only when it is there', async () => {
@@ -87,21 +87,21 @@ describe('which rule files gspot writes', () => {
                 '{"name":"example","devDependencies":{"tailwindcss":"4.1.0","@playwright/test":"1.50.0"}}\n',
         });
         for (const path of [
-            findRuleFilePath('javascript', 'BUN.md'),
-            findRuleFilePath('css', 'TAILWIND.md'),
-            findRuleFilePath('javascript', 'PLAYWRIGHT.md'),
+            getRuleFilePath('javascript', 'BUN.md'),
+            getRuleFilePath('css', 'TAILWIND.md'),
+            getRuleFilePath('javascript', 'PLAYWRIGHT.md'),
         ]) {
             expect(all.has(path)).toBe(false);
             expect(present.has(path)).toBe(true);
         }
     });
 
-    test('Swift rule files need a real import, not one in a comment or string', async () => {
+    test('Swift rule files need an import, not one in a comment or string', async () => {
         const absent = await generateRuleFiles('all', {
             'View.swift': '// import UIKit\nlet text = "import SwiftUI"\n',
         });
         const present = await generateRuleFiles('all', { 'View.swift': 'import SwiftUI\nimport class UIKit.UIView\n' });
-        for (const path of [findRuleFilePath('swift', 'SWIFTUI.md'), findRuleFilePath('swift', 'UIKIT.md')]) {
+        for (const path of [getRuleFilePath('swift', 'SWIFTUI.md'), getRuleFilePath('swift', 'UIKIT.md')]) {
             expect(absent.has(path)).toBe(false);
             expect(present.has(path)).toBe(true);
         }
@@ -123,7 +123,21 @@ test.each(['deno.json', 'deno.jsonc'].flatMap((file) => ['', 'apps/api'].map((sc
         });
         const session = await openSession(sandbox.path);
         using _resources = session.resources;
-        const files = generate(session).files;
-        expect(files.map(({ path }) => path)).toContain(findRuleFilePath('javascript', 'DENO.md'));
+        const files = generateFiles(session).files;
+        expect(files.map(({ path }) => path)).toContain(getRuleFilePath('javascript', 'DENO.md'));
     },
 );
+
+test('YAML rules require a YAML file, including a nested workflow', async () => {
+    const absent = await generateRuleFiles('all', {});
+    const present = await generateRuleFiles('all', { '.github/workflows/ci.yaml': 'name: Checks\n' });
+    expect(absent.has(getRuleFilePath('data-files', 'YAML.md'))).toBe(false);
+    expect(present.has(getRuleFilePath('data-files', 'YAML.md'))).toBe(true);
+});
+
+test('the Neon Postgres driver selects the Drizzle rule file', async () => {
+    const rules = await generateRuleFiles('all', {
+        'package.json': '{"private":true,"dependencies":{"drizzle-orm":"1.0.0","@neondatabase/serverless":"1.0.0"}}',
+    });
+    expect(rules.has(getRuleFilePath('drizzle', 'DRIZZLE.md'))).toBe(true);
+});

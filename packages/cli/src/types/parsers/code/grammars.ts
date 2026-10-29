@@ -1,16 +1,14 @@
-import type { Node, Parser } from 'web-tree-sitter';
-import type { ReadCache } from '#cli/types/system/files.ts';
-import type { GRAMMAR_NAMES } from '#cli/config/parsers/code/grammars.ts';
+import { type Node, type Parser } from 'web-tree-sitter';
+import { type ReadCache } from '#cli/types/system/files.ts';
+import { type GRAMMAR_NAMES } from '#cli/config/parsers/code/grammars.ts';
 
-type ParsedFile = { path: string; grammar: GrammarName };
+type GrammarFile = { path: string; grammar: GrammarName };
 
 export type GrammarName = (typeof GRAMMAR_NAMES)[number];
 
 export type ParseCache = { reads: ReadCache; resources?: DisposableStack };
 
-export type SourceFiles = ParseCache & { files: { path: string; kind: string }[] };
-
-export type GrammarSourceFiles = ParseCache & { files: ParsedFile[] };
+export type GrammarSourceFiles = ParseCache & { files: GrammarFile[] };
 
 export type SourceTree = { path: string; text: string; rootNode: Node };
 

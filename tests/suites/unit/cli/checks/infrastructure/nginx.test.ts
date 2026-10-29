@@ -1,17 +1,22 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { readFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { NGINX_MOUNT_CASES, NGINX_UPSTREAM_CONF } from '#tests/config/checks/infrastructure/nginx.ts';
+
+import {
+    NGINX_MOUNT_CASES,
+    NGINX_UPSTREAM_CONF,
+    NGINX_EMERGENCY_CASES,
+} from '#tests/config/checks/infrastructure/nginx.ts';
 
 test.each([...NGINX_MOUNT_CASES])(
     'nginx/syntax mounts the nginx.conf and its certificates and maps upstream hosts: $name',
@@ -59,7 +64,7 @@ test.each(['stdout', 'stderr'])(
         resources.use(fakes);
         const folders: string[] = [];
         const message = 'The temporary key could not be written.';
-        using spawn = spyOn(processes, 'spawnProcess').mockImplementation((_command, options) => {
+        using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((_command, options) => {
             folders.push(options.cwd);
             return Promise.resolve(
                 buildProcessResult({
@@ -72,11 +77,40 @@ test.each(['stdout', 'stderr'])(
 
         const error = await captureRejection(runSandboxCheck(session.root, 'nginx/syntax'));
         expect(error.message).toBe(`The openssl command could not write the temporary certificate: ${message}`);
-        expect(spawn).toHaveBeenCalledTimes(1);
+        expect(_spawn).toHaveBeenCalledTimes(1);
         for (const folder of folders) {
             expect(folder).not.toBe(sandbox.path);
             expect(await isOnDisk(folder)).toBe(false);
         }
         expect(await readFile(join(sandbox.path, 'nginx.conf'), 'utf8')).toBe(NGINX_UPSTREAM_CONF);
+    },
+);
+
+test.each([...NGINX_EMERGENCY_CASES])(
+    'nginx/syntax reports an [emerg] line at $file:$line',
+    async ({ stderr, file, line }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['nginx']),
+            'nginx.conf': 'events {}\nhttp { include /etc/nginx/conf.d/site.conf; }\n',
+            'conf.d/site.conf': 'server {}\n',
+        });
+        const session = await openSession(sandbox.path);
+        using _pins = fakeToolExecutables(
+            ['openssl', 'docker'].map((name) => getTool(session.configurationsByName.values(), name)),
+        );
+        using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command) =>
+            Promise.resolve(buildProcessResult(command.includes('--rm') ? { code: 1, stderr } : {})),
+        );
+        expect(await runSandboxCheck(sandbox.path, 'nginx/syntax')).toStrictEqual([
+            {
+                check: 'nginx/syntax',
+                file,
+                line,
+                rule: 'syntax',
+                fixable: false,
+                message: stderr,
+                help: 'Fix the line nginx names. Set `tools.nginx.image` to the one your deployment runs.',
+            },
+        ]);
     },
 );

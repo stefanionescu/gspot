@@ -1,9 +1,9 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
-import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
+import { splitWords } from '#cli/checks/general/naming/settings.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';
 import { extractBaseName, extractExtension, isInInstalledFolder, extractParentFolder } from '#cli/system/paths.ts';
@@ -13,6 +13,7 @@ import {
     HOOK_FOLDERS,
     COMPANION_SUFFIX,
     INDEX_BASE_NAMES,
+    SHARED_PREFIX_RULE,
 } from '#cli/config/checks/general/structure/shared-prefixes.ts';
 
 function hasKindSuffix(name: string, kinds: Set<string>): boolean {
@@ -23,19 +24,13 @@ function hasKindSuffix(name: string, kinds: Set<string>): boolean {
     return segments.length > 1 && kind !== undefined && kinds.has(kind);
 }
 
-function extractPrefix(baseName: string): string {
-    const cuts = [baseName.indexOf('-'), baseName.indexOf('.')].filter((index) => index >= 0);
-    return cuts.length === 0 ? baseName : baseName.slice(0, Math.min(...cuts));
-}
-
 /**
 Reports each prefix that at least `limits.shared_prefix_files` siblings in a folder share.
 
 @param _session the repository and its tools.
 @param planned the scope files and limit.
-@returns the findings.
 */
-export function checkStructureSharedPrefixes(_session: Session, planned: PlannedCheck): Finding[] {
+export function checkStructureSharedPrefixes(_session: Session, planned: PlannedCheck): CheckFinding[] {
     const limit = getTable(planned.scope.settings, 'limits').shared_prefix_files;
     const prefixes = new Set(
         planned.scope.configurations.flatMap((configuration) => configuration.shared_prefixes.prefixes),
@@ -54,7 +49,7 @@ export function checkStructureSharedPrefixes(_session: Session, planned: Planned
     return files.flatMap((file) => {
         const folder = extractParentFolder(file.path);
         const stem = extractBaseName(file.path);
-        const prefix = extractPrefix(stem);
+        const prefix = splitWords(stem)[0] ?? '';
         const key = JSON.stringify([folder, prefix]);
         if (prefix === '' || prefixes.has(prefix) || INDEX_BASE_NAMES.has(stem) || seen.has(key)) return [];
         const peers = (tree.get(folder) ?? []).filter((child) => {
@@ -62,11 +57,11 @@ export function checkStructureSharedPrefixes(_session: Session, planned: Planned
                 return (
                     !child.name.startsWith('.') &&
                     !isInInstalledFolder(child.name) &&
-                    extractPrefix(child.name) === prefix
+                    (splitWords(child.name)[0] ?? '') === prefix
                 );
             if (hasKindSuffix(child.name, kinds)) return false;
             const peerStem = extractBaseName(child.name);
-            return !INDEX_BASE_NAMES.has(peerStem) && extractPrefix(peerStem) === prefix;
+            return !INDEX_BASE_NAMES.has(peerStem) && (splitWords(peerStem)[0] ?? '') === prefix;
         });
         if (
             new Set(
@@ -79,12 +74,12 @@ export function checkStructureSharedPrefixes(_session: Session, planned: Planned
         seen.add(key);
         const names = peers.map((peer) => (peer.kind === 'folder' ? `${peer.name}/` : peer.name)).join(', ');
         return [
-            buildFinding(
-                planned,
-                { file: file.path, line: 1 },
-                'shared-prefix',
-                `${names} share the prefix "${prefix}". Group them in a folder named ${prefix} and drop the prefix, or use gspot ignore structure/shared-prefixes with paths and a reason.`,
-            ),
+            {
+                file: file.path,
+                line: 1,
+                rule: SHARED_PREFIX_RULE,
+                message: `${names} share the prefix "${prefix}". Group them in a folder named ${prefix} and drop the prefix, or use gspot ignore structure/shared-prefixes with paths and a reason.`,
+            },
         ];
     });
 }

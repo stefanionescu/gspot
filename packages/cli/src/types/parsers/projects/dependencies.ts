@@ -24,13 +24,13 @@ export type PackageJsonFields = {
 
 export type PackageJson = PackageJsonFields & Record<string, unknown>;
 
-export type DependencyMap = Record<string, string>;
+export type Dependencies = Record<string, string>;
 
 export type DependencyFile = {
     path: string;
     kind: 'package.json' | 'pyproject.toml' | 'Package.swift' | 'Pipfile' | 'requirements.txt';
-    dependencies: DependencyMap;
-    installed: DependencyMap;
+    dependencies: Dependencies;
+    installed: Dependencies;
     runtimes?: Record<string, string>;
 };
 

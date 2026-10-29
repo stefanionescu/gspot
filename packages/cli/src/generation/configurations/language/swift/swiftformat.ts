@@ -1,5 +1,5 @@
 import { join } from 'node:path/posix';
-import { PBXPROJ_NAME } from '#cli/config/files/names.ts';
+import { PBXPROJ_FILE } from '#cli/config/files/names.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
@@ -8,26 +8,28 @@ import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
 
 import {
+    SWIFTFORMAT_CHECK,
     SWIFTFORMAT_COMMAS,
     SWIFT_TOOLS_VERSION,
     SWIFTFORMAT_OPTIONS,
     SWIFTFORMAT_ALWAYS_OFF,
     SWIFTFORMAT_ALL_LEVEL_ON,
-    SWIFTFORMAT_RECOMMENDED_OFF,
+    SWIFTFORMAT_DEFAULT_LEVEL_OFF,
 } from '#cli/config/generation/configurations/language/swift/swiftformat.ts';
 
-function readSwiftVersion(reads: ReadCache, scope: string, projectPath: string): string | undefined {
-    const packageText = findCachedText(reads, join(scope, PACKAGE_SWIFT));
+function readSwiftVersion(reads: ReadCache, scopePath: string, projectPath: string): string | undefined {
+    const packageText = findCachedText(reads, join(scopePath, PACKAGE_SWIFT));
     if (packageText !== undefined) return SWIFT_TOOLS_VERSION.exec(packageText)?.[1];
-    const projectText = projectPath === '' ? undefined : findCachedText(reads, join(projectPath, PBXPROJ_NAME));
-    return projectText === undefined ? undefined : parseBuildSettings(projectText).swiftVersion;
+    const projectText = projectPath === '' ? undefined : findCachedText(reads, join(projectPath, PBXPROJ_FILE));
+    return projectText === undefined
+        ? undefined
+        : parseBuildSettings(projectText, join(projectPath, PBXPROJ_FILE)).swiftVersion;
 }
 
 /**
 Build swiftformat: the SwiftFormat settings of the repository.
 
-@param planned the config file with its scope, level, and target path.
-@returns the SwiftFormat settings of the repository.
+@param planned the config file to build.
 */
 export function buildSwiftformatFile(planned: PlannedConfigFile): string {
     const { scope } = planned;
@@ -35,7 +37,7 @@ export function buildSwiftformatFile(planned: PlannedConfigFile): string {
     const { format } = scope.settings.tables;
     const isAll = planned.level === 'all';
     const version = readSwiftVersion(reads, scope.path, getTable(scope.settings, 'swift').xcode_project ?? '');
-    const ignored = listIgnoredRules(scope, 'swift/swiftformat');
+    const ignored = listIgnoredRules(scope, SWIFTFORMAT_CHECK);
     const options = {
         ...SWIFTFORMAT_OPTIONS,
         indent: format.indent_style === 'tab' ? 'tab' : format.indent_width,
@@ -46,7 +48,11 @@ export function buildSwiftformatFile(planned: PlannedConfigFile): string {
     };
     const enabled = isAll ? SWIFTFORMAT_ALL_LEVEL_ON.filter((rule) => !ignored.includes(rule)) : [];
     const disabled = [
-        ...new Set([...Object.keys(SWIFTFORMAT_ALWAYS_OFF), ...ignored, ...(isAll ? [] : SWIFTFORMAT_RECOMMENDED_OFF)]),
+        ...new Set([
+            ...Object.keys(SWIFTFORMAT_ALWAYS_OFF),
+            ...ignored,
+            ...(isAll ? [] : SWIFTFORMAT_DEFAULT_LEVEL_OFF),
+        ]),
     ];
     return [
         ...Object.entries(options).map(([option, value]) => `--${option} ${String(value)}`),

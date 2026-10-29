@@ -24,11 +24,16 @@ router.post('/orders', async (req, res) => {
 
 ```ts
 // Good: middleware validates and authenticates; the route makes one domain call.
-router.post('/orders', authenticate, validateBody(submitOrderSchema), async (req, res) => {
-    const order = await submitOrder(res.locals.accountId, res.locals.body);
-    res.status(201).json(order);
+const HTTP_CREATED = 201;
+
+router.post('/orders', authenticate, validateBody(submitOrderSchema), async (_request, response) => {
+    const order = await submitOrder(response.locals.accountId, response.locals.body);
+    response.status(HTTP_CREATED).json(order);
 });
 ```
+
+- Declare each field that middleware sets on `response.locals` in the global `Express.Locals` interface, so a route
+  reads typed values.
 
 - Middleware checks authentication and ownership, and reaches the database only through the auth helpers.
 - A permission check that depends on domain state belongs in a module, and a transport-level one in ownership

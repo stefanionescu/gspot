@@ -1,5 +1,41 @@
 export const STORAGE_POLICIES = [
     {
+        name: 'dropped policy',
+        sql: "CREATE POLICY p ON storage.objects USING (bucket_id = 'avatars'); DROP POLICY p ON storage.objects;",
+        allowed: false,
+    },
+    {
+        name: 'altered policy',
+        sql: "CREATE POLICY p ON storage.objects USING (bucket_id = 'avatars'); ALTER POLICY p ON storage.objects USING (bucket_id = 'other');",
+        allowed: false,
+    },
+    {
+        name: 'owner comparison',
+        sql: "CREATE POLICY p ON storage.objects USING (owner_id = 'avatars');",
+        allowed: false,
+    },
+    {
+        name: 'bucket inequality',
+        sql: "CREATE POLICY p ON storage.objects USING (bucket_id <> 'avatars');",
+        allowed: false,
+    },
+    {
+        name: 'negated condition',
+        sql: "CREATE POLICY p ON storage.objects USING (NOT (bucket_id = 'avatars'));",
+        allowed: false,
+    },
+    {
+        name: 'qualified bucket list',
+        sql: "CREATE POLICY p ON storage.objects USING (objects.bucket_id IN ('avatars', 'other'));",
+        allowed: true,
+    },
+    {
+        name: 'alter preserves with check',
+        sql: "CREATE POLICY p ON storage.objects WITH CHECK (bucket_id = 'avatars'); ALTER POLICY p ON storage.objects TO authenticated;",
+        allowed: true,
+    },
+
+    {
         name: 'comment only',
         sql: "-- CREATE POLICY p ON storage.objects USING (bucket_id = 'avatars');\n",
         allowed: false,

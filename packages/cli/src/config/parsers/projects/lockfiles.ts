@@ -17,3 +17,8 @@ export const PNPM_PEER_START = '(';
 export const IMPORTER_LOCKFILES = ['bun.lock', 'package-lock.json', 'pnpm-lock.yaml'] as const;
 
 export const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
+
+export const LOCKFILE_URL_FIELDS = ['resolved', 'tarball', 'repo', 'resolution'];
+
+export const YARN_CLASSIC_PROPERTY = /^[\t ]+(?:version|resolved|integrity)[\t ]+"/mu;
+export const YARN_CLASSIC_HEADER = '# yarn lockfile v1\n';

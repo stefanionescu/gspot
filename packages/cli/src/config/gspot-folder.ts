@@ -2,10 +2,10 @@ import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 
 import {
     SCHEMA_FILE,
+    UV_LOCKFILE,
     NODE_MODULES,
-    MISE_LOCK_FILE,
+    MISE_LOCKFILE,
     MISE_CONFIG_FILE,
-    PROJECT_UV_LOCKFILE,
     PYTHON_ENVIRONMENT_FOLDER,
 } from '#cli/config/files/names.ts';
 
@@ -14,17 +14,18 @@ export const GSPOT_FOLDER = '.gspot';
 export const GSPOT_PATHS = {
     configurations: `${GSPOT_FOLDER}/configurations`,
     hooks: `${GSPOT_FOLDER}/hooks`,
+    gitignore: `${GSPOT_FOLDER}/.gitignore`,
     state: `${GSPOT_FOLDER}/state`,
     installRecord: `${GSPOT_FOLDER}/state/install.json`,
     versionPin: `${GSPOT_FOLDER}/version`,
     settingsSchema: `${GSPOT_FOLDER}/${SCHEMA_FILE}`,
     miseProject: `${GSPOT_FOLDER}/${MISE_CONFIG_FILE}`,
-    miseLockfile: `${GSPOT_FOLDER}/${MISE_LOCK_FILE}`,
+    miseLockfile: `${GSPOT_FOLDER}/${MISE_LOCKFILE}`,
     npmProject: `${GSPOT_FOLDER}/package.json`,
     nodeModules: `${GSPOT_FOLDER}/${NODE_MODULES}`,
     pythonProject: `${GSPOT_FOLDER}/pyproject.toml`,
     pythonEnvironment: `${GSPOT_FOLDER}/${PYTHON_ENVIRONMENT_FOLDER}`,
-    uvLockfile: `${GSPOT_FOLDER}/${PROJECT_UV_LOCKFILE}`,
+    uvLockfile: `${GSPOT_FOLDER}/${UV_LOCKFILE}`,
     valePackages: `${GSPOT_FOLDER}/vale`,
     valeConfigFile: `${GSPOT_FOLDER}/configurations/general/prose/vale.ini`,
 } as const;

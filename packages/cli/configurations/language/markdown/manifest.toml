@@ -36,7 +36,6 @@ example = "A heading that jumps from level one to level three reports MD001. Cha
 exit_codes = [1]
 fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config_file:markdownlint-cli2}", "{files}"]
 help = "Run `gspot check --fix` for the rules that fix themselves; read the rule name for the rest."
-level = "recommended"
 name = "markdownlint"
 output = { format = "markdownlint" }
 run_in_copy = true
@@ -47,8 +46,7 @@ why = "Consistent Markdown renders the same in every viewer."
 [[check]]
 example = "A `bash` fence with `if then` reports a syntax error. Correct the Bash, or label the block `text` when it holds no code."
 help = "Fix the code, or label the block `text` when it holds prose."
-level = "recommended"
 name = "fences"
 stage = "commit"
-summary = "Checks JSON, JSONC, TOML, YAML, Bash, JavaScript, JSX, TypeScript, TSX, and Python code fences in Markdown (.md) files for syntax errors."
+summary = "Checks JSON, JSONC, TOML, YAML, Bash, JavaScript, JSX, TypeScript, TSX, and Python code fences in Markdown and MDX files for syntax errors."
 why = "A code block that fails to parse shows readers a program that cannot run."

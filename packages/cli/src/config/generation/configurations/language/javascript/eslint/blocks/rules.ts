@@ -1,13 +1,23 @@
 export const ESLINT_RULES = {
+    'array-callback-return': 'error',
+    'no-constructor-return': 'error',
+    'no-new-func': 'error',
+    'no-promise-executor-return': 'error',
+    'no-return-assign': 'error',
+    'no-self-compare': 'error',
+    'no-template-curly-in-string': 'error',
+    'no-unmodified-loop-condition': 'error',
+    'no-unreachable-loop': 'error',
+    'no-var': 'error',
     'no-empty-character-class': 'off',
     'no-useless-constructor': 'error',
     'no-useless-return': 'error',
     'no-useless-call': 'error',
     'no-useless-rename': 'error',
     'no-duplicate-imports': 'off',
-    eqeqeq: ['error', 'always'],
+    eqeqeq: 'error',
     'prefer-const': 'error',
-    'no-empty': ['error', { allowEmptyCatch: false }],
+    'no-empty': 'error',
 
     'no-param-reassign': 'error',
 } as const;
@@ -154,7 +164,7 @@ export const REGEXP_RULES = {
 
 export const IMPORT_X_RULES = {
     'import-x/export': 'error',
-    'import-x/no-cycle': ['error', { ignoreExternal: false }],
+    'import-x/no-cycle': 'error',
     'import-x/no-self-import': 'error',
     'import-x/no-useless-path-segments': 'error',
     'import-x/no-empty-named-blocks': 'error',

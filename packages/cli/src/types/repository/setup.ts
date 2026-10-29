@@ -22,6 +22,10 @@ export type ConflictingConfigFile = {
 
 export type CiJob = {
     script?: string | string[] | undefined;
-    steps?: { run?: string | undefined }[] | undefined;
+    steps?: CiStep[] | undefined;
     extends?: unknown;
 };
+
+export type RepositoryHooks = { hooksPath: string; hooks: RepositorySetup['hooks'] };
+
+export type CiStep = { run?: string | undefined };

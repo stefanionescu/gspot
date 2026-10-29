@@ -4,14 +4,16 @@ The documentation site uses Astro Starlight.
 
 ## Setup
 
-Run `mise tasks` from the repository root to list the tasks that set up, serve, build, and deploy the site.
+`mise run setup` installs the packages and writes the site types. `mise run docs:serve` serves the site and rebuilds
+a page when you save a file. `mise run docs:build` builds it into `docs/dist`.
 Write guides in `src/content/docs/`. The code in `src/reference/` builds the command, configuration, check,
 settings, and ESLint plugin reference pages from the implementation. `src/config/navigation.ts` holds the sidebar.
 
 ## Deployment
 
-The release deploys the site to the `gspot-docs` Worker at `generativespotting.com`, with the Wrangler login of the
-person who releases.
+Run `mise run docs:deploy` to build and deploy the site to the `gspot-docs` Worker at `generativespotting.com`, with
+your Wrangler login. This task publishes documentation without publishing npm packages. The release task also deploys
+the site.
 
 A Cloudflare rule on the zone serves `<path>index.md` when a request accepts `text/markdown`. `public/_headers` sends
 `Vary: Accept` for it. Keep the rule when you move the site.

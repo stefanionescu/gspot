@@ -1,5 +1,4 @@
 import type { StylelintComponent } from '#cli/types/generation/css.ts';
-import { VUE_CONFIGURATION, SVELTE_CONFIGURATION } from '#cli/config/configurations/names.ts';
 
 const VUE_STYLELINT_OVERRIDE = {
     files: ['**/*.vue'],
@@ -49,7 +48,7 @@ export const CSS_MODULES_OVERRIDE = {
     atRules: ['value'],
 } as const;
 
-export const STYLELINT_RECOMMENDED_OFF: ReadonlySet<string> = new Set([
+export const STYLELINT_DEFAULT_LEVEL_OFF: ReadonlySet<string> = new Set([
     'no-descending-specificity',
     'container-name-pattern',
     'custom-media-pattern',
@@ -63,7 +62,10 @@ export const STYLELINT_RECOMMENDED_OFF: ReadonlySet<string> = new Set([
     'selector-not-notation',
 ]);
 
-export const STYLELINT_COMPONENTS: Readonly<Record<string, StylelintComponent>> = {
-    [VUE_CONFIGURATION]: VUE_STYLELINT_OVERRIDE,
-    [SVELTE_CONFIGURATION]: SVELTE_STYLELINT_OVERRIDE,
-};
+export const STYLELINT_COMPONENTS: readonly StylelintComponent[] = [
+    VUE_STYLELINT_OVERRIDE,
+    SVELTE_STYLELINT_OVERRIDE,
+    { files: ['**/*.astro'], customSyntax: 'postcss-html', ignorePseudoClasses: [] },
+];
+
+export const STYLELINT_CHECK = 'css/stylelint';

@@ -3,12 +3,12 @@ import { testdir } from 'testdirs';
 import { parseDocument } from 'yaml';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import type { SemgrepRuleFile } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findManifestTarget, findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
 test('a language choice brings its security rules without selecting security', async () => {
     await using sandbox = await testdir({
@@ -16,15 +16,15 @@ test('a language choice brings its security rules without selecting security', a
         'sample.sh': 'echo sample\n',
     });
 
-    const target = findManifestTarget('bash', 'semgrep.yml');
+    const target = getManifestTarget('bash', 'semgrep.yml');
     const defaultSession = await openSession(sandbox.path);
-    const defaultOutput = generate(defaultSession);
+    const defaultOutput = generateFiles(defaultSession);
     expect(
         parseDocument(defaultOutput.files.find((file) => file.path === target)!.content).getIn(['rules', 0, 'id']),
     ).toBe('gspot.bash.curl-pipe-shell');
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['bash', 'security']));
     const securitySession = await openSession(sandbox.path);
-    const securityOutput = generate(securitySession);
+    const securityOutput = generateFiles(securitySession);
     const generated = securityOutput.files.find((file) => file.path === target);
     expect(generated?.content).toBe(defaultOutput.files.find((file) => file.path === target)?.content);
     expect(generated?.content).not.toContain('gspot.javascript.no-eval');
@@ -44,16 +44,16 @@ test.each([...LEVELS])(
         });
 
         const session = await openSession(sandbox.path);
-        const output = generate(session);
+        const output = generateFiles(session);
         const worker = output.files.find(({ path }) => path.endsWith('/cloudflare/semgrep.yml'));
-        if (level === 'recommended') expect(worker).toBeUndefined();
+        if (level === 'basic') expect(worker).toBeUndefined();
         else {
             expect(parseDocument(worker!.content).toJS()).toMatchObject({
                 rules: [{ id: 'gspot.cloudflare.wildcard-cors-origin' }],
             });
             expect(parseDocument(worker!.content).getIn(['rules', 0, 'paths'])).toBeUndefined();
         }
-        const javascript = output.files.find(({ path }) => path === findManifestTarget('javascript', 'semgrep.yml'))!;
+        const javascript = output.files.find(({ path }) => path === getManifestTarget('javascript', 'semgrep.yml'))!;
         const { rules: javascriptRules } = parseDocument(javascript.content).toJS() as SemgrepRuleFile;
         expect(javascriptRules.map(({ id }) => id)).toContain('gspot.javascript.ssrf-web-request-user-input');
         const supabase = output.files.find(({ path }) => path.endsWith('/supabase/semgrep.yml'))!;
@@ -86,9 +86,9 @@ test('JWT rules are written only where the nearest package.json has jsonwebtoken
     });
 
     const session = await openSession(sandbox.path);
-    const output = generate(session);
+    const output = generateFiles(session);
     for (const scope of ['', 'jwt', 'jwt/child', 'other']) {
-        const target = findConfigFilePath(session, 'semgrep', scope);
+        const target = getConfigFilePath(session, 'semgrep', scope);
         const text = output.files.find((file) => file.path === target)!.content;
         const ids = (parseDocument(text).toJS() as SemgrepRuleFile).rules.map(({ id }) => id);
         expect(

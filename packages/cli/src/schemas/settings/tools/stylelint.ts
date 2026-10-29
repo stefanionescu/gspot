@@ -2,24 +2,28 @@ import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { TableSettings } from '#cli/types/settings/file.ts';
 import type { StylelintOptions } from '#cli/types/settings/tools.ts';
-import { nonemptyString } from '#cli/schemas/configurations/fields.ts';
 import { buildRuleTableSchema } from '#cli/schemas/settings/tools/rules.ts';
+import { nonemptyStringSchema } from '#cli/schemas/configurations/fields.ts';
 
-const stylelintOptions = z
+const stylelintOptionsSchema = z
     .object({
         severity: z.literal('error').optional(),
     } satisfies SchemaShape<StylelintOptions>)
     .catchall(z.json());
 
-const stylelintValue = z.union([z.literal(true), nonemptyString, z.number(), stylelintOptions]) satisfies z.ZodType<
-    Exclude<TableSettings<'tools.stylelint'>['rules'][string], unknown[]>
->;
+const stylelintValueSchema = z.union([
+    z.literal(true),
+    nonemptyStringSchema,
+    z.number(),
+    stylelintOptionsSchema,
+]) satisfies z.ZodType<Exclude<TableSettings<'tools.stylelint'>['rules'][string], unknown[]>>;
+
 const stylelintTupleSchema = z.tuple([
-    z.union([stylelintValue, z.json().array()]),
-    stylelintOptions.optional(),
+    z.union([stylelintValueSchema, z.json().array()]),
+    stylelintOptionsSchema.optional(),
 ]) satisfies z.ZodType<Extract<TableSettings<'tools.stylelint'>['rules'][string], unknown[]>>;
 
-export const stylelintRules = buildRuleTableSchema(
-    z.record(nonemptyString, z.union([stylelintValue, stylelintTupleSchema])),
+export const stylelintRulesSchema = buildRuleTableSchema(
+    z.record(nonemptyStringSchema, z.union([stylelintValueSchema, stylelintTupleSchema])),
     'css/stylelint',
 ) satisfies z.ZodType<TableSettings<'tools.stylelint'>['rules']>;

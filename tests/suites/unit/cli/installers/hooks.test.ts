@@ -1,19 +1,20 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
+import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitSetting } from '#cli/system/git.ts';
-import { readFile, writeFile } from 'node:fs/promises';
+import { openSession } from '#cli/planning/session.ts';
 import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
+import { STALE_LOCKFILE_NOTE } from '#tests/config/messages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { installHooks, readHookStatus } from '#cli/installers/hooks.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { createGitSandbox, createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH, HOOK_CONFIGURATION_CASES } from '#tests/config/installers/hooks.ts';
 
 test.each([...HOOK_REPOSITORIES])(
@@ -29,7 +30,10 @@ test.each([...HOOK_REPOSITORIES])(
             ...files,
         });
         if (setting !== undefined) runGitStep(sandbox.path, [...setting]);
-        if (gitHook) await writeFile(join(sandbox.path, '.git/hooks/pre-commit'), '#!/bin/sh\nexit 0\n');
+        if (gitHook) {
+            await writeFile(join(sandbox.path, '.git/hooks/pre-commit'), '#!/bin/sh\nexit 0\n');
+            await chmod(join(sandbox.path, '.git/hooks/pre-commit'), 0o755);
+        }
         const before = readGitSetting(sandbox.path, 'core.hooksPath');
         const authoredPaths = gitHook ? ['.git/hooks/pre-commit'] : Object.keys(files);
         const authored = await Promise.all(
@@ -62,6 +66,11 @@ test.each([...HOOK_REPOSITORIES])(
             join(sandbox.path, first!.path),
             `${first!.content}\n${command} check --hook pre-commit\n${command} check --hook pre-push\n`,
         );
+        if (first!.path.endsWith('/pre-commit')) {
+            const push = join(sandbox.path, dirname(first!.path), 'pre-push');
+            await writeFile(push, `${command} check --hook pre-push\n`);
+            await chmod(push, 0o755);
+        }
         expect(readHookStatus(session, session.repository)).toMatchObject({ ready: true });
     },
 );
@@ -114,9 +123,6 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
             path.startsWith(`${GSPOT_PATHS.hooks}/`),
         ),
     ).toStrictEqual([
-        { path: `${GSPOT_PATHS.hooks}/post-checkout`, kind: 'stray' },
-        { path: `${GSPOT_PATHS.hooks}/post-commit`, kind: 'stray' },
-        { path: `${GSPOT_PATHS.hooks}/post-merge`, kind: 'stray' },
         { path: `${GSPOT_PATHS.hooks}/pre-commit`, kind: 'stray' },
         { path: `${GSPOT_PATHS.hooks}/pre-push`, kind: 'stray' },
     ]);
@@ -124,12 +130,9 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
     const removed = await runGspot(root, ['apply']);
     expect(removed).toMatchObject({
         code: 0,
-        stdout: [
-            'removed  5 generated files',
-            'note     Git hooks changed. Run gspot install.',
-            'note     The tool lockfile is missing or stale. Run gspot install; until then gspot/generated-files fails on it.',
-            '',
-        ].join('\n'),
+        stdout: ['removed  .gspot/hooks/pre-commit', 'removed  .gspot/hooks/pre-push', STALE_LOCKFILE_NOTE, ''].join(
+            '\n',
+        ),
     });
     expect(await isOnDisk(hook)).toBe(false);
     expect(readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
@@ -161,6 +164,7 @@ test('the hooks that git lfs install wrote are not other hooks, so install point
         'git lfs post-merge "$@"',
     );
     await writeFile(join(sandbox.path, '.git/hooks/post-merge'), '#!/bin/sh\ngit lfs post-merge "$@"\necho custom\n');
+    await chmod(join(sandbox.path, '.git/hooks/post-merge'), 0o755);
     runGitStep(sandbox.path, ['config', '--unset', 'core.hooksPath']);
     expect(installHooks(session, [])).toBe(
         'hooks already run from .git/hooks; add these gspot lines to them:\n  pre-commit: mise exec -- gspot check --hook pre-commit\n  pre-push: mise exec -- gspot check --hook pre-push -- "$@"',
@@ -201,4 +205,34 @@ test('hooks already set to .gspot/hooks need no command or note', async () => {
     expect(installHooks(await openSession(sandbox.path), steps)).toBe('');
     expect(steps).toStrictEqual([]);
     expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
+});
+
+test('hook status ignores commented commands and commands in the wrong hook file', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
+        '.githooks/pre-commit': '# gspot check --hook pre-commit\ngspot check --hook pre-push\n',
+    });
+    const session = await openSession(sandbox.path);
+    expect(readHookStatus(session, session.repository).ready).toBe(false);
+    await writeFile(
+        join(sandbox.path, '.githooks/pre-commit'),
+        'gspot check --hook pre-commit\ngspot check --hook pre-push\n',
+    );
+    expect(readHookStatus(session, session.repository).ready).toBe(false);
+    await writeFile(join(sandbox.path, '.githooks/pre-push'), 'gspot check --hook pre-push\n');
+    expect(readHookStatus(session, session.repository).ready).toBe(true);
+});
+
+test('a linked executable Git hook is retained by install', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
+        'authored-hook': '#!/bin/sh\nexit 0\n',
+    });
+    await chmod(join(sandbox.path, 'authored-hook'), 0o755);
+    await symlink('../../authored-hook', join(sandbox.path, '.git/hooks/pre-commit'));
+    const session = await openSession(sandbox.path);
+    const steps: (readonly string[])[] = [];
+    expect(installHooks(session, steps)).toContain('hooks already run from .git/hooks');
+    expect(steps).toStrictEqual([]);
+    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
 });

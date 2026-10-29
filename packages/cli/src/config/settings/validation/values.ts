@@ -9,3 +9,7 @@ export const SETTING_RULES: Readonly<Record<string, Readonly<Record<string, stri
         'n/file-extension-in-import': 'tools.eslint.import_extension',
     },
 };
+
+export const COVERAGE_LINES_SETTING = 'coverage.lines';
+
+export const SWIFT_TARGET_MESSAGE = 'A Swift target with a lower line minimum than coverage.lines needs a reason.';

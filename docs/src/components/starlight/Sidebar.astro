@@ -1,12 +1,14 @@
 ---
 import Default from '@astrojs/starlight/components/Sidebar.astro';
+import { WIDE_SCREEN_QUERY } from '../../config/components/starlight.ts';
 ---
 
 <Default />
-<script is:inline>
+<script is:inline define:vars={{ WIDE_SCREEN_QUERY }}>
     (() => {
-        if (!matchMedia('(min-width: 50em)').matches) return;
+        if (!matchMedia(WIDE_SCREEN_QUERY).matches) return;
         const pane = document.querySelector('#starlight__sidebar');
+        if (pane === null) return;
         const link = pane.querySelector('a[aria-current="page"]');
         if (link === null || pane.scrollTop > 0) return;
         if (link.getBoundingClientRect().bottom > innerHeight) link.scrollIntoView({ block: 'center' });

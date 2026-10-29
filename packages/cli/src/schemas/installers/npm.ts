@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { BunPackage, NpmPackage, PnpmPackage } from '#cli/types/installers/npm.ts';
-import { npmLockSchema, bunLockSchema, pnpmLockSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
+import { npmLockfileSchema, bunLockfileSchema, pnpmLockfileSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
 
 export const bunPackageSchema = z.tuple([
     z.string(),
@@ -10,7 +10,7 @@ export const bunPackageSchema = z.tuple([
     z.string(),
 ]) satisfies z.ZodType<BunPackage>;
 
-export const npmToolLockSchemas = { npm: npmLockSchema, bun: bunLockSchema, pnpm: pnpmLockSchema } as const;
+export const npmToolLockSchemas = { npm: npmLockfileSchema, bun: bunLockfileSchema, pnpm: pnpmLockfileSchema } as const;
 
 export const npmToolPackageSchema = z.looseObject({
     name: z.string().optional(),

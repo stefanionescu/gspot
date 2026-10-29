@@ -11,7 +11,6 @@ filenames = ["jest.config.*"]
 paths = ["{setting:test_files}", "**/jest.config.*"]
 
 [[tool]]
-crash_pattern = "^No tests found|^  ● Test suite failed to run"
 name = "jest"
 system = true
 
@@ -33,7 +32,6 @@ cwd = "scope"
 example = "Jest reports `coverage threshold for lines (90%) not met: 85%`. Add tests for the lines its report marks uncovered."
 exit_codes = [1]
 help = "Fix each failed test, and add tests for the code that the report marks uncovered. Lower a minimum under `coverage` only with a reason."
-level = "recommended"
 name = "coverage"
 runs = "scope"
 stage = "push"
@@ -45,4 +43,4 @@ extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]
 
 [check.output]
 format = "regex"
-pattern = "^(?:Jest: \"global\" |  (?=● ))(?<message>coverage threshold for .+ not met: .+|● (?!Test suite failed to run$).+)$"
+pattern = "^(?:Jest: \"global\" |  (?=● ))(?<message>coverage threshold for .+ not met: .+|● .+)$"

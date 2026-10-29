@@ -1,6 +1,6 @@
 import type { Constraint } from '@pgsql/types';
-import type { SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
-import { getNodeFields, listNodeFields, visitStatement } from '#cli/parsers/code/sql.ts';
+import { getNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
+import type { SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
 import { PUBLIC_SCHEMA, SCHEMA_NAME_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/checks/database/postgres/schema.ts';
 
 import type {
@@ -12,7 +12,7 @@ import type {
     SchemaAlterations,
 } from '#cli/types/checks/postgres.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlining raises five schema readers above the complexity limit.
 function qualifyName(schema: string | undefined, name: string | undefined = ''): string {
     return `${schema === undefined || schema === '' ? PUBLIC_SCHEMA : schema}.${name}`;
 }
@@ -24,8 +24,7 @@ function removeTable(state: SchemaState, table: string): void {
     state.indexes = state.indexes.filter((index) => index.table !== table);
 }
 
-function renameTable(state: SchemaState, table: string, name: string): void {
-    const renamed = `${table.slice(0, table.indexOf('.'))}.${name}`;
+function renameTable(state: SchemaState, table: string, renamed: string): void {
     const source = state.tables.get(table);
     if (source !== undefined) {
         state.tables.set(renamed, source);
@@ -40,7 +39,9 @@ function renameTable(state: SchemaState, table: string, name: string): void {
         );
         state.constraints.delete(table);
     }
-    state.indexes = state.indexes.map((index) => (index.table === table ? { ...index, table: renamed } : index));
+    state.indexes = state.indexes.map((index) =>
+        index.table === table ? { ...index, table: renamed, schema: renamed.slice(0, renamed.indexOf('.')) } : index,
+    );
 }
 
 function buildConstraintName(node: Constraint, table: string, kind: string, keys: string[]): string {
@@ -51,19 +52,19 @@ function buildConstraintName(node: Constraint, table: string, kind: string, keys
     return [tableName, ...(kind === 'CONSTR_PRIMARY' ? [] : keys), suffix].join('_');
 }
 
-function addForeignKey(state: SchemaState, at: Location, name: string, columns: string[]): void {
-    const constraints = state.constraints.get(at.table) ?? new Map<string, Schema['foreignKeys'][number]>();
+function addForeignKey(state: SchemaState, location: Location, name: string, columns: string[]): void {
+    const constraints = state.constraints.get(location.table) ?? new Map<string, Schema['foreignKeys'][number]>();
     constraints.set(name, {
-        table: at.table,
+        table: location.table,
         columns,
-        path: at.migration.path,
-        offset: at.statement.start,
-        text: at.migration.text,
+        path: location.migration.path,
+        offset: location.statement.start,
+        text: location.migration.text,
     });
-    state.constraints.set(at.table, constraints);
+    state.constraints.set(location.table, constraints);
 }
 
-function addConstraint(state: SchemaState, at: Location, node: Constraint, column?: string): void {
+function addConstraint(state: SchemaState, location: Location, node: Constraint, column?: string): void {
     const kind = node.contype ?? '';
     if (!Reflect.has(CONSTRAINT_SUFFIXES, kind)) return;
     const { keys, columns } =
@@ -74,16 +75,16 @@ function addConstraint(state: SchemaState, at: Location, node: Constraint, colum
               }
             : { keys: [column], columns: [column] };
     const isForeign = kind === 'CONSTR_FOREIGN';
-    const name = buildConstraintName(node, at.table, kind, isForeign ? columns : keys);
+    const name = buildConstraintName(node, location.table, kind, isForeign ? columns : keys);
     if (!isForeign && keys.length > 0)
         state.indexes.push({
-            table: at.table,
-            schema: at.table.slice(0, at.table.indexOf('.')),
+            table: location.table,
+            schema: location.table.slice(0, location.table.indexOf('.')),
             name,
             columns: keys,
             constraint: name,
         });
-    if (isForeign) addForeignKey(state, at, name, columns);
+    if (isForeign) addForeignKey(state, location, name, columns);
 }
 
 const readCreateTable: StatementReader<'CreateStmt'> = (statement, state, migration) => {
@@ -108,6 +109,18 @@ const ALTERATIONS: SchemaAlterations = {
         const name = command.name ?? '';
         state.constraints.get(at.table)?.delete(name);
         state.indexes = state.indexes.filter((index) => index.table !== at.table || index.constraint !== name);
+    },
+    AT_AddColumn: (state, at, command) => {
+        const column = getNodeFields(command.def, 'ColumnDef');
+        for (const node of listNodeFields(column?.constraints, 'Constraint'))
+            addConstraint(state, at, node, column?.colname ?? '');
+    },
+    AT_DropColumn: (state, at, command) => {
+        const name = command.name ?? '';
+        const constraints = state.constraints.get(at.table);
+        for (const [key, constraint] of constraints ?? [])
+            if (constraint.columns.includes(name)) constraints?.delete(key);
+        state.indexes = state.indexes.filter((index) => index.table !== at.table || !index.columns.includes(name));
     },
     AT_AddConstraint: (state, at, command) => {
         const node = getNodeFields(command.def, 'Constraint');
@@ -143,17 +156,51 @@ function renameColumn(state: SchemaState, table: string, previous: string | unde
     }
 }
 
+function renameConstraint(state: SchemaState, table: string, previous: string, name: string): void {
+    const constraints = state.constraints.get(table);
+
+    const constraint = constraints?.get(previous);
+    if (constraint !== undefined) {
+        constraints?.delete(previous);
+        constraints?.set(name, constraint);
+    }
+    for (const index of state.indexes) {
+        if (index.table === table && index.constraint === previous) {
+            index.constraint = name;
+            index.name = name;
+        }
+    }
+}
+
+function renameIndex(state: SchemaState, previous: string, name: string): void {
+    const index = state.indexes.find((otherIndex) => qualifyName(otherIndex.schema, otherIndex.name) === previous);
+    if (index === undefined) return;
+    index.name = name;
+}
+
 const STATEMENT_READERS: SqlStatementVisitors<void, [SchemaState, Migration]> = {
     DropStmt: readDrop,
     CreateStmt: readCreateTable,
     AlterTableStmt: readAlterTable,
     RenameStmt: ({ fields }, state) => {
-        const table = qualifyName(fields.relation?.schemaname, fields.relation?.relname);
-        if (fields.renameType === 'OBJECT_TABLE') renameTable(state, table, fields.newname ?? '');
+        const { relation = {}, newname: name = '', subname: previous = '' } = fields;
+        const table = qualifyName(relation.schemaname, relation.relname);
+        if (fields.renameType === 'OBJECT_TABLE') renameTable(state, table, qualifyName(relation.schemaname, name));
+        if (fields.renameType === 'OBJECT_INDEX') renameIndex(state, table, name);
+        if (fields.renameType === 'OBJECT_TABCONSTRAINT') renameConstraint(state, table, previous, name);
         if (fields.renameType !== 'OBJECT_COLUMN') return;
-        renameColumn(state, table, fields.subname, fields.newname ?? '');
+        renameColumn(state, table, previous, name);
+    },
+    AlterObjectSchemaStmt: ({ fields }, state) => {
+        if (fields.objectType === 'OBJECT_TABLE')
+            renameTable(
+                state,
+                qualifyName(fields.relation?.schemaname, fields.relation?.relname),
+                qualifyName(fields.newschema, fields.relation?.relname),
+            );
     },
     IndexStmt: (statement, state) => {
+        if (statement.fields.whereClause !== undefined) return;
         const columns = listNodeFields(statement.fields.indexParams, 'IndexElem').map((column) => column.name ?? '');
         if (columns.length === 0) return;
         const table = qualifyName(statement.fields.relation?.schemaname, statement.fields.relation?.relname);
@@ -167,7 +214,26 @@ const STATEMENT_READERS: SqlStatementVisitors<void, [SchemaState, Migration]> = 
     },
 };
 
-function buildDatabaseSchema(state: SchemaState): Schema {
+/**
+Replays the parsed migrations in version order and collects the tables, foreign keys, indexed columns, and tables
+with row security that they leave.
+
+@param migrations parsed SQL files in version order.
+*/
+export function buildDatabaseSchema(migrations: Migration[]): Schema {
+    const state: SchemaState = {
+        indexes: [],
+        constraints: new Map(),
+        tables: new Map(),
+        secured: new Set(),
+    };
+    for (const migration of migrations)
+        for (const statement of migration.statements) {
+            const read = STATEMENT_READERS[statement.kind] as
+                | ((statement: SqlStatement, state: SchemaState, migration: Migration) => void)
+                | undefined;
+            read?.(statement, state, migration);
+        }
     const foreignKeys = state.constraints
         .values()
         .flatMap((constraints) => constraints.values().toArray())
@@ -179,23 +245,4 @@ function buildDatabaseSchema(state: SchemaState): Schema {
         indexed.set(index.table, columns);
     }
     return { tables: state.tables, secured: state.secured, foreignKeys, indexed };
-}
-
-/**
-Replays the parsed migrations in version order and collects the tables, foreign keys, indexed columns, and tables
-with row security that they leave.
-
-@param migrations parsed SQL files in version order.
-@returns the schema summary.
-*/
-export function buildSchema(migrations: Migration[]): Schema {
-    const state: SchemaState = {
-        indexes: [],
-        constraints: new Map(),
-        tables: new Map(),
-        secured: new Set(),
-    };
-    for (const migration of migrations)
-        for (const statement of migration.statements) visitStatement(statement, STATEMENT_READERS, state, migration);
-    return buildDatabaseSchema(state);
 }

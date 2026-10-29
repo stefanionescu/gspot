@@ -3,35 +3,38 @@ import { parseSyml } from '@yarnpkg/parsers';
 import { isTable } from '#cli/system/tables.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
+import { type ReadCache } from '#cli/types/system/files.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
 import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { normalizePythonName } from '#cli/parsers/projects/dependencies.ts';
-import type { LockfileName } from '#cli/types/parsers/projects/lockfiles.ts';
+import { GspotError, parseFileFields } from '#cli/system/errors.ts';
+import { type LockfileName } from '#cli/types/parsers/projects/lockfiles.ts';
+import { PACKAGE_JSON, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
 
+import {
+    uvLockfileSchema,
+    bunLockfileSchema,
+    npmLockfileSchema,
+    yarnPackageSchema,
+    pnpmLockfileSchema,
+    yarnLockfileSchema,
+    dependencySectionsSchema,
+} from '#cli/schemas/parsers/projects/lockfiles.ts';
 import {
     PNPM_PEER_START,
     PNPM_ROOT_IMPORTER,
+    YARN_CLASSIC_HEADER,
+    LOCKFILE_URL_FIELDS,
     DEPENDENCY_SECTIONS,
+    YARN_CLASSIC_PROPERTY,
     type IMPORTER_LOCKFILES,
     type LOCKED_PACKAGE_LOCKFILES,
 } from '#cli/config/parsers/projects/lockfiles.ts';
-import {
-    uvLockSchema,
-    bunLockSchema,
-    npmLockSchema,
-    pnpmLockSchema,
-    yarnLockSchema,
-    yarnPackageSchema,
-    dependencySectionsSchema,
-} from '#cli/schemas/parsers/projects/lockfiles.ts';
 
 function parseNpmPackages(path: string, text: string): string[] {
-    return Object.entries(parseJsonFile(path, text, npmLockSchema).packages).flatMap(([folder, lockedPackage]) => {
+    return Object.entries(parseJsonFile(path, text, npmLockfileSchema).packages).flatMap(([folder, lockedPackage]) => {
         const index = folder.lastIndexOf(NPM_PACKAGE_FOLDER);
         return index === -1 || lockedPackage.version === undefined
             ? []
@@ -40,15 +43,15 @@ function parseNpmPackages(path: string, text: string): string[] {
 }
 
 function parsePnpmPackages(path: string, text: string): string[] {
-    return Object.keys(parseYamlFile(path, text, pnpmLockSchema).packages).map((key) => {
+    return Object.keys(parseYamlFile(path, text, pnpmLockfileSchema).packages).map((key) => {
         const name = key.replace(LEADING_SLASH, '');
         const peers = name.indexOf(PNPM_PEER_START);
         return peers === -1 ? name : name.slice(0, peers);
     });
 }
 
-function parseYarnPackages(_path: string, text: string): string[] {
-    return Object.entries(yarnLockSchema.parse(parseSyml(text))).flatMap(([descriptors, yarnPackage]) => {
+function parseYarnPackages(path: string, text: string): string[] {
+    return Object.entries(parseYarnLockfile(path, text)).flatMap(([descriptors, yarnPackage]) => {
         const version = yarnPackageSchema.safeParse(yarnPackage);
         const name = splitIdentity(descriptors.split(',', 1)[0]?.trim() ?? '')?.[0];
         return name !== undefined && version.success && version.data.version !== undefined
@@ -57,28 +60,37 @@ function parseYarnPackages(_path: string, text: string): string[] {
     });
 }
 
-const PACKAGE_PARSERS: Readonly<
+export const PACKAGE_PARSERS: Readonly<
     Record<(typeof LOCKED_PACKAGE_LOCKFILES)[number], (path: string, text: string) => string[]>
 > = {
     'package-lock.json': parseNpmPackages,
     'npm-shrinkwrap.json': parseNpmPackages,
     'bun.lock': (path, text) =>
-        Object.values(parseJsonFile(path, text, bunLockSchema).packages).flatMap(([identity]) =>
+        Object.values(parseJsonFile(path, text, bunLockfileSchema).packages).flatMap(([identity]) =>
             typeof identity === 'string' && splitIdentity(identity) !== undefined ? [identity] : [],
         ),
     'pnpm-lock.yaml': parsePnpmPackages,
     'yarn.lock': parseYarnPackages,
     'uv.lock': (path, text) =>
-        parseTomlFile(path, text, uvLockSchema).package.flatMap(({ name, version }) =>
-            version === undefined ? [] : `${normalizePythonName(name)}@${version}`,
+        parseTomlFile(path, text, uvLockfileSchema).package.flatMap(({ name, version }) =>
+            version === undefined ? [] : `${name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${version}`,
         ),
 };
 
-function listSpecifiers(workspace: unknown): Map<string, string> {
+/**
+Read the declared package requirements from the selected dependency tables.
+
+@param workspace the package or importer record to inspect.
+@param sections the dependency tables to read in order.
+*/
+export function listSpecifiers(
+    workspace: unknown,
+    sections: readonly ((typeof DEPENDENCY_SECTIONS)[number] | 'peerDependencies')[] = DEPENDENCY_SECTIONS,
+): Map<string, string> {
     const parsed = dependencySectionsSchema.safeParse(workspace);
     if (!parsed.success) return new Map();
     return new Map(
-        DEPENDENCY_SECTIONS.flatMap((section) => {
+        sections.flatMap((section) => {
             const dependencies = parsed.data[section];
             if (dependencies === undefined) return [];
             return Object.entries(dependencies).flatMap(([name, value]): [string, string][] => {
@@ -91,7 +103,7 @@ function listSpecifiers(workspace: unknown): Map<string, string> {
 }
 
 function parseNpmVersions(path: string, text: string, folder: string): Map<string, string> {
-    const { packages } = parseJsonFile(path, text, npmLockSchema);
+    const { packages } = parseJsonFile(path, text, npmLockfileSchema);
     const specifiers = listSpecifiers(packages[folder]);
     return new Map(
         specifiers.keys().flatMap((name): [string, string][] => {
@@ -104,7 +116,7 @@ function parseNpmVersions(path: string, text: string, folder: string): Map<strin
 }
 
 function parseBunVersions(path: string, text: string, folder: string): Map<string, string> {
-    const lockfile = parseJsonFile(path, text, bunLockSchema);
+    const lockfile = parseJsonFile(path, text, bunLockfileSchema);
     const workspace = lockfile.workspaces[folder];
     const importer = isTable(workspace) && typeof workspace['name'] === 'string' ? workspace['name'] : folder;
     return new Map(
@@ -119,7 +131,7 @@ function parseBunVersions(path: string, text: string, folder: string): Map<strin
 }
 
 function parsePnpmVersions(path: string, text: string, folder: string): Map<string, string> {
-    const { importers } = parseYamlFile(path, text, pnpmLockSchema);
+    const { importers } = parseYamlFile(path, text, pnpmLockfileSchema);
     const workspace = dependencySectionsSchema.safeParse(importers[folder === '' ? PNPM_ROOT_IMPORTER : folder]);
     if (!workspace.success) return new Map();
     return new Map(
@@ -134,8 +146,8 @@ function parsePnpmVersions(path: string, text: string, folder: string): Map<stri
     );
 }
 
-function parseYarnVersions(text: string, specifiers: Map<string, string>): Map<string, string> {
-    const packages = Object.entries(yarnLockSchema.parse(parseSyml(text)));
+function parseYarnVersions(path: string, text: string, specifiers: Map<string, string>): Map<string, string> {
+    const packages = Object.entries(parseYarnLockfile(path, text));
     const versions = [...specifiers].flatMap(([name, specifier]): [string, string][] => {
         const descriptors = new Set([`${name}@${specifier}`, `${name}@npm:${specifier}`]);
         const found = packages.find(([keys]) => keys.split(',').some((key) => descriptors.has(key.trim())));
@@ -145,15 +157,15 @@ function parseYarnVersions(text: string, specifiers: Map<string, string>): Map<s
     return new Map(versions);
 }
 
-const SPECIFIER_PARSERS: Readonly<
+export const SPECIFIER_PARSERS: Readonly<
     Record<(typeof IMPORTER_LOCKFILES)[number], (path: string, text: string) => [string, unknown][]>
 > = {
     'package-lock.json': (path, text) =>
-        Object.entries(parseJsonFile(path, text, npmLockSchema).packages).filter(
+        Object.entries(parseJsonFile(path, text, npmLockfileSchema).packages).filter(
             ([key]) => !key.includes(NPM_PACKAGE_FOLDER),
         ),
-    'bun.lock': (path, text) => Object.entries(parseJsonFile(path, text, bunLockSchema).workspaces),
-    'pnpm-lock.yaml': (path, text) => Object.entries(parseYamlFile(path, text, pnpmLockSchema).importers),
+    'bun.lock': (path, text) => Object.entries(parseJsonFile(path, text, bunLockfileSchema).workspaces),
+    'pnpm-lock.yaml': (path, text) => Object.entries(parseYamlFile(path, text, pnpmLockfileSchema).importers),
 };
 
 /**
@@ -174,7 +186,7 @@ Find the first lockfile from a folder up to the repository root.
 @param reads the repository cache.
 @param folder the starting project folder.
 @param lockfiles the lockfile names in preference order.
-@returns the first lockfile and its contents, or undefined.
+@returns undefined without a lockfile.
 */
 export function findNearestLockfile<Name extends string>(
     reads: ReadCache,
@@ -192,30 +204,12 @@ export function findNearestLockfile<Name extends string>(
 }
 
 /**
-Find the nearest lockfile of a project, from its folder up to the repository root, and list what it holds.
-
-@param reads the run cache, rooted at the repository.
-@param folder the project folder, relative to the repository root.
-@param lockfiles the lockfile names of the project's package manager family, in the order to try.
-@returns each locked package as `name@version`, or undefined when no lockfile sits on the way to the root.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function readLockedPackages(
-    reads: ReadCache,
-    folder: string,
-    lockfiles: readonly (typeof LOCKED_PACKAGE_LOCKFILES)[number][],
-): Set<string> | undefined {
-    const found = findNearestLockfile(reads, folder, lockfiles);
-    return found === undefined ? undefined : new Set(PACKAGE_PARSERS[found.lockfile](found.path, found.text));
-}
-
-/**
 Read the versions that a project's direct dependencies resolve to in its nearest lockfile.
 
 @param reads the repository read cache.
 @param folder the project folder relative to the repository.
 @param lockfiles the lockfile names in preference order.
-@returns each direct dependency's version, or undefined without a lockfile.
+@returns undefined without a lockfile.
 */
 export function readLockedVersions(
     reads: ReadCache,
@@ -227,14 +221,14 @@ export function readLockedVersions(
         'npm-shrinkwrap.json': parseNpmVersions,
         'bun.lock': parseBunVersions,
         'pnpm-lock.yaml': parsePnpmVersions,
-        'yarn.lock': (_path, text) => {
+        'yarn.lock': (path, text) => {
             const manifest = posix.join(folder, PACKAGE_JSON);
             const content = findCachedText(reads, manifest);
             const specifiers =
                 content === undefined
                     ? new Map<string, string>()
                     : listSpecifiers(parseJsonFile(manifest, content, dependencySectionsSchema));
-            return parseYarnVersions(text, specifiers);
+            return parseYarnVersions(path, text, specifiers);
         },
     };
     const found = findNearestLockfile(reads, folder, lockfiles);
@@ -244,23 +238,76 @@ export function readLockedVersions(
 }
 
 /**
-Parse the dependency specifiers that a lockfile records for each workspace.
+Parse a yarn.lock file and reject other formats.
 
-@param lockfile the lockfile name, which selects its format.
-@param text the lockfile contents.
-@param path the repository-relative lockfile path.
-@returns the dependency specifiers for each folder, with an empty key for the root.
+@param path the file, for the error.
+@param text the saved dependency records to decode.
+@returns the packages of the lockfile, by key.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The lockfile formats it reads stay private to this parser.
-export function parseLockedSpecifiers(
-    lockfile: (typeof IMPORTER_LOCKFILES)[number],
-    text: string,
-    path: string,
-): Map<string, Map<string, string>> {
-    return new Map(
-        SPECIFIER_PARSERS[lockfile](path, text).map(([key, workspace]) => [
-            key === PNPM_ROOT_IMPORTER ? '' : key,
-            listSpecifiers(workspace),
-        ]),
-    );
+function parseYarnLockfile(path: string, text: string): Record<string, unknown> {
+    let parsed: unknown;
+    try {
+        parsed = parseSyml(YARN_CLASSIC_PROPERTY.test(text) ? YARN_CLASSIC_HEADER + text : text);
+    } catch (error) {
+        throw new GspotError('parse', `${path} is not valid Yarn lock syntax. Fix the lockfile.`, { cause: error });
+    }
+    return parseFileFields(path, parsed, yarnLockfileSchema);
+}
+
+/**
+List package download URLs from a JavaScript lockfile. Read resolved fields for npm and Yarn, tarball and repo fields for pnpm, and package identities and tuple values for Bun.
+
+@param path the lockfile path, whose file name gives the format.
+@param text the serialized package records to inspect for download addresses.
+@returns the URLs, in the order of the lockfile.
+*/
+export function listLockfileUrls(path: string, text: string): string[] {
+    const parsed = parseLockfileDocument(path, text);
+    const urls = posix.basename(path) === 'bun.lock' ? listBunUrls(parsed) : [];
+    const pending: unknown[] = [parsed];
+    while (pending.length > 0) {
+        const fields = listDownloadFields(pending.pop());
+        urls.push(...fields.urls);
+        pending.push(...fields.children.toReversed());
+    }
+    return urls;
+}
+
+function parseLockfileDocument(path: string, text: string): unknown {
+    const name = posix.basename(path);
+    if (name === 'yarn.lock') return parseYarnLockfile(path, text);
+    if (name.endsWith('.yaml')) return parseYamlFile(path, text);
+    if (name === 'uv.lock') return parseTomlFile(path, text);
+    return parseJsonFile(path, text);
+}
+
+function listUrlChildren(value: unknown): [string, unknown][] {
+    if (Array.isArray(value)) return (value as unknown[]).map((field) => ['', field]);
+    if (isTable(value)) return Object.entries(value);
+    return [];
+}
+
+function listBunUrls(document: unknown): string[] {
+    const packages = isTable(document) ? document['packages'] : undefined;
+    if (!isTable(packages)) return [];
+    return Object.values(packages).flatMap((record): string[] => {
+        if (!Array.isArray(record)) return [];
+        const identity = typeof record[0] === 'string' ? splitIdentity(record[0])?.[1] : undefined;
+        return [identity, record[1]].filter(
+            (value): value is string => typeof value === 'string' && URL.canParse(value),
+        );
+    });
+}
+
+function listDownloadFields(value: unknown) {
+    const urls: string[] = [];
+    const children: unknown[] = [];
+    for (const [key, field] of listUrlChildren(value)) {
+        if (typeof field === 'string' && LOCKFILE_URL_FIELDS.includes(key)) {
+            const identity = splitIdentity(field)?.[1];
+            urls.push(identity !== undefined && URL.canParse(identity) ? identity : field);
+        }
+        children.push(field);
+    }
+    return { urls, children };
 }

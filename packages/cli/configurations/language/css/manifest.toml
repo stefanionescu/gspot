@@ -5,7 +5,7 @@ description = "Style sheets and the style blocks of components: the standard sty
 title = "CSS"
 
 [detect]
-extensions = [".css", ".vue", ".svelte"]
+extensions = [".css", ".vue", ".svelte", ".astro"]
 
 [files]
 extensions = [".css"]
@@ -47,13 +47,12 @@ tool = "stylelint"
 command = ["stylelint", "--config", "{config_file:stylelint}", "--config-basedir", "{root}/.gspot", "--formatter", "unix", "--allow-empty-input", "{files}"]
 example = "The declaration `color: #ggg` holds an invalid hex value and reports a finding. Replace it with a valid one such as `#abc`."
 exit_codes = [2]
-files = { extensions = [".css", ".vue", ".svelte"] }
+files = { extensions = [".css", ".vue", ".svelte", ".astro"] }
 fix = ["stylelint", "--config", "{config_file:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
 help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore css/stylelint --rule <rule> --reason \"<why>\"`."
-level = "recommended"
 name = "stylelint"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$" }
 stage = "commit"
 summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
-tool = ["stylelint", "stylelint-config-standard"]
+tool = ["stylelint", "stylelint-config-standard", "postcss-html"]
 why = "A browser silently skips a declaration it cannot parse, so a typo in a property ships as a missing style."

@@ -1,172 +1,35 @@
 export const FIELD_COMMENT_CASES = [
     {
-        name: `unowned prose before deleted key`,
-        source: `level="all"
-
-# Free regional note
-
-# Second regional note
-
-tool_timeout_seconds=600 # Deleted inline
-
-# Hooks owner
-[hooks]
-enabled=true
-`,
-        target: `level = "all"
-
-[hooks]
-enabled = true
-`,
-        expected: `level = "all"
-
-# Free regional note
-
-# Second regional note
-
-# Hooks owner
-[hooks]
-enabled = true
-`,
+        name: 'unowned prose before deleted key',
+        source: 'level="all"\n\n# Free regional note\n\n# Second regional note\n\ntool_timeout_seconds=600 # Deleted inline\n\n# Hooks owner\n[hooks]\nenabled=true\n',
+        target: 'level = "all"\n\n[hooks]\nenabled = true\n',
+        expected:
+            'level="all"\n\n# Free regional note\n\n# Second regional note\n\n\n# Hooks owner\n[hooks]\nenabled=true\n',
     },
     {
-        name: `inline comment column gap`,
-        source: `[[ignore]]
-check="a/check"
-paths=["a.ts"]
-reason="Reviewed findings stay ignored intentionally." # Authored reason
-until=2026-12-31
-`,
-        target: `[[ignore]]
-check = "a/check"
-paths = [ "a.ts" ]
-reason="Reviewed findings stay ignored intentionally."
-until = 2026-12-31
-`,
-        expected: `[[ignore]]
-check = "a/check"
-paths = ["a.ts"]
-# Authored reason
-reason = "Reviewed findings stay ignored intentionally."
-until = 2026-12-31
-`,
+        name: 'inline comment column gap',
+        source: '[[ignore]]\ncheck="a/check"\npaths=["a.ts"]\nreason="Reviewed findings stay ignored intentionally." # Authored reason\nuntil=2026-12-31\n',
+        target: '[[ignore]]\ncheck = "a/check"\npaths = [ "a.ts" ]\nreason="Reviewed findings stay ignored intentionally."\nuntil = 2026-12-31\n',
+        expected:
+            '[[ignore]]\ncheck="a/check"\npaths=["a.ts"]\nreason="Reviewed findings stay ignored intentionally." # Authored reason\nuntil=2026-12-31\n',
     },
     {
-        name: `maps dotted and blank lines`,
-        source: `# schema note
-# Root
-level="all" # Level inline
-# Dotted hook
-hooks.enabled=true
-
-# Z scope
-[[scope]]
-path="z/app"
-
-# A check
-[[command_check]]
-id="a/task"
-command=["bun","task.ts"]
-paths=["src/**"]
-stage="manual"
-summary="Old task" # Summary inline
-
-# A scope
-[[scope]]
-path="a/app"
-`,
-        target: `level="all"
-hooks.enabled=true
-[[scope]]
-path="z/app"
-[[scope]]
-path="a/app"
-[[command_check]]
-id="a/task"
-command=["bun","task.ts"]
-paths=["src/**"]
-stage="manual"
-summary="Changed task"
-`,
-        expected: `# schema note
-# Root
-# Level inline
-level = "all"
-
-[hooks]
-# Dotted hook
-enabled = true
-
-# Z scope
-[[scope]]
-path = "z/app"
-
-# A scope
-[[scope]]
-path = "a/app"
-
-# A check
-[[command_check]]
-id = "a/task"
-command = ["bun", "task.ts"]
-paths = ["src/**"]
-stage = "manual"
-# Summary inline
-summary = "Changed task"
-`,
+        name: 'maps dotted and blank lines',
+        source: '# schema note\n# Root\nlevel="all" # Level inline\n# Dotted hook\nhooks.enabled=true\n\n# Z scope\n[[scope]]\npath="z/app"\n\n# A check\n[[command_check]]\nid="a/task"\ncommand=["bun","task.ts"]\npaths=["src/**"]\nstage="manual"\nsummary="Old task" # Summary inline\n\n# A scope\n[[scope]]\npath="a/app"\n',
+        target: 'level="all"\nhooks.enabled=true\n[[scope]]\npath="z/app"\n[[scope]]\npath="a/app"\n[[command_check]]\nid="a/task"\ncommand=["bun","task.ts"]\npaths=["src/**"]\nstage="manual"\nsummary="Changed task"\n',
+        expected:
+            '# schema note\n# Root\nlevel="all" # Level inline\n# Dotted hook\nhooks.enabled=true\n\n# Z scope\n[[scope]]\npath="z/app"\n\n# A check\n[[command_check]]\nid="a/task"\ncommand=["bun","task.ts"]\npaths=["src/**"]\nstage="manual"\nsummary="Changed task" # Summary inline\n\n# A scope\n[[scope]]\npath="a/app"\n',
     },
     {
-        name: `inline tool options and Unicode tables`,
-        source: `# Native options
-[tools.eslint.rules]
-options = [{a=1,b=["x","y"],note="""First line
-# String data
-Last line"""}] # Native inline
-
-# Unicode scope
-[[scope]]
-path="apps/前言"
-configurations=[]
-`,
-        // eslint-disable-next-line unicorn/prefer-string-raw -- reason: Bun escapes Unicode in raw templates and changes this TOML value.
-        target: `[tools.eslint.rules]
-options = [{a=1,b=["x","y"],note="First line\\n# String data\\nLast line"}]
-[[scope]]
-path="apps/前言"
-configurations=[]
-`,
-        // eslint-disable-next-line unicorn/prefer-string-raw -- reason: Bun escapes Unicode in raw templates and changes this expected TOML value.
-        expected: `# Native options
-[tools.eslint.rules]
-options = [
-    # Native inline
-    { a = 1, b = ["x", "y"], note = "First line\\n# String data\\nLast line" },
-]
-
-# Unicode scope
-[[scope]]
-path = "apps/前言"
-configurations = []
-`,
+        name: 'inline tool options and Unicode tables',
+        source: '# Native options\n[tools.eslint.rules]\noptions = [{a=1,b=["x","y"],note="""First line\n# String data\nLast line"""}] # Native inline\n\n# Unicode scope\n[[scope]]\npath="apps/前言"\nconfigurations=[]\n',
+        target: '[tools.eslint.rules]\noptions = [{a=1,b=["x","y"],note="First line\\n# String data\\nLast line"}]\n[[scope]]\npath="apps/前言"\nconfigurations=[]\n',
+        expected:
+            '# Native options\n[tools.eslint.rules]\noptions = [{a=1,b=["x","y"],note="""First line\n# String data\nLast line"""}] # Native inline\n\n# Unicode scope\n[[scope]]\npath="apps/前言"\nconfigurations=[]\n',
     },
     {
-        name: `inline field`,
-        source: `[tools.eslint.rules]
- # Field comment
- values=[1,2]
-`,
-        expected: `[tools.eslint.rules]
-# Field comment
-values = [1, 2]
-`,
+        name: 'inline field',
+        source: '[tools.eslint.rules]\n # Field comment\n values=[1,2]\n',
+        expected: '[tools.eslint.rules]\n # Field comment\n values=[1,2]\n',
     },
-] as const;
-export const INLINE_FIELD_COMMENT = `[tools.markdownlint.rules.MD001]
-mixed=[
- {
- # Field-owned comment
- enabled=true
- },
- 2
-]
-`;
+];

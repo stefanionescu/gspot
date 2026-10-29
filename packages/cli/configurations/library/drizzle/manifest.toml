@@ -1,7 +1,7 @@
 allowed_words = ["Drizzle"]
 
 [configuration]
-description = "Drizzle: no update or delete without `where`, and migrations that match the schema."
+description = "Drizzle: no update or delete without a where clause, and migrations that match the schema."
 requires = ["javascript"]
 title = "Drizzle"
 
@@ -9,7 +9,7 @@ title = "Drizzle"
 dependencies = ["drizzle-orm"]
 
 [rules."DRIZZLE.md"]
-dependencies = ["pg", "postgres"]
+dependencies = ["pg", "postgres", "@neondatabase/serverless"]
 
 [[tool]]
 kind = "library"
@@ -38,7 +38,6 @@ required_tools = ["eslint-plugin-drizzle"]
 command = ["drizzle-kit", "generate"]
 example = "A schema change with no new migration reports drift. Run `drizzle-kit generate`, review the migration, and commit it."
 help = "Run `drizzle-kit generate` and commit the migration."
-level = "recommended"
 name = "stale-migrations"
 runs = "scope"
 stage = "push"

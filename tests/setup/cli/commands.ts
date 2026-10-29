@@ -2,18 +2,17 @@ import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { spyOn, expect } from 'bun:test';
 import { runProgram } from '#cli/main.ts';
-import type { Sandbox } from '#tests/types/sandbox.ts';
-import type { RunReport } from '#cli/types/runs/run.ts';
+import { type Sandbox } from '#tests/types/sandbox.ts';
 import { readTree } from '#tests/setup/system/files.ts';
-import type { FixReport } from '#cli/types/runs/fixes.ts';
-import type { CheckResult } from '#cli/types/runs/check.ts';
+import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/environment.ts';
-import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
+import { type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import type { FindingRow, ScopeFindingRow } from '#tests/types/reports.ts';
-import type { StdinOptions, ProcessOutput } from '#tests/types/processes.ts';
+import { type RunReport, type FixReport } from '#cli/types/commands/check.ts';
+import { type FindingRow, type ScopeFindingRow } from '#tests/types/reports.ts';
+import { type StdinOptions, type ProcessOutput } from '#tests/types/processes.ts';
 
 export const CLI_BIN = join(REPOSITORY_ROOT, 'packages/cli/src/bin.ts');
 
@@ -34,13 +33,8 @@ export function listScopeFindingRows(report: RunReport): ScopeFindingRow[] {
 }
 
 /**
-Run gspot in this process over a folder with color off and CI set, and capture what it writes.
-
-@param cwd the sandbox.
-@param commandArguments everything after gspot.
-@param environment extra variables, restored afterwards.
-@param options byte input for commands that read standard input.
-@returns the exit code and both streams.
+Run gspot in this process over a folder with color off and CI set, and capture what it writes. It restores the
+environment variables it sets.
 */
 export async function runGspot(
     cwd: string,
@@ -65,10 +59,8 @@ export async function runGspot(
         }),
     );
     const variables: Record<string, string> = { ...GSPOT_ENVIRONMENT, ...environment };
-    const exitCode = process.exitCode;
     const stdin = Object.getOwnPropertyDescriptor(process, 'stdin')!;
     using _environment = overrideEnvironment(variables);
-    process.exitCode = 0;
     try {
         if (options.stdin !== undefined)
             Object.defineProperty(process, 'stdin', {
@@ -81,12 +73,11 @@ export async function runGspot(
     } finally {
         process.chdir(previousFolder);
         Object.defineProperty(process, 'stdin', stdin);
-        process.exitCode = exitCode ?? 0;
     }
 }
 
 /**
-Parse the JSON report of a completed check run. Keep its exit code and streams.
+Parse the JSON report of a completed check run.
 */
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 240 calls in 71 files share it.
@@ -96,12 +87,6 @@ export function parseCheckReport(output: ProcessOutput): ProcessOutput & { repor
 
 /**
 Run gspot as a child process in a folder with color off and CI set.
-
-@param cwd the sandbox.
-@param commandArguments everything after gspot.
-@param environment extra variables for the child.
-@param options stdin for the child process.
-@returns the exit code and both streams.
 */
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 61 files call it.
@@ -121,10 +106,10 @@ export async function spawnGspot(
 /**
 Run one check as a child process and return its result for the root scope.
 */
-export async function spawnRootCheck(root: string, check: string): Promise<CheckResult> {
-    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', check, '--json']));
+export async function spawnRootCheck(root: string, checkId: string): Promise<CheckResult> {
+    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', checkId, '--json']));
     const found = result.report.checks.find((each) => each.scope === '');
-    if (found === undefined) throw new Error(`The report has no root result for ${check}.`);
+    if (found === undefined) throw new Error(`The report has no root result for ${checkId}.`);
     return found;
 }
 
@@ -141,15 +126,10 @@ export async function runGspotStep(sandbox: Sandbox, commandArguments: readonly 
 }
 
 /**
-Run a refused command in text and JSON, and check that both refuse it and write nothing.
-
-@param root the sandbox that the command must leave unchanged.
-@param commandArguments the refused command.
-@param refusal the error kind and the message that both outputs name.
-@param refusal.error the error kind of the JSON output.
-@param refusal.message the refusal text.
+Run a refused command in text and JSON, and check that both refuse it with the error kind and message of the refusal,
+and write nothing.
 */
-export async function expectRefusalWithoutWrites(
+export async function assertRefusalWithoutWrites(
     root: string,
     commandArguments: readonly string[],
     refusal: { error: string; message: string },
@@ -174,12 +154,4 @@ export async function applyThenInstall(root: string): Promise<void> {
     const sandbox = { root, run: spawnGspot };
     await runGspotStep(sandbox, ['apply']);
     await runGspotStep(sandbox, ['install']);
-}
-
-/**
-The init arguments for a test run without prompts.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 48 calls in 14 files share it.
-export function buildInitArguments(configurations: readonly string[]): string[] {
-    return ['init', '--yes', ...(configurations.length === 0 ? [] : ['--configurations', ...configurations])];
 }

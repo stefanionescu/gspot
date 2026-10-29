@@ -72,7 +72,6 @@ cwd = "scope"
 example = "A component whose frontmatter holds `const count: number = 'three';` reports `ts(2322)`. Give the value the declared type, such as `const count: number = 3;`."
 exit_codes = [1]
 help = "Fix the first error `astro check` prints; later errors often come from the same mistake."
-level = "recommended"
 name = "astro-check"
 runs = "scope"
 stage = "push"

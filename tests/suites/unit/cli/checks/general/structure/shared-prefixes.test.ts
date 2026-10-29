@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -125,4 +125,19 @@ test('NestJS kind suffixes do not count in NestJS scopes; JSX files and unknown 
     expect(
         result.report.checks.map(({ scope, findings }) => ({ scope, paths: findings.map(({ file }) => file) })),
     ).toStrictEqual([...NESTJS_PREFIX_RESULTS]);
+});
+
+test('snake_case and PascalCase siblings share their first word', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+        'snake/invoice_list.ts': '',
+        'snake/invoice_row.ts': '',
+        'pascal/InvoiceList.ts': '',
+        'pascal/InvoiceRow.ts': '',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'structure/shared-prefixes');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'pascal/InvoiceList.ts', rule: 'shared-prefix' },
+        { file: 'snake/invoice_list.ts', rule: 'shared-prefix' },
+    ]);
 });

@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/files/modes.ts';
 import type { FileBounds, FileContents } from '#cli/types/system/files.ts';
 import { TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files/bounded.ts';
+import { GspotError, hasErrorCode, buildWriteError } from '#cli/system/errors.ts';
 import { linkSync, mkdirSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { readBounded, preparePath, buildContainedPath } from '#cli/system/files/bounded.ts';
 import { LOCK_RECOVERY_SUFFIX, LOCK_TOKEN_SEPARATOR } from '#cli/config/system/files/lock.ts';
@@ -40,7 +40,7 @@ function assertAbandonedLock(lockContents: FileContents, path: string): void {
     );
 }
 
-function removeStaleLock(bounds: FileBounds, path: string, absolutePath: string): void {
+function deleteStaleLock(bounds: FileBounds, path: string, absolutePath: string): void {
     const reclaim = `${absolutePath}${LOCK_RECOVERY_SUFFIX}`;
     try {
         mkdirSync(reclaim, { mode: PRIVATE_FOLDER });
@@ -67,7 +67,6 @@ function removeStaleLock(bounds: FileBounds, path: string, absolutePath: string)
 Release every lock that this Files handle holds.
 
 @param bounds the root and its held locks.
-@returns the paths of released locks for parent-folder cleanup.
 */
 export function releaseLocks(bounds: FileBounds): string[] {
     const released: string[] = [];
@@ -87,13 +86,17 @@ Take the writer lock at a path. Clear a lock whose holder has exited, and refuse
 @param path the root-relative lock file.
 */
 export function createLock(bounds: FileBounds, path: string): void {
-    const target = preparePath(bounds, path);
-    const token = `${String(process.pid)}${LOCK_TOKEN_SEPARATOR}${randomUUID()}`;
-    while (!writeLockFile(target, token)) {
-        const lockContents = readBounded(bounds, path);
-        if (lockContents === undefined) continue;
-        assertAbandonedLock(lockContents, path);
-        removeStaleLock(bounds, path, target);
+    try {
+        const target = preparePath(bounds, path);
+        const token = `${String(process.pid)}${LOCK_TOKEN_SEPARATOR}${randomUUID()}`;
+        while (!writeLockFile(target, token)) {
+            const lockContents = readBounded(bounds, path);
+            if (lockContents === undefined) continue;
+            assertAbandonedLock(lockContents, path);
+            deleteStaleLock(bounds, path, target);
+        }
+        bounds.locks.set(path, token);
+    } catch (error) {
+        throw buildWriteError(path, error);
     }
-    bounds.locks.set(path, token);
 }

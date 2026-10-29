@@ -1,27 +1,33 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/ignores.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { createFileTree, type TestdirResult } from 'testdirs';
 import { type DryRunJson } from '#cli/types/commands/apply.ts';
 import { TEST_VERSION } from '#tests/config/commands/samples.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
+import { PRESERVE_SOURCE } from '#tests/config/commands/contents.ts';
+import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { GSPOT_PATHS, TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
-import { MISSING_GENERATED_PATHS } from '#tests/config/commands/apply/dry-run.ts';
+
+import {
+    APPLY_WRITE_MESSAGE,
+    INSTALL_WRITE_MESSAGE,
+    MISSING_GENERATED_PATHS,
+} from '#tests/config/commands/apply/dry-run.ts';
 
 async function createAppliedSandbox(): Promise<TestdirResult> {
     const sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: NPM_CHECK_IGNORES }),
-        'control.txt': 'preserve this source\n',
+        'control.txt': PRESERVE_SOURCE,
     });
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -51,8 +57,8 @@ test.skipIf(isWindows)(
         const human = await runGspot(sandbox.path, ['apply', '--dry-run']);
         expect(human.code, human.stdout + human.stderr).toBe(0);
         expect(human.stdout).toContain('  .editorconfig  changed\n    old mode 600\n    new mode 644');
-        expect(human.stdout).toContain('Run gspot apply to write these files.');
-        expect(human.stdout).toContain('Run gspot install to write the tool lockfiles.');
+        expect(human.stdout).toContain(APPLY_WRITE_MESSAGE);
+        expect(human.stdout).toContain(INSTALL_WRITE_MESSAGE);
         expect(human.stdout.indexOf('Run gspot apply')).toBeLessThan(human.stdout.indexOf('.gspot/package-lock.json'));
         const checked = parseCheckReport(
             await runGspot(sandbox.path, ['check', '--only', 'gspot/generated-files', '--json']),
@@ -84,7 +90,7 @@ test('apply --dry-run shows a hand edit of the ESLint config file as a diff with
 
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const path = findConfigFilePath(await openSession(sandbox.path), 'eslint');
+    const path = getConfigFilePath(await openSession(sandbox.path), 'eslint');
     const written = await readFile(join(sandbox.path, path), 'utf8');
     const generated = written.split('\n').slice(0, -1);
     const authored = 'throw new Error("The preview executed authored configuration.");\n';
@@ -140,6 +146,7 @@ test('turning rules off lists the same rule files as stray in apply --dry-run as
     ).toStrictEqual(strays);
     for (const path of ownedPaths) expect(await isOnDisk(join(sandbox.path, path))).toBe(false);
 });
+
 test('apply --dry-run lists missing generated files and writes nothing', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash']);
@@ -162,11 +169,11 @@ test('apply --dry-run lists missing generated files and writes nothing', async (
             '',
             ...ordinary.map((path) => `  ${path}  missing`),
             '',
-            'Run gspot apply to write these files.',
+            APPLY_WRITE_MESSAGE,
             '',
             ...lockfiles.map((path) => `  ${path}  missing`),
             '',
-            'Run gspot install to write the tool lockfiles.',
+            INSTALL_WRITE_MESSAGE,
             '',
             'Dry run: nothing was written.',
             '',
@@ -174,14 +181,15 @@ test('apply --dry-run lists missing generated files and writes nothing', async (
     );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
+
 test('apply --dry-run after apply leaves missing tool lockfiles for install', async () => {
     await using sandbox = await createAppliedSandbox();
     const before = await readTree(sandbox.path);
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(preview.stderr).toBe('');
-    expect(preview.stdout).toContain('Run gspot install to write the tool lockfiles.');
-    expect(preview.stdout).not.toContain('Run gspot apply to write these files.');
+    expect(preview.stdout).toContain(INSTALL_WRITE_MESSAGE);
+    expect(preview.stdout).not.toContain(APPLY_WRITE_MESSAGE);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const structured = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
@@ -205,8 +213,8 @@ test('apply --dry-run shows a changed version pin as a diff and writes nothing',
     expect(preview.stdout).toStartWith(`version ${TEST_VERSION} -> ${cliPackage.version}\n`);
     expect(preview.stdout).toContain(`  ${GSPOT_PATHS.versionPin}  changed`);
     expect(preview.stdout).toContain(`    -${TEST_VERSION}\n    +${cliPackage.version}`);
-    expect(preview.stdout).toContain('Run gspot apply to write these files.');
-    expect(preview.stdout).toContain('Run gspot install to write the tool lockfiles.');
+    expect(preview.stdout).toContain(APPLY_WRITE_MESSAGE);
+    expect(preview.stdout).toContain(INSTALL_WRITE_MESSAGE);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const structured = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
@@ -229,19 +237,19 @@ test('apply --dry-run reports a changed file, a stray, a conflict, and an edited
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const session = await openSession(sandbox.path);
-    const shellcheckrc = findConfigFilePath(session, 'shellcheckrc');
-    const markdownlint = findConfigFilePath(session, 'markdownlint');
-    const edit = async (path: string, text: (current: string) => string): Promise<void> => {
+    const shellcheckrc = getConfigFilePath(session, 'shellcheckrc');
+    const markdownlint = getConfigFilePath(session, 'markdownlint');
+    const editFile = async (path: string, text: (current: string) => string): Promise<void> => {
         const absolute = join(sandbox.path, path);
         await chmod(absolute, 0o644);
         await writeFile(absolute, text(await readFile(absolute, 'utf8')));
     };
-    await edit(shellcheckrc, (text) => `${text}# Edited.\n`);
-    await edit(
+    await editFile(shellcheckrc, (text) => `${text}# Edited.\n`);
+    await editFile(
         GSPOT_PATHS.npmProject,
         (text) => `${'<'.repeat(7)} ours\n${text}${'='.repeat(7)}\n${'>'.repeat(7)} theirs\n`,
     );
-    await edit('AGENTS.md', (text) =>
+    await editFile('AGENTS.md', (text) =>
         text.replace('<!-- <<< gspot managed <<< -->', 'Edited inside.\n<!-- <<< gspot managed <<< -->'),
     );
     await unlink(join(sandbox.path, 'README.md'));

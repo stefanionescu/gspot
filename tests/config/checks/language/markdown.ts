@@ -1,5 +1,10 @@
 export const MARKDOWN_FENCE_CASES = [
     {
+        name: 'a YAML fence beside one that parses',
+        markdown: '```yaml\nvalue: [\n```\n\n```yaml\nvalue: accepted\n```\n',
+        lines: [2],
+    },
+    {
         name: 'TSX and JSONC alongside invalid JSON',
         markdown: `\`\`\`tsx
 export const panel = <div>Hello</div>;

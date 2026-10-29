@@ -5,8 +5,9 @@ suggests = ["css", "javascript"]
 title = "Static site"
 
 [detect]
+dependencies = ["@astrojs/sitemap", "@astrojs/starlight"]
 filenames = ["sitemap.xml"]
-absent_dependencies = ["next", "nuxt", "@sveltejs/kit", "@remix-run/node", "@react-router/node", "expo"]
+absent_dependencies = ["next", "nuxt", "@sveltejs/kit", "@remix-run/node", "@react-router/node", "expo", "django", "flask", "@astrojs/node", "@astrojs/vercel", "@astrojs/netlify", "@astrojs/cloudflare"]
 
 [files]
 extensions = [".svg"]
@@ -42,7 +43,6 @@ tool = "purgecss"
 [[check]]
 example = "A build that imports a missing template fails the check. Fix the import, or restore that file."
 help = "Run the build command by hand and fix what it prints. Name the command under site.build_command."
-level = "recommended"
 name = "build"
 needs = ["build"]
 runs = "scope"
@@ -53,7 +53,6 @@ why = "Other site checks read the built files, so a failed build hides their fin
 [[check]]
 example = "A template that writes `<img src=\"logo.png\">` without alternative text reports a finding in the built HTML. Add `alt` text in the template, or `alt=\"\"` for a decorative image."
 help = "Fix the template or the content that writes the markup the rule names."
-level = "recommended"
 name = "html-validate"
 needs = ["build"]
 output = { format = "json", children = "messages", fields = { file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message" } }
@@ -66,7 +65,6 @@ why = "Templates can each be valid and still join into a page with two main elem
 [[check]]
 example = "A built `.unused-banner` selector that no page or script uses reports a finding. Delete the rule, or list a class that a script adds under `tools.purgecss.safelist` with a reason."
 help = "Delete the rule, or list a name a script adds at run time under tools.purgecss.safelist with a reason."
-level = "recommended"
 name = "purgecss"
 needs = ["build"]
 runs = "scope"
@@ -78,7 +76,6 @@ why = "Visitors download an unused selector, and maintainers still read it."
 [[check]]
 example = "A link to `/missing/` reports a broken destination when that page does not exist. Point it at an existing page, or add the page."
 help = "Fix the link, or the page it points at."
-level = "recommended"
 name = "lychee"
 needs = ["build"]
 output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
@@ -91,7 +88,6 @@ why = "A visitor hits a broken internal link before the author notices it."
 [[check]]
 example = "A built page over its limit reports the measured size. Remove unused assets or shrink the page, then rebuild."
 help = "Remove what the page does not need, or raise the ceiling with a reason."
-level = "recommended"
 name = "size"
 needs = ["build"]
 runs = "scope"
@@ -103,7 +99,6 @@ why = "Page weight grows a kilobyte at a time, and only a limit catches it."
 [[check]]
 example = "A sitemap URL for `/removed/` with no built page reports a stale route. Remove it from the sitemap source, and rebuild."
 help = "Add the page to the sitemap, remove the dead URL, or leave a page out under site.allowed_unlisted_pages."
-level = "recommended"
 name = "sitemap"
 needs = ["build"]
 runs = "scope"

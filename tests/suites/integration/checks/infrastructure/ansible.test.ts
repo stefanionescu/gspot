@@ -20,7 +20,7 @@ import {
 describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
     const installedSandbox = shareInstalledSandbox(ANSIBLE_SANDBOX);
 
-    test('ansible-lint reports command-instead-of-module in the root and in a scope without ansible.cfg, and passes after the fix', async () => {
+    test('reports command-instead-of-module in the root and in a scope without ansible.cfg, and passes after the fix', async () => {
         const { root } = installedSandbox();
         await using _sourceChange = await applySandboxChanges(
             installedSandbox(),
@@ -53,14 +53,14 @@ describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
     });
 
     test.each([...LEVELS])(
-        'ansible-lint uses the profile of level %s next to the root and scope ansible.cfg files',
+        'uses the profile of level %s next to the root and scope ansible.cfg files',
         async (level) => {
-            await checkLevelProfile(installedSandbox(), level);
+            await assertLevelProfile(installedSandbox(), level);
         },
     );
 });
 
-async function checkLevelProfile(sandbox: Sandbox, level: Level): Promise<void> {
+async function assertLevelProfile(sandbox: Sandbox, level: Level): Promise<void> {
     const { root } = sandbox;
     const source = ANSIBLE_PLAYBOOK.replace('ansible.builtin.systemd:', 'systemd:');
     await using _sourceChange = await applySandboxChanges(sandbox, {

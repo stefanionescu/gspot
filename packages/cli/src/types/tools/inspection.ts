@@ -6,6 +6,7 @@ export type InspectedTool = {
     root: string;
     cwd: string;
     tool: Tool;
+    missing: ToolInspection;
     help: string;
     want: string | undefined;
     miseBinPaths: string[] | undefined;
@@ -29,7 +30,7 @@ export type ToolSearch = {
     miseBinPaths?: string[];
 };
 export type ExecutableSearch = {
-    searchFolders: string[];
+    folders: string[];
     miseBinPaths?: string[] | undefined;
     toolFolderKind?: ToolFolderKind | undefined;
 };

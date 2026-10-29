@@ -1,9 +1,10 @@
 import { posix } from 'node:path';
 import { testdir } from 'testdirs';
-import { openSession } from '#cli/session.ts';
 import type { Session } from '#cli/types/session.ts';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { ROOT_LABEL } from '#tests/config/messages.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
@@ -12,24 +13,20 @@ import { listRuleFiles, readConfigurations } from '#cli/configurations/manifests
 /**
 Find the generated config file for a tool and scope.
 */
-export function findConfigFilePath(session: Session, tool: string, scopePath = ''): string {
+export function getConfigFilePath(session: Session, tool: string, scopePath = ''): string {
     const declaration = session.scopes
         .find((scope) => scope.path === scopePath)
         ?.configurations.flatMap((configuration) => configuration.configFiles)
         .find((file) => extractConfigFileName(file.file) === tool);
     if (declaration === undefined)
-        throw new Error(`The sandbox generates no ${tool} file for ${scopePath || 'the root'}.`);
+        throw new Error(`The sandbox generates no ${tool} file for ${scopePath || ROOT_LABEL}.`);
     return getConfigFileTarget(scopePath, declaration, buildConfigFiles(session));
 }
 
 /**
-Find where gspot writes a config file that a configuration ships, as its manifest declares it.
-
-@param configuration the configuration name, such as `javascript`.
-@param file the config file name in the manifest, such as `knip.json`.
-@returns the repository path of the root config file.
+Find where gspot writes the root copy of a config file that a configuration ships, as its manifest declares it.
 */
-export function findManifestTarget(configuration: string, file: string): string {
+export function getManifestTarget(configuration: string, file: string): string {
     const target = readConfigurations()
         .get(configuration)
         ?.configFiles.find((configFile) => configFile.file === file)?.target;
@@ -39,12 +36,8 @@ export function findManifestTarget(configuration: string, file: string): string 
 
 /**
 Find where gspot writes a rule file for coding agents, as the configuration ships it.
-
-@param configuration the configuration name, such as `engineering`.
-@param file the rule file name, such as `WORKING.md`.
-@returns the repository path of the rule file.
 */
-export function findRuleFilePath(configuration: string, file: string): string {
+export function getRuleFilePath(configuration: string, file: string): string {
     const shipped = readConfigurations().get(configuration);
     const rule =
         shipped === undefined ? undefined : listRuleFiles(shipped).find(({ path }) => posix.basename(path) === file);
@@ -53,18 +46,13 @@ export function findRuleFilePath(configuration: string, file: string): string {
 }
 
 /**
-Create a repository with the settings and files, and return the content of one generated file.
-
-@param settings the gspot.toml text.
-@param path generated file to read.
-@param files other content for the repository.
-@returns the generated content.
+Create a repository with this gspot.toml text and these files, and return the content of one generated file.
 */
 export async function generateFile(settings: string, path: string, files: Record<string, string>): Promise<string> {
     await using sandbox = await testdir({ ...files, 'gspot.toml': settings });
 
     const session = await openSession(sandbox.path);
-    const output = generate(session);
+    const output = generateFiles(session);
     const file = output.files.find((each) => each.path === path);
     if (file === undefined) throw new Error(`The sandbox generates no ${path}.`);
     return file.content;

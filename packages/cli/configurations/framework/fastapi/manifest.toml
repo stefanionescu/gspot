@@ -1,5 +1,5 @@
 [configuration]
-description = "FastAPI routes: route rules, and security rules for request handlers when the security configuration is on."
+description = "FastAPI routes: the Ruff FastAPI rules, and Semgrep rules for request handlers."
 requires = ["python"]
 suggests = ["openapi"]
 title = "FastAPI"
@@ -8,7 +8,7 @@ title = "FastAPI"
 dependencies = ["fastapi"]
 
 [ruff]
-recommended = ["FAST001", "FAST002", "FAST003"]
+basic = ["FAST001", "FAST002", "FAST003"]
 
 [[config_file]]
 per_scope = true

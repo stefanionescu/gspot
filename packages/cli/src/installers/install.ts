@@ -7,22 +7,15 @@ import type { Files } from '#cli/types/system/files.ts';
 import { installMiseTools } from '#cli/installers/mise.ts';
 import { readInstallRecord } from '#cli/installers/record.ts';
 import { installValePackages } from '#cli/installers/vale.ts';
+import { getTable, getRootScope } from '#cli/settings/scopes.ts';
+import type { Generation } from '#cli/types/generation/files.ts';
 import { installToolProjects } from '#cli/installers/projects.ts';
-import { getTable, findRootScope } from '#cli/settings/scopes.ts';
-import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { assertPackageManagerVersion } from '#cli/installers/npm/project.ts';
 import { readToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { listDistinctTools, listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { ToolInstall, InstallResult, ToolPackageManager } from '#cli/types/installers/install.ts';
 
-/**
-Read the package manager of the tool project, and how a command runs it: with the pin of the repository when the
-repository uses the same manager.
-
-@param session the repository and its package manager pin.
-@returns the package manager with its command, or undefined when the repository has no npm project.
-*/
-export function readInstallPackageManager(session: Session): ToolPackageManager | undefined {
+function readInstallPackageManager(session: Session): ToolPackageManager | undefined {
     const pin = session.packageManager;
     if (pin === undefined) return undefined;
     const packageManager = readToolPackageManager(session.toolsRoot, pin, session.timeoutSeconds, session.reads);
@@ -35,34 +28,11 @@ Install the tools in their tool projects and set the hooks of this clone.
 @param session the repository to install for.
 @param writer the locked repository handle.
 @param generated the tool projects to install.
-@returns the commands that ran and the install summary.
 */
-export async function installTools(
-    session: Session,
-    writer: Files,
-    generated: GenerationResult,
-): Promise<InstallResult> {
-    const configurations = session.toolConfigurations;
-    const pins = listToolProjectPins(configurations);
-    const steps: (readonly string[])[] = [];
-    const tools = listDistinctTools(configurations);
-    const misePath = which.sync(MISE_TOOL, { nothrow: true });
+export async function installTools(session: Session, writer: Files, generated: Generation): Promise<InstallResult> {
     try {
-        const context: ToolInstall = {
-            session,
-            record: readInstallRecord(session),
-            packageManager: readInstallPackageManager(session),
-            minimumReleaseAge: {
-                days: getTable(findRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
-                npmExclusions: Object.keys(pins.npm),
-                pythonExclusions: pins.python.map((pin) => pin.slice(0, pin.indexOf('=='))),
-            },
-            writer,
-            generated,
-            tools,
-            misePath,
-            steps,
-        };
+        const context = buildToolInstall(session, writer, generated);
+        const { steps } = context;
         await assertPackageManagerVersion(context);
         const mise = await installMiseTools(context);
         const notes = [
@@ -79,4 +49,35 @@ export async function installTools(
             cause: error,
         });
     }
+}
+
+/**
+Build what every install step reads from the session.
+
+@param session the repository and its settings.
+@param writer the files of the run.
+@param generated the files that apply wrote.
+@returns the install of the tools.
+*/
+export function buildToolInstall(session: Session, writer: Files, generated: Generation): ToolInstall {
+    const configurations = session.toolConfigurations;
+    const pins = listToolProjectPins(configurations);
+    const steps: (readonly string[])[] = [];
+    const tools = listDistinctTools(configurations);
+    const misePath = which.sync(MISE_TOOL, { nothrow: true });
+    return {
+        session,
+        record: readInstallRecord(session),
+        packageManager: readInstallPackageManager(session),
+        minimumReleaseAge: {
+            days: getTable(getRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
+            npmExclusions: Object.keys(pins.npm),
+            pythonExclusions: pins.python.map((pin) => pin.slice(0, pin.indexOf('=='))),
+        },
+        writer,
+        generated,
+        tools,
+        misePath,
+        steps,
+    };
 }

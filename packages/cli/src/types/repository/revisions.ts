@@ -6,6 +6,7 @@ export type PushRevision = {
     tree: string;
     refs: string[];
     commits: string[];
+    range: string[];
     shallow: boolean;
     paths?: string[];
 };
@@ -16,8 +17,6 @@ export type PushedRevisions = {
 };
 
 export type PushLine = { localRef: string; localHash: string; remoteRef: string; remoteHash: string };
-
-export type PushInput = { stdin: string; remote?: string };
 
 export type Comparison = { base: string; changed: string[] | undefined; range: string[] };
 

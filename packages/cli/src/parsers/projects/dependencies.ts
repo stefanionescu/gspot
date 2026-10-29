@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { LINE_BREAK } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -8,7 +9,7 @@ import { pipfileSchema, pyprojectSchema, packageJsonSchema } from '#cli/schemas/
 import type {
     Pyproject,
     PackageJson,
-    DependencyMap,
+    Dependencies,
     DependencyFile,
     PythonDependency,
     DependencyFileParser,
@@ -16,11 +17,13 @@ import type {
 import {
     PIPFILE,
     GIT_SUFFIX,
+    PYTEST_TABLE,
     PACKAGE_JSON,
     PACKAGE_SWIFT,
     INLINE_COMMENT,
     PYPROJECT_TOML,
     RUNTIME_COMMAND,
+    REQUIREMENTS_TXT,
     REQUIREMENT_NAME,
     LINE_CONTINUATION,
     JAVASCRIPT_RUNTIMES,
@@ -32,22 +35,25 @@ function parseRequirementName(requirement: string): string | undefined {
     const trimmed = requirement.trim();
     const end = trimmed.search(REQUIREMENT_NAME_END);
     const name = end === -1 ? trimmed : trimmed.slice(0, end);
-    return REQUIREMENT_NAME.test(name) ? normalizePythonName(name) : undefined;
+    return REQUIREMENT_NAME.test(name) ? name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-') : undefined;
 }
 
-function convertPythonDependencies(maps: Record<string, PythonDependency>[]): DependencyMap {
+function convertPythonDependencies(maps: Record<string, PythonDependency>[]): Dependencies {
     return Object.fromEntries(
         maps
             .flatMap((map) => Object.entries(map))
             .map(
                 ([name, value]) =>
-                    [normalizePythonName(name), typeof value === 'string' ? value : JSON.stringify(value)] as const,
+                    [
+                        name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-'),
+                        typeof value === 'string' ? value : JSON.stringify(value),
+                    ] as const,
             )
             .filter(([name]) => name !== 'python'),
     );
 }
 
-function listPythonRequirements(path: string, parsed: Pyproject): DependencyMap {
+function listPythonRequirements(path: string, parsed: Pyproject): Dependencies {
     const project = parsed.project;
     const groups = [
         ...(project?.dependencies ?? []),
@@ -72,12 +78,12 @@ function listPythonRequirements(path: string, parsed: Pyproject): DependencyMap 
     );
 }
 
-function listPythonDependencies(path: string, parsed: Pyproject): DependencyMap {
+function listPythonDependencies(path: string, parsed: Pyproject): Dependencies {
     const poetry = parsed.tool?.poetry;
     const maps = [poetry?.dependencies];
     if (poetry?.group !== undefined) for (const group of Object.values(poetry.group)) maps.push(group.dependencies);
     return Object.assign(
-        parsed.tool?.pytest === undefined ? {} : { pytest: 'tool.pytest' },
+        parsed.tool?.pytest === undefined ? {} : { pytest: PYTEST_TABLE },
         listPythonRequirements(path, parsed),
         convertPythonDependencies(maps.filter((map): map is Record<string, PythonDependency> => map !== undefined)),
     );
@@ -97,15 +103,18 @@ function detectPackageRuntimes(path: string, packageJson: PackageJson): Record<s
 
 function parsePackageJson(path: string, text: string): DependencyFile {
     const parsed = parseJsonFile(path, text, packageJsonSchema);
-    const installed: DependencyMap = { ...parsed.dependencies, ...parsed.devDependencies };
-    const dependencies: DependencyMap = {
+    const installed: Dependencies = {
+        ...parsed.dependencies,
+        ...parsed.devDependencies,
+        ...parsed.optionalDependencies,
+    };
+    const dependencies: Dependencies = {
         ...installed,
         ...parsed.peerDependencies,
-        ...parsed.optionalDependencies,
     };
     return {
         path,
-        kind: 'package.json',
+        kind: PACKAGE_JSON,
         dependencies,
         installed,
         runtimes: detectPackageRuntimes(path, parsed),
@@ -127,14 +136,14 @@ function parsePyproject(path: string, text: string): DependencyFile {
     const dependencies = listPythonDependencies(path, parsed);
     return {
         path,
-        kind: 'pyproject.toml',
+        kind: PYPROJECT_TOML,
         dependencies,
         installed: dependencies,
     };
 }
 
 async function parseSwiftPackage(path: string, text: string): Promise<DependencyFile> {
-    const dependencies: DependencyMap = {};
+    const dependencies: Dependencies = {};
     const tree = await parseSource('swift', text);
     try {
         const calls = tree.rootNode
@@ -167,26 +176,14 @@ async function parseSwiftPackage(path: string, text: string): Promise<Dependency
 }
 
 /**
-Normalize a Python distribution name the way package indexes compare names.
-
-@param name the distribution name as written.
-@returns the lowercase name with each run of separators replaced by one hyphen.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 2 files share it.
-export function normalizePythonName(name: string): string {
-    return name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-');
-}
-
-/**
 Parse package requirements after removing line continuations and comments.
 
 @param path the repository-relative requirements file.
-@param text authored distribution names, version specifiers, and installer options.
-@returns the package declarations in the file.
+@param text the file as written.
 */
 export function parseRequirements(path: string, text: string): DependencyFile {
-    const dependencies: DependencyMap = {};
-    for (const line of text.replaceAll(LINE_CONTINUATION, '').split(/\r?\n/u)) {
+    const dependencies: Dependencies = {};
+    for (const line of text.replaceAll(LINE_CONTINUATION, '').split(LINE_BREAK)) {
         const comment = line.search(INLINE_COMMENT);
         const spec = (comment === -1 ? line : line.slice(0, comment)).trim();
         const name = parseRequirementName(spec);
@@ -194,7 +191,7 @@ export function parseRequirements(path: string, text: string): DependencyFile {
     }
     return {
         path,
-        kind: 'requirements.txt',
+        kind: REQUIREMENTS_TXT,
         dependencies,
         installed: dependencies,
     };

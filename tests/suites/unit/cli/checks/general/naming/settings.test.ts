@@ -15,19 +15,21 @@ test('category limits inherit root and scope language settings while explicit ca
         { scope: 'sibling', characters: 38, functions: 37, words: 4 },
     ] as const) {
         const naming = buildScopeNamingSettings(text, scope);
-        expect(naming.limitsFor('swift', 'functions')).toMatchObject({
-            maxChars: functions,
+        expect(naming.limitLookup('swift', 'functions')).toStrictEqual({
+            cases: ['camel'],
+            maxCharacters: functions,
             maxWords: words,
         });
-        expect(naming.limitsFor('swift', 'variables')).toMatchObject({
-            maxChars: characters,
+        expect(naming.limitLookup('swift', 'variables')).toStrictEqual({
+            cases: [],
+            maxCharacters: characters,
             maxWords: words,
         });
     }
 });
 
 test.each([...NAME_WORD_CASES])(
-    'splitWords splits %s at case changes, separators, and digit runs, and keeps an acronym or number word whole',
+    'splitWords splits %s at case changes, separators, and digit runs, and keeps an acronym or a number word as one word',
     (name, words) => {
         expect(splitWords(name)).toStrictEqual([...words]);
     },

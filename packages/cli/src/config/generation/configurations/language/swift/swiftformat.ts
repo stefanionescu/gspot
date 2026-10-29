@@ -2,7 +2,7 @@ export const SWIFT_TOOLS_VERSION = /^\s*\/\/\s*swift-tools-version\s*:\s*(\d+(?:
 
 export const SWIFTFORMAT_COMMAS = { none: 'never', es5: 'collections-only', all: 'always' } as const;
 
-export const SWIFTFORMAT_RECOMMENDED_OFF = [
+export const SWIFTFORMAT_DEFAULT_LEVEL_OFF = [
     'hoistPatternLet',
     'modifierOrder',
     'redundantClosure',
@@ -68,7 +68,7 @@ export const SWIFTFORMAT_RECOMMENDED_OFF = [
 ] as const;
 
 export const SWIFTFORMAT_ALWAYS_OFF: Readonly<Record<string, string>> = {
-    trailingClosures: '# SwiftLint trailing_closure owns closure syntax, so one tool reports it.',
+    trailingClosures: '# SwiftLint trailing_closure owns closure syntax.',
     initCoderUnavailable:
         '# Inserts an availability attribute into UIKit initializers, a behavior change, not a layout one.',
     redundantInternal: '# SwiftLint owns explicit access annotations, so the formatter keeps them.',
@@ -78,22 +78,13 @@ export const SWIFTFORMAT_ALWAYS_OFF: Readonly<Record<string, string>> = {
 export const SWIFTFORMAT_ALL_LEVEL_ON = ['blockComments', 'wrapEnumCases'] as const;
 
 export const SWIFTFORMAT_OPTIONS = {
-    indentcase: false,
-    ifdef: 'indent',
     wraparguments: 'before-first',
     wrapparameters: 'before-first',
     wrapcollections: 'before-first',
-    wrapreturntype: 'preserve',
-    wrapconditions: 'preserve',
-    closingparen: 'balanced',
     nospaceoperators: '...,..<',
-    operatorfunc: 'spaced',
-    ranges: 'spaced',
-    allman: false,
-    elseposition: 'same-line',
     guardelse: 'next-line',
-    emptybraces: 'no-space',
-    trimwhitespace: 'always',
     importgrouping: 'length,alpha',
     self: 'init-only',
 } as const;
+
+export const SWIFTFORMAT_CHECK = 'swift/swiftformat';

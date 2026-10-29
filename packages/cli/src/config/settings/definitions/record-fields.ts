@@ -111,11 +111,13 @@ export const RECORD_FIELD_DEFINITIONS = {
         default: false,
     },
     'licenses.allowed_package': {
+        template: 'repository',
         configurations: ['licenses'],
         description: 'Packages accepted under a license outside the list: name, exact version, and reason.',
         default: [] as [],
     },
     'coverage.swift_target': {
+        template: 'repository',
         configurations: ['swift'],
         description: 'Line coverage minimums for named Swift targets.',
         default: [] as [],

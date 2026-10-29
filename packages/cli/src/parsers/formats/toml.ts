@@ -1,9 +1,10 @@
 import type { z } from 'zod';
-import { PATCH_FORMAT } from '#cli/config/parsers/formats/toml.ts';
+import { MESSAGE_END } from '#cli/config/parsers/formats/errors.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { isTable, getValueAt, normalizeTables } from '#cli/system/tables.ts';
 import type { KeyPath, EditableFile } from '#cli/types/parsers/editable-file.ts';
-import { patch, parseDocument, parse as parseToml } from '@decimalturn/toml-patch';
+import { patch, stringify, parseDocument, parse as parseToml } from '@decimalturn/toml-patch';
+import { PATCH_FORMAT, TABLE_PROPERTY_FLAGS, MISSING_RANGE_MESSAGE } from '#cli/config/parsers/formats/toml.ts';
 
 import {
     type TomlBlock,
@@ -15,21 +16,12 @@ import {
     type TomlPathNode,
     type TomlTextChunk,
     type TomlCommentNode,
+    type TomlCommentMove,
     type TomlTableOptions,
     type TomlTablePositions,
     type TomlAnchoredComment,
     type TomlCommentPlacement,
 } from '#cli/types/parsers/formats/toml.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function setTableValue(table: Record<string, unknown>, key: PropertyKey, value: unknown): void {
-    Object.defineProperty(table, key, {
-        value: normalizeTables(value),
-        enumerable: true,
-        writable: true,
-        configurable: true,
-    });
-}
 
 function findTomlTable(
     document: Record<string, unknown>,
@@ -39,12 +31,15 @@ function findTomlTable(
     for (const key of options.keys) {
         if (!Object.hasOwn(table, key)) {
             if (!options.create) return undefined;
-            setTableValue(table, key, {});
+            Object.defineProperty(table, key, {
+                value: normalizeTables({}),
+                ...TABLE_PROPERTY_FLAGS,
+            });
         }
         const child = table[key];
         if (!isTable(child))
             throw new GspotError(
-                'filesystem',
+                'parse',
                 `${options.filePath} has a TOML field that is not a table: ${String(key)}. Fix the field, then run gspot apply.`,
             );
         table = child;
@@ -52,21 +47,24 @@ function findTomlTable(
     return table;
 }
 
-function buildPatchedToml(previous: TomlSyntax, values: Record<string, unknown>): string {
-    const patched = patch(previous.document.toTomlString, values, PATCH_FORMAT);
+/**
+Write the values over the TOML text, and keep its order, its layout, and its comments. A top-level array of tables that the text lacks goes at its end.
+
+@param previous the parsed text.
+@param values the table to write.
+@param format the toml-patch format of the new values.
+@returns the TOML text.
+*/
+export function buildPatchedToml(
+    previous: TomlSyntax,
+    values: Record<string, unknown>,
+    format: Parameters<typeof patch>[2],
+): string {
+    const { patched, suffix } = patchTomlValues(previous, values, format);
     const reparsed = parseTomlSyntax(patched, values);
-    const unmatched = new Set(listAnchoredComments(reparsed));
     const kept = new Set(reparsed.pathNodes.map(({ kind, path }) => JSON.stringify([kind, ...path])));
     const comments: TomlComments = new Map();
-    const changed = listAnchoredComments(previous)
-        .map((source) => {
-            const found = [...unmatched].find(
-                (unmatchedComment) => unmatchedComment.comment.raw === source.comment.raw,
-            );
-            if (found !== undefined) unmatched.delete(found);
-            return { source, found };
-        })
-        .filter(({ source, found }) => found?.identity !== source.identity);
+    const changed = pairChangedComments(previous, reparsed);
     const chunks = changed.flatMap(({ source: { comment, anchor: authored }, found }): TomlTextChunk[] => {
         const owner =
             authored ??
@@ -96,26 +94,31 @@ function buildPatchedToml(previous: TomlSyntax, values: Record<string, unknown>)
     }
     let position = 0;
     return (
-        chunks
-            .toSorted((left, right) => left.start - right.start)
-            .map((chunk) => {
-                const kept = patched.slice(position, chunk.start) + chunk.text;
-                position = chunk.end;
-                return kept;
-            })
-            .join('') + patched.slice(position)
+        (
+            chunks
+                .toSorted((left, right) => left.start - right.start)
+                .map((chunk) => {
+                    const piece = patched.slice(position, chunk.start) + chunk.text;
+                    position = chunk.end;
+                    return piece;
+                })
+                .join('') + patched.slice(position)
+        ).trimEnd() +
+        suffix +
+        '\n'
     );
 }
 
 export function parseTomlFile(path: string, text: string): Record<string, unknown>;
+
 export function parseTomlFile<Value>(path: string, text: string, schema: z.ZodType<Value>): Value;
+
 /**
 Parse TOML, and name the file and position on invalid syntax or fields.
 
 @param path the source file.
 @param text the TOML contents.
 @param schema the shape to check, when supplied.
-@returns the parsed table.
 */
 export function parseTomlFile(path: string, text: string, schema?: z.ZodType): unknown {
     let value: Record<string, unknown>;
@@ -127,8 +130,8 @@ export function parseTomlFile(path: string, text: string, schema?: z.ZodType): u
             'line' in error && typeof error.line === 'number' && 'column' in error && typeof error.column === 'number'
                 ? `${path}:${String(error.line)}:${String(error.column + 1)}`
                 : path;
-        const detail = error.message.trimEnd().split('\n').slice(-1).join('').replace(/[.:]$/u, '');
-        throw new GspotError('filesystem', `${position} is not valid TOML: ${detail}. Fix the file.`, { cause: error });
+        const detail = error.message.trimEnd().split('\n').slice(-1).join('').replace(MESSAGE_END, '');
+        throw new GspotError('parse', `${position} is not valid TOML: ${detail}. Fix the file.`, { cause: error });
     }
     return schema === undefined ? value : parseFileFields(path, value, schema);
 }
@@ -138,7 +141,6 @@ Open a TOML file for key edits, and keep its comments and layout.
 
 @param path the repository-relative TOML file.
 @param text the complete TOML document.
-@returns the editable document.
 */
 export function openTomlFile(path: string, text: string): EditableFile {
     const document: Record<string, unknown> = parseTomlFile(path, text);
@@ -156,13 +158,14 @@ export function openTomlFile(path: string, text: string): EditableFile {
             });
             if (table === undefined) return;
             if (value === undefined) Reflect.deleteProperty(table, key);
-            else setTableValue(table, key, value);
+            else
+                Object.defineProperty(table, key, {
+                    value: normalizeTables(value),
+                    ...TABLE_PROPERTY_FLAGS,
+                });
         },
 
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The TOML document type declares it.
-        getText() {
-            return buildPatchedToml(previous, document);
-        },
+        getText: () => buildPatchedToml(previous, document, PATCH_FORMAT),
     };
 }
 
@@ -186,16 +189,16 @@ function buildTablePath(
     return path;
 }
 
-function listNestedNodes(node: TomlValue, path: KeyPath): TomlSyntax['pathNodes'] {
+function listNestedNodes(node: TomlValue, keys: KeyPath): TomlSyntax['pathNodes'] {
     if (isTomlKind(node, 'InlineArray'))
         return node.items.flatMap(({ item }, index): TomlSyntax['pathNodes'] => {
             const value = item as TomlValue;
-            const child = [...path, index];
+            const child = [...keys, index];
             return [{ kind: 'item', path: child, node: value }, ...listNestedNodes(value, child)];
         });
     if (isTomlKind(node, 'InlineTable'))
         return node.items.flatMap(({ item }): TomlSyntax['pathNodes'] => {
-            const child = [...path, ...item.key.value];
+            const child = [...keys, ...item.key.value];
             return [{ kind: 'key', path: child, node: item }, ...listNestedNodes(item.value, child)];
         });
     return [];
@@ -219,16 +222,8 @@ function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlPa
     return next?.node.loc.start.line === end + 1 ? next : undefined;
 }
 
-/**
-Narrow a parsed TOML node by the syntax kind of the library.
-
-@param node the parsed item to test.
-@param node.type its library enum value.
-@param kind the type name to match.
-@returns whether the node has that kind.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
-export function isTomlKind<Kind extends string>(
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The parser's private node enum needs this predicate to narrow concrete syntax tree unions.
+function isTomlKind<Kind extends string>(
     node: { type: unknown },
     kind: Kind,
 ): node is Extract<TomlBlock | TomlValue, { type: Kind }> {
@@ -278,17 +273,8 @@ export function parseTomlSyntax(source: string, parsed: Record<string, unknown>)
     };
 }
 
-/**
-Place comments directly before their own key, header, or array item, without column alignment.
-
-@param comments the syntax entries as written.
-@param kind the type of the entry.
-@param path the keys and array indexes of the entry.
-@param text the entry contents.
-@returns syntax with exact source-ordered leading comments.
-*/
-export function insertTomlComments(comments: TomlComments, kind: string, path: KeyPath, text: string): string {
-    const id = JSON.stringify([kind, ...path]);
+function insertTomlComments(comments: TomlComments, kind: string, keys: KeyPath, text: string): string {
+    const id = JSON.stringify([kind, ...keys]);
     const block = comments.get(id);
     if (block === undefined) return text;
     comments.delete(id);
@@ -307,13 +293,7 @@ export function insertTomlComments(comments: TomlComments, kind: string, path: K
     ].join('\n');
 }
 
-/**
-Find the entry that each comment describes, with an identity that stays the same through document edits.
-
-@param syntax the indexed entries.
-@returns comments with their original anchors and stable path identities.
-*/
-export function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] {
+function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] {
     return syntax.comments.map((comment) => {
         const anchor = findCommentAnchor(syntax, comment);
         const identity = anchor === undefined ? 'free' : JSON.stringify([anchor.kind, ...anchor.path]);
@@ -325,20 +305,13 @@ export function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] 
 Read the extent of a parsed syntax token.
 
 @param node parsed syntax.
-@returns the start and end offsets.
 */
 export function getTomlRange(node: SourceRange): readonly [number, number] {
-    if (node.range === undefined) throw new Error('The TOML parser omitted a source range.');
+    if (node.range === undefined) throw new Error(MISSING_RANGE_MESSAGE);
     return node.range;
 }
 
-/**
-Add a source comment to its TOML entry.
-
-@param comments the collected comment blocks.
-@param commentPlacement what to add, and where.
-*/
-export function addTomlComment(comments: TomlComments, commentPlacement: TomlCommentPlacement): void {
+function addTomlComment(comments: TomlComments, commentPlacement: TomlCommentPlacement): void {
     const { kind, path, comment, placement } = commentPlacement;
     if (path === undefined) return;
     const id = JSON.stringify([kind, ...path]);
@@ -349,4 +322,28 @@ export function addTomlComment(comments: TomlComments, commentPlacement: TomlCom
         line: comment.loc.start.line,
     });
     comments.set(id, block);
+}
+
+function patchTomlValues(previous: TomlSyntax, values: Record<string, unknown>, format: Parameters<typeof patch>[2]) {
+    const appended: Record<string, unknown> = {};
+    const assigned: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(values)) {
+        if (!Object.hasOwn(previous.value, key) && Array.isArray(value) && value.length > 0 && value.every(isTable))
+            appended[key] = value;
+        else assigned[key] = value;
+    }
+    const patched = patch(previous.document.toTomlString, assigned, format);
+    const suffix = Object.keys(appended).length === 0 ? '' : `\n\n${stringify(appended, format)}`;
+    return { patched, suffix };
+}
+
+function pairChangedComments(previous: TomlSyntax, reparsed: TomlSyntax): TomlCommentMove[] {
+    const unmatched = new Set(listAnchoredComments(reparsed));
+    return listAnchoredComments(previous)
+        .map((source) => {
+            const found = unmatched.values().find((comment) => comment.comment.raw === source.comment.raw);
+            if (found !== undefined) unmatched.delete(found);
+            return { source, found };
+        })
+        .filter(({ source, found }) => found?.identity !== source.identity);
 }

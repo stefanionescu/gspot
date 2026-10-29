@@ -1,26 +1,28 @@
 import { setKey } from '#cli/settings/edit.ts';
+import { parse } from '@decimalturn/toml-patch';
 import { GspotError } from '#cli/system/errors.ts';
-import { trimTrailingSlashes } from '#cli/system/paths.ts';
+import { isReasonedValue } from '#cli/settings/file.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
-import { parseTomlText, isReasonedValue } from '#cli/settings/file.ts';
+import { findSettingSchema } from '#cli/settings/schema-lookup.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
-import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/schemas.ts';
+import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/flags.ts';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
+import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { SettingsEditContext } from '#cli/types/generation/settings-edit.ts';
-import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { type Setting, type InheritedSetting } from '#cli/types/settings/inheritance.ts';
+import type { Setting, InheritedSetting } from '#cli/types/settings/inheritance.ts';
 import { NUMBER_TEXT, DASH_VALUE_HELP, TOML_COMPOUND_START } from '#cli/config/commands/set.ts';
 import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/generation/settings-edit.ts';
-import { type SetOptions, type ParsedSettingValue, type SettingReasonContext } from '#cli/types/commands/set.ts';
+import type { SetOptions, ParsedSettingValue, SettingReasonContext } from '#cli/types/commands/set.ts';
 
-function parseStructured(text: string): unknown {
+function parseInlineValue(text: string): unknown {
     try {
-        return parseTomlText(`value = ${text}`, 'value')['value'];
+        return (parse(`value = ${text}`) as TomlTable)['value'];
     } catch (error) {
         throw new GspotError(
             'arguments',
@@ -34,7 +36,7 @@ function parseValueArgument(text: string): unknown {
     if (text === 'true') return true;
     if (text === 'false') return false;
     if (NUMBER_TEXT.test(text)) return Number(text);
-    return TOML_COMPOUND_START.test(text) ? parseStructured(text) : text;
+    return TOML_COMPOUND_START.test(text) ? parseInlineValue(text) : text;
 }
 
 function buildSettingValue(words: unknown[], setting: Setting): ParsedSettingValue {
@@ -60,7 +62,7 @@ function parseSettingValue(values: string[], setting: Setting): ParsedSettingVal
     );
 }
 
-function parseReasonTable(options: SetOptions): ParsedSettingValue {
+function buildReasonTable(options: SetOptions): ParsedSettingValue {
     const { reason } = options;
     if (reason === undefined)
         throw new GspotError(
@@ -87,22 +89,22 @@ function editSetting(scopeTable: TomlTable, change: ParsedSettingValue, setting:
     setKey(scopeTable, options.key, { value, reason: options.reason });
 }
 
-function assertReasonPresent({
-    options,
-    setting,
-    change,
-    shippedDefault,
-}: Omit<SettingReasonContext, 'previous'>): void {
-    if (
-        options.reason === undefined ||
-        setting.reason_values === true ||
-        isLoosening(setting, change.value, shippedDefault)
-    )
+function assertReason({ options, setting, change, previous, shippedDefault }: SettingReasonContext): void {
+    if (setting.reason_values === true) return;
+    const loosens = isLoosening(setting, change.value, shippedDefault);
+    if (options.reason === undefined) {
+        if (change.type === 'list' && previous?.reason !== undefined && loosens)
+            throw new GspotError(
+                'arguments',
+                `${options.key} already has the reason ${JSON.stringify(previous.reason)}. Pass --reason with a reason that covers every item.`,
+            );
         return;
-    throw new GspotError(
-        'arguments',
-        `${options.key} takes no reason here: the value does not loosen the shipped default. Run the command without --reason.`,
-    );
+    }
+    if (!loosens)
+        throw new GspotError(
+            'arguments',
+            `${options.key} takes no reason here: the value does not loosen the shipped default. Run the command without --reason.`,
+        );
 }
 
 function formatSettingChange(
@@ -110,46 +112,32 @@ function formatSettingChange(
     context: {
         setting: Setting;
         options: SetOptions;
-        scope: string | undefined;
+        scope: string;
         previous: InheritedSetting | undefined;
     },
 ): string {
     const { setting, options, scope, previous } = context;
-    const displayKey = scope === undefined ? options.key : `scope.${scope}.${options.key}`;
+    const displayKey = options.key;
+    const where = scope === '' ? '' : ` in scope ${scope}`;
     const was =
         previous?.value === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
-    if (setting.reason_values === true) return `Added ${options.values.join(' and ')} to ${displayKey}.${was}`;
+    if (setting.reason_values === true) return `Added ${options.values.join(' and ')} to ${displayKey}${where}.${was}`;
     const reason = options.reason === undefined ? '' : `  # ${options.reason}`;
-    return `Set ${displayKey} to ${JSON.stringify(change.value)}.${reason}${was}`;
+    return `Set ${displayKey} to ${JSON.stringify(change.value)}${where}.${reason}${was}`;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it puts runSetCommand over the complexity limit of 8.
-function assertReasonCoversList({ options, setting, change, previous, shippedDefault }: SettingReasonContext): void {
-    if (
-        change.type === 'list' &&
-        options.reason === undefined &&
-        previous?.reason !== undefined &&
-        isLoosening(setting, change.value, shippedDefault)
-    )
-        throw new GspotError(
-            'arguments',
-            `${options.key} already has the reason ${JSON.stringify(previous.reason)}. Pass --reason with a reason that covers every item.`,
-        );
-}
-
-async function readSettingChange(
+function readSettingChange(
     edit: SettingsEditContext,
     options: SetOptions,
-): Promise<{ setting: Setting; change: ParsedSettingValue; summary: string }> {
+): { setting: Setting; change: ParsedSettingValue; summary: string } {
     const { settings } = edit;
-    const { availableSettings, match, scope } = await readSetting(edit, options.key);
+    const { availableSettings, match, scope } = readSetting(edit, options.key);
     const setting = match.setting;
     const change =
-        setting.reason_values === true ? parseReasonTable(options) : parseSettingValue(options.values, setting);
+        setting.reason_values === true ? buildReasonTable(options) : parseSettingValue(options.values, setting);
     const previous = getSettingValue(availableSettings, settings, options.key, edit.scope);
     const shippedDefault = findSettingDefault(availableSettings, settings, match, edit.scope)?.value;
-    assertReasonCoversList({ options, setting, change, previous, shippedDefault });
-    assertReasonPresent({ options, setting, change, shippedDefault });
+    assertReason({ options, setting, change, previous, shippedDefault });
     const readers = listSettingReaders(settings, scope, options.key);
     const note =
         options.key.startsWith('limits.') && readers.every((reader) => !reader.enabled)
@@ -160,19 +148,12 @@ async function readSettingChange(
 }
 
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {
-    if (Object.hasOwn(RECORD_FIELDS, options.key))
-        throw new GspotError(
-            'arguments',
-            options.key === 'ignore'
-                ? 'Run gspot ignore <check> --reason "<why>" to add an ignore.'
-                : `Write [[${options.key}]] by hand in gspot.toml. Record lists have their own fields.`,
-        );
-    const edit = prepareSettingsEdit(options.cwd, options.scope);
-    const { root, input, scopeTable } = edit;
-    const { setting, change, summary } = await readSettingChange(edit, options);
+    const edit = await prepareSettingsEdit(options.cwd, options.scope);
+    const { root, edit: input, scopeTable } = edit;
+    const { setting, change, summary } = readSettingChange(edit, options);
     try {
         editSetting(scopeTable, change, setting, options);
-        return await applySettingsEdit(root, { edit: input, summary });
+        return await applySettingsEdit(root, { edit: input, summary, reads: edit.reads, listing: edit.listing });
     } catch (error) {
         if (error instanceof GspotError && error.code === 'settings')
             throw new GspotError('arguments', error.message, { cause: error });
@@ -193,8 +174,8 @@ export function registerSet(program: Command, onResult: CommandCompletion): void
         .argument('<values...>', COMMAND_HELP.set.arguments['values'])
         .summary(COMMAND_HELP.set.summary)
         .description(COMMAND_HELP.set.description)
-        .option('--reason <text>', COMMAND_HELP.set.options['--reason <text>'])
-        .option('--scope <path>', COMMAND_HELP.set.options['--scope <path>'], trimTrailingSlashes)
+        .option(REASON_OPTION, COMMAND_HELP.set.options[REASON_OPTION])
+        .option(SCOPE_OPTION, COMMAND_HELP.set.options[SCOPE_OPTION], stripTrailingSlashes)
         .exitOverride((error) => {
             if (error.code !== 'commander.unknownOption') throw error;
             throw new CommanderError(error.exitCode, error.code, `${error.message}. ${DASH_VALUE_HELP}`);

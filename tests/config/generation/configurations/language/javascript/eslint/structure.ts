@@ -34,8 +34,8 @@ export const BARREL_CASES = [
 ] as const;
 
 export const LEVEL_REEXPORT_CASES = [
-    ['recommended', 'none'],
-    ['recommended', 'index-only'],
+    ['basic', 'none'],
+    ['basic', 'index-only'],
     ['all', 'none'],
     ['all', 'index-only'],
 ] as const;

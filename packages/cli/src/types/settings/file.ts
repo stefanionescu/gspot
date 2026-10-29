@@ -1,33 +1,33 @@
-import type { Check } from '#cli/types/configurations.ts';
-import type { STAGES } from '#cli/config/configurations/names.ts';
-import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { REEXPORT_MODES } from '#cli/config/settings/tables.ts';
-import type { ImportRule } from '#cli/types/settings/import-rules.ts';
-import type { ConfigurationTables } from '#cli/types/settings/tables.ts';
-import type { Defined, Optional, SchemaShape } from '#cli/types/shapes.ts';
-import type { ParsedTools, WrittenTools } from '#cli/types/settings/tools.ts';
-import type { CheckOutput, WrittenOutput } from '#cli/types/runs/output/formats.ts';
+import { type Check } from '#cli/types/configurations.ts';
+import { type STAGES } from '#cli/config/configurations/names.ts';
+import { type KeyPath } from '#cli/types/parsers/editable-file.ts';
+import { type Defined, type Optional } from '#cli/types/shapes.ts';
+import { type REEXPORT_MODES } from '#cli/config/settings/tables.ts';
+import { type ImportRule } from '#cli/types/settings/import-rules.ts';
+import { type ConfigurationTables } from '#cli/types/settings/tables.ts';
+import { type ParsedTools, type WrittenTools } from '#cli/types/settings/tools.ts';
+import { type CheckOutput, type WrittenOutput } from '#cli/types/runs/output/formats.ts';
 
-import type {
-    NamingCase,
-    NamingFields,
-    ParsedNaming,
-    SettingLanguage,
-    ParsedNamingOverride,
-    NamingLanguageFields,
+import {
+    type NamingCase,
+    type NamingFields,
+    type ParsedNaming,
+    type SettingLanguage,
+    type ParsedNamingOverride,
+    type NamingLanguageFields,
 } from '#cli/types/settings/naming.ts';
-import type {
-    ParsedCi,
-    ParsedRoot,
-    ParsedRules,
-    ParsedHooks,
-    LimitFields,
-    ParsedLimits,
-    ParsedFormat,
-    SettingValue,
-    LimitLanguage,
-    ParsedStructure,
-    LanguageLimitFields,
+import {
+    type ParsedCi,
+    type ParsedRoot,
+    type ParsedRules,
+    type ParsedHooks,
+    type LimitFields,
+    type ParsedLimits,
+    type ParsedFormat,
+    type SettingValue,
+    type LimitLanguage,
+    type ParsedStructure,
+    type LanguageLimitFields,
 } from '#cli/types/settings/values.ts';
 
 export type TableValues = {
@@ -40,8 +40,6 @@ export type TableValues = {
     naming?: ParsedNaming | undefined;
     structure?: ParsedStructure | undefined;
 };
-
-export type ToolTableSchemas = Pick<SchemaShape<TableValues>, `tools.${keyof ParsedTools}`>;
 
 export type TableSettings<Name extends keyof TableValues> = NonNullable<TableValues[Name]>;
 
@@ -61,13 +59,13 @@ export type Settings = Omit<
     configurations: string[];
     removed_configurations: string[];
     structure: StructureSettings;
-    tools: Record<string, TomlTable>;
+    tools: Defined<ParsedTools>;
     test_files: string[];
     ignore: IgnoreRecord[];
     commandChecks: Record<string, CommandCheck>;
     hooks?: Defined<Required<NonNullable<ParsedSettings['hooks']>>>;
     ci?: ParsedCi;
-    scopes: Record<string, NonNullable<ParsedSettings['scope']>[number] & Pick<Settings, 'written'>>;
+    scopes: Map<string, NonNullable<ParsedSettings['scope']>[number] & Pick<Settings, 'written'>>;
 };
 
 export type CommandCheck = Check & {
@@ -75,7 +73,7 @@ export type CommandCheck = Check & {
     files: NonNullable<Check['files']>;
 };
 
-export type SettingsTable = Settings | Settings['scopes'][string];
+export type SettingsTable = Settings | NonNullable<ReturnType<Settings['scopes']['get']>>;
 
 type CommandCheckFields = {
     id: string;
@@ -117,10 +115,18 @@ type WrittenSite = Optional<Omit<ConfigurationTables['site'], 'allowed_unlisted_
 
 type WrittenStructure = Optional<{
     reexports: SettingValue<(typeof REEXPORT_MODES)[number]>;
-    environment_readers: string[];
+    environment_readers: SettingValue<string[]>;
 }>;
 
 type WrittenReasonedTables = {
+    javascript: Optional<Omit<ConfigurationTables['javascript'], 'externals' | 'script_files'>> & {
+        externals?: SettingValue<string[]> | undefined;
+        script_files?: SettingValue<string[]> | undefined;
+    };
+    python: Optional<Omit<ConfigurationTables['python'], 'externals'>> & {
+        externals?: SettingValue<string[]> | undefined;
+    };
+    zustand: { store_files?: SettingValue<string[]> | undefined };
     coverage: WrittenCoverage;
     dependencies: WrittenDependencies;
     docs: WrittenDocs;
@@ -254,9 +260,6 @@ export type IgnoreRecord = NonNullable<ParsedSettings['ignore']>[number];
 
 export type SettingsError = { path: KeyPath; message: string };
 
-export type FormatSettings = Required<Defined<Omit<NonNullable<ParsedSettings['format']>, 'override' | 'quotes'>>> &
-    Pick<NonNullable<ParsedSettings['format']>, 'quotes'>;
-
 export type WrittenScope = Omit<WrittenSettings, RootOnlyFields | keyof ParsedScopeTables> & {
     path: string;
     limits?: WrittenLimits | undefined;
@@ -266,7 +269,7 @@ export type WrittenScope = Omit<WrittenSettings, RootOnlyFields | keyof ParsedSc
     licenses?: Omit<WrittenLicenses, 'allowed_package'> | undefined;
     site?: Omit<WrittenSite, 'size_limit'> | undefined;
     naming?: Omit<WrittenNaming, 'override'> | undefined;
-    structure?: { environment_readers?: string[] | undefined } | undefined;
+    structure?: { environment_readers?: SettingValue<string[]> | undefined } | undefined;
     tools?:
         | (Omit<WrittenTools, 'eslint' | 'v8r'> & {
               eslint?: Omit<NonNullable<WrittenTools['eslint']>, 'override'> | undefined;

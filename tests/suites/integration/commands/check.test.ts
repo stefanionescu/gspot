@@ -4,19 +4,20 @@ import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { join, dirname, delimiter } from 'node:path';
 import { getTool } from '#cli/configurations/tools.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/samples.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { MISE_INSTALL_URL } from '#cli/config/tools/inspect.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { PARTIAL_FIX_CASES } from '#tests/config/integration/commands.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { spawnGspot, applyThenInstall, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned version, while bash/function-size passes and bash/shellcheck passes on the full PATH', async () => {
     await using sandbox = await createGitSandbox({
@@ -38,7 +39,7 @@ test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned ve
         HOME: join(sandbox.path, 'home'),
         MISE_DATA_DIR: join(sandbox.path, 'home', 'mise'),
     };
-    const initialized = await spawnGspot(sandbox.path, buildInitArguments(['bash']), environment);
+    const initialized = await spawnGspot(sandbox.path, ['init', '--yes', '--configurations', 'bash'], environment);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(initialized.stdout.split('\n')).toContain(
         'Next: run gspot install to install the tools and turn on the Git hooks.',

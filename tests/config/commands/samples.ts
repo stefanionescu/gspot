@@ -23,7 +23,7 @@ export const ALWAYS_SELECTED_RESULTS = {
 export const UNKNOWN_CONFIGURATION_REFUSALS = ['not-a-real-config-a', 'not-a-real-config-b']
     .map(
         (name) =>
-            `There is no configuration called \`${name}\`. Run \`gspot list configurations\` to see the available configurations.\n`,
+            `There is no configuration called ${name}. See https://generativespotting.com/reference/configurations/ for the available configurations.\n`,
     )
     .join('');
 

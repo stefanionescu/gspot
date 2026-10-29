@@ -10,4 +10,16 @@ export const CHECK_STATUS_COLORS = {
     skipped: 'yellow',
 } as const;
 
-export const FIXER_ERROR_MESSAGE = /^(?:[\w.]*(?:Error|error))(?: \[[^\]]+\])?:\s*/u;
+export const FIXER_ERROR_PREFIX = /^(?:[\w.]*(?:Error|error))(?: \[[^\]]+\])?:\s*/u;
+
+export const TOOL_MISSING_MESSAGE = ' (a tool is missing; run gspot install)';
+
+export const STAGED_FILES = 'the staged files';
+
+export const UNCHANGED_PREVIEW_MESSAGE = 'No fixer changes anything.';
+
+export const UNCHANGED_FIX_MESSAGE = 'No fixer changed anything.';
+
+export const WORKING_TREE = 'the working tree';
+
+export const RUN_AGAIN = 'run again:';

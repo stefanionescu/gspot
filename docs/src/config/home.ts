@@ -1,18 +1,18 @@
 export const HOME_TITLE = 'Lint the code your AI agent writes';
 export const TOOLS = [
-    { name: 'ESLint', icon: '/tools/eslint.svg' },
-    { name: 'Prettier', icon: '/tools/prettier.svg' },
-    { name: 'Ruff', icon: '/tools/ruff.svg' },
-    { name: 'Stylelint', icon: '/tools/stylelint.svg' },
-    { name: 'ShellCheck', icon: '/tools/shellcheck.png' },
-    { name: 'Semgrep', icon: '/tools/semgrep.svg' },
-    { name: 'Knip', icon: '/tools/knip.svg' },
-    { name: 'Trivy', icon: '/tools/trivy.svg' },
+    { name: 'ESLint', icon: 'eslint.svg' },
+    { name: 'Prettier', icon: 'prettier.svg' },
+    { name: 'Ruff', icon: 'ruff.svg' },
+    { name: 'Stylelint', icon: 'stylelint.svg' },
+    { name: 'ShellCheck', icon: 'shellcheck.png' },
+    { name: 'Semgrep', icon: 'semgrep.svg' },
+    { name: 'Knip', icon: 'knip.svg' },
+    { name: 'Trivy', icon: 'trivy.svg' },
 ] as const;
 export const USE_CASES = [
     {
         title: 'Blocks bad code',
-        text: 'Bugs, type errors, unsafe code, and code that nothing uses cannot be committed or pushed. gspot shows the file, the line, and how to fix it.',
+        text: 'When the checks find bugs, type errors, unsafe code, or code that nothing uses, the Git hooks stop the commit or the push. gspot shows the file, the line, and how to fix it.',
         icon: ['M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6l7-3z', 'M9 12l2 2 4-4'],
     },
     {
@@ -22,12 +22,12 @@ export const USE_CASES = [
     },
     {
         title: 'Stops leaked passwords and keys',
-        text: 'If a commit holds a password, an API key, or a token, gspot stops it before the commit exists.',
+        text: 'When a staged change holds a password, an API key, or a token, the pre-commit hook stops the commit.',
         icon: ['M4 15a4 4 0 1 0 8 0a4 4 0 1 0-8 0', 'M10.9 12.1L20 3', 'M16 7l3 3', 'M13.5 9.5l2 2'],
     },
     {
         title: 'Checks the packages you install',
-        text: 'gspot warns you about packages with known security holes or a license you do not allow.',
+        text: 'Before each push, gspot reports packages with known security holes and licenses outside the list you allow.',
         icon: ['M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z', 'M4 7.5l8 4.5 8-4.5', 'M12 12v9'],
     },
     {

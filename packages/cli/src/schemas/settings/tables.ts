@@ -1,33 +1,30 @@
 import { z } from 'zod';
 import { ciFields } from '#cli/schemas/settings/ci.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
-import { type SchemaShape } from '#cli/types/shapes.ts';
+import type { SchemaShape } from '#cli/types/shapes.ts';
 import { hooksSchema } from '#cli/schemas/settings/hooks.ts';
 import { rulesSchema } from '#cli/schemas/settings/rules.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import { licensesSchema } from '#cli/schemas/settings/licenses.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
+import type { ToolTableSchemas } from '#cli/types/settings/tables.ts';
+import { TABLE_DESCRIPTIONS } from '#cli/config/settings/json-schema.ts';
 import { pythonSchema, javascriptSchema } from '#cli/schemas/settings/languages.ts';
-import { commandSchema, nonemptyString } from '#cli/schemas/configurations/fields.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION } from '#cli/config/parsers/code/sql.ts';
+import { commandSchema, nonemptyStringSchema } from '#cli/schemas/configurations/fields.ts';
+import type { TableValues, TableSettings, WrittenSettings } from '#cli/types/settings/file.ts';
 import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
 
 import {
-    type TableValues,
-    type TableSettings,
-    type WrittenSettings,
-    type ToolTableSchemas,
-} from '#cli/types/settings/file.ts';
-import {
-    percentage,
     formatSchema,
-    relativePath,
-    nonemptyStrings,
-    destinationPath,
-    nonnegativeInteger,
+    percentageSchema,
+    relativePathSchema,
     allowReasonedValue,
+    nonemptyStringsSchema,
+    destinationPathSchema,
+    nonnegativeIntegerSchema,
 } from '#cli/schemas/settings/fields.ts';
 
 export const configurationTableSchemas = {
@@ -37,36 +34,33 @@ export const configurationTableSchemas = {
     structure: z
         .strictObject({
             reexports: allowReasonedValue(z.enum(REEXPORT_MODES), SETTING_DEFINITIONS['structure.reexports']),
-            environment_readers: relativePath
-                .array()
-                .default(SETTING_DEFINITIONS['structure.environment_readers'].default)
-                .meta(SETTING_DEFINITIONS['structure.environment_readers']),
+            environment_readers: allowReasonedValue(
+                relativePathSchema.array(),
+                SETTING_DEFINITIONS['structure.environment_readers'],
+            ),
         } satisfies SchemaShape<TableSettings<'structure'>, NonNullable<WrittenSettings['structure']>>)
         .optional(),
     cloudflare: z
         .strictObject({
-            types_file: destinationPath
+            types_file: destinationPathSchema
                 .default(SETTING_DEFINITIONS['cloudflare.types_file'].default)
                 .meta(SETTING_DEFINITIONS['cloudflare.types_file']),
-            types_interface: nonemptyString
+            types_interface: nonemptyStringSchema
                 .default(SETTING_DEFINITIONS['cloudflare.types_interface'].default)
                 .meta(SETTING_DEFINITIONS['cloudflare.types_interface']),
         } satisfies SchemaShape<TableSettings<'cloudflare'>, NonNullable<WrittenSettings['cloudflare']>>)
         .optional(),
     coverage: z
         .strictObject({
-            lines: allowReasonedValue(percentage, SETTING_DEFINITIONS['coverage.lines']),
-            branches: allowReasonedValue(percentage, SETTING_DEFINITIONS['coverage.branches']),
-            functions: allowReasonedValue(percentage, SETTING_DEFINITIONS['coverage.functions']),
-            statements: allowReasonedValue(percentage, SETTING_DEFINITIONS['coverage.statements']),
+            lines: allowReasonedValue(percentageSchema, SETTING_DEFINITIONS['coverage.lines']),
+            branches: allowReasonedValue(percentageSchema, SETTING_DEFINITIONS['coverage.branches']),
+            functions: allowReasonedValue(percentageSchema, SETTING_DEFINITIONS['coverage.functions']),
+            statements: allowReasonedValue(percentageSchema, SETTING_DEFINITIONS['coverage.statements']),
             swift_target: z
                 .strictObject({
-                    name: nonemptyString.describe(SETTING_DEFINITIONS['coverage.swift_target.name'].description),
-                    lines: percentage.describe(SETTING_DEFINITIONS['coverage.swift_target.lines'].description),
-                    reason: z
-                        .string()
-                        .optional()
-                        .describe(SETTING_DEFINITIONS['coverage.swift_target.reason'].description),
+                    name: nonemptyStringSchema.meta(SETTING_DEFINITIONS['coverage.swift_target.name']),
+                    lines: percentageSchema.meta(SETTING_DEFINITIONS['coverage.swift_target.lines']),
+                    reason: z.string().optional().meta(SETTING_DEFINITIONS['coverage.swift_target.reason']),
                 } satisfies SchemaShape<TableSettings<'coverage'>['swift_target'][number]>)
                 .array()
                 .default(SETTING_DEFINITIONS['coverage.swift_target'].default)
@@ -76,14 +70,14 @@ export const configurationTableSchemas = {
     dependencies: z
         .strictObject({
             min_release_age_days: allowReasonedValue(
-                nonnegativeInteger,
+                nonnegativeIntegerSchema,
                 SETTING_DEFINITIONS['dependencies.min_release_age_days'],
             ),
             allowed_registries: allowReasonedValue(
-                nonemptyStrings,
+                nonemptyStringsSchema,
                 SETTING_DEFINITIONS['dependencies.allowed_registries'],
             ),
-            bun_scanner: nonemptyString.optional().meta(SETTING_DEFINITIONS['dependencies.bun_scanner']),
+            bun_scanner: nonemptyStringSchema.optional().meta(SETTING_DEFINITIONS['dependencies.bun_scanner']),
         } satisfies SchemaShape<TableSettings<'dependencies'>, NonNullable<WrittenSettings['dependencies']>>)
         .optional(),
     docs: z
@@ -98,7 +92,7 @@ export const configurationTableSchemas = {
         .optional(),
     drizzle: z
         .strictObject({
-            client_names: nonemptyStrings
+            client_names: nonemptyStringsSchema
                 .default(SETTING_DEFINITIONS['drizzle.client_names'].default)
                 .meta(SETTING_DEFINITIONS['drizzle.client_names']),
         } satisfies SchemaShape<TableSettings<'drizzle'>, NonNullable<WrittenSettings['drizzle']>>)
@@ -107,11 +101,11 @@ export const configurationTableSchemas = {
     python: pythonSchema,
     trpc: z
         .strictObject({
-            router_files: relativePath
+            router_files: relativePathSchema
                 .array()
                 .default(SETTING_DEFINITIONS['trpc.router_files'].default)
                 .meta(SETTING_DEFINITIONS['trpc.router_files']),
-            server_files: relativePath
+            server_files: relativePathSchema
                 .array()
                 .default(SETTING_DEFINITIONS['trpc.server_files'].default)
                 .meta(SETTING_DEFINITIONS['trpc.server_files']),
@@ -119,37 +113,34 @@ export const configurationTableSchemas = {
         .optional(),
     zustand: z
         .strictObject({
-            store_files: relativePath
-                .array()
-                .default(SETTING_DEFINITIONS['zustand.store_files'].default)
-                .meta(SETTING_DEFINITIONS['zustand.store_files']),
+            store_files: allowReasonedValue(relativePathSchema.array(), SETTING_DEFINITIONS['zustand.store_files']),
         } satisfies SchemaShape<TableSettings<'zustand'>, NonNullable<WrittenSettings['zustand']>>)
         .optional(),
     licenses: licensesSchema.optional(),
     openapi: z
         .strictObject({
-            document: relativePath.optional().meta(SETTING_DEFINITIONS['openapi.document']),
+            document: relativePathSchema.optional().meta(SETTING_DEFINITIONS['openapi.document']),
             generate_command: commandSchema.optional().meta(SETTING_DEFINITIONS['openapi.generate_command']),
         } satisfies SchemaShape<TableSettings<'openapi'>, NonNullable<WrittenSettings['openapi']>>)
         .optional(),
     postgres: z
         .strictObject({
-            client_schemas: nonemptyStrings
+            client_schemas: nonemptyStringsSchema
                 .default(SETTING_DEFINITIONS['postgres.client_schemas'].default)
                 .meta(SETTING_DEFINITIONS['postgres.client_schemas']),
             frozen_through: z
                 .union([z.enum([FROZEN_NONE, FROZEN_ALL]), z.string().regex(FROZEN_VERSION)])
                 .default(SETTING_DEFINITIONS['postgres.frozen_through'].default)
                 .meta(SETTING_DEFINITIONS['postgres.frozen_through']),
-            migrations_folder: relativePath.optional().meta(SETTING_DEFINITIONS['postgres.migrations_folder']),
+            migrations_folder: relativePathSchema.optional().meta(SETTING_DEFINITIONS['postgres.migrations_folder']),
         } satisfies SchemaShape<TableSettings<'postgres'>, NonNullable<WrittenSettings['postgres']>>)
         .optional(),
     secrets: z
         .strictObject({
-            env_examples: nonemptyStrings
+            env_examples: nonemptyStringsSchema
                 .default(SETTING_DEFINITIONS['secrets.env_examples'].default)
                 .meta(SETTING_DEFINITIONS['secrets.env_examples']),
-            environment_functions: nonemptyStrings
+            environment_functions: nonemptyStringsSchema
                 .default(SETTING_DEFINITIONS['secrets.environment_functions'].default)
                 .meta(SETTING_DEFINITIONS['secrets.environment_functions']),
         } satisfies SchemaShape<TableSettings<'secrets'>, NonNullable<WrittenSettings['secrets']>>)
@@ -159,20 +150,17 @@ export const configurationTableSchemas = {
             build_command: commandSchema
                 .default(SETTING_DEFINITIONS['site.build_command'].default)
                 .meta(SETTING_DEFINITIONS['site.build_command']),
-            build_folder: destinationPath
+            build_folder: destinationPathSchema
                 .default(SETTING_DEFINITIONS['site.build_folder'].default)
                 .meta(SETTING_DEFINITIONS['site.build_folder']),
             allowed_unlisted_pages: allowReasonedValue(
-                relativePath.meta({ path_role: 'build' }).array(),
+                relativePathSchema.meta({ path_role: 'build' }).array(),
                 SETTING_DEFINITIONS['site.allowed_unlisted_pages'],
             ),
             size_limit: z
                 .strictObject({
-                    paths: destinationPath
-                        .array()
-                        .min(1)
-                        .describe(SETTING_DEFINITIONS['site.size_limit.paths'].description),
-                    kilobytes: nonnegativeInteger.describe(
+                    paths: destinationPathSchema.array().min(1).meta(SETTING_DEFINITIONS['site.size_limit.paths']),
+                    kilobytes: nonnegativeIntegerSchema.describe(
                         SETTING_DEFINITIONS['site.size_limit.kilobytes'].description,
                     ),
                 } satisfies SchemaShape<TableSettings<'site'>['size_limit'][number]>)
@@ -198,28 +186,28 @@ export const configurationTableSchemas = {
         .optional(),
     supabase: z
         .strictObject({
-            functions_folder: relativePath
+            functions_folder: relativePathSchema
                 .default(SETTING_DEFINITIONS['supabase.functions_folder'].default)
                 .meta(SETTING_DEFINITIONS['supabase.functions_folder']),
-            schemas: nonemptyStrings
+            schemas: nonemptyStringsSchema
                 .default(SETTING_DEFINITIONS['supabase.schemas'].default)
                 .meta(SETTING_DEFINITIONS['supabase.schemas']),
-            types_file: destinationPath.optional().meta(SETTING_DEFINITIONS['supabase.types_file']),
+            types_file: destinationPathSchema.optional().meta(SETTING_DEFINITIONS['supabase.types_file']),
         } satisfies SchemaShape<TableSettings<'supabase'>, NonNullable<WrittenSettings['supabase']>>)
         .optional(),
     translations: z
         .strictObject({
-            base_locale: nonemptyString
+            base_locale: nonemptyStringSchema
                 .default(SETTING_DEFINITIONS['translations.base_locale'].default)
                 .meta(SETTING_DEFINITIONS['translations.base_locale']),
-            messages_folder: relativePath.optional().meta(SETTING_DEFINITIONS['translations.messages_folder']),
+            messages_folder: relativePathSchema.optional().meta(SETTING_DEFINITIONS['translations.messages_folder']),
         } satisfies SchemaShape<TableSettings<'translations'>, NonNullable<WrittenSettings['translations']>>)
         .optional(),
     swift: z
         .strictObject({
-            xcode_project: relativePath.optional().meta(SETTING_DEFINITIONS['swift.xcode_project']),
-            xcode_scheme: nonemptyString.optional().meta(SETTING_DEFINITIONS['swift.xcode_scheme']),
-            xcode_destination: nonemptyString
+            xcode_project: relativePathSchema.optional().meta(SETTING_DEFINITIONS['swift.xcode_project']),
+            xcode_scheme: nonemptyStringSchema.optional().meta(SETTING_DEFINITIONS['swift.xcode_scheme']),
+            xcode_destination: nonemptyStringSchema
                 .default(SETTING_DEFINITIONS['swift.xcode_destination'].default)
                 .meta(SETTING_DEFINITIONS['swift.xcode_destination']),
         } satisfies SchemaShape<TableSettings<'swift'>, NonNullable<WrittenSettings['swift']>>)
@@ -227,20 +215,23 @@ export const configurationTableSchemas = {
     repository: z
         .strictObject({
             max_file_kilobytes: allowReasonedValue(
-                nonnegativeInteger,
+                nonnegativeIntegerSchema,
                 SETTING_DEFINITIONS['repository.max_file_kilobytes'],
             ),
         } satisfies SchemaShape<TableSettings<'repository'>, NonNullable<WrittenSettings['repository']>>)
         .optional(),
     prose: z
         .strictObject({
-            max_sentence_words: allowReasonedValue(nonnegativeInteger, SETTING_DEFINITIONS['prose.max_sentence_words']),
+            max_sentence_words: allowReasonedValue(
+                nonnegativeIntegerSchema,
+                SETTING_DEFINITIONS['prose.max_sentence_words'],
+            ),
             max_list_item_words: allowReasonedValue(
-                nonnegativeInteger,
+                nonnegativeIntegerSchema,
                 SETTING_DEFINITIONS['prose.max_list_item_words'],
             ),
             max_paragraph_sentences: allowReasonedValue(
-                nonnegativeInteger,
+                nonnegativeIntegerSchema,
                 SETTING_DEFINITIONS['prose.max_paragraph_sentences'],
             ),
         } satisfies SchemaShape<TableSettings<'prose'>, NonNullable<WrittenSettings['prose']>>)
@@ -273,6 +264,16 @@ export const tableValuesSchema = z
         ...toolTableSchemas,
     })
     .transform(stripUndefined) satisfies z.ZodType<TableValues>;
+
+for (const [name, schema] of Object.entries(configurationTableSchemas)) {
+    const description = TABLE_DESCRIPTIONS[name];
+    if (description !== undefined)
+        z.globalRegistry.add(schema, {
+            ...schema.meta(),
+            ...(schema.unwrap().meta()?.id === undefined ? { id: name } : {}),
+            description,
+        });
+}
 
 export const tableSettingSchemas = Object.fromEntries(
     Object.entries({ hooks: hooksSchema.shape, ci: ciFields, rules: rulesSchema.shape }).flatMap(([section, fields]) =>

@@ -4,6 +4,8 @@ Read this rule when you change a Zustand store.
 
 ## Scope and initialize the store
 
+- Create a store only in a file that `zustand.store_files` matches, by default `store.*`, `*.store.*`, or a file in a
+  `store/` or `stores/` folder.
 - Create a store through a factory, with `createStore` from `zustand/vanilla` when a context provider owns the instance.
   Report an explicit error for a missing required provider.
 - Keep one store instance in the provider for its mounted lifetime, and expose it through React context. Consumers call

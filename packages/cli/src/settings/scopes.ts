@@ -1,15 +1,16 @@
-import { findSettingSchema } from '#cli/settings/schemas.ts';
 import { getValueAt, createTable } from '#cli/system/tables.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import { findSettingSchema } from '#cli/settings/schema-lookup.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
+import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/scopes.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
+import { getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
 import type { Settings, TableValues, TableSettings } from '#cli/types/settings/file.ts';
 import { isInScope, isScopeCovered, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { SETTING_LANGUAGES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
-import { getSettingTable, getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
 
 import type {
     Scope,
@@ -24,7 +25,7 @@ Find the nearest scope that holds a path.
 
 @param scopes every project scope.
 @param path the repository-relative destination.
-@returns the scope, or undefined at the root.
+@returns undefined at the root.
 */
 export function findParentScope(scopes: Scope[], path: string): Scope | undefined {
     return scopes
@@ -37,38 +38,34 @@ export function findParentScope(scopes: Scope[], path: string): Scope | undefine
 Select the configurations of the root and each parent scope, each once, in order.
 
 @param selected the configuration lists as written.
-@param selected.configurations the root choices.
-@param selected.scopes each folder with its written choices.
-@param selected.removed_configurations the names that you removed.
-@param scope the folder to select for.
+@param scopePath the folder to select for.
 @param configurationsByName every configuration.
-@returns the configurations in order.
 */
 export function selectForScope(
     selected: SelectedConfigurations,
-    scope: string,
+    scopePath: string,
     configurationsByName: Map<string, Configuration>,
 ): Configuration[] {
     const automatic = listAutomaticConfigurations(configurationsByName);
-    const choices = new Set<string>();
+    const choices = new Set<string>([...selected.configurations, ...automatic]);
     const tables = [
         selected,
-        ...Object.entries(selected.scopes)
-            .filter(([ancestor]) => isInScope(scope, ancestor))
+        ...[...selected.scopes]
+            .filter(([ancestor]) => isInScope(scopePath, ancestor))
             .toSorted(([left], [right]) => compareScopeDepth(left, right))
             .map(([, scopeTable]) => scopeTable),
     ];
     for (const table of tables) {
-        for (const removed of table.removed_configurations) choices.delete(removed);
         for (const configuration of table.configurations) choices.add(configuration);
+        for (const removed of table.removed_configurations) choices.delete(removed);
     }
-    return selectConfigurations([...choices, ...automatic], configurationsByName);
+    return selectConfigurations([...choices], configurationsByName);
 }
 
 function listNamingVariants(
     availableSettings: AvailableSettings,
     settings: Settings,
-    scope: string,
+    scopePath: string,
 ): InheritedSetting[] {
     return SETTING_LANGUAGES.flatMap((language) =>
         Object.keys(namingCategorySchema.shape).flatMap((field) => [
@@ -77,14 +74,14 @@ function listNamingVariants(
         ]),
     )
         .filter((key) => !availableSettings.settings.has(key))
-        .map((key) => getSettingValue(availableSettings, settings, key, scope))
+        .map((key) => getSettingValue(availableSettings, settings, key, scopePath))
         .filter((row) => row !== undefined);
 }
 
 function listLimitVariants(
     availableSettings: AvailableSettings,
     settings: Settings,
-    scope: string,
+    scopePath: string,
 ): InheritedSetting[] {
     return availableSettings.settings
         .values()
@@ -95,7 +92,7 @@ function listLimitVariants(
             ),
         )
         .filter((key) => !availableSettings.settings.has(key))
-        .map((key) => getSettingValue(availableSettings, settings, key, scope))
+        .map((key) => getSettingValue(availableSettings, settings, key, scopePath))
         .filter((row) => row !== undefined)
         .toArray();
 }
@@ -107,21 +104,20 @@ scope.
 @param availableSettings the settings and defaults of the selected configurations.
 @param settings the written root values and scoped overrides.
 @param configurations the configurations that the scope selects.
-@param scope the folder, '' for the root.
-@returns the scope settings that planning, checks, and the config file builders read.
+@param scopePath the folder, '' for the root.
 */
 export function buildScopeSettings(
     availableSettings: AvailableSettings,
     settings: Settings,
     configurations: Configuration[],
-    scope: string,
+    scopePath: string,
 ): ScopeSettings {
-    const listed = listInheritedSettings(availableSettings, settings, scope);
+    const listed = listInheritedSettings(availableSettings, settings, scopePath);
     const valuesByKey = Object.fromEntries(listed.map((row) => [row.key, row.value]));
     const namespaces: Record<string, unknown> = {};
     fillTableValues(namespaces, listed);
-    fillTableValues(namespaces, listNamingVariants(availableSettings, settings, scope));
-    fillTableValues(namespaces, listLimitVariants(availableSettings, settings, scope));
+    fillTableValues(namespaces, listNamingVariants(availableSettings, settings, scopePath));
+    fillTableValues(namespaces, listLimitVariants(availableSettings, settings, scopePath));
     return {
         configurations: configurations.map((configuration) => configuration.name),
         valuesByKey: valuesByKey,
@@ -136,7 +132,6 @@ Read one validated table from the scope's merged values.
 
 @param scopeSettings the merged scope data.
 @param name the table's dotted name.
-@returns the requested table.
 */
 export function getTable<Name extends keyof TableValues>(
     scopeSettings: ScopeSettings,
@@ -153,7 +148,6 @@ Read a language's limit, falling back to the scope's general limit.
 @param scopeSettings the merged scope data.
 @param key the limit name.
 @param language the language, if the check reads a language-specific value.
-@returns the numeric limit.
 */
 export function getLimit(scopeSettings: ScopeSettings, key: string, language?: string): number {
     const value =
@@ -173,7 +167,7 @@ List the written ignores that apply to a check or to every check.
 @param check the check name.
 @returns the matching ignores with normalized paths.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 6 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, its rule repeats in the code of several layers.
 export function listIgnores(scopeSettings: ScopeSettings, check: string): ScopeSettings['ignores'] {
     return scopeSettings.ignores.filter((ignore) => ignore.check === check || ignore.check === undefined);
 }
@@ -182,12 +176,11 @@ export function listIgnores(scopeSettings: ScopeSettings, check: string): ScopeS
 List the lint rules disabled throughout the selected scope.
 
 @param scope the scope and its merged data.
-@param check the check name.
-@returns the disabled rule names.
+@param checkId the check name.
 */
-export function listIgnoredRules(scope: Scope, check: string): string[] {
+export function listIgnoredRules(scope: Scope, checkId: string): string[] {
     return scope.settings.ignores
-        .filter((ignore) => ignore.check === check)
+        .filter((ignore) => ignore.check === checkId)
         .filter((ignore) => ignore.paths.length === 0 || isScopeCovered(ignore.paths, scope.path))
         .map((ignore) => ignore.rule)
         .filter((rule) => rule !== undefined);
@@ -195,17 +188,17 @@ export function listIgnoredRules(scope: Scope, check: string): string[] {
 
 function fillTableValues(tables: Record<string, unknown>, rows: InheritedSetting[]): void {
     const valueRows = rows
-        .filter(
-            (row) =>
-                Object.hasOwn(tableValuesSchema.in.shape, getSettingTable(row.key)) &&
-                findSettingSchema(row.key) !== undefined,
-        )
         .map((row) => {
             const segments = row.key.split('.');
-            const name = getSettingTable(row.key);
+            const [table, tool] = segments;
+            const name = table === 'tools' && tool !== undefined ? `${table}.${tool}` : (table as string);
             const path = segments.slice(name.split('.').length);
             return { row, name, path: path.slice(0, -1), field: path.at(-1) ?? '' };
-        });
+        })
+        .filter(
+            ({ row, name }) =>
+                Object.hasOwn(tableValuesSchema.in.shape, name) && findSettingSchema(row.key) !== undefined,
+        );
     const empty = valueRows.filter(({ row }) => row.value === undefined);
     for (const { row, name } of empty) {
         if (createTable(tables, [name]) === undefined)
@@ -225,8 +218,8 @@ Find the root scope, which every run has.
 @param scopes every scope, the root among them.
 @returns the scope with an empty path.
 */
-export function findRootScope(scopes: readonly Scope[]): Scope {
+export function getRootScope(scopes: readonly Scope[]): Scope {
     const root = scopes.find((scope) => scope.path === '');
-    if (root === undefined) throw new Error('The scopes hold no repository root.');
+    if (root === undefined) throw new Error(NO_ROOT_SCOPE_MESSAGE);
     return root;
 }

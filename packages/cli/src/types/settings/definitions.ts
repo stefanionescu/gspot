@@ -1,14 +1,12 @@
-import type { z } from 'zod';
-import type { TableSettings } from '#cli/types/settings/file.ts';
-import { type ReasonedValue } from '#cli/types/settings/values.ts';
-import { type SettingLanguage } from '#cli/types/settings/naming.ts';
 import type { REASON_DESCRIPTIONS } from '#cli/config/settings/fields.ts';
+import type { LEFT_OUT_NOTES } from '#cli/config/commands/init/template.ts';
 
 export type ReasonedSettingDefinition = Required<Pick<SettingDefinition, 'description' | 'reason_when'>>;
 
 export type ReasonRequirement = keyof typeof REASON_DESCRIPTIONS;
 
 export type SettingDefinition = {
+    template?: keyof typeof LEFT_OUT_NOTES;
     description?: string;
     minimum?: number;
     configurations?: readonly string[];
@@ -19,8 +17,3 @@ export type SettingDefinition = {
     default_all?: unknown;
     default?: unknown;
 };
-
-export type LimitSchemas = Record<
-    keyof Omit<TableSettings<'limits'>, SettingLanguage>,
-    z.ZodDefault<z.ZodUnion<readonly [z.ZodType<number, number>, z.ZodType<number, ReasonedValue<number>>]>>
->;

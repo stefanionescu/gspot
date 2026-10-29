@@ -1,11 +1,13 @@
-/**
-Count nonempty lines that do not start with the comment marker.
+import { maskGrammarComments } from '#cli/parsers/code/comments.ts';
+import type { GrammarName } from '#cli/types/parsers/code/grammars.ts';
 
-@param lines the source lines.
-@param marker the comment prefix.
-@returns the number of code lines.
+/**
+Skip blank lines and lines that hold only a comment of the grammar.
+
+@param text the source.
+@param grammar the language whose comments count as no code.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-export function countCodeLines(lines: readonly string[], marker: string): number {
-    return lines.filter((line) => line.trim() !== '' && !line.trimStart().startsWith(marker)).length;
+export async function countCodeLines(text: string, grammar: GrammarName | 'sql'): Promise<number> {
+    const code = await maskGrammarComments(grammar, text);
+    return code.split('\n').filter((line) => line.trim() !== '').length;
 }

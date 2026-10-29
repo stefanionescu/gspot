@@ -1,13 +1,12 @@
 import { join } from 'node:path';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import type { Tool } from '#cli/types/configurations.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { unlink, symlink, writeFile } from 'node:fs/promises';
@@ -23,21 +22,43 @@ test('a library is found only in the tool project', async () => {
         'api/node_modules/eslint-plugin-n/package.json': '{"name":"eslint-plugin-n","version":"18.3.0"}',
     });
 
-    expect(inspectTool(buildToolSearch(sandbox.path), buildLibraryPin('globals', '17.12.0')).state).toBe('ok');
-    expect(inspectTool(buildToolSearch(sandbox.path), buildLibraryPin('eslint-plugin-n', '18.3.0')).state).toBe(
-        'missing',
-    );
+    expect(
+        inspectTool(buildToolSearch(sandbox.path), {
+            name: 'globals',
+            kind: 'library' as const,
+            version: '17.12.0',
+            installers: { npm: { name: 'globals', version: '17.12.0' } },
+        }).state,
+    ).toBe('ok');
+    expect(
+        inspectTool(buildToolSearch(sandbox.path), {
+            name: 'eslint-plugin-n',
+            kind: 'library' as const,
+            version: '18.3.0',
+            installers: { npm: { name: 'eslint-plugin-n', version: '18.3.0' } },
+        }).state,
+    ).toBe('missing');
 });
 
-test('a library that is absent is missing, and one off its pin is reported', async () => {
+test('an absent library is missing, and one above its pin is newer', async () => {
     await using sandbox = await testdir({
         [`${GSPOT_PATHS.nodeModules}/typescript/package.json`]: '{"name":"typescript","version":"6.0.0"}',
     });
 
-    const absent = inspectTool(buildToolSearch(sandbox.path), buildLibraryPin('eslint-plugin-regexp', '3.3.0'));
+    const absent = inspectTool(buildToolSearch(sandbox.path), {
+        name: 'eslint-plugin-regexp',
+        kind: 'library' as const,
+        version: '3.3.0',
+        installers: { npm: { name: 'eslint-plugin-regexp', version: '3.3.0' } },
+    });
     expect(absent.state).toBe('missing');
     expect(absent.want).toBe('3.3.0');
-    const laterVersion = inspectTool(buildToolSearch(sandbox.path), buildLibraryPin('typescript', '5.9.3'));
+    const laterVersion = inspectTool(buildToolSearch(sandbox.path), {
+        name: 'typescript',
+        kind: 'library' as const,
+        version: '5.9.3',
+        installers: { npm: { name: 'typescript', version: '5.9.3' } },
+    });
     expect(laterVersion.state).toBe('newer');
     expect(laterVersion.found).toBe('6.0.0');
 });
@@ -103,7 +124,12 @@ test('a library linked inside the tool project is accepted and one linked outsid
     const link = join(sandbox.path, `${GSPOT_PATHS.nodeModules}/globals`);
     await symlink('.store/globals', link);
     const context = buildToolSearch(sandbox.path);
-    const tool = buildLibraryPin('globals', '17.12.0');
+    const tool = {
+        name: 'globals',
+        kind: 'library' as const,
+        version: '17.12.0',
+        installers: { npm: { name: 'globals', version: '17.12.0' } },
+    };
     expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '17.12.0' });
     await unlink(link);
     await symlink(outside.path, link);
@@ -122,7 +148,12 @@ test('library reads are kept per session and see a new install in the next sessi
     });
 
     const session = await openSession(sandbox.path);
-    const pin = buildLibraryPin('example', '1.0.0');
+    const pin = {
+        name: 'example',
+        kind: 'library' as const,
+        version: '1.0.0',
+        installers: { npm: { name: 'example', version: '1.0.0' } },
+    };
     expect(inspectTool(session, pin).state).toBe('missing');
     await createFileTree(sandbox.path, {
         [`${GSPOT_PATHS.nodeModules}/example/package.json`]: '{"name":"example","version":"1.0.0"}',
@@ -130,7 +161,14 @@ test('library reads are kept per session and see a new install in the next sessi
     expect(inspectTool(session, pin).state).toBe('missing');
     const next = await openSession(sandbox.path);
     expect(inspectTool(next, pin).state).toBe('ok');
-    expect(inspectTool(next, buildLibraryPin('example', '2.0.0')).state).toBe('outdated');
+    expect(
+        inspectTool(next, {
+            name: 'example',
+            kind: 'library' as const,
+            version: '2.0.0',
+            installers: { npm: { name: 'example', version: '2.0.0' } },
+        }).state,
+    ).toBe('outdated');
 });
 
 test.each([...PACKAGE_METADATA_FAILURES])(
@@ -141,11 +179,16 @@ test.each([...PACKAGE_METADATA_FAILURES])(
         const previous = JSON.stringify(packageJson);
         await createFileTree(sandbox.path, { [`${GSPOT_PATHS.nodeModules}/teller/package.json`]: previous });
         const context = buildToolSearch(sandbox.path);
-        const tool = buildLibraryPin('teller', '5.0.1');
+        const tool = {
+            name: 'teller',
+            kind: 'library' as const,
+            version: '5.0.1',
+            installers: { npm: { name: 'teller', version: '5.0.1' } },
+        };
         expect(() => inspectTool(context, tool)).toThrow(
             matchFields<GspotError>({
                 name: 'GspotError',
-                code: 'filesystem',
+                code: 'parse',
                 message: `${path}: ${field}: Invalid input: expected string, received boolean. Fix the field.`,
             }),
         );
@@ -153,8 +196,3 @@ test.each([...PACKAGE_METADATA_FAILURES])(
         expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
     },
 );
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in this file share it.
-function buildLibraryPin(name: string, version: string): Tool {
-    return { name, kind: 'library', version, installers: { npm: { name, version } } };
-}

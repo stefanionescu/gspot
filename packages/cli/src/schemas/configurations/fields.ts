@@ -4,12 +4,12 @@ import { LEVELS, STAGES } from '#cli/config/configurations/names.ts';
 import { outputSchema } from '#cli/schemas/configurations/output.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
-import { MAX_EXIT_CODE, DEFAULT_OUTPUT_FORMAT } from '#cli/config/configurations/fields.ts';
 import type { Level, Stage, ParsedCheck, ConditionFields } from '#cli/types/configurations.ts';
+import { MAX_EXIT_CODE, VALID_UNICODE_MESSAGE, DEFAULT_OUTPUT_FORMAT } from '#cli/config/configurations/fields.ts';
 
 const findingExitCodesSchema = z.number().int().min(1).max(MAX_EXIT_CODE).array() satisfies z.ZodType<number[]>;
 
-export const nonemptyString = z.string().min(1) satisfies z.ZodType<string>;
+export const nonemptyStringSchema = z.string().min(1) satisfies z.ZodType<string>;
 
 export const checkStageSchema = z.enum(STAGES) satisfies z.ZodType<Stage>;
 
@@ -24,7 +24,7 @@ export const regexSchema = z.string().superRefine((pattern, context) => {
     try {
         new RegExp(pattern, 'u');
     } catch {
-        context.addIssue({ code: 'custom', message: 'Use a valid Unicode regular expression.' });
+        context.addIssue({ code: 'custom', message: VALID_UNICODE_MESSAGE });
     }
 }) satisfies z.ZodType<string>;
 

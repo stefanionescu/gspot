@@ -15,3 +15,30 @@ export const SELECTOR_LIBRARY_FILES = {
     'router.js':
         'const byId = publicProcedure.input(schema);\nexport const appRouter = router({\n    item: byId.query(resolve),\n    order: publicProcedure.input(schema).query(({ input }) => pool.query(sql)),\n});\n',
 } as const;
+
+export const FRAMEWORK_SELECTOR_CASES = [
+    {
+        configuration: 'express',
+        language: 'javascript',
+        file: 'source.js',
+        source: 'response.json({ message: `Hello ${name}` });\nresponse.send({ error: `Failed ${code}` });\nresponse.json({ message: "Hello", name });\n',
+        basic: [1, 2],
+        all: [1, 2],
+    },
+    {
+        configuration: 'nestjs',
+        language: 'typescript',
+        file: 'source.ts',
+        source: 'import { Res, Response, forwardRef } from "@nestjs/common";\nexport class Controller {\n    first(@Res() response: unknown) { return response; }\n    second(@Response({ passthrough: true }) response: unknown) { return response; }\n}\nforwardRef(() => Controller);\n',
+        basic: [3],
+        all: [3, 6],
+    },
+    {
+        configuration: 'react-native',
+        language: 'javascript',
+        file: 'source.jsx',
+        source: 'import { TouchableOpacity, Pressable } from "react-native";\nAsyncStorage.setItem("accessToken", value);\nAsyncStorage.setItem("theme", value);\nexport const button = <Pressable />;\n',
+        basic: [2],
+        all: [1, 2],
+    },
+] as const;

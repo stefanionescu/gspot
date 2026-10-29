@@ -2,6 +2,7 @@ import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
 
 export const LANGUAGE_DEFINITIONS = {
     'javascript.script_files': {
+        reason_when: 'adding',
         configurations: ['javascript'],
         description: 'Script files, which may print to the console and call process.exit.',
         default: ['scripts/**', '**/*.config.{js,mjs,cjs,ts}'] as ['scripts/**', '**/*.config.{js,mjs,cjs,ts}'],
@@ -13,12 +14,16 @@ export const LANGUAGE_DEFINITIONS = {
         default: [] as [],
     },
     'javascript.externals': {
+        reason_when: 'adding',
+        template: 'repository',
         configurations: ['javascript'],
         description:
             'Import specifiers that the runtime provides, such as ../../scripts/app.js in a host application. Globs match several.',
         default: [] as [],
     },
     'python.externals': {
+        reason_when: 'adding',
+        template: 'repository',
         configurations: ['python'],
         description:
             'Modules that the host application provides at run time, such as folder_paths. A name covers its submodules.',

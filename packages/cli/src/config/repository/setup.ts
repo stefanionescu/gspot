@@ -55,3 +55,11 @@ export const HOOKS_PATH_SETTING = 'core.hooksPath';
 export const LINT_FOLDERS = ['quality', 'lint', 'linting', '.qlty', 'code-quality'] as const;
 
 export const YAML_EXTENSIONS: readonly string[] = ['.yml', '.yaml'];
+
+export const SAMPLE_HOOK_SUFFIX = '.sample';
+
+export const LFS_PUSH_CALLS: ReadonlySet<string> = new Set([
+    'git lfs pre-push "$@"',
+    'git lfs push --stdin "$@"',
+    'git lfs push --stdin $*',
+]);

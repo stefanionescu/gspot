@@ -1,4 +1,4 @@
-import { BASH_HEADER } from '#tests/config/samples.ts';
+import { BASH_HEADER } from '#tests/config/bash.ts';
 
 export const TRAP_SCRIPT_FORMS = ['_cleanup', "'_cleanup'", '"_cleanup"', "'_cleanup; exit 1'"];
 
@@ -39,3 +39,5 @@ main() {
 
 main "$@"
 `;
+
+export const LITERAL_FUNCTION_REFERENCES = ['_retry _download', 'xargs -n1 _each', 'export -f _each'] as const;

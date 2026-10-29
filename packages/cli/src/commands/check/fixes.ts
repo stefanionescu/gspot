@@ -1,31 +1,29 @@
 import { compareText } from '#cli/system/text.ts';
+import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { getTool } from '#cli/configurations/tools.ts';
+import { openWriter } from '#cli/repository/writer.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { findCheckCode } from '#cli/checks/registry.ts';
 import { buildDiff } from '#cli/generation/outdated.ts';
-import type { Tool } from '#cli/types/configurations.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
+import { type Tool } from '#cli/types/configurations.ts';
+import { runToolProcess } from '#cli/runs/command/tool.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
 import { isReportedCrash } from '#cli/runs/command/output.ts';
-import type { FileContents } from '#cli/types/system/files.ts';
-import type { CheckRunOptions } from '#cli/types/runs/check.ts';
-import type { CommandLaunch } from '#cli/types/runs/command.ts';
-import { FIX_ROUNDS } from '#cli/config/commands/check/fixes.ts';
-import type { SpawnResult } from '#cli/types/system/processes.ts';
-import type { Session, CheckSession } from '#cli/types/session.ts';
-import type { FixReport, FixResult } from '#cli/types/runs/fixes.ts';
+import { type FileContents } from '#cli/types/system/files.ts';
+import { type CheckRunOptions } from '#cli/types/runs/check.ts';
+import { type CommandLaunch } from '#cli/types/runs/command.ts';
+import { listCopyFiles } from '#cli/runs/command/placeholders.ts';
+import { type SpawnResult } from '#cli/types/system/processes.ts';
 import { createCopy, selectCopyPaths } from '#cli/runs/copy/files.ts';
-import type { GrammarName } from '#cli/types/parsers/code/grammars.ts';
-import type { FixRounds, PathBytes } from '#cli/types/commands/check.ts';
-import { runToolProcess, readToolAvailability } from '#cli/runs/command/tool.ts';
+import { type GrammarName } from '#cli/types/parsers/code/grammars.ts';
+import { type Session, type CheckSession } from '#cli/types/session.ts';
+import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
+import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
+import { prepareCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
-import { prepareCommand, prepareCommandIn, buildCommandSetup, createCommandCopy } from '#cli/runs/command/check.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function listFixPaths(planned: PlannedCheck): string[] {
-    return [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
-}
+import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/commands/check/fixes.ts';
+import { type FixReport, type FixResult, type FixRounds, type PathBytes } from '#cli/types/commands/check.ts';
 
 function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
     const { check } = planned;
@@ -37,7 +35,7 @@ function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | un
 
 async function runFixCommands(session: Session, planned: PlannedCheck, setup: CommandLaunch): Promise<FixResult> {
     const check = planned.check.id;
-    const paths = listFixPaths(planned);
+    const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const before = readContents(setup.root, paths);
     let note: string | undefined;
     for (const command of setup.commandLines) {
@@ -51,9 +49,7 @@ async function runFixCommands(session: Session, planned: PlannedCheck, setup: Co
         if (note !== undefined) break;
     }
     const changed = listChangedPaths(before, readContents(setup.root, paths));
-    return note === undefined
-        ? { check, status: changed.length === 0 ? 'unchanged' : 'changed', changed }
-        : { check, status: 'failed', changed, note };
+    return buildFixResult(check, changed, note, session.cancelSignal);
 }
 
 async function runFixInCopy(
@@ -66,15 +62,20 @@ async function runFixInCopy(
         options,
     }: { session: Session; root: string; command: string[]; toolPath: string; options: CheckRunOptions },
 ): Promise<FixResult> {
-    using scratch = await createCommandCopy(planned, {
-        session,
-        root,
-        command,
-        configFiles: options.listConfigFiles?.(session, planned) ?? [],
+    using scratch = await createCopy({
+        root: root,
+        paths: [...listCopyFiles(session, planned, command), ...(options.listConfigFiles?.(session, planned) ?? [])],
+        dependencies: [],
+        cancelSignal: session.cancelSignal,
     });
-    const setup = prepareCommandIn(scratch.path, planned, { session, command, toolPath, options });
+    const setup = prepareCommand(planned, {
+        session: session,
+        command: command,
+        setup: buildCommandSetup(session, planned, { options: options, root: scratch.path }),
+        toolPath: toolPath,
+    });
     using files = openFiles(root);
-    const paths = listFixPaths(planned);
+    const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const before = new Map(paths.map((path) => [path, files.read(path)]));
     const result = await runFixCommands(session, planned, setup);
     using corrected = openFiles(scratch.path);
@@ -90,8 +91,7 @@ async function runFixInCopy(
 function mergeResults(first: FixResult | undefined, next: FixResult): FixResult {
     if (first === undefined) return next;
     const changed = [...new Set([...first.changed, ...next.changed])];
-    if (first.status === 'failed') return { ...first, changed };
-    if (next.status === 'failed') return { ...next, changed };
+    if (next.status === 'failed' || next.status === 'canceled') return { ...next, changed };
     return { check: next.check, status: changed.length === 0 ? next.status : 'changed', changed };
 }
 
@@ -100,14 +100,18 @@ async function runFixTool(
     planned: PlannedCheck,
     { root, command, tool }: { root: string; command: string[]; tool: Tool },
 ): Promise<FixResult> {
-    const code = findCheckCode(planned.check);
+    const code =
+        planned.check.generator_outputs === undefined ? CHECK_CODE[planned.check.id] : { check: checkGeneratorOutputs };
     const options: CheckRunOptions = {
         listFileArguments: code?.listFileArguments,
         listConfigFiles: code?.listConfigFiles,
     };
     const selected = { ...planned, tool };
     const setup = buildCommandSetup(session, selected, { options, root: session.root });
-    const availability = readToolAvailability(session, setup.cwd, tool);
+    const availability = buildToolAvailability(
+        tool,
+        inspectTool({ ...session, cwd: setup.cwd, miseBinPaths: session.readMiseBinPaths() }, tool),
+    );
     if ('status' in availability)
         return { check: planned.check.id, status: 'failed', changed: [], note: availability.note };
     const toolPath = availability.path;
@@ -116,14 +120,19 @@ async function runFixTool(
     const fixSetup =
         root === session.root
             ? prepareCommand(selected, { session, command, setup, toolPath })
-            : prepareCommandIn(root, selected, { session, command, toolPath, options });
-    return runFixCommands(session, planned, fixSetup);
+            : prepareCommand(selected, {
+                  session: session,
+                  command: command,
+                  setup: buildCommandSetup(session, selected, { options: options, root: root }),
+                  toolPath: toolPath,
+              });
+    return runFixCommands(session, selected, fixSetup);
 }
 
 async function runFixer(session: CheckSession, planned: PlannedCheck, root: string): Promise<FixResult> {
     const check = planned.check.id;
     if (session.cancelSignal?.aborted === true)
-        return { check, status: 'failed', changed: [], note: 'The fix was canceled.' };
+        return { check, status: 'canceled', changed: [], note: FIX_CANCELED_MESSAGE };
     if (planned.skip !== undefined || planned.files.length + planned.triggerPaths.length === 0)
         return { check, status: 'skipped', changed: [] };
     const command = planned.check.fix as string[];
@@ -165,17 +174,30 @@ async function runFixerRounds(
     const results = new Map<number, FixResult>();
     let firstBefore: PathBytes | undefined;
     let after: PathBytes = new Map();
+    const fixedContents = new Map<number, PathBytes>();
     let pending = checks.map((check, index) => ({ check, index }));
     for (let round = 0; round < FIX_ROUNDS && pending.length > 0; round += 1) {
         const before = readContents(sourceRoot, paths);
         firstBefore ??= before;
-        for (const { check, index } of pending)
+        for (const { check, index } of pending) {
             results.set(index, mergeResults(results.get(index), await runFixer(session, check, sourceRoot)));
+            fixedContents.set(
+                index,
+                readContents(sourceRoot, [
+                    ...new Set([
+                        ...(checks[index] as PlannedCheck).files.map((file) => file.path),
+                        ...(checks[index] as PlannedCheck).triggerPaths,
+                    ]),
+                ]),
+            );
+        }
         after = readContents(sourceRoot, paths);
-        const changed = new Set(listChangedPaths(before, after));
         pending = checks.flatMap((check, index) => {
+            const changed = new Set(listChangedPaths(fixedContents.get(index) as PathBytes, after));
             const files = check.files.filter((file) => changed.has(file.path) && after.get(file.path) !== undefined);
-            return files.length === 0 || results.get(index)?.status === 'failed'
+            return files.length === 0 ||
+                results.get(index)?.status === 'failed' ||
+                results.get(index)?.status === 'canceled'
                 ? []
                 : { check: { ...check, files, triggerPaths: [] }, index };
         });
@@ -192,7 +214,7 @@ async function hasSyntaxError(grammar: GrammarName, bytes: Buffer): Promise<bool
     }
 }
 
-async function listBrokenSyntax(changed: string[], before: PathBytes, after: PathBytes): Promise<string[]> {
+async function listBrokenFiles(changed: string[], before: PathBytes, after: PathBytes): Promise<string[]> {
     const checked = await Promise.all(
         changed.map(async (path) => {
             const grammar = findGrammarByExtension(path);
@@ -225,17 +247,21 @@ Runs fixes in passes and collects their results. A dry run always removes its co
 @param session the repository and its tools.
 @param planned the checks to fix.
 @param options the fix mode.
-@param options.isDryRun whether to run in a copy and report diffs.
-@returns the fix results, changed paths, and dry-run diffs.
+@param options.dryRun whether to run in a copy and report diffs.
 */
 export async function runFixers(
     session: CheckSession,
     planned: PlannedCheck[],
-    { isDryRun }: { isDryRun: boolean },
+    { dryRun }: { dryRun: boolean },
 ): Promise<FixReport> {
     const checks = planned.filter((check) => check.check.fix !== undefined);
-    const paths = [...new Set(checks.flatMap((check) => listFixPaths(check)))].toSorted((a, b) => compareText(a, b));
-    using scratch = isDryRun
+    using _writer = dryRun ? undefined : openWriter(session.root);
+    const paths = [
+        ...new Set(
+            checks.flatMap((check) => [...new Set([...check.files.map((file) => file.path), ...check.triggerPaths])]),
+        ),
+    ].toSorted((a, b) => compareText(a, b));
+    using scratch = dryRun
         ? await createCopy(
               selectCopyPaths(
                   session.root,
@@ -248,9 +274,9 @@ export async function runFixers(
     const rounds = await runFixerRounds(session, checks, root, paths);
     const { before, after, results } = rounds;
     const changed = listChangedPaths(before, after);
-    const broken = await listBrokenSyntax(changed, before, after);
-    if (!isDryRun) restoreBrokenFiles(session.root, broken, rounds);
-    const diffs = isDryRun
+    const broken = await listBrokenFiles(changed, before, after);
+    if (!dryRun) restoreBrokenFiles(session.root, broken, rounds);
+    const diffs = dryRun
         ? changed.map((path) =>
               buildDiff(path, before.get(path)?.toString('utf8') ?? '', after.get(path)?.toString('utf8') ?? '', [
                   '',
@@ -258,5 +284,16 @@ export async function runFixers(
               ]),
           )
         : [];
-    return { results, changed: isDryRun ? changed : changed.filter((path) => !broken.includes(path)), broken, diffs };
+    return { results, changed: dryRun ? changed : changed.filter((path) => !broken.includes(path)), broken, diffs };
+}
+
+function buildFixResult(
+    check: string,
+    changed: string[],
+    note: string | undefined,
+    signal: AbortSignal | undefined,
+): FixResult {
+    if (signal?.aborted === true) return { check, changed, status: 'canceled', note: note ?? 'Canceled.' };
+    if (note !== undefined) return { check, changed, status: 'failed', note };
+    return { check, changed, status: changed.length === 0 ? 'unchanged' : 'changed' };
 }

@@ -10,10 +10,10 @@ import { splitSystemPath } from '#cli/system/files/names.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { copyDependencies } from '#cli/runs/copy/dependencies.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import type { CopyFile, CopyPlan, CopyPaths } from '#cli/types/runs/copy.ts';
 import { type Files, type TemporaryFolder } from '#cli/types/system/files.ts';
 import { listWorkspaceDependencySources } from '#cli/repository/npm/workspaces.ts';
 import { SYMLINK_MODE, GIT_FILE_MODES, PERMISSION_BITS } from '#cli/config/files/modes.ts';
-import type { CopyFile, CopyPlan, CopyPaths, DependencyCopy } from '#cli/types/runs/copy.ts';
 import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/runs/copy/files.ts';
 import { statSync, chmodSync, constants, mkdirSync, symlinkSync, copyFileSync, writeFileSync } from 'node:fs';
 
@@ -47,7 +47,7 @@ export async function writeCopyFiles(plan: CopyPlan): Promise<void> {
         written += 1;
         plan.cancelSignal?.throwIfAborted();
         const path = typeof file === 'string' ? file : file.indexFile.path;
-        if (plan.dependencies.every((dependency) => !isInScope(path, dependency.path)))
+        if (plan.dependencies.every((dependency) => !isInScope(path, dependency)))
             writeCopyFile(files, plan.target, file);
     }
 }
@@ -108,7 +108,6 @@ Selects the paths and installed dependency trees for a copy of the working tree.
 @param root the repository folder.
 @param paths the tracked files to copy.
 @param scopes the folders that hold installed dependencies.
-@returns the paths and dependency trees to copy.
 */
 export function selectCopyPaths(root: string, paths: string[], scopes: string[]): CopyPaths {
     const projects = paths.flatMap((path) =>
@@ -118,14 +117,7 @@ export function selectCopyPaths(root: string, paths: string[], scopes: string[])
     );
     const dependencies = [
         ...new Set([GSPOT_FOLDER, ...scopes, ...projects].map((project) => posix.join(project, NODE_MODULES))),
-    ]
-        .filter((path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined)
-        .map(
-            (path): DependencyCopy => ({
-                path,
-                operation: path === posix.join(GSPOT_FOLDER, NODE_MODULES) ? 'link' : 'clone',
-            }),
-        );
+    ].filter((path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined);
     return {
         root: root,
         paths: [...new Set([...paths, ...COPY_ROOT_FILES])].filter(

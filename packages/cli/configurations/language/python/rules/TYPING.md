@@ -113,12 +113,11 @@ class Reader(Protocol):
 
     def read(self) -> str:
         """Return the document text."""
-        ...
 
 
 def read_unique_records(reader: Reader) -> list[str]:
     """Read sorted unique records, omitting blank lines."""
     records = {line.strip() for line in reader.read().splitlines()}
-    records.discard('')
+    records.discard("")
     return sorted(records)
 ```

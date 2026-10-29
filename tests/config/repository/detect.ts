@@ -92,3 +92,5 @@ export const SITE_DETECTION_PATHS = [
     'docs/public/sitemap.xml',
     'static/site.webmanifest',
 ] as const;
+
+export const POSTGRESQL_PROVIDER = 'provider = "postgresql"\n';

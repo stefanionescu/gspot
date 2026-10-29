@@ -13,6 +13,13 @@ Read this rule when you change Vue components, composables, or stores.
 
 Name an event for what happened, in the past tense or as a noun, such as `saved` or `update:modelValue`.
 
+### Component conventions
+
+<!-- level: all -->
+
+- Write each component with `<script setup>`.
+- Name each component with two or more words, such as `TodoItem.vue`.
+
 ## Reactivity
 
 - Use `ref` for a value and `reactive` for an object that keeps the same identity. Do not destructure a reactive object.

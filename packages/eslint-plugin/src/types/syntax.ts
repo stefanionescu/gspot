@@ -1,9 +1,4 @@
-import type { TSESTree } from '@typescript-eslint/utils';
-
-export type FunctionNode =
-    | TSESTree.FunctionDeclaration
-    | TSESTree.FunctionExpression
-    | TSESTree.ArrowFunctionExpression;
+import { type TSESTree } from '@typescript-eslint/utils';
 
 export type ImportSource =
     | TSESTree.ImportDeclaration
@@ -11,5 +6,3 @@ export type ImportSource =
     | TSESTree.ExportNamedDeclaration
     | TSESTree.ImportExpression
     | TSESTree.TSImportType;
-
-export type ImportBlock = { first: TSESTree.Statement; last: TSESTree.Statement };

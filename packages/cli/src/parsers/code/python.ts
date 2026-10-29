@@ -1,9 +1,15 @@
-import type { Node } from 'web-tree-sitter';
+import { type Node } from 'web-tree-sitter';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import type { ParseCache, SourceFiles } from '#cli/types/parsers/code/grammars.ts';
-import { PYTHON_EXTENSION, PYTHON_FUNCTION_NODES } from '#cli/config/parsers/code/python.ts';
-import type { PythonFiles, PythonModule, PythonFunction } from '#cli/types/parsers/code/python.ts';
+import { type ParseCache } from '#cli/types/parsers/code/grammars.ts';
+import { PYTHON_EXTENSION, DOCSTRING_PREFIXES, PYTHON_FUNCTION_NODES } from '#cli/config/parsers/code/python.ts';
+
+import {
+    type SourceFiles,
+    type PythonFiles,
+    type PythonModule,
+    type PythonFunction,
+} from '#cli/types/parsers/code/python.ts';
 
 function listFunctions(module: PythonModule): PythonFunction[] {
     return module.tree.rootNode
@@ -25,10 +31,10 @@ Check whether a Python string expression comes first, after any comments.
 
 @param node the statement to test.
 @param siblings the statements in the same file or function body.
-@returns true when the string holds a docstring.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
 export function isDocstring(node: Node, siblings: Node[]): boolean {
+    const literal = node.namedChildren[0];
+    if (literal !== undefined && DOCSTRING_PREFIXES.test(literal.text)) return false;
     return (
         node.type === 'expression_statement' &&
         node.namedChildren[0]?.type === 'string' &&
@@ -36,7 +42,7 @@ export function isDocstring(node: Node, siblings: Node[]): boolean {
     );
 }
 
-async function readPython(sources: SourceFiles): Promise<PythonFiles> {
+async function readPythonFiles(sources: SourceFiles): Promise<PythonFiles> {
     const modules: PythonModule[] = [];
     try {
         for (const file of sources.files) {
@@ -52,12 +58,12 @@ async function readPython(sources: SourceFiles): Promise<PythonFiles> {
 }
 
 /**
-Parse one Python module, with the grammar cache of the run, if any.
+Parse one Python module with the grammar cache of the run.
 
 @param path the repository-relative source file.
 @param text the exact source content.
 @param cache the source reads and tree cleanup for this run.
-@returns a parsed module whose caller disposes its tree.
+@returns the caller disposes its tree.
 */
 export async function parsePythonModule(path: string, text: string, cache?: ParseCache): Promise<PythonModule> {
     const tree = await parseSource('python', text, cache);
@@ -76,7 +82,6 @@ export async function parsePythonModule(path: string, text: string, cache?: Pars
 Find the docstring text of a function.
 
 @param definition the function node.
-@returns the text inside the quotes, or undefined.
 */
 export function findDocstring(definition: Node): string | undefined {
     const siblings = definition.childForFieldName('body')?.namedChildren ?? [];
@@ -90,4 +95,4 @@ function deletePythonTrees(parsed: PythonFiles): void {
     for (const source of parsed.modules) source.tree.delete();
 }
 
-export const PYTHON_SOURCES = { read: readPython, dispose: deletePythonTrees };
+export const PYTHON_SOURCES = { read: readPythonFiles, dispose: deletePythonTrees };

@@ -2,14 +2,15 @@ import ts from 'typescript';
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a jsconfig beside a tsconfig keeps authored exclusions and lists only tracked declaration files', async () => {
     await using sandbox = await createGitSandbox({
@@ -32,25 +33,24 @@ test('a jsconfig beside a tsconfig keeps authored exclusions and lists only trac
         'worker.js',
         'cloudflare-env.d.ts',
     ]);
-    const files = generate(await openSession(sandbox.path)).files;
+    const files = generateFiles(await openSession(sandbox.path)).files;
     const jsconfig = JSON.parse(
-        files.find(({ path }) => path === findManifestTarget('javascript', 'jsconfig.json'))!.content,
+        files.find(({ path }) => path === getManifestTarget('javascript', 'jsconfig.json'))!.content,
     ) as { files: string[]; exclude: string[] };
     expect(jsconfig.files).toStrictEqual(['../../../../cloudflare-env.d.ts']);
     expect(jsconfig.exclude).toStrictEqual(
         [
             `${GSPOT_FOLDER}/**`,
-            'eslint.config.mjs',
             '.editorconfig',
-            'prettier.config.mjs',
             '.prettierignore',
+            'eslint.config.mjs',
+            'prettier.config.mjs',
             '**/node_modules/**',
             '**/bower_components/**',
             '**/.env',
             '**/.env.*',
             '**/.dev.vars',
             '**/.dev.vars.*',
-            '**/.env*',
             '**/eslint.config.mjs',
             '**/eslint.config.js',
             '**/eslint.config.cjs',
@@ -59,7 +59,7 @@ test('a jsconfig beside a tsconfig keeps authored exclusions and lists only trac
     );
 });
 
-test.each(['recommended', 'all'] as const)('JavaScript implicit parameters follow level %s', async (level) => {
+test.each(['basic', 'all'] as const)('JavaScript implicit parameters follow level %s', async (level) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], { level }),
         'source.js':
@@ -69,7 +69,7 @@ test.each(['recommended', 'all'] as const)('JavaScript implicit parameters follo
     const session = await openSession(sandbox.path);
     const project = readTsconfig(
         sandbox.path,
-        join(sandbox.path, findManifestTarget('javascript', 'jsconfig.json')),
+        join(sandbox.path, getManifestTarget('javascript', 'jsconfig.json')),
         session.reads,
     )!;
     const program = ts.createProgram(project.fileNames, { ...project.options, noLib: true });

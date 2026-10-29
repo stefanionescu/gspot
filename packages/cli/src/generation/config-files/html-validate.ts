@@ -4,23 +4,22 @@ import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 
 import {
     HTML_RULES,
-    HTML_RECOMMENDED_OFF,
     HTML_VALIDATE_EXTENDS,
+    HTML_DEFAULT_LEVEL_OFF,
     HTML_VALIDATE_OVERRIDES,
 } from '#cli/config/generation/config-files/html-validate.ts';
 
 /**
 Build html-validate.json: the HTML validation rules for source files or built site pages.
 
-@param planned the config file with its scope, level, and target path.
-@returns the rules for the configuration's HTML validation check.
+@param planned the config file to build.
 */
 export function buildHtmlValidateFile(planned: PlannedConfigFile): string {
     const configuration = planned.configuration.name;
     const check = `${configuration}/html-validate`;
     const rules: Record<string, unknown> = { ...HTML_RULES, ...HTML_VALIDATE_OVERRIDES[configuration] };
     for (const rule of [
-        ...(planned.level === 'all' ? [] : HTML_RECOMMENDED_OFF),
+        ...(planned.level === 'all' ? [] : HTML_DEFAULT_LEVEL_OFF),
         ...listIgnoredRules(planned.scope, check),
     ])
         rules[rule] = 'off';

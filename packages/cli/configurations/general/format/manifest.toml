@@ -2,7 +2,7 @@ allowed_words = ["Prettier"]
 
 [configuration]
 always_selected = true
-description = "Every file: the layout of Prettier for the file types it formats, and line endings, final newlines, and trailing whitespace from editorconfig-checker. One `[format]` block sets the indentation, line length, quotes, and line endings for every formatter."
+description = "Every file: the Prettier layout for the file types it formats, and line endings, final newlines, and trailing whitespace from editorconfig-checker. The format settings set the indentation, line length, quotes, and line endings for every formatter."
 title = "Format"
 
 [files]
@@ -48,12 +48,11 @@ tool = "prettier"
 [[check]]
 command = ["prettier", "--check", "--config", "{pointer:prettier.config.mjs}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
 example = "A JavaScript file with `const value={enabled:true};` differs from the Prettier output. Run `gspot check --fix` to format it."
-exit_codes = [1]
+exit_codes = [1, 2]
 fix = ["prettier", "--write", "--config", "{pointer:prettier.config.mjs}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
 help = "Run `gspot check --fix` to format every file, or `prettier --write` on one file."
-level = "recommended"
 name = "prettier"
-output = { format = "regex", pattern = "^\\[warn\\] (?<file>[^\\s].*[^\\s.])$", fixable = "^\\[warn\\] ", message = "Not formatted the way Prettier formats it." }
+output = { format = "regex", pattern = "^\\[(?:warn|error)\\] (?<file>[^\\s].*?)(?:: SyntaxError: (?<message>.+) \\((?<line>\\d+):(?<column>\\d+)\\)|(?<![\\s.]))$", fixable = "^\\[warn\\] ", message = "Not formatted the way Prettier formats it." }
 stage = "commit"
 summary = "Checks each file Prettier handles for unformatted code."
 why = "Formatting by hand differs by editor; one formatter keeps diffs about the change and not the spacing."
@@ -63,7 +62,6 @@ command = ["editorconfig-checker", "-no-color", "-disable-indentation", "-format
 example = "A file with CRLF line endings under an `.editorconfig` that requires LF reports a finding. Save it with LF endings."
 files = { paths = ["**"] }
 help = "Fix the line the checker names; most editors apply .editorconfig on save."
-level = "recommended"
 name = "editorconfig-checker"
 output = { format = "grouped", file_pattern = "^(?<file>.+):$", pattern = "^\\s+(?:(?<line>\\d+)(?:-\\d+)?: )?(?<message>\\S.*)$" }
 stage = "commit"

@@ -4,13 +4,14 @@ import type { NamingDefaults } from '#cli/types/configurations.ts';
 import { NAMING_DEFAULTS_FILE } from '#cli/config/configurations/naming.ts';
 import { namingDefaultsSchema } from '#cli/schemas/configurations/naming.ts';
 
-/**
-Read the shipped naming choices.
+let namingDefaults: NamingDefaults | undefined;
 
-@returns the shipped naming choices
+/**
+Read the shipped naming choices once per process.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in 5 files share it.
 export function readNamingDefaults(): NamingDefaults {
+    if (namingDefaults !== undefined) return namingDefaults;
     const contents = readFileSync(buildAssetPath(NAMING_DEFAULTS_FILE), 'utf8');
-    return namingDefaultsSchema.parse(JSON.parse(contents));
+    namingDefaults = namingDefaultsSchema.parse(JSON.parse(contents));
+    return namingDefaults;
 }

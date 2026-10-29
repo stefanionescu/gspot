@@ -26,7 +26,7 @@ export async function createPythonProject(
         '.gitignore': '.venv/\n',
         'gspot.toml': buildSandboxSettings(['python'], {
             ignore: { checks: PYTHON_PROJECT_IGNORES, reason: 'This test exercises the pinned Ruff installation.' },
-            level: 'recommended',
+            level: 'basic',
         }),
         ...PYTHON_PROJECT_FILES,
     });

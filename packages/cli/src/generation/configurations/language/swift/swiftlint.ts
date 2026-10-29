@@ -3,59 +3,75 @@ import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { getTable, getLimit, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
+    SWIFTLINT_CHECK,
     SWIFTLINT_OPT_IN,
     SWIFTLINT_ANALYZER,
     SWIFTLINT_COMMENTS,
+    SWIFTLINT_LEVEL_NOTE,
     SWIFTLINT_ALWAYS_OFF,
-    SWIFTLINT_RECOMMENDED_OFF,
     SWIFTLINT_FUNCTION_NESTING,
+    SWIFTLINT_DEFAULT_LEVEL_OFF,
 } from '#cli/config/generation/configurations/language/swift/swiftlint.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in this file share it.
-function buildSeverityLimits(count: number) {
-    return { warning: count, error: count };
-}
-
-/**
-Build swiftlint.yml: the SwiftLint rules with the source limits of the repository.
-
-@param planned the config file with its scope, level, and target path.
-@returns the SwiftLint rules with the source limits of the repository.
-*/
-export function buildSwiftlintFile(planned: PlannedConfigFile): string {
+function buildSwiftlintOptions(planned: PlannedConfigFile, offSet: Set<string>) {
     const { format } = planned.scope.settings.tables;
-    const isAll = planned.level === 'all';
-    const off = [...listIgnoredRules(planned.scope, 'swift/swiftlint'), ...(isAll ? [] : SWIFTLINT_RECOMMENDED_OFF)];
-    const offSet = new Set(off);
     const options = {
-        line_length: { ...buildSeverityLimits(format.print_width), ignores_urls: true },
+        line_length: { warning: format.print_width, error: format.print_width, ignores_urls: true },
         file_length: {
-            ...buildSeverityLimits(getLimit(planned.scope.settings, 'file_lines', 'swift')),
+            warning: getLimit(planned.scope.settings, 'file_lines', 'swift'),
+            error: getLimit(planned.scope.settings, 'file_lines', 'swift'),
             ignore_comment_only_lines: true,
         },
-        type_body_length: buildSeverityLimits(getLimit(planned.scope.settings, 'type_lines', 'swift')),
+        type_body_length: {
+            warning: getLimit(planned.scope.settings, 'type_lines', 'swift'),
+            error: getLimit(planned.scope.settings, 'type_lines', 'swift'),
+        },
         function_parameter_count: {
-            ...buildSeverityLimits(getLimit(planned.scope.settings, 'function_parameters', 'swift')),
+            warning: getLimit(planned.scope.settings, 'function_parameters', 'swift'),
+            error: getLimit(planned.scope.settings, 'function_parameters', 'swift'),
             ignores_default_parameters: false,
         },
-        function_body_length: buildSeverityLimits(getLimit(planned.scope.settings, 'function_lines', 'swift')),
-        cyclomatic_complexity: buildSeverityLimits(getLimit(planned.scope.settings, 'cyclomatic_complexity', 'swift')),
-        closure_body_length: buildSeverityLimits(getLimit(planned.scope.settings, 'closure_lines', 'swift')),
+        function_body_length: {
+            warning: getLimit(planned.scope.settings, 'function_lines', 'swift'),
+            error: getLimit(planned.scope.settings, 'function_lines', 'swift'),
+        },
+        cyclomatic_complexity: {
+            warning: getLimit(planned.scope.settings, 'cyclomatic_complexity', 'swift'),
+            error: getLimit(planned.scope.settings, 'cyclomatic_complexity', 'swift'),
+        },
+        closure_body_length: {
+            warning: getLimit(planned.scope.settings, 'closure_lines', 'swift'),
+            error: getLimit(planned.scope.settings, 'closure_lines', 'swift'),
+        },
         identifier_name: {
             min_length: 1,
             max_length: getTable(planned.scope.settings, 'naming').swift?.max_characters,
         },
         type_name: { min_length: 1, max_length: getTable(planned.scope.settings, 'naming').swift?.max_characters },
         nesting: {
-            type_level: buildSeverityLimits(1),
-            function_level: buildSeverityLimits(SWIFTLINT_FUNCTION_NESTING),
+            type_level: { warning: 1, error: 1 },
+            function_level: { warning: SWIFTLINT_FUNCTION_NESTING, error: SWIFTLINT_FUNCTION_NESTING },
         },
         missing_docs: { error: ['open', 'public'] },
         unused_import: { always_keep_imports: getTable(planned.scope.settings, 'tools.swiftlint').always_keep_imports },
         trailing_comma: { mandatory_comma: format.trailing_commas !== 'none' },
     };
+    const enabled = Object.entries(options).filter(([rule]) => !offSet.has(rule));
+    return Object.fromEntries(enabled);
+}
+
+/**
+Build swiftlint.yml: the SwiftLint rules with the source limits of the repository.
+
+@param planned the config file to build.
+*/
+export function buildSwiftlintFile(planned: PlannedConfigFile): string {
+    const isAll = planned.level === 'all';
+    const off = [...listIgnoredRules(planned.scope, SWIFTLINT_CHECK), ...(isAll ? [] : SWIFTLINT_DEFAULT_LEVEL_OFF)];
+    const offSet = new Set(off);
+    const options = buildSwiftlintOptions(planned, offSet);
     const document = {
-        ...Object.fromEntries(Object.entries(options).filter(([rule]) => !offSet.has(rule))),
+        ...options,
         disabled_rules: [
             ...SWIFTLINT_ALWAYS_OFF,
             ...off.filter((rule) => !SWIFTLINT_OPT_IN.has(rule) && !SWIFTLINT_ANALYZER.has(rule)),
@@ -64,10 +80,23 @@ export function buildSwiftlintFile(planned: PlannedConfigFile): string {
         analyzer_rules: [...SWIFTLINT_ANALYZER.difference(offSet)],
     };
 
+    const disabled = buildDisabledRuleLines(off);
     return Object.entries(document)
-        .flatMap(([rule, value]) => [
-            ...(rule === 'identifier_name' || rule === 'disabled_rules' ? [SWIFTLINT_COMMENTS[rule]] : []),
-            stringify({ [rule]: value }).trimEnd(),
-        ])
+        .flatMap(([rule, value]) => {
+            if (rule === 'disabled_rules') return disabled;
+            const note = rule === 'identifier_name' ? [SWIFTLINT_COMMENTS.identifier_name] : [];
+            return [...note, stringify({ [rule]: value }).trimEnd()];
+        })
         .join('\n');
+}
+
+function buildDisabledRuleLines(off: string[]): string[] {
+    const disabled = off.filter((name) => !SWIFTLINT_OPT_IN.has(name) && !SWIFTLINT_ANALYZER.has(name));
+    const levelLines = disabled.map((name) => `  - ${name}`);
+    return [
+        'disabled_rules:',
+        `  ${SWIFTLINT_COMMENTS.disabled_rules}`,
+        ...SWIFTLINT_ALWAYS_OFF.map((name) => `  - ${name}`),
+        ...(disabled.length === 0 ? [] : [`  ${SWIFTLINT_LEVEL_NOTE}`, ...levelLines]),
+    ];
 }

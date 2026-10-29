@@ -12,3 +12,5 @@ export const GIT_ATTRIBUTES_BLOCK = `${GSPOT_FOLDER}/** linguist-generated
 ${GSPOT_FOLDER}/** ${LF_ATTRIBUTES}
 .gitignore ${LF_ATTRIBUTES}
 .gitattributes ${LF_ATTRIBUTES}`;
+
+export const TOOL_FOLDER_IGNORES = ['node_modules/', '.venv/', 'vale/', 'state/'] as const;

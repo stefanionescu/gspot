@@ -5,7 +5,7 @@ export const LEVEL_SUMMARY =
     "Correctness, security, accessibility, type safety, routine formatting, and the project's own declared checks apply at both levels.";
 
 export const ALL_LEVEL_SUMMARY =
-    'Level `all` adds checks and rules for word choice, architecture, naming, doc comments, declaration order, duplication, API style, and complexity.';
+    'Level all adds checks and rules for word choice, architecture, naming, doc comments, declaration order, duplication, API style, and complexity.';
 
 export const ROOT_SETTING_DEFINITIONS = {
     configurations: {
@@ -27,7 +27,7 @@ export const ROOT_SETTING_DEFINITIONS = {
     },
     level: {
         description: `${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY} No level turns on experimental or preview lint rules.`,
-        default: 'recommended',
+        default: 'basic',
     },
     tool_timeout_seconds: {
         description:
@@ -61,14 +61,17 @@ export const ROOT_SETTING_DEFINITIONS = {
         ],
     },
     'ci.enabled': {
+        template: 'ci',
         description: 'Whether gspot writes a CI workflow; set it at the root only.',
         default: false,
     },
     'ci.provider': {
+        template: 'ci',
         description: 'Which CI service gets the workflow; set it at the root only.',
         default: 'github',
     },
     'ci.setup_command': {
+        template: 'code',
         description: 'A command CI runs before `gspot install`, in place of the frozen install of each lockfile.',
     },
     'rules.enabled': {

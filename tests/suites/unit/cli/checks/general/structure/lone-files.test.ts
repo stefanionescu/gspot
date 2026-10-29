@@ -1,12 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { LINGUIST_GENERATED_PATTERN } from '#tests/config/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
@@ -27,6 +28,7 @@ test('an untracked neighbor does not hide a selected tracked lone file', async (
         { file: 'lone/only.ts', rule: 'lone-file' },
     ]);
 });
+
 test('only code files count, and ignored paths and folders with subfolders are not reported', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript'], {
@@ -45,6 +47,7 @@ test('only code files count, and ignored paths and folders with subfolders are n
         ...LONE_CODE_FILES,
     ]);
 });
+
 test('lone-files and shared-prefixes check build, dist and coverage folders and skip folders marked linguist-generated', async () => {
     await using sandbox = await testdir();
     const authored = Object.fromEntries(
@@ -59,7 +62,7 @@ test('lone-files and shared-prefixes check build, dist and coverage folders and 
             level: 'all',
         }),
         ...authored,
-        '.gitattributes': 'emitted/** linguist-generated\n',
+        '.gitattributes': LINGUIST_GENERATED_PATTERN,
         'emitted/lone/only.ts': '',
         'emitted/cards/asset-one.ts': '',
         'emitted/cards/asset-two.ts': '',
@@ -76,6 +79,7 @@ test('lone-files and shared-prefixes check build, dist and coverage folders and 
             .toSorted((left, right) => left.localeCompare(right)),
     );
 });
+
 test.each([...FRAMEWORK_COMPONENT_CASES])(
     'a lone $framework component is reported once its framework is selected',
     async ({ framework, name, folder, content }) => {
@@ -93,6 +97,7 @@ test.each([...FRAMEWORK_COMPONENT_CASES])(
         expect(findings.map((finding) => finding.file)).toStrictEqual([neighbor, route]);
     },
 );
+
 test.each([...ROUTE_FILE_CASES])(
     'a folder with only a $framework route file is a route, not a lone file',
     async ({ configurations, files, expected }) => {

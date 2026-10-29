@@ -19,12 +19,14 @@
         "resolveJsonModule": true,
         "paths": {
             "#cli/*": ["./packages/cli/src/*"],
+            "#cli-configurations/*": ["./packages/cli/configurations/*"],
             "#tests/*": ["./tests/*"],
             "#cli-package": ["./packages/cli/package.json"],
             "#eslint-plugin/*": ["./packages/eslint-plugin/src/*"],
             "#eslint-plugin-local/*": ["./packages/eslint-plugin/local/*"],
             "#eslint-plugin-package": ["./packages/eslint-plugin/package.json"],
-            "#root-package": ["./package.json"]
+            "#root-package": ["./package.json"],
+            "#docs/*": ["./docs/src/*"]
         }
     },
     "include": ["tests/**/*.ts", "packages/cli/src/types/**/*.d.ts"]

@@ -8,20 +8,17 @@ export const JAVASCRIPT_IGNORED_GLOBS = [
     '**/eslint.config.cjs',
 ] as const;
 
-export const JAVASCRIPT_IMPORTS = {
+export const STANDALONE_OPTIONS = {
     target: 'ES2022',
     module: 'NodeNext',
     moduleResolution: 'NodeNext',
     jsx: 'preserve',
-    skipLibCheck: true,
     resolveJsonModule: true,
 } as const;
 
 export const JAVASCRIPT_OPTIONS = {
     checkJs: true,
-    allowJs: true,
     strict: true,
-    noEmit: true,
     allowImportingTsExtensions: true,
     maxNodeModuleJsDepth: 0,
 } as const;

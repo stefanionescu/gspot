@@ -1,5 +1,5 @@
 import { escapeGlob } from '#cli/system/paths.ts';
-import { MISE_SCRIPT_PATH } from '#cli/config/files/names.ts';
+import { MISE_TASKS_GLOB } from '#cli/config/files/names.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { EslintRuntime } from '#cli/types/generation/eslint.ts';
 import { joinScope, isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
@@ -18,13 +18,13 @@ function selectFrameworkRuntime(configurations: string[]): string | undefined {
     return ESLINT_BROWSER_CONFIGURATIONS.some((name) => configurations.includes(name)) ? 'browser' : undefined;
 }
 
-function isRuntimeRoot(scope: string, scopes: Scope[]): boolean {
+function isRuntimeRoot(scopePath: string, scopes: Scope[]): boolean {
     return (
-        scope === '' ||
+        scopePath === '' ||
         scopes.some(
             (ancestor) =>
-                ancestor.path !== scope &&
-                isInScope(scope, ancestor.path) &&
+                ancestor.path !== scopePath &&
+                isInScope(scopePath, ancestor.path) &&
                 (selectFrameworkRuntime(ancestor.settings.configurations) !== undefined ||
                     (ancestor.settings.tables[ESLINT_SETTINGS_TABLE]?.override ?? []).some(
                         (override) => override.runtime !== undefined,
@@ -67,7 +67,7 @@ export function buildRuntimes(scopes: Scope[]): EslintRuntime[] {
 function buildFrameworkRuntime(scope: Scope, escaped: string): EslintRuntime | undefined {
     const runtime = selectFrameworkRuntime(scope.settings.configurations);
     if (runtime === undefined) return undefined;
-    const scripts = [...(scope.settings.tables.javascript?.script_files ?? []), joinScope(escaped, MISE_SCRIPT_PATH)];
+    const scripts = [...(scope.settings.tables.javascript?.script_files ?? []), joinScope(escaped, MISE_TASKS_GLOB)];
     return {
         scope: scope.path,
         runtime,

@@ -5,7 +5,12 @@ export const UNMATCHED_PATH_CASES = [
         settings: {
             configurations: ['bash'],
             import_rule: [{ name: 'core', paths: ['src/**', 'gone/**'] }],
-            structure: { environment_readers: ['scripts/kept.sh', 'scripts/gone.sh'] },
+            structure: {
+                environment_readers: {
+                    value: ['scripts/kept.sh', 'scripts/gone.sh'],
+                    reason: 'These files own environment access for the scope.',
+                },
+            },
         },
         messages: [
             'gone/** under [[import_rule]] matches no tracked file or folder.',
@@ -17,12 +22,30 @@ export const UNMATCHED_PATH_CASES = [
         files: { 'app/kept.sh': 'echo kept\n', 'app/deep/kept.sh': 'echo kept\n' },
         settings: {
             configurations: ['bash'],
-            structure: { environment_readers: ['root-gone.sh'] },
+            structure: {
+                environment_readers: {
+                    value: ['root-gone.sh'],
+                    reason: 'These files own environment access for the scope.',
+                },
+            },
             scope: [
-                { path: 'app', structure: { environment_readers: ['app/kept.sh', 'app/gone.sh'] } },
+                {
+                    path: 'app',
+                    structure: {
+                        environment_readers: {
+                            value: ['app/kept.sh', 'app/gone.sh'],
+                            reason: 'These files own environment access for the scope.',
+                        },
+                    },
+                },
                 {
                     path: 'app/deep',
-                    structure: { environment_readers: ['app/deep/kept.sh', 'app/deep/gone.sh'] },
+                    structure: {
+                        environment_readers: {
+                            value: ['app/deep/kept.sh', 'app/deep/gone.sh'],
+                            reason: 'These files own environment access for the scope.',
+                        },
+                    },
                 },
             ],
         },

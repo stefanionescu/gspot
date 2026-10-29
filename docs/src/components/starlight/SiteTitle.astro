@@ -1,10 +1,11 @@
 ---
+import mark from '../../assets/mark.webp';
 import { DOCS_PATH } from '../../config/site.ts';
 ---
 
 <div class="brand-navigation">
     <a class="site-title" href="/" aria-label="gspot home">
-        <img class="brand-mark" src="/brand/mark.webp" alt="" width="28" height="28" />
+        <img class="brand-mark" src={mark.src} alt="" width="28" height="28" />
         <span>gspot</span>
     </a>
     {Astro.url.pathname !== '/' && (

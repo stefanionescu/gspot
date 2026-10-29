@@ -1,15 +1,18 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
+import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
-import { findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildDatabaseSchema } from '#cli/checks/database/postgres/schema.ts';
+import { ROW_SECURITY_SQL } from '#tests/config/checks/database/postgres/statements.ts';
+import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     POSTGRES_CHECKS,
@@ -31,7 +34,18 @@ test('postgres/migration-order reports a migration that does not parse at its li
 
     const syntax = failed.report.checks.find(({ check }) => check === 'postgres/migration-order');
     expect(syntax?.status).toBe('failed');
-    expect(syntax?.findings).toMatchObject([{ file: MALFORMED_MIGRATION_PATH, line: 1, column: 14, rule: 'syntax' }]);
+    expect(syntax?.findings).toStrictEqual([
+        {
+            check: 'postgres/migration-order',
+            file: MALFORMED_MIGRATION_PATH,
+            line: 1,
+            column: 14,
+            rule: 'syntax',
+            message: 'syntax error at or near ";"',
+            fixable: false,
+            help: getShippedCheck('postgres/migration-order').help,
+        },
+    ]);
     expect(
         failed.report.checks
             .filter(({ check }) => check !== 'postgres/migration-order')
@@ -61,7 +75,7 @@ test('dbmate and golang-migrate replays exclude rollback SQL', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['postgres']),
         'db/migrations/1_teams.sql': '-- migrate:up\nCREATE TABLE teams (id int);\n-- migrate:down\nDROP TABLE teams;',
-        'db/migrations/2_secure.up.sql': 'ALTER TABLE teams ENABLE ROW LEVEL SECURITY;',
+        'db/migrations/2_secure.up.sql': ROW_SECURITY_SQL,
         'db/migrations/2_secure.down.sql': 'ALTER TABLE teams DISABLE ROW LEVEL SECURITY;',
     });
 
@@ -69,8 +83,8 @@ test('dbmate and golang-migrate replays exclude rollback SQL', async () => {
     const input = planSandboxCheck(session, 'postgres/migration-order');
     const { migrations } = await readMigrations(session, input);
     expect(migrations.map((migration) => migration.name)).toStrictEqual(['1_teams.sql', '2_secure.up.sql']);
-    expect(buildSchema(migrations).secured.has('public.teams')).toBe(true);
-    expect(await findBuiltInCheck('postgres/migration-order')(session, input)).toStrictEqual([]);
+    expect(buildDatabaseSchema(migrations).secured.has('public.teams')).toBe(true);
+    expect(await getBuiltInCheck('postgres/migration-order')(session, input)).toStrictEqual([]);
 });
 
 test.each(['', 'app'])('the default migration folders are read and a set folder replaces them in %j', async (scope) => {
@@ -124,9 +138,55 @@ test.each(['prisma/migrations/20260101000000_init/migration.sql', 'drizzle/0001_
         expect(migrations.map(({ version }) => version)).toStrictEqual([
             path.startsWith('prisma/') ? '20260101000000' : '0001',
         ]);
-        expect(await findBuiltInCheck('postgres/migration-order')(session, input)).toStrictEqual([]);
+        expect(await getBuiltInCheck('postgres/migration-order')(session, input)).toStrictEqual([]);
         expect(
-            await findBuiltInCheck('postgres/grants')(session, planSandboxCheck(session, 'postgres/grants')),
+            await getBuiltInCheck('postgres/grants')(session, planSandboxCheck(session, 'postgres/grants')),
         ).toMatchObject([{ file: path, rule: 'grant-all' }]);
     },
 );
+
+test.each(['', 'V'])('unpadded %s migration versions replay and freeze in numeric order', async (prefix) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['postgres'], { tables: '[postgres]\nfrozen_through = "9"\n' }),
+        [`migrations/${prefix}9_create.sql`]: 'CREATE TABLE teams (id int);',
+        [`migrations/${prefix}10_secure.sql`]: ROW_SECURITY_SQL,
+    });
+
+    commitAll(sandbox.path);
+    await createFileTree(sandbox.path, {
+        [`migrations/${prefix}8_earlier.sql`]: 'SELECT 8;',
+        [`migrations/${prefix}11_later.sql`]: 'SELECT 11;',
+    });
+    const session = await openSession(sandbox.path);
+    const input = planSandboxCheck(session, 'postgres/migration-order');
+    const { migrations } = await readMigrations(session, input);
+    expect(migrations.map((migration) => migration.version)).toStrictEqual(['8', '9', '10', '11']);
+    expect(buildDatabaseSchema(migrations).secured.has('public.teams')).toBe(true);
+    expect(await getBuiltInCheck('postgres/migration-order')(session, input)).toMatchObject([
+        { file: `migrations/${prefix}8_earlier.sql`, rule: 'order' },
+    ]);
+    await writeFile(join(sandbox.path, `migrations/${prefix}10_secure.sql`), 'SELECT 10;');
+    expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toStrictEqual([]);
+    await writeFile(join(sandbox.path, `migrations/${prefix}9_create.sql`), 'CREATE TABLE teams (id bigint);');
+    expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toMatchObject([
+        { file: `migrations/${prefix}9_create.sql`, rule: 'frozen' },
+    ]);
+});
+
+test('Flyway component versions remain distinct and dollar-quoted down markers stay inside their function', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['postgres']),
+        'migrations/V1__first.sql': 'CREATE TABLE entries (id int);',
+        'migrations/V1_1__second.sql':
+            "CREATE FUNCTION sample() RETURNS text LANGUAGE sql AS $$\n-- migrate:down\nSELECT 'value';\n$$;\n-- migrate:down\nDROP TABLE entries;",
+        'migrations/V1_10__later.sql': 'SELECT 1;',
+        'migrations/V1_2__third.sql': 'SELECT 1;',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planSandboxCheck(session, 'postgres/migration-order');
+    const { migrations, findings } = await readMigrations(session, planned);
+    expect(findings).toStrictEqual([]);
+    expect(migrations.map(({ version }) => version)).toStrictEqual(['1', '1.1', '1.2', '1.10']);
+    expect(migrations[1]?.text).toContain("SELECT 'value'");
+    expect(migrations[1]?.text).not.toContain('DROP TABLE');
+});

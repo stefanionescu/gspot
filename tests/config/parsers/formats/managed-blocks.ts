@@ -1,9 +1,8 @@
 export const MALFORMED_BLOCKS = [
-    { path: 'AGENTS.md', style: 'markdown', source: '<!-- >>> gspot managed >>> -->\nbody\n' },
-    { path: 'AGENTS.md', style: 'markdown', source: 'body\n<!-- <<< gspot managed <<< -->\n' },
+    { path: 'AGENTS.md', source: '<!-- >>> gspot managed >>> -->\nbody\n' },
+    { path: 'AGENTS.md', source: 'body\n<!-- <<< gspot managed <<< -->\n' },
     {
         path: 'AGENTS.md',
-        style: 'markdown',
         source: `<!-- <<< gspot managed <<< -->
 body
 <!-- >>> gspot managed >>> -->
@@ -11,7 +10,6 @@ body
     },
     {
         path: 'AGENTS.md',
-        style: 'markdown',
         source: `<!-- >>> gspot managed >>> -->
 <!-- >>> gspot managed >>> -->
 body
@@ -20,7 +18,6 @@ body
     },
     {
         path: 'AGENTS.md',
-        style: 'markdown',
         source: `<!-- >>> gspot managed >>> -->
 body
 <!-- <<< gspot managed <<< -->
@@ -32,9 +29,8 @@ body
 export const BLOCK_FORMATS = [
     {
         path: 'AGENTS.md',
-        style: 'markdown',
         start: '<!-- >>> gspot managed >>> -->',
         end: '<!-- <<< gspot managed <<< -->',
     },
-    { path: '.gitignore', style: 'hash', start: '# >>> gspot managed >>>', end: '# <<< gspot managed <<<' },
+    { path: '.gitignore', start: '# >>> gspot managed >>>', end: '# <<< gspot managed <<<' },
 ] as const;

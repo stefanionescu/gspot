@@ -1,11 +1,12 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
+import { OS_SOURCE } from '#tests/config/python.ts';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { getTool } from '#cli/configurations/tools.ts';
-import { buildVenvBinPath } from '#cli/system/paths.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { executableLayout } from '#cli/system/paths.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
@@ -17,9 +18,9 @@ test('vulture reads every Python file of the scope and reports unused definition
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['python'], { level: 'all', scopes: [{ path: 'child' }] }),
         'app/nodes.py': 'def helper():\n    return 1\n',
-        'app/main.py': 'import os\n',
+        'app/main.py': OS_SOURCE,
         'child/other.py': 'VALUE = 1\n',
-        [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'vulture')]: 'stub',
+        [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'vulture')]: 'stub',
     });
     const session = await openSession(sandbox.path);
     using resources = fakeToolExecutables([getTool(session.configurationsByName.values(), 'vulture')]);

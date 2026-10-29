@@ -10,15 +10,12 @@ export const TYPESCRIPT_RULES = {
     'jsdoc/check-tag-names': ['error', { typed: true }],
 
     '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
-    '@typescript-eslint/consistent-type-imports': [
-        'error',
-        { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
-    ],
+    '@typescript-eslint/consistent-type-imports': 'error',
     'import-x/no-duplicates': ['error', { 'prefer-inline': true }],
-    '@typescript-eslint/consistent-type-exports': ['error', { fixMixedExportsWithInlineTypeSpecifier: false }],
+    '@typescript-eslint/consistent-type-exports': 'error',
     '@typescript-eslint/switch-exhaustiveness-check': ['error', { considerDefaultExhaustiveForUnions: true }],
     '@typescript-eslint/prefer-readonly': 'error',
-    '@typescript-eslint/require-array-sort-compare': ['error', { ignoreStringArrays: true }],
+    '@typescript-eslint/require-array-sort-compare': 'error',
     '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: false }],
     '@typescript-eslint/no-unused-vars': [
         'error',
@@ -48,8 +45,6 @@ export const TYPESCRIPT_RULES = {
         'error',
         {
             'ts-expect-error': false,
-            'ts-ignore': true,
-            'ts-nocheck': true,
         },
     ],
     'sonarjs/no-duplicate-in-composite': 'error',

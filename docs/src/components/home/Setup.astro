@@ -1,12 +1,19 @@
 ---
 import { URL_BREAK } from '../../config/home.ts';
 import { Icon } from '@astrojs/starlight/components';
-import { LLMS_URL, AGENT_PROMPT, LLMS_COMMAND, SETUP_COMMANDS } from '../../config/setup.ts';
+import { COPIED_MESSAGE, COPY_FAILED_MESSAGE } from '../../config/components/home.ts';
+import { LLMS_URL, AGENT_PROMPT, LLMS_COMMAND, CURL_COMMAND, SETUP_COMMANDS } from '../../config/setup.ts';
 
 const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
 ---
 
-<home-setup class="setup" data-mode="human">
+<home-setup
+    class="setup"
+    data-mode="human"
+    data-prompt={AGENT_PROMPT}
+    data-copied={COPIED_MESSAGE}
+    data-copy-failed={COPY_FAILED_MESSAGE}
+>
     <div class="setup-head">
         <div class="modes" role="tablist" aria-label="Who sets up gspot">
             <button
@@ -71,7 +78,7 @@ const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
             <p class="agent-prompt">
                 {promptStart}
                 <span class="em">
-                    <span class="nowrap">curl -fsSL</span>{' '}
+                    <span class="nowrap">{CURL_COMMAND}</span>{' '}
                     {LLMS_URL.split(URL_BREAK).map((segment, index) => (
                         <>
                             {index > 0 && <wbr />}
@@ -87,7 +94,6 @@ const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
 </home-setup>
 
 <script>
-    import { AGENT_PROMPT } from '../../config/setup.ts';
 
     class HomeSetup extends HTMLElement {
         connectedCallback(): void {
@@ -121,15 +127,15 @@ const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
                 });
             }
             copy.addEventListener('click', async () => {
-                const text = this.dataset['mode'] === 'agent' ? AGENT_PROMPT : commands
+                const text = this.dataset['mode'] === 'agent' ? (this.dataset['prompt'] as string) : commands
                     .filter((pre) => !pre.hidden)
                     .flatMap((pre) => [...pre.querySelectorAll('.command-text')].map((line) => line.textContent))
                     .join('\n');
                 try {
                     await navigator.clipboard.writeText(text);
-                    status.textContent = 'Copied.';
+                    status.textContent = (this.dataset['copied'] as string);
                 } catch {
-                    status.textContent = 'Copy failed. Select and copy the text.';
+                    status.textContent = (this.dataset['copyFailed'] as string);
                 }
             });
         }

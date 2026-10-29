@@ -26,3 +26,31 @@ assets/*
 `;
 
 export const CLOUDFLARE_SCOPE_SETTINGS = [{ path: 'app', configurations: ['cloudflare'] }];
+
+export const SECURITY_HEADER_CASES = [
+    {
+        name: 'missing content type protection',
+        text: '/*\n  Referrer-Policy: same-origin\n  X-Frame-Options: DENY\n',
+        missing: ['x-content-type-options'],
+    },
+    {
+        name: 'missing referrer policy',
+        text: '/*\n  X-Content-Type-Options: nosniff\n  X-Frame-Options: DENY\n',
+        missing: ['referrer-policy'],
+    },
+    {
+        name: 'missing frame protection',
+        text: '/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: same-origin\n',
+        missing: ['x-frame-options'],
+    },
+    {
+        name: 'no global block',
+        text: '/assets/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: same-origin\n  X-Frame-Options: DENY\n',
+        missing: ['x-content-type-options', 'referrer-policy', 'x-frame-options'],
+    },
+    {
+        name: 'a detached unrelated header',
+        text: '/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: same-origin\n  X-Frame-Options: DENY\n  ! X-Powered-By\n',
+        missing: [],
+    },
+] as const;

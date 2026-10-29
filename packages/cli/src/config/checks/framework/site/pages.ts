@@ -1,4 +1,4 @@
-export const SITEMAP_LOCATION = /<loc>\s*(?<url>[^<\s]+)\s*<\/loc>/gu;
+export const SITEMAP_LOCATION = /<loc>(?:\s*<!\[CDATA\[(?<cdata>[\s\S]*?)\]\]>\s*|(?<url>[^<]*))<\/loc>/gu;
 
 export const SITEMAP_EXTENSION = '.xml';
 
@@ -28,7 +28,7 @@ export const HTML_VALIDATE_CONFIG_FLAG = '--config';
 
 export const HTML_VALIDATE_FORMATTER_FLAG = '--formatter';
 
-export const HTML_REPORT_FILE = 'html-validate.json';
+export const HTML_VALIDATE_OUTPUT = 'html-validate.json';
 
 export const CSS_EXTENSION = '.css';
 
@@ -43,3 +43,19 @@ export const STYLE_COMPONENTS = new Set(['.astro', '.vue', '.svelte']);
 export const STYLE_WHITESPACE = /\s+/gu;
 
 export const STYLE_SCOPING = /:where\(\.astro-[a-z\d-]+\)|\[data-(?:astro-cid|v)-[a-z\d-]+\]|\.svelte-[a-z\d-]+/giu;
+
+export const ROOT_DIR_FLAG = '--root-dir';
+
+export const REMAP_FLAG = '--remap';
+
+export const EXCLUDE_FLAG = '--exclude';
+
+export const UNLISTED_PAGE_MESSAGE = 'The build wrote this page, and the sitemap does not list it.';
+
+export const RULES = {
+    unusedSelector: 'unused-selector',
+    size: 'size',
+    missingPage: 'missing-page',
+    unlistedPage: 'unlisted-page',
+    invalidUrl: 'invalid-url',
+} as const;

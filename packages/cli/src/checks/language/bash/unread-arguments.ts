@@ -1,41 +1,38 @@
 import type { Session } from '#cli/types/session.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
-import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { readScripts } from '#cli/checks/language/bash/scripts.ts';
+import type { CheckFinding } from '#cli/types/runs/check.ts';
+import { readScripts, listFunctionCalls } from '#cli/checks/language/bash/scripts.ts';
+import { READS_NO_POSITIONAL, UNREAD_ARGUMENTS_RULE } from '#cli/config/checks/language/bash/unread-arguments.ts';
 
 /**
 Reports each function called with more arguments than it reads.
 
 @param session the repository and its tools.
 @param planned the scope scripts to read.
-@returns the findings.
 */
-export async function checkBashUnreadArguments(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkBashUnreadArguments(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
-    const names = new Set(scripts.flatMap((file) => file.functions.map((scriptFunction) => scriptFunction.name)));
-    const widest = new Map<string, number>();
-    for (const file of scripts)
-        for (const call of file.calls) {
-            if (!call.forwards && names.has(call.name))
-                widest.set(call.name, Math.max(widest.get(call.name) ?? 0, call.count));
-        }
     return scripts.flatMap((file) =>
         file.functions.flatMap((scriptFunction) => {
-            const width = widest.get(scriptFunction.name) ?? 0;
+            const width = Math.max(
+                0,
+                ...listFunctionCalls(scripts, file, scriptFunction.name)
+                    .filter((call) => !call.forwards)
+                    .map((call) => call.count),
+            );
             const highest = scriptFunction.highestRead;
             if (width <= highest) return [];
             const unread = Array.from({ length: width - highest }, (_, offset) => String(highest + offset + 1));
-            const read = highest === 0 ? 'reads no positional parameter' : `reads none past $${String(highest)}`;
+            const read = highest === 0 ? READS_NO_POSITIONAL : `reads none past $${String(highest)}`;
             const positions =
                 unread.length === 1 ? `position ${unread.join('')} is` : `positions ${unread.join(' and ')} are`;
             return [
-                buildFinding(
-                    planned,
-                    { file: file.path, line: scriptFunction.start },
-                    'unread-arguments',
-                    `${scriptFunction.name} is called with up to ${String(width)} ${width === 1 ? 'argument' : 'arguments'} but ${read}: ${positions} never read.`,
-                ),
+                {
+                    file: file.path,
+                    line: scriptFunction.start,
+                    rule: UNREAD_ARGUMENTS_RULE,
+                    message: `${scriptFunction.name} is called with up to ${String(width)} ${width === 1 ? 'argument' : 'arguments'} but ${read}: ${positions} never read.`,
+                },
             ];
         }),
     );

@@ -2,22 +2,22 @@ import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 
 import {
+    SQLFLUFF_CHECK,
     SQL_FILE_EXTENSIONS,
     SQLFLUFF_CAPITALISATION,
-    SQLFLUFF_RECOMMENDED_OFF,
+    SQLFLUFF_DEFAULT_LEVEL_OFF,
 } from '#cli/config/generation/configurations/language/sql.ts';
 
 /**
 Build sqlfluff.cfg: the SQL dialect, formatting choices, and SQLFluff rule exclusions.
 
-@param planned the config file with its scope, level, and target path.
-@returns the SQL dialect, formatting choices, and SQLFluff rule exclusions.
+@param planned the config file to build.
 */
 export function buildSqlfluffFile(planned: PlannedConfigFile): string {
     const { format } = planned.scope.settings.tables;
     const isAll = planned.level === 'all';
 
-    const off = [...listIgnoredRules(planned.scope, 'sql/sqlfluff'), ...(isAll ? [] : SQLFLUFF_RECOMMENDED_OFF)];
+    const off = [...listIgnoredRules(planned.scope, SQLFLUFF_CHECK), ...(isAll ? [] : SQLFLUFF_DEFAULT_LEVEL_OFF)];
     const sections = {
         sqlfluff: {
             dialect: getTable(planned.scope.settings, 'tools.sqlfluff').dialect,

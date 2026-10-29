@@ -1,14 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { openSession } from '#cli/session.ts';
 import { planChecks } from '#cli/planning/checks.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, runGspotStep, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -137,7 +138,7 @@ test.skipIf(isWindows).each([...SYNTAX_CASES])(
 test('shfmt reports a syntax error as a finding and passes after the script is repaired', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash', 'format']),
-        'broken script.sh': 'if then\n',
+        'broken script.sh': BROKEN_IF_SCRIPT,
     });
 
     const command = ['check', '--only', 'bash/shfmt', '--json'];

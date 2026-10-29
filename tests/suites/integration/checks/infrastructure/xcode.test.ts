@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { openSession } from '#cli/session.ts';
 import { test, expect, describe } from 'bun:test';
 import { chmod, writeFile } from 'node:fs/promises';
 import { planChecks } from '#cli/planning/checks.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system/platform.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 import { XCODE_CASES, PLUTIL_UNREADABLE_FILES } from '#tests/config/integration/checks/infrastructure/xcode.ts';
 
 describe.skipIf(!isMacos)('Xcode samples', () => {
@@ -19,7 +19,7 @@ describe.skipIf(!isMacos)('Xcode samples', () => {
         files: {},
     });
     test.each([...XCODE_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
-        expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
+        await assertCheckSample(installedSandbox(), sample);
     });
 });
 

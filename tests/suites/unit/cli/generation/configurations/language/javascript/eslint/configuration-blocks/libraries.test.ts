@@ -76,7 +76,7 @@ test.each([...LEVELS])(
                 tables: `[tools.eslint]
 restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
 [zustand]
-store_files = ["**/store.js"]
+store_files = { value = ["**/store.js"], reason = "This test sets the allowed locations explicitly." }
 `,
                 level,
             }),
@@ -88,6 +88,7 @@ store_files = ["**/store.js"]
             { file: 'src/store.js', rule: 'no-restricted-imports', line: 2 },
             { file: 'src/widget.js', rule: 'no-restricted-imports', line: 1 },
             { file: 'src/widget.js', rule: 'no-restricted-imports', line: 2 },
+            { file: 'src/widget.js', rule: 'no-restricted-imports', line: 3 },
         ]);
         const results = await eslint.lintFiles(files);
         for (const result of results) {

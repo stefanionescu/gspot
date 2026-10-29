@@ -12,6 +12,8 @@ import {
     RUNTIME_GLOBAL_FINDINGS,
     FRAMEWORK_RUNTIME_CASES,
     RUNTIME_OVERRIDE_TABLES,
+    WINDOW_UNDEFINED_MESSAGE,
+    PROCESS_UNDEFINED_MESSAGE,
     RUNTIME_OVERRIDE_SETTINGS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/runtimes.ts';
 
@@ -38,7 +40,7 @@ test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($ru
     ]);
     const [result] = await eslint.lintFiles(['application/source.js']);
     expect(result!.messages.map(({ ruleId, line, message }) => ({ ruleId, line, message }))).toStrictEqual([
-        ...(globals.includes('process') ? [] : [{ ruleId: 'no-undef', line: 1, message: "'process' is not defined." }]),
+        ...(globals.includes('process') ? [] : [{ ruleId: 'no-undef', line: 1, message: PROCESS_UNDEFINED_MESSAGE }]),
         {
             ruleId: 'unicorn/no-process-exit',
             line: 1,
@@ -130,7 +132,7 @@ test('a later [[tools.eslint.override]] runtime replaces an earlier one', async 
     expect(browser!.messages).toStrictEqual([]);
     const [worker] = await eslint.lintFiles(['worker.js']);
     expect(worker!.messages.map(({ ruleId, line, message }) => ({ ruleId, line, message }))).toStrictEqual([
-        { ruleId: 'no-undef', line: 2, message: "'window' is not defined." },
+        { ruleId: 'no-undef', line: 2, message: WINDOW_UNDEFINED_MESSAGE },
     ]);
 });
 
@@ -149,6 +151,6 @@ test.each([...FRAMEWORK_RUNTIME_CASES])(
         const [result] = await eslint.lintFiles([row.path]);
         expect(
             result!.messages.filter(({ ruleId }) => ruleId === 'no-undef').map(({ message }) => message),
-        ).toStrictEqual(["'window' is not defined.", "'process' is not defined."]);
+        ).toStrictEqual([WINDOW_UNDEFINED_MESSAGE, PROCESS_UNDEFINED_MESSAGE]);
     },
 );

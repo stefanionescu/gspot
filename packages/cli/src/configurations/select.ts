@@ -4,13 +4,15 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { SOURCE_FILE_GROUPS } from '#cli/config/configurations/select.ts';
 import { type Configuration, type RequirementWalk, type WrittenConfiguration } from '#cli/types/configurations.ts';
 
-function addRequiredConfigurations(walk: RequirementWalk, configurationName: string): void {
-    if (walk.seen.has(configurationName)) return;
-    walk.seen.add(configurationName);
-    const configuration = walk.configurationsByName.get(configurationName);
+function addRequiredConfigurations(walk: RequirementWalk, name: string): void {
+    if (walk.seen.has(name)) return;
+    walk.seen.add(name);
+    const configuration = walk.configurationsByName.get(name);
     if (!configuration) {
         const names = walk.configurationsByName.keys().toArray();
-        walk.errors.push(formatUnknownConfiguration(configurationName, names));
+        walk.errors.push(
+            `There is no configuration called ${name}.${formatSimilarNames(name, names)} See https://generativespotting.com/reference/configurations/ for the available configurations.`,
+        );
         return;
     }
     for (const required of configuration.requires) addRequiredConfigurations(walk, required);
@@ -20,12 +22,12 @@ function addRequiredConfigurations(walk: RequirementWalk, configurationName: str
 /**
 Resolve configuration names to configurations in order, and throw for unknown names.
 
-@param configurationNames the names to resolve.
+@param names the names to resolve.
 @param configurationsByName every configuration.
 @returns the configurations, requirements first, in order of first mention.
 */
 export function selectConfigurations(
-    configurationNames: string[],
+    names: string[],
     configurationsByName: Map<string, Configuration>,
 ): Configuration[] {
     const walk: RequirementWalk = {
@@ -34,7 +36,7 @@ export function selectConfigurations(
         order: [],
         seen: new Set(),
     };
-    for (const configurationName of configurationNames) addRequiredConfigurations(walk, configurationName);
+    for (const configurationName of names) addRequiredConfigurations(walk, configurationName);
     if (walk.errors.length > 0) throw new GspotError('arguments', walk.errors.join('\n'));
     return walk.order;
 }
@@ -43,7 +45,6 @@ export function selectConfigurations(
 Keep the language and framework configurations that add source files to shared checks.
 
 @param configurations the configurations in use.
-@returns the configurations that own source settings.
 */
 export function filterSourceConfigurations(configurations: Configuration[]): Configuration[] {
     const groups: readonly string[] = SOURCE_FILE_GROUPS;
@@ -54,7 +55,6 @@ export function filterSourceConfigurations(configurations: Configuration[]): Con
 List each configuration of the scopes once, in first-seen order.
 
 @param scopes the scopes, which can share configurations.
-@returns each configuration once.
 */
 export function listSelectedConfigurations(scopes: Pick<Scope, 'configurations'>[]): Configuration[] {
     const seen = new Map<string, Configuration>();
@@ -69,15 +69,9 @@ Check whether any scope selects a configuration.
 
 @param scopes the validated scopes.
 @param name the configuration to find.
-@returns whether any scope includes the configuration.
 */
 export function isConfigurationSelected(scopes: Pick<Scope, 'configurations'>[], name: string): boolean {
     return scopes.some((scope) => scope.configurations.some((configuration) => configuration.name === name));
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function formatUnknownConfiguration(name: string, available: string[]): string {
-    return `There is no configuration called \`${name}\`.${formatSimilarNames(name, available)} Run \`gspot list configurations\` to see the available configurations.`;
 }
 
 /**
@@ -85,7 +79,6 @@ Find the unknown configuration names, and keep their order and location.
 
 @param written the requested names, with their original fields.
 @param configurationsByName the shipped configurations.
-@returns each unknown name with its error message.
 */
 export function listUnknownConfigurations<Written extends Pick<WrittenConfiguration, 'name'>>(
     written: readonly Written[],
@@ -96,7 +89,7 @@ export function listUnknownConfigurations<Written extends Pick<WrittenConfigurat
         .filter(({ name }) => !configurationsByName.has(name))
         .map((missing) => ({
             ...missing,
-            message: formatUnknownConfiguration(missing.name, available),
+            message: `There is no configuration called ${missing.name}.${formatSimilarNames(missing.name, available)} See https://generativespotting.com/reference/configurations/ for the available configurations.`,
         }));
 }
 

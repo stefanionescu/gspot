@@ -1,15 +1,16 @@
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { parse } from '@decimalturn/toml-patch';
 import { getTable } from '#cli/settings/scopes.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { parseSettings } from '#cli/settings/read.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import type { InitJson } from '#cli/types/commands/init.ts';
-import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
-import { type TomlTable, type FormatSettings } from '#cli/types/settings/file.ts';
+import { type InitJson } from '#cli/types/commands/init.ts';
+import { type TomlTable } from '#cli/types/settings/file.ts';
+import { type FormatSettings } from '#cli/types/generation/formatting.ts';
 
 import {
     FORMAT_FILE_CASES,
@@ -30,7 +31,7 @@ test.each(INVALID_PRETTIER_OPTIONS)(
             [file]: text,
         });
         commitAll(sandbox.path);
-        const result = await runGspot(sandbox.path, [...buildInitArguments(['format']), '--dry-run']);
+        const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'format', '--dry-run']);
         expect(result.code).toBe(2);
         expect(result.stdout).toBe('');
         expect(result.stderr).toBe(
@@ -44,14 +45,14 @@ async function readInitFormatOptions(root: string, commandArguments: string[]): 
     const result = await runGspot(root, [...commandArguments, '--dry-run', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const text = (JSON.parse(result.stdout) as InitJson).settings;
-    const session = await openSession(root, { settingsFile: { settings: parseSettings(text, root), text } });
+    const session = await openSession(root, { settingsFile: { settings: readSettings(text, root), text } });
     return session.scopes.map(({ settings }) => getTable(settings, 'format'));
 }
 
 test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', async ({ files, expected }) => {
     await using sandbox = await testdir({ 'source.txt': 'source\n', ...files });
     commitAll(sandbox.path);
-    const options = await readInitFormatOptions(sandbox.path, buildInitArguments(['format']));
+    const options = await readInitFormatOptions(sandbox.path, ['init', '--yes', '--configurations', 'format']);
     expect(options[0]).toMatchObject(expected);
     for (const [path, source] of Object.entries(files))
         expect(await readFile(`${sandbox.path}/${path}`, 'utf8')).toBe(source);
@@ -62,11 +63,11 @@ test('init reads the format settings of each scope', async () => {
     await using sandbox = await testdir(SCOPE_FORMAT_FILES);
     await createFileTree(sandbox.path, FORMAT_WORKSPACE_FILES);
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, [...buildInitArguments(['format']), '--dry-run', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'format', '--dry-run', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const text = (JSON.parse(result.stdout) as InitJson).settings;
     const session = await openSession(sandbox.path, {
-        settingsFile: { settings: parseSettings(text, sandbox.path), text },
+        settingsFile: { settings: readSettings(text, sandbox.path), text },
     });
     expect(
         session.scopes.map(({ path, settings }) => {
@@ -95,7 +96,7 @@ test('init turns Prettier overrides and the Ruff quote style into format overrid
         'package.json': '{"private":true,"devDependencies":{"prettier":"3.8.1"}}',
     });
     commitAll(sandbox.path);
-    const options = await readInitFormatOptions(sandbox.path, buildInitArguments(['format']));
+    const options = await readInitFormatOptions(sandbox.path, ['init', '--yes', '--configurations', 'format']);
     expect(options[0]).toMatchObject(PRETTIER_FORMAT_OPTIONS);
 });
 
@@ -107,7 +108,14 @@ test.each([...UNREADABLE_PRETTIER_FILES])(
             'source.js': 'export const count = 1;\n',
         });
         commitAll(sandbox.path);
-        const result = await runGspot(sandbox.path, [...buildInitArguments(['format']), '--dry-run', '--json']);
+        const result = await runGspot(sandbox.path, [
+            'init',
+            '--yes',
+            '--configurations',
+            'format',
+            '--dry-run',
+            '--json',
+        ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const { plan, settings } = JSON.parse(result.stdout) as InitJson;
         expect([...plan.delete, ...plan.write].find((file) => file.path === path)?.note).toContain(
@@ -127,7 +135,7 @@ test('init preserves tabs, semicolons and trailing commas from Prettier', async 
         'source.ts': 'export {};\n',
     });
     commitAll(sandbox.path);
-    const formats = await readInitFormatOptions(sandbox.path, buildInitArguments(['format']));
+    const formats = await readInitFormatOptions(sandbox.path, ['init', '--yes', '--configurations', 'format']);
     expect(formats[0]).toMatchObject({
         indent_style: 'tab',
         semicolons: false,

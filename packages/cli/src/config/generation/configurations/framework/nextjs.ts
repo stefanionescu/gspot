@@ -11,3 +11,5 @@ export const REFRESH_RULE = 'react-refresh/only-export-components';
 export const NEXT_ERROR_HOCS = ['catchError'] as const;
 
 export const NEXT_SERVER_FILES = ['**/server/**', '**/*.server.*'] as const;
+
+export const REACT_FILES = ['**/*.{js,jsx,ts,tsx}'] as const;

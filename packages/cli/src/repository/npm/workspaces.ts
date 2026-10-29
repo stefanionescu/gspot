@@ -11,6 +11,7 @@ import { FOLDER_CONTENTS } from '#cli/config/files/path-patterns.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool, type Package } from '@manypkg/tools';
 import { listSourceFiles, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { RUSH_FILE, LERNA_FILE, PNPM_WORKSPACE_FILE } from '#cli/config/repository/npm.ts';
 import { isInside, convertToPosixPath, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 
 function listWorkspacePackages(root: string): Package[] {
@@ -18,9 +19,9 @@ function listWorkspacePackages(root: string): Package[] {
     try {
         const packageJson = readPackageJson(root, PACKAGE_JSON);
         for (const [tool, path] of [
-            [PnpmTool, 'pnpm-workspace.yaml'],
-            [LernaTool, 'lerna.json'],
-            [RushTool, 'rush.json'],
+            [PnpmTool, PNPM_WORKSPACE_FILE],
+            [LernaTool, LERNA_FILE],
+            [RushTool, RUSH_FILE],
         ] as const) {
             file = path;
             if (!tool.isMonorepoRootSync(root)) continue;
@@ -60,15 +61,15 @@ List the files of the workspace packages that a project imports or depends on, a
 publish.
 
 @param reads the run cache.
-@param scope the owning project.
+@param scopePath the owning project.
 @param files the source inventory.
 @returns the repository-relative paths.
 */
-export function listWorkspaceDependencySources(reads: ReadCache, scope: string, files: TrackedFile[]): string[] {
+export function listWorkspaceDependencySources(reads: ReadCache, scopePath: string, files: TrackedFile[]): string[] {
     const root = reads.root;
     const cache = getCachedValue(reads, WORKSPACE_SOURCES);
     const tracked = new Set(files.map((file) => file.path));
-    const packageJsonPath = listEnclosingFolders(scope)
+    const packageJsonPath = listEnclosingFolders(scopePath)
         .map((folder) => joinScope(folder, PACKAGE_JSON))
         .find((path) => tracked.has(path));
     if (packageJsonPath === undefined) return [];

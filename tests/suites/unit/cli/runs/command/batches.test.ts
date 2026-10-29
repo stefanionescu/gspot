@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
 import { UNIX_COMMAND_LIMIT, WINDOWS_COMMAND_LIMIT } from '#cli/config/runs/command/batches.ts';
 
-test('Windows batches leave room for quoted paths and the full executable path', () => {
+test('Windows batches leave room for quoted paths and the absolute executable path', () => {
     const files = Array.from({ length: 5000 }, (_, index) => `docs/café folder (draft)/page-${String(index)}.md`);
     const fixed = [
         'C:/workspace with spaces/node_modules/.bin/markdownlint.cmd',
@@ -32,4 +32,10 @@ test('a long Unicode list splits under the byte limit in order, and a path or to
     expect(() => splitFileArguments([], ['x'.repeat(UNIX_COMMAND_LIMIT + 1)], 'linux')).toThrow(
         new Error('Tool arguments exceed the command limit. Shorten the tool arguments.'),
     );
+});
+
+test('file arguments that fill the byte budget stay together and the next byte starts another batch', () => {
+    const first = 'x'.repeat(UNIX_COMMAND_LIMIT - Buffer.byteLength('tool') - 4);
+    expect(splitFileArguments([first, 'a'], ['tool'], 'linux')).toStrictEqual([[first, 'a']]);
+    expect(splitFileArguments([first, 'ab'], ['tool'], 'linux')).toStrictEqual([[first], ['ab']]);
 });

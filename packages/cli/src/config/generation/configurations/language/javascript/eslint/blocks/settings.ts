@@ -8,12 +8,9 @@ export const TRIVIAL_FUNCTIONS_RULE = 'gspot/no-trivial-functions';
 
 export const TRIVIAL_FILES_RULE = 'gspot/no-trivial-files';
 
-export const RESTRICTED_IMPORT_RULES: ReadonlySet<string> = new Set([
-    'no-restricted-imports',
-    '@typescript-eslint/no-restricted-imports',
-]);
-
 export const ENVIRONMENT_RULES = {
     'n/no-process-env': ['error', { allowedVariables: ['NODE_ENV'] }],
     'no-restricted-properties': ['error', { object: 'Bun', property: 'env' }, { object: 'Deno', property: 'env' }],
 } as const;
+
+export const PACKAGE_JSON_RULE_PREFIX = 'package-json/';

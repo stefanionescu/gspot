@@ -1,12 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, readFile } from 'node:fs/promises';
+import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
+import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { SCOPE_ASSET_FILES, ASSET_REFERENCE_CASES } from '#tests/config/checks/framework/site/unused-assets.ts';
 
 async function prepareAssetRepository(resources: AsyncDisposableStack, files: Record<string, string>): Promise<string> {
@@ -27,8 +28,16 @@ test("an asset in a scope's assets folder counts as used when a file outside the
     await using resources = new AsyncDisposableStack();
     const root = await prepareAssetRepository(resources, SCOPE_ASSET_FILES);
 
-    expect(await runSandboxCheck(root, 'site/unused-assets', { scope: 'docs' })).toMatchObject([
-        { file: 'docs/assets/unused.svg', line: 1, check: 'site/unused-assets', rule: 'unused-asset' },
+    expect(await runSandboxCheck(root, 'site/unused-assets', { scope: 'docs' })).toStrictEqual([
+        {
+            file: 'docs/assets/unused.svg',
+            line: 1,
+            check: 'site/unused-assets',
+            rule: 'unused-asset',
+            fixable: false,
+            help: getShippedCheck('site/unused-assets').help,
+            message: 'No page, stylesheet or script names this file.',
+        },
     ]);
 });
 
@@ -73,7 +82,22 @@ test('an unstaged deletion removes the reference without failing the asset check
     await unlink(join(root, 'README.md'));
     const session = await openSession(root);
     const input = planSandboxCheck(session, 'site/unused-assets', { scope: 'docs' });
-    expect(await findBuiltInCheck('site/unused-assets')(session, input)).toMatchObject([
+    expect(await getBuiltInCheck('site/unused-assets')(session, input)).toMatchObject([
         { file: 'docs/assets/logo.svg', rule: 'unused-asset' },
+    ]);
+});
+
+test('conventional assets pass and a nested asset needs its own path', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['site'], { level: 'all' }),
+        'public/favicon.ico': 'image',
+        'public/apple-touch-icon.png': 'image',
+        'public/.well-known/security.txt': 'Contact: mailto:security@example.test',
+        'public/a/logo.svg': '<svg/>',
+        'public/b/logo.svg': '<svg/>',
+        'page.mdx': '<img src="/a/logo.svg" />',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'site/unused-assets')).toMatchObject([
+        { file: 'public/b/logo.svg', rule: 'unused-asset' },
     ]);
 });

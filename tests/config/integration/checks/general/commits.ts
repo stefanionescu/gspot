@@ -15,11 +15,11 @@ export const COMMIT_MESSAGES = [
 ] as const;
 
 export const COMMITLINT_LEVEL_RESULTS = {
-    recommended: {
+    basic: {
         code: 2,
         output: {
             error: 'arguments',
-            message: 'commits/commitlint is off at level recommended. Run gspot set level all to turn it on.',
+            message: 'commits/commitlint is off at level basic. Run gspot set level all to turn it on.',
         },
     },
     all: { code: 0, output: { checks: [{ check: 'commits/commitlint', status: 'passed', findings: [] }] } },

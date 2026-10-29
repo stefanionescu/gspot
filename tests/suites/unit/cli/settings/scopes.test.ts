@@ -1,21 +1,28 @@
 import { join } from 'node:path';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
-import { parseSettings } from '#cli/settings/read.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { TWO_WORDS } from '#tests/config/ignores.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { test, expect, setSystemTime } from 'bun:test';
+import { buildSettingsText } from '#cli/settings/text.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { setKey, getScopeTable } from '#cli/settings/edit.ts';
-import { formatSchema } from '#cli/schemas/settings/fields.ts';
-import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { selectScopeSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getLimit, getTable, listIgnores, selectForScope, listIgnoredRules } from '#cli/settings/scopes.ts';
 
+import {
+    getLimit,
+    getTable,
+    listIgnores,
+    selectForScope,
+    findParentScope,
+    listIgnoredRules,
+} from '#cli/settings/scopes.ts';
 import {
     PROJECT_CHOICES,
     SCOPE_LIMIT_VALUES,
@@ -65,7 +72,7 @@ test('a scope keeps a written site build command including empty and spaced argu
     const table = parseToml(
         buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['site'] }] }),
     ) as TomlTable;
-    setKey(getScopeTable(table, 'app'), 'site.build_command', ['custom-builder', '', 'two words']);
+    setKey(getScopeTable(table, 'app'), 'site.build_command', ['custom-builder', '', TWO_WORDS]);
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify(table),
         'app/index.html': '<!doctype html><title>Site</title>',
@@ -73,7 +80,7 @@ test('a scope keeps a written site build command including empty and spaced argu
     const session = await openSession(sandbox.path);
     expect(
         getTable(session.scopes.find((scope) => scope.path === 'app')!.settings, 'site').build_command,
-    ).toStrictEqual(['custom-builder', '', 'two words']);
+    ).toStrictEqual(['custom-builder', '', TWO_WORDS]);
 });
 
 test('an ignore with a rule and paths turns the rule off in its scope and the scopes below only', async () => {
@@ -109,12 +116,12 @@ test('a per-scope limit overrides a root language limit in the scope view', asyn
     expect(getLimit(scope.settings, 'file_lines', 'python')).toBe(100);
 });
 
-test('ignore expiry does not change the scope view or gspot.toml', () => {
+test('an ignore past its until date stays in the scope view and the parsed settings', () => {
     using sandbox = createTemporaryFolder();
     setSystemTime(new Date('2030-05-20T23:59:59.000Z'));
     try {
-        const settings = parseSettings(
-            buildSettingsText('', { configurations: [], ignore: IGNORE_EXPIRY_CASES }, formatSchema.parse({})),
+        const settings = readSettings(
+            buildSettingsText('', '', { configurations: [], ignore: IGNORE_EXPIRY_CASES }),
             sandbox.path,
         );
         const rootSettings = selectScopeSettings(settings).scopeSettings;
@@ -128,36 +135,36 @@ test('ignore expiry does not change the scope view or gspot.toml', () => {
             settings: rootSettings,
         };
         expect(listIgnores(rootSettings, 'dependencies/osv-scanner')).toStrictEqual([
-            { ...IGNORE_EXPIRY_CASES[3], paths: [] },
-            { ...IGNORE_EXPIRY_CASES[1], paths: [] },
             { ...IGNORE_EXPIRY_CASES[0], paths: [] },
+            { ...IGNORE_EXPIRY_CASES[1], paths: [] },
             { ...IGNORE_EXPIRY_CASES[2], paths: [] },
+            { ...IGNORE_EXPIRY_CASES[3], paths: [] },
         ]);
         expect(listIgnoredRules(scope, 'dependencies/osv-scanner')).toStrictEqual([
-            'future',
-            'past',
             'permanent',
+            'past',
             'today',
+            'future',
         ]);
         expect(settings.ignore).toStrictEqual([
-            IGNORE_EXPIRY_CASES[3],
-            IGNORE_EXPIRY_CASES[1],
             IGNORE_EXPIRY_CASES[0],
+            IGNORE_EXPIRY_CASES[1],
             IGNORE_EXPIRY_CASES[2],
+            IGNORE_EXPIRY_CASES[3],
         ]);
         setSystemTime(new Date('2030-05-21T00:00:00.000Z'));
         const next = selectScopeSettings(settings).scopeSettings;
         expect(listIgnoredRules({ ...scope, settings: next }, 'dependencies/osv-scanner')).toStrictEqual([
-            'future',
-            'past',
             'permanent',
+            'past',
             'today',
+            'future',
         ]);
         expect(listIgnoredRules(scope, 'dependencies/osv-scanner')).toStrictEqual([
-            'future',
-            'past',
             'permanent',
+            'past',
             'today',
+            'future',
         ]);
     } finally {
         setSystemTime();
@@ -201,7 +208,7 @@ test.each([...PROJECT_SCOPE_CASES])('scope $scope selects $name: $selected', ({ 
         {
             configurations: [...PROJECT_CHOICES.configurations],
             removed_configurations: [...PROJECT_CHOICES.removed_configurations],
-            scopes: Object.fromEntries(
+            scopes: new Map(
                 PROJECT_CHOICES.scope.map((choice) => [
                     choice.path,
                     {
@@ -216,12 +223,64 @@ test.each([...PROJECT_SCOPE_CASES])('scope $scope selects $name: $selected', ({ 
     ).map((configuration) => configuration.name);
     expect(names.includes(name)).toBe(selected);
 });
+
 test('a rule option named reason is passed on and is not a gspot reason', () => {
     using sandbox = createTemporaryFolder();
-    const settings = parseSettings(
+    const settings = readSettings(
         'configurations = ["css"]\n[tools.stylelint.rules]\nselector-class-pattern = ["^[a-z]+$", { reason = false }]\n',
         sandbox.path,
     );
     const rules: unknown = getTable(selectScopeSettings(settings).scopeSettings, 'tools.stylelint').rules;
     expect(rules).toStrictEqual({ 'selector-class-pattern': ['^[a-z]+$', { reason: false }] });
+});
+
+test('a language limit overrides the shared limit in the root and in a child scope', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['python', 'swift'], {
+            tables: '[limits]\nfunction_parameters = 2\n[limits.python]\nfunction_parameters = { value = 8, reason = "The project API declares eight required parameters." }\n[[scope]]\npath = "api"\n',
+        }),
+        'source.py': 'value = 1\n',
+        'api/source.py': 'value = 2\n',
+    });
+    const session = await openSession(sandbox.path);
+    expect(
+        session.scopes.map(({ path, settings }) => ({
+            path,
+            python: getLimit(settings, 'function_parameters', 'python'),
+            swift: getLimit(settings, 'function_parameters', 'swift'),
+            shared: getLimit(settings, 'function_parameters'),
+        })),
+    ).toStrictEqual([
+        { path: '', python: 8, swift: 2, shared: 2 },
+        { path: 'api', python: 8, swift: 2, shared: 2 },
+    ]);
+});
+
+test('the nearest parent scope contains a nested path', async () => {
+    const scopes = await readNestedScopes();
+    expect(findParentScope(scopes, 'api/v1/src')?.path).toBe('api/v1');
+});
+
+test('an ignore without a check applies to every check', () => {
+    using sandbox = createTemporaryFolder();
+    const settings = readSettings(
+        '[[ignore]]\npaths = ["generated/**"]\nreason = "The generator owns these files."\n',
+        sandbox.path,
+    );
+    const selected = selectScopeSettings(settings).scopeSettings;
+    const expected = [{ paths: ['generated/**'], reason: 'The generator owns these files.' }];
+    expect(listIgnores(selected, 'python/ruff')).toStrictEqual(expected);
+    expect(listIgnores(selected, 'typescript/tsc')).toStrictEqual(expected);
+});
+
+test('a table rule option keeps its value and reason fields', () => {
+    using sandbox = createTemporaryFolder();
+    const settings = readSettings(
+        'configurations = ["css"]\n[tools.stylelint.rules]\nselector-class-pattern = {value = "^[a-z]+$", reason = "The style rule receives both fields."}\n',
+        sandbox.path,
+    );
+    const rules: unknown = getTable(selectScopeSettings(settings).scopeSettings, 'tools.stylelint').rules;
+    expect(rules).toStrictEqual({
+        'selector-class-pattern': { value: '^[a-z]+$', reason: 'The style rule receives both fields.' },
+    });
 });

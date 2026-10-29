@@ -4,7 +4,6 @@ import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 
 import {
     JSON_EXTENSIONS,
-    GENERATED_EDIT_LINE,
     SLASH_COMMENT_FILES,
     GENERATED_HEADER_TEXT,
     SLASH_COMMENT_EXTENSIONS,
@@ -22,7 +21,7 @@ export function formatHeader(path: string, notes: string[] = []): string {
     const extension = extractExtension(path);
     const isSlashComment = SLASH_COMMENT_EXTENSIONS.has(extension) || SLASH_COMMENT_FILES.has(posix.basename(path));
     if (JSON_EXTENSIONS.has(extension) && !isSlashComment) return '';
-    const lines = [GENERATED_HEADER_TEXT, GENERATED_EDIT_LINE, ...(notes.length === 0 ? [] : ['', ...notes])];
+    const lines = [GENERATED_HEADER_TEXT, ...notes];
     const mark = isSlashComment ? '//' : '#';
     return lines.map((line) => (line === '' ? mark : `${mark} ${line}`)).join('\n') + '\n';
 }

@@ -2,9 +2,6 @@ import { expect } from 'bun:test';
 
 /**
 Await a promise that must reject with an error.
-
-@param promise what must reject.
-@returns the error it rejected with.
 */
 export async function captureRejection(promise: Promise<unknown>): Promise<Error> {
     try {
@@ -18,9 +15,6 @@ export async function captureRejection(promise: Promise<unknown>): Promise<Error
 
 /**
 An object that must hold these properties, typed as the compared value.
-
-@param shape the properties the compared object must hold.
-@returns the matcher.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The cast lets an asymmetric matcher stand where a test expects T.
 export function matchFields<T>(shape: NoInfer<Partial<T>>): T {

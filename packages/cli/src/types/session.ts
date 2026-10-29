@@ -1,5 +1,5 @@
-import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
+import type { ConfiguredCheck } from '#cli/types/planning.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
@@ -9,7 +9,7 @@ import type { Settings, SettingsFile } from '#cli/types/settings/file.ts';
 import { type StartRunner, type PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
 
 export type Session = {
-    configuredChecks: PlannedCheck[];
+    configuredChecks: ConfiguredCheck[];
     toolConfigurations: Configuration[];
     timeoutSeconds: number;
     root: string;

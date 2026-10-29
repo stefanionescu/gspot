@@ -37,7 +37,7 @@ test('a child scope wildcard exempts its tests and scripts without exempting sib
             level: 'all',
             rules: true,
             scopes: [{ path: 'app' }],
-            tables: 'test_files = ["**/read.js"]\n[scope.javascript]\nscript_files = ["**/build.js"]\n',
+            tables: 'test_files = ["**/read.js"]\n[scope.javascript]\nscript_files = { value = ["**/build.js"], reason = "Nested build entrypoints are scripts in this scope." }\n',
         }),
     });
     const eslint = await createEslint(sandbox.path);

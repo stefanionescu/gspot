@@ -1,4 +1,5 @@
-import type { Node, Tree } from 'web-tree-sitter';
+import { type Node, type Tree } from 'web-tree-sitter';
+import type { ParseCache } from '#cli/types/parsers/code/grammars.ts';
 
 export type PythonModule = {
     path: string;
@@ -10,3 +11,5 @@ export type PythonModule = {
 export type PythonFunction = { path: string; name: string; node: Node; body: Node[] };
 
 export type PythonFiles = { modules: PythonModule[]; functions: PythonFunction[] };
+
+export type SourceFiles = ParseCache & { files: { path: string; kind: string }[] };

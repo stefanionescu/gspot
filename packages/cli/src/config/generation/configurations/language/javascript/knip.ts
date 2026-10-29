@@ -22,3 +22,9 @@ export const MISE_FILE_TASK_GLOBS = [
 ] as const;
 
 export const KNIP_ESLINT_CONFIG = 'eslint.config.mjs';
+
+export const KNIP_TABLE = 'tools.knip';
+
+export const KNIP_CHECK = 'javascript/knip';
+
+export const UNQUOTED_COMMENT = /('[^']*'|"(?:[^"\\]|\\.)*")|(?<![^\s;&|()])#.*/gu;

@@ -7,6 +7,8 @@ Read POSTGRES.md too. Supabase uses the API roles `anon`, `authenticated`, and `
 ## Layout and migrations
 
 - Use the established Supabase layout for migrations, Edge Functions, storage assets, and tests.
+- After a migration changes the schema, write the output of `supabase gen types typescript --local` to the file that
+  `supabase.types_file` names.
 
 ## Database access
 
@@ -21,12 +23,18 @@ Read POSTGRES.md too. Supabase uses the API roles `anon`, `authenticated`, and `
 
 Choose the Supabase connection mode for the workload.
 
-| Workload                                      | Connection choice                                                     |
-| --------------------------------------------- | --------------------------------------------------------------------- |
-| Short-lived serverless application requests   | Transaction pooler, with a compatible driver                          |
-| Persistent server with direct network access  | Direct connection with a bounded application pool                     |
-| Persistent server on an IPv4-only network     | Session pooler when the server cannot reach the direct endpoint       |
-| Migrations, dumps, or session-dependent tools | Direct connection; use a supported session alternative when necessary |
+| Workload | Connection choice
+|
+| --------------------------------------------- | ---------------------------------------------------------------------
+|
+| Short-lived serverless application requests | Transaction pooler, with a compatible driver
+|
+| Persistent server with direct network access | Direct connection with a bounded application pool
+|
+| Persistent server on an IPv4-only network | Session pooler when the server cannot reach the direct endpoint
+|
+| Migrations, dumps, or session-dependent tools | Direct connection; use a supported session alternative when necessary
+|
 
 A separate migration credential holds schema privileges. The application role holds only the privileges it needs at
 runtime. See [connection modes](https://supabase.com/docs/guides/database/connecting-to-postgres).
@@ -50,6 +58,8 @@ tool. See [migration history](https://supabase.com/docs/guides/local-development
 - Define buckets in migrations and mirror them in `config.toml`. A change to `public`, `file_size_limit`, or
   `allowed_mime_types` updates both at once.
 - Bucket restrictions enforce file size and MIME type, not only application validation.
+- Give every bucket of `config.toml` a migration policy on `storage.objects` that names it in `USING` or `WITH CHECK`,
+  such as `bucket_id = 'avatars'`.
 - RLS policies on `storage.objects` and `storage.buckets` control access. The service controls metadata in the `storage`
   schema: migrations add only policies, indexes for RLS or validation, triggers, and bucket configuration. Object rows
   change only through the Storage API.
@@ -64,11 +74,16 @@ tool. See [migration history](https://supabase.com/docs/guides/local-development
 - Use stable, explicit storage object keys.
 - Do not use display text as storage identity.
 
-| Avoid                                       | Prefer                                 | Meaning                              |
-| ------------------------------------------- | -------------------------------------- | ------------------------------------ |
-| `Avatar Pictures`                           | `avatar_images`                        | A bucket.                            |
-| `avatars/john@example.com/avatar image.png` | `avatars/user_01hxx8j2r6/avatar.png`   | Object key without personal content. |
-| `uploads/latest`                            | `reports/report_01hxx8j2r6/export.pdf` | A key tied to a specific report.     |
+| Avoid | Prefer | Meaning
+|
+| ------------------------------------------- | -------------------------------------- |
+------------------------------------ |
+| `Avatar Pictures` | `avatar_images` | A bucket.
+|
+| `avatars/john@example.com/avatar image.png` | `avatars/user_01hxx8j2r6/avatar.png` | Object key without personal
+content. |
+| `uploads/latest` | `reports/report_01hxx8j2r6/export.pdf` | A key tied to a specific
+report. |
 
 ## Edge functions
 
@@ -84,8 +99,8 @@ tool. See [migration history](https://supabase.com/docs/guides/local-development
 - A publishable or secret API key differs from a user JSON Web Token (JWT). Never send that key as
   `Authorization: Bearer <key>`. Forward the caller's `Authorization` header to the Supabase client, so RLS runs as the
   user.
-- A service-role client serves only admin operations that cannot run as a user. Keep it on a path that code and tests make
-  explicit.
+- A service-role client serves only admin operations that cannot run as a user. Keep it on a path that code and tests
+  make explicit.
 - Keep handlers small: parsing, validation, responses, provider calls, and database operations move into local modules
   as complexity grows. JSON responses, `OPTIONS`, and Cross-Origin Resource Sharing (CORS) go through one helper in
   `functions/_shared/`.

@@ -1,19 +1,21 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/planning/session.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
+import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { SOURCE_KIND } from '#cli/config/repository/files/classify.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/samples.ts';
-import { buildTrackedFile, readTestRepository } from '#tests/setup/cli/repository.ts';
 import { readPackageJson, readDependencyFiles, listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 
 import {
     PACKAGE_FIELDS,
     REACT_VUE_PACKAGES,
+    PYTHON_DEPENDENCY_CASES,
     INVALID_DEPENDENCY_FILES,
     PROJECT_DEPENDENCY_FILES,
     PROJECT_DEPENDENCY_SCOPES,
@@ -44,11 +46,20 @@ test.each(INVALID_DEPENDENCY_FILES)(
     async (path, content, message) => {
         await using sandbox = await testdir({ [path]: content, 'source.ts': 'export {};\n' });
 
-        const files = [buildTrackedFile(path)];
+        const files = [
+            {
+                path: path,
+                kind: 'source' as const,
+                kindOrigin: SOURCE_KIND.origin,
+                tags: ['text'],
+                executable: false,
+                size: 1,
+            },
+        ];
         const error = await captureRejection(readDependencyFiles(createReadCache(sandbox.path), files));
         expect(error).toMatchObject({
             name: 'GspotError',
-            code: 'filesystem',
+            code: 'parse',
             message,
             cause: expect.any(Error) as Error,
         });
@@ -88,21 +99,21 @@ test('package.json reads keep your own fields and tell a missing file from inval
     expect(() => readPackageJson(sandbox.path, 'package.json')).toThrow(
         matchFields<GspotError>({
             name: 'GspotError',
-            code: 'filesystem',
-            message: 'package.json:1:2 is not valid JSON: CloseBraceExpected. Fix the file.',
+            code: 'parse',
+            message: PACKAGE_JSON_ERROR,
         }),
     );
     const error = await captureRejection(readDependencyFiles(createReadCache(sandbox.path), repository.files));
     expect(error).toMatchObject({
         name: 'GspotError',
-        code: 'filesystem',
-        message: 'package.json:1:2 is not valid JSON: CloseBraceExpected. Fix the file.',
+        code: 'parse',
+        message: PACKAGE_JSON_ERROR,
     });
     await writeFile(join(sandbox.path, 'package.json'), '{"dependencies":{"next":16}}');
     expect(() => readPackageJson(sandbox.path, 'package.json')).toThrow(
         matchFields<GspotError>({
             name: 'GspotError',
-            code: 'filesystem',
+            code: 'parse',
             message: 'package.json: dependencies.next: Invalid input: expected string, received number. Fix the field.',
         }),
     );
@@ -138,8 +149,8 @@ test('a broken package.json stops the next session and a fixed one changes the s
     await writeFile(join(sandbox.path, 'package.json'), '{');
     expect(await captureRejection(openSession(sandbox.path))).toMatchObject({
         name: 'GspotError',
-        code: 'filesystem',
-        message: 'package.json:1:2 is not valid JSON: CloseBraceExpected. Fix the file.',
+        code: 'parse',
+        message: PACKAGE_JSON_ERROR,
     });
     await writeFile(join(sandbox.path, 'package.json'), ROOT_PACKAGE_WITHOUT_DEPENDENCIES);
     const reopened = await openSession(sandbox.path);
@@ -176,3 +187,20 @@ test.each(['constructor', 'toString', '__proto__'])(
         expect(await readDependencyFiles(createReadCache(sandbox.path), repository.files)).toStrictEqual([]);
     },
 );
+
+test('optional runtime dependencies remain installed beside development tools', async () => {
+    await using sandbox = await testdir({
+        'package.json': '{"devDependencies":{"eslint":"9.0.0"},"optionalDependencies":{"react":"19.0.0"}}',
+    });
+    const files = await readDependencyFiles(createReadCache(sandbox.path), [
+        {
+            path: 'package.json',
+            kind: 'source' as const,
+            kindOrigin: SOURCE_KIND.origin,
+            tags: ['text'],
+            executable: false,
+            size: 1,
+        },
+    ]);
+    expect(files[0]?.installed).toStrictEqual({ eslint: '9.0.0', react: '19.0.0' });
+});

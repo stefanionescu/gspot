@@ -9,6 +9,8 @@ import {
     IMPORT_X_RULES,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/rules.ts';
 
+export const GSPOT_PRESET_LEVELS = { basic: 'recommended', all: 'all' } as const;
+
 export const IMPORT_LAYOUT_RULES = {
     'import-x/first': 'error',
     'import-x/newline-after-import': ['error', { count: 1, considerComments: true }],
@@ -35,6 +37,9 @@ export const LEVEL_ALL_PLUGIN_IMPORTS = {
 export const BOUNDARIES_PLUGIN_IMPORT = { boundaries: ['boundaries', 'eslint-plugin-boundaries'] } as const;
 
 export const JAVASCRIPT_RULES = {
+    'no-implied-eval': 'error',
+    'no-throw-literal': 'error',
+    'no-unused-expressions': 'error',
     'no-unused-vars': [
         'error',
         {
@@ -52,6 +57,11 @@ export const JAVASCRIPT_RULES = {
 } as const;
 
 export const SCRIPT_RULES = { 'n/no-process-exit': 'off', 'unicorn/no-process-exit': 'off' } as const;
+
+export const TEST_CHECK_RULES = {
+    'sonarjs/assertions-in-tests': 'error',
+    'sonarjs/no-empty-test-file': 'error',
+} as const;
 
 export const TEST_RULES = {
     'jsdoc/require-jsdoc': 'off',
@@ -92,14 +102,22 @@ export const NODE_RULES = {
     'n/no-extraneous-import': 'error',
     'n/no-extraneous-require': 'error',
 
-    'n/prefer-global/url-search-params': ['error', 'always'],
-    'n/prefer-global/url': ['error', 'always'],
-    'n/prefer-global/process': ['error', 'always'],
-    'n/prefer-global/console': ['error', 'always'],
-    'n/prefer-global/buffer': ['error', 'always'],
+    'n/prefer-global/url-search-params': 'error',
+    'n/prefer-global/url': 'error',
+    'n/prefer-global/process': 'error',
+    'n/prefer-global/console': 'error',
+    'n/prefer-global/buffer': 'error',
     'n/no-process-exit': 'error',
     'n/prefer-promises/dns': 'error',
     'n/prefer-promises/fs': 'error',
 } as const;
 
 export const CONSOLE_RULES = { 'no-console': 'error' } as const;
+
+export const IMPORT_BOUNDARIES_RULE = 'gspot/import-boundaries';
+
+export const PACKAGE_JSON_PATTERN = '**/package.json';
+
+export const GSPOT_RULE_PREFIX = 'gspot/';
+
+export const BOUNDARIES_FILES_SETTING = 'boundaries/files';

@@ -5,14 +5,7 @@ export const GIT_PLAN_CASES = [
     {
         name: 'a Git repository',
         hasGit: true,
-        changes: [
-            '.gitignore',
-            '.gitattributes',
-            GSPOT_PATHS.miseProject,
-            GSPOT_PATHS.npmProject,
-            GSPOT_PATHS.pythonProject,
-            GSPOT_PATHS.hooks,
-        ],
+        changes: ['.gitattributes', GSPOT_PATHS.hooks],
     },
 ] as const;
 
@@ -43,24 +36,12 @@ exclude_rules = LT01
 
 export const MANAGED_PLAN_CHANGES = [
     {
-        path: '.gitignore',
-        note: 'one managed block',
-    },
-    {
         path: '.gitattributes',
         note: 'marks the generated files and keeps LF line endings',
-    },
-    {
-        path: '.gspot/mise.toml',
-        note: '9 tool pins',
     },
 ] as const;
 
 export const TOOL_PLAN_CHANGES = [
-    {
-        path: '.gspot/pyproject.toml',
-        note: '1 pinned Python tool; matching uv.lock and tool environment',
-    },
     {
         path: '.gspot/hooks',
         note: 'gspot install points core.hooksPath here; a repository that already runs hooks gets the lines to add instead',
@@ -69,12 +50,7 @@ export const TOOL_PLAN_CHANGES = [
 
 export const EXACT_DEPENDENCY_CHANGES = [
     ...MANAGED_PLAN_CHANGES,
-    {
-        path: '.gspot/package.json',
-        note: '23 pinned npm tools; matching lockfile',
-    },
-    { path: '.gspot/pyproject.toml', note: '2 pinned Python tools; matching uv.lock and tool environment' },
-    TOOL_PLAN_CHANGES[1],
+    TOOL_PLAN_CHANGES[0],
     {
         path: 'package.json',
         note: 'typescript is now pinned in .gspot/package.json; remove it from package.json if nothing else uses it',

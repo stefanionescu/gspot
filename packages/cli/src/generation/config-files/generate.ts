@@ -25,7 +25,6 @@ const configFilesKey: CacheKey<Map<Repository, ConfigFileGeneration>> = { create
 Reuse generated settings only while the session keeps the same repository read cache.
 
 @param session the current settings, scopes, and repository files.
-@returns the generated settings and scope destinations.
 */
 export function buildConfigFiles(session: Session): ConfigFileGeneration {
     const repositorySession =
@@ -36,15 +35,15 @@ export function buildConfigFiles(session: Session): ConfigFileGeneration {
 }
 
 function buildOwnedOutput(
-    each: OwnedSourceFile,
+    owned: OwnedSourceFile,
     ownedFiles: OwnedSourceFile[],
     generated: ConfigFileBuildState,
 ): BuiltConfigFile[] {
     try {
-        return [{ ...each, ...buildConfigFile(each, each.configFile.target, generated.targets) }];
+        return [{ ...owned, ...buildConfigFile(owned, owned.configFile.target, generated.targets) }];
     } catch (error) {
         if (!(error instanceof GspotError)) throw error;
-        for (const { owner, configFile } of each.configFile.per_scope ? [each] : ownedFiles) {
+        for (const { owner, configFile } of owned.configFile.per_scope ? [owned] : ownedFiles) {
             const scope = owner.scope.path;
             const failures = generated.failures.get(scope) ?? new Map<string, Error>();
             failures.set(configFile.target, error);
@@ -80,7 +79,7 @@ function addToolOutput(target: string, group: BuiltConfigFile[], index: number, 
     }
 }
 
-function buildSourceFiles(configFiles: OwnedConfigFile[], generated: ConfigFileBuildState): void {
+function addSourceFiles(configFiles: OwnedConfigFile[], generated: ConfigFileBuildState): void {
     const sourced = configFiles.filter((each): each is OwnedSourceFile => each.configFile.source !== undefined);
     const sources = Map.groupBy(sourced, ({ configFile }) => configFile.target);
     for (const [declared, ownedFiles] of sources) {
@@ -124,15 +123,15 @@ function addPointerFiles(
 function buildScopeConfigFiles(session: Session): ConfigFileGeneration {
     const configFiles = listOwnedConfigFiles(session);
     const state: ConfigFileBuildState = { targets: new Map(), files: new Map(), failures: new Map() };
-    buildSourceFiles(configFiles, state);
+    addSourceFiles(configFiles, state);
     for (const configFile of configFiles)
         if (state.failures.get(configFile.owner.scope.path)?.has(configFile.configFile.target) !== true)
             addPointerFiles(configFile, configFiles, state);
     return { files: state.files.values().toArray(), targets: state.targets, failures: state.failures };
 }
 
-function buildPerScopeTarget(configFile: Pick<ConfigFile, 'target' | 'file' | 'root'>, scope: string): string {
-    if (configFile.root) return join(scope, configFile.target);
+function buildPerScopeTarget(configFile: Pick<ConfigFile, 'target' | 'file' | 'root'>, scopePath: string): string {
+    if (configFile.root) return join(scopePath, configFile.target);
     const folder = configFile.target.slice(0, configFile.target.length - configFile.file.length);
-    return join(folder, CONFIG_FILE_SCOPES_FOLDER, scope, configFile.file);
+    return join(folder, CONFIG_FILE_SCOPES_FOLDER, scopePath, configFile.file);
 }

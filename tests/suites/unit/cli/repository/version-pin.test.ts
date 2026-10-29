@@ -5,8 +5,8 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { PIN_MESSAGE, UPGRADE_PIN_MESSAGE } from '#tests/config/version-pin.ts';
 import { readVersionPin, assertVersionPin } from '#cli/repository/version-pin.ts';
 

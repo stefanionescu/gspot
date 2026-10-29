@@ -4,10 +4,10 @@ import { GspotError } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { parseToolReport } from '#cli/parsers/formats/json.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { reportedTypoSchema } from '#cli/schemas/runs/typos.ts';
 import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
-import type { ReportedTypo } from '#cli/types/runs/output/reports.ts';
+import type { ReportedTypo } from '#cli/types/runs/output/outputs.ts';
 
 function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {
     const held = cache.get(path);
@@ -30,7 +30,7 @@ function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]
     return lines;
 }
 
-function getTypoPosition(
+function findTypoPosition(
     root: string,
     path: string,
     typo: ReportedTypo,
@@ -79,11 +79,11 @@ export function parseTyposFindings(output: ToolOutput): Finding[] {
     const typos = stdout
         .split('\n')
         .filter((line) => line.trim() !== '')
-        .map((line) => parseToolReport('Typos', line, reportedTypoSchema));
+        .map((line) => parseToolOutput('Typos', line, reportedTypoSchema));
     const linesByPath = new Map<string, Buffer[]>();
     return typos.map((typo) => {
         const path = resolve(cwd, typo.path);
         const local = convertToPosixPath(relative(root, path));
-        return buildTypoFinding(output, typo, path, getTypoPosition(root, local, typo, linesByPath));
+        return buildTypoFinding(output, typo, path, findTypoPosition(root, local, typo, linesByPath));
     });
 }

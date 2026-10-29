@@ -1,7 +1,7 @@
 import { GspotError } from '#cli/system/errors.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { parseToolReport } from '#cli/parsers/formats/json.ts';
-import { semgrepReportSchema } from '#cli/schemas/runs/semgrep.ts';
+import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { semgrepOutputSchema } from '#cli/schemas/runs/semgrep.ts';
 import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
 import { SEMGREP_PARSE_RULE, SEMGREP_PARSE_EXIT, SEMGREP_PARSE_ERRORS } from '#cli/config/runs/output/semgrep.ts';
 
@@ -9,11 +9,10 @@ import { SEMGREP_PARSE_RULE, SEMGREP_PARSE_EXIT, SEMGREP_PARSE_ERRORS } from '#c
 Read Semgrep rule findings and source parsing errors, and refuse scanner or rule failures.
 
 @param output the tool output to read.
-@returns positioned findings from a validated report.
 */
 export function parseSemgrepFindings(output: ToolOutput): Finding[] {
     const { check, stdout, help } = output;
-    const report = parseToolReport('Semgrep', stdout, semgrepReportSchema);
+    const report = parseToolOutput('Semgrep', stdout, semgrepOutputSchema);
     const findings: Finding[] = report.results.map((result) => ({
         check,
         help,

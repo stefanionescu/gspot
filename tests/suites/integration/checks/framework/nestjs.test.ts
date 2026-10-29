@@ -1,8 +1,8 @@
-import { test, expect } from 'bun:test';
+import { test } from 'bun:test';
 import { NESTJS_SANDBOX } from '#tests/config/nestjs.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
 import { NESTJS_CASES } from '#tests/config/integration/checks/framework/nestjs.ts';
 
 const installedSandbox = shareInstalledSandbox({
@@ -16,5 +16,5 @@ const installedSandbox = shareInstalledSandbox({
 });
 
 test.each([...NESTJS_CASES])('$name and passes after the fix', async (sample) => {
-    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(buildExpectedSummary(sample));
+    await assertCheckSample(installedSandbox(), sample);
 });

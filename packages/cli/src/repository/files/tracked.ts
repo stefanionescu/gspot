@@ -1,6 +1,7 @@
 import ignore from 'ignore';
 import { compareText } from '#cli/system/text.ts';
 import { join, posix, relative } from 'node:path';
+import { decodeGitPaths } from '#cli/parsers/git.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
@@ -8,7 +9,6 @@ import type { GitIndexFile } from '#cli/types/parsers/git.ts';
 import { isIgnored } from '#cli/repository/files/gitignore.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
 import { buildGitError, runGitForBytes } from '#cli/system/git.ts';
-import { decodeGitPaths, parseIndexFiles } from '#cli/parsers/git.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { isInside, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 import { GITLINK_MODE, GIT_FILE_MODES, EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
@@ -18,13 +18,12 @@ import {
     GIT_FOLDER,
     GITIGNORE_FILE,
     EXECUTABLE_BITS,
-    GIT_INDEX_FILES_ARGUMENTS,
     INSTALLED_DEPENDENCY_FOLDERS,
     GIT_UNTRACKED_FILES_ARGUMENTS,
 } from '#cli/config/repository/files/tracked.ts';
 
 function readSymlinkFile(root: string, path: string): ListedFile | undefined {
-    const link = { path, size: 0, executable: false, symlink: true };
+    const link = { path, size: 0, executable: false, isSymlink: true };
     let target: string;
     try {
         target = realpathSync(join(root, path));
@@ -34,7 +33,7 @@ function readSymlinkFile(root: string, path: string): ListedFile | undefined {
     }
     if (!isInside(relative(realpathSync(root), target))) return undefined;
     const stat = statSync(target);
-    return stat.isDirectory() ? undefined : { ...link, size: stat.size };
+    return stat.isFile() ? { ...link, size: stat.size } : undefined;
 }
 
 function readListedFile(
@@ -47,12 +46,12 @@ function readListedFile(
     if (stat.isSymbolicLink()) {
         if (INSTALLED_DEPENDENCY_FOLDERS.has(posix.basename(path))) return undefined;
         return isInInstalledFolder(extractParentFolder(path))
-            ? { path, size: stat.size, executable: false, symlink: true }
+            ? { path, size: stat.size, executable: false, isSymlink: true }
             : readSymlinkFile(root, path);
     }
-    if (stat.isDirectory()) return undefined;
+    if (!stat.isFile()) return undefined;
     const isExecutable = executables === undefined ? (stat.mode & EXECUTABLE_BITS) !== 0 : executables.has(path);
-    return { path, size: stat.size, executable: isExecutable, symlink: false };
+    return { path, size: stat.size, executable: isExecutable, isSymlink: false };
 }
 
 function readFolderListing(root: string, folder: string, inherited: PathIgnore[]): FolderListing {
@@ -88,27 +87,24 @@ function walkPaths(root: string): string[] {
     return paths;
 }
 
-async function listGitFiles(
+/**
+Read a Git file listing and separate names with invalid UTF-8.
+
+@param root the folder where Git runs.
+@param gitArguments the listing command and flags.
+@param cancelSignal stops the command.
+@param unreadablePaths receives quoted names with invalid UTF-8.
+@returns the readable null-delimited listing.
+*/
+export async function listGitFiles(
     root: string,
     gitArguments: readonly string[],
     cancelSignal?: AbortSignal,
+    unreadablePaths: string[] = [],
 ): Promise<string> {
     const listed = await runGitForBytes(root, gitArguments, { cancelSignal });
     if (listed.code !== 0) throw buildGitError(root, gitArguments, listed);
-    return decodeGitPaths(listed.stdout);
-}
-
-/**
-Read a Git index once for paths, executable bits, and gitlinks.
-
-@param root the folder where Git runs.
-@param cancelSignal stops the command.
-@returns validated entries, retaining stages of conflicted working files.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 12 calls in 4 files share it.
-export async function readIndexFiles(root: string, cancelSignal?: AbortSignal): Promise<GitIndexFile[]> {
-    const listed = await listGitFiles(root, GIT_INDEX_FILES_ARGUMENTS, cancelSignal);
-    return parseIndexFiles(listed);
+    return decodeGitPaths(listed.stdout, unreadablePaths);
 }
 
 /**
@@ -132,14 +128,16 @@ List tracked and new files as sorted, root-relative paths. Outside Git, walk fil
 @param index the parsed staging area entries.
 @param options what the walk knows about the repository.
 @param options.hasGit whether the folder belongs to a Git repository.
-@returns the entries with size, executable bit, and symlink flag.
+@param options.unreadablePaths paths that the inventory cannot read.
 */
 export async function listTrackedFiles(
     root: string,
     index: GitIndexFile[],
-    { hasGit }: { hasGit: boolean },
+    { hasGit, unreadablePaths }: { hasGit: boolean; unreadablePaths?: string[] },
 ): Promise<ListedFile[]> {
-    const listed = hasGit ? await listGitFiles(root, GIT_UNTRACKED_FILES_ARGUMENTS) : undefined;
+    const listed = hasGit
+        ? await listGitFiles(root, GIT_UNTRACKED_FILES_ARGUMENTS, undefined, unreadablePaths)
+        : undefined;
     const paths =
         listed === undefined
             ? walkPaths(root)

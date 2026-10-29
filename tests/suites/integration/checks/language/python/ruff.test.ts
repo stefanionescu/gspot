@@ -3,26 +3,29 @@ import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { RunReport } from '#cli/types/runs/run.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
+import { type RunReport } from '#cli/types/commands/check.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { type LinterJsonFinding } from '#tests/types/tools.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 import { ruffRulesSchema, ruffConfigurationSchema } from '#tests/schemas/ruff.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { RUFF_SANDBOX } from '#tests/config/integration/checks/language/python/samples.ts';
-import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { RUFF_SANDBOX } from '#tests/config/integration/checks/language/python/sandboxes.ts';
+import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     PYTEST_SAMPLE,
     VERSION_SOURCE,
     RUFF_FORMAT_CASES,
     RUFF_VERSION_CASES,
+    PARAMETER_LIMIT_CASE,
     UNUSED_IMPORT_SOURCE,
 } from '#tests/config/integration/checks/language/python/ruff.ts';
 
@@ -104,7 +107,7 @@ test.each([...LEVELS])(
         const rules = ruffRulesSchema.parse(JSON.parse(resultRules.stdout));
         const previewCodes = new Set(rules.flatMap(({ code, preview }) => (code !== null && preview ? code : [])));
         const command = ['check', 'sample.py', '--only', 'python/ruff', '--json'];
-        const ruffText = await readFile(join(root, findManifestTarget('python', 'ruff.toml')), 'utf8');
+        const ruffText = await readFile(join(root, getManifestTarget('python', 'ruff.toml')), 'utf8');
         const contents: unknown = parse(ruffText);
         const config = ruffConfigurationSchema.parse(contents);
         expect(config.lint.select.filter((code) => previewCodes.has(code))).toStrictEqual([]);
@@ -277,3 +280,27 @@ function listScopeRules(report: RunReport): Record<string, { status: string; rul
         ]),
     );
 }
+
+test.each(['default', 8] as const)('Ruff counts parameters with maximum %s', async (supplied) => {
+    const scenario = PARAMETER_LIMIT_CASE;
+    await using sandbox = await createGitSandbox({});
+    const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, scenario, supplied);
+    await applyThenInstall(sandbox.path);
+    const result = runCommandBlocking(
+        [
+            buildVenvExecutablePath(join(sandbox.path, GSPOT_PATHS.pythonEnvironment), 'ruff'),
+            'check',
+            '--config',
+            getManifestTarget('python', 'ruff.toml'),
+            '--output-format',
+            'json',
+            scenario.file,
+        ],
+        { cwd: sandbox.path },
+    );
+    const findings = JSON.parse(result.stdout) as LinterJsonFinding[];
+    expect(result.code, result.stdout + result.stderr).toBe(maximum === defaultMaximum ? scenario.failureStatus : 0);
+    expect(findings.filter((finding) => finding.code === 'PLR0913')).toMatchObject(
+        maximum === defaultMaximum ? [scenario.finding] : [],
+    );
+});

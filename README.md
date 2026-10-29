@@ -1,4 +1,4 @@
-# ![gspot](docs/banner/light.svg#gh-light-mode-only)![gspot](docs/banner/dark.svg#gh-dark-mode-only)
+# ![gspot](docs/banner.svg)
 
 gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.
 
@@ -24,8 +24,8 @@ gspot is a command-line tool that lints AI-generated code and installs rules for
 
 ## Requirements
 
-You need Git, Bun 1.4.2 or newer, and Node.js 24.15 or newer. gspot runs on macOS, Linux, and Windows. Some checks need
-more, such as the Swift toolchain or a running Docker daemon;
+You need Git and Node.js 24.15 or newer. The commands below use Bun 1.4.2 or newer. gspot runs on macOS, Linux,
+and Windows. Some checks need more, such as the Swift toolchain or a running Docker daemon;
 [Installation](https://generativespotting.com/start/install/) lists what each kind of check needs.
 
 ## Set up
@@ -50,7 +50,7 @@ bun run --no-install gspot check
    do not come from npm or PyPI. Without mise, it names each program that you must install yourself.
 4. `gspot check` runs the checks on every file. From then on, the Git hooks check each commit and push.
 
-gspot starts at level `recommended`. To start at level `all`, add `--level all` to the init command. To print the plan
+gspot starts at level `basic`. To start at level `all`, add `--level all` to the init command. To print the plan
 and write nothing, add `--dry-run`.
 
 Commit `gspot.toml` and the files that `gspot init` and `gspot install` wrote. In each new clone, install the

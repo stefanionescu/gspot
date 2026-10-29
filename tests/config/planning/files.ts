@@ -1,5 +1,3 @@
-import type { PlanOptions } from '#cli/types/planning.ts';
-
 export const TWO_SCOPES_SETTINGS = `configurations = []
 [[scope]]
 path = "api"
@@ -9,10 +7,7 @@ path = "web"
 configurations = []
 `;
 
-export const TSC_PUSH_OPTIONS = { stage: 'push', only: ['typescript/tsc'] } satisfies Pick<
-    PlanOptions,
-    'stage' | 'only'
->;
+export const TSC_PUSH_OPTIONS = { stage: 'push' as const, only: ['typescript/tsc'] };
 
 export const EDITORCONFIG_FILES = {
     'source.py': 'VALUE = 1\n',
@@ -100,3 +95,10 @@ export const LOCKFILE_TRIGGER_NAMES = [
     'yarn.lock',
     'uv.lock',
 ] as const;
+
+export const PROJECT_FINDING_MESSAGE = 'Project finding';
+
+export const LAST_FILE_CHANGES = [
+    ['delete', 'staged'],
+    ['rename', 'changed'],
+];

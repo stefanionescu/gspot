@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { rm, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { isMacos } from '#tests/setup/system/platform.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { readCheckoutCacheFolder } from '#cli/checks/language/swift/cache.ts';
 
 import {
     TEST_TARGET_PBXPROJ,
@@ -26,9 +26,7 @@ test.skipIf(!isMacos)(
             'ValueTests.swift': XCTEST_COVERAGE_TESTS,
         });
 
-        await using _cache = {
-            [Symbol.asyncDispose]: () => rm(readCheckoutCacheFolder(sandbox.path), { recursive: true, force: true }),
-        };
+        await using _cache = await redirectCacheFolder();
         const command = ['check', '--only', 'swift/coverage', '--json'];
         const failed = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
         expect(failed.exitCode, JSON.stringify(failed)).toBe(1);

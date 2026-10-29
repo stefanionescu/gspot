@@ -9,7 +9,6 @@ List the files whose eslint-disable comments name a rule that no plugin of the n
 such a comment as a rule it cannot find.
 
 @param session the repository and the tools that the selected checks run.
-@returns a plan row for each file, with the rules it names.
 */
 export function listForeignDisableComments(session: Session): InitFileRow[] {
     const prefixes = new Set(

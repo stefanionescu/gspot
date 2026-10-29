@@ -5,54 +5,32 @@ import { hasErrorCode } from '#cli/system/errors.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import type { NameList } from '#cli/types/configurations.ts';
+import { type NameList } from '#cli/types/configurations.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
-import type { EslintPreset } from '#cli/types/generation/eslint.ts';
+import { type EslintPreset } from '#cli/types/generation/eslint.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { ESLINT_RULE_NAMES_FILE } from '#cli/config/commands/explain.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations/names.ts';
+import { ESLINT_GLOBAL_NAMES_FILE } from '#cli/config/settings/tools/tables.ts';
+import { packageIdentitySchema, testsPackageJsonSchema } from '#cli/schemas/linter-exports.ts';
+import { STYLELINT_RULE_NAMES_FILE } from '#cli/config/generation/configurations/language/css.ts';
+import { INSTALL_PROJECT, LINTER_PACKAGES, PRESET_BLOCK_KEYS } from '#cli/config/linter-exports.ts';
 import { eslintPresetSchema, eslintPresetsSchema } from '#cli/schemas/configurations/eslint-presets.ts';
-import { testsManifestSchema, packageIdentitySchema } from '#cli/schemas/configurations/linter-exports.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/configurations/language/javascript/eslint/presets.ts';
 
-import type {
-    GlobalsModule,
-    PrettierModule,
-    PackageIdentity,
-    StylelintModule,
-    InstalledPackage,
-    EslintRuleModule,
+import {
+    type GlobalsModule,
+    type PrettierModule,
+    type PackageIdentity,
+    type StylelintModule,
+    type InstalledPackage,
+    type EslintRuleModule,
 } from '#cli/types/linter-exports.ts';
 
-const LINTER_PACKAGES = {
-    eslint: {
-        module: 'eslint/use-at-your-own-risk',
-        nameList: { file: 'configurations/language/javascript/eslint-rule-names.json' },
-    },
-    globals: {
-        module: 'globals',
-        nameList: { file: 'configurations/language/javascript/eslint-global-names.json' },
-    },
-    stylelint: {
-        module: 'stylelint',
-        nameList: { file: 'configurations/language/css/stylelint-rule-names.json' },
-    },
-    standard: { module: 'stylelint-config-standard' },
-    prettier: { module: 'prettier' },
-} as const;
-
-const LINTER_INSTALL_FOLDER = {
-    manifest: 'package.json',
-    install: ['bun', 'install', '--ignore-scripts'],
-    sample: 'capture.css',
-    testsManifest: '../../tests/package.json',
-} as const;
-
-const PRESET_BLOCK_KEYS = ['files', 'ignores', 'basePath', 'rules'] as const;
-
-function findInstalledPackage(folder: string, packageName: string, moduleName: string): InstalledPackage {
-    const modulePath = fileURLToPath(import.meta.resolve(moduleName, join(folder, LINTER_INSTALL_FOLDER.manifest)));
+function readInstalledPackage(folder: string, packageName: string, moduleName: string): InstalledPackage {
+    const modulePath = fileURLToPath(import.meta.resolve(moduleName, join(folder, INSTALL_PROJECT.manifest)));
     const document = readInstalledIdentity(modulePath, packageName);
     return { ...document, modulePath: modulePath };
 }
@@ -61,7 +39,7 @@ function readInstalledIdentity(modulePath: string, packageName: string): Package
     for (let path = dirname(modulePath); path !== dirname(path); path = dirname(path)) {
         let text: string;
         try {
-            text = readFileSync(join(path, LINTER_INSTALL_FOLDER.manifest), 'utf8');
+            text = readFileSync(join(path, INSTALL_PROJECT.manifest), 'utf8');
         } catch (error) {
             if (!hasErrorCode(error, 'ENOENT')) throw error;
             continue;
@@ -72,7 +50,7 @@ function readInstalledIdentity(modulePath: string, packageName: string): Package
     throw new Error(`No installed package named ${packageName} owns ${modulePath}.`);
 }
 
-function capturePreset(installed: InstalledPackage, source: string, module: unknown): EslintPreset {
+function buildPreset(installed: InstalledPackage, source: string, module: unknown): EslintPreset {
     let value = module;
     const keys = source === '' ? [] : source.split('.');
     for (const key of keys) {
@@ -97,16 +75,16 @@ async function installPackages(
     dependencies: Record<string, string>,
 ): Promise<Map<string, InstalledPackage>> {
     writeFileSync(
-        join(folder, LINTER_INSTALL_FOLDER.manifest),
+        join(folder, INSTALL_PROJECT.manifest),
         JSON.stringify({ private: true, type: 'module', dependencies }),
     );
-    const install = await spawnProcess(LINTER_INSTALL_FOLDER.install, { cwd: folder });
+    const install = await spawnProcess(INSTALL_PROJECT.install, { cwd: folder });
     if (install.code !== 0)
         throw new Error(`Bun install failed, so the linter exports stay as they were. ${install.stderr}`);
     return new Map(
         Object.keys(dependencies).map((name) => [
             name,
-            findInstalledPackage(folder, name, name === 'eslint' ? LINTER_PACKAGES.eslint.module : name),
+            readInstalledPackage(folder, name, name === 'eslint' ? LINTER_PACKAGES.eslint.module : name),
         ]),
     );
 }
@@ -123,8 +101,8 @@ async function preparePackages(folder: string, names: Set<string>): Promise<Map<
             }),
     );
     const installed = await installPackages(folder, dependencies);
-    const testsFile = fileURLToPath(new URL(LINTER_INSTALL_FOLDER.testsManifest, import.meta.url));
-    const tests = testsManifestSchema.parse(JSON.parse(readFileSync(testsFile, 'utf8')));
+    const testsFile = fileURLToPath(new URL(INSTALL_PROJECT.testsManifest, import.meta.url));
+    const tests = testsPackageJsonSchema.parse(JSON.parse(readFileSync(testsFile, 'utf8')));
     const peers = Object.fromEntries(
         installed.values().flatMap(({ peerDependencies }) =>
             Object.keys(peerDependencies).flatMap((name) => {
@@ -136,7 +114,7 @@ async function preparePackages(folder: string, names: Set<string>): Promise<Map<
     return Object.keys(peers).length === 0 ? installed : installPackages(folder, { ...dependencies, ...peers });
 }
 
-async function captureNames(installed: Map<string, InstalledPackage>, folder: string): Promise<Map<string, unknown>> {
+async function readNameLists(installed: Map<string, InstalledPackage>, folder: string): Promise<Map<string, unknown>> {
     const eslint = installed.get('eslint') as InstalledPackage;
     const builtins = (await import(pathToFileURL(eslint.modulePath).href)) as EslintRuleModule;
     const globals = installed.get(LINTER_PACKAGES.globals.module) as InstalledPackage;
@@ -144,7 +122,7 @@ async function captureNames(installed: Map<string, InstalledPackage>, folder: st
     const standard = installed.get(LINTER_PACKAGES.standard.module) as InstalledPackage;
     const stylelint = installed.get(LINTER_PACKAGES.stylelint.module) as InstalledPackage;
     const stylelintExports = (await import(pathToFileURL(stylelint.modulePath).href)) as { default: StylelintModule };
-    const sample = join(folder, LINTER_INSTALL_FOLDER.sample);
+    const sample = join(folder, INSTALL_PROJECT.sample);
     writeFileSync(sample, '');
     const style = await stylelintExports.default.resolveConfig(sample, {
         config: { extends: standard.modulePath },
@@ -168,13 +146,13 @@ async function captureNames(installed: Map<string, InstalledPackage>, folder: st
         names: Object.keys(style.rules).toSorted((first, second) => compareText(first, second)),
     };
     return new Map([
-        [LINTER_PACKAGES.eslint.nameList.file, eslintNames],
-        [LINTER_PACKAGES.globals.nameList.file, globalsNames],
-        [LINTER_PACKAGES.stylelint.nameList.file, stylelintNames],
+        [ESLINT_RULE_NAMES_FILE, eslintNames],
+        [ESLINT_GLOBAL_NAMES_FILE, globalsNames],
+        [STYLELINT_RULE_NAMES_FILE, stylelintNames],
     ]);
 }
 
-async function copyLinterExports(): Promise<void> {
+async function writeLinterExports(): Promise<void> {
     const recipes = listAssets(`${CONFIGURATIONS_FOLDER}/`)
         .filter((path) => path.endsWith(`/${ESLINT_PRESETS_FILE}`))
         .map((path) => {
@@ -195,13 +173,13 @@ async function copyLinterExports(): Promise<void> {
     try {
         process.chdir(folder.path);
         const installed = await preparePackages(folder.path, names);
-        const nameLists = await captureNames(installed, folder.path);
+        const nameLists = await readNameLists(installed, folder.path);
         for (const { path, presets } of recipes) {
             const copied = [];
             for (const [name, preset] of Object.entries(presets)) {
                 const owner = installed.get(preset.package) as InstalledPackage;
                 const module = (await import(pathToFileURL(owner.modulePath).href)) as { default: unknown };
-                copied.push([name, capturePreset(owner, preset.source, module.default)]);
+                copied.push([name, buildPreset(owner, preset.source, module.default)]);
             }
             nameLists.set(path, Object.fromEntries(copied));
         }
@@ -227,4 +205,4 @@ async function copyLinterExports(): Promise<void> {
     }
 }
 
-await copyLinterExports();
+await writeLinterExports();

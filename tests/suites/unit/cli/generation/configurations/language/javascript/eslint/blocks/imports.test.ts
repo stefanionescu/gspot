@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { HOST_MODULE } from '#tests/config/generation/configurations/language/javascript/samples.ts';
+import { HOST_MODULE } from '#tests/config/generation/configurations/language/javascript/paths.ts';
 
 import {
     SORT_CASES,
@@ -134,7 +134,7 @@ test('an import of a javascript.externals path gets no gspot/import-boundaries f
         buildSandboxSettings(['javascript'], {
             level: 'all',
             scopes,
-            tables: `[javascript]\nexternals = ["${HOST_MODULE}"]\n`,
+            tables: `[javascript]\nexternals = { value = ["${HOST_MODULE}"], reason = "The host supplies this module." }\n`,
         }),
     );
     const external = await createEslint(sandbox.path);

@@ -25,7 +25,7 @@ async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<
 }
 
 /**
-Read the supported dependency files for dependency and runtime detection.
+Read the supported dependency files.
 
 @param reads the run cache.
 @param files the tracked inventory.
@@ -73,13 +73,18 @@ Read the dependency specifiers declared for installation.
 
 @param reads the cache rooted at the repository.
 @param path the repository-relative package.json path.
-@returns the specifiers by name, or undefined when the file does not exist.
+@param sections the package.json dependency tables to read.
+@returns undefined when the file does not exist.
 */
-export function readDependencySpecifiers(reads: ReadCache, path: string): Map<string, string> | undefined {
+export function readDependencySpecifiers(
+    reads: ReadCache,
+    path: string,
+    sections: readonly ((typeof DEPENDENCY_SECTIONS)[number] | 'peerDependencies')[] = DEPENDENCY_SECTIONS,
+): Map<string, string> | undefined {
     const fields = readCachedPackageJson(reads, path);
     if (fields === undefined) return undefined;
     return new Map(
-        DEPENDENCY_SECTIONS.flatMap((section) => {
+        sections.flatMap((section) => {
             const dependencies = fields[section];
             return dependencies === undefined ? [] : Object.entries(dependencies);
         }),
@@ -91,7 +96,6 @@ List the tool-only packages: each package.json that holds only declared npm tool
 
 @param dependencyFiles the parsed files.
 @param configurations the configurations that declare the npm tools.
-@returns the paths of the tool-only packages.
 */
 export function listToolOnlyPackages(
     dependencyFiles: DependencyFile[],
@@ -113,14 +117,14 @@ export function listToolOnlyPackages(
 List the dependency names of the nearest declared npm project that contains a scope.
 
 @param dependencyFiles the validated files.
-@param scope the repository-relative project folder.
+@param scopePath the repository-relative project folder.
 @returns the declared dependency names. Child and sibling projects keep their own.
 */
-export function listProjectDependencyNames(dependencyFiles: DependencyFile[], scope: string): string[] {
+export function listProjectDependencyNames(dependencyFiles: DependencyFile[], scopePath: string): string[] {
     const projects = new Map(
         dependencyFiles.filter((file) => file.kind === PACKAGE_JSON).map((file) => [file.path, file]),
     );
-    const owner = listEnclosingFolders(scope)
+    const owner = listEnclosingFolders(scopePath)
         .map((folder) => projects.get(posix.join(folder, PACKAGE_JSON)))
         .find((file) => file !== undefined);
     return owner === undefined ? [] : Object.keys(owner.dependencies);

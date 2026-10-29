@@ -1,16 +1,26 @@
+import type { Session } from '#cli/types/session.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
+import type { RepositoryListing } from '#cli/types/repository/read.ts';
 import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
 
-export type SaveSettingsOptions = { edit: SettingsEdit; summary: string; notes?: string[] };
+export type SettingsEditOptions = {
+    edit: SettingsEdit;
+    summary: string;
+    notes?: string[];
+    reads?: ReadCache;
+    listing?: RepositoryListing;
+};
 
 export type ConfigurationsOptions = { cwd: string; configurations: string[]; scope?: string };
 
 export type SettingsEditContext = {
     root: string;
-    input: SettingsEdit;
+    edit: SettingsEdit;
     settings: Settings;
     reads: ReadCache;
-    scope: string | undefined;
+    session: Session;
+    listing: RepositoryListing;
+    scope: string;
     scopeTable: TomlTable;
 };

@@ -1,6 +1,9 @@
 export type EslintGlobals = Record<string, boolean | 'readonly' | 'writable' | 'writeable' | 'off'>;
 
 export type JavascriptBlock = {
+    rules?: Record<string, unknown>;
+    plugins?: Record<string, unknown>;
+    settings?: Record<string, unknown>;
     languageOptions?: { globals?: EslintGlobals; [option: string]: unknown };
     [field: string]: unknown;
 };

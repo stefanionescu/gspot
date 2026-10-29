@@ -3,11 +3,12 @@ import { test, expect } from 'bun:test';
 import { unlink, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
+    IGNORE_CASES,
     SCOPE_IMPORT_FILES,
     SCOPE_IMPORT_TABLES,
     ESLINT_OVERRIDES_SETTINGS,
@@ -15,10 +16,7 @@ import {
     RESTRICTED_IMPORT_SETTINGS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/overrides.ts';
 
-test.each([
-    { name: 'without an ignore', ignored: false },
-    { name: 'with an ignore', ignored: true },
-])('an ignore of an ESLint rule applies after your rule options ($name)', async ({ ignored }) => {
+test.each(IGNORE_CASES)('an ignore of an ESLint rule applies after your rule options ($name)', async ({ ignored }) => {
     const settings = buildSandboxSettings(['javascript'], {
         level: 'all',
         tables: '[tools.eslint.rules]\n"no-console" = [{allow = ["warn"]}]\n',
@@ -39,10 +37,7 @@ test.each([
     );
 });
 
-test.each([
-    { name: 'without an ignore', ignored: false },
-    { name: 'with an ignore', ignored: true },
-])(
+test.each(IGNORE_CASES)(
     'ESLint override blocks keep their order, nested scope limits, later files and path ignores ($name)',
     async ({ ignored }) => {
         const source = 'export const matches = (value) => value == null;\n';
@@ -85,6 +80,7 @@ test.each([
         ).toStrictEqual(expected.map(() => 2));
     },
 );
+
 test('an override of no-restricted-imports is refused with its owning setting', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], RESTRICTED_IMPORT_SETTINGS),

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#MISE description="Deploy the built documentation site to generativespotting.com."
+#MISE depends=["docs:build"]
+#MISE dir="{{config_root}}/docs"
+set -euo pipefail
+
+bun run wrangler deploy || exit 1
+if ! curl --fail --show-error --silent --location --connect-timeout 10 --max-time 30 \
+    https://generativespotting.com/llms.txt | cmp -s dist/llms.txt -; then
+    printf 'The published llms.txt differs from the documentation build. Check the deployment.\n' >&2
+    exit 1
+fi

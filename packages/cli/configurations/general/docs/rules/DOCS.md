@@ -29,6 +29,9 @@ attributed source text.
 Keep required instructions outside collapsed panels. Delete obsolete content. A badge belongs only where its accurate
 state affects a reader's decision.
 
+Give every project scope a `README.md` that says what it does and how to start, and the repository root a `LICENSE`
+file.
+
 ## Examples and procedures
 
 An example teaches one idea and uses the supported API. Include imports, setup, and the context readers need. Label an
@@ -49,6 +52,11 @@ recovery. Preserve exact public errors and remove private data from examples.
 
 Do not write the current release number in prose or examples. Write `<version>` and say once where to find the number,
 or generate the text from the dependency file.
+
+Each path, and each `mise run`, `npm run`, `pnpm run`, `yarn run`, or `bun run` command, in prose or in a `bash`, `sh`,
+or `console` block names a tracked file or a task of its project. Give a shell block of example paths a `title=`
+attribute, such as `title="example"`. Label each code block with its language, or `text` when it holds no code. A block
+labeled JSON, TOML, YAML, Bash, JavaScript, TypeScript, or Python must parse.
 
 ## Reference pages
 
@@ -77,13 +85,13 @@ Keep media with its editable source and license. Use screenshots for interfaces,
 for data. Add media when text alone does not explain the information. Report stale media.
 
 A video needs captions and a transcript for information absent from the page. Keep the full procedure in text. Do not
-embed trackers or commit video outside the project's asset workflow. Follow ACCESSIBILITY.md for alt text and color.
+embed trackers or commit video outside the project's asset workflow. Convey no meaning by color alone.
 
 Keep diagrams small and draw equal concepts with the same shape. Prefer editable diagrams and descriptive file names.
 List keyboard shortcuts and per-system steps in a fixed order.
 
 ## Links
 
-Use maintained primary sources for external APIs and relative paths for repository content. A public procedure states
-any account or permission needed to open a required page. See [Diátaxis](https://diataxis.fr/) and
-[W3C image guidance](https://www.w3.org/WAI/tutorials/images/).
+Point every relative link at a file and a heading that exist. Use maintained primary sources for external APIs and
+relative paths for repository content. A public procedure states any account or permission needed to open a required
+page. See [Diátaxis](https://diataxis.fr/) and [W3C image guidance](https://www.w3.org/WAI/tutorials/images/).

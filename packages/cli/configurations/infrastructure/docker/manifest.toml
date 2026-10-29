@@ -1,14 +1,14 @@
 allowed_words = ["Docker", "Trivy"]
 
 [configuration]
-description = "Dockerfiles and Compose files: Dockerfile best practices, valid Compose files, a `.dockerignore` beside each Dockerfile, and image vulnerability scans."
+description = "Dockerfiles and Compose files: Dockerfile best practices, valid Compose files, a .dockerignore beside each Dockerfile, and image vulnerability scans."
 title = "Docker"
 
 [detect]
-paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml", "!**/*.dockerignore"]
+paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose.{yml,yaml}", "**/compose.*.{yml,yaml}", "**/compose-*.{yml,yaml}", "!**/*.dockerignore"]
 
 [files]
-paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml", "**/.dockerignore", "**/*.dockerignore"]
+paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose.{yml,yaml}", "**/compose.*.{yml,yaml}", "**/compose-*.{yml,yaml}", "**/.dockerignore", "**/*.dockerignore"]
 
 [shared_prefixes]
 prefixes = ["docker"]
@@ -50,7 +50,6 @@ command = ["hadolint", "--no-color", "--config", "{config_file:hadolint}", "{fil
 example = "`FROM node:latest` reports DL3007, because that tag moves. Pin an explicit version tag or a digest."
 files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*.dockerignore"] }
 help = "Change the instruction the way the rule says. Turn one rule off with `gspot ignore docker/hadolint --rule <rule> --reason \"<why>\"`."
-level = "recommended"
 name = "hadolint"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+) (?<rule>[A-Z]+\\d+) [a-z]+: (?<message>.*)$" }
 stage = "commit"
@@ -58,11 +57,10 @@ summary = "Lints every Dockerfile, and runs ShellCheck over its RUN lines."
 why = "An unpinned base image makes a build nobody can repeat, and a cache left in a layer bloats the result."
 
 [[check]]
-command = ["docker", "compose", "-f", "{file}", "config", "--quiet", "--no-env-resolution"]
+command = ["docker", "compose", "-f", "{file}", "config", "--quiet", "--no-interpolate", "--no-env-resolution"]
 example = "A Compose service with the unknown key `bogus` fails to parse. Remove the key, or use a supported one."
-files = { paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"] }
+files = { paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose.{yml,yaml}", "**/compose.*.{yml,yaml}", "**/compose-*.{yml,yaml}"] }
 help = "Read the message Compose prints; it names the key and the service."
-level = "recommended"
 name = "compose"
 needs = ["docker"]
 output = { format = "lines" }
@@ -74,7 +72,6 @@ why = "Valid YAML can still hold a key that Compose rejects, and otherwise the f
 [[check]]
 example = "A Dockerfile with no `.dockerignore` beside it reports a finding. Add one that excludes the paths the finding names, such as `.git` and installed dependencies."
 help = "Add a .dockerignore beside the Dockerfile with the paths the message names."
-level = "recommended"
 name = "dockerignore"
 runs = "once"
 stage = "commit"
@@ -87,7 +84,6 @@ example = "A Dockerfile whose final stage runs as root reports a finding. Create
 exit_codes = [10]
 files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*.dockerignore"] }
 help = "Change the file the way the message says. Accept one advisory with `gspot ignore docker/trivy-config --rule <rule> --reason \"<why>\"`."
-level = "recommended"
 name = "trivy-config"
 output = { format = "json", list = "Results", children = "Misconfigurations", fields = { file = "Target", line = "CauseMetadata.StartLine", rule = "ID", message = "Message" } }
 run_in_copy = true
@@ -98,9 +94,8 @@ why = "A root user turns any bug in the service into full control of the contain
 
 [[check]]
 example = "An image with a vulnerable package reports the advisory. Move to an image version with the fixed package."
-files = { paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"] }
+files = { paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose.{yml,yaml}", "**/compose.*.{yml,yaml}", "**/compose-*.{yml,yaml}"] }
 help = "Move to a newer tag of the image. Accept one advisory with `gspot ignore docker/trivy-image --rule <rule> --reason \"<why>\"`."
-level = "recommended"
 name = "trivy-image"
 needs = ["docker"]
 runs = "scope"

@@ -1,3 +1,4 @@
+import { OWN_FILES_ONLY } from '#cli/config/settings/import-rules.ts';
 import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 
 /**
@@ -19,11 +20,10 @@ Explain an import that an import rule refuses.
 @param allowed the names from listAllowedRules, the importing rule first.
 @param imported the import as written.
 @param owner the import rule of the imported file, as its category, such as import-rule:core.
-@returns the finding message.
 */
 export function formatRefusedImport(allowed: string[], imported: string, owner: string): string {
     const [name, ...others] = allowed;
     const quoted = others.map((rule) => JSON.stringify(rule)).join(', ');
-    const reach = others.length === 0 ? 'only its own files' : `its own files and ${quoted}`;
+    const reach = others.length === 0 ? OWN_FILES_ONLY : `its own files and ${quoted}`;
     return `Import rule "${String(name)}" may import ${reach}, not ${imported} from ${owner}. Move the code, move that rule above this one, or list the rules it may import in can_import.`;
 }

@@ -4,28 +4,27 @@ import { buildUvRunCommand } from '#cli/tools/uv.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import { countCodeLines } from '#cli/checks/code-lines.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getTable, getLimit } from '#cli/settings/scopes.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/files/names.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
-import { COMMENT_MARKERS } from '#cli/config/checks/code-lines.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
-import { buildFinding, getNodePlace } from '#cli/checks/finding.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
-import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
+import { PATH_SEPARATOR_PATTERN } from '#cli/config/files/path-patterns.ts';
 import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
-import { runCommandCheck, runCommandGroups } from '#cli/runs/command/check.ts';
+import { type CheckResult, type CheckFinding } from '#cli/types/runs/check.ts';
+import { runCommandCheck, runCommandBatches } from '#cli/runs/command/check.ts';
 import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { RUFF_TABLE } from '#cli/config/generation/configurations/language/python.ts';
 import { deptrySchema, docstringStyleSchema } from '#cli/schemas/checks/language/python.ts';
 import { findDocstring, PYTHON_SOURCES, parsePythonModule } from '#cli/parsers/code/python.ts';
 import { type PydoclintOptions, type PythonDocstringStyle } from '#cli/types/checks/language/python.ts';
 
 import {
+    RULES,
     PIP_INSTALL,
     PLACEHOLDERS,
     NON_WORD_RUN,
@@ -33,15 +32,21 @@ import {
     VULTURE_COMMAND,
     VULTURE_FINDING,
     NUMPY_DOCSTRING,
+    NO_LOCKFILE_NOTE,
     GOOGLE_DOCSTRING,
+    NO_PYPROJECT_NOTE,
     VULTURE_DEAD_CODE,
     PYDOCLINT_COMMAND,
+    PIP_INSTALL_MESSAGE,
     DEPTRY_EXCLUDE_FLAG,
+    DEPTRY_GSPOT_EXCLUDE,
     PYDOCLINT_STYLE_FLAG,
     INSTALL_FILE_SUFFIXES,
     PYDOCLINT_TYPE_OPTIONS,
     DEPTRY_FIRST_PARTY_FLAG,
     PYDOCLINT_DEFAULT_STYLE,
+    REQUIREMENTS_FOLDER_FILE,
+    REQUIREMENTS_FILE_MESSAGE,
 } from '#cli/config/checks/language/python.ts';
 
 function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
@@ -55,20 +60,19 @@ function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
 Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot and child scopes added, because the command-line flag replaces it.
 
 @param session the repository and installed tools.
-@param planned the dependency check and its scope.
-@returns the check result.
+@param planned the configured check and selected scope files.
 */
 export async function checkPythonDeptry(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const text = findCachedText(session.reads, pyproject);
-    if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
+    if (text === undefined) throw new GspotError('skip', NO_PYPROJECT_NOTE);
     const { extend_exclude: exclusions, known_first_party: firstParty } = parseTomlFile(pyproject, text, deptrySchema)
         .tool.deptry;
     return await runCommandCheck(session, planned, {
         command: buildUvRunCommand(planned.scope, join(session.root, planned.scope.path), [
             ...DEPTRY_COMMAND,
             ...[
-                String.raw`(^|.*[/\\])${RegExp.escape(GSPOT_FOLDER)}([/\\]|$)`,
+                DEPTRY_GSPOT_EXCLUDE,
                 ...listNestedScopes(
                     session.scopes.map((scope) => scope.path),
                     planned.scope.path,
@@ -77,7 +81,7 @@ export async function checkPythonDeptry(session: CheckSession, planned: PlannedC
                         .relative(planned.scope.path, path)
                         .split('/')
                         .map((segment) => RegExp.escape(segment))
-                        .join(String.raw`[/\\]`);
+                        .join(PATH_SEPARATOR_PATTERN);
                     return String.raw`^${child}([/\\]|$)`;
                 }),
                 ...exclusions,
@@ -89,46 +93,53 @@ export async function checkPythonDeptry(session: CheckSession, planned: PlannedC
 
 async function listLongFunctions(
     session: Session,
-    planned: PlannedCheck,
+    files: PlannedCheck['files'],
     path: string,
     limit: number,
-): Promise<Finding[]> {
-    const text = readCachedText(session.reads, path);
-    const lines = text.split('\n');
-    const tree = await parseSource('python', text);
-    try {
-        return tree.rootNode.descendantsOfType('function_definition').flatMap((node) => {
-            const count = countCodeLines(
-                lines.slice(node.startPosition.row, node.endPosition.row + 1),
-                COMMENT_MARKERS.python,
-            );
-            if (count <= limit) return [];
-            const name = node.childForFieldName('name')?.text ?? 'function';
-            return [
-                buildFinding(
-                    planned,
-                    { file: path, line: node.startPosition.row + 1 },
-                    'function-lines',
-                    `${name} has ${String(count)} code lines, over the limit of ${String(limit)}.`,
-                ),
-            ];
-        });
-    } finally {
-        tree.delete();
-    }
+): Promise<CheckFinding[]> {
+    const { functions } = await parseCached(
+        { root: session.root, reads: session.reads, resources: session.resources, files },
+        PYTHON_SOURCES,
+    );
+    const findings = await Promise.all(
+        functions
+            .filter((definition) => definition.path === path)
+            .map(async ({ node, name }) => {
+                const lines = node.text.split('\n');
+                const first = node.childForFieldName('body')?.namedChildren.find((child) => child.type !== 'comment');
+                if (first !== undefined && findDocstring(node) !== undefined) {
+                    for (let row = first.startPosition.row; row <= first.endPosition.row; row += 1)
+                        lines[row - node.startPosition.row] = '';
+                }
+                const count = await countCodeLines(lines.join('\n'), 'python');
+                return count <= limit
+                    ? []
+                    : [
+                          {
+                              file: path,
+                              line: node.startPosition.row + 1,
+                              rule: RULES.functionLines,
+                              message: `${name} has ${String(count)} code lines, over the limit of ${String(limit)}.`,
+                          },
+                      ];
+            }),
+    );
+    return findings.flat();
 }
 
 /**
 Checks each Python function against limits.function_lines, counting code lines only.
 
 @param session the repository and its tools.
-@param planned the scope files and limits.
+@param planned the configured check and selected scope files.
 @returns one finding per function over the limit.
 */
-export async function checkPythonFunctionSize(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkPythonFunctionSize(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const limit = getLimit(planned.scope.settings, 'function_lines', 'python');
     const files = planned.files.filter((file) => file.path.endsWith(PYTHON_EXTENSION));
-    const findings = await Promise.all(files.map((file) => listLongFunctions(session, planned, file.path, limit)));
+    const findings = await Promise.all(
+        files.map((file) => listLongFunctions(session, planned.files, file.path, limit)),
+    );
     return findings.flat();
 }
 
@@ -136,41 +147,38 @@ export async function checkPythonFunctionSize(session: Session, planned: Planned
 Reports hand-kept requirements files and unmanaged pip installs, so pyproject.toml owns every dependency.
 
 @param session the repository and its tools.
-@param planned the scope files to read.
-@returns the findings.
+@param planned the configured check and selected scope files.
 */
-export function checkPythonPipInstalls(session: Session, planned: PlannedCheck): Finding[] {
+export function checkPythonPipInstalls(session: Session, planned: PlannedCheck): CheckFinding[] {
     if (
         !(planned.check.files?.filenames ?? []).some((file) =>
             planned.files.some(({ path }) => path === joinScope(planned.scope.path, file)),
         )
     )
-        throw new GspotError('skip', 'This check needs uv.lock, poetry.lock, or pdm.lock in this scope.');
+        throw new GspotError('skip', NO_LOCKFILE_NOTE);
     const files = planned.files.filter((file) => file.kind === 'source');
     const requirements = files
-        .filter((file) => REQUIREMENTS_FILE.test(file.path))
-        .map((file) =>
-            buildFinding(
-                planned,
-                { file: file.path, line: 1 },
-                'requirements-file',
-                'A hand-kept requirements file is a second owner of the dependencies. Export it from the lockfile and declare it generated, or delete it.',
-            ),
-        );
+        .filter((file) => REQUIREMENTS_FILE.test(file.path) || REQUIREMENTS_FOLDER_FILE.test(file.path))
+        .map((file) => ({
+            file: file.path,
+            line: 1,
+            rule: RULES.requirementsFile,
+            message: REQUIREMENTS_FILE_MESSAGE,
+        }));
     const installs = files
         .filter((file) => INSTALL_FILE_SUFFIXES.some((ending) => file.path.endsWith(ending)))
         .flatMap((file) =>
             readCachedText(session.reads, file.path)
                 .split('\n')
-                .flatMap((text, index): Finding[] =>
+                .flatMap((text, index): CheckFinding[] =>
                     PIP_INSTALL.test(text) && !text.trimStart().startsWith('#')
                         ? [
-                              buildFinding(
-                                  planned,
-                                  { file: file.path, line: index + 1 },
-                                  'pip-install',
-                                  'Add the package to pyproject.toml and install it from the lockfile.',
-                              ),
+                              {
+                                  file: file.path,
+                                  line: index + 1,
+                                  rule: RULES.pipInstall,
+                                  message: PIP_INSTALL_MESSAGE,
+                              },
                           ]
                         : [],
                 ),
@@ -182,27 +190,38 @@ export function checkPythonPipInstalls(session: Session, planned: PlannedCheck):
 Reports Python docstrings that only repeat a name or placeholder.
 
 @param session the repository and its tools.
-@param planned the scope Python files.
-@returns the findings.
+@param planned the configured check and selected scope files.
 */
-export async function checkPythonPlaceholderDocstrings(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const { functions } = await parseCached(
+export async function checkPythonPlaceholderDocstrings(
+    session: Session,
+    planned: PlannedCheck,
+): Promise<CheckFinding[]> {
+    const { functions, modules } = await parseCached(
         { root: session.root, reads: session.reads, resources: session.resources, files: planned.files },
         PYTHON_SOURCES,
     );
-    return functions.flatMap((definition) => {
+    const definitions = [
+        ...functions,
+        ...modules.flatMap(({ path, tree }) =>
+            tree.rootNode
+                .descendantsOfType('class_definition')
+                .map((node) => ({ path, node, name: node.childForFieldName('name')?.text ?? '' })),
+        ),
+    ];
+    return definitions.flatMap((definition) => {
         const text = findDocstring(definition.node);
         if (text === undefined) return [];
         const lowered = text.toLowerCase().replaceAll(NON_WORD_RUN, ' ').trim();
         const isName = lowered === definition.name.toLowerCase().replaceAll('_', ' ').trim();
         if (lowered !== '' && !isName && !PLACEHOLDERS.has(lowered)) return [];
         return [
-            buildFinding(
-                planned,
-                getNodePlace(definition.path, definition.node),
-                'placeholder-docstring',
-                `The docstring of ${definition.name} says nothing the name does not. Say what the function does, or for whom.`,
-            ),
+            {
+                file: definition.path,
+                line: definition.node.startPosition.row + 1,
+                column: definition.node.startPosition.column + 1,
+                rule: RULES.placeholderDocstring,
+                message: `The docstring of ${definition.name} says nothing the name does not. Say what the function does, or for whom.`,
+            },
         ];
     });
 }
@@ -238,6 +257,7 @@ async function groupByDocstringStyle(
             .map(([style, group]) => [style, group.map(({ file }) => file)]),
     );
 }
+
 function parsePydoclintOptions(path: string, text: string, convention: unknown): PydoclintOptions {
     const { tool } = parseTomlFile(path, text, docstringStyleSchema);
     const inherited = tool.ruff.lint.pydocstyle.convention ?? convention;
@@ -251,18 +271,18 @@ function parsePydoclintOptions(path: string, text: string, convention: unknown):
 Runs pydoclint with the declared docstring style, or with the style each file uses.
 
 @param session the repository and installed tools.
-@param planned the docstring check for one scope.
-@returns the check result, with earlier findings kept when a later batch fails.
+@param planned the configured check and selected scope files.
+@returns the result, with earlier findings kept when a later batch fails.
 */
 export async function checkPythonPydoclint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const configured = parsePydoclintOptions(
         pyproject,
         findCachedText(session.reads, pyproject) ?? '',
-        planned.scope.settings.tables['tools.ruff']?.docstring_convention,
+        planned.scope.settings.tables[RUFF_TABLE]?.docstring_convention,
     );
     const groups = await groupByDocstringStyle(session, planned.files, configured.style);
-    return runCommandGroups(
+    return runCommandBatches(
         session,
         planned,
         [...groups].map(([style, files]) => ({
@@ -272,7 +292,7 @@ export async function checkPythonPydoclint(session: CheckSession, planned: Plann
     );
 }
 
-function parseVultureFinding(planned: PlannedCheck, line: string, selected: ReadonlySet<string>): Finding[] {
+function parseVultureFinding(line: string, selected: ReadonlySet<string>): CheckFinding[] {
     const groups = VULTURE_FINDING.exec(line)?.groups;
     if (groups === undefined) return [];
     const file = groups['file'] ?? '';
@@ -281,10 +301,14 @@ function parseVultureFinding(planned: PlannedCheck, line: string, selected: Read
     const { kind, name, statement } = groups;
     if (kind === undefined || name === undefined)
         return [
-            buildFinding(planned, at, 'unreachable-code', `The code after ${String(statement)} never runs. Delete it.`),
+            {
+                ...at,
+                rule: RULES.unreachableCode,
+                message: `The code after ${String(statement)} never runs. Delete it.`,
+            },
         ];
     const message = `No code uses the ${kind} ${name}. Delete it, or, when code that vulture cannot see uses it by name, record that with gspot ignore python/vulture --names ${name} and a reason.`;
-    return [{ ...buildFinding(planned, at, `unused-${kind}`, message), name }];
+    return [{ ...at, rule: `unused-${kind}`, message: message, name }];
 }
 
 /**
@@ -292,10 +316,10 @@ Runs vulture over every Python file of the scope, so that a use in any file coun
 files of this run.
 
 @param session the repository and its tools.
-@param planned the scope, its files, and the repository files.
+@param planned the configured check and selected scope files.
 @returns each unused definition and each line of unreachable code.
 */
-export async function checkPythonVulture(session: CheckSession, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkPythonVulture(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scope = planned.scope.path;
     const children = listNestedScopes(
         session.scopes.map(({ path }) => path),
@@ -308,6 +332,6 @@ export async function checkPythonVulture(session: CheckSession, planned: Planned
     if (sources.length === 0) return [];
     const result = await runCheckTool(session, planned, [...VULTURE_COMMAND, ...sources], { cwd: session.root });
     const selected = new Set(planned.files.map((file) => file.path));
-    const findings = result.stdout.split('\n').flatMap((line) => parseVultureFinding(planned, line, selected));
+    const findings = result.stdout.split('\n').flatMap((line) => parseVultureFinding(line, selected));
     return result.code === VULTURE_DEAD_CODE ? findings : assertToolFindings(result, findings, 'vulture');
 }

@@ -48,3 +48,5 @@ export type TomlCommentPlacement = {
     comment: TomlCommentNode;
     placement: 'owned' | 'free';
 };
+
+export type TomlCommentMove = { source: TomlAnchoredComment; found: TomlAnchoredComment | undefined };

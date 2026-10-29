@@ -5,6 +5,7 @@ import { formatHeader } from '#cli/generation/header.ts';
 import { join, dirname, relative } from 'node:path/posix';
 import { buildSemgrepFile } from '#cli/generation/config-files/semgrep.ts';
 import { buildSquawkFile } from '#cli/generation/configurations/postgres.ts';
+import { buildCoverageFile } from '#cli/generation/configurations/pytest.ts';
 import { buildLycheeFile } from '#cli/generation/configurations/general/docs.ts';
 import { buildSqlfluffFile } from '#cli/generation/configurations/language/sql.ts';
 import { buildTyposFile } from '#cli/generation/configurations/general/spelling.ts';
@@ -32,6 +33,7 @@ import { buildTrivyFile, buildHadolintFile } from '#cli/generation/configuration
 import { buildV8rFile, buildTaploFile, buildYamllintFile } from '#cli/generation/configurations/general/data-files.ts';
 
 import {
+    TS_EXTENSION,
     TRANSPILE_OPTIONS,
     CONFIG_FILE_REFERENCE,
     SEMGREP_RULE_PACK_FILE,
@@ -53,7 +55,8 @@ import {
     buildBannedHeadingsStyle,
 } from '#cli/generation/configurations/general/prose.ts';
 
-const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefined>> = {
+export const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefined>> = {
+    'pytest/coveragerc': buildCoverageFile,
     'ansible/ansible-lint.yml': buildAnsibleLintFile,
     'prose/styles/gspot/acronyms.yml': buildAcronymsStyle,
     'nginx/gixy.cfg': buildGixyFile,
@@ -126,7 +129,7 @@ export function buildConfigFile(
     if (builder === undefined) {
         const source = configFile.source;
         const shipped = readFileSync(buildAssetPath(`${planned.configuration.folder}/${source}`), 'utf8');
-        built = source.endsWith('.ts')
+        built = source.endsWith(TS_EXTENSION)
             ? ts.transpileModule(shipped, { compilerOptions: TRANSPILE_OPTIONS }).outputText
             : shipped;
     } else built = builder(planned);

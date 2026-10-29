@@ -1,7 +1,7 @@
 allowed_words = ["PostgreSQL", "Postgres"]
 
 [configuration]
-description = "Postgres migrations: no locking or breaking changes, a fixed order, no edits after they ran, row-level security, explicit grants, and an index under every foreign key."
+description = "Postgres migrations: the locking and breaking changes that Squawk reports, a fixed order, no edits to frozen migrations, row-level security, explicit grants, and an index under every foreign key."
 requires = ["sql"]
 title = "Postgres"
 
@@ -32,9 +32,8 @@ command = ["squawk", "--config", "{config_file:squawk}", "--reporter", "json", "
 example = "A migration that adds a constraint with a full table scan reports a finding. Create the constraint first, and validate it in a separate migration."
 files = { paths = ["{setting:postgres.migrations_folder}/**/*.sql"] }
 help = "Follow the advice squawk prints for the rule. Turn one rule off with `gspot ignore postgres/squawk --rule <rule> --reason \"<why>\"`."
-level = "recommended"
 name = "squawk"
-output = { format = "json", line_base = 0, fields = { file = "file", line = "line", column = "column", rule = "rule_name", message = "message" } }
+output = { format = "json", line_base = 0, fields = { file = "file", line = "line", column = "column", rule = "rule_name", message = "message help" } }
 stage = "commit"
 summary = "Checks every migration for changes that lock or rewrite a table, or break the running application."
 why = "A migration that takes an exclusive lock on a large table stops the application for as long as it runs."
@@ -42,7 +41,6 @@ why = "A migration that takes an exclusive lock on a large table stops the appli
 [[check]]
 example = "A new migration numbered below the latest committed one reports a finding. Give it a later version, and leave applied migrations unchanged."
 help = "Rename the new migration with a version later than the newest committed one."
-level = "recommended"
 name = "migration-order"
 runs = "scope"
 stage = "commit"
@@ -52,7 +50,6 @@ why = "A migration that sorts before an applied one never runs on databases alre
 [[check]]
 example = "An edit to a committed migration reports a finding. Restore the original file, and write the change as a new migration."
 help = "Restore the file with `git checkout`, and write the change as a new migration."
-level = "recommended"
 name = "edited-migrations"
 runs = "scope"
 stage = "commit"
@@ -62,7 +59,6 @@ why = "An applied migration never runs again, so an edit reaches only new databa
 [[check]]
 example = "A new table without row-level security reports a finding. Add `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` for it."
 help = "Enable row-level security on the table."
-level = "recommended"
 name = "row-level-security"
 when = { setting = "postgres.client_schemas" }
 runs = "scope"
@@ -73,7 +69,6 @@ why = "A client that reaches the schema reads and writes every row of a table wi
 [[check]]
 example = "The statement `GRANT ALL ON TABLE public.items TO app_reader;` reports a broad grant. If the role only reads rows, use `GRANT SELECT ON TABLE public.items TO app_reader;`."
 help = "Name the privileges the role needs, such as `SELECT` alone."
-level = "recommended"
 name = "grants"
 runs = "scope"
 stage = "commit"
@@ -82,8 +77,7 @@ why = "A full grant includes truncating the table, adding triggers, and each pri
 
 [[check]]
 example = "A `SECURITY DEFINER` function without a safe search path reports a finding. Add `SET search_path = ''` to the definition, and schema-qualify the objects in its body."
-help = "Give the function an empty `search_path` in its definition, and qualify every name inside it."
-level = "recommended"
+help = "Set an explicit `search_path` in the definition, such as `SET search_path = ''`, and qualify every name inside it."
 name = "definer-search-path"
 runs = "scope"
 stage = "commit"
@@ -91,9 +85,8 @@ summary = "Checks that every SECURITY DEFINER function sets its search_path."
 why = "A definer function runs with its owner's rights, and a caller who controls the search path chooses the objects it touches."
 
 [[check]]
-example = "A foreign key on `orders.customer_id` without an index starting with that column reports a missing index. Add `CREATE INDEX orders_customer_id_idx ON orders (customer_id);` in the migration set."
+example = "A foreign key on `orders.customer_id` without an index starting with that column reports a missing index. Add `SET lock_timeout = '5s'; SET statement_timeout = '60s'; CREATE INDEX orders_customer_id_idx ON orders (customer_id);` in the migration set."
 help = "Create an index that starts with all columns of the foreign key."
-level = "recommended"
 name = "foreign-key-indexes"
 runs = "scope"
 stage = "commit"

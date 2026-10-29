@@ -7,6 +7,7 @@ import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import {
     SELECTOR_FILES,
     SELECTOR_LIBRARY_FILES,
+    FRAMEWORK_SELECTOR_CASES,
 } from '#tests/config/generation/configurations/language/javascript/eslint/blocks/selectors.ts';
 
 test('a template message to a logger method, including log, is reported, and console.log is not', async () => {
@@ -79,7 +80,7 @@ test('store, form and procedure selectors distinguish validated calls and unrela
     );
 });
 
-test('recommended library selectors report both whole-store reads and accept schema options and unrelated queries', async () => {
+test('library selectors at level basic report both whole-store reads and accept schema options and unrelated queries', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript', 'zustand', 'react-hook-form', 'trpc'], {
             tables: '[trpc]\nrouter_files = ["router.js"]\n',
@@ -93,4 +94,33 @@ test('recommended library selectors report both whole-store reads and accept sch
         { file: 'cart.js', line: 4, rule: 'no-restricted-syntax' },
         { file: 'cart.js', line: 5, rule: 'no-restricted-syntax' },
     ]);
+});
+
+test.each([...FRAMEWORK_SELECTOR_CASES])(
+    '$configuration selectors report their samples and pass the fixed ones',
+    async (sample) => {
+        for (const level of LEVELS) {
+            await using sandbox = await testdir({
+                'gspot.toml': buildSandboxSettings([sample.language, sample.configuration], { level }),
+                'package.json': '{"private":true,"type":"module"}\n',
+                'tsconfig.json': '{"compilerOptions":{"experimentalDecorators":true},"include":["*.ts"]}\n',
+                [sample.file]: sample.source,
+            });
+            const eslint = await createEslint(sandbox.path);
+            expect(await listLintFindings(eslint, sandbox.path, [sample.file], ['no-restricted-syntax'])).toStrictEqual(
+                sample[level].map((line) => ({ file: sample.file, rule: 'no-restricted-syntax', line })),
+            );
+        }
+    },
+);
+
+test.each([...LEVELS])('a raw sql template reports at level all only (%s)', async (level) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'drizzle'], { level }),
+        'source.js': 'sql`select 1`;\ndb.select().from(users);\n',
+    });
+    const eslint = await createEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['no-restricted-syntax'])).toStrictEqual(
+        level === 'all' ? [{ file: 'source.js', rule: 'no-restricted-syntax', line: 1 }] : [],
+    );
 });

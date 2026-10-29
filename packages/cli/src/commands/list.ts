@@ -1,22 +1,31 @@
-import { openSession } from '#cli/session.ts';
-import { type Session } from '#cli/types/session.ts';
+import type { Session } from '#cli/types/session.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { isRootOnlyCheck } from '#cli/planning/files.ts';
 import { ROOT_RUNS } from '#cli/config/planning/checks.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
-import { type PlannedCheck } from '#cli/types/planning.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { type Settings } from '#cli/types/settings/file.ts';
+import type { Settings } from '#cli/types/settings/file.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
-import { type Scope } from '#cli/types/settings/inheritance.ts';
+import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
-import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { KEY_GAP, LIST_KINDS, VALUE_WIDTH, REASON_HEADER } from '#cli/config/commands/list.ts';
-import { type ListKind, type SettingsListJson, type ConfigurationsListJson } from '#cli/types/commands/list.ts';
+import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
+import type { ListKind, SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
+
+import {
+    KEY_GAP,
+    LIST_USAGE,
+    LIST_KINDS,
+    VALUE_WIDTH,
+    OFF_BY_LEVEL,
+    REASON_HEADER,
+    NO_MATCHING_FILES,
+} from '#cli/config/commands/list.ts';
 
 function buildSettingsResult(session: Session): CommandResult {
     const settings = buildSettingRows(session.settings, session.scopes);
@@ -106,10 +115,10 @@ function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson
     });
 }
 
-function formatCheckState(check: PlannedCheck | undefined): string {
-    if (check === undefined) return 'off (level)';
-    if (check.skip !== undefined) return `off (${check.skip.cause})`;
-    return isActive(check) ? 'on' : 'no matching files';
+function formatCheckState(planned: PlannedCheck | undefined): string {
+    if (planned === undefined) return OFF_BY_LEVEL;
+    if (planned.skip !== undefined) return `off (${planned.skip.cause})`;
+    return isActive(planned) ? 'on' : NO_MATCHING_FILES;
 }
 
 async function runListCommand(cwd: string, kind: ListKind): Promise<CommandResult> {
@@ -120,7 +129,7 @@ async function runListCommand(cwd: string, kind: ListKind): Promise<CommandResul
 }
 
 /**
-Register the list command. It runs no checks and changes no files.
+Register the list command.
 
 @param program the gspot program that gets the command.
 @param onResult receives the result of the command.
@@ -129,7 +138,7 @@ Register the list command. It runs no checks and changes no files.
 export function registerList(program: Command, onResult: CommandCompletion): void {
     program
         .command('list')
-        .usage('[options] [configurations|settings]')
+        .usage(LIST_USAGE)
         .summary(COMMAND_HELP.list.summary)
         .description(COMMAND_HELP.list.description)
         .addArgument(

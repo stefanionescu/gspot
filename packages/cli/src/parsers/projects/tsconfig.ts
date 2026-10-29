@@ -6,41 +6,50 @@ import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
+import { tsconfigSchema } from '#cli/schemas/parsers/projects/tsconfig.ts';
 import { findCachedText, readContainedPath } from '#cli/system/files/reads.ts';
-import { typeScriptConfigSchema } from '#cli/schemas/parsers/projects/tsconfig.ts';
 import { isInside, convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
-import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/projects/tsconfig.ts';
+import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers/projects/tsconfig.ts';
 
 import {
     TSCONFIG_FILE,
-    TSC_NO_FILES_CODE,
+    TS_NO_FILES_CODE,
     TS_EMPTY_FILES_CODE,
     MISSING_EXTENDED_CONFIG,
 } from '#cli/config/parsers/projects/tsconfig.ts';
 
-const PARSED_TSCONFIGS = { create: () => new Map<string, TypeScriptConfiguration | undefined>() };
+const PARSED_TSCONFIGS = { create: () => new Map<string, ParsedTsconfig | undefined>() };
 
-function readReferencedProjects(root: string, path: string, reads: ReadCache): Map<string, TypeScriptConfiguration> {
-    const projects = new Map<string, TypeScriptConfiguration>();
+function readReferencedProjects(root: string, path: string, reads: ReadCache): Map<string, ParsedTsconfig> {
+    const projects = new Map<string, ParsedTsconfig>();
     const pending = [resolve(path)];
+    const owners = new Map<string, string>();
     for (let projectPath = pending.shift(); projectPath !== undefined; projectPath = pending.shift()) {
         if (projects.has(projectPath)) continue;
         const parsed = readTsconfig(root, projectPath, reads);
-        if (parsed === undefined) throw new Error(`Missing TypeScript project: ${projectPath}`);
+        if (parsed === undefined)
+            throw new GspotError(
+                'configuration',
+                `${convertToPosixPath(relative(root, owners.get(projectPath) ?? path))} references ${convertToPosixPath(relative(root, projectPath))}, which has no tsconfig.json. Fix the reference.`,
+            );
         projects.set(projectPath, parsed);
         pending.push(
-            ...(parsed.projectReferences ?? []).map((reference) => resolve(ts.resolveProjectReferencePath(reference))),
+            ...(parsed.projectReferences ?? []).map((reference) => {
+                const referenced = resolve(ts.resolveProjectReferencePath(reference));
+                owners.set(referenced, projectPath);
+                return referenced;
+            }),
         );
     }
     return projects;
 }
 
-function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): TypeScriptConfiguration {
+function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): ParsedTsconfig {
     const fileName = convertToPosixPath(path);
     const source = ts.parseConfigFileTextToJson(fileName, text);
     if (source.error !== undefined) throw new Error(ts.flattenDiagnosticMessageText(source.error.messageText, '\n'));
     const json: unknown = source.config;
-    const authored = typeScriptConfigSchema.parse(json);
+    const authored = tsconfigSchema.parse(json);
     const tsconfigFiles = [path];
     const sourceFile: ts.TsConfigSourceFile = ts.parseJsonText(fileName, text);
     const parsed = ts.parseJsonSourceFileConfigFileContent(
@@ -58,7 +67,7 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
         fileName,
     );
     const errors = parsed.errors.filter(
-        (error) => error.code !== TS_EMPTY_FILES_CODE && error.code !== TSC_NO_FILES_CODE,
+        (error) => error.code !== TS_EMPTY_FILES_CODE && error.code !== TS_NO_FILES_CODE,
     );
     if (errors.length > 0)
         throw new Error(errors.map((error) => ts.flattenDiagnosticMessageText(error.messageText, '\n')).join('\n'));
@@ -66,13 +75,13 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
         ...parsed,
         raw: authored,
         tsconfigFiles,
-        extendedConfigurationFiles: sourceFile.extendedSourceFiles ?? [],
+        extendedTsconfigFiles: sourceFile.extendedSourceFiles ?? [],
     };
 }
 
 function buildCompilerHost(
     root: string,
-    scope: string,
+    scopePath: string,
     reads: ReadCache,
     options: ts.CompilerOptions,
 ): ts.CompilerHost {
@@ -90,7 +99,7 @@ function buildCompilerHost(
             },
             createSource,
         );
-    host.getCurrentDirectory = () => join(root, scope);
+    host.getCurrentDirectory = () => join(root, scopePath);
     host.realpath = (path) => {
         const target = readCanonicalPath?.(path) ?? path;
         const local = convertToPosixPath(relative(root, path));
@@ -143,9 +152,9 @@ Resolve compiler options and inherited paths with the TypeScript compiler.
 @param root the base folder of the cached readers.
 @param path the absolute tsconfig file.
 @param reads the run cache.
-@returns the parsed settings, or undefined when the file does not exist.
+@returns undefined when the file does not exist.
 */
-export function readTsconfig(root: string, path: string, reads: ReadCache): TypeScriptConfiguration | undefined {
+export function readTsconfig(root: string, path: string, reads: ReadCache): ParsedTsconfig | undefined {
     const configurations = getCachedValue(reads, PARSED_TSCONFIGS);
     const key = JSON.stringify([root, resolve(path)]);
     if (configurations.has(key)) return configurations.get(key);
@@ -169,18 +178,18 @@ export function readTsconfig(root: string, path: string, reads: ReadCache): Type
 Find the nearest TypeScript project that includes every source of a scope.
 
 @param root the base folder of the cached readers.
-@param scope the repository-relative folder.
+@param scopePath the repository-relative folder.
 @param files the source paths of the scope.
 @param reads the run cache.
-@returns the project, or undefined for a standalone scope.
+@returns undefined for a standalone scope.
 */
 export function readTsconfigProject(
     root: string,
-    scope: string,
+    scopePath: string,
     files: string[],
     reads: ReadCache,
 ): TypeScriptProject | undefined {
-    for (const folder of listEnclosingFolders(scope)) {
+    for (const folder of listEnclosingFolders(scopePath)) {
         const path = join(root, folder, TSCONFIG_FILE);
         const config = readTsconfig(root, path, reads);
         if (config === undefined) continue;
@@ -188,7 +197,7 @@ export function readTsconfigProject(
         const members = new Set(
             projects.values().flatMap((project) => project.fileNames.map((file) => convertToPosixPath(file))),
         );
-        return folder !== scope && files.some((file) => !members.has(convertToPosixPath(join(root, file))))
+        return folder !== scopePath && files.some((file) => !members.has(convertToPosixPath(join(root, file))))
             ? undefined
             : { path, config, projects };
     }
@@ -199,22 +208,22 @@ export function readTsconfigProject(
 Resolve the source inputs through the tsconfig of the project.
 
 @param root the base folder of the cached readers.
-@param scope the importing project folder.
+@param scopePath the importing project folder.
 @param reads the run cache.
 @param config the parsed project.
 @returns resolved source files without installed or compiler libraries.
 */
 export function listSourceFiles(
     root: string,
-    scope: string,
+    scopePath: string,
     reads: ReadCache,
-    config: TypeScriptConfiguration,
+    config: ParsedTsconfig,
 ): ts.SourceFile[] {
     const program = ts.createProgram({
         rootNames: config.fileNames,
         options: config.options,
         ...(config.projectReferences !== undefined && { projectReferences: config.projectReferences }),
-        host: buildCompilerHost(root, scope, reads, config.options),
+        host: buildCompilerHost(root, scopePath, reads, config.options),
     });
     return program
         .getSourceFiles()

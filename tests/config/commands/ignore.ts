@@ -68,9 +68,38 @@ export const UNKNOWN_IGNORE_ARGUMENTS = [
 
 export const IGNORE_REFUSALS = [
     {
+        name: 'an invalid calendar date',
+        arguments: [
+            'ignore',
+            'bash/shellcheck',
+            '--reason',
+            'The sandbox preserves word splitting.',
+            '--until',
+            '2099-02-30',
+        ],
+        message: '--until needs a calendar date in YYYY-MM-DD form (UTC).',
+    },
+    {
+        name: 'a one-letter reason',
+        arguments: ['ignore', '--paths', 'vendor/**', '--reason', 'x'],
+        message: 'gspot ignore needs a reason of two or more words that says why: "x" is refused.',
+    },
+    {
+        name: 'a past expiry date',
+        arguments: [
+            'ignore',
+            'bash/shellcheck',
+            '--reason',
+            'The generated script has a reviewed exception.',
+            '--until',
+            '2020-01-01',
+        ],
+        message: '--until must be a date after today (UTC).',
+    },
+    {
         name: 'ignore without a check or paths',
         arguments: ['ignore', '--reason', 'Vendored sources remain outside the checks.'],
-        message: 'An ignore without a check needs --paths. Name the paths to keep out of every check.',
+        message: '--paths: An ignore without check needs paths.',
     },
     {
         name: 'ignore with a rule but no check',
@@ -83,7 +112,7 @@ export const IGNORE_REFUSALS = [
             '--reason',
             'Vendored sources remain outside the checks.',
         ],
-        message: 'An ignore without a check cannot take --rule. Name the check that owns the rule.',
+        message: '--rule: An ignore without check cannot name a rule. Add the check that owns the rule.',
     },
 ] as const;
 

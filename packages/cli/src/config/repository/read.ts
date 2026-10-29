@@ -16,3 +16,5 @@ export const GIT_CHECK_ATTRIBUTES_ARGUMENTS = [
 ] as const;
 
 export const FILE_PREFIX_BYTES = 4096;
+
+export const ROOT_SCOPE = { path: '', origin: 'root' } as const;

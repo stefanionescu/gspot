@@ -1,10 +1,9 @@
-export const LOCKFILE_DOWNLOADS: ReadonlyMap<string, RegExp> = new Map([
-    ['package-lock.json', /"resolved"\s*:\s*"([^"]+)"/gu],
-    ['npm-shrinkwrap.json', /"resolved"\s*:\s*"([^"]+)"/gu],
-    ['pnpm-lock.yaml', /resolution:\s*\{[^}]*?\b(?:tarball|repo):\s*["']?([^\s"',}]+)/gu],
-    ['yarn.lock', /(?:resolved\s+"|resolution:\s*"[^"]+@)([a-z+]+:\/\/[^"]+)/gu],
-    ['bun.lock', /:\s*\[\s*"[^"]*"\s*,\s*"([^"]*)"/gu],
-]);
+export const STALE_LOCKFILE_SECTIONS = [
+    'dependencies',
+    'devDependencies',
+    'optionalDependencies',
+    'peerDependencies',
+] as const;
 
 export const DOWNLOAD_PROTOCOLS: ReadonlySet<string> = new Set([
     'http:',
@@ -22,3 +21,16 @@ export const LOCKFILE_UPDATE_COMMANDS = {
     'package-lock.json': 'npm install',
     'pnpm-lock.yaml': 'pnpm install',
 } as const;
+
+export const PACKAGE_MANAGER_HASH_SEPARATOR = '+';
+
+export const PACKAGE_MANAGER_VERSION_SEPARATOR = '@';
+
+export const RULES = {
+    packageManagerPin: 'package-manager-pin',
+    staleLockfile: 'stale-lockfile',
+    host: 'host',
+    foreignLockfile: 'foreign-lockfile',
+} as const;
+
+export const LOCKFILE_KEY_SUFFIX = /^["']?:[ \t]*(?:\r?\n|$)/u;

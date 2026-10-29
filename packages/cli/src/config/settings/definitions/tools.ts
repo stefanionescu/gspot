@@ -13,6 +13,7 @@ export const TOOL_SETTING_DEFINITIONS = {
     },
     'tools.v8r.schema.url': { description: 'The JSON Schema for them.' },
     'tools.eslint.import_extension': {
+        template: 'repository',
         configurations: ['javascript'],
         description:
             'The import suffix in this scope: js for compiled ESM, ts for Deno and Bun, or extensionless for code that a bundler builds.',
@@ -46,6 +47,7 @@ export const TOOL_SETTING_DEFINITIONS = {
         default: [] as [],
     },
     'tools.nginx.image': {
+        template: 'code',
         configurations: ['nginx'],
         description: 'The image nginx -t runs in; name the one the deployment uses.',
         default: 'nginx:1.29.3-alpine',
@@ -65,11 +67,13 @@ export const TOOL_SETTING_DEFINITIONS = {
         default: [] as [],
     },
     'tools.sqlfluff.dialect': {
+        template: 'repository',
         configurations: ['sql'],
         description: 'The SQL dialect that SQLFluff parses, such as postgres. The postgres configuration sets it.',
         default: 'ansi',
     },
     'tools.swiftlint.always_keep_imports': {
+        template: 'repository',
         configurations: ['swift'],
         description: 'Imports the analyzer keeps although it sees no use of them.',
         default: [] as [],
@@ -80,6 +84,7 @@ export const TOOL_SETTING_DEFINITIONS = {
         default: ['HIGH', 'CRITICAL'] as ['HIGH', 'CRITICAL'],
     },
     'tools.commitlint.types': {
+        reason_when: 'adding',
         configurations: ['commits'],
         description: 'The commit types the type-enum rule allows.',
         default: ['feat', 'fix', 'refactor', 'perf', 'docs', 'test', 'build', 'ci', 'chore', 'style', 'revert'] as [
@@ -97,6 +102,7 @@ export const TOOL_SETTING_DEFINITIONS = {
         ],
     },
     'tools.commitlint.scopes': {
+        template: 'repository',
         configurations: ['commits'],
         description:
             'Commit scopes that the scope-enum rule accepts, and a message may leave out its scope. When empty, gspot uses the last segment of each project scope path, or no list without project scopes.',
@@ -127,6 +133,7 @@ export const TOOL_SETTING_DEFINITIONS = {
         default: {},
     },
     'tools.squawk.assume_in_transaction': {
+        template: 'repository',
         configurations: ['postgres'],
         description: 'Whether the migration runner wraps every migration in a transaction.',
         default: true,
@@ -137,6 +144,7 @@ export const TOOL_SETTING_DEFINITIONS = {
         default: [] as [],
     },
     'tools.knip.ignore_dependencies': {
+        template: 'repository',
         configurations: ['javascript'],
         description:
             'Exact package names that knip does not report as unused; new names need a reason, and a scope list applies to that project only.',
@@ -144,6 +152,7 @@ export const TOOL_SETTING_DEFINITIONS = {
         default: [] as [],
     },
     'tools.purgecss.safelist': {
+        template: 'repository',
         configurations: ['site'],
         description: 'Class names a script adds at run time: the names and the reason.',
         reason_when: 'adding',

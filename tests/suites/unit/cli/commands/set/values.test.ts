@@ -1,17 +1,22 @@
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { parse } from '@decimalturn/toml-patch';
 import { getValueAt } from '#cli/system/tables.ts';
-import { testdir, createFileTree } from 'testdirs';
+import { readSettings } from '#cli/settings/read.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { type SettingsListJson } from '#cli/types/commands/list.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { rm, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
-import { readSandboxSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { ROOT_EDITORCONFIG } from '#tests/config/commands/contents.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     SETTING_REASON,
@@ -24,7 +29,7 @@ import {
     STRING_SETTING_VALUES,
 } from '#tests/config/commands/set.ts';
 
-test('set and unset work on a setting of a configuration that detection selects from package.json', async () => {
+test('set writes and unset removes a setting of a configuration that detection selects from package.json', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{ "name": "example", "private": true }\n',
@@ -57,11 +62,11 @@ test.each([...NO_CHANGE_COMMANDS])(
     '%s reports no change when gspot.toml already has the value',
     async (_name, commandArguments) => {
         await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['bash'], commandArguments[0] === 'set' ? { level: 'recommended' } : {}),
+            'gspot.toml': buildSandboxSettings(['bash'], commandArguments[0] === 'set' ? { level: 'basic' } : {}),
         });
         const result = await runGspot(sandbox.path, commandArguments);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        expect(result.stdout.split('\n', 1)[0]).toBe('No change: gspot.toml stays the same.');
+        expect(result.stdout.split('\n', 1)[0]).toBe('gspot.toml already says this.');
     },
 );
 
@@ -74,7 +79,7 @@ test.each([...KEPT_SETTING_CHANGES])(
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const generated = join(sandbox.path, '.editorconfig');
         const authored = join(sandbox.path, 'authored-editorconfig');
-        await writeFile(authored, 'root = true\n');
+        await writeFile(authored, ROOT_EDITORCONFIG);
         await rm(generated);
         await symlink('authored-editorconfig', generated);
         const stopped = await runGspot(sandbox.path, commandArguments);
@@ -84,7 +89,7 @@ test.each([...KEPT_SETTING_CHANGES])(
             `${change}\ngspot.toml keeps this change, and applying it stopped: .editorconfig is not a regular file. Use a regular file.\nFix that, then run gspot apply.\n`,
         );
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain(written);
-        expect(await readFile(authored, 'utf8')).toBe('root = true\n');
+        expect(await readFile(authored, 'utf8')).toBe(ROOT_EDITORCONFIG);
     },
 );
 
@@ -108,7 +113,7 @@ test.each([...BANNED_WORD_SCOPES])(
 );
 
 test('set writes a TOML list of tables as tables and refuses a value that is not a TOML inline value', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'README.md': '# test\n',
         'gspot.toml': buildSandboxSettings(['docs', 'javascript']),
     });
@@ -134,12 +139,11 @@ test('set writes a TOML list of tables as tables and refuses a value that is not
     expect(read.code, read.stdout + read.stderr).toBe(2);
     expect(JSON.parse(read.stdout) as CommandFailureJson).toStrictEqual({
         error: 'settings',
-        message:
-            'gspot.toml:4: tools.eslint.restricted_imports.0: The value {name = "a", message = "Use its public entrypoint."} is not valid for tools.eslint.restricted_imports.0. Use a valid table value.',
+        message: String.raw`gspot.toml:4: tools.eslint.restricted_imports.0: The value "{name = \"a\", message = \"Use its public entrypoint.\"}" is not valid for tools.eslint.restricted_imports.0. Use a valid table value.`,
     });
 });
 
-test('set level all works in a fresh clone', async () => {
+test('set level all writes the level in a fresh clone', async () => {
     await using sandbox = await createGitSandbox({});
     const source = join(sandbox.path, 'source');
     const checkout = join(sandbox.path, 'checkout');
@@ -153,7 +157,7 @@ test('set level all works in a fresh clone', async () => {
     runGitStep(sandbox.path, ['clone', '--quiet', source, checkout]);
     const changed = await runGspot(checkout, ['set', 'level', 'all']);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-    const settings = readSandboxSettings(checkout).level;
+    const settings = readSettings(readFileSync(join(checkout, SETTINGS_FILE), 'utf8'), checkout).level;
     expect(settings).toBe('all');
 });
 
@@ -168,12 +172,11 @@ test.each([...LOOSENED_SETTINGS])(
         const refused = await runGspot(sandbox.path, ['set', key, value]);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect(refused.stderr).toBe(
-            `gspot.toml:9: ${key}.reason: ${key} needs a reason. Write it as ${key} = { value = [...], reason = "..." }, or run gspot set ${key} ... --reason "<why>".\n`,
+            `${key}.reason: ${key} needs a reason. Write it as ${key} = { value = [...], reason = "..." }, or run gspot set ${key} ... --reason "<why>".\n`,
         );
         expect(await readTree(sandbox.path)).toStrictEqual(before);
         for (const commandArguments of [
-            ['set', key, value, '--reason', SETTING_REASON],
-            ['set', key, second, '--reason', SETTING_REASON],
+            ['set', key, value, second, '--reason', SETTING_REASON],
             ['unset', key, value],
         ]) {
             const result = await runGspot(sandbox.path, commandArguments);
@@ -181,7 +184,7 @@ test.each([...LOOSENED_SETTINGS])(
         }
         const contents = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
         const saved = getValueAt(contents, key.split('.'));
-        expect(saved).toMatchObject({ value: [second], reason: SETTING_REASON });
+        expect(saved).toStrictEqual({ value: [second], reason: SETTING_REASON });
     },
 );
 
@@ -214,7 +217,7 @@ test.each([...LOOSENED_SETTINGS])(
 );
 
 test('spelling.allowed_words keeps one reason for each word through edits', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'entry.ts': 'export const port = 8080;\n',
     });

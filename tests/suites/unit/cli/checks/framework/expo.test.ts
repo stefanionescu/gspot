@@ -10,10 +10,10 @@ import { type SpawnResult } from '#cli/types/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { APP_FOLDERS, EXPO_PACKAGE_JSON, FAILED_DOCTOR_REPORT } from '#tests/config/checks/framework/expo.ts';
+import { APP_FOLDERS, EXPO_PACKAGE_JSON, FAILED_DOCTOR_OUTPUT } from '#tests/config/checks/framework/expo.ts';
 
 test('Expo Doctor reports each failed check once in each app folder', async () => {
-    await using apps = await prepareExpoApps({ code: 1, stdout: FAILED_DOCTOR_REPORT });
+    await using apps = await prepareExpoApps({ code: 1, stdout: FAILED_DOCTOR_OUTPUT });
     for (const scope of APP_FOLDERS) {
         const findings = await runSandboxCheck(apps.path, 'expo/expo-doctor', { scope });
         expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual(

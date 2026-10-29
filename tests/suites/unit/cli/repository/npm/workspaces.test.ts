@@ -3,6 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
+import { UNCLOSED_PACKAGES } from '#tests/config/yaml.ts';
 import { rm, mkdir, symlink, writeFile } from 'node:fs/promises';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 
@@ -20,9 +21,10 @@ test('workspace detection stays inside the folder', async () => {
         const root = join(sandbox.path, folder);
         expect(listWorkspaceFolders(root)).toStrictEqual([]);
     }
-    await writeFile(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
+    await writeFile(join(sandbox.path, 'pnpm-workspace.yaml'), UNCLOSED_PACKAGES);
     expect(listWorkspaceFolders(join(sandbox.path, 'empty'))).toStrictEqual([]);
 });
+
 test.each([...OUTSIDE_WORKSPACE_FILES])(
     'workspace detection refuses a package folder outside the repository from %s',
     async (path, declaration, escaped) => {
@@ -40,11 +42,13 @@ test.each([...OUTSIDE_WORKSPACE_FILES])(
         expect(listWorkspaceFolders(join(root, 'packages'))).toStrictEqual([]);
     },
 );
+
 test('workspace detection does not parse an unused lower-priority file', async () => {
     await using sandbox = await testdir(INACTIVE_LERNA_FILES);
 
     expect(listWorkspaceFolders(sandbox.path)).toStrictEqual(['packages/app']);
 });
+
 test.each([...INVALID_WORKSPACE_FILES])(
     'an invalid or unreadable $path is a GspotError that names the file',
     async ({ path, parseError }) => {

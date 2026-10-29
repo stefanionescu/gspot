@@ -2,16 +2,17 @@ import { promisify } from 'node:util';
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
 import { createFileTree } from 'testdirs';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isLinux } from '#tests/setup/system/platform.ts';
 import { randomUUID, generateKeyPair } from 'node:crypto';
 import { LEVELS } from '#cli/config/configurations/names.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
-import { runCheckSample, buildExpectedSummary } from '#tests/setup/cli/samples.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -127,7 +128,7 @@ test.skipIf(!isLinux || Bun.which('docker') === null)(
             'payload.pem': privateKey,
         });
         await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
-        const configPath = join(sandbox.path, findManifestTarget('docker', 'trivy.yml'));
+        const configPath = join(sandbox.path, getManifestTarget('docker', 'trivy.yml'));
         const configuration = await readFile(configPath, 'utf8');
         const command = ['check', '--only', 'docker/trivy-image', '--json'];
         try {
@@ -169,9 +170,7 @@ test.each([...DOCKER_CASES])('$check reports $expected.file and passes after the
         'message' in sample.expected
             ? { ...sample.expected, message: expect.stringContaining(sample.expected.message) as string }
             : sample.expected;
-    expect(await runCheckSample(installedSandbox(), { ...sample, expected })).toStrictEqual(
-        buildExpectedSummary({ ...sample, expected }),
-    );
+    await assertCheckSample(installedSandbox(), { ...sample, expected });
 });
 
 test('Trivy skips a package without a Dockerfile beside a root Dockerfile', async () => {

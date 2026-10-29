@@ -27,12 +27,12 @@ export type XcodeProject = {
     visiting: Set<string>;
 };
 
-export type Folder = { path: string; excluded: Set<string> };
+export type TargetFolder = { path: string; excluded: Set<string> };
 
 export type ProjectSources = {
     sources: Set<string>;
-    folders: Folder[];
-    targets: { name: string; sources: string[]; folders: Folder[] }[];
+    folders: TargetFolder[];
+    targets: { name: string; sources: string[]; folders: TargetFolder[] }[];
 };
 
 export type ProjectBuildSettings = { sdkRoot: string | undefined; swiftVersion: string | undefined };

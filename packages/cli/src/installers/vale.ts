@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { CONFIG_FLAG } from '#cli/config/flags.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { getTool } from '#cli/configurations/tools.ts';
@@ -14,24 +15,32 @@ import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { buildInstallKey, recordInstalledProject } from '#cli/installers/record.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { VALE_STYLES_PATH } from '#cli/config/generation/configurations/general/prose.ts';
 
 import {
+    VOCAB_LINE,
+    ALT_TEXT_ON,
+    ALT_TEXT_OFF,
     VALE_PACKAGES,
-    VALE_STYLES_PATH,
-    VALE_PACKAGE_RELEASES,
-    VALE_PACKAGE_REPOSITORY,
-} from '#cli/config/generation/configurations/general/prose.ts';
-import {
     BLOCK_IGNORES,
     TOKEN_IGNORES,
+    MIN_ALERT_LINE,
+    NO_STYLES_LINE,
     VALE_OFF_RULES,
+    VALE_PACKAGE_URLS,
+    VALE_INSTALL_STEP,
+    ALL_FILES_SECTION,
     VALE_MARKUP_RULES,
     VALE_MARKUP_FILES,
+    VALE_DOWNLOAD_NAME,
     VALE_ARCHIVE_LIMIT,
     VALE_COMMENT_RULES,
+    STYLES_PATH_COMMENT,
     VALE_INSTALL_PREFIX,
     VALE_SKIPPED_SCOPES,
+    MARKUP_RULES_COMMENT,
     VALE_PACKAGE_FOLDERS,
+    VALE_PACKAGE_RELEASES,
     VALE_INSTALL_ARGUMENTS,
 } from '#cli/config/installers/vale.ts';
 
@@ -39,8 +48,8 @@ async function downloadValePackages(install: ToolInstall, folder: string): Promi
     const packages: string[] = [];
     for (const name of VALE_PACKAGES) {
         const release = VALE_PACKAGE_RELEASES[name];
-        const url = `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${release.version}/${name}.zip`;
-        const bytes = await downloadArchive(install, { url, name: 'the Vale package', limit: VALE_ARCHIVE_LIMIT });
+        const url = VALE_PACKAGE_URLS[name];
+        const bytes = await downloadArchive(install, { url, name: VALE_DOWNLOAD_NAME, limit: VALE_ARCHIVE_LIMIT });
         const sha256 = createHash('sha256').update(bytes).digest('hex');
         if (sha256 !== release.sha256)
             throw new GspotError(
@@ -58,13 +67,12 @@ async function downloadValePackages(install: ToolInstall, folder: string): Promi
 Check that the Vale packages exist before prose checks run.
 
 @param root the root with the generated Vale files and package folders.
-@param level recommended or all, which decides the packages.
-@returns whether the Vale settings and the package folders exist.
+@param level the configured level, which decides the packages.
 */
 export function hasValePackages(root: string, level: Settings['level']): boolean {
     using files = openFiles(root);
     if (files.read(GSPOT_PATHS.valeConfigFile) === undefined) return false;
-    if (level === 'recommended') return true;
+    if (level === 'basic') return true;
     return VALE_PACKAGE_FOLDERS.every(
         (name) => files.readStats(`${GSPOT_PATHS.valePackages}/${name}`)?.isDirectory() === true,
     );
@@ -76,14 +84,13 @@ Needs the network.
 
 @param install what install needs for this step.
 @param miseBinPaths the program folders that mise installed, where Vale may sit.
-@returns the install summary.
 */
 export async function installValePackages(install: ToolInstall, miseBinPaths: string[]): Promise<string> {
     const { session } = install;
     const { root } = session;
     const level = session.settings.level;
     const usesVale = session.toolConfigurations.some(({ tools }) => tools.some((tool) => tool.name === VALE_TOOL));
-    if (level === 'recommended' || !usesVale) return '';
+    if (level === 'basic' || !usesVale) return '';
     const key = buildInstallKey([level, JSON.stringify(VALE_PACKAGE_RELEASES)]);
     if (install.record.vale === key && install.writer.readStats(GSPOT_PATHS.valePackages)?.isDirectory() === true)
         return '';
@@ -104,8 +111,8 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
         });
         mkdirSync(dirname(config), { recursive: true });
         writeFileSync(config, content);
-        const command = [available.path, '--config', config, ...VALE_INSTALL_ARGUMENTS];
-        await runRequiredInstallStep(install, command, { cwd: dirname(config), name: 'Vale sync' });
+        const command = [available.path, CONFIG_FLAG, config, ...VALE_INSTALL_ARGUMENTS];
+        await runRequiredInstallStep(install, command, { cwd: dirname(config), name: VALE_INSTALL_STEP });
         files.deleteTree(GSPOT_PATHS.valePackages);
         renameSync(join(temporary, GSPOT_PATHS.valePackages), join(root, GSPOT_PATHS.valePackages));
         recordInstalledProject(install, 'vale', key);
@@ -118,11 +125,10 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
 /**
 Build the text of a vale.ini from its style folders and package sources.
 
-@param ini the level, the style folders in the order Vale reads them, and the package sources.
-@param ini.level recommended or all; level all adds the packages and their rules.
+@param ini the vale.ini settings.
+@param ini.level the configured level; level all adds the packages and the rules for code.
 @param ini.stylesPaths the style folders; Vale installs packages in the last one.
 @param ini.packages the package archives: each a URL or a local path.
-@returns the vale.ini text.
 */
 export function buildValeIni({
     level,
@@ -134,35 +140,39 @@ export function buildValeIni({
     packages: string[];
 }): string {
     const isAll = level === 'all';
+    const markupRules = isAll ? VALE_MARKUP_RULES : [];
     const formats = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
         'format' in grammar ? [[extension.slice(1), grammar.format] as const] : [],
     );
     const lines = [
-        ...(isAll ? ['# Vale reads both StylesPath lines in order and installs packages in the last folder.'] : []),
+        ...(isAll ? [STYLES_PATH_COMMENT] : []),
         ...stylesPaths.map((path) => `StylesPath = ${path}`),
-        'MinAlertLevel = suggestion',
+        MIN_ALERT_LINE,
         `SkippedScopes = ${VALE_SKIPPED_SCOPES}`,
-        ...(isAll ? [`Packages = ${packages.join(', ')}`, 'Vocab = words'] : []),
+        ...(isAll ? [`Packages = ${packages.join(', ')}`, VOCAB_LINE] : []),
         '',
-        '[formats]',
-        ...formats.map(([extension, format]) => `${extension} = ${format}`),
+        ...(isAll ? ['[formats]', ...formats.map(([extension, format]) => `${extension} = ${format}`)] : []),
         '',
-        '[*]',
+        ALL_FILES_SECTION,
         `BasedOnStyles = ${(isAll ? ['gspot', 'Vale', ...VALE_PACKAGES] : ['gspot']).join(', ')}`,
         `BlockIgnores = ${BLOCK_IGNORES.join(', ')}`,
         `TokenIgnores = ${TOKEN_IGNORES.join(', ')}`,
         ...(isAll ? Object.entries(VALE_OFF_RULES).flatMap(([rule, reason]) => [`# ${reason}`, `${rule} = NO`]) : []),
-        '# Markup checks read markup only.',
-        'gspot.alt-text = NO',
-        ...(isAll ? VALE_MARKUP_RULES.map((rule) => `${rule} = NO`) : []),
+        MARKUP_RULES_COMMENT,
+        ALT_TEXT_OFF,
+        ...markupRules.map((rule) => `${rule} = NO`),
         '',
-        `[*.{${formats.map(([extension]) => extension).join(',')}}]`,
-        'BasedOnStyles =',
-        ...VALE_COMMENT_RULES.map((rule) => `${rule} = YES`),
+        ...(isAll
+            ? [
+                  `[*.{${formats.map(([extension]) => extension).join(',')}}]`,
+                  NO_STYLES_LINE,
+                  ...VALE_COMMENT_RULES.map((rule) => `${rule} = YES`),
+              ]
+            : []),
         '',
         `[${VALE_MARKUP_FILES}]`,
-        'gspot.alt-text = YES',
-        ...(isAll ? VALE_MARKUP_RULES.map((rule) => `${rule} = YES`) : []),
+        ALT_TEXT_ON,
+        ...markupRules.map((rule) => `${rule} = YES`),
     ];
     return lines.join('\n');
 }

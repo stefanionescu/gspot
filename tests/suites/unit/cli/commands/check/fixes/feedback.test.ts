@@ -4,10 +4,10 @@ import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { DURATION } from '#tests/config/commands/check/report.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { FIX_SUMMARY_CASES } from '#tests/config/commands/check/fixes/feedback.ts';
 
 test.each([...FIX_SUMMARY_CASES])(

@@ -21,3 +21,5 @@ export const COMMIT_MESSAGE_PATH_LINES = [
     'if command -v cygpath >/dev/null 2>&1; then message=$(cygpath -w "$message"); fi',
     'set -- "$message"',
 ] as const;
+
+export const LFS_MISSING_GUARD = `${LFS_GUARD_PREFIX}{ echo 'This repository uses Git LFS. Install git-lfs, then run git lfs install --skip-repo.' >&2; exit 2; }`;

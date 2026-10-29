@@ -2,23 +2,25 @@ import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import prettierPackage from 'prettier/package.json' with { type: 'json' };
 import { spawnGspot, applyThenInstall } from '#tests/setup/cli/commands.ts';
-import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/samples.ts';
+import { AUTHENTICATION_REQUIRED_MESSAGE } from '#tests/config/setup/runner.ts';
+import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/package-managers.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
 import { PACKAGE_MANAGER_AGE_REFUSALS } from '#tests/config/integration/installers/npm.ts';
-import { runGit, commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { REGISTRY_HOST, PNPM_WORKSPACE, NPM_REGISTRY_TOKEN } from '#tests/config/setup/sandboxes.ts';
 
 test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
@@ -183,7 +185,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
                           `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${toolPackageManager} ${version.stdout.trim()})`,
                       ],
             );
-            const status = runGit(clone, ['status', '--porcelain']);
+            const status = runCommandBlocking(['git', 'status', '--porcelain'], { cwd: clone, env: {} });
             expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
             const contents = await readFile(join(clone, GSPOT_FOLDER, basename(lockfilePath)));
             expect(contents).toStrictEqual(Buffer.from(lockfile));
@@ -205,7 +207,7 @@ test('registry settings from the repository .npmrc authenticate an isolated proj
         fetch(request) {
             if (request.headers.get('authorization') !== `Bearer ${token}`) {
                 requests.rejected++;
-                return Response.json({ error: 'Authentication required' }, { status: 401 });
+                return Response.json({ error: AUTHENTICATION_REQUIRED_MESSAGE }, { status: 401 });
             }
             requests.authenticated++;
             return Response.json({

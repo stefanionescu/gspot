@@ -1,15 +1,17 @@
 import type { Node } from 'web-tree-sitter';
 import type { Session } from '#cli/types/session.ts';
-import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
-import { getNodePlace, buildFinding } from '#cli/checks/finding.ts';
 
 import {
     COMMENT_LINE,
     XCTEST_PREFIX,
+    REASON_GROUP_INDEX,
+    DISABLED_TEST_RULE,
     SKIP_REASON_ARGUMENT,
     SWIFT_STRING_LITERAL,
+    DISABLED_TEST_MESSAGE,
 } from '#cli/config/checks/language/swift/skip-reasons.ts';
 
 function hasReason(reason: Node | undefined): boolean {
@@ -18,7 +20,7 @@ function hasReason(reason: Node | undefined): boolean {
     const literal = SWIFT_STRING_LITERAL.exec(reason.text);
     if (literal === null) return true;
     const whitespace = new RegExp(`\\\\${literal[1] ?? ''}[nrt0]`, 'gu');
-    return (literal[3] ?? '').replaceAll(whitespace, ' ').trim() !== '';
+    return (literal[REASON_GROUP_INDEX] ?? '').replaceAll(whitespace, ' ').trim() !== '';
 }
 
 function findSkipReason(call: Node, position: number): Node | undefined {
@@ -32,13 +34,13 @@ function findSkipReason(call: Node, position: number): Node | undefined {
     return positional[position]?.childForFieldName('value') ?? undefined;
 }
 
-function listUnexplainedSkips(root: Node, lines: string[]): Node[] {
-    const calls = root.descendantsOfType('call_expression').filter((call) => {
+function listUnexplainedSkips(syntaxRoot: Node, lines: string[]): Node[] {
+    const calls = syntaxRoot.descendantsOfType('call_expression').filter((call) => {
         const name = call.firstNamedChild?.text.replace(XCTEST_PREFIX, '') ?? '';
         const position = SKIP_REASON_ARGUMENT.get(name);
         return position !== undefined && !hasReason(findSkipReason(call, position));
     });
-    const attributes = root.descendantsOfType('attribute').filter((attribute) => {
+    const attributes = syntaxRoot.descendantsOfType('attribute').filter((attribute) => {
         if (
             attribute.firstNamedChild?.text !== 'available' ||
             !attribute.namedChildren.some((node) => node.type === 'simple_identifier' && node.text === 'unavailable')
@@ -56,22 +58,20 @@ Reports each skipped test without a reason, and each unavailable declaration wit
 
 @param session the repository and its tools.
 @param planned the scope Swift test files.
-@returns the findings.
 */
-export async function checkSwiftSkipReasons(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkSwiftSkipReasons(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
-    const findings: Finding[] = [];
+    const findings: CheckFinding[] = [];
     await visitParsedSources({ reads: session.reads, resources: session.resources, files }, (source) => {
         const skipped = listUnexplainedSkips(source.rootNode, source.text.split('\n'));
         for (const node of skipped)
-            findings.push(
-                buildFinding(
-                    planned,
-                    getNodePlace(source.path, node),
-                    'disabled',
-                    'Explain why this test is disabled in its reason argument or availability annotation.',
-                ),
-            );
+            findings.push({
+                file: source.path,
+                line: node.startPosition.row + 1,
+                column: node.startPosition.column + 1,
+                rule: DISABLED_TEST_RULE,
+                message: DISABLED_TEST_MESSAGE,
+            });
     });
     return findings;
 }

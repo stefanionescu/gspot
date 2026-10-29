@@ -9,12 +9,13 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { listProjectFolders } from '#cli/repository/scopes.ts';
 import { YAML_EXTENSIONS } from '#cli/config/repository/setup.ts';
+import { TOML_EXTENSION } from '#cli/config/repository/writer.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
-import { INI_EXTENSIONS } from '#cli/config/repository/config-files.ts';
 import type { ConflictingConfigFile } from '#cli/types/repository/setup.ts';
+import { JSON_EXTENSION, INI_EXTENSIONS } from '#cli/config/repository/config-files.ts';
 
-function findConflictingConfigFiles(
+function listReplacementConflicts(
     root: string,
     files: { inventory: Set<string>; projectFolders: Set<string> },
     tool: string,
@@ -24,17 +25,16 @@ function findConflictingConfigFiles(
     const depth = replacement.path.split('/').length;
     const isDotfile = posix.basename(replacement.path).startsWith('.');
     const matches = buildPathMatcher([replacement.path, `**/${replacement.path}`]);
-    const paths = new Set(inventory);
+    const paths = [...inventory].filter(
+        (path) => matches(path) && (isDotfile || projectFolders.has(path.split('/').slice(0, -depth).join('/'))),
+    );
     if (
         !picomatch.scan(replacement.path).isGlob &&
-        !paths.has(replacement.path) &&
+        !inventory.has(replacement.path) &&
         findText(root, replacement.path) !== undefined
     )
-        paths.add(replacement.path);
-    return [...paths]
-        .filter(
-            (path) => matches(path) && (isDotfile || projectFolders.has(path.split('/').slice(0, -depth).join('/'))),
-        )
+        paths.push(replacement.path);
+    return paths
         .filter((path) => {
             const source = findText(root, path);
             if (source === undefined) return false;
@@ -53,9 +53,9 @@ function findConflictingConfigFiles(
 }
 
 function parseSharedFile(text: string, extension: string, path: string): unknown {
-    if (extension === '.json') return parseJsonFile(path, text);
+    if (extension === JSON_EXTENSION) return parseJsonFile(path, text);
     if (YAML_EXTENSIONS.includes(extension)) return parseYamlFile(path, text);
-    if (extension === '.toml') return parseTomlFile(path, text);
+    if (extension === TOML_EXTENSION) return parseTomlFile(path, text);
     throw new Error(`${path}: gspot cannot read the settings format of this shared file.`);
 }
 
@@ -83,7 +83,6 @@ Find the settings files of the tools that gspot writes settings for, such as .co
 @param root the repository to read.
 @param files the tracked inventory.
 @param configurations the configurations whose tools name their settings files.
-@returns each settings file with its tool, and whether it shares the file with other settings.
 */
 export function listConflictingConfigFiles(
     root: string,
@@ -102,7 +101,7 @@ export function listConflictingConfigFiles(
             [
                 ...(tool.replace ?? []).map((path) => ({ path, shared: false })),
                 ...(tool.replace_key ?? []).map(({ file, ...selector }) => ({ path: file, shared: true, ...selector })),
-            ].flatMap((replacement) => findConflictingConfigFiles(root, located, tool.name, replacement)),
+            ].flatMap((replacement) => listReplacementConflicts(root, located, tool.name, replacement)),
         ),
     );
 }

@@ -7,10 +7,11 @@ suggests = ["typescript"]
 title = "Supabase"
 
 [detect]
+dependencies = ["@supabase/supabase-js", "@supabase/ssr"]
 project_files = ["supabase/config.toml"]
 
 [files]
-paths = ["supabase/config.toml", "supabase/functions/**", "supabase/seed.sql"]
+paths = ["supabase/config.toml", "{setting:supabase.functions_folder}/**", "supabase/seed.sql"]
 
 [defaults]
 "postgres.client_schemas" = ["public"]
@@ -43,17 +44,15 @@ tool = "semgrep"
 [[check]]
 example = "A storage bucket with no policy on `storage.objects` reports a finding. Add a migration that defines access for that bucket."
 help = "Add a policy on storage.objects for the bucket in a migration."
-level = "recommended"
 name = "storage-policies"
 runs = "scope"
 stage = "commit"
 summary = "Checks that every storage bucket in the project file has a policy on storage.objects that names it."
-why = "A bucket with no policy stays closed to every user, or open to anyone when public, and nobody recorded that choice."
+why = "A bucket with no policy refuses every upload, and when public serves every file to anyone, and nobody recorded that choice."
 
 [[check]]
 example = "Client code that reads a Supabase service-role key reports a finding. Move the key and the privileged work into an edge function."
 help = "Move code to edge functions or tests, or run `gspot ignore supabase/service-role-key` with a reason."
-level = "recommended"
 name = "service-role-key"
 runs = "scope"
 stage = "commit"
@@ -63,31 +62,30 @@ why = "Secret and service role keys bypass row-level security, so a client bundl
 [[check]]
 example = "An Edge Function declaring `var greeting = \"hello\";` reports `no-var`. Use `const greeting = \"hello\";` instead."
 help = "Change the code the way the rule says; `deno lint --rules` explains each one."
-level = "recommended"
 name = "deno-lint"
 runs = "scope"
 stage = "commit"
-summary = "Runs `deno lint` over every edge function with its own deno.json."
+summary = "Runs `deno lint` over every edge function, with the function's deno.json when it has one."
 tool = "deno"
 why = "Edge functions run under Deno, and its linter covers runtime APIs that the Node rules miss."
 
 [[check]]
 example = "An edge function that assigns a string to a number variable reports a type error. Correct the value or the type."
 help = "Fix the first error Deno prints; later ones often come from the same mistake."
-level = "recommended"
 name = "deno-check"
 runs = "scope"
 stage = "push"
 summary = "Runs `deno check` on the entry file of every edge function."
 tool = "deno"
 why = "The project compiler cannot resolve the import map of a function, so only Deno can check its types."
-
+needs = ["network"]
 [[check]]
+when = { setting = "supabase.types_file" }
+
 command = ["supabase", "gen", "types", "typescript", "--local", "{each:--schema:supabase.schemas}"]
 example = "A types file that differs from the local Supabase schema reports drift. With the local database running, write the output of `supabase gen types typescript --local` to that file."
 generator_outputs = [{ stdout = "{setting:supabase.types_file}" }]
 help = "Run `supabase gen types typescript --local` and write the output to the file."
-level = "recommended"
 name = "stale-types"
 needs = ["docker"]
 runs = "scope"

@@ -25,13 +25,13 @@ export const DUPLICATED_REASON_ERRORS = [
         key: 'limits.file_lines',
         text: '[limits]\nfile_lines = { value = 400, reason = "x" }\n',
         message:
-            'gspot.toml:4: limits.file_lines.reason: limits.file_lines needs a reason that says something: "x" is refused. Write one sentence saying why.',
+            'gspot.toml:4: limits.file_lines.reason: limits.file_lines needs a reason of two or more words that says why: "x" is refused.',
     },
     {
         key: 'docs.allowed_urls',
         text: '[docs]\nallowed_urls = { value = ["https://example.com/docs"], reason = "x" }\n',
         message:
-            'gspot.toml:4: docs.allowed_urls.reason: docs.allowed_urls needs a reason that says something: "x" is refused. Write one sentence saying why.',
+            'gspot.toml:4: docs.allowed_urls.reason: docs.allowed_urls needs a reason of two or more words that says why: "x" is refused.',
     },
 ];
 
@@ -43,7 +43,7 @@ export const KEY_PATH_CASES = [
             tables: '[[licenses.allowed_package]]\nname = "example"\nversion = "latest"\nreason = "Reviewed its MIT license."\n',
         },
         where: [
-            'gspot.toml:5: licenses.allowed_package.0.version: The value latest is not valid for licenses.allowed_package.0.version. Name an exact version, a semver range such as ^1.2.0, or * for every version.',
+            'gspot.toml:5: licenses.allowed_package.0.version: The value "latest" is not valid for licenses.allowed_package.0.version. Name an exact version, a semver range such as ^1.2.0, or * for every version.',
         ],
         correction: ['"latest"', '"^1.2.3"'],
     },
@@ -54,7 +54,7 @@ export const KEY_PATH_CASES = [
             tables: '[[naming.override]]\npaths = ["src/**"]\nignored_names_pattern = "("\nreason = "The library exports these reviewed names."\n',
         },
         where: [
-            'gspot.toml:5: naming.override.0.ignored_names_pattern: The value ( is not valid for naming.override.0.ignored_names_pattern. Use a valid Unicode regular expression.',
+            'gspot.toml:5: naming.override.0.ignored_names_pattern: The value "(" is not valid for naming.override.0.ignored_names_pattern. Use a valid Unicode regular expression.',
         ],
         correction: ['"("', '"^_"'],
     },
@@ -94,7 +94,7 @@ export const KEY_PATH_CASES = [
         },
         correction: ['rulez', 'rules'],
         where: [
-            'gspot.toml:5: tools.eslint.override.0.rulez: `rulez` is not a gspot.toml setting. Did you mean `rules`? See generativespotting.com/reference/gspot-toml/ for every key.',
+            'gspot.toml:5: tools.eslint.override.0.rulez: rulez is not a gspot.toml setting. Did you mean rules? See generativespotting.com/reference/gspot-toml/ for every key.',
         ],
     },
 ] as const;
@@ -108,7 +108,7 @@ enabled = true
 psh = "all"
 `,
         message:
-            'gspot.toml:4: hooks.psh: `psh` is not a gspot.toml setting. See generativespotting.com/reference/gspot-toml/ for every key.',
+            'gspot.toml:4: hooks.psh: psh is not a gspot.toml setting. See generativespotting.com/reference/gspot-toml/ for every key.',
         correction: ['psh = "all"\n', ''] as const,
     },
     {
@@ -119,7 +119,7 @@ path = "api"
 kitz = []
 `,
         message:
-            'gspot.toml:4: scope.0.kitz: `kitz` is not a gspot.toml setting. Did you mean `site`? See generativespotting.com/reference/gspot-toml/ for every key.',
+            'gspot.toml:4: scope.0.kitz: kitz is not a field of [[scope]]. The allowed fields are path, configurations, removed_configurations, and test_files.',
         correction: ['kitz', 'configurations'] as const,
     },
     {
@@ -128,7 +128,7 @@ kitz = []
 bun_scanners = "@socketsecurity/bun-security-scanner"
 `,
         message:
-            'gspot.toml:2: dependencies.bun_scanners: `bun_scanners` is not a gspot.toml setting. Did you mean `bun_scanner`? See generativespotting.com/reference/gspot-toml/ for every key.',
+            'gspot.toml:2: dependencies.bun_scanners: bun_scanners is not a gspot.toml setting. Did you mean bun_scanner? See generativespotting.com/reference/gspot-toml/ for every key.',
         correction: ['bun_scanners', 'bun_scanner'] as const,
     },
 ] as const;
@@ -151,10 +151,10 @@ export const RULE_FILE_SETTINGS = {
 } as const;
 
 export const RULE_FILE_ERRORS = [
-    'gspot.toml:4: tools.eslint.plugins.0.path: `missing-root.mjs` names no file. Point path at a file, relative to the repository root.',
-    'gspot.toml:5: tools.semgrep.rule_files.0: `missing-root.yml` names no file. Point rule_files at a file, relative to the repository root.',
-    'gspot.toml:9: scope.0.tools.eslint.plugins.0.path: `missing-scope.mjs` names no file. Point path at a file, relative to the repository root.',
-    'gspot.toml:9: scope.0.tools.semgrep.rule_files.0: `missing-scope.yml` names no file. Point rule_files at a file, relative to the repository root.',
+    'gspot.toml:4: tools.eslint.plugins.0.path: missing-root.mjs names no file. Point path at a file, relative to the repository root.',
+    'gspot.toml:5: tools.semgrep.rule_files.0: missing-root.yml names no file. Point rule_files at a file, relative to the repository root.',
+    'gspot.toml:9: scope.0.tools.eslint.plugins.0.path: missing-scope.mjs names no file. Point path at a file, relative to the repository root.',
+    'gspot.toml:9: scope.0.tools.semgrep.rule_files.0: missing-scope.yml names no file. Point rule_files at a file, relative to the repository root.',
 ] as const;
 
 export const EMPTY_REASONS = [
@@ -168,13 +168,13 @@ export const INVALID_TOOL_ENUMS = [
         configuration: 'docker',
         tables: '[tools.trivy]\nseverity = ["SEVERE"]\n',
         message:
-            'gspot.toml:4: tools.trivy.severity.0: The value SEVERE is not valid for tools.trivy.severity.0. Use UNKNOWN or LOW or MEDIUM or HIGH or CRITICAL.',
+            'gspot.toml:4: tools.trivy.severity.0: The value "SEVERE" is not valid for tools.trivy.severity.0. Use UNKNOWN or LOW or MEDIUM or HIGH or CRITICAL.',
     },
     {
         configuration: 'sql',
         tables: '[tools.sqlfluff]\ndialect = "postgresql"\n',
         message:
-            'gspot.toml:4: tools.sqlfluff.dialect: The value postgresql is not valid for tools.sqlfluff.dialect. Use ansi or athena or bigquery or clickhouse or databricks or db2 or doris or duckdb or exasol or flink or greenplum or hive or impala or materialize or mariadb or mysql or oracle or postgres or redshift or snowflake or soql or sparksql or sqlite or starrocks or teradata or trino or tsql or vertica.',
+            'gspot.toml:4: tools.sqlfluff.dialect: The value "postgresql" is not valid for tools.sqlfluff.dialect. Use ansi or athena or bigquery or clickhouse or databricks or db2 or doris or duckdb or exasol or flink or greenplum or hive or impala or materialize or mariadb or mysql or oracle or postgres or redshift or snowflake or soql or sparksql or sqlite or starrocks or teradata or trino or tsql or vertica.',
     },
 ] as const;
 
@@ -185,7 +185,7 @@ export const SCOPE_CONFIGURATION_SETTINGS = [
         name: 'a sibling configuration does not expose its settings to another scope',
         text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n[scope.tools.sqlfluff]\ndialect = "sqlite"\n',
         messages: [
-            'gspot.toml:8: scope.1.tools.sqlfluff.dialect: No selected configuration has the setting tools.sqlfluff.dialect. No setting exists under that table. Run `gspot list settings` to see every one.',
+            'gspot.toml:8: scope.1.tools.sqlfluff.dialect: No selected configuration has the setting tools.sqlfluff.dialect. No setting exists under that table. Run gspot list settings to see every one.',
         ],
     },
     {

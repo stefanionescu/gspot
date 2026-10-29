@@ -29,3 +29,14 @@ export const DENO_LINT_COMMAND = ['deno', 'lint', '--json'] as const;
 export const DENO_CHECK_COMMAND = ['deno', 'check', '--quiet'] as const;
 
 export const SERVICE_ROLE_KEY_TAGS = ['javascript', 'typescript', 'vue', 'svelte', 'astro', 'swift', 'python'] as const;
+
+export const DENO_LINT_NAME = 'deno lint';
+
+export const SERVICE_ROLE_KEY_MESSAGE =
+    'This file names a privileged Supabase key, which bypasses row level security, outside the paths allowed to hold it.';
+
+export const DENO_CHECK_FAILED_MESSAGE = 'The deno check command failed.';
+
+export const RULES = { bucketPolicy: 'bucket-policy', serviceRoleKey: 'service-role-key' } as const;
+
+export const DENO_IMPORT_MAP_FLAG = '--import-map';

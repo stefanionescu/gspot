@@ -15,8 +15,8 @@ A suppression turns a lint rule off for one place, and it carries a reason.
 - Never suppress a size or complexity limit, such as `complexity`, `max-lines`, or `max-statements`. Split the code by
   its steps, or ask the user to raise the limit in `gspot.toml`.
 - Do not widen a setting, such as an import boundary or an import rule, so that a finding passes. Move the code instead.
-- Treat a `gspot doctor` row "detected, not selected" as a suggestion. Do not run `gspot add` only to clear it; ask the user
-  whether the scope uses that configuration.
+- Treat a `gspot doctor` row "detected, not selected" as a suggestion. Do not run `gspot add` only to clear it; ask the
+  user whether the scope uses that configuration.
 - Delete a suppression when its cause does not apply. Never add filler statements to pass a check.
 
 This rule covers every suppression comment, in every language. gspot rejects Semgrep and Vale suppressions: record an

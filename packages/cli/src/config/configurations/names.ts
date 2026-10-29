@@ -27,7 +27,7 @@ export const GROUP_LABELS = {
     general: 'General',
 } as const satisfies Record<Group, string>;
 
-export const LEVELS = ['recommended', 'all'] as const;
+export const LEVELS = ['basic', 'all'] as const;
 
 export const STAGES = ['commit', 'push', 'manual', 'message'] as const;
 
@@ -70,7 +70,3 @@ export const REACT_NATIVE_CONFIGURATION = 'react-native';
 export const TYPESCRIPT_CONFIGURATION = 'typescript';
 
 export const LICENSES_CONFIGURATION = 'licenses';
-
-export const VUE_CONFIGURATION = 'vue';
-
-export const SVELTE_CONFIGURATION = 'svelte';

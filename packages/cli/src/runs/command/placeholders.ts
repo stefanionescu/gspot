@@ -40,7 +40,7 @@ function expandEachPlaceholder(planned: PlannedCheck, argument: string): string[
     const name = groups['setting'] as string;
     return assertArgumentList(planned.scope.settings.valuesByKey[name] ?? [], name).flatMap((value) => [
         groups['flag'] as string,
-        convertToSystemPath(value),
+        value.split('/').join(sep),
     ]);
 }
 
@@ -55,8 +55,8 @@ function listConfigFiles(session: Session, planned: PlannedCheck): ConfigFile[] 
     return [...own, ...every];
 }
 
-function selectPointerPath(session: Session, scope: string, name: string): string {
-    const path = joinScope(scope, name);
+function selectPointerPath(session: Session, scopePath: string, name: string): string {
+    const path = joinScope(scopePath, name);
     const generated = listGeneratedPaths(session.repository.files);
     return !generated.has(path) && generated.has(name) ? name : path;
 }
@@ -91,7 +91,7 @@ Find the path of the config file that {config_file:<name>} names, with the confi
 @param session the repository and its configurations.
 @param planned the check that names it.
 @param name the config file path without its extensions.
-@returns the repository-relative path of that config file for the scope of the check.
+@returns the repository-relative path in the scope of the check.
 @throws the build failure of that config file in the scope.
 */
 export function getConfigFilePath(session: Session, planned: PlannedCheck, name: string): string {
@@ -158,13 +158,12 @@ export function listCopyFiles(session: Session, planned: PlannedCheck, command: 
 /**
 Replace scalar setting placeholders with their scope values.
 
-@param settings the values of the scope.
+@param scopeSettings the values of the scope.
 @param text the text with placeholders.
-@returns the expanded text.
 */
-export function replaceSettingPlaceholders(settings: ScopeSettings, text: string): string {
+export function replaceSettingPlaceholders(scopeSettings: ScopeSettings, text: string): string {
     return text.replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
-        const found = settings.valuesByKey[name];
+        const found = scopeSettings.valuesByKey[name];
         if (Array.isArray(found)) throw new TypeError(`List setting ${name} must occupy a whole command argument.`);
         return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean'
             ? String(found)
@@ -179,7 +178,6 @@ Expands a scalar command argument or environment value from the check scope.
 @param planned the check and its scope.
 @param argument the value with placeholders.
 @param substitutions the expansion values.
-@returns the expanded value.
 */
 export function replacePlaceholders(
     session: Session,
@@ -188,14 +186,16 @@ export function replacePlaceholders(
     substitutions: Substitutions,
 ): string {
     return replaceSettingPlaceholders(planned.scope.settings, argument)
-        .replaceAll(LEVEL_PLACEHOLDER, (_match, recommended: string, all: string) =>
-            session.settings.level === 'all' ? all : recommended,
+        .replaceAll(LEVEL_PLACEHOLDER, (_match, defaultLevel: string, all: string) =>
+            session.settings.level === 'all' ? all : defaultLevel,
         )
         .replaceAll(CONFIG_FILE_PLACEHOLDER, (_match, name: string) =>
-            convertToSystemPath(join(substitutions.root, getConfigFilePath(session, planned, name))),
+            join(substitutions.root, getConfigFilePath(session, planned, name))
+                .split('/')
+                .join(sep),
         )
         .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) =>
-            convertToSystemPath(selectPointerPath(session, substitutions.scope, name)),
+            selectPointerPath(session, substitutions.scope, name).split('/').join(sep),
         )
         .replaceAll(SCOPE_PLACEHOLDER, () => (substitutions.scope === '' ? '.' : substitutions.scope))
         .replaceAll(ROOT_PLACEHOLDER, () => substitutions.root)
@@ -210,7 +210,6 @@ Expands setting and scope placeholders, and keeps a marker for each file slot.
 @param planned the check and its scope.
 @param command the arguments as declared.
 @param substitutions the expansion values.
-@returns argument text and file markers.
 */
 export function expandCommand(
     session: Session,
@@ -243,9 +242,4 @@ export function buildFileCommandLines(command: CommandArgument[], files: string[
         commandArguments: command.map((argument) => (typeof argument === 'string' ? argument : file)),
         ...(hasFile && { file }),
     }));
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
-function convertToSystemPath(path: string): string {
-    return path.split('/').join(sep);
 }

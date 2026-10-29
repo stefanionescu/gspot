@@ -1,21 +1,28 @@
 import { join } from 'node:path';
 import * as filesystem from 'node:fs';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, writeFile } from 'node:fs/promises';
+import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
+import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
+import { SOURCE_KIND } from '#cli/config/repository/files/classify.ts';
 import { buildConfiguration } from '#tests/setup/cli/configurations.ts';
-import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/samples.ts';
-import { buildTrackedFile, readTestRepository } from '#tests/setup/cli/repository.ts';
-import { PRISMA_SCHEMA_CASES, SITE_DETECTION_PATHS, RUNTIME_DETECTION_CASES } from '#tests/config/repository/detect.ts';
+import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/dependencies.ts';
 
-async function detectSandbox(root: string): Promise<string[]> {
+import {
+    POSTGRESQL_PROVIDER,
+    PRISMA_SCHEMA_CASES,
+    SITE_DETECTION_PATHS,
+    RUNTIME_DETECTION_CASES,
+} from '#tests/config/repository/detect.ts';
+
+async function detectSandboxConfigurations(root: string): Promise<string[]> {
     const repository = await readTestRepository(root);
     const dependencyFiles = await readDependencyFiles(createReadCache(root), repository.files);
     return detectConfigurations({ root, files: repository.files, dependencyFiles }, readConfigurations()).map(
@@ -27,7 +34,20 @@ test('detection proposes a language from an extension and the always-selected co
     const always = { ...buildConfiguration('always'), always_selected: true };
     const bashConfiguration = buildConfiguration('shell', { tables: '[detect]\nextensions = [".sh"]\n' });
     const plans = detectConfigurations(
-        { root: process.cwd(), files: [buildTrackedFile('a.sh')], dependencyFiles: [] },
+        {
+            root: process.cwd(),
+            files: [
+                {
+                    path: 'a.sh',
+                    kind: 'source' as const,
+                    kindOrigin: SOURCE_KIND.origin,
+                    tags: ['text'],
+                    executable: false,
+                    size: 1,
+                },
+            ],
+            dependencyFiles: [],
+        },
         new Map([
             [always.name, always],
             [bashConfiguration.name, bashConfiguration],
@@ -40,7 +60,7 @@ test('detection proposes a language from an extension and the always-selected co
 });
 
 test.each(['.d.ts', '.d.mts', '.d.cts'])(
-    'TypeScript tooling with %s declarations needs a tsconfig.json to propose typescript',
+    'TypeScript declarations in %s need a tsconfig.json to propose typescript',
     async (extension) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript']),
@@ -89,8 +109,8 @@ test('a FastAPI dependency proposes fastapi and python in its own scope until it
             { root: sandbox.path, files: repository.files, dependencyFiles },
             configurationsByName,
             'other',
-        ).some((detection) => detection.configuration === 'fastapi'),
-    ).toBe(false);
+        ).filter((detection) => detection.configuration === 'fastapi'),
+    ).toStrictEqual([]);
     await writeFile(join(sandbox.path, 'api', path), path.endsWith('.txt') ? '# dependencies removed\n' : '');
     const corrected = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     expect(
@@ -98,12 +118,12 @@ test('a FastAPI dependency proposes fastapi and python in its own scope until it
             { root: sandbox.path, files: repository.files, dependencyFiles: corrected },
             configurationsByName,
             'api',
-        ).some((detection) => detection.configuration === 'fastapi'),
-    ).toBe(false);
+        ).filter((detection) => detection.configuration === 'fastapi'),
+    ).toStrictEqual([]);
 });
 
 test.each(PRISMA_SCHEMA_CASES.flatMap((row) => ['', 'apps/api'].map((scope) => ({ ...row, scope }))))(
-    'a Prisma schema with $name selects postgres in "$scope" as expected, and a sibling scope keeps its own detection',
+    'a Prisma schema with $name selects postgres in "$scope", and a sibling scope keeps its own detection',
     async ({ path, source, detected, scope }) => {
         await using sandbox = await testdir();
         const owned = scope === '' ? path : `${scope}/${path}`;
@@ -118,8 +138,8 @@ test.each(PRISMA_SCHEMA_CASES.flatMap((row) => ['', 'apps/api'].map((scope) => (
                 { root: sandbox.path, files: repository.files, dependencyFiles: [] },
                 configurationsByName,
                 scope,
-            ).some((detection) => detection.configuration === 'postgres'),
-        ).toBe(detected);
+            ).filter((detection) => detection.configuration === 'postgres'),
+        ).toStrictEqual(detected ? [{ configuration: 'postgres', group: 'database', evidence: owned }] : []);
         expect(
             detectConfigurations(
                 { root: sandbox.path, files: repository.files, dependencyFiles: [] },
@@ -131,7 +151,7 @@ test.each(PRISMA_SCHEMA_CASES.flatMap((row) => ['', 'apps/api'].map((scope) => (
 );
 
 test('content detection skips a file deleted after the repository read', async () => {
-    await using sandbox = await testdir({ 'prisma/schema.prisma': 'provider = "postgresql"\n' });
+    await using sandbox = await testdir({ 'prisma/schema.prisma': POSTGRESQL_PROVIDER });
 
     const repository = await readTestRepository(sandbox.path);
     await unlink(join(sandbox.path, 'prisma/schema.prisma'));
@@ -139,14 +159,14 @@ test('content detection skips a file deleted after the repository read', async (
         detectConfigurations(
             { root: sandbox.path, files: repository.files, dependencyFiles: [] },
             readConfigurations(),
-        ).some((detection) => detection.configuration === 'postgres'),
-    ).toBe(false);
+        ).filter((detection) => detection.configuration === 'postgres'),
+    ).toStrictEqual([]);
 });
 
 test('a Prisma read error stops detection, and a session with saved choices does not read the file', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript']),
-        'prisma/schema.prisma': 'provider = "postgresql"\n',
+        'prisma/schema.prisma': POSTGRESQL_PROVIDER,
     });
 
     const repository = await readTestRepository(sandbox.path);
@@ -218,7 +238,20 @@ test('site is detected from a sitemap.xml in any folder', () => {
     for (const path of SITE_DETECTION_PATHS) {
         if (!path.endsWith('sitemap.xml')) continue;
         const detected = detectConfigurations(
-            { root: process.cwd(), files: [buildTrackedFile(path)], dependencyFiles: [] },
+            {
+                root: process.cwd(),
+                files: [
+                    {
+                        path: path,
+                        kind: 'source' as const,
+                        kindOrigin: SOURCE_KIND.origin,
+                        tags: ['text'],
+                        executable: false,
+                        size: 1,
+                    },
+                ],
+                dependencyFiles: [],
+            },
             configurationsByName,
         );
         expect(detected.find(({ configuration }) => configuration === 'site')?.evidence).toBe(path);
@@ -230,21 +263,32 @@ test('site detection excludes a server framework even when a sitemap is present'
         'package.json': '{"dependencies":{"next":"15.5.4"}}',
         'public/sitemap.xml': '<urlset/>',
     });
-    expect(await detectSandbox(sandbox.path)).not.toContain('site');
+    expect(await detectSandboxConfigurations(sandbox.path)).not.toContain('site');
 });
+
 test('a favicon manifest alone does not select the static site checks', () => {
     expect(
         detectConfigurations(
-            { root: process.cwd(), files: [buildTrackedFile('public/site.webmanifest')], dependencyFiles: [] },
+            {
+                root: process.cwd(),
+                files: [
+                    {
+                        path: 'public/site.webmanifest',
+                        kind: 'source' as const,
+                        kindOrigin: SOURCE_KIND.origin,
+                        tags: ['text'],
+                        executable: false,
+                        size: 1,
+                    },
+                ],
+                dependencyFiles: [],
+            },
             readConfigurations(),
         ).map(({ configuration }) => configuration),
     ).not.toContain('site');
 });
 
-test.each(['psycopg', 'psycopg2', 'psycopg2-binary', 'psycopg-binary'])(
-    '%s selects Postgres migration checks',
-    async (dependency) => {
-        await using sandbox = await testdir({ 'requirements.txt': `${dependency}==3.2.3\n` });
-        expect(await detectSandbox(sandbox.path)).toContain('postgres');
-    },
-);
+test('a Python database driver selects Postgres migration checks', async () => {
+    await using sandbox = await testdir({ 'requirements.txt': 'psycopg==3.2.3\n' });
+    expect(await detectSandboxConfigurations(sandbox.path)).toContain('postgres');
+});

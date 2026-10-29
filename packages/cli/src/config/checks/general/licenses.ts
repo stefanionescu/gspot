@@ -20,3 +20,10 @@ export const TROVE_LICENSES: Readonly<Record<string, string>> = {
 };
 
 export const ANY_VERSION = '*';
+
+export const EMPTY_SCAN_MESSAGE =
+    'The license scan found no packages. Install the selected project dependencies before scanning.';
+
+export const NO_ALLOWED_LICENSES_NOTE = 'Set licenses.allowed to check licenses.';
+
+export const RULES = { unusedRecord: 'unused-record', disallowedLicense: 'disallowed-license' } as const;

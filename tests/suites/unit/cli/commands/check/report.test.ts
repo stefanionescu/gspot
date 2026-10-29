@@ -4,17 +4,19 @@ import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { stripVTControlCharacters } from 'node:util';
-import { type RunReport } from '#cli/types/runs/run.ts';
 import { setOutputOptions } from '#cli/system/terminal.ts';
 import { fakeTerminals } from '#tests/setup/system/fakes.ts';
+import { type RunReport } from '#cli/types/commands/check.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { COMMAND_CHECK_HELP_LINE } from '#tests/config/messages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PROGRESS_CLEAR } from '#cli/config/commands/check/check.ts';
 import { FINDINGS_SHOWN } from '#cli/config/commands/check/report.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { printProgress, formatRunReport } from '#cli/commands/check/report.ts';
-import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
     DURATION,
@@ -93,7 +95,7 @@ test('check --verbose prints every finding and the command', async () => {
             `example/findings  failed  ${String(FINDINGS_SHOWN + 1)} findings`,
             `  $ ${findingsCommand.join(' ')}`,
             ...FINDING_LINES.map((line) => `  ${line}`),
-            '  help: Read the command output; this repository declares the check.',
+            COMMAND_CHECK_HELP_LINE,
             '  run again: gspot check --only example/findings --changed HEAD',
             '',
             'example/passing  passed  1 file  0.0s',
@@ -123,9 +125,10 @@ test('the summary counts skipped checks apart from passed ones, and an empty run
     const text = formatRunReport(corrected, { verbose: false });
     expect(text).toEndWith('Passed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 0.\n');
 });
+
 test('a failed report prints each check with its findings, help, and reproduce line, the ignore count, and the summary', () => {
     expect(formatRunReport(FAILED_CHECK_REPORT, { verbose: false })).toBe(
-        'bash/shellcheck  failed  1 finding\n  a.sh:4:3  SC2086  Double quote to prevent globbing.\n  help: Quote it.\n  run again: gspot check --only bash/shellcheck\n\napi  format/prettier  missing  prettier is not installed. Run: mise install\n\nignores    1 (printed with --verbose)\nFailed: 1 check with 1 finding. Could not run: 1 check (a tool is missing; run gspot install). Passed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 1.\n',
+        'bash/shellcheck  failed  1 finding\n  a.sh:4:3  SC2086  Double quote to prevent globbing.\n  help: Quote it.\n  run again: gspot check --only bash/shellcheck\n\nmissing  format/prettier api\n  prettier is not installed. Run: mise install\n\nignores    1 (printed with --verbose)\nFailed: 1 check with 1 finding. Could not run: 1 check (a tool is missing; run gspot install). Passed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 1.\n',
     );
 });
 
@@ -147,15 +150,15 @@ test('findings that share a help print it once, after the last of them', () => {
 });
 
 test('colors change the report only by escape codes', () => {
-    setOutputOptions({ json: false, color: false });
+    setOutputOptions({ isJson: false, colored: false });
     const concise = formatRunReport(FAILED_CHECK_REPORT, { verbose: false });
     try {
-        setOutputOptions({ json: false, color: true });
+        setOutputOptions({ isJson: false, colored: true });
         const colored = formatRunReport(FAILED_CHECK_REPORT, { verbose: false });
         expect(colored).not.toBe(concise);
         expect(stripVTControlCharacters(colored)).toBe(concise);
     } finally {
-        setOutputOptions({ json: false, color: false });
+        setOutputOptions({ isJson: false, colored: false });
     }
 });
 

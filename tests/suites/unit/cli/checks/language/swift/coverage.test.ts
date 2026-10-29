@@ -1,17 +1,17 @@
 import { join } from 'node:path';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { type RunResult } from '#cli/types/runs/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import * as environment from '#cli/system/environment.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { SWIFT_PACKAGE_HEADER } from '#tests/config/swift.ts';
+import { type RunResult } from '#cli/types/commands/check.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
+import { XCTEST_SOURCE, SWIFT_PACKAGE_HEADER } from '#tests/config/swift.ts';
 import { planSandboxCheck, redirectCacheFolder } from '#tests/setup/cli/checks.ts';
 
 import {
@@ -25,7 +25,7 @@ import {
 
 test.each([...XCTEST_FAILURES])(
     'swift/coverage: XCTest coverage classifies $failure and passes after the fix',
-    async ({ tables, build, coverage, code, status, produced, note }) => {
+    async ({ tables, build, coverage, code, status, produced, note, failure }) => {
         await using sandbox = await testdir();
         await using _cache = await redirectCacheFolder();
         const result = await runXcodeCoverage(sandbox, {
@@ -43,6 +43,10 @@ test.each([...XCTEST_FAILURES])(
         expect(result.report.exitCode).toBe(code);
         expect(result.report.checks[0]!.status).toBe(status);
         expect(result.report.checks[0]!.note).toBe(note);
+        if (failure === 'failed-test')
+            expect(result.report.checks[0]!.findings).toMatchObject([
+                { rule: 'failed-test', file: 'ExampleTests.swift', line: 3, message: 'Expected true.' },
+            ]);
         expect(await isOnDisk(join(sandbox.path, 'viewed.txt'))).toBe(false);
         await writeFile(
             join(sandbox.path, 'gspot.toml'),
@@ -68,21 +72,22 @@ test.each([...XCTEST_FAILURES])(
 
 async function runXcodeCoverage(
     sandbox: TestdirResult,
-    files: { tables: string; xcodebuild: string[]; xcrun: string[] },
+    options: { tables: string; xcodebuild: string[]; xcrun: string[] },
 ): Promise<RunResult> {
     using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings(['swift', 'xcode'], { tables: files.tables }),
-        'ExampleTests.swift': 'import XCTest\n',
+        'gspot.toml': buildSandboxSettings(['swift', 'xcode'], { tables: options.tables }),
+        'ExampleTests.swift': XCTEST_SOURCE,
         'Example.xcodeproj/project.pbxproj': '',
     });
-    await writeProgramCommand(sandbox.path, 'node_modules/.bin/xcodebuild', 'fakes/xcodebuild', ...files.xcodebuild);
-    await writeProgramCommand(sandbox.path, 'node_modules/.bin/xcrun', 'fakes/tool', ...files.xcrun);
+    await writeProgramCommand(sandbox.path, 'node_modules/.bin/xcodebuild', 'fakes/xcodebuild', ...options.xcodebuild);
+    await writeProgramCommand(sandbox.path, 'node_modules/.bin/xcrun', 'fakes/tool', ...options.xcrun);
     return await runChecks(
         await openSession(sandbox.path),
         buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
     );
 }
+
 test('swift/coverage: XCTest coverage refuses an external result link and removes a previous result bundle', async () => {
     using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
     await using sandbox = await testdir();
@@ -90,7 +95,7 @@ test('swift/coverage: XCTest coverage refuses an external result link and remove
     await using _cache = await redirectCacheFolder();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['swift', 'xcode'], { tables: XCTEST_TABLES }),
-        'ExampleTests.swift': 'import XCTest\n',
+        'ExampleTests.swift': XCTEST_SOURCE,
         'Example.xcodeproj/project.pbxproj': '',
     });
 
@@ -121,7 +126,8 @@ test('swift/coverage: XCTest coverage refuses an external result link and remove
     expect(await readFile(join(cache, 'source/tested.txt'), 'utf8')).toBe('tested');
     expect(await readFile(join(outside.path, 'authored.txt'), 'utf8')).toBe('preserved');
 });
-test('Swift package coverage measures actual custom target paths and applies every target limit', async () => {
+
+test('Swift package coverage runs swift test, reads the custom target paths, and applies every target limit', async () => {
     using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
     await using sandbox = await testdir();
     await using _cache = await redirectCacheFolder();
@@ -141,6 +147,8 @@ test('Swift package coverage measures actual custom target paths and applies eve
         sandbox.path,
         'node_modules/.bin/swift',
         'fakes/swift',
+        '--log-arguments',
+        join(sandbox.path, 'swift-calls.jsonl'),
         '--report',
         reportPath,
         '--targets',
@@ -152,6 +160,18 @@ test('Swift package coverage measures actual custom target paths and applies eve
         buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
     );
 
+    const log = await readFile(join(sandbox.path, 'swift-calls.jsonl'), 'utf8');
+    const calls = log
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line) as string[]);
+    expect(calls.map((call) => call.slice(0, 3))).toStrictEqual([
+        ['test', '--enable-code-coverage', '--scratch-path'],
+        ['test', '--show-codecov-path', '--scratch-path'],
+        ['package', 'describe', '--type'],
+    ]);
+    expect(calls[0]?.[3]).toBe(calls[1]?.[3]);
+    expect(calls[2]).toStrictEqual(['package', 'describe', '--type', 'json']);
     expect(measured.report.checks[0]?.findings.map(({ message }) => message)).toStrictEqual([
         'Core covers 50% of its lines, under the limit of 51%.',
         'API covers 66% of its lines, under the limit of 67%.',
@@ -169,6 +189,7 @@ test('Swift package coverage measures actual custom target paths and applies eve
         'The swift/coverage check failed: The Swift coverage report has no source lines for target API.',
     );
 });
+
 test('Swift coverage skips a scope that holds no Swift tests', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['swift']),
@@ -182,6 +203,7 @@ test('Swift coverage skips a scope that holds no Swift tests', async () => {
     );
     expect(report.checks).toMatchObject([...UNTESTED_COVERAGE_RESULTS]);
 });
+
 test.each([...COVERAGE_LIMIT_CASES])(
     'swift/coverage compares each target with the shared and per-target limits: $name',
     async ({ report, tables, expected }) => {
@@ -198,3 +220,22 @@ test.each([...COVERAGE_LIMIT_CASES])(
         ).toStrictEqual([...expected]);
     },
 );
+
+test('Swift Testing failures name the test file and its source position', async () => {
+    await using sandbox = await testdir();
+    await using _cache = await redirectCacheFolder();
+    const result = await runXcodeCoverage(sandbox, {
+        tables: XCTEST_TABLES,
+        xcodebuild: [
+            '--exit',
+            '65',
+            '--failure',
+            'Test value() recorded an issue at ExampleTests.swift:4:8: Expected true.',
+        ],
+        xcrun: [],
+    });
+    expect(result.report.exitCode).toBe(1);
+    expect(result.report.checks[0]?.findings).toMatchObject([
+        { rule: 'failed-test', file: 'ExampleTests.swift', line: 4, column: 8, message: 'Expected true.' },
+    ]);
+});

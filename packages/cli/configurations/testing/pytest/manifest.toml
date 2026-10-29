@@ -30,21 +30,26 @@ system = true
 version_command = ["pytest", "--version", "--version"]
 version_pattern = "pytest-cov-(\\d+(?:\\.\\d+)+)"
 
+[[config_file]]
+per_scope = true
+target = "coveragerc"
+tool = "pytest-cov"
+check = "pytest/coverage"
+
 [ruff]
 all = ["PT001", "PT002", "PT003", "PT006", "PT007", "PT018", "PT019", "PT022", "PT023", "PT026"]
-recommended = ["PT008", "PT009", "PT010", "PT011", "PT012", "PT013", "PT014", "PT015", "PT016", "PT017", "PT020", "PT021", "PT024", "PT025", "PT027", "PT028", "PT030", "PT031"]
+basic = ["PT008", "PT009", "PT010", "PT011", "PT012", "PT013", "PT014", "PT015", "PT016", "PT017", "PT020", "PT021", "PT024", "PT025", "PT027", "PT028", "PT030", "PT031"]
 
 [[check]]
-command = ["pytest", "-q", "--strict-markers", "--strict-config", "--cov", "--cov-fail-under={setting:coverage.lines}", "--no-header", "-p", "no:cacheprovider"]
-coverage_arguments = ["--cov", "--cov-fail-under"]
+command = ["pytest", "-q", "--strict-markers", "--strict-config", "--cov", "--cov-config={config_file:pytest-cov}", "--cov-fail-under={setting:coverage.lines}", "--no-header", "-p", "no:cacheprovider"]
+coverage_arguments = ["--cov", "--cov-config", "--cov-fail-under"]
 cwd = "scope"
 example = "pytest-cov reports `FAIL Required test coverage of 90% not reached. Total coverage: 85%`. Add a Python test for the uncovered behavior."
-exit_codes = [1]
+exit_codes = [1, 5]
 files = { extensions = [".py"] }
 help = "Fix each failed test, and add tests for the code that the report marks uncovered. Lower `coverage.lines` only with a reason."
-level = "recommended"
 name = "coverage"
-output = { format = "regex", pattern = "^(?<message>(?:FAIL Required test coverage|FAILED |ERROR ).*)$" }
+output = { format = "regex", pattern = "^(?:(?:FAILED|ERROR) (?<file>[^\\s:]+)(?:::\\S+)?(?: - .*)?|FAIL Required test coverage.*)$" }
 runs = "scope"
 stage = "push"
 summary = "Runs pytest with coverage, and fails on a failed test or when the covered lines fall under their minimum."

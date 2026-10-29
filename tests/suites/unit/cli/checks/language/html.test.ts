@@ -65,3 +65,11 @@ test('html/inline-scripts reports an executable inline script and an event handl
         ],
     );
 });
+
+test('prototype property tag names with data URLs do not crash the check', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['html'], { level: 'all' }),
+        'index.html': '<constructor src="data:text/javascript,run()"></constructor>',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'html/inline-scripts')).toStrictEqual([]);
+});

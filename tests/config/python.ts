@@ -12,3 +12,7 @@ version = "1.0.0"
 ${PYTHON_PROJECT_OPTIONS}`;
 
 export const GOOGLE_PYPROJECT = `${PYPROJECT}\n${PYDOCLINT_GOOGLE}`;
+
+export const OS_SOURCE = 'import os\n';
+
+export const PYVENV_HOME = 'home = /usr/bin\n';

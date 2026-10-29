@@ -13,8 +13,9 @@ import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/
 import {
     STYLESHEETS,
     TAILWIND_FILES,
-    STYLELINT_TABLES,
     STYLELINT_COMMAND,
+    APP_STYLELINT_SCOPE,
+    ROOT_STYLELINT_RULES,
     CORRECTED_STYLESHEETS,
     ALL_LEVEL_STYLELINT_TABLES,
 } from '#tests/config/integration/checks/language/css.ts';
@@ -33,7 +34,8 @@ test.each([...LEVELS])(
             files: {
                 'gspot.toml': buildSandboxSettings(['css'], {
                     level,
-                    tables: level === 'all' ? ALL_LEVEL_STYLELINT_TABLES : STYLELINT_TABLES,
+                    tables:
+                        level === 'all' ? ALL_LEVEL_STYLELINT_TABLES : `${ROOT_STYLELINT_RULES}${APP_STYLELINT_SCOPE}`,
                 }),
                 'package.json': '{"private":true}\n',
                 ...STYLESHEETS,

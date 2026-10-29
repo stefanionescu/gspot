@@ -4,19 +4,19 @@ import { addIdentifier } from '#cli/checks/general/naming/languages/identifier.t
 import type { Identifier, FileIdentifiers } from '#cli/types/checks/general/naming.ts';
 
 import {
+    NAME_NODES,
+    DECLARATIONS,
+    PATTERN_LISTS,
+    CALLABLE_NODES,
+    PATTERN_FIELDS,
+    PARAMETER_NODES,
     COMPONENT_FACTORY,
-    TYPESCRIPT_NAME_NODES,
-    TYPESCRIPT_DECLARATIONS,
-    TYPESCRIPT_PATTERN_LISTS,
-    TYPESCRIPT_CALLABLE_NODES,
-    TYPESCRIPT_PATTERN_FIELDS,
-    TYPESCRIPT_PARAMETER_NODES,
 } from '#cli/config/checks/general/naming/languages/typescript.ts';
 
 function addPattern(found: FileIdentifiers, node: Node | null, category: NamedCategory): void {
     if (node === null) return;
-    const field = TYPESCRIPT_PATTERN_FIELDS[node.type];
-    if (TYPESCRIPT_NAME_NODES.has(node.type))
+    const field = PATTERN_FIELDS[node.type];
+    if (NAME_NODES.has(node.type))
         addIdentifier(
             found,
             node,
@@ -24,8 +24,7 @@ function addPattern(found: FileIdentifiers, node: Node | null, category: NamedCa
             node.type === 'private_property_identifier' ? node.text.slice(1) : node.text,
         );
     else if (field !== undefined) addPattern(found, node.childForFieldName(field), category);
-    else if (TYPESCRIPT_PATTERN_LISTS.has(node.type))
-        for (const child of node.namedChildren) addPattern(found, child, category);
+    else if (PATTERN_LISTS.has(node.type)) for (const child of node.namedChildren) addPattern(found, child, category);
 }
 
 function addParameter(found: FileIdentifiers, parameter: Node): void {
@@ -38,7 +37,7 @@ function addParameter(found: FileIdentifiers, parameter: Node): void {
 function addParameters(found: FileIdentifiers, node: Node): void {
     const parameters = node.childForFieldName('parameters')?.namedChildren ?? [];
     for (const parameter of parameters) {
-        if (TYPESCRIPT_PARAMETER_NODES.has(parameter.type)) addParameter(found, parameter);
+        if (PARAMETER_NODES.has(parameter.type)) addParameter(found, parameter);
         else addPattern(found, parameter, 'parameters');
     }
     addPattern(found, node.childForFieldName('parameter'), 'parameters');
@@ -61,9 +60,9 @@ function addDeclarator(found: FileIdentifiers, declarator: Node): void {
         for (const identifier of found.identifiers.slice(start)) identifier.addedCases = ['pascal'];
 }
 
-function addNamed(found: FileIdentifiers, root: Node): void {
-    for (const [types, category] of TYPESCRIPT_DECLARATIONS) {
-        const nodes = root
+function addDeclarations(found: FileIdentifiers, syntaxRoot: Node): void {
+    for (const [types, category] of DECLARATIONS) {
+        const nodes = syntaxRoot
             .descendantsOfType([...types])
             .filter(
                 (node) =>
@@ -76,8 +75,8 @@ function addNamed(found: FileIdentifiers, root: Node): void {
     }
 }
 
-function addEnumCases(found: FileIdentifiers, root: Node): void {
-    for (const body of root.descendantsOfType('enum_body')) {
+function addEnumCases(found: FileIdentifiers, syntaxRoot: Node): void {
+    for (const body of syntaxRoot.descendantsOfType('enum_body')) {
         const cases = body.namedChildren.filter((child) => child.type === 'property_identifier');
         for (const child of cases) addIdentifier(found, child, 'enum_cases');
     }
@@ -89,15 +88,18 @@ Lists the names that a TypeScript or JavaScript file declares.
 @param syntaxRoot the parsed program.
 @param file the repository path of the source.
 @param language `typescript` or `javascript`.
-@returns the declared names.
 */
 export function extractTypescriptIdentifiers(syntaxRoot: Node, file: string, language: string): Identifier[] {
     const found: FileIdentifiers = { file, language, identifiers: [] };
-    addNamed(found, syntaxRoot);
+    addDeclarations(found, syntaxRoot);
     addEnumCases(found, syntaxRoot);
     const declarators = syntaxRoot.descendantsOfType('variable_declarator').filter((node) => !isImportedName(node));
     for (const node of declarators) addDeclarator(found, node);
-    const callables = syntaxRoot.descendantsOfType([...TYPESCRIPT_CALLABLE_NODES]);
+    for (const node of syntaxRoot.descendantsOfType('for_in_statement'))
+        addPattern(found, node.childForFieldName('left'), 'variables');
+    for (const node of syntaxRoot.descendantsOfType('catch_clause'))
+        addPattern(found, node.childForFieldName('parameter'), 'variables');
+    const callables = syntaxRoot.descendantsOfType([...CALLABLE_NODES]);
     for (const node of callables) addParameters(found, node);
     return found.identifiers;
 }

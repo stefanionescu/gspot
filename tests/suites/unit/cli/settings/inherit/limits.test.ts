@@ -19,7 +19,7 @@ test('limits that no check reads are refused', () => {
         }),
     );
     expect(errors).toStrictEqual([
-        'gspot.toml:6: limits.bash.cyclomatic_complexity: `limits.bash.cyclomatic_complexity` is not a limit any check reads. The limits that bash reads are `file_lines`, `function_lines`, `block_nesting`, `function_branches`, `function_assignments`, `trivial_function_statements`.',
-        'gspot.toml:4: limits.sql.function_lines: `limits.sql.function_lines` is not a limit any check reads. The limits that sql reads are `file_lines`.',
+        'gspot.toml:6: limits.bash.cyclomatic_complexity: limits.bash.cyclomatic_complexity is not a limit any check reads. The limits that bash reads are file_lines, function_lines, block_nesting, function_branches, function_assignments, trivial_function_statements.',
+        'gspot.toml:4: limits.sql.function_lines: limits.sql.function_lines is not a limit any check reads. The limits that sql reads are file_lines.',
     ]);
 });

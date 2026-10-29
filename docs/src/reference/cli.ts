@@ -9,7 +9,7 @@ import { buildAvailableSettings, SETTINGS_BY_CONFIGURATION } from '#cli/settings
 function groupSettingVariants(configurations: CliReference['configurations']): SettingVariant[] {
     const settings = new Map<string, SettingVariant[]>();
     const ownedSettings = [
-        ...buildAvailableSettings([], 'recommended')
+        ...buildAvailableSettings([], 'basic')
             .settings.values()
             .map((setting) => ({
                 setting,

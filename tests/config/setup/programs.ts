@@ -31,9 +31,8 @@ export const PROGRAM_NAMES = [
     'fakes/generator',
     'fakes/site-build',
     'fakes/package-bin',
-    'runner/preload',
-    'runner/environment.test',
-    'runner/interrupt.test',
+    'runner/environment',
+    'runner/interrupt',
 ] as const;
 
 export const WAIT_INTERVAL_MILLISECONDS = 60_000;
@@ -127,7 +126,11 @@ export const FAKE_CI_MISE_OPTIONS = {
 
 export const CLI_PACKAGE_REQUEST = 'npm:@gspothq/cli[allow_low_downloads=true]@';
 
-export const REPORT_SWIFT_COVERAGE_OPTIONS = { report: { type: 'string' }, targets: { type: 'string' } } as const;
+export const REPORT_SWIFT_COVERAGE_OPTIONS = {
+    report: { type: 'string' },
+    targets: { type: 'string' },
+    'log-arguments': { type: 'string' },
+} as const;
 
 export const VALE_PACKAGE_FOLDERS = [
     'Google',
@@ -137,3 +140,9 @@ export const VALE_PACKAGE_FOLDERS = [
     'Harper',
     'config/dictionaries',
 ] as const;
+
+export const INHERITED_STREAMS = { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' } as const;
+
+export const CLIENT_ENV_RULE = 'gspot/no-client-env';
+
+export const LATER_TEST_MESSAGE = 'Later test ran';

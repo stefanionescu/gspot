@@ -29,7 +29,6 @@ tool = "gixy"
 command = ["gixy", "--config", "{config_file:gixy}", "--format", "json", "{file}"]
 example = "A location for `/proxy/(.*)` with `proxy_pass http://$1` sends requests to any host and reports `ssrf`. Point `proxy_pass` at a fixed upstream instead."
 help = "Change the block the way the rule page says. Turn one rule off with `gspot ignore nginx/gixy --rule <rule> --reason \"<why>\"`."
-level = "recommended"
 name = "gixy"
 output = { format = "json", fields = { file = "path", line = "line", rule = "plugin", message = "summary" } }
 stage = "commit"
@@ -40,7 +39,6 @@ why = "These mistakes parse, serve traffic, and look like any other location blo
 example = "The line `invalid_directive on;` fails `nginx -T`. Remove it, or replace it with a known directive such as `listen 443 ssl;`."
 files = { filenames = ["nginx.conf"] }
 help = "Fix the line nginx names. Set `tools.nginx.image` to the one your deployment runs."
-level = "recommended"
 name = "syntax"
 needs = ["docker"]
 runs = "scope"

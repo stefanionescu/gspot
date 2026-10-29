@@ -5,8 +5,10 @@ import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 
 import {
+    V8R_TABLE,
     V8R_NOTES,
     MISE_SCHEMA,
+    YAMLLINT_CHECK,
     YAMLLINT_RULES,
     SETTINGS_SCHEMA,
     TAPLO_FORMATTING,
@@ -17,8 +19,7 @@ import {
 /**
 Build taplo.toml: the Taplo formatting settings with automatic schema lookup disabled.
 
-@param planned the config file with its scope, level, and target path.
-@returns the Taplo formatting settings with automatic schema lookup disabled.
+@param planned the config file to build.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildTaploFile(planned: PlannedConfigFile): string {
@@ -40,11 +41,10 @@ export function buildTaploFile(planned: PlannedConfigFile): string {
 /**
 Build v8r.yml: the v8r schema catalog, including the configured file selectors.
 
-@param planned the config file with its scope, level, and target path.
-@returns the v8r schema catalog, including the configured file selectors.
+@param planned the config file to build.
 */
 export function buildV8rFile(planned: PlannedConfigFile): string {
-    const schemas = getTable(planned.scope.settings, 'tools.v8r').schema.map(({ paths, url }) => ({
+    const schemas = getTable(planned.scope.settings, V8R_TABLE).schema.map(({ paths, url }) => ({
         name: url,
         fileMatch: paths,
         location: url,
@@ -61,8 +61,7 @@ export function buildV8rFile(planned: PlannedConfigFile): string {
 /**
 Build yamllint.yml: the YAML lint rules with the configured indentation and disabled checks.
 
-@param planned the config file with its scope, level, and target path.
-@returns the YAML lint rules with the configured indentation and disabled checks.
+@param planned the config file to build.
 */
 export function buildYamllintFile(planned: PlannedConfigFile): string {
     const rules: Record<string, unknown> = {
@@ -73,7 +72,7 @@ export function buildYamllintFile(planned: PlannedConfigFile): string {
         rules[rule] = { ...(rules[rule] as Record<string, unknown>), ...chosen };
     Object.assign(
         rules,
-        Object.fromEntries(listIgnoredRules(planned.scope, 'data-files/yamllint').map((name) => [name, 'disable'])),
+        Object.fromEntries(listIgnoredRules(planned.scope, YAMLLINT_CHECK).map((name) => [name, 'disable'])),
     );
     const document = { rules };
     return stringifyYaml(document, YAMLLINT_YAML_OPTIONS);

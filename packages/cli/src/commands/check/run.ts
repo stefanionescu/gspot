@@ -3,34 +3,52 @@ import { join, relative } from 'node:path';
 import { availableParallelism } from 'node:os';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
-import { buildBaseResult } from '#cli/runs/report.ts';
+import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { getTool } from '#cli/configurations/tools.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
-import { findCheckCode } from '#cli/checks/registry.ts';
-import { readSessionRepository } from '#cli/session.ts';
+import { spawnProcess } from '#cli/system/processes.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { FixReport } from '#cli/types/runs/fixes.ts';
 import { DOCKER_TOOL } from '#cli/config/tools/inspect.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
+import { type PlannedCheck } from '#cli/types/planning.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { getCachedValue } from '#cli/system/files/cache.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
-import type { IgnoreRecord } from '#cli/types/settings/file.ts';
-import { INCOMPLETE_STATUSES } from '#cli/config/runs/report.ts';
-import { readToolAvailability } from '#cli/runs/command/tool.ts';
-import type { Session, CheckSession } from '#cli/types/session.ts';
+import { type IgnoreRecord } from '#cli/types/settings/file.ts';
+import { INCOMPLETE_STATUSES } from '#cli/config/runs/results.ts';
+import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import { SHORT_HASH_LENGTH } from '#cli/config/commands/check/check.ts';
-import { RAN_STATUSES, FAILED_STATUSES } from '#cli/config/runs/check.ts';
-import type { FinishedRun, ReproduceOptions } from '#cli/types/commands/check.ts';
-import { CANCELED_CHECK_NOTE, DOCKER_MISSING_MESSAGE } from '#cli/config/commands/check/run.ts';
-import type { Run, RunResult, RunReport, RunOptions, PlanAfterFixes } from '#cli/types/runs/run.ts';
-import type { Finding, CheckCode, CheckResult, BuiltInCheck, CheckRunOptions } from '#cli/types/runs/check.ts';
+import { type Session, type CheckSession } from '#cli/types/session.ts';
+import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
+import { listDetectedAdditions } from '#cli/repository/configurations.ts';
+import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
+import { STAGED_FLAG, CHANGED_FLAG } from '#cli/config/commands/check/flags.ts';
+import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/runs/results.ts';
+import { type Finding, type CheckCode, type CheckResult, type CheckRunOptions } from '#cli/types/runs/check.ts';
+
+import {
+    HOOK_FLAG,
+    CHECK_COMMAND,
+    FAILED_STATUSES,
+    NO_FILES_MESSAGE,
+    CANCELED_CHECK_NOTE,
+    DOCKER_MISSING_MESSAGE,
+} from '#cli/config/commands/check/run.ts';
+import {
+    type Run,
+    type FixReport,
+    type RunResult,
+    type RunReport,
+    type RunOptions,
+    type FinishedRun,
+    type PlanAfterFixes,
+    type ReproduceOptions,
+} from '#cli/types/commands/check.ts';
 
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     if ((['check', 'rule'] as const).some((key) => record[key] !== undefined && record[key] !== finding[key]))
@@ -41,28 +59,40 @@ function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     );
 }
 
-async function readSessionAfterFixes(session: CheckSession): Promise<CheckSession> {
-    const reads = createReadCache(session.root);
-    const repository = await readSessionRepository({
-        settings: session.settings,
-        configurationsByName: session.configurationsByName,
-        reads,
-        listing: await listRepositoryFiles(reads),
-    });
-    return { ...session, reads, repository, inspections: new Map() };
-}
+const DOCKER_AVAILABILITY = { create: () => new Map<string, Promise<SpawnResult>>() };
 
-function findUnrunnableResult(
+async function findUnrunnableResult(
     session: CheckSession,
     planned: PlannedCheck,
     base: CheckResult,
-): CheckResult | undefined {
+): Promise<CheckResult | undefined> {
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: CANCELED_CHECK_NOTE };
     if (planned.check.needs?.includes('docker') !== true) return undefined;
-    return 'status' in
-        readToolAvailability(session, session.root, getTool(session.configurationsByName.values(), DOCKER_TOOL))
-        ? { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE }
-        : undefined;
+    if (
+        'status' in
+        buildToolAvailability(
+            getTool(session.configurationsByName.values(), DOCKER_TOOL),
+            inspectTool(
+                { ...session, cwd: session.root, miseBinPaths: session.readMiseBinPaths() },
+                getTool(session.configurationsByName.values(), DOCKER_TOOL),
+            ),
+        )
+    )
+        return { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE };
+    const available = getCachedValue(session.reads, DOCKER_AVAILABILITY);
+    let pending = available.get(session.root);
+    if (pending === undefined) {
+        pending = spawnProcess([DOCKER_TOOL, 'info'], {
+            cwd: session.root,
+            timeoutSeconds: session.timeoutSeconds,
+            cancelSignal: session.cancelSignal,
+        });
+        available.set(session.root, pending);
+    }
+    const result = await pending;
+    return result.code === 0
+        ? undefined
+        : { ...base, status: 'missing', note: 'Start Docker, then run the check again.' };
 }
 
 function classifyCheckError(name: string, error: unknown): Pick<CheckResult, 'status' | 'note' | 'cause'> {
@@ -78,11 +108,18 @@ function classifyCheckError(name: string, error: unknown): Pick<CheckResult, 'st
 async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckResult> {
     const { session } = run;
     const base = buildBaseResult(planned, session);
-    const unrunnable = findUnrunnableResult(session, planned, base);
+    const unrunnable = await findUnrunnableResult(session, planned, base);
     if (unrunnable) return unrunnable;
     const started = performance.now();
     try {
-        return await runCheckCode(session, planned, findCheckCode(planned.check), { verbose: run.options.verbose });
+        return await runCheckCode(
+            session,
+            planned,
+            planned.check.generator_outputs === undefined
+                ? CHECK_CODE[planned.check.id]
+                : { check: checkGeneratorOutputs },
+            { verbose: run.options.verbose },
+        );
     } catch (error) {
         return {
             ...base,
@@ -96,7 +133,8 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
 
 function removeIgnoredFindings(result: CheckResult, ignores: IgnoreRecord[]): void {
     result.findings = result.findings.filter((finding) => ignores.every((record) => !isIgnoreMatch(record, finding)));
-    result.status = result.findings.length > 0 ? 'failed' : 'passed';
+    if (result.status === 'passed' || result.status === 'failed')
+        result.status = result.findings.length > 0 ? 'failed' : 'passed';
 }
 
 function removeOutsideFindings(result: CheckResult, run: Run): void {
@@ -122,22 +160,22 @@ function buildReproduceOptions(options: RunOptions): ReproduceOptions {
 
 function formatReproduceCommand(checkId: string, scopeArgument: string | undefined, options: ReproduceOptions): string {
     const { paths, changed, messageFile, staged } = options;
-    const words = ['gspot check'];
-    if (paths.length > 0) words.push(...paths.map((path) => quoteArgument(path)));
-    else if (scopeArgument !== undefined && messageFile === undefined) words.push(quoteArgument(scopeArgument));
+    const words = [CHECK_COMMAND];
+    if (paths.length > 0) words.push(...paths.map((path) => quoteArgument(path.startsWith('-') ? `./${path}` : path)));
+    else if (scopeArgument !== undefined && messageFile === undefined)
+        words.push(quoteArgument(scopeArgument.startsWith('-') ? `./${scopeArgument}` : scopeArgument));
     words.push('--only', quoteArgument(checkId));
-    if (changed !== undefined) words.push('--changed', quoteArgument(changed));
-    if (messageFile !== undefined) words.push('--hook', 'commit-msg', '--', quoteArgument(messageFile));
-    if (staged) words.push('--staged');
+    if (changed !== undefined) words.push(CHANGED_FLAG, quoteArgument(changed));
+    if (messageFile !== undefined) words.push(HOOK_FLAG, 'commit-msg', '--', quoteArgument(messageFile));
+    if (staged) words.push(STAGED_FLAG);
     return words.join(' ');
 }
 
 function finishResult(run: Run, result: CheckResult): void {
-    if (RAN_STATUSES.has(result.status)) {
-        removeOutsideFindings(result, run);
-        removeIgnoredFindings(result, run.session.settings.ignore);
-    }
-    if (!FAILED_STATUSES.has(result.status)) return;
+    removeOutsideFindings(result, run);
+    removeIgnoredFindings(result, run.session.settings.ignore);
+    normalizeResultPaths(run.session, result);
+    if (!FAILED_STATUSES.has(result.status) || run.session.cancelSignal?.aborted === true) return;
     const scopeArgument =
         result.scope === ''
             ? undefined
@@ -172,10 +210,16 @@ async function planAfterFixes(session: CheckSession, options: RunOptions): Promi
     const planned = planChecks(session, options);
     if (!options.fix) return { session, planned, fixes: undefined };
     const fixes = await runFixers(session, planned, {
-        isDryRun: options.isDryRun,
+        dryRun: options.dryRun,
     });
-    if (options.isDryRun) return { session, planned, fixes };
-    const fixed = await readSessionAfterFixes(session);
+    if (options.dryRun) return { session, planned, fixes };
+    const fixed = buildCheckSession(
+        await openSession(session.root, {
+            toolsRoot: session.toolsRoot,
+            resources: session.resources,
+            cancelSignal: session.cancelSignal,
+        }),
+    );
     return { session: fixed, planned: planChecks(fixed, options), fixes };
 }
 
@@ -195,7 +239,7 @@ function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport
 }
 
 function buildRunReport(run: FinishedRun): RunReport {
-    const { session, options, started, planned, ran, fixes } = run;
+    const { session, options, started, planned, results: ran, fixes } = run;
     const results = new Map(run.active.map((check, index) => [check, ran[index] as CheckResult]));
     const checks = planned.map<CheckResult>(
         (check) =>
@@ -203,7 +247,7 @@ function buildRunReport(run: FinishedRun): RunReport {
                 ...buildBaseResult(check, session),
                 status: 'skipped' as const,
                 cause: check.skip?.cause ?? 'no-files',
-                note: check.skip?.note ?? 'No matching files.',
+                note: check.skip?.note ?? NO_FILES_MESSAGE,
             },
     );
     const failed = listFailedChecks(checks, fixes);
@@ -213,6 +257,10 @@ function buildRunReport(run: FinishedRun): RunReport {
         code = session.cancelSignal.reason;
     return {
         ...(options.comparison !== undefined && { comparison: options.comparison }),
+        notes: listDetectedAdditions(session).map(
+            ({ scope, configurations }) =>
+                `Detected ${configurations.join(', ')}${scope === '.' || scope === '' ? '' : ' in ' + scope}. Run gspot add to enable the new configurations.`,
+        ),
         version: cliPackage.version,
         stage: options.stage,
         started: started.toISOString(),
@@ -246,7 +294,7 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
         started,
         planned,
         active,
-        ran,
+        results: ran,
         fixes,
     });
     return fixes ? { report, planned, fixes } : { report, planned };
@@ -257,7 +305,6 @@ Give a session the reader of the program folders of its mise tools, which asks m
 tool.
 
 @param session the repository and its tools.
-@returns the session that the checks of one run share.
 */
 export function buildCheckSession(session: Session): CheckSession {
     let miseBinPaths: string[] | undefined;
@@ -277,7 +324,6 @@ Run a built-in check or the command of its implementation.
 @param planned the check to run.
 @param code the check implementation, or undefined for a tool command.
 @param options the command and temporary folder overrides.
-@returns the check result.
 */
 export async function runCheckCode(
     session: CheckSession,
@@ -291,23 +337,4 @@ export async function runCheckCode(
         listFileArguments: code?.listFileArguments,
         listConfigFiles: code?.listConfigFiles,
     });
-}
-
-async function runBuiltInCheck(
-    builtInCheck: BuiltInCheck,
-    session: CheckSession,
-    planned: PlannedCheck,
-): Promise<CheckResult> {
-    const started = performance.now();
-    const result = await builtInCheck(session, planned);
-    const findings = Array.isArray(result) ? result : result.findings;
-    const files = Array.isArray(result) ? undefined : [...new Set(result.files)];
-    for (const finding of findings) finding.help ??= planned.check.help;
-    return {
-        ...buildBaseResult(planned, session),
-        findings,
-        ...(files !== undefined && { files, fileCount: files.length }),
-        status: findings.length > 0 ? 'failed' : 'passed',
-        duration: Math.round(performance.now() - started),
-    };
 }

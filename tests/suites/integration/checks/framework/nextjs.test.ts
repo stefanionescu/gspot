@@ -1,18 +1,18 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { JSON_INDENT } from '#cli/config/text.ts';
-import type { Sandbox } from '#tests/types/sandbox.ts';
+import { type Sandbox } from '#tests/types/sandbox.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { RunReport } from '#cli/types/runs/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { tsconfigSchema } from '#tests/schemas/tsconfig.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { type RunReport } from '#cli/types/commands/check.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import nextPackage from 'next/package.json' with { type: 'json' };
 import workspacePackage from '#root-package' with { type: 'json' };
 import reactPackage from 'react/package.json' with { type: 'json' };
 import testsPackage from '#tests/package.json' with { type: 'json' };
-import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import reactDomPackage from 'react-dom/package.json' with { type: 'json' };
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -24,8 +24,8 @@ import {
     REFERENCED_PROJECT_FINDING,
 } from '#tests/config/integration/checks/framework/nextjs.ts';
 
-async function readCheckReport(repository: Sandbox, checks: string[], code: number): Promise<RunReport> {
-    const result = parseCheckReport(await spawnGspot(repository.root, ['check', '--only', checks.join(','), '--json']));
+async function readCheckReport(sandbox: Sandbox, checks: string[], code: number): Promise<RunReport> {
+    const result = parseCheckReport(await spawnGspot(sandbox.root, ['check', '--only', checks.join(','), '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(code);
     return result.report;
 }
@@ -59,7 +59,7 @@ test('nextjs/tsc generates types and checks a referenced project without writing
         references: [{ path: './compiler-ref' }],
         exclude: [...(tsconfigSchema.parse(parsed).exclude ?? []), 'compiler-ref/**'],
     });
-    await using _sourceChange = await changeAppliedSandbox(installedSandbox(), {
+    await using _sourceChange = await changeSandbox(installedSandbox(), {
         files: { ...REFERENCE_PROJECT_FILES, 'tsconfig.json': authored },
     });
     const failed = await readCheckReport(installedSandbox(), ['nextjs/tsc'], 1);

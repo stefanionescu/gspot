@@ -2,39 +2,38 @@ import { join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import { findText } from '#cli/system/files/reads.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { runInstallStep } from '#cli/installers/steps.ts';
-import { parse, stringify } from '@decimalturn/toml-patch';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
-import type { SpawnResult } from '#cli/types/system/processes.ts';
-import type { GeneratedFile } from '#cli/types/generation/files.ts';
+import { type Configuration } from '#cli/types/configurations.ts';
+import { type SpawnResult } from '#cli/types/system/processes.ts';
+import { type GeneratedFile } from '#cli/types/generation/files.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import { uvLockSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
-import type { PythonToolProject } from '#cli/types/installers/projects.ts';
-import type { UvLockfile } from '#cli/types/parsers/projects/lockfiles.ts';
+import type { ReplacementRequest } from '#cli/types/repository/writer.ts';
+import { type UvLockfile } from '#cli/types/parsers/projects/lockfiles.ts';
 import { getTool, listToolProjectPins } from '#cli/configurations/tools.ts';
-import type { ToolInstall, MinimumReleaseAge } from '#cli/types/installers/install.ts';
-import { type UvCommand, type PythonIndexSettings } from '#cli/types/installers/pypi.ts';
-import { PROJECT_UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
-import { UV_TOOL, UV_PROJECT_FLAGS, UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/uv.ts';
+import { uvLockfileSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
+import { PRIVATE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
+import { UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
+import { UV_TOOL, UV_FLAGS, UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/uv.ts';
 import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/installers/pypi.ts';
+import { type ToolInstall, type MinimumReleaseAge } from '#cli/types/installers/install.ts';
 import { PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
+import { type UvCommand, type PythonToolProject, type PythonIndexSettings } from '#cli/types/installers/pypi.ts';
 import { redactInstallOutput, extractUrlPasswords, assertCredentialFreeLockfile } from '#cli/installers/credentials.ts';
 
 import {
-    HTTP_URL,
     URL_SCHEME,
     INDEX_SETTINGS,
+    PYTHON_TOOL_NOUN,
     UV_SETTINGS_FILE,
     UV_VENV_ARGUMENTS,
     PYTHON_TOOL_PROJECT,
-    MILLISECONDS_PER_DAY,
     UV_INSTALL_ARGUMENTS,
     UV_LOCKFILE_ARGUMENTS,
     PYTHON_PACKAGE_ORIGINS,
@@ -50,11 +49,11 @@ async function runUv(
     const command = [
         executable,
         ...commandArguments,
-        UV_PROJECT_FLAGS.project,
+        UV_FLAGS.project,
         runFolder,
-        UV_PROJECT_FLAGS.directory,
+        UV_FLAGS.directory,
         runFolder,
-        UV_PROJECT_FLAGS.configFile,
+        UV_FLAGS.configFile,
         configFile,
     ];
     const result = await runInstallStep(install, command, {
@@ -87,15 +86,18 @@ function parseExactRequirements(lockedPackage: UvLockfile['package'][number]): s
     return pins;
 }
 
-function parsePythonToolLockfile(lockfile: string): UvLockfile | undefined {
+function parsePythonToolLockfile(lockfile: string, minimumReleaseAge?: number): UvLockfile | undefined {
     let parsed;
     try {
-        parsed = uvLockSchema.safeParse(parse(lockfile));
+        parsed = parseTomlFile(GSPOT_PATHS.uvLockfile, lockfile, uvLockfileSchema);
     } catch (error) {
-        if (!(error instanceof Error && 'line' in error && typeof error.line === 'number')) throw error;
+        if (!(error instanceof GspotError) || error.code !== 'parse') throw error;
         return undefined;
     }
-    return parsed.success && parsed.data.version === 1 ? parsed.data : undefined;
+    if (parsed.version !== 1) return undefined;
+    if (minimumReleaseAge !== undefined && parsed.options?.['exclude-newer-span'] !== `P${String(minimumReleaseAge)}D`)
+        return undefined;
+    return parsed;
 }
 
 /**
@@ -111,34 +113,38 @@ export async function preparePythonLockfile(
     install: ToolInstall,
     toolProjectFile: GeneratedFile,
     executable: string,
-): Promise<GeneratedFile> {
+): Promise<ReplacementRequest> {
     const { root } = install.session;
     const project = buildPythonProjectTable(install.session.toolConfigurations);
     const previous = install.writer.read(GSPOT_PATHS.uvLockfile);
     const saved = previous?.bytes.toString('utf8');
     const { settings: indexes, credentials: savedCredentials } = readPythonSettings(root);
-    if (isPythonLockfileFresh(project, saved, indexes)) {
+    if (isPythonLockfileFresh(project, saved, indexes, install.minimumReleaseAge.days)) {
         assertCredentialFreeLockfile(saved, savedCredentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
-        return { path: GSPOT_PATHS.uvLockfile, content: saved, kind: 'lock', read: previous };
+        return {
+            path: GSPOT_PATHS.uvLockfile,
+            next: { bytes: Buffer.from(saved), mode: OWNER_WRITABLE_FILE },
+            expected: previous,
+        };
     }
     using scratch = createTemporaryFolder();
     const runFolder = scratch.path;
     writeFileSync(join(runFolder, PYPROJECT_TOML), toolProjectFile.content);
 
-    const credentials = writePythonSettings(root, runFolder, install.minimumReleaseAge);
+    writePythonSettings(runFolder, indexes, install.minimumReleaseAge);
+    const credentials = savedCredentials;
     await runUv(install, {
         runFolder,
         commandArguments: UV_LOCKFILE_ARGUMENTS,
         executable,
         credentials,
     });
-    const lockfile = readFileSync(join(runFolder, PROJECT_UV_LOCKFILE), 'utf8');
+    const lockfile = readFileSync(join(runFolder, UV_LOCKFILE), 'utf8');
     assertCredentialFreeLockfile(lockfile, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
     return {
         path: GSPOT_PATHS.uvLockfile,
-        content: lockfile,
-        kind: 'lock',
-        read: previous,
+        next: { bytes: Buffer.from(lockfile), mode: OWNER_WRITABLE_FILE },
+        expected: previous,
     };
 }
 
@@ -147,15 +153,14 @@ Install the frozen Python tool project in .gspot.
 
 @param install what install needs for this step.
 @param executable the path of uv.
-
-@returns the install summary.
 */
 export async function installPythonTools(install: ToolInstall, executable: string): Promise<string> {
     const { root, toolConfigurations } = install.session;
     const runFolder = join(root, GSPOT_FOLDER);
 
     using settings = createTemporaryFolder();
-    const credentials = writePythonSettings(root, settings.path, install.minimumReleaseAge);
+    const { settings: indexes, credentials } = readPythonSettings(root);
+    writePythonSettings(settings.path, indexes, install.minimumReleaseAge);
     for (const commandArguments of [UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS]) {
         await runUv(install, {
             runFolder,
@@ -166,7 +171,7 @@ export async function installPythonTools(install: ToolInstall, executable: strin
         });
     }
     const count = listToolProjectPins(toolConfigurations).python.length;
-    return `installed ${formatCount(count, 'Python tool')} in ${GSPOT_PATHS.pythonEnvironment}`;
+    return `installed ${formatCount(count, PYTHON_TOOL_NOUN)} in ${GSPOT_PATHS.pythonEnvironment}`;
 }
 
 /**
@@ -175,15 +180,16 @@ Compare a Python tool project with the pins recorded in its uv lockfile.
 @param project the project table of the tool project.
 @param lockfile the recorded uv.lock contents.
 @param indexes the configured Python index settings.
-@returns whether the two files describe the same requirements.
+@param minimumReleaseAge the required relative release age in days.
 */
 export function isPythonLockfileFresh(
     project: PythonToolProject,
     lockfile: string | undefined,
     indexes: PythonIndexSettings['settings'],
+    minimumReleaseAge?: number,
 ): lockfile is string {
     if (lockfile === undefined) return false;
-    const saved = parsePythonToolLockfile(lockfile);
+    const saved = parsePythonToolLockfile(lockfile, minimumReleaseAge);
     if (saved === undefined) return false;
     if (!hasAllowedPythonOrigins(saved, indexes)) return false;
     const projectPackage = saved.package.find(
@@ -244,34 +250,23 @@ function normalizeIndexLocation(root: string, location: string): string {
     return resolve(root, location);
 }
 
-/**
-Copy repository uv index settings into the temporary folder, make relative paths absolute, and collect registry
-credentials.
-
-@param root the base folder for reading uv settings and resolving local index paths.
-@param settingsFolder the folder where the resolution runs.
-@param minimumReleaseAge the minimum age of a release, and the Python pins it exempts.
-@returns index credentials that must stay out of generated lockfiles.
-*/
-export function writePythonSettings(
-    root: string,
+function writePythonSettings(
     settingsFolder: string,
+    indexes: PythonIndexSettings['settings'],
     minimumReleaseAge: MinimumReleaseAge,
-): string[] {
-    const { settings, credentials } = readPythonSettings(root);
-    settings['exclude-newer'] = new Date(Date.now() - minimumReleaseAge.days * MILLISECONDS_PER_DAY).toISOString();
-    settings['exclude-newer-package'] = Object.fromEntries(
-        minimumReleaseAge.pythonExclusions.map((name) => [name, false]),
-    );
+): void {
+    const settings = {
+        ...indexes,
+        'exclude-newer': `${String(minimumReleaseAge.days)} days`,
+        'exclude-newer-package': Object.fromEntries(minimumReleaseAge.pythonExclusions.map((name) => [name, false])),
+    };
     writeFileSync(join(settingsFolder, UV_SETTINGS_FILE), stringify(settings), { mode: PRIVATE_FILE });
-    return credentials;
 }
 
 /**
 Read repository index settings and resolve their local paths for a temporary uv project.
 
 @param root the base for local index paths.
-@returns the index settings, and the passwords to keep out of generated lockfiles and messages.
 */
 export function readPythonSettings(root: string): PythonIndexSettings {
     const uv = findText(root, UV_SETTINGS_FILE);
@@ -294,7 +289,7 @@ export function readPythonSettings(root: string): PythonIndexSettings {
             key === 'index'
                 ? indexes.map((index) => index.url)
                 : values.filter((element) => typeof element === 'string');
-        return settingValues.filter((value) => HTTP_URL.test(value)).flatMap((value) => extractUrlPasswords(value));
+        return settingValues.flatMap((value) => extractUrlPasswords(value));
     });
     return { settings: selected, credentials };
 }

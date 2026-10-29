@@ -29,3 +29,5 @@ export const VALE_INSTALL_FAILURES = [
         settings: '',
     },
 ] as const;
+
+export const AUTHORED_STYLE = 'authored legacy bytes\n';

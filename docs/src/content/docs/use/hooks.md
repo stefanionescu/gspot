@@ -4,7 +4,7 @@ description: Run checks before commits and pushes and check commit messages.
 ---
 
 The `gspot init` plan includes Git hooks. With `hooks.enabled = true`, gspot writes each hook below that runs at least
-one check, and `gspot install` turns them on. At level `recommended`, no check runs on commit messages, so gspot writes
+one check, and `gspot install` turns them on. At level `basic`, no check runs on commit messages, so gspot writes
 no `commit-msg` hook.
 
 | Hook         | Checks                                                                                                                                                                               |
@@ -76,3 +76,5 @@ hook manager.
 
 Fix each finding, then commit or push again. To stop a finding on every run, add an ignore with a reason. See [Ignore
 findings](/use/ignore/).
+
+The hooks run the code of the repository as you; see [Trust](/start/concepts/#trust).

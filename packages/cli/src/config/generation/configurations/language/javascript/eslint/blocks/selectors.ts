@@ -19,3 +19,5 @@ export const ALIAS_IMPORT_SELECTORS = {
 export const REEXPORT_SELECTORS = ['ExportAllDeclaration', 'ExportNamedDeclaration[source!=null]'] as const;
 
 export const REEXPORT_MESSAGE = 'Export values at their declaration instead of re-exporting them.';
+
+export const INDEX_PATTERN = '**/index.*';

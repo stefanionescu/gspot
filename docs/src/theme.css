@@ -5,7 +5,7 @@
     --target-size: 44px;
     --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 14%, transparent);
     --home-fixed-bg: color-mix(in srgb, #88a5ff 16%, transparent);
-    --home-pass: var(--sl-color-accent);
+    --home-pass: var(--sl-color-accent-high);
     --code-text: #d6deeb;
     --code-keyword: #c792ea;
     --code-string: #ecc48d;
@@ -55,9 +55,9 @@
 :root[data-theme='light'] {
     --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 12%, transparent);
     --home-fixed-bg: color-mix(in srgb, #2457ff 10%, transparent);
-    --home-pass: var(--sl-color-accent);
+    --home-pass: var(--sl-color-accent-high);
     --code-text: #403f53;
-    --code-keyword: #994cc3;
+    --code-keyword: #8a3fb5;
     --code-string: #a2453f;
     --code-function: #3b61b0;
     --code-type: #8a5a00;

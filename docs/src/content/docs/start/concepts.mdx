@@ -3,6 +3,7 @@ title: Concepts
 description: Understand configurations, checks, findings, settings, levels, and scopes.
 ---
 
+import InlineText from '../../../components/InlineText.astro';
 import { buildLevelRows } from '../../../reference/levels.ts';
 
 | Term                                            | Meaning                                                                                                                                                                                                                                                                                             |
@@ -14,7 +15,7 @@ import { buildLevelRows } from '../../../reference/levels.ts';
 | <span id="lint-rule">Lint rule</span>           | One instruction for a linter, such as `no-console`.                                                                                                                                                                                                                                                 |
 | <span id="rules">Rules</span>                   | Markdown for coding agents, under `.gspot/configurations/<group>/<configuration>/rules/` and listed in `AGENTS.md`. See [Coding agents](/use/coding-agents/).                                                                                                                                       |
 | <span id="settings">Settings</span>             | The values in `gspot.toml`. See [gspot.toml](/configure/gspot-toml/).                                                                                                                                                                                                                               |
-| <span id="level">Level</span>                   | `recommended` or `all`. See [Levels](#levels).                                                                                                                                                                                                                                                      |
+| <span id="level">Level</span>                   | `basic` or `all`. See [Levels](#levels).                                                                                                                                                                                                                                                            |
 | <span id="stage">Stage</span>                   | When a check runs. `commit` checks run in the pre-commit hook. `push` checks run with the commit checks in the pre-push hook, in CI, and in `gspot check`. `message` checks run in the commit-msg hook. `manual` checks run only when `--only` names them, and in the CI job on the default branch. |
 | <span id="scope">Scope</span>                   | A folder with its own configurations and settings. See [Monorepos](/configure/monorepos/).                                                                                                                                                                                                          |
 | <span id="generated-file">Generated file</span> | A file that gspot writes from your settings. See [Generated files](/reference/generated-files/).                                                                                                                                                                                                    |
@@ -35,9 +36,9 @@ import { buildLevelRows } from '../../../reference/levels.ts';
             <tr>
                 <td>
                     <code>{level}</code>
-                    {level === 'recommended' && ' (default)'}
+                    {level === 'basic' && ' (default)'}
                 </td>
-                <td>{description}</td>
+                <td><InlineText text={description} /></td>
                 <td>{count}</td>
                 <td>{tools}</td>
             </tr>
@@ -54,4 +55,16 @@ gspot set level all
 gspot install
 ```
 
-Run `gspot set level recommended` to return to the default level.
+Run `gspot unset level` to return to the default level, `basic`.
+
+## Trust
+
+gspot runs the code of the repository as you, with no sandbox:
+
+- `gspot check` and `gspot check --fix` run the commands and fix commands of `[[command_check]]` records.
+- `gspot install` runs mise and the package managers, which install the pinned tools.
+- After `gspot install`, the tracked hooks in `.gspot/hooks/` run on each Git event, checkout included, like any
+  committed hook under `core.hooksPath`.
+
+Before you run gspot on a branch you do not trust, or check that branch out, review its changes to `.gspot/hooks/` and
+to the `[[command_check]]` records of `gspot.toml`.

@@ -3,10 +3,16 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/system/git.ts';
-import type { RunReport } from '#cli/types/runs/run.ts';
+import { type RunReport } from '#cli/types/commands/check.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { SHARED_IMPORTS, DUPLICATED_METADATA } from '#tests/config/integration/checks/general/duplication.ts';
+
+import {
+    SHARED_IMPORTS,
+    DUPLICATED_METADATA,
+    SHARED_PYTHON_IMPORTS,
+    DUPLICATED_PYTHON_LOGIC,
+} from '#tests/config/integration/checks/general/duplication.ts';
 
 const COUNT_STEPS = Array.from(
     { length: 30 },
@@ -61,4 +67,25 @@ test('duplication/jscpd skips an import list that two files share', async () => 
     await initSandbox({ root: sandbox.path, run: spawnGspot }, { configurations: ['typescript'], level: 'all' });
     const report = await runJscpdCheck(sandbox.path, 0);
     expect(report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'passed', findings: [] }]);
+});
+
+test('duplication/jscpd skips shared Python imports and reports duplicated executable statements', async () => {
+    await using sandbox = await testdir({
+        'first.py': `${SHARED_PYTHON_IMPORTS}\nprint("first")\n`,
+        'second.py': `${SHARED_PYTHON_IMPORTS}\nprint("second")\n`,
+    });
+    commitAll(sandbox.path);
+    await initSandbox({ root: sandbox.path, run: spawnGspot }, { configurations: ['python'], level: 'all' });
+    const imports = await runJscpdCheck(sandbox.path, 0);
+    expect(imports.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'passed', findings: [] }]);
+    for (const name of ['first', 'second']) {
+        await writeFile(
+            join(sandbox.path, `${name}.py`),
+            `${SHARED_PYTHON_IMPORTS}\ndef ${name}(values):\n    total = 0\n${DUPLICATED_PYTHON_LOGIC}\n    return total\n`,
+        );
+    }
+    const copied = await runJscpdCheck(sandbox.path, 1);
+    expect(copied.checks).toMatchObject([
+        { check: 'duplication/jscpd', status: 'failed', findings: [{ rule: 'clone' }] },
+    ]);
 });

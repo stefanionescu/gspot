@@ -85,7 +85,7 @@ export const EXPRESS_SOURCE =
     'import value from "#lib/owner";\nresponse.json({ message: `Item ${identifier}` });\ncustom.info(`Item ${identifier}`);\n';
 
 export const EXPRESS_FINDINGS = {
-    recommended: [
+    basic: [
         { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 1 },
         { file: 'api/child/source.js', rule: 'no-restricted-syntax', line: 2 },
         { file: 'api/source.js', rule: 'no-restricted-syntax', line: 1 },

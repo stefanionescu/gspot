@@ -1,25 +1,20 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { openSession } from '#cli/session.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { createGitSandbox } from '#tests/setup/system/git.ts';
+import { CANCELED_CHECK_NOTE } from '#tests/config/messages.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
-import { buildSiteSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-
-import {
-    SCOPE_FINDINGS,
-    SCOPE_CHECK_FILES,
-    QUALITY_FIX_ARGUMENTS,
-    QUALITY_SEARCH_ARGUMENTS,
-} from '#tests/config/commands/check/run.ts';
+import { SCOPE_FINDINGS, SCOPE_CHECK_FILES, QUALITY_SEARCH_ARGUMENTS } from '#tests/config/commands/check/run.ts';
 
 test('an aborted run stops its command and reports cancellation on every system', async () => {
     await using sandbox = await createGitSandbox({});
@@ -58,7 +53,13 @@ test('a check whose code fails because the run was canceled reports the cancella
     await using sandbox = await createGitSandbox({});
     const marker = join(sandbox.path, 'build-ready');
     const command = buildProgramCommand('fakes/tool', '--mark', marker, '--wait');
-    await createFileTree(sandbox.path, { 'gspot.toml': buildSiteSettings(command), 'index.html': '<p>Ready.</p>\n' });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSandboxSettings(['site'], {
+            level: 'all',
+            tables: `[site]\nbuild_command = ${JSON.stringify(command)}\n`,
+        }),
+        'index.html': '<p>Ready.</p>\n',
+    });
     const controller = new AbortController();
     const session = await openSession(sandbox.path);
     using _resources = session.resources;
@@ -67,11 +68,10 @@ test('a check whose code fails because the run was canceled reports the cancella
     expect(await waitForFile(marker)).toBe(true);
     controller.abort(130);
     const result = await running;
-    expect(result.report.checks).toMatchObject([
-        { check: 'site/build', status: 'error', note: 'The check was canceled.' },
-    ]);
+    expect(result.report.checks).toMatchObject([{ check: 'site/build', status: 'error', note: CANCELED_CHECK_NOTE }]);
     await waitForExit(Number(await readFile(marker, 'utf8')));
 });
+
 test('a path ignore keeps the check and its fixer off those paths, and a run of only ignored paths is skipped', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings([], {
@@ -80,7 +80,15 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
                 {
                     id: 'project/quality',
                     command: buildProgramCommand('checks/search', ...QUALITY_SEARCH_ARGUMENTS),
-                    fix: buildProgramCommand('fakes/tool', ...QUALITY_FIX_ARGUMENTS),
+                    fix: buildProgramCommand(
+                        'fakes/tool',
+                        '--log-arguments',
+                        'fixed.txt',
+                        '--text',
+                        'corrected\n',
+                        '--',
+                        '{files}',
+                    ),
                     paths: ['inputs/**'],
                     stage: 'commit',
                 },
@@ -121,6 +129,7 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
     expect(await readFile(join(sandbox.path, 'checked.txt'), 'utf8')).toBe(checked);
     expect(await readFile(join(sandbox.path, 'fixed.txt'), 'utf8')).toBe(fixed);
 });
+
 test('a path ignore covers its own paths, not the scopes below or beside it', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash'], {
@@ -191,6 +200,7 @@ test('a check with malformed JSON reports an error, and the other checks keep th
         { check: 'sandbox/kept', status: 'failed', findings: [{ message: 'source.txt' }] },
     ]);
 });
+
 test('progress is reported as soon as each check ends, with ignores applied to the final results', async () => {
     await using sandbox = await createGitSandbox({
         'source.sh': 'echo example\n',

@@ -1,5 +1,3 @@
-import { serializePresetAccess } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
-
 import {
     TABINDEX_RULES,
     FOCUSABLE_ROLES,
@@ -8,16 +6,14 @@ import type {
     EslintPreset,
     EslintPresets,
     EslintBlockFields,
+    EslintPresetRules,
     ConfigurationBlocks,
-    EslintRuleExpression,
 } from '#cli/types/generation/eslint.ts';
 
 /**
 Turn enabled warnings into errors, and keep every preset option.
 
 @param rules what a pinned preset sets.
-
-@returns the lint rules as errors, and the ones that stay off.
 */
 export function convertWarningsToErrors(rules: Record<string, unknown>): Record<string, unknown> {
     return Object.fromEntries(
@@ -34,7 +30,6 @@ Get a required preset and report a missing shipped export.
 
 @param presets the captured exports of the configuration.
 @param name the required export.
-@returns the captured preset.
 */
 export function getPreset(presets: EslintPresets | undefined, name: string): EslintPreset {
     const preset = presets?.[name];
@@ -48,18 +43,19 @@ Preserve every array preset spread while transforming its captured fields.
 @param preset the pinned array export.
 @param importName its imported binding.
 @param transform the rules and file fields of each block.
-@returns the changed blocks with their runtime expressions.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The configuration builder table or shared block builders call this function.
 export function buildArrayPresetBlocks(
     preset: EslintPreset,
     importName: string,
     transform: (block: EslintPreset['blocks'][number]) => EslintBlockFields,
 ): ConfigurationBlocks['blocks'] {
-    const source = serializePresetAccess(importName, preset.source);
     return preset.blocks.map((block, index) => ({
         fields: transform(block),
-        properties: `...${source}[${String(index)}]`,
-        preset: { expression: `${source}[${String(index)}].rules`, rules: block.rules },
+        preset: {
+            sources: [{ importName: importName, path: `${preset.source}.${String(index)}`, includeFields: true }],
+            rules: block.rules,
+        },
     }));
 }
 
@@ -69,12 +65,9 @@ Merge first-block preset rules and their runtime expressions in the same order.
 @param presets imported bindings paired with captured presets.
 @returns the combined rule expression and captured rule values.
 */
-export function buildPresetRuleExpression(presets: (readonly [string, EslintPreset])[]): EslintRuleExpression {
-    const sources = presets.map(
-        ([importName, preset]) => '...' + serializePresetAccess(importName, preset.source) + '.rules',
-    );
+export function buildPresetRules(presets: (readonly [string, EslintPreset])[]): EslintPresetRules {
     return {
-        expression: '{ ' + sources.join(', ') + ' }',
+        sources: presets.map(([importName, preset]) => ({ importName, path: preset.source })),
         rules: Object.fromEntries(
             presets.flatMap(([, preset]) => {
                 const rules = preset.blocks[0].rules;
@@ -91,7 +84,7 @@ Add fixed options while retaining a rule's severity and existing options.
 @param options the rule-specific values that replace existing options.
 @returns the rule with the added options, or the unchanged non-array entry.
 */
-export function addRuleOptions(ruleSetting: unknown, options: Record<string, unknown>): unknown {
+export function mergeRuleOptions(ruleSetting: unknown, options: Record<string, unknown>): unknown {
     if (!Array.isArray(ruleSetting)) return ruleSetting;
     const severity: unknown = ruleSetting[0];
     const previous: unknown = ruleSetting[1];
@@ -99,34 +92,14 @@ export function addRuleOptions(ruleSetting: unknown, options: Record<string, unk
 }
 
 /**
-Allow keyboard focus on scrollable regions in accessibility presets.
+Allow keyboard focus on the supported region roles while retaining each preset's severity and other options.
 
-@param rules the captured jsx-a11y rules.
-@returns the rules with region roles permitted by tabindex checks.
+@param rules the accessibility rules from the pinned preset.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
-export function allowFocusableRegions(rules: Record<string, unknown>): Record<string, unknown> {
-    return Object.fromEntries(
-        Object.entries(rules).map(([rule, ruleSetting]) => [
-            rule,
-            (TABINDEX_RULES as readonly string[]).includes(rule)
-                ? addRuleOptions(ruleSetting, { roles: [...FOCUSABLE_ROLES] })
-                : ruleSetting,
-        ]),
-    );
-}
-
-/**
-Keep component preset fields and raise warning rules to errors.
-
-@param block one captured component preset.
-@returns its fields, with warnings turned into errors.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: vue.ts and svelte.ts pass it to convert each preset block.
-export function convertPresetWarnings(block: EslintPreset['blocks'][number]): EslintBlockFields {
-    const { parser: _parser, ...fields } = block;
-    return {
-        ...fields,
-        ...(block.rules !== undefined && { rules: convertWarningsToErrors(block.rules) }),
-    };
+export function setFocusableRoles(rules: Record<string, unknown>): Record<string, unknown> {
+    const configured = { ...rules };
+    for (const rule of TABINDEX_RULES)
+        if (Object.hasOwn(configured, rule))
+            configured[rule] = mergeRuleOptions(configured[rule], { roles: [...FOCUSABLE_ROLES] });
+    return configured;
 }

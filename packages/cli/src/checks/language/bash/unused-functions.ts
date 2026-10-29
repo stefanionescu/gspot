@@ -1,30 +1,32 @@
 import type { Session } from '#cli/types/session.ts';
-import { buildFinding } from '#cli/checks/finding.ts';
-import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { readScripts } from '#cli/checks/language/bash/scripts.ts';
+import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { MAIN_FUNCTION } from '#cli/config/checks/language/bash/scripts.ts';
+import { readScripts, listFunctionCalls } from '#cli/checks/language/bash/scripts.ts';
+import { BATS_HOOKS, NEVER_CALLED_RULE } from '#cli/config/checks/language/bash/unused-functions.ts';
 
 /**
-Reports each function that no script calls, except main.
+Report functions with no callers. Exclude main and the bats hooks.
 
 @param session the repository and its tools.
 @param planned the scope scripts to read.
-@returns the findings.
 */
-export async function checkBashUnusedFunctions(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkBashUnusedFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
-    const referenced = new Set(scripts.flatMap((file) => file.calls.map(({ name }) => name)));
+    const bats = new Set(planned.files.filter((file) => file.tags.includes('bats')).map((file) => file.path));
     return scripts.flatMap((file) => {
         return file.functions
-            .filter((scriptFunction) => scriptFunction.name !== MAIN_FUNCTION && !referenced.has(scriptFunction.name))
-            .map((scriptFunction) =>
-                buildFinding(
-                    planned,
-                    { file: file.path, line: scriptFunction.start },
-                    'never-called',
-                    `No script in this scope calls ${scriptFunction.name}. Delete it, or call it.`,
-                ),
-            );
+            .filter(
+                (scriptFunction) =>
+                    scriptFunction.name !== MAIN_FUNCTION &&
+                    !(bats.has(file.path) && BATS_HOOKS.has(scriptFunction.name)) &&
+                    listFunctionCalls(scripts, file, scriptFunction.name).length === 0,
+            )
+            .map((scriptFunction) => ({
+                file: file.path,
+                line: scriptFunction.start,
+                rule: NEVER_CALLED_RULE,
+                message: `No script in this scope calls ${scriptFunction.name}. Delete it, or call it.`,
+            }));
     });
 }

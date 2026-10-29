@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module';
 import { createRule } from '../create-rule.ts';
-import { FUNCTION_TYPES } from '../config/syntax.ts';
+import { FUNCTION_NODES } from '../config/syntax.ts';
 import type { MagicNumbersOptions } from '../types/rules.ts';
 import { UPSTREAM_RULE, OPTIONS_SCHEMA } from '../config/rules/no-magic-numbers.ts';
 import { ESLintUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -18,7 +18,7 @@ function isModuleConstant(declaration: TSESTree.VariableDeclaration): boolean {
 
 function isConstantValue(node: TSESTree.Node): boolean {
     for (let ancestor: TSESTree.Node = node; ancestor.type !== AST_NODE_TYPES.Program; ancestor = ancestor.parent) {
-        if (FUNCTION_TYPES.has(ancestor.type)) return false;
+        if (FUNCTION_NODES.has(ancestor.type)) return false;
         if (ancestor.type === AST_NODE_TYPES.VariableDeclarator) return isModuleConstant(ancestor.parent);
     }
     return false;

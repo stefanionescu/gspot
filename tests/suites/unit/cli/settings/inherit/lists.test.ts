@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { parseSettings } from '#cli/settings/read.ts';
+import { readSettings } from '#cli/settings/read.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
@@ -75,20 +75,23 @@ test('a root list replaces configuration defaults, and a scope list adds to the 
             defaults: { 'naming.banned_words': terms },
         });
     }
-    const defaults = buildAvailableSettings(configurations, 'recommended');
-    const unwritten = parseSettings(buildSandboxSettings(['naming']), sandbox.path);
-    expect(getSettingValue(defaults, unwritten, 'naming.banned_words')?.value).toStrictEqual([
+    const defaults = buildAvailableSettings(configurations, 'basic');
+    const unwritten = readSettings(buildSandboxSettings(['naming']), sandbox.path);
+    expect(getSettingValue(defaults, unwritten, 'naming.banned_words', '')?.value).toStrictEqual([
         'dispatcher',
         'orchestrator',
     ]);
-    const settings = parseSettings(
+    const settings = readSettings(
         buildSandboxSettings(['naming'], {
             rules: true,
             tables: '[naming]\nbanned_words = ["dispatcher", "manager"]\n[[scope]]\npath = "api"\nnaming.banned_words = ["handler"]\n',
         }),
         sandbox.path,
     );
-    expect(getSettingValue(defaults, settings, 'naming.banned_words')?.value).toStrictEqual(['dispatcher', 'manager']);
+    expect(getSettingValue(defaults, settings, 'naming.banned_words', '')?.value).toStrictEqual([
+        'dispatcher',
+        'manager',
+    ]);
     expect(getSettingValue(defaults, settings, 'naming.banned_words', 'api')?.value).toStrictEqual([
         'dispatcher',
         'manager',
@@ -104,21 +107,21 @@ test.each(REPLACED_LIST_DEFAULTS)(
     ({ key, configurations, tables, value }) => {
         using sandbox = createTemporaryFolder();
         const availableSettings = buildSelectedAvailableSettings(configurations);
-        const settings = parseSettings(buildSandboxSettings(configurations, { tables }), sandbox.path);
-        expect(getSettingValue(availableSettings, settings, key)?.value).toStrictEqual(value);
+        const settings = readSettings(buildSandboxSettings(configurations, { tables }), sandbox.path);
+        expect(getSettingValue(availableSettings, settings, key, '')?.value).toStrictEqual(value);
     },
 );
 
 test('a first list written in a scope replaces the shipped default for that scope and its children', () => {
     using sandbox = createTemporaryFolder();
     const availableSettings = buildSelectedAvailableSettings(['supabase']);
-    const settings = parseSettings(
+    const settings = readSettings(
         buildSandboxSettings(['supabase'], {
             tables: '[[scope]]\npath = "app"\nsupabase.schemas = ["api"]\n',
         }),
         sandbox.path,
     );
-    expect(getSettingValue(availableSettings, settings, 'supabase.schemas')?.value).toStrictEqual(['public']);
+    expect(getSettingValue(availableSettings, settings, 'supabase.schemas', '')?.value).toStrictEqual(['public']);
     for (const scope of ['app', 'app/deep'])
         expect(getSettingValue(availableSettings, settings, 'supabase.schemas', scope)?.value).toStrictEqual(['api']);
 });

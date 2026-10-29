@@ -34,8 +34,9 @@ xcode_destination = "generic/platform=iOS Simulator"
 With `swift.xcode_project` set, the build, Periphery, analyzer, and coverage checks use that project or workspace. These
 checks need macOS with Xcode selected by `xcode-select`, and Periphery runs on macOS only.
 
-The `xcode` configuration also checks property lists, build settings files, string catalogs, asset catalogs, and
-entitlements against `xcode.allowed_entitlements`. Only `xcode/plutil` needs macOS.
+The `xcode` configuration also checks property lists, string catalogs, asset catalogs and unused assets, Swift files
+that no target names, App Transport Security, and entitlements against `xcode.allowed_entitlements`. Only
+`xcode/plutil` needs macOS.
 
 ## Analyzer
 

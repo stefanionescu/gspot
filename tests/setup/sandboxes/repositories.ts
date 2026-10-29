@@ -1,33 +1,41 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { testdir, createFileTree, type TestdirResult } from 'testdirs';
-import { PUSH_CONTENT, LFS_ATTRIBUTES, BASH_SYNTAX_CHECK, NESTED_SCOPE_FILES } from '#tests/config/setup/sandboxes.ts';
+import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
+
+import {
+    PUSH_CONTENT,
+    LFS_ATTRIBUTES,
+    CHANGED_CONTEXT,
+    TEAMS_TABLE_SQL,
+    BASH_SYNTAX_CHECK,
+    NESTED_SCOPE_FILES,
+    TEAMS_MIGRATION_PATH,
+} from '#tests/config/setup/sandboxes.ts';
 
 /**
-Create base, reviewed, and broken commits, plus different working-tree bytes, for the push tests.
-
-@param sandboxRoot folder for the repository.
-@returns the commit hashes and the zero hash for a new ref.
+Create base, reviewed, and broken commits, plus different working-tree bytes, for the push tests, and return their
+hashes with the zero hash of a new ref.
 */
 export async function preparePushRepository(
-    sandboxRoot: string,
+    root: string,
 ): Promise<{ base: string; reviewed: string; broken: string; zero: string }> {
-    await createFileTree(sandboxRoot, {
+    await createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'changed.sh': PUSH_CONTENT.base,
         'legacy.sh': PUSH_CONTENT.broken,
     });
-    const base = commitAll(sandboxRoot);
-    await writeFile(join(sandboxRoot, 'changed.sh'), PUSH_CONTENT.reviewed);
-    const reviewed = commitAll(sandboxRoot, 'reviewed');
-    runGitStep(sandboxRoot, ['branch', 'reviewed', reviewed]);
-    await writeFile(join(sandboxRoot, 'changed.sh'), PUSH_CONTENT.broken);
-    const broken = commitAll(sandboxRoot, 'unreviewed');
-    await writeFile(join(sandboxRoot, 'changed.sh'), PUSH_CONTENT.working);
-    await writeFile(join(sandboxRoot, 'gspot.toml'), PUSH_CONTENT.settings);
+    const base = commitAll(root);
+    await writeFile(join(root, 'changed.sh'), PUSH_CONTENT.reviewed);
+    const reviewed = commitAll(root, 'reviewed');
+    runGitStep(root, ['branch', 'reviewed', reviewed]);
+    await writeFile(join(root, 'changed.sh'), PUSH_CONTENT.broken);
+    const broken = commitAll(root, 'unreviewed');
+    await writeFile(join(root, 'changed.sh'), PUSH_CONTENT.working);
+    await writeFile(join(root, SETTINGS_FILE), PUSH_CONTENT.settings);
     return { base, reviewed, broken, zero: '0'.repeat(base.length) };
 }
 
@@ -41,7 +49,7 @@ export async function prepareNestedRepository(
     const project = join(root, 'nested settings');
     const base = commitAll(root, 'Base');
     await writeFile(join(project, 'source.txt'), 'pushed');
-    await writeFile(join(root, 'outside.txt'), 'changed context');
+    await writeFile(join(root, 'outside.txt'), CHANGED_CONTEXT);
     const commitId = commitAll(root, 'Change');
     await writeFile(join(project, 'source.txt'), 'indexed');
     runGitStep(root, ['add', '.']);
@@ -51,8 +59,6 @@ export async function prepareNestedRepository(
 
 /**
 Create a committed repository with hooks on and one file that Git Large File Storage (LFS) stores.
-
-@returns the sandbox, which removes itself on disposal.
 */
 export async function createLfsRepository(): Promise<TestdirResult> {
     const sandbox = await testdir({
@@ -61,5 +67,28 @@ export async function createLfsRepository(): Promise<TestdirResult> {
         'asset.bin': 'binary',
     });
     commitAll(sandbox.path);
+    return sandbox;
+}
+
+/**
+Create a repository with a committed migration and freeze its migrations.
+
+@returns the repository and its cleanup.
+*/
+export async function createMigrationHistory(): Promise<AsyncDisposable & { path: string }> {
+    const sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['postgres'], { tables: '[postgres]\nfrozen_through = "all"\n' }),
+        [TEAMS_MIGRATION_PATH]: TEAMS_TABLE_SQL,
+    });
+    commitAll(sandbox.path);
+    return sandbox;
+}
+
+/**
+Create a sandbox from these files and make it a Git repository without commits.
+*/
+export async function createGitSandbox(files: DirectoryJSON): Promise<TestdirResult> {
+    const sandbox = await testdir(files);
+    runGitStep(sandbox.path, ['init', '--quiet']);
     return sandbox;
 }

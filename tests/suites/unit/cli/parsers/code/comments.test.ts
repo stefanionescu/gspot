@@ -41,3 +41,8 @@ test.each([...COMPONENT_SCRIPT_COMMENTS])(
         expect(await listMarkedLines(path, source, [])).toStrictEqual([...lines]);
     },
 );
+
+test('MDX recognizes expression comments without reading comments from exported strings', async () => {
+    const comments = await parseComments('page.mdx', 'export const value = "{/* hidden */}";\n\n{/* visible */}\n', []);
+    expect(comments).toStrictEqual([{ line: 3, text: '/* visible */', standalone: true }]);
+});

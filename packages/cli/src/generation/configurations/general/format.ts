@@ -7,37 +7,37 @@ import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { includeFolderContents } from '#cli/system/matchers.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import type { Settings, WrittenFormat, FormatSettings } from '#cli/types/settings/file.ts';
-import type { ScopeFormat, FormatOverride, PrettierPlugin } from '#cli/types/generation/formatting.ts';
+import { type PlannedConfigFile } from '#cli/types/generation/files.ts';
+import { type Settings, type WrittenFormat } from '#cli/types/settings/file.ts';
+import { type ScopeFormat, type FormatOverride, type PrettierPlugin } from '#cli/types/generation/formatting.ts';
 
 import {
     DEFAULT_QUOTES,
+    EDITORCONFIG_ROOT_LINE,
     PRETTIER_FIXED_OPTIONS,
     UNREPRESENTABLE_SELECTOR,
     EDITORCONFIG_FIXED_SECTIONS,
 } from '#cli/config/generation/configurations/general/format.ts';
 
-function buildSectionPath(pattern: string, scope: string): string {
+function buildSectionPath(pattern: string, scopePath: string): string {
     if (pattern.startsWith('!') || UNREPRESENTABLE_SELECTOR.test(pattern))
         throw new GspotError(
             'settings',
             `EditorConfig cannot represent selector ${JSON.stringify(pattern)}. Keep this override in a \`[[format.override]]\` record with a selector that EditorConfig can read.`,
         );
-    if (scope === '' || pattern.startsWith(`${scope}/`)) return pattern;
+    if (scopePath === '' || pattern.startsWith(`${scopePath}/`)) return pattern;
     if (!pattern.startsWith('**/') || pattern.slice('**/'.length).includes('/'))
         throw new GspotError(
             'settings',
-            `EditorConfig cannot intersect selector ${JSON.stringify(pattern)} with scope ${scope}. Use a root-relative selector within that scope.`,
+            `EditorConfig cannot intersect selector ${JSON.stringify(pattern)} with scope ${scopePath}. Use a root-relative selector within that scope.`,
         );
-    return `${escapeGlob(scope)}/${pattern}`;
+    return `${escapeGlob(scopePath)}/${pattern}`;
 }
 
 /**
 Build .editorconfig: the EditorConfig sections of this repository.
 
-@param planned the config file with its scope, level, and target path.
-@returns the EditorConfig sections of this repository.
+@param planned the config file to build.
 */
 export function buildEditorconfigFile(planned: PlannedConfigFile): string {
     const { format } = planned.scope.settings.tables;
@@ -72,7 +72,7 @@ export function buildEditorconfigFile(planned: PlannedConfigFile): string {
         }),
     ];
     return (
-        'root = true\n\n' +
+        EDITORCONFIG_ROOT_LINE +
         sections
             .map(
                 ({ path, options }) =>
@@ -88,7 +88,7 @@ export function buildEditorconfigFile(planned: PlannedConfigFile): string {
 
 function listScopeFormats(settings: Settings): ScopeFormat[] {
     const orderedTables = listSettingsTables(settings).toSorted((first, second) =>
-        compareScopeDepth(first.scope ?? '', second.scope ?? ''),
+        compareScopeDepth(first.scope, second.scope),
     );
     const tables: { scope: string; format: WrittenFormat }[] = [];
     for (const { scope = '', table } of orderedTables) {
@@ -116,7 +116,19 @@ function listFormatOverrides(settings: Settings): FormatOverride[] {
         const files = included.filter((path) => !path.startsWith('!'));
         const excludeFiles = included.filter((path) => path.startsWith('!')).map((path) => path.slice(1));
         if (scope !== '') excludeFiles.push(`!${escapeGlob(scope)}/**`);
-        return { files, excludeFiles, options: convertFormatSettings(format) };
+        return {
+            files,
+            excludeFiles,
+            options: stripUndefined({
+                tabWidth: format.indent_width,
+                useTabs: format.indent_style === undefined ? undefined : format.indent_style === 'tab',
+                printWidth: format.print_width,
+                singleQuote: format.quotes === undefined ? undefined : format.quotes === 'single',
+                trailingComma: format.trailing_commas,
+                semi: format.semicolons,
+                endOfLine: format.line_ending,
+            }),
+        };
     });
 }
 
@@ -126,24 +138,10 @@ function buildPluginsOption(plugins: PrettierPlugin[]): { plugins?: string[] } {
     return { plugins: shipped };
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function convertFormatSettings(format: Partial<FormatSettings>): Record<string, unknown> {
-    return {
-        ...(format.indent_width !== undefined && { tabWidth: format.indent_width }),
-        ...(format.indent_style !== undefined && { useTabs: format.indent_style === 'tab' }),
-        ...(format.print_width !== undefined && { printWidth: format.print_width }),
-        ...(format.quotes !== undefined && { singleQuote: format.quotes === 'single' }),
-        ...(format.trailing_commas !== undefined && { trailingComma: format.trailing_commas }),
-        ...(format.semicolons !== undefined && { semi: format.semicolons }),
-        ...(format.line_ending !== undefined && { endOfLine: format.line_ending }),
-    };
-}
-
 /**
 Build prettier.json, which the root pointer loads: the formatter options, plugins, and scope overrides.
 
-@param planned the config file with its scope, level, and target path.
-@returns the formatter options, plugins, and scope overrides.
+@param planned the config file to build.
 */
 export function buildPrettierFile(planned: PlannedConfigFile): string {
     const settings = planned.session.settings;
@@ -153,7 +151,13 @@ export function buildPrettierFile(planned: PlannedConfigFile): string {
         .toArray();
     const overrides = [...plugins.flatMap((plugin) => plugin.overrides), ...listFormatOverrides(settings)];
     const value = {
-        ...convertFormatSettings({ ...format, quotes: format.quotes ?? DEFAULT_QUOTES.prettier }),
+        tabWidth: format.indent_width,
+        useTabs: format.indent_style === 'tab',
+        printWidth: format.print_width,
+        singleQuote: (format.quotes ?? DEFAULT_QUOTES.prettier) === 'single',
+        trailingComma: format.trailing_commas,
+        semi: format.semicolons,
+        endOfLine: format.line_ending,
         ...PRETTIER_FIXED_OPTIONS,
         ...buildPluginsOption(plugins),
         ...(overrides.length > 0 && { overrides }),

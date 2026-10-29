@@ -262,7 +262,7 @@ createRuleTester({ root: String.raw`c:\repo` }).run<
     ],
 });
 
-test('a relative import that leaves its folder reports escape against the ESLint working folder when no root is set', () => {
+test('boundary folders start at the ESLint cwd when no root is set', () => {
     const linter = new Linter({ configType: 'flat', cwd: '/repo' });
     const config: object[] = [
         { files: ['**/*.ts'], plugins: { gspot: plugin }, rules: { 'gspot/import-boundaries': 'error' } },

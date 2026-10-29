@@ -17,4 +17,4 @@ version = "5.2.0"
 
 [eslint]
 required_tools = ["eslint-plugin-zod"]
-all_level_rules = ["zod/no-any-schema", "zod/no-native-enum", "zod/prefer-meta-last", "zod/prefer-strict-object"]
+all_level_rules = ["zod/consistent-import", "zod/consistent-schema-var-name", "zod/require-error-message", "zod/prefer-meta-last", "zod/prefer-strict-object"]

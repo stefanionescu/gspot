@@ -1,22 +1,24 @@
 import ts from 'typescript';
 import { compareText } from '#cli/system/text.ts';
-import { chmodSync, writeFileSync } from 'node:fs';
-import { buildBaseResult } from '#cli/runs/report.ts';
+import { buildBaseResult } from '#cli/runs/results.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
-import { join, resolve, relative, isAbsolute } from 'node:path';
+import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import type { TypeScriptReferenceCopy } from '#cli/types/checks/tsc.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
+import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
 import { readTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
-import { writeScopeTsconfig, selectCheckedTsconfigOptions } from '#cli/checks/tsc/scope-tsconfig.ts';
-import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/projects/tsconfig.ts';
+import { TYPESCRIPT_TSCONFIG_CHECK } from '#cli/config/checks/tsc/scope-tsconfig.ts';
+import { buildTsconfig, selectRequiredTsconfigOptions } from '#cli/checks/tsc/scope-tsconfig.ts';
+import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers/projects/tsconfig.ts';
 
 import {
     TSBUILDINFO_FLAG,
@@ -42,7 +44,7 @@ function convertToCopyPath(value: unknown, copy: TypeScriptReferenceCopy): unkno
 }
 
 function buildReferenceTsconfig(
-    copy: TypeScriptReferenceCopy & { path: string; config: TypeScriptConfiguration },
+    copy: TypeScriptReferenceCopy & { path: string; config: ParsedTsconfig },
 ): Record<string, unknown> {
     const { root, copyRoot, path, config } = copy;
     const output = join(copyRoot, GSPOT_FOLDER, TSC_REFERENCE_OUTPUT_FOLDER, relative(root, path));
@@ -84,7 +86,7 @@ Points the incremental build information of tsc into the temporary folder, when 
 @param folder the folder for the build information.
 @param name the file name of the build information.
 */
-export function appendTsbuildinfoFlag(
+export function addTsbuildinfoFlag(
     command: string[],
     options: ts.CompilerOptions | undefined,
     folder: string,
@@ -100,7 +102,6 @@ Replaces the paths of the copy in the command with repository paths.
 @param result the compiler run, which may have no command.
 @param copyRoot the folder of the temporary copy that tsc checked.
 @param sourceRoot the repository folder that the finding paths point into.
-@returns the run with repository paths.
 */
 export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourceRoot: string): CheckResult {
     if (result.command === undefined) return result;
@@ -121,7 +122,7 @@ Shares a project compile across scopes, but never skips a second run in the same
 @param projectCheck.required the compiler flags for one scope.
 @returns whether another scope already checks this project with these flags.
 */
-export function isProjectChecked(
+export function claimProjectCheck(
     reads: ReadCache,
     projectCheck: { check: string; path: string; scope: string; required: Record<string, boolean> },
 ): boolean {
@@ -145,7 +146,6 @@ Runs tsc on a project and keeps the build information in tsbuildinfoFolder.
 @param planned the tsc check for one scope.
 @param tsbuildinfoFolder the folder for the build information.
 @param project the parsed tsconfig, if any.
-@returns the check result.
 */
 export async function runTsc(
     session: CheckSession,
@@ -153,10 +153,14 @@ export async function runTsc(
     tsbuildinfoFolder: string,
     project: TypeScriptProject | undefined,
 ): Promise<CheckResult> {
-    const required = selectCheckedTsconfigOptions(session.settings.level, planned.scope);
+    const required = Object.fromEntries(
+        Object.entries(selectRequiredTsconfigOptions(session.settings.level, planned.scope.configurations)).filter(
+            ([name]) => !listIgnoredRules(planned.scope, TYPESCRIPT_TSCONFIG_CHECK).includes(name),
+        ),
+    );
     const target = project === undefined ? join(session.root, planned.scope.path, TSCONFIG_FILE) : project.path;
     if (
-        isProjectChecked(session.reads, {
+        claimProjectCheck(session.reads, {
             check: planned.check.id,
             path: target,
             scope: planned.scope.path,
@@ -174,9 +178,10 @@ export async function runTsc(
         command.push(...TSC_BUILD_COMMAND, project.path);
     } else {
         const generatedPath = join(tsbuildinfoFolder, TSCONFIG_COPY_FOLDER, planned.scope.path, TSCONFIG_FILE);
-        writeScopeTsconfig(session, planned.scope, generatedPath);
+        mkdirSync(dirname(generatedPath), { recursive: true });
+        writeFileSync(generatedPath, JSON.stringify(buildTsconfig(session, planned.scope, generatedPath)));
         command.push(...TSC_PROJECT_COMMAND, generatedPath);
-        appendTsbuildinfoFlag(command, project?.config.options, tsbuildinfoFolder, TSCONFIG_TSBUILDINFO);
+        addTsbuildinfoFlag(command, project?.config.options, tsbuildinfoFolder, TSCONFIG_TSBUILDINFO);
     }
     command.push(...TSC_UNFORMATTED_OUTPUT);
     return runCommandCheck(session, planned, { command, copyRoot: session.root });
@@ -192,8 +197,8 @@ export function writeReferenceProjects(copy: TypeScriptReferenceCopy): void {
     const configurations = new Map([
         ...projects,
         ...projects.values().flatMap((config) =>
-            config.extendedConfigurationFiles.map((path) => {
-                return [path, readTsconfig(root, path, reads) as TypeScriptConfiguration] as const;
+            config.extendedTsconfigFiles.map((path) => {
+                return [path, readTsconfig(root, path, reads) as ParsedTsconfig] as const;
             }),
         ),
     ]);
@@ -211,10 +216,7 @@ Lists the tsconfig files and sources of each project, for the copy.
 @param projects each scope path with its parsed tsconfig.
 @returns the repository-relative paths.
 */
-export function listCompilerFiles(
-    session: Session,
-    projects: Iterable<readonly [string, TypeScriptConfiguration]>,
-): string[] {
+export function listCompilerFiles(session: Session, projects: Iterable<readonly [string, ParsedTsconfig]>): string[] {
     return [...projects]
         .flatMap(([scope, config]) => [
             ...config.tsconfigFiles,

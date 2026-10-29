@@ -80,7 +80,7 @@ export type ParsedManifest = {
     checks: Check[];
     naming?: { override: (NamingOverride & { reason: string })[] } | undefined;
     rules: Record<string, ParsedManifest['detect']>;
-    ruff: { recommended: string[]; all: string[] };
+    ruff: Record<Level, string[]>;
 };
 
 export type ConfigFile = {
@@ -159,6 +159,7 @@ export type MiseToolPin = {
     name: string;
     version: string;
     options?: Record<string, string | number | boolean>;
+    checksums?: Record<string, string>;
 };
 
 export type ToolFolderKind = (typeof TOOL_FOLDER_KINDS)[number];
@@ -171,6 +172,7 @@ type InstallerPin = {
     name: string;
     version?: string | undefined;
     options?: Record<string, string | boolean> | undefined;
+    checksums?: Record<string, string> | undefined;
 };
 
 export type VersionedInstaller = InstallerPin & { version: string };
@@ -232,7 +234,7 @@ export type PathContainer = { open: string; close: string; category: NamedCatego
 
 export type NamingDefaults = {
     path_containers: PathContainer[];
-    groups: Record<string, { terms: string[] }>;
+    lists: Record<string, { words: string[] }>;
     allowed_names: string[];
     allowed_phrases: string[];
     languages: Record<string, { categories: Record<string, { cases: NamingCase[] }> }>;

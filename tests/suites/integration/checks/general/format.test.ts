@@ -8,7 +8,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { generateFile, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { generateFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/format.ts';
 
 import {
@@ -106,7 +106,7 @@ test('check --staged formats with the staged Prettier config file after a later 
             [STAGED_FORMAT_PATHS.source]: 'export const value = {\n  value: {\n    active: true,\n  },\n};\n',
         },
     });
-    const rootConfig = findManifestTarget('format', 'prettier.json');
+    const rootConfig = getManifestTarget('format', 'prettier.json');
 
     expect(await isOnDisk(join(root, rootConfig))).toBe(true);
     expect(await isOnDisk(join(root, STAGED_FORMAT_PATHS.scopeConfig))).toBe(false);

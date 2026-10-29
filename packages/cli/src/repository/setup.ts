@@ -1,23 +1,30 @@
 import { compareText } from '#cli/system/text.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import type { ManagedKeys } from '#cli/types/write.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { type Repository } from '#cli/types/repository/files.ts';
-import { TRAILING_SLASH } from '#cli/config/files/path-patterns.ts';
+import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
+import type { ManagedKeys } from '#cli/types/repository/writer.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { join, dirname, resolve, basename, relative } from 'node:path';
-import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
+import { EXECUTABLE_BITS } from '#cli/config/repository/files/tracked.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations/names.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { listConflictingConfigFiles } from '#cli/repository/config-files.ts';
 import { MARKDOWN_EXTENSION } from '#cli/config/repository/files/classify.ts';
 import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository/setup.ts';
+import { statSync, lstatSync, readdirSync, realpathSync, readFileSync } from 'node:fs';
 import { readPackageJson, listToolOnlyPackages } from '#cli/repository/dependencies.ts';
-import { type CiJob, type RepositorySetup, type ConflictingConfigFile } from '#cli/types/repository/setup.ts';
+import { LFS_HOOKS, HOOK_SHEBANG, LFS_GUARD_PREFIX } from '#cli/config/generation/hooks.ts';
 
+import {
+    type CiJob,
+    type RepositoryHooks,
+    type RepositorySetup,
+    type ConflictingConfigFile,
+} from '#cli/types/repository/setup.ts';
 import {
     RUN_WORD,
     LINT_TASK,
@@ -29,6 +36,7 @@ import {
     RULE_FOLDERS,
     RUNNER_NAMES,
     KEPT_DOT_FILE,
+    LFS_PUSH_CALLS,
     LEFTHOOK_NAMES,
     GITLAB_CI_FILE,
     TASK_AFTER_RUN,
@@ -37,6 +45,7 @@ import {
     FOREIGN_CI_FILES,
     GITLAB_CI_FOLDER,
     LEFTHOOK_PREFIXES,
+    SAMPLE_HOOK_SUFFIX,
     HOOKS_PATH_SETTING,
     COMMAND_SEPARATORS,
     LEFTHOOK_EXTENSIONS,
@@ -69,22 +78,16 @@ function listFolder(root: string, folder: string): string[] {
         .filter((name) => !name.startsWith('.') || name === KEPT_DOT_FILE);
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function listHookFiles(root: string, folder: string): string[] {
-    return listFolder(root, folder).filter(
-        (name) => statSync(join(root, folder, name), { throwIfNoEntry: false })?.isFile() === true,
-    );
-}
-
 function detectHookFolder(
     root: string,
     folder: string,
     hooksPath: string,
 ): RepositorySetup['hooks'][number] | undefined {
     if (hooksPath === folder) return undefined;
-    const files = listHookFiles(root, folder);
-    if (files.length === 0 && lstatSync(join(root, folder), { throwIfNoEntry: false })?.isSymbolicLink() !== true)
-        return undefined;
+    const files = listFolder(root, folder).filter(
+        (name) => statSync(join(root, folder, name), { throwIfNoEntry: false })?.isFile() === true,
+    );
+    if (files.length === 0) return undefined;
     return { kind: folder === HUSKY_PATH ? 'husky' : 'githooks', path: folder, files };
 }
 
@@ -122,33 +125,22 @@ function listLintJobs(path: string, document: unknown): string[] {
 function readHooksPathSetup(root: string, hooksPath: string): RepositorySetup['hooks'] {
     if (hooksPath === '') return [];
     const location = readHooksFolder(root);
-    return [{ kind: 'hooksPath', path: hooksPath, files: listHookFiles(dirname(location), basename(location)) }];
+    return [
+        {
+            kind: 'hooksPath',
+            path: hooksPath,
+            files: listFolder(dirname(location), basename(location)).filter(
+                (name) =>
+                    statSync(join(dirname(location), basename(location), name), { throwIfNoEntry: false })?.isFile() ===
+                    true,
+            ),
+        },
+    ];
 }
 
-/**
-Read core.hooksPath as a path from the repository root, without a leading ./ or a trailing slash.
-
-@param root the repository to read.
-@returns the hooks folder that Git uses, or an empty string when Git has no such setting.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 2 files share it.
-export function readHooksPath(root: string): string {
-    const written = readGitSetting(root, HOOKS_PATH_SETTING) ?? '';
-    return convertToPosixPath(relative(root, resolve(root, written))).replace(TRAILING_SLASH, '');
-}
-
-/**
-Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings.
-
-@param root the repository to read.
-@returns each hook setup and its location.
-*/
-export function readHooks(root: string): RepositorySetup['hooks'] {
+function listHookSetups(root: string, hooksPath: string): RepositorySetup['hooks'] {
     const packageJson = readPackageJson(root, PACKAGE_JSON);
     const isPackageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
-    const hooksPath = readHooksPath(root);
-    const isHuskyPath = hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
-    const foreignHooksPath = isHuskyPath ? '' : hooksPath;
     const hookNames = [
         ...LEFTHOOK_NAMES.flatMap((name) =>
             LEFTHOOK_EXTENSIONS.flatMap((extension) =>
@@ -160,8 +152,8 @@ export function readHooks(root: string): RepositorySetup['hooks'] {
     const present = hookNames.filter((name) => lstatSync(join(root, name), { throwIfNoEntry: false }) !== undefined);
     const lefthook = present.find((name) => name !== PRE_COMMIT_FILE);
     return [
-        ...readHooksPathSetup(root, foreignHooksPath),
-        ...FOREIGN_HOOK_FOLDERS.map((folder) => detectHookFolder(root, folder, foreignHooksPath)).filter(
+        ...readHooksPathSetup(root, hooksPath),
+        ...FOREIGN_HOOK_FOLDERS.map((folder) => detectHookFolder(root, folder, hooksPath)).filter(
             (hook) => hook !== undefined,
         ),
         ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
@@ -172,12 +164,49 @@ export function readHooks(root: string): RepositorySetup['hooks'] {
     ];
 }
 
+function isLfsHookScript(folder: string, name: string): boolean {
+    if (!(LFS_HOOKS as readonly string[]).includes(name)) return false;
+    const lines = readFileSync(join(folder, name), 'utf8').trim().split(/\r?\n/u);
+    const call = lines.at(-1) ?? '';
+    const isCall = call === `git lfs ${name} "$@"` || (name === 'pre-push' && LFS_PUSH_CALLS.has(call));
+    return lines[0] === HOOK_SHEBANG && isCall && lines.slice(1, -1).every((line) => line.startsWith(LFS_GUARD_PREFIX));
+}
+
+function listGitFolderHooks(root: string): RepositorySetup['hooks'] {
+    const folder = readHooksFolder(root);
+    if (statSync(folder, { throwIfNoEntry: false })?.isDirectory() !== true) return [];
+    const files = readdirSync(folder).filter((name) => {
+        if (name.endsWith(SAMPLE_HOOK_SUFFIX)) return false;
+        const stat = statSync(join(folder, name), { throwIfNoEntry: false });
+        return (
+            stat?.isFile() === true &&
+            (process.platform === 'win32' || (stat.mode & EXECUTABLE_BITS) !== 0) &&
+            !isLfsHookScript(folder, name)
+        );
+    });
+    return files.length === 0 ? [] : [{ kind: 'hooksPath', path: convertToPosixPath(relative(root, folder)), files }];
+}
+
 /**
-Find the existing lint jobs before init proposes a CI job.
+Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings.
+
+@param repository the repository to read and whether Git tracks it
+*/
+export function readHooks(repository: Pick<Repository, 'root' | 'hasGit'>): RepositoryHooks {
+    const { root, hasGit } = repository;
+    const written = hasGit ? readGitSetting(root, HOOKS_PATH_SETTING) : undefined;
+    const hooksPath = convertToPosixPath(relative(root, resolve(root, written ?? '')));
+    const own = hooksPath === GSPOT_PATHS.hooks || hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
+    const hooks = listHookSetups(root, own ? '' : hooksPath);
+    if (written === undefined && hasGit) hooks.push(...listGitFolderHooks(root));
+    return { hooksPath, hooks };
+}
+
+/**
+Find the existing jobs that run a linter.
 
 @param root the repository to read.
 @param paths the CI files to read.
-@returns the names of the jobs that already run a linter.
 */
 export function readLintJobs(root: string, paths: string[]): string[] {
     return paths
@@ -185,8 +214,7 @@ export function readLintJobs(root: string, paths: string[]): string[] {
         .flatMap((path) => {
             const source = findText(root, path);
             if (source === undefined) return [];
-            const document = parseYamlFile(path, source);
-            return listLintJobs(path, document);
+            return parseYamlDocuments(path, source).flatMap((document) => listLintJobs(path, document));
         });
 }
 
@@ -199,7 +227,7 @@ Find config files to replace, hooks, CI, agent files, and lint folders.
 */
 export function readRepositorySetup(
     reads: ReadCache,
-    repository: Pick<Repository, 'files' | 'dependencyFiles'>,
+    repository: Pick<Repository, 'files' | 'dependencyFiles' | 'hasGit'>,
 ): RepositorySetup {
     const root = reads.root;
     const { files, dependencyFiles } = repository;
@@ -224,7 +252,7 @@ export function readRepositorySetup(
         )
             .values()
             .toArray(),
-        hooks: readHooks(root),
+        hooks: readHooks({ root, hasGit: repository.hasGit }).hooks,
         ci: [...paths]
             .filter(
                 (path) =>
@@ -250,7 +278,6 @@ Check whether generated field edits cover an existing tool settings section.
 
 @param configFile the existing file or section.
 @param fileEdits the generated field edits.
-@returns whether an edit covers that file and key.
 */
 export function isEditedInPlace(configFile: ConflictingConfigFile, fileEdits: ManagedKeys[]): boolean {
     return fileEdits.some(

@@ -37,3 +37,8 @@ selector = "CallExpression[callee.name='forwardRef']"
 [[eslint.selectors]]
 message = "Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }."
 selector = "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))"
+
+[[eslint.rules_off]]
+files = ["**/*.ts"]
+rules = ["@eslint-react/no-forward-ref"]
+reason = "Nest forwardRef resolves module references and is unrelated to React refs."

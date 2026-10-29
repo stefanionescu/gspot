@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { isPortablePath } from '#cli/system/files/names.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { UNSAFE_PATH_MESSAGE } from '#tests/config/messages.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { link, stat, symlink, readFile } from 'node:fs/promises';
 import { OUTSIDE_LINKS, MODE_REPLACEMENTS } from '#tests/config/system/files/open.ts';
@@ -19,12 +19,12 @@ test.skipIf(isWindows)(
         const previous = { bytes: Buffer.from('inside'), mode: 0o640 };
         root.write(path, previous, undefined);
         expect(root.read(path)).toStrictEqual(previous);
-        expect(isPortablePath(path)).toBe(false);
-        const link = { bytes: Buffer.from(path), mode: 0o777, isLink: true as const };
+        const link = { bytes: Buffer.from(path), mode: 0o777, isSymlink: true as const };
         await symlink(path, join(sandbox.path, 'linked'));
         expect(root.readKeepingLinks('linked')).toStrictEqual(link);
     },
 );
+
 test.each(['../outside', '/outside', 'folder/../outside', 'nul\0suffix'])(
     'system paths refuse the escape %j',
     async (path) => {
@@ -32,9 +32,10 @@ test.each(['../outside', '/outside', 'folder/../outside', 'nul\0suffix'])(
         using root = openFiles(sandbox.path);
         expect(() => {
             root.write(path, { bytes: Buffer.from('inside'), mode: 0o640 }, undefined);
-        }).toThrow('is not a safe repository-relative path');
+        }).toThrow(UNSAFE_PATH_MESSAGE);
     },
 );
+
 test('deleteFolder refuses linked and outside parents and keeps folders that are not empty', async () => {
     await using sandbox = await testdir({ 'project/.keep': '', 'outside/kept/value': 'external' });
 
@@ -65,10 +66,12 @@ test('deleteFolder refuses linked and outside parents and keeps folders that are
     expect(files.read('cache/kept/value')?.bytes.toString()).toBe('retained');
     expect(await readFile(join(sandbox.path, 'outside/kept/value'), 'utf8')).toBe('external');
 });
+
 test('opening a missing folder throws its ENOENT error', async () => {
     await using sandbox = await testdir();
     expect(() => openFiles(join(sandbox.path, 'missing'))).toThrow(matchFields({ code: 'ENOENT' }));
 });
+
 test.each(MODE_REPLACEMENTS.filter(({ posix }) => !posix || !isWindows))(
     'write and remove keep the file modes $original/$replacement and refuse a file that changed since it was read',
     async ({ original: previousMode, replacement: replacementMode, content }) => {
@@ -99,6 +102,7 @@ test.each(MODE_REPLACEMENTS.filter(({ posix }) => !posix || !isWindows))(
         expect(root.read('config/input')).toBeUndefined();
     },
 );
+
 test.skipIf(isWindows).each([...OUTSIDE_LINKS])(
     'path $path cannot change a file outside the folder',
     async ({ path, refusal }) => {

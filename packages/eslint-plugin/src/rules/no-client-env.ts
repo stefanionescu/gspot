@@ -86,7 +86,7 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
         const allowedNames = new Set(options.allowedNames);
         const viteNames = new Set([...allowedNames, ...VITE_ENVIRONMENT_NAMES]);
         const publicText = [...prefixes.map((prefix) => `${prefix}*`), ...allowedNames].join(', ');
-        const report = (node: TSESTree.Node, publicNames: ReadonlySet<string>): void => {
+        const reportPrivateRead = (node: TSESTree.Node, publicNames: ReadonlySet<string>): void => {
             const names = listEnvironmentNames(node);
             if (
                 names.length > 0 &&
@@ -107,10 +107,11 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
                     node.object.property.name === 'meta' &&
                     ASTUtils.getPropertyName(node) === ENVIRONMENT_PROPERTY
                 )
-                    report(node, viteNames);
+                    reportPrivateRead(node, viteNames);
             },
             'Program:exit'() {
-                for (const access of listGlobalEnvironmentReads(context.sourceCode)) report(access, allowedNames);
+                for (const access of listGlobalEnvironmentReads(context.sourceCode))
+                    reportPrivateRead(access, allowedNames);
             },
         };
     },

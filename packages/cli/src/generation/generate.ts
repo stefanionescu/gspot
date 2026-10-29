@@ -1,29 +1,30 @@
+import { basename } from 'node:path/posix';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { listHookNames } from '#cli/installers/hooks.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
+import { FROZEN_INSTALLS } from '#cli/config/generation/ci.ts';
 import { buildJsonSchema } from '#cli/settings/json-schema.ts';
 import type { RuleFile } from '#cli/types/generation/rules.ts';
-import { listDistinctTools } from '#cli/configurations/tools.ts';
-import { getTable, findRootScope } from '#cli/settings/scopes.ts';
+import type { Generation } from '#cli/types/generation/files.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { listWrittenPaths } from '#cli/generation/config-files/ignore-files.ts';
-import { GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { buildPointerFieldEdits } from '#cli/generation/config-files/pointers.ts';
 import { readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
+import type { FrozenLockfile, CiPackageManager } from '#cli/types/generation/ci.ts';
+import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files/classify.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildBunScannerEdits } from '#cli/generation/configurations/general/dependencies.ts';
 import { isConfigurationSelected, listSelectedConfigurations } from '#cli/configurations/select.ts';
-import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/installers/projects.ts';
+import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/tool-projects.ts';
 
 import {
     buildGithubWorkflow,
@@ -34,15 +35,27 @@ import {
 import {
     LF_ATTRIBUTES,
     AUTO_LF_ATTRIBUTES,
+    TOOL_FOLDER_IGNORES,
     GIT_ATTRIBUTES_BLOCK,
     ATTRIBUTE_GLOB_CHARACTERS,
     ATTRIBUTE_QUOTED_CHARACTERS,
 } from '#cli/config/generation/generate.ts';
 
-function buildWorkflow(session: Session, generated: GenerationResult): void {
+function listWorkflowPackageManagers(session: Session, generated: Generation, lockfiles: string[]): CiPackageManager[] {
+    const packageManagers = new Set<CiPackageManager>(
+        lockfiles.map((path) => FROZEN_INSTALLS[basename(path) as FrozenLockfile][0]),
+    );
+    if (generated.files.some(({ path }) => path === GSPOT_PATHS.npmProject) && session.packageManager !== undefined)
+        packageManagers.add(session.packageManager.name === 'yarn' ? 'npm' : session.packageManager.name);
+    if (generated.files.some(({ path }) => path === GSPOT_PATHS.pythonProject)) packageManagers.add('uv');
+    return [...packageManagers].toSorted(compareText);
+}
+
+function addWorkflow(session: Session, generated: Generation): void {
     const { settings, scopes } = session;
     if (settings.ci?.enabled !== true) return;
-    const manual = session.configuredChecks.filter((planned) => planned.check.stage === 'manual');
+    const lockfiles = listProjectLockfiles(session);
+    const packageManagers = listWorkflowPackageManagers(session, generated, lockfiles);
     generated.files.push(
         (settings.ci.provider === 'github' ? buildGithubWorkflow : buildGitlabWorkflow)({
             version: cliPackage.version,
@@ -59,10 +72,9 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
             projectInstall: settings.ci.setup_command === undefined ? listProjectInstallLines(session) : [],
             operatingSystems: settings.ci.operating_systems,
             linuxRunner: settings.ci.linux_runner,
-            lockfiles: listProjectLockfiles(session),
+            lockfiles,
             hasSwift: isConfigurationSelected(scopes, SWIFT_CONFIGURATION),
-            manualChecks: manual,
-            tools: listDistinctTools(session.toolConfigurations),
+            packageManagers,
         }),
     );
 }
@@ -92,41 +104,29 @@ function buildAttributesBlock(outsidePaths: string[], authored: string): string 
     return [block, ...lines].join('\n');
 }
 
-function buildGitignoreBlock(): string {
-    const toolProjectPaths = [...Object.values(INSTALLED_TOOL_FOLDERS), GSPOT_PATHS.state].map((path) => `${path}/`);
-    return toolProjectPaths.join('\n');
-}
-
-function addManagedBlocks(session: Session, rules: RuleFile[], generated: GenerationResult): void {
-    const { settings, repository, reads } = session;
+function addManagedBlocks(session: Session, rules: RuleFile[], generated: Generation): void {
+    const { settings, reads } = session;
     const outsidePaths = listWrittenPaths(session).map((path) => path.slice(1));
     const text = findCachedText(reads, GITATTRIBUTES_FILE) ?? '';
-    const authored = stripBlock(text, { path: GITATTRIBUTES_FILE, style: 'hash' });
-    if (repository.hasGit) {
-        generated.blocks.push(
-            { path: GITIGNORE_FILE, block: buildGitignoreBlock(), style: 'hash' },
-            {
-                path: GITATTRIBUTES_FILE,
-                block: buildAttributesBlock(outsidePaths, authored),
-                style: 'hash',
-            },
-        );
-    }
+    const authored = stripBlock(text, { path: GITATTRIBUTES_FILE });
+    generated.blocks.push({ path: GITATTRIBUTES_FILE, body: buildAttributesBlock(outsidePaths, authored) });
     if (!settings.rules.enabled) return;
     const agents = findCachedText(reads, AGENTS_FILE) ?? '';
-    const agentsText = stripBlock(agents, { path: AGENTS_FILE, style: 'markdown' });
+    const agentsText = stripBlock(agents, { path: AGENTS_FILE });
     const block = buildAgentsBlock({
         hasOwnTitle: hasTopHeading(agentsText),
         generatedPaths: outsidePaths,
-        managedKeys: generated.managedKeys.map(({ path, keys }) => ({
-            path,
-            keys: keys.map((change) => change.key.join('.')),
-        })),
+        managedKeys: generated.managedKeys
+            .map(({ path, keys }) => ({
+                path,
+                keys: keys.filter((change) => change.value !== undefined).map((change) => change.key.join('.')),
+            }))
+            .filter(({ keys }) => keys.length > 0),
         startCommand: session.startRunner.command,
         files: rules,
         hasChecks: listSelectedConfigurations(session.scopes).some((configuration) => configuration.checks.length > 0),
     });
-    generated.blocks.push({ path: AGENTS_FILE, block, style: 'markdown' });
+    generated.blocks.push({ path: AGENTS_FILE, body: block });
 }
 
 /**
@@ -136,12 +136,13 @@ Generate every file in memory, and write nothing.
 
 @returns everything that apply writes.
 */
-export function generate(session: Session): GenerationResult {
-    const { settings, scopes } = session;
+export function generateFiles(session: Session): Generation {
+    const { settings } = session;
     const { packageManager, toolConfigurations } = session;
-    const generated: GenerationResult = {
+    const generated: Generation = {
         files: [
             { path: GSPOT_PATHS.versionPin, content: cliPackage.version + '\n' },
+            { path: GSPOT_PATHS.gitignore, content: TOOL_FOLDER_IGNORES.join('\n') + '\n' },
             { path: GSPOT_PATHS.settingsSchema, content: `${JSON.stringify(buildJsonSchema(), null, JSON_INDENT)}\n` },
         ],
         blocks: [],
@@ -155,16 +156,19 @@ export function generate(session: Session): GenerationResult {
         ...buildBunScannerEdits(session),
         ...buildPointerFieldEdits(session, generated.files, configFiles),
     );
-    const minimumAge = getTable(findRootScope(scopes).settings, 'dependencies').min_release_age_days;
     generated.files.push(
         ...(settings.hooks?.enabled === true
-            ? buildHookFiles(session.startRunner, listHookNames(session.configuredChecks))
+            ? buildHookFiles(session.startRunner, listHookNames(session.configuredChecks), {
+                  hasLfsFiles: session.repository.attributes
+                      .values()
+                      .some((attributes) => attributes[FILTER_ATTRIBUTE] === LFS_FILTER),
+              })
             : []),
         ...(packageManager === undefined ? [] : buildNpmProject(toolConfigurations)),
-        ...buildPythonProject(toolConfigurations, minimumAge),
+        ...buildPythonProject(toolConfigurations),
         buildMiseProject(toolConfigurations),
     );
-    buildWorkflow(session, generated);
+    addWorkflow(session, generated);
     const rules = selectRuleFiles(session);
     generated.files.push(...rules.map(({ target: path, content }) => ({ path, content })));
     addManagedBlocks(session, rules, generated);

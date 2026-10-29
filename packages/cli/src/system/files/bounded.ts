@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { splitSystemPath } from '#cli/system/files/names.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { type FileBounds, type FileContents } from '#cli/types/system/files.ts';
+import { GspotError, hasErrorCode, buildWriteError } from '#cli/system/errors.ts';
 import { MODE_BITS, PRIVATE_FILE, PERMISSION_BITS } from '#cli/config/files/modes.ts';
 
 import {
@@ -64,15 +64,15 @@ function walkParentFolders(bounds: FileBounds, path: string, statParent: (path: 
     return join(bounds.root, ...segments);
 }
 
-function writeStagedFile(temporary: string, contents: FileContents): void {
-    const file = openSync(temporary, 'wx', PRIVATE_FILE);
+function writeStagedFile(path: string, contents: FileContents): void {
+    const file = openSync(path, 'wx', PRIVATE_FILE);
     try {
         writeFileSync(file, contents.bytes);
         fchmodSync(file, contents.mode);
         fsyncSync(file);
     } catch (error) {
         closeSync(file);
-        unlinkSync(temporary);
+        unlinkSync(path);
         throw error;
     }
     closeSync(file);
@@ -84,8 +84,8 @@ Keep only the permissions that the system file API shows. Windows shows a read-o
 @param file the mode, and whether it holds a link.
 @returns the mode the system can represent.
 */
-export function normalizeFileMode(file: Pick<FileContents, 'mode' | 'isLink'>): number {
-    if (file.isLink) return PERMISSION_BITS;
+export function normalizeFileMode(file: Pick<FileContents, 'mode' | 'isSymlink'>): number {
+    if (file.isSymlink) return PERMISSION_BITS;
     if (process.platform !== 'win32') return file.mode;
     return (file.mode & OWNER_WRITE_BIT) === 0 ? READ_ONLY_FILE : WRITABLE_FILE;
 }
@@ -109,7 +109,6 @@ Build the absolute path of a file after a check that every parent names a real f
 
 @param bounds the root.
 @param path the root-relative file.
-@returns the absolute path.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 3 files share it.
 export function buildContainedPath(bounds: FileBounds, path: string): string {
@@ -121,11 +120,13 @@ Build the absolute path of a file, create missing parents, and refuse parents th
 
 @param bounds the root.
 @param path the root-relative file.
-@returns the absolute path after preparing its parents.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 3 files share it.
 export function preparePath(bounds: FileBounds, path: string): string {
-    return walkParentFolders(bounds, path, prepareParentFolder);
+    try {
+        return walkParentFolders(bounds, path, prepareParentFolder);
+    } catch (error) {
+        throw buildWriteError(path, error);
+    }
 }
 
 /**
@@ -133,7 +134,6 @@ Read a regular file, or return undefined when absent.
 
 @param bounds the root.
 @param path the root-relative file.
-@returns the file contents.
 */
 export function readBounded(bounds: FileBounds, path: string): FileContents | undefined {
     try {
@@ -150,14 +150,13 @@ Read a file or symbolic link without following the link, or return undefined whe
 
 @param bounds the root.
 @param path the root-relative file.
-@returns the file contents.
 */
 export function readBoundedKeepingLinks(bounds: FileBounds, path: string): FileContents | undefined {
     try {
         const target = buildContainedPath(bounds, path);
         const stat = lstatSync(target);
         return stat.isSymbolicLink()
-            ? { bytes: Buffer.from(readlinkSync(target)), mode: PERMISSION_BITS, isLink: true }
+            ? { bytes: Buffer.from(readlinkSync(target)), mode: PERMISSION_BITS, isSymlink: true }
             : readRegularFile(target, stat, path);
     } catch (error) {
         if (hasErrorCode(error, 'ENOENT')) return undefined;
@@ -190,12 +189,14 @@ export function replaceBounded(
         if (
             process.platform === 'win32' &&
             expected !== undefined &&
-            expected.isLink !== true &&
+            expected.isSymlink !== true &&
             (expected.mode & OWNER_WRITE_BIT) === 0
         )
             unlinkSync(target);
         renameSync(temporary, target);
         isStaged = false;
+    } catch (error) {
+        throw buildWriteError(path, error);
     } finally {
         if (isStaged) unlinkSync(temporary);
     }

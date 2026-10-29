@@ -10,8 +10,8 @@ Read this rule when you change a form built with React Hook Form.
   in fields and submit handlers.
 - Initialize `defaultValues` with the form's complete starting values. Reset deliberately when the edited record
   switches; an incoming background response must not discard a user's changes.
-- An input uses either `register` or `Controller`. A controlled widget forwards the value of the controller, its change handler, and its blur
-  handlers, ref, and disabled state through its supported interface.
+- An input uses either `register` or `Controller`. A controlled widget forwards the value of the controller, its change
+  handler, and its blur handlers, ref, and disabled state through its supported interface.
 - Subscribe through `useWatch` or `useFormState` near the consumer instead of making the entire form rerender for every
   field. `getValues` reads a snapshot rather than subscribing.
 - Conditional fields separate hidden values that stay in the submission from ones that need removal. The schema follows

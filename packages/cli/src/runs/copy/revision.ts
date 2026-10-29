@@ -1,12 +1,12 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { setImmediate } from 'node:timers/promises';
 import { openFiles } from '#cli/system/files/open.ts';
+import { extractExtension } from '#cli/system/paths.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { writeCopyFiles } from '#cli/runs/copy/files.ts';
 import { runGit, readGitText } from '#cli/system/git.ts';
 import type { GitFile } from '#cli/types/parsers/git.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { DEPENDENCY_FILES } from '#cli/config/runs/copy/files.ts';
 import { copyValePackages } from '#cli/runs/copy/vale-packages.ts';
@@ -19,20 +19,16 @@ import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names
 import { TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 import { visitGitBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
+import type { CopyFile, RevisionCopy, CopyIndexFile, RevisionDependencies } from '#cli/types/runs/copy.ts';
 import { statSync, chmodSync, lstatSync, mkdirSync, realpathSync, copyFileSync, writeFileSync } from 'node:fs';
 import { copyDependencies, readIgnoredPaths, readDeclarationDependencies } from '#cli/runs/copy/dependencies.ts';
 
-import type {
-    CopyFile,
-    RevisionCopy,
-    CopyIndexFile,
-    DependencyCopy,
-    RevisionDependencies,
-} from '#cli/types/runs/copy.ts';
 import {
+    GIT_SHALLOW_PATH,
     GIT_INIT_ARGUMENTS,
     GIT_HASH_ARGUMENTS,
     GIT_PATH_ARGUMENTS,
+    GIT_ALTERNATES_PATH,
     OWNER_WRITABLE_FOLDER,
     GIT_SET_HEAD_ARGUMENTS,
     DEPENDENCY_REVISION_NOTE,
@@ -41,6 +37,8 @@ import {
     GIT_VERIFY_HEAD_ARGUMENTS,
     GIT_HASH_FORMAT_ARGUMENTS,
     GIT_UPDATE_INDEX_ARGUMENTS,
+    DECLARATION_CONFIG_EXTENSIONS,
+    INSTALLED_DEPENDENCIES_MESSAGE,
 } from '#cli/config/runs/copy/revision.ts';
 
 function listDependencyFolders(installed: Files, projects: string[]): string[] {
@@ -66,17 +64,18 @@ function assertDependencyReady(copyRoot: string, folder: string): void {
         );
 }
 
-async function areDependencyFilesUnchanged(
+async function listUnchangedDependencies(
     root: string,
     installed: Files,
     indexFiles: GitFile[],
     cancelSignal?: AbortSignal,
-): Promise<boolean> {
-    if (indexFiles.some((indexFile) => statSync(join(root, indexFile.path), { throwIfNoEntry: false }) === undefined))
-        return false;
-    for (const indexFile of indexFiles) installed.readCanonicalPath(indexFile.path);
+): Promise<Set<string>> {
+    const present = indexFiles.filter(
+        ({ path }) => statSync(join(root, path), { throwIfNoEntry: false })?.isFile() === true,
+    );
+    for (const indexFile of present) installed.readCanonicalPath(indexFile.path);
     const hashed = await runGit(root, GIT_HASH_ARGUMENTS, {
-        stdin: indexFiles.map((indexFile) => `${indexFile.path}\n`).join(''),
+        stdin: present.map((indexFile) => JSON.stringify(indexFile.path) + '\n').join(''),
         cancelSignal,
     });
     if (hashed.code !== 0)
@@ -85,18 +84,15 @@ async function areDependencyFilesUnchanged(
             `Git cannot hash the working-tree dependency files: ${hashed.stderr.trim()}. Repair the repository before checking this revision.`,
         );
     const hashes = hashed.stdout.trim().split('\n');
-    return indexFiles.every((indexFile, index) => hashes[index] === indexFile.hash);
+    return new Set(present.filter((indexFile, index) => hashes[index] === indexFile.hash).map(({ path }) => path));
 }
 
-function listInstalledDependencies(copyRoot: string, folders: string[]): DependencyCopy[] {
+function listInstalledDependencies(copyRoot: string, folders: string[]): string[] {
     return folders.map((folder) => {
         const path = posix.join(folder, NODE_MODULES);
         if (lstatSync(join(copyRoot, path), { throwIfNoEntry: false }) !== undefined)
-            throw new GspotError(
-                'copy',
-                'Installed dependencies are tracked in the selected revision. Untrack them before checking again.',
-            );
-        return { path, operation: basename(folder) === GSPOT_FOLDER ? 'link' : 'clone' };
+            throw new GspotError('copy', INSTALLED_DEPENDENCIES_MESSAGE);
+        return path;
     });
 }
 
@@ -121,7 +117,15 @@ async function selectRevisionDependencies(
                 installed.readStats(posix.join(dirname(path), PYTHON_ENVIRONMENT_FOLDER))?.isDirectory() === true,
         )
         .map((path) => dirname(path));
-    const declarations = await readDeclarationDependencies(root, indexFiles, cancelSignal);
+    const unchangedPaths = await listUnchangedDependencies(
+        root,
+        installed,
+        indexFiles.filter(
+            (file) => dependencyFiles.includes(file) || DECLARATION_CONFIG_EXTENSIONS.has(extractExtension(file.path)),
+        ),
+        cancelSignal,
+    );
+    const declarations = await readDeclarationDependencies(root, indexFiles, unchangedPaths, cancelSignal);
     const artifacts = await readIgnoredPaths(
         root,
         listPackageFiles(
@@ -133,22 +137,14 @@ async function selectRevisionDependencies(
     const tracked = new Set(indexFiles.map(({ path }) => path));
     const untrackedArtifacts = artifacts.filter((path) => !tracked.has(path));
     if (folders.length + environments.length + declarations.copies.length + untrackedArtifacts.length === 0)
-        return { dependencies: [] };
+        return declarations.mismatched
+            ? { dependencies: [], dependencyNote: DEPENDENCY_REVISION_NOTE }
+            : { dependencies: [] };
     for (const folder of folders) assertDependencyReady(copyRoot, folder);
-    const matches = await areDependencyFilesUnchanged(
-        root,
-        installed,
-        [
-            ...new Set([
-                ...dependencyFiles,
-                ...indexFiles.filter(({ path }) => declarations.configurationPaths.has(path)),
-            ]),
-        ],
-        cancelSignal,
-    );
-    const dependencies: DependencyCopy[] = [
+    const matches = !declarations.mismatched && dependencyFiles.every(({ path }) => unchangedPaths.has(path));
+    const dependencies: string[] = [
         ...declarations.copies,
-        ...untrackedArtifacts.map((path): DependencyCopy => ({ path, operation: 'clone' })),
+        ...untrackedArtifacts,
         ...listInstalledDependencies(copyRoot, folders),
     ];
     return matches ? { dependencies } : { dependencies, dependencyNote: DEPENDENCY_REVISION_NOTE };
@@ -225,11 +221,11 @@ async function initializeRevisionCopy(
         cancelSignal,
     });
     const gitStoreLine = await readGitText(toplevel, [...GIT_PATH_ARGUMENTS, 'objects'], { cancelSignal });
-    writeFileSync(join(copyRoot, '.git/objects/info/alternates'), `${gitStoreLine.trim()}\n`);
+    writeFileSync(join(copyRoot, GIT_ALTERNATES_PATH), `${gitStoreLine.trim()}\n`);
     const shallowLine = await readGitText(toplevel, [...GIT_PATH_ARGUMENTS, 'shallow'], { cancelSignal });
     const shallow = shallowLine.trim();
     if (statSync(shallow, { throwIfNoEntry: false }) !== undefined)
-        copyFileSync(shallow, join(copyRoot, '.git/shallow'));
+        copyFileSync(shallow, join(copyRoot, GIT_SHALLOW_PATH));
     const head = await runGit(toplevel, GIT_VERIFY_HEAD_ARGUMENTS, { cancelSignal });
     if (source.kind === 'index' && head.code === 0)
         await readGitText(copyRoot, [...GIT_SET_HEAD_ARGUMENTS, head.stdout.trim()], { cancelSignal });
@@ -243,13 +239,13 @@ Writes a Git revision into a copy without checkout filters, stashing, or working
 @param root the checkout with the Git objects and installed dependencies.
 @param source the revision to copy.
 @param cancelSignal stops the copy.
-@returns the temporary copy, the folder of the repository inside it, and the tree hash of the copied index.
 */
 export async function copyRevision(root: string, source: Revision, cancelSignal?: AbortSignal): Promise<RevisionCopy> {
     const toplevelLine = await readGitText(root, GIT_TOP_LEVEL_ARGUMENTS, { cancelSignal });
     const toplevel = toplevelLine.replace(TRAILING_NEWLINE, '');
     const folder = relative(realpathSync(toplevel), realpathSync(root));
-    const indexFiles = await listRevisionFiles(toplevel, source, cancelSignal);
+    const unreadablePaths: string[] = [];
+    const indexFiles = await listRevisionFiles(toplevel, source, cancelSignal, unreadablePaths);
     const index = indexFiles.map((indexFile) => `${indexFile.mode} ${indexFile.hash} 0\t${indexFile.path}\0`).join('');
     const copy = createTemporaryFolder();
     try {
@@ -275,6 +271,7 @@ export async function copyRevision(root: string, source: Revision, cancelSignal?
         cancelSignal?.throwIfAborted();
         return {
             ...copy,
+            unreadablePaths,
             root: join(copy.path, folder),
             tree,
             ...(selected.dependencyNote !== undefined && { dependencyNote: selected.dependencyNote }),

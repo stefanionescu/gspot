@@ -3,15 +3,17 @@ import * as prettier from 'prettier';
 import { test, expect } from 'bun:test';
 import { type Options } from 'prettier';
 import { writeFile } from 'node:fs/promises';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { generate } from '#cli/generation/generate.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { generateFiles } from '#cli/generation/generate.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { GREETING_SOURCE } from '#tests/config/typescript.ts';
+import { NESTED_YAML } from '#tests/config/generation/documents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { generateFile, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { generateFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/format.ts';
 import { EDITORCONFIG_SELECTOR_ERRORS } from '#tests/config/generation/configurations/general/format.ts';
 
@@ -34,10 +36,10 @@ test('Prettier loads the selected plugin through the root pointer', async () => 
         'gspot.toml': buildSandboxSettings(['svelte']),
         'source.svelte': '<h1>Example</h1>\n',
     });
-    const generated = generate(await openSession(sandbox.path));
+    const generated = generateFiles(await openSession(sandbox.path));
     await createFileTree(sandbox.path, Object.fromEntries(generated.files.map(({ path, content }) => [path, content])));
     const configFile = JSON.parse(
-        generated.files.find(({ path }) => path === findManifestTarget('format', 'prettier.json'))!.content,
+        generated.files.find(({ path }) => path === getManifestTarget('format', 'prettier.json'))!.content,
     ) as Options;
     expect(configFile.plugins).toStrictEqual([`./${GSPOT_PATHS.nodeModules}/prettier-plugin-svelte/plugin.js`]);
     const pointer = await prettier.resolveConfig(join(sandbox.path, 'source.svelte'), {
@@ -55,7 +57,7 @@ test('the Prettier plugin overrides come before your overrides, and without a pl
         format: { override: [{ paths: ['docs/**'], print_width: 80 }] },
     };
     const pluginPolicy = JSON.parse(
-        await generateFile(stringify(settings), findManifestTarget('format', 'prettier.json'), {
+        await generateFile(stringify(settings), getManifestTarget('format', 'prettier.json'), {
             'source.svelte': '<h1>Example</h1>\n',
         }),
     ) as Options;
@@ -66,7 +68,7 @@ test('the Prettier plugin overrides come before your overrides, and without a pl
     const without = JSON.parse(
         await generateFile(
             stringify({ ...settings, configurations: ['format'] }),
-            findManifestTarget('format', 'prettier.json'),
+            getManifestTarget('format', 'prettier.json'),
             { 'source.js': 'export {};\n' },
         ),
     ) as Options;
@@ -80,7 +82,7 @@ test('a YAML indent override gives EditorConfig and Prettier the same width', as
             rules: true,
             tables: stringify({ format: { indent_width: 6, override: [{ paths: ['**/*.yaml'], indent_width: 2 }] } }),
         }),
-        'sample.yaml': 'parent:\n child: value\n',
+        'sample.yaml': NESTED_YAML,
     });
 
     await applyGeneratedFiles(sandbox.path);
@@ -101,7 +103,7 @@ test('Prettier overrides agree in the root pointer and editor lookup', async () 
     await createFileTree(root, {
         'gspot.toml': FORMAT_OVERRIDES_SETTINGS,
         'package.json': '{"private":true}\n',
-        ...Object.fromEntries(PRETTIER_OPTIONS_BY_FILE.map(({ file }) => [file, 'const greeting="hello";'])),
+        ...Object.fromEntries(PRETTIER_OPTIONS_BY_FILE.map(({ file }) => [file, GREETING_SOURCE])),
     });
     await applyGeneratedFiles(root);
     for (const { file, ...expected } of PRETTIER_OPTIONS_BY_FILE) {
@@ -115,7 +117,7 @@ test('Prettier overrides agree in the root pointer and editor lookup', async () 
             expected,
         );
     }
-    await writeFile(join(root, 'tests/future.js'), 'const greeting="hello";');
+    await writeFile(join(root, 'tests/future.js'), GREETING_SOURCE);
     expect(
         await prettier.resolveConfig(join(root, 'tests/future.js'), {
             config: join(root, 'prettier.config.mjs'),

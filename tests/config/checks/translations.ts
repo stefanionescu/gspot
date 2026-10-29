@@ -32,7 +32,7 @@ export const TRANSLATION_CASES = [
 `,
         },
         settings: TRANSLATION_TABLES,
-        expected: { file: 'messages/de.json', rule: 'message', line: 1 },
+        expected: { file: 'messages/de.json', rule: 'message', line: 2 },
     },
 ] as const;
 

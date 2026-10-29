@@ -20,7 +20,6 @@ required_tools = ["eslint-plugin-jsx-a11y-x"]
 example = "A project that locks `react 19.1.0` and `react-dom 19.0.0` reports `react-versions`. Install the same version of both."
 files = { filenames = ["package.json"] }
 help = "Install the same version of react and react-dom."
-level = "recommended"
 name = "react-versions"
 runs = "scope"
 stage = "push"
