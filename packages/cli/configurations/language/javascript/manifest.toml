@@ -166,7 +166,7 @@ kind = "library"
 name = "eslint-plugin-boundaries"
 npm = "eslint-plugin-boundaries"
 rule_prefix = "boundaries"
-version = "7.2.0"
+version = "7.2.1"
 
 [[tool.when]]
 setting = "import_rule"
