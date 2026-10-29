@@ -17,6 +17,7 @@ import { SWIFT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/installers/npm/yarn.ts';
+import { listWrittenPaths } from '#cli/generation/config-files/ignore-files.ts';
 import { buildPointerFieldEdits } from '#cli/generation/config-files/pointers.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildBunScannerEdits } from '#cli/generation/configurations/general/dependencies.ts';
@@ -99,7 +100,7 @@ function buildGitignoreBlock(): string {
 
 function addManagedBlocks(session: Session, rules: RuleFile[], generated: GenerationResult): void {
     const { settings, repository, reads } = session;
-    const outsidePaths = generated.files.map(({ path }) => path).filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
+    const outsidePaths = listWrittenPaths(session).map((path) => path.slice(1));
     const text = findCachedText(reads, GITATTRIBUTES_FILE) ?? '';
     const authored = stripBlock(text, { path: GITATTRIBUTES_FILE, style: 'hash' });
     if (repository.hasGit) {

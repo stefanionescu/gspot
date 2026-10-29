@@ -24,6 +24,23 @@ import {
     PRETTIER_IGNORE_SETTINGS,
 } from '#tests/config/generation/config-files/ignore-files.ts';
 
+test.each([true, false])('generated file lists include the CI workflow only when enabled: %s', async (enabled) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: stringify({ ci: { enabled, provider: 'github' } }),
+        }),
+    });
+    const generated = generate(await openSession(sandbox.path));
+    const prettierIgnore = generated.files.find(({ path }) => path === '.prettierignore')!.content;
+    const typos = generated.files.find(({ path }) => path.endsWith('/typos.toml'))!.content;
+    const agents = generated.blocks.find(({ path }) => path === 'AGENTS.md')!.block;
+    const attributes = generated.blocks.find(({ path }) => path === '.gitattributes')!.block;
+    for (const text of [prettierIgnore, typos, agents, attributes]) {
+        expect(text.includes('.github/workflows/gspot.yml')).toBe(enabled);
+    }
+});
+
 test('shared Markdown settings leave inherited pointers out of generated path ignores', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['markdown'], {

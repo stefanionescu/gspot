@@ -28,6 +28,8 @@ Change `gspot.toml`, then run `gspot apply`; gspot writes every generated file f
 
 The managed block of `AGENTS.md` lists your repository's generated files and the keys gspot sets. Run `gspot install` in each new clone.
 
+The generated-file lists in `.prettierignore`, `.gitattributes`, and `AGENTS.md` include generated pointers and the enabled CI workflow.
+
 ## Do not edit generated files
 
 Do not edit a generated file. Each one sits in `.gspot/`, starts with a gspot header, or sits in a managed block between
