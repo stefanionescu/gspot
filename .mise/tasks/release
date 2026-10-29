@@ -1,42 +1,114 @@
 #!/usr/bin/env bash
 #MISE description="Publish both npm packages from a tested main commit, deploy the docs site, tag each published package, and create the GitHub release."
-#MISE raw=true
+#MISE depends=["build"]
 set -euo pipefail
 
-source .mise/release/packages.sh
-source .mise/release/preflight.sh
-source .mise/release/notes.sh
+# assert_release_commit: Refuses a release unless main has no changes and both workflows passed on HEAD.
+assert_release_commit() {
+    local branch
+    local changes
+    local commit
+    local workflow
+    local conclusion
 
-main() (
-    local work_folder
-    local root
-    local plugin_version
-    local cli_version
-    local file
-
-    assert_release_ready
-    root=$(pwd -P)
-    work_folder=$(mktemp -d)
-    trap 'cd -- "${root}" && { if [[ -d ${work_folder}/checkout ]]; then git worktree remove --force "${work_folder}/checkout"; fi; } && rm -rf -- "${work_folder}"' EXIT
-    git worktree add --detach "${work_folder}/checkout" HEAD
-    cd -- "${work_folder}/checkout" || exit 1
-    export MISE_TRUSTED_CONFIG_PATHS="${work_folder}/checkout"
-    mise run setup || exit 1
-    mise run build || exit 1
-    mise run docs:build || exit 1
-    for file in packages/cli/README.md packages/cli/LICENSE.md packages/eslint-plugin/LICENSE.md; do
-        if ! git diff --quiet HEAD -- "${file}"; then
-            printf 'Build changed %s. Rebuild and commit the copy before release.\n' "${file}" >&2
-            exit 1
+    branch=$(git branch --show-current) || return 1
+    changes=$(git status --porcelain) || return 1
+    if [[ ${branch} != main || -n ${changes} ]]; then
+        printf 'Run the release on main with no changes.\n' >&2
+        return 1
+    fi
+    commit=$(git rev-parse HEAD) || return 1
+    for workflow in tests.yml gspot.yml; do
+        conclusion=$(gh run list --workflow "${workflow}" --commit "${commit}" --json conclusion --jq '.[0].conclusion') || return 1
+        if [[ ${conclusion} != success ]]; then
+            printf '%s has not passed on %s.\n' "${workflow}" "${commit}" >&2
+            return 1
         fi
     done
-    plugin_version=$(package_field packages/eslint-plugin version)
-    cli_version=$(package_field packages/cli version)
-    publish_package packages/eslint-plugin "${plugin_version}"
-    publish_package packages/cli "${cli_version}"
-    mise run --skip-deps docs:deploy || exit 1
-    publish_tags "${plugin_version}" "${cli_version}"
-    printf 'Next commit: set npm:@gspothq/cli to %s in mise.toml, then run mise exec -- gspot apply and mise exec -- gspot install.\n' "${cli_version}"
-)
+}
+
+# assert_version_raised: Refuses a package whose code changed since the tag of a version that npm already serves.
+# Arguments:
+#   Package folder.
+#   Package name and version.
+#   Tag of the version.
+assert_version_raised() {
+    local folder="$1"
+    local spec="$2"
+    local tag="$3"
+
+    if npm view "${spec}" version >/dev/null 2>&1 && ! git diff --quiet "${tag}" HEAD -- "${folder}"; then
+        printf '%s changed since %s, which npm serves. Raise its version first.\n' "${folder}" "${tag}" >&2
+        return 1
+    fi
+}
+
+# publish_package: Publishes a package version that npm does not serve yet.
+# Arguments:
+#   Package folder.
+#   Package name and version.
+publish_package() {
+    local folder="$1"
+    local spec="$2"
+
+    if npm view "${spec}" version >/dev/null 2>&1; then
+        printf '%s is already on npm.\n' "${spec}"
+        return 0
+    fi
+    npm publish "./${folder}" || return 1
+}
+
+# push_tag: Tags HEAD unless the tag exists, and pushes the tag unless origin has it.
+# Arguments:
+#   Tag name.
+push_tag() {
+    local tag="$1"
+    local remote_tag
+
+    if ! git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+        git tag "${tag}" || return 1
+    fi
+    remote_tag=$(git ls-remote --tags origin "refs/tags/${tag}") || return 1
+    if [[ -z ${remote_tag} ]]; then
+        git push origin "${tag}" || return 1
+    fi
+}
+
+# create_release: Creates the GitHub release of a CLI tag, listing the commit subjects since the previous CLI tag.
+# Arguments:
+#   CLI tag.
+create_release() {
+    local tag="$1"
+    local previous
+    local notes
+
+    if gh release view "${tag}" >/dev/null 2>&1; then
+        return 0
+    fi
+    previous=$(git describe --tags --abbrev=0 --match 'v[0-9]*' --exclude "${tag}" "${tag}") || return 1
+    notes=$(git log --no-merges --format='- %s' "${previous}..${tag}") || return 1
+    gh release create "${tag}" --verify-tag --title "${tag}" --notes "${notes}" || return 1
+}
+
+main() {
+    local plugin_spec
+    local cli_spec
+    local plugin_tag
+    local cli_tag
+
+    assert_release_commit
+    plugin_spec=$(npm pkg get name version --prefix packages/eslint-plugin | jq -r '"\(.name)@\(.version)"') || exit 1
+    cli_spec=$(npm pkg get name version --prefix packages/cli | jq -r '"\(.name)@\(.version)"') || exit 1
+    plugin_tag="eslint-plugin-v${plugin_spec##*@}"
+    cli_tag="v${cli_spec##*@}"
+    assert_version_raised packages/eslint-plugin "${plugin_spec}" "${plugin_tag}"
+    assert_version_raised packages/cli "${cli_spec}" "${cli_tag}"
+    publish_package packages/eslint-plugin "${plugin_spec}"
+    publish_package packages/cli "${cli_spec}"
+    mise run docs:deploy || exit 1
+    push_tag "${plugin_tag}"
+    push_tag "${cli_tag}"
+    create_release "${cli_tag}"
+}
 
 main "$@"
