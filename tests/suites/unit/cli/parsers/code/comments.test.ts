@@ -42,11 +42,14 @@ test.each([...COMPONENT_SCRIPT_COMMENTS])(
     },
 );
 
-test('MDX recognizes expression comments without reading comments from exported strings', async () => {
+test('MDX recognizes expression and HTML comments without reading comments from exported strings or code', async () => {
     const comments = await parseComments(
         'page.mdx',
-        'export const value = "{/* hidden */}";\n\n{/* visible */}\n```mdx\n{/* fenced */}\n```\n`{/* inline */}`\n',
+        'export const value = "{/* hidden */}";\n\n{/* visible */}\n```mdx\n{/* fenced */}\n<!-- fenced -->\n```\n`{/* inline */}`\n\n<!-- vale off -->\n',
         [],
     );
-    expect(comments).toStrictEqual([{ line: 3, text: '/* visible */', standalone: true }]);
+    expect(comments.map(({ line, text }) => ({ line, text }))).toStrictEqual([
+        { line: 3, text: '/* visible */' },
+        { line: 10, text: '<!-- vale off -->' },
+    ]);
 });

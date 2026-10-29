@@ -240,7 +240,7 @@ export async function maskGrammarComments(grammar: GrammarName | 'sql', text: st
     return maskCommentRanges(text, ranges);
 }
 
-function parseMdxComments(text: string): SourceComment[] {
+async function parseMdxComments(text: string): Promise<SourceComment[]> {
     let masked = text;
     const ranges: TextRange[] = [];
     visit(fromMarkdown(text), (node) => {
@@ -252,11 +252,13 @@ function parseMdxComments(text: string): SourceComment[] {
     masked = spliceRanges(masked, blank, ranges).replaceAll(MDX_ESM, (segment) =>
         segment.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length)),
     );
-    return [...masked.matchAll(MDX_COMMENT)].map((match) => {
+    const expressions = [...masked.matchAll(MDX_COMMENT)].map((match) => {
         const start = match.index;
         const comment = buildComment(text, start, start + match[0].length, getPosition(text, start).line);
         return { ...comment, text: match[0].slice(1, -1) };
     });
+    const markup = await parseGrammarComments('html', text, extractMarkdownHtml(text));
+    return [...expressions, ...markup].toSorted((left, right) => left.line - right.line);
 }
 
 function maskCommentRanges(text: string, ranges: TextRange[]): string {
