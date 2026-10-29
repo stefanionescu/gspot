@@ -61,7 +61,7 @@ test.each([...TRIVIAL_FUNCTION_CASES])(
     },
 );
 
-test('Python counts the statements of nested functions, lambdas, and control flow, and reports decorated methods', async () => {
+test('Python counts the statements of nested functions, lambdas, and control flow, reports decorated methods, and skips lambdas in a dict', async () => {
     await using initialSandbox = await testdir({
         ['example.py']: NESTED_PYTHON_FUNCTIONS,
         'gspot.toml': buildSandboxSettings(['python'], {

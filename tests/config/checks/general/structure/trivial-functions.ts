@@ -95,6 +95,17 @@ func isNew(_ name: String) -> Bool {
         lines: [2, 4, 5, 8, 9],
     },
     { name: 'substantial function bodies', source: CLEAN_SWIFT, lines: [] },
+    {
+        name: 'closures in a dictionary literal',
+        source: `import Foundation
+
+let handlers: [String: () -> Int] = [
+    "one": { 1 },
+    "two": { 2 },
+]
+`,
+        lines: [],
+    },
 ] as const;
 
 export const PYTHON_INTERFACES = `from abc import ABC, abstractmethod
@@ -244,4 +255,5 @@ def flow(x):
     if x:
         one()
         two()
+HANDLERS = {"one": lambda: 1, "two": lambda: 2}
 `;

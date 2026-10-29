@@ -47,9 +47,6 @@ function getOutermostValue(node: TSESTree.Expression): TSESTree.Expression {
 function isValueSlot(value: TSESTree.Expression): boolean {
     const { parent } = value;
     switch (parent.type) {
-        case AST_NODE_TYPES.Property: {
-            return parent.kind === 'init' && !parent.method;
-        }
         case AST_NODE_TYPES.AssignmentExpression: {
             return parent.left.type === AST_NODE_TYPES.MemberExpression;
         }
@@ -73,9 +70,10 @@ function isFrameworkMember(node: FunctionNode): boolean {
 }
 
 function isInlineValue(node: FunctionNode): boolean {
-    if (node.type === AST_NODE_TYPES.FunctionDeclaration || node.id !== null) return false;
+    if (node.type === AST_NODE_TYPES.FunctionDeclaration) return false;
     const value = getOutermostValue(node);
-    return INLINE_VALUE_PARENTS.has(value.parent.type) || isValueSlot(value);
+    if (value.parent.type === AST_NODE_TYPES.Property) return true;
+    return node.id === null && (INLINE_VALUE_PARENTS.has(value.parent.type) || isValueSlot(value));
 }
 
 export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>({
@@ -85,10 +83,10 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
         type: 'suggestion',
         docs: {
             example:
-                'The function `function one() { return 1; }` reports `trivial`. Replace its calls with the value `1` and delete the function. A function written inline as a value has no name and is not reported: a callback argument, an array element, a return value, or the value of an object-literal key. A function that must stay, such as a method that a framework or an interface calls by name, gets a suppression comment with its reason.',
+                'The function `function one() { return 1; }` reports `trivial`. Replace its calls with the value `1` and delete the function. A function written inline as a value has no name and is not reported: a callback argument, an array element, a return value, or a member of an object literal. A function that must stay, such as a method that a framework or an interface calls by name, gets a suppression comment with its reason.',
             level: 'all',
             description:
-                'Reports each named function at or under the `trivialFunctionStatements` limit: function declarations, functions assigned to a name, methods, accessors, and constructors, exported or not. The count includes nested callbacks. A function written inline as a value is not reported: a callback argument, an array element, a return value, a default value, an assignment to a member, or the value of an object-literal key. A decorated method and a constructor with parameter properties are not reported, because a framework calls them. Other methods of object literals and classes are reported.',
+                'Reports each named function at or under the `trivialFunctionStatements` limit: function declarations, functions assigned to a name, and the methods, accessors, and constructors of classes, exported or not. The count includes nested callbacks. A function written inline as a value is not reported: a callback argument, an array element, a return value, a default value, or an assignment to a member. No member of an object literal is reported: methods, accessors, and function values alike. A decorated method and a constructor with parameter properties are not reported, because a framework calls them. Other class methods are reported.',
             why: 'An unnecessary function adds another name and another place to read.',
             fix: 'Inline the function at its call sites and delete it. Keep a function whose identity matters, such as a listener that code adds and removes by name, and give its suppression that reason.',
         },

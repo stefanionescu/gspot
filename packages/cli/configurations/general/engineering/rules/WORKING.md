@@ -68,8 +68,8 @@ Keep one implementation of each concept, and one copy of each table of values, i
 shared code only when two or more callers need the same behavior now.
 
 - Delete each named function of `limits.trivial_function_statements` statements or fewer, exported or
-  not, and inline its body at each call site. Methods, accessors, constructors, and recursive functions count too. A
-  callback written inline has no name and stays.
+  not, and inline its body at each call site. Class methods, accessors, constructors, and recursive functions count
+  too. A callback written inline and a member of an object literal stay.
 - When a function of that size must stay, such as a method that an interface requires, ask the user. Then add a
   suppression comment with the reason.
 - Keep a function with one caller when it names a step and holds more statements than that limit. Do not split code into

@@ -49,10 +49,7 @@ test('v8r validates a staged JSON file with a non-ASCII path against its schema'
         hostname: '127.0.0.1',
         port: 0,
 
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `Bun.serve` calls it for each request.
-        async fetch() {
-            return new Response(await readFile(join(root, 'schema.json')));
-        },
+        fetch: async () => new Response(await readFile(join(root, 'schema.json'))),
     });
     await using _change = await applySandboxChanges(installedSandbox(), {
         files: { 'settings/café.json': JSON.stringify({ count: 'invalid' }), '.v8rrc.yml': UNCLOSED_SEQUENCE },
@@ -87,8 +84,7 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
         hostname: '127.0.0.1',
         port: 0,
 
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `Bun.serve` calls it for each request.
-        fetch() {
+        fetch: () => {
             requests++;
             return Response.json({ type: 'object', required: ['missing'] });
         },
