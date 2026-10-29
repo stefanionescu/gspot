@@ -35,3 +35,11 @@ export const CSS_EXTENSION = '.css';
 export const PURGECSS_PROCESS = 'purgecss-process';
 
 export const PURGECSS_CONTENT = ['**/*.html', '**/*.js'] as const;
+
+export const STYLE_EXTENSIONS = new Set(['.css', '.scss', '.sass', '.less']);
+
+export const STYLE_COMPONENTS = new Set(['.astro', '.vue', '.svelte']);
+
+export const STYLE_WHITESPACE = /\s+/gu;
+
+export const STYLE_SCOPING = /:where\(\.astro-[a-z\d-]+\)|\[data-(?:astro-cid|v)-[a-z\d-]+\]|\.svelte-[a-z\d-]+/giu;

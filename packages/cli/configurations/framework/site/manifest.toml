@@ -71,7 +71,7 @@ name = "purgecss"
 needs = ["build"]
 runs = "scope"
 stage = "push"
-summary = "Finds selectors in the built stylesheets that no page or script uses."
+summary = "Finds unused selectors from the scope's stylesheets in the built CSS."
 tool = "purgecss"
 why = "Visitors download an unused selector, and maintainers still read it."
 

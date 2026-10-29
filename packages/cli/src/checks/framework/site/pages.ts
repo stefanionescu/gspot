@@ -3,21 +3,23 @@ import { pathToFileURL } from 'node:url';
 import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildFinding } from '#cli/checks/finding.ts';
-import { readBytes } from '#cli/system/files/reads.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
+import { findScopePath } from '#cli/repository/scopes.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
+import { readBytes, readCachedText } from '#cli/system/files/reads.ts';
 import type { SitemapUrls } from '#cli/types/checks/framework/site.ts';
 import { join, extname, relative, normalize, isAbsolute } from 'node:path';
 import { purgecssReportSchema } from '#cli/schemas/checks/framework/site.ts';
@@ -29,7 +31,11 @@ import {
     LYCHEE_TOOL,
     SITEMAP_FILE,
     CSS_EXTENSION,
+    STYLE_SCOPING,
     HTML_EXTENSION,
+    STYLE_EXTENSIONS,
+    STYLE_COMPONENTS,
+    STYLE_WHITESPACE,
     PURGECSS_CONTENT,
     PURGECSS_PROCESS,
     HTML_REPORT_FILE,
@@ -185,8 +191,38 @@ export async function checkSiteHtmlValidate(session: CheckSession, planned: Plan
     return findings;
 }
 
+async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Promise<string> {
+    const files = session.repository.files.filter(
+        (file) =>
+            file.kind === 'source' &&
+            findScopePath(file.path, session.scopes) === planned.scope.path &&
+            (STYLE_EXTENSIONS.has(extname(file.path)) || STYLE_COMPONENTS.has(extname(file.path))),
+    );
+    const styles: string[] = [];
+    for (const file of files) {
+        const text = readCachedText(session.reads, file.path);
+        if (STYLE_EXTENSIONS.has(extname(file.path))) {
+            styles.push(text);
+            continue;
+        }
+        const tree = await parseSource('html', text, session);
+        try {
+            styles.push(
+                ...tree.rootNode
+                    .descendantsOfType('style_element')
+                    .flatMap((node) =>
+                        node.namedChildren.filter((child) => child.type === 'raw_text').map((child) => child.text),
+                    ),
+            );
+        } finally {
+            tree.delete();
+        }
+    }
+    return styles.join('\n').replaceAll(STYLE_WHITESPACE, '');
+}
+
 /**
-Reports selectors in built stylesheets that no built page or script uses.
+Report unused selectors that also occur in the tracked stylesheets of this scope.
 
 @param session the repository and its tools.
 @param planned the scope whose site to check.
@@ -208,21 +244,27 @@ export async function checkSitePurgecss(session: CheckSession, planned: PlannedC
     );
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
     const report = parseToolReport('PurgeCSS', result.stdout, purgecssReportSchema);
+    const styles = await readScopeStyles(session, planned);
     return report.flatMap((sheet) =>
-        sheet.rejected.map((selector) =>
-            buildFinding(
-                planned,
-                {
-                    file: joinBuildFolder(
-                        planned,
-                        isAbsolute(sheet.file) ? relative(build.folder, sheet.file) : sheet.file,
-                    ),
-                    line: 1,
-                },
-                'unused-selector',
-                `No built page uses the selector ${selector.trim()}.`,
+        sheet.rejected
+            .filter((selector) => {
+                const owned = selector.replaceAll(STYLE_SCOPING, '').replaceAll(STYLE_WHITESPACE, '');
+                return owned !== '' && styles.includes(owned);
+            })
+            .map((selector) =>
+                buildFinding(
+                    planned,
+                    {
+                        file: joinBuildFolder(
+                            planned,
+                            isAbsolute(sheet.file) ? relative(build.folder, sheet.file) : sheet.file,
+                        ),
+                        line: 1,
+                    },
+                    'unused-selector',
+                    `No built page uses the selector ${selector.trim()}.`,
+                ),
             ),
-        ),
     );
 }
 

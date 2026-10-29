@@ -7,7 +7,7 @@ Split a built page or script into the words that can name a selector, without th
 @returns the words.
 */
 export const defaultExtractor = (content: string): string[] =>
-    (content.match(/[\w/:-]+/gu) ?? [])
+    (content.match(/[^<>"'`\s]+/gu) ?? [])
         .map((token) => {
             let end = token.length;
             while (end > 0 && token[end - 1] === ':') end--;
