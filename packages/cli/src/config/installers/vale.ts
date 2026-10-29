@@ -37,6 +37,7 @@ export const VALE_OFF_RULES: Readonly<Record<string, string>> = {
     'proselint.Very': 'gspot.hedging owns hedges',
     'Google.EmDash': 'gspot.em-dashes owns dashes',
     'proselint.DateCase': 'Google.AMPM owns times',
+    'Google.DateFormat': 'gspot.dates owns dates and accepts the month name before or after the day',
     'write-good.E-Prime': 'it flags every form of to be, which plain sentences need',
     'Vale.Spelling': 'typos owns spelling',
     'Google.Spelling': 'typos owns spelling',
