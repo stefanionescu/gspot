@@ -34,10 +34,10 @@ export const configurationTableSchemas = {
     structure: z
         .strictObject({
             reexports: allowReasonedValue(z.enum(REEXPORT_MODES), SETTING_DEFINITIONS['structure.reexports']),
-            environment_readers: allowReasonedValue(
-                relativePathSchema.array(),
-                SETTING_DEFINITIONS['structure.environment_readers'],
-            ),
+            environment_readers: relativePathSchema
+                .array()
+                .default(SETTING_DEFINITIONS['structure.environment_readers'].default)
+                .meta(SETTING_DEFINITIONS['structure.environment_readers']),
         } satisfies SchemaShape<TableSettings<'structure'>, NonNullable<WrittenSettings['structure']>>)
         .optional(),
     cloudflare: z

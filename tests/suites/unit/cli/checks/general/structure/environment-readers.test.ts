@@ -37,7 +37,7 @@ let spaced = ProcessInfo . processInfo . environment
         `${sandbox.path}/gspot.toml`,
         buildSandboxSettings(['swift'], {
             level: 'all',
-            tables: '[structure]\nenvironment_readers = { value = ["Sources/Environment.swift"], reason = "These paths own environment access for this project." }\n',
+            tables: '[structure]\nenvironment_readers = ["Sources/Environment.swift"]\n',
         }),
     );
     const result = await runSandboxCheck(sandbox.path, 'structure/environment-readers');
@@ -49,7 +49,7 @@ let spaced = ProcessInfo . processInfo . environment
         `${sandbox.path}/gspot.toml`,
         buildSandboxSettings(['swift'], {
             level: 'all',
-            tables: '[structure]\nenvironment_readers = { value = ["Sources/Screen.swift"], reason = "These paths own environment access for this project." }\n',
+            tables: '[structure]\nenvironment_readers = ["Sources/Screen.swift"]\n',
         }),
     );
     expect(await runSandboxCheck(sandbox.path, 'structure/environment-readers')).toStrictEqual([]);
@@ -59,7 +59,7 @@ test('Python reads through os aliases are reported; shadowed and unrelated names
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
-            tables: '[structure]\nenvironment_readers = { value = ["environment.py"], reason = "These paths own environment access for this project." }\n',
+            tables: '[structure]\nenvironment_readers = ["environment.py"]\n',
         }),
         'environment.py': OS_VALUE_SOURCE,
         'main.py': PYTHON_ENVIRONMENT_SOURCE,
@@ -89,7 +89,7 @@ test('each scope uses its own environment readers', async () => {
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['python'] }],
-            tables: '[structure]\nenvironment_readers = { value = ["environment.py"], reason = "These paths own environment access for this project." }\n[scope.structure]\nenvironment_readers = { value = ["app/environment.py"], reason = "These paths own environment access for this project." }\n',
+            tables: '[structure]\nenvironment_readers = ["environment.py"]\n[scope.structure]\nenvironment_readers = ["app/environment.py"]\n',
         }),
         'environment.py': OS_VALUE_SOURCE,
         'main.py': OS_VALUE_SOURCE,

@@ -92,7 +92,7 @@ export const TEST_IMPORT_CASES = [
 ] as const;
 
 export const ENVIRONMENT_TABLES = `[structure]
-environment_readers = { value = ["config/**", "app/src/env/**", "literal/config/**"], reason = "This test sets the allowed locations explicitly." }
+environment_readers = ["config/**", "app/src/env/**", "literal/config/**"]
 
 [[scope]]
 path = "app"

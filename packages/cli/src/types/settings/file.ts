@@ -115,7 +115,7 @@ type WrittenSite = Optional<Omit<ConfigurationTables['site'], 'allowed_unlisted_
 
 type WrittenStructure = Optional<{
     reexports: SettingValue<(typeof REEXPORT_MODES)[number]>;
-    environment_readers: SettingValue<string[]>;
+    environment_readers: string[];
 }>;
 
 type WrittenReasonedTables = {
@@ -269,7 +269,7 @@ export type WrittenScope = Omit<WrittenSettings, RootOnlyFields | keyof ParsedSc
     licenses?: Omit<WrittenLicenses, 'allowed_package'> | undefined;
     site?: Omit<WrittenSite, 'size_limit'> | undefined;
     naming?: Omit<WrittenNaming, 'override'> | undefined;
-    structure?: { environment_readers?: SettingValue<string[]> | undefined } | undefined;
+    structure?: { environment_readers?: string[] | undefined } | undefined;
     tools?:
         | (Omit<WrittenTools, 'eslint' | 'v8r'> & {
               eslint?: Omit<NonNullable<WrittenTools['eslint']>, 'override'> | undefined;

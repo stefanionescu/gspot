@@ -266,9 +266,9 @@ export const SETTING_DEFINITIONS = {
     },
 
     'structure.environment_readers': {
-        reason_when: 'adding',
         configurations: ['structure'],
-        description: 'The files that may read environment variables; other files get the values passed in.',
+        description:
+            'The files that may read environment variables; other files get the values passed in. Empty turns the check off.',
         default: [] as [],
     },
     'trpc.router_files': {

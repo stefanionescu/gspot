@@ -19,8 +19,7 @@ main() {
 main "$@"
 `,
         },
-        settings:
-            '[structure]\nenvironment_readers = { value = ["scripts/environment.sh"], reason = "These paths own environment access for this project." }\n',
+        settings: '[structure]\nenvironment_readers = ["scripts/environment.sh"]\n',
         expected: { file: 'scripts/reader.sh', rule: 'read-outside-reader', line: 10 },
         corrected: {
             files: {

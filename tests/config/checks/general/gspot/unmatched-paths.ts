@@ -6,10 +6,7 @@ export const UNMATCHED_PATH_CASES = [
             configurations: ['bash'],
             import_rule: [{ name: 'core', paths: ['src/**', 'gone/**'] }],
             structure: {
-                environment_readers: {
-                    value: ['scripts/kept.sh', 'scripts/gone.sh'],
-                    reason: 'These files own environment access for the scope.',
-                },
+                environment_readers: ['scripts/kept.sh', 'scripts/gone.sh'],
             },
         },
         messages: [
@@ -23,28 +20,19 @@ export const UNMATCHED_PATH_CASES = [
         settings: {
             configurations: ['bash'],
             structure: {
-                environment_readers: {
-                    value: ['root-gone.sh'],
-                    reason: 'These files own environment access for the scope.',
-                },
+                environment_readers: ['root-gone.sh'],
             },
             scope: [
                 {
                     path: 'app',
                     structure: {
-                        environment_readers: {
-                            value: ['app/kept.sh', 'app/gone.sh'],
-                            reason: 'These files own environment access for the scope.',
-                        },
+                        environment_readers: ['app/kept.sh', 'app/gone.sh'],
                     },
                 },
                 {
                     path: 'app/deep',
                     structure: {
-                        environment_readers: {
-                            value: ['app/deep/kept.sh', 'app/deep/gone.sh'],
-                            reason: 'These files own environment access for the scope.',
-                        },
+                        environment_readers: ['app/deep/kept.sh', 'app/deep/gone.sh'],
                     },
                 },
             ],
