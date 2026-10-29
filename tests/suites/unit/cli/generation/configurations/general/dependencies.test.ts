@@ -27,7 +27,7 @@ test('a scope that uses Bun gets the scanner that gspot.toml names in its bunfig
     ]);
 });
 
-test('a new Bun scanner file has one table and a final newline', async () => {
+test('a new Bun scanner file has one table and a final newline, and keeps its key with a note after the scanner setting goes', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['dependencies'], {
             tables: BUN_SCANNER_SETTINGS,

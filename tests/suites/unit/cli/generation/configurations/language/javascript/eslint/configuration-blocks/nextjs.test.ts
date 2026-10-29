@@ -7,7 +7,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 test.each([false, true])('Next.js keeps its project root and pages rule with a pages scope: %s', async (inScope) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript', 'nextjs'], { scopes: inScope ? [{ path: 'pages' }] : [] }),
-        'package.json': '{"private":true,"type":"module","dependencies":{"next":"16.4.2"}}',
+        'package.json': '{"private":true,"type":"module","dependencies":{"next":"0.0.0-test"}}',
         'pages/index.jsx': 'export default function Page() { return <a href="/about">About</a>; }\n',
     });
     const eslint = await createEslint(sandbox.path);

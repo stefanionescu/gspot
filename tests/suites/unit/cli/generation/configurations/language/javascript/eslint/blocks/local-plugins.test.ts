@@ -54,7 +54,7 @@ test('one plugin name with two modules is a settings error that names both paths
     expect(error).toMatchObject(DUPLICATE_PLUGIN_ERROR);
 });
 
-test('tools.eslint.plugins loads your plugin by its path and turns its rules on as errors', async () => {
+test('tools.eslint.plugins loads your plugin by its path and refuses the gspot rule prefix', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], { tables: LOCAL_PLUGIN_TABLES }),
         '.gitignore': 'node_modules/\n',

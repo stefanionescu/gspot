@@ -4,7 +4,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 test.each(['javascript', 'typescript'].flatMap((language) => [7, 8].map((maximum) => ({ language, maximum }))))(
-    'ESLint for $language counts declared parameters against an authored maximum of $maximum',
+    'ESLint for $language counts declared parameters against a maximum of $maximum: the default 7 or an authored 8',
     async ({ language, maximum }) => {
         await using sandbox = await testdir();
         const extension = { javascript: 'js', typescript: 'ts' }[language]!;

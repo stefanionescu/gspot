@@ -70,7 +70,7 @@ test("Knip ignores gspot's tool packages and reports your unused dependencies", 
     await using sandbox = await testdir();
     const files = {
         'package.json':
-            '{"name":"native-project","private":true,"type":"module","dependencies":{"vale":"0.0.0","sample-unused-package":"1.0.0","prettier":"3.8.4","eslint-config-prettier":"10.1.8","@gspothq/eslint-plugin":"0.0.0"}}',
+            '{"name":"native-project","private":true,"type":"module","dependencies":{"vale":"0.0.0","sample-unused-package":"1.0.0","prettier":"0.0.0-test","eslint-config-prettier":"0.0.0-test","@gspothq/eslint-plugin":"0.0.0"}}',
         'main.js': 'export const value = 1;\n',
     };
     const configuration = await generateFile(

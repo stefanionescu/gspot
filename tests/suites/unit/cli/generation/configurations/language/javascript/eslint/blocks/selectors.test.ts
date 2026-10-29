@@ -98,7 +98,7 @@ test('library selectors at level basic report both whole-store reads and accept 
 });
 
 test.each([...FRAMEWORK_SELECTOR_CASES])(
-    '$configuration selectors report their samples and pass the fixed ones',
+    '$configuration selectors report their sample lines at each level',
     async (sample) => {
         for (const level of LEVELS) {
             await using sandbox = await testdir({

@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { formatHeader } from '#cli/generation/header.ts';
 
-test('managed tool configuration files carry no generated header', () => {
+test('files inside .gspot and JSON files get no generated header, and a pointer gets the header and its notes', () => {
     expect(formatHeader('.gspot/configurations/general/spelling/typos.toml')).toBe('');
     expect(formatHeader('settings.json')).toBe('');
     expect(formatHeader('eslint.config.mjs', ['Run gspot install before opening the editor.'])).toBe(
