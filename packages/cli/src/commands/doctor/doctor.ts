@@ -15,6 +15,7 @@ import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
+import { buildMiseProject } from '#cli/generation/tool-projects.ts';
 import { AVAILABLE_TOOL_STATES } from '#cli/config/tools/inspect.ts';
 import type { ToolInspection } from '#cli/types/tools/inspection.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
@@ -99,7 +100,7 @@ function inspectScopeTools(session: Session): ToolInspection[] {
     const pins = listDistinctTools(session.toolConfigurations).filter(
         (tool) => findMissingBuild(tool, { platform, arch: process.arch }) === undefined,
     );
-    const miseBinPaths = readToolBinPaths(session);
+    const miseBinPaths = readToolBinPaths(session, buildMiseProject(session.toolConfigurations).content);
     for (const { path: scopePath, configurations } of session.scopes) {
         const toolNames = new Set(
             configurations.flatMap((configuration) => configuration.tools).map((tool) => tool.name),

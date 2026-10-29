@@ -63,7 +63,6 @@ test.each([...PYTHON_PROJECTS])(
         expect(
             steps.map((step) => (step[0] === 'mise' ? step : ['uv', ...step.slice(1, step.indexOf('--project'))])),
         ).toStrictEqual([
-            ['mise', 'trust', GSPOT_PATHS.miseProject],
             ['mise', 'install', ...miseTools],
             ['mise', 'bin-paths', ...miseTools],
             ['uv', 'venv', '--python', PYTHON_VERSION, '--allow-existing', '.venv'],

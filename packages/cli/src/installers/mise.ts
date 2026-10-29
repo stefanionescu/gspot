@@ -19,25 +19,26 @@ import { redactInstallOutput } from '#cli/installers/credentials.ts';
 import { miseLockfileSchema } from '#cli/schemas/installers/mise.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import type { Tool, MiseToolPin } from '#cli/types/configurations.ts';
-import { MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/locate.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
-import { readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
 import { MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/files/names.ts';
+import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
 import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/configurations/tools.ts';
 
 import {
-    MISE_TRUST_NOTE,
+    MISE_BIN_PATHS_ARGUMENTS,
+    MISE_CEILING_PATHS_VARIABLE,
+    MISE_TRUSTED_PATHS_VARIABLE,
+} from '#cli/config/tools/locate.ts';
+import {
     MISE_RELEASE_HOSTS,
     MISE_LOCK_ARGUMENTS,
-    MISE_TRUST_ARGUMENTS,
     MISE_PLATFORM_PREFIX,
+    MISE_PROJECT_MESSAGE,
     MISE_CHECKSUM_PATTERN,
     MISE_RELEASE_PROTOCOL,
     MISE_INSTALL_ARGUMENTS,
     MISE_LOCKED_ENVIRONMENT,
-    MISE_TRUSTED_PATHS_VARIABLE,
-    MISE_CEILING_PATHS_VARIABLE,
 } from '#cli/config/installers/mise.ts';
 
 function selectMiseTools(session: Session, tools: Tool[]) {
@@ -128,8 +129,7 @@ function writeChecksums(lockfile: string, pins: MiseToolPin[]): string {
     return stringify(document);
 }
 
-async function prepareMiseLockfile(install: ToolInstall): Promise<void> {
-    const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
+async function prepareMiseLockfile(install: ToolInstall, project: GeneratedFile): Promise<void> {
     const saved = install.writer.read(GSPOT_PATHS.miseLockfile);
     if (isMiseLockfileFresh(listMisePins(install.session.toolConfigurations), saved?.bytes.toString('utf8'))) return;
     using scratch = createTemporaryFolder();
@@ -169,7 +169,7 @@ async function prepareMiseLockfile(install: ToolInstall): Promise<void> {
 Install the mise tools, and read their executable folders.
 
 @param install what install needs for this step.
-@returns the trust note, or the note about missing programs, and the folders of the programs that mise installed.
+@returns the note about missing programs, and the folders of the programs that mise installed.
 */
 export async function installMiseTools(install: ToolInstall): Promise<MiseInstall> {
     const { session, tools, misePath, steps } = install;
@@ -185,23 +185,25 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
         const note = missing.length === 0 ? '' : `Install mise, or install these tools yourself: ${missing.join(', ')}`;
         return { note, binPaths: [] };
     }
-    if (listMisePins(session.toolConfigurations).length > 0) await prepareMiseLockfile(install);
-    if (pins.length === 0) return { note: '', binPaths: readToolBinPaths(session) };
-    const commands = [
-        { command: MISE_TRUST_ARGUMENTS, cwd: session.root, env: {} },
-        {
-            command: [...MISE_INSTALL_ARGUMENTS, ...pins.map((pin) => pin.name)],
-            cwd: join(session.root, GSPOT_FOLDER),
-            env: MISE_LOCKED_ENVIRONMENT,
-        },
-    ];
-    for (const { command, cwd, env } of commands)
-        await runRequiredInstallStep(install, command, { cwd, env, name: `The command ${command.join(' ')}` });
+    const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
+    if (listMisePins(session.toolConfigurations).length > 0) await prepareMiseLockfile(install, project);
+    if (pins.length === 0) return { note: '', binPaths: readToolBinPaths(session, project.content) };
+    const trust = buildMiseTrust(session.root, project.content);
+    if (trust === undefined) throw new GspotError('install', MISE_PROJECT_MESSAGE);
+    const command = [...MISE_INSTALL_ARGUMENTS, ...pins.map((pin) => pin.name)];
+    await runRequiredInstallStep(install, command, {
+        cwd: join(session.root, GSPOT_FOLDER),
+        env: { ...MISE_LOCKED_ENVIRONMENT, ...trust },
+        name: `The command ${command.join(' ')}`,
+    });
     const names = pins.map((pin) => pin.name);
     steps.push([...MISE_BIN_PATHS_ARGUMENTS, ...names]);
     return {
-        note: MISE_TRUST_NOTE,
-        binPaths: readMiseBinPaths(session.root, names, session.timeoutSeconds),
+        note: '',
+        binPaths: readMiseBinPaths(session.root, names, {
+            timeoutSeconds: session.timeoutSeconds,
+            project: project.content,
+        }),
     };
 }
 

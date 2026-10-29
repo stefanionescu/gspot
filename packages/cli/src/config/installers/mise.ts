@@ -1,7 +1,4 @@
 import { MISE_TOOL } from '#cli/config/tools/locate.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-
-export const MISE_TRUST_ARGUMENTS = [MISE_TOOL, 'trust', GSPOT_PATHS.miseProject] as const;
 
 export const MISE_INSTALL_ARGUMENTS = [MISE_TOOL, 'install'] as const;
 
@@ -19,8 +16,5 @@ export const MISE_RELEASE_HOSTS = new Set(['github.com', 'api.github.com', 'dl.d
 
 export const MISE_RELEASE_PROTOCOL = 'https:';
 
-export const MISE_TRUST_NOTE = 'trusted .gspot/mise.toml for mise';
-
-export const MISE_TRUSTED_PATHS_VARIABLE = 'MISE_TRUSTED_CONFIG_PATHS';
-
-export const MISE_CEILING_PATHS_VARIABLE = 'MISE_CEILING_PATHS';
+export const MISE_PROJECT_MESSAGE =
+    'gspot runs mise in .gspot only when no other mise config file sits beside .gspot/mise.toml. Delete the other mise files in .gspot, such as mise.local.toml, then run gspot install.';

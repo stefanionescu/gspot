@@ -19,6 +19,7 @@ import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { buildRunReport } from '#cli/commands/check/results.ts';
 import { type IgnoreRecord } from '#cli/types/settings/file.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
+import { buildMiseProject } from '#cli/generation/tool-projects.ts';
 import { SHORT_HASH_LENGTH } from '#cli/config/commands/check/check.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
 import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
@@ -247,7 +248,7 @@ export function buildCheckSession(session: Session): CheckSession {
     return {
         ...session,
         readMiseBinPaths: () => {
-            miseBinPaths ??= readToolBinPaths(session);
+            miseBinPaths ??= readToolBinPaths(session, buildMiseProject(session.toolConfigurations).content);
             return miseBinPaths;
         },
     };
