@@ -21,7 +21,6 @@ import {
     APPLE_TOUCH_ICON,
     SOCIAL_IMAGE_ALT,
     SOCIAL_IMAGE_SIZE,
-    FIRST_PAINT_ELEMENT,
 } from '#docs/config/site.ts';
 
 export default defineConfig({
@@ -79,7 +78,6 @@ export default defineConfig({
                 { tag: 'meta', attrs: { property: 'og:image:height', content: String(SOCIAL_IMAGE_SIZE.height) } },
                 { tag: 'meta', attrs: { property: 'og:image:alt', content: SOCIAL_IMAGE_ALT } },
                 { tag: 'link', attrs: { rel: 'apple-touch-icon', href: APPLE_TOUCH_ICON } },
-                { tag: 'link', attrs: { rel: 'expect', href: `#${FIRST_PAINT_ELEMENT}`, blocking: 'render' } },
             ],
             components: {
                 Header: './src/components/starlight/Header.astro',
@@ -89,7 +87,6 @@ export default defineConfig({
                 ThemeSelect: './src/components/starlight/theme/Select.astro',
                 MobileMenuToggle: './src/components/starlight/MobileMenuToggle.astro',
                 Sidebar: './src/components/starlight/Sidebar.astro',
-                MarkdownContent: './src/components/starlight/MarkdownContent.astro',
                 Hero: './src/components/starlight/Hero.astro',
             },
             expressiveCode: {

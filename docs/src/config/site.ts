@@ -21,8 +21,6 @@ export const SOCIAL_IMAGE_SIZE = { width: 1200, height: 630 } as const;
 
 export const FONT_PACKAGES = ['geist', 'geist-mono'] as const;
 
-export const FIRST_PAINT_ELEMENT = 'article-end';
-
 export const THEME_STORAGE_KEY = 'starlight-theme';
 
 export const THEME_SWITCH_LABELS = { dark: 'Switch to light theme', light: 'Switch to dark theme' } as const;
