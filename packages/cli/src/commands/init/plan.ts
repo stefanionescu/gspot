@@ -1,3 +1,4 @@
+import { getColors } from '#cli/system/terminal.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
@@ -7,7 +8,6 @@ import type { Configuration } from '#cli/types/configurations.ts';
 import { GENERATED_FILE_NOUN } from '#cli/config/generation/write.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import { getColors, stripControlCharacters } from '#cli/system/terminal.ts';
 import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { InitPlan, InitScan, InitFileRow } from '#cli/types/commands/init.ts';
@@ -202,5 +202,5 @@ export function formatInitPlan(plan: InitPlan): string {
         CI_OFF_MESSAGE,
         CHANGE_LATER_MESSAGE,
     ];
-    return `${lines.map((line) => stripControlCharacters(line)).join('\n')}\n`;
+    return `${lines.join('\n')}\n`;
 }

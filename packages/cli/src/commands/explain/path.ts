@@ -6,7 +6,6 @@ import { listCheckedFiles } from '#cli/planning/files.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { stripControlCharacters } from '#cli/system/terminal.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { selectScopePath, buildArgumentPath } from '#cli/repository/scopes.ts';
 import type { Explanation, PathExplanation } from '#cli/types/commands/explain.ts';
@@ -87,7 +86,7 @@ function formatPathExplanation(explanation: PathExplanation): string {
         ...(ignores.length === 0 ? [] : ['Ignores:', ...ignores]),
         ...(explanation.remedy === undefined ? [] : ['', `To change this: ${explanation.remedy}`]),
     ];
-    return `${lines.map((line) => stripControlCharacters(line)).join('\n')}\n`;
+    return `${lines.join('\n')}\n`;
 }
 
 /**

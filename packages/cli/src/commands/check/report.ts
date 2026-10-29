@@ -38,22 +38,20 @@ function formatLocation(finding: Finding): string {
     if (finding.file === '') return '';
     const line = finding.line === undefined ? '' : `:${String(finding.line)}`;
     const column = finding.column === undefined ? '' : `:${String(finding.column)}`;
-    return `${stripControlCharacters(finding.file)}${line}${column}  `;
+    return `${finding.file}${line}${column}  `;
 }
 
 function formatFinding(finding: Finding, next?: Finding): string[] {
     const rule =
-        finding.rule === undefined || finding.rule === finding.check
-            ? ''
-            : `${getColors().cyan(stripControlCharacters(finding.rule))}  `;
+        finding.rule === undefined || finding.rule === finding.check ? '' : `${getColors().cyan(finding.rule)}  `;
     const lines = [
-        `  ${formatLocation(finding)}${rule}${stripControlCharacters(finding.message)
+        `  ${formatLocation(finding)}${rule}${finding.message
             .split(LINE_BREAK)
             .map((line) => line.trim())
             .join(' ')}`,
     ];
     if (finding.help !== undefined && finding.help !== '' && next?.help !== finding.help)
-        lines.push(`  ${getColors().dim('help:')} ${stripControlCharacters(finding.help)}`);
+        lines.push(`  ${getColors().dim('help:')} ${finding.help}`);
     return lines;
 }
 
@@ -77,15 +75,12 @@ function formatFindings(findings: readonly Finding[], { verbose }: { verbose: bo
 
 function formatCheck(result: CheckResult, { verbose }: { verbose: boolean }): string[] {
     const status = getColors()[CHECK_STATUS_COLORS[result.status]](result.status);
-    const scope = result.scope === '' ? '' : `${stripControlCharacters(result.scope)}  `;
-    const tail = stripControlCharacters(formatCheckTail(result));
-    const lines = [`${scope}${stripControlCharacters(result.check)}  ${status}  ${tail}`.trimEnd()];
-    if (verbose && result.command)
-        lines.push(`  ${getColors().dim('$ ' + stripControlCharacters(result.command.join(' ')))}`);
+    const scope = result.scope === '' ? '' : `${result.scope}  `;
+    const lines = [`${scope}${result.check}  ${status}  ${formatCheckTail(result)}`.trimEnd()];
+    if (verbose && result.command) lines.push(`  ${getColors().dim('$ ' + result.command.join(' '))}`);
     if (result.status === 'failed' || result.status === 'error')
         lines.push(...formatFindings(result.findings, { verbose }));
-    if (result.reproduce !== undefined)
-        lines.push(`  ${getColors().dim(RUN_AGAIN)} ${stripControlCharacters(result.reproduce)}`);
+    if (result.reproduce !== undefined) lines.push(`  ${getColors().dim(RUN_AGAIN)} ${result.reproduce}`);
     return lines;
 }
 
@@ -93,10 +88,10 @@ function formatIgnores(report: RunReport, { verbose }: { verbose: boolean }): st
     if (report.ignores.length === 0) return [];
     if (!verbose) return [`ignores    ${String(report.ignores.length)} (printed with --verbose)`];
     return report.ignores.map((ignore) => {
-        const rule = ignore.rule === undefined ? '' : ` ${stripControlCharacters(ignore.rule)}`;
-        const paths = ignore.paths === undefined ? '' : ` ${stripControlCharacters(ignore.paths.join(' '))}`;
-        const names = ignore.names === undefined ? '' : ` names ${stripControlCharacters(ignore.names.join(' '))}`;
-        return `ignore     ${stripControlCharacters(ignore.check ?? EVERY_CHECK)}${rule}${paths}${names}  ${getColors().dim(stripControlCharacters(ignore.reason))}`;
+        const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
+        const paths = ignore.paths === undefined ? '' : ` ${ignore.paths.join(' ')}`;
+        const names = ignore.names === undefined ? '' : ` names ${ignore.names.join(' ')}`;
+        return `ignore     ${ignore.check ?? EVERY_CHECK}${rule}${paths}${names}  ${getColors().dim(ignore.reason)}`;
     });
 }
 
@@ -122,7 +117,7 @@ function formatSummary(report: RunReport, { selectedOnly }: { selectedOnly: bool
 function formatComparison(comparison: RunReport['comparison']): string {
     if (comparison === undefined) return '';
     return comparison.content === 'working-tree'
-        ? `Checked the files changed since ${stripControlCharacters(comparison.reference)}.\n`
+        ? `Checked the files changed since ${comparison.reference}.\n`
         : `Checked ${formatCheckedContent(comparison)}.\n`;
 }
 
@@ -166,17 +161,15 @@ function formatMissingChecks(checks: readonly CheckResult[], { selectedOnly }: {
         grouped.set(note, [...(grouped.get(note) ?? []), check]);
     }
     return [...grouped].flatMap(([note, missing]) => [
-        `missing  ${missing.map((check) => stripControlCharacters([check.check, check.scope].filter(Boolean).join(' '))).join(', ')}`,
-        `  ${stripControlCharacters(!selectedOnly && note.endsWith(STANDARD_INSTALL_HELP) ? note.slice(0, -STANDARD_INSTALL_HELP.length) : note)}`,
+        `missing  ${missing.map((check) => [check.check, check.scope].filter(Boolean).join(' ')).join(', ')}`,
+        `  ${!selectedOnly && note.endsWith(STANDARD_INSTALL_HELP) ? note.slice(0, -STANDARD_INSTALL_HELP.length) : note}`,
         '',
     ]);
 }
 
 function formatNotChecked(notChecked: RunReport['notChecked']): string[] {
     if (notChecked === undefined) return [];
-    const choices = notChecked
-        .map(({ configuration, evidence }) => stripControlCharacters(`${configuration} (${evidence})`))
-        .join(', ');
+    const choices = notChecked.map(({ configuration, evidence }) => `${configuration} (${evidence})`).join(', ');
     return [`note     Not checked: ${choices}. Run gspot add, or gspot remove <name> --reason "<why>".`];
 }
 
@@ -199,7 +192,7 @@ export function formatRunReport(report: RunReport, options: { verbose: boolean; 
     lines.push(
         ...formatMissingChecks(checks, { selectedOnly }),
         ...formatNotChecked(report.notChecked),
-        ...(report.notes ?? []).map((note) => `note     ${stripControlCharacters(note)}`),
+        ...(report.notes ?? []).map((note) => `note     ${note}`),
         ...formatIgnores(report, { verbose }),
         ...formatUnstagedChanges(report),
         formatSummary(report, { selectedOnly }),

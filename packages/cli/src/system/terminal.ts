@@ -1,7 +1,13 @@
 import pc from 'picocolors';
 import { stripVTControlCharacters } from 'node:util';
-import { SIGNAL_EXIT_CODES, RESULT_JSON_INDENT, TERMINAL_CONTROL_CHARACTERS } from '#cli/config/system/terminal.ts';
 import type { CommandResult, OutputOptions, CommandFailureJson, CanceledCommandJson } from '#cli/types/terminal.ts';
+
+import {
+    SIGNAL_EXIT_CODES,
+    RESULT_JSON_INDENT,
+    TERMINAL_COLOR_SEQUENCE,
+    TERMINAL_CONTROL_CHARACTERS,
+} from '#cli/config/system/terminal.ts';
 
 let options: OutputOptions = { isJson: false, colored: false };
 
@@ -48,13 +54,14 @@ export function printResult(result: CommandResult): void {
 }
 
 /**
-Print readable text on stdout, unless --json asks for structured output.
+Print readable text on stdout without terminal control bytes, unless --json asks for structured output.
 
 @param text the output, which gets a final newline if it lacks one.
 */
 export function print(text: string): void {
     if (options.isJson) return;
-    process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
+    const printable = stripControlCharacters(text);
+    process.stdout.write(printable.endsWith('\n') ? printable : `${printable}\n`);
 }
 
 /**
@@ -93,13 +100,20 @@ export async function runCancelableCommand<Json extends object>(
 }
 
 /**
-Remove terminal escape sequences and control characters except tabs and line feeds. Repository text then cannot control terminal output.
+Remove terminal escape sequences, control characters except tabs and line feeds, and format characters such as
+bidirectional overrides. Keep the color codes of the gspot palette. Repository text then cannot control terminal output.
 
 @param text the text to print.
 @returns the text without them.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Terminal writers share the same control-character removal.
 export function stripControlCharacters(text: string): string {
-    const uncolored = stripVTControlCharacters(text);
-    return uncolored.replaceAll(TERMINAL_CONTROL_CHARACTERS, '');
+    return text
+        .split(TERMINAL_COLOR_SEQUENCE)
+        .map((segment) =>
+            TERMINAL_COLOR_SEQUENCE.test(segment)
+                ? segment
+                : stripVTControlCharacters(segment).replaceAll(TERMINAL_CONTROL_CHARACTERS, ''),
+        )
+        .join('');
 }

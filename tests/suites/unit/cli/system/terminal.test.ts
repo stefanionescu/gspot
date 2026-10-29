@@ -1,5 +1,5 @@
 import { test, spyOn, expect } from 'bun:test';
-import { printError, setOutputOptions, runCancelableCommand } from '#cli/system/terminal.ts';
+import { getColors, printError, printResult, setOutputOptions, runCancelableCommand } from '#cli/system/terminal.ts';
 
 test('an aborted command returns its cancellation status and removes its signal listeners', async () => {
     const listeners = process.listenerCount('SIGINT');
@@ -14,6 +14,22 @@ test('an aborted command returns its cancellation status and removes its signal 
         json: { error: 'canceled', message: 'The command was canceled.', exitCode: 130 },
     });
     expect(process.listenerCount('SIGINT')).toBe(listeners);
+});
+
+test('a printed result removes escape sequences and format characters but keeps the gspot colors', () => {
+    const stdout: string[] = [];
+    using _stdout = spyOn(process.stdout, 'write').mockImplementation((chunk) => {
+        stdout.push(String(chunk));
+        return true;
+    });
+    try {
+        setOutputOptions({ isJson: false, colored: true });
+        const name = 'title\u001B]0;renamed\u0007\u001B[2Jcheck‮gnp.exe​⁦x⁩';
+        printResult({ text: `${getColors().red('failed')} ${name}\n`, json: {}, exitCode: 1 });
+        expect(stdout).toStrictEqual(['\u001B[31mfailed\u001B[39m titlecheckgnp.exex\n']);
+    } finally {
+        setOutputOptions({ isJson: false, colored: false });
+    }
 });
 
 test('a human error removes terminal controls while JSON preserves the message as escaped data', () => {

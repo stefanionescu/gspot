@@ -10,7 +10,6 @@ import { generateFiles } from '#cli/generation/generate.ts';
 import { TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
-import { stripControlCharacters } from '#cli/system/terminal.ts';
 import type { OutdatedFile } from '#cli/types/generation/files.ts';
 import { GENERATED_FILE_NOUN } from '#cli/config/generation/write.ts';
 import { DRY_RUN_FLAG, DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
@@ -47,7 +46,7 @@ function formatOutdatedFiles(files: OutdatedFile[]): string {
         },
     ];
     for (const group of groups) lines.push(...formatFileChanges(group.files, group.repair));
-    return `${lines.map((line) => stripControlCharacters(line)).join('\n')}\n`;
+    return `${lines.join('\n')}\n`;
 }
 
 async function buildDryRunResult(session: Session): Promise<CommandResult> {
