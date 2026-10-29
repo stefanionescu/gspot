@@ -1,13 +1,13 @@
 ---
 import type { ImageMetadata } from 'astro';
-import InlineText from '../components/InlineText.astro';
-import Example from '../components/home/example/Example.astro';
-import { TOOLS, USE_CASES, HOME_TITLE } from '../config/home.ts';
-import '../components/home/page.css';
+import InlineText from '#docs/components/InlineText.astro';
+import Example from '#docs/components/home/example/Example.astro';
+import { TOOLS, USE_CASES, HOME_TITLE } from '#docs/config/home.ts';
+import '#docs/components/home/page.css';
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
-import { REFERENCE_PATH, REFERENCE_FOLDERS } from '../config/reference.ts';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import { NPM_URL, DOCS_PATH, DESCRIPTION, REPOSITORY_URL } from '../config/site.ts';
+import { REFERENCE_PATH, REFERENCE_FOLDERS } from '#docs/config/reference.ts';
+import { NPM_URL, DOCS_PATH, DESCRIPTION, REPOSITORY_URL } from '#docs/config/site.ts';
 
 const images = import.meta.glob<ImageMetadata>('../assets/tools/*', { eager: true, import: 'default' });
 const tools = TOOLS.map(({ name, icon }) => {

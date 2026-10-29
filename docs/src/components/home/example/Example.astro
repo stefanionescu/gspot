@@ -1,8 +1,8 @@
 ---
-import Run from './Run.astro';
-import InlineText from '../../InlineText.astro';
-import { tokenizeExampleLine } from './syntax.ts';
-import example from '../../../config/example.json';
+import example from '#docs/config/example.json';
+import Run from '#docs/components/home/example/Run.astro';
+import InlineText from '#docs/components/InlineText.astro';
+import { tokenizeExampleLine } from '#docs/components/home/example/syntax.ts';
 
 const beforeLines = example.agent.files
     .flatMap(({ content }) =>

@@ -1,5 +1,5 @@
-import type { ReferencePage } from '../types/reference.ts';
-import { MARKDOWN_ESCAPES, FLAGS_OUTSIDE_CODE, HTML_BRACKET_ENTITIES } from '../config/reference.ts';
+import type { ReferencePage } from '#docs/types/reference.ts';
+import { MARKDOWN_ESCAPES, FLAGS_OUTSIDE_CODE, HTML_BRACKET_ENTITIES } from '#docs/config/reference.ts';
 
 /**
 Build a reference page with escaped markup and no edit link.

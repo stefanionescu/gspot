@@ -13,7 +13,7 @@ import {
     STYLE_HASH_LENGTH,
     STYLE_ASSET_FOLDER,
     PSEUDO_CLASS_SELECTOR,
-} from './config/styles.ts';
+} from '#docs/config/styles.ts';
 
 function extractStyleTokens(content: string): string[] {
     return content

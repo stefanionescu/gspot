@@ -1,7 +1,7 @@
 import plugin from '#eslint-plugin/plugin.ts';
-import { formatTable, buildReferencePage } from './markdown.ts';
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
-import type { PluginRule, ReferencePage } from '../types/reference.ts';
+import type { PluginRule, ReferencePage } from '#docs/types/reference.ts';
+import { formatTable, buildReferencePage } from '#docs/reference/markdown.ts';
 
 import {
     REFERENCE_PATH,
@@ -14,7 +14,7 @@ import {
     NO_OPTIONS_MESSAGE,
     ESLINT_FIX_MESSAGE,
     DEFAULT_OPTION_DESCRIPTION,
-} from '../config/reference.ts';
+} from '#docs/config/reference.ts';
 
 function formatRuleOptions({
     schema,

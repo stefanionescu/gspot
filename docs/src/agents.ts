@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
-import { DESCRIPTION } from './config/site.ts';
-import { AGENT_STEPS } from './config/setup.ts';
-import type { AgentSkillsIndex } from './types/agents.ts';
+import { DESCRIPTION } from '#docs/config/site.ts';
+import { AGENT_STEPS } from '#docs/config/setup.ts';
+import type { AgentSkillsIndex } from '#docs/types/agents.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
 
 import {
@@ -14,7 +14,7 @@ import {
     NOT_FOUND_PAGE,
     SKILLS_INDEX_FILE,
     MARKDOWN_COPY_FILE,
-} from './config/agents.ts';
+} from '#docs/config/agents.ts';
 
 /**
 Build the address of the Markdown copy of a docs page. Starlight serves the entry `a/index` at `/a/`, and gives the

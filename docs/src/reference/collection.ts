@@ -1,12 +1,12 @@
-import { CLI_REFERENCE } from './cli.ts';
-import { buildCommandPage } from './commands.ts';
-import { buildSettingsPage } from './settings.ts';
-import { buildPluginPages } from './eslint-plugin.ts';
+import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import type { Loader, DataStore } from 'astro/loaders';
 import { docsLoader } from '@astrojs/starlight/loaders';
-import { buildConfigurationPages } from './configurations.ts';
-import type { GuideSlug, ReferencePage } from '../types/reference.ts';
-import { buildCheckPage, buildCheckIndex, listSuppressions } from './checks.ts';
+import { buildCommandPage } from '#docs/reference/commands.ts';
+import { buildSettingsPage } from '#docs/reference/settings.ts';
+import { buildPluginPages } from '#docs/reference/eslint-plugin.ts';
+import type { GuideSlug, ReferencePage } from '#docs/types/reference.ts';
+import { buildConfigurationPages } from '#docs/reference/configurations.ts';
+import { buildCheckPage, buildCheckIndex, listSuppressions } from '#docs/reference/checks.ts';
 
 import {
     GUIDES,
@@ -16,7 +16,7 @@ import {
     DOCS_SOURCE_NAME,
     REFERENCE_FOLDERS,
     REFERENCE_IDS_KEY,
-} from '../config/reference.ts';
+} from '#docs/config/reference.ts';
 
 function getGuideTitles(store: DataStore): Record<GuideSlug, string> {
     const titles = {} as Record<GuideSlug, string>;

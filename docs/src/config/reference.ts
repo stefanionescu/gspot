@@ -1,4 +1,4 @@
-import { type GuideSlug } from '../types/reference.ts';
+import { type GuideSlug } from '#docs/types/reference.ts';
 
 const CODE_SPAN = /(?<!`)(?<delimiter>`+)(?!`)[\s\S]+?(?<!`)\k<delimiter>(?!`)/u;
 

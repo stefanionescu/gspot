@@ -1,8 +1,8 @@
 ---
-import SiteTitle from './SiteTitle.astro';
-import Select from './theme/Select.astro';
-import { DOCS_PATH } from '../../config/site.ts';
+import { DOCS_PATH } from '#docs/config/site.ts';
 import Search from '@astrojs/starlight/components/Search.astro';
+import SiteTitle from '#docs/components/starlight/SiteTitle.astro';
+import Select from '#docs/components/starlight/theme/Select.astro';
 import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
 
 const isHome = Astro.url.pathname === '/';

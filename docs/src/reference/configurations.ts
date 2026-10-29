@@ -1,14 +1,14 @@
 import { posix } from 'node:path';
-import { CLI_REFERENCE } from './cli.ts';
-import { formatSettingLink } from './settings.ts';
+import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { formatSettingLink } from '#docs/reference/settings.ts';
 import { listRuleFiles } from '#cli/configurations/manifests.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
-import type { GuideSlug, ReferencePage } from '../types/reference.ts';
 import { findToolProjectPackage } from '#cli/configurations/tools.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import { formatTable, formatSection, buildReferencePage } from './markdown.ts';
+import type { GuideSlug, ReferencePage } from '#docs/types/reference.ts';
+import { formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
 
 import {
     SETS_HEADING,
@@ -37,7 +37,7 @@ import {
     SELECTED_IN_GIT_MESSAGE,
     ALWAYS_SELECTED_MESSAGE,
     CONFIGURATIONS_DESCRIPTION,
-} from '../config/reference.ts';
+} from '#docs/config/reference.ts';
 
 function formatDetectionConditions(detect: Configuration['detect']): string[] {
     const conditions: string[] = [];

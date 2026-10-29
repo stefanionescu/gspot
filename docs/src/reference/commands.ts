@@ -1,7 +1,7 @@
-import { CLI_REFERENCE } from './cli.ts';
+import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
-import { formatTable, formatSection, buildReferencePage } from './markdown.ts';
-import { type ReferencePage, type CommandReference } from '../types/reference.ts';
+import { type ReferencePage, type CommandReference } from '#docs/types/reference.ts';
+import { formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
 
 import {
     PURPOSE_HEADING,
@@ -14,7 +14,7 @@ import {
     ENVIRONMENT_VARIABLES,
     GLOBAL_OPTIONS_HEADING,
     ENVIRONMENT_VARIABLES_HEADING,
-} from '../config/reference.ts';
+} from '#docs/config/reference.ts';
 
 function formatCommand(command: CommandReference): string {
     const argumentRows = command.arguments.map((argument) => [

@@ -3,7 +3,7 @@ title: Continuous integration
 description: Run checks in GitHub Actions, GitLab, or an existing pipeline.
 ---
 
-import { LOCKFILE_INSTALLS } from '../../../config/setup.ts';
+import { LOCKFILE_INSTALLS } from '#docs/config/setup.ts';
 
 gspot writes one workflow file and never touches the others. Keep your tests, builds, and deploys in your own workflow
 files; GitHub runs every workflow file in parallel, so they never wait on gspot. A testing configuration such as `jest`

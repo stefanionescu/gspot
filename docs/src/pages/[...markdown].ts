@@ -1,5 +1,5 @@
-import { buildMarkdownCopyPath } from '../agents.ts';
 import type { APIRoute, GetStaticPaths } from 'astro';
+import { buildMarkdownCopyPath } from '#docs/agents.ts';
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { entryToSimpleMarkdown } from 'starlight-llms-txt/markdown';
 

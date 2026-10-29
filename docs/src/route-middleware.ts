@@ -1,5 +1,5 @@
-import { MARKDOWN_TYPE } from './config/agents.ts';
-import { buildMarkdownCopyPath } from './agents.ts';
+import { MARKDOWN_TYPE } from '#docs/config/agents.ts';
+import { buildMarkdownCopyPath } from '#docs/agents.ts';
 import { defineRouteMiddleware } from '@astrojs/starlight/route-data';
 
 export const onRequest = defineRouteMiddleware(({ locals }) => {

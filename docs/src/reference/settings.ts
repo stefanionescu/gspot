@@ -1,8 +1,8 @@
-import { CLI_REFERENCE } from './cli.ts';
 import { isDeepStrictEqual } from 'node:util';
+import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import { SCHEMA_FILE } from '#cli/config/files/names.ts';
-import { formatTable, formatSection, buildReferencePage } from './markdown.ts';
-import type { CliReference, ReferencePage, SettingsSchema } from '../types/reference.ts';
+import type { CliReference, ReferencePage, SettingsSchema } from '#docs/types/reference.ts';
+import { formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
 
 import {
     DEFS_PREFIX,
@@ -23,7 +23,7 @@ import {
     LANGUAGE_PLACEHOLDER,
     REASONED_VALUE_LABEL,
     MONOREPOS_SCOPE_MESSAGE,
-} from '../config/reference.ts';
+} from '#docs/config/reference.ts';
 
 function getSchemaNode(schema: SettingsSchema, subschema: SettingsSchema | boolean): SettingsSchema {
     if (typeof subschema === 'boolean') return subschema ? {} : { not: {} };

@@ -1,11 +1,11 @@
-import { CLI_REFERENCE } from './cli.ts';
+import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 import type { Check, Configuration } from '#cli/types/configurations.ts';
-import { formatTable, formatSection, buildReferencePage } from './markdown.ts';
 import { getTool, getToolName, hasRuleOutput } from '#cli/configurations/tools.ts';
-import type { GuideCheck, Suppression, ReferencePage } from '../types/reference.ts';
 import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
+import type { GuideCheck, Suppression, ReferencePage } from '#docs/types/reference.ts';
+import { formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
 
 import {
     HELP_HEADING,
@@ -24,7 +24,7 @@ import {
     REFUSED_FORM_LABEL,
     SUPPRESSION_FORMS_HEADING,
     REFUSED_SUPPRESSION_MESSAGE,
-} from '../config/reference.ts';
+} from '#docs/config/reference.ts';
 
 function formatToolNames(check: Check): string | undefined {
     const program = getToolName(check);

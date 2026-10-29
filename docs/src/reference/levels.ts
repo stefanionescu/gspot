@@ -1,5 +1,5 @@
-import { CLI_REFERENCE } from './cli.ts';
-import { LEVEL_ADVICE } from '../config/reference.ts';
+import { CLI_REFERENCE } from '#docs/reference/cli.ts';
+import { LEVEL_ADVICE } from '#docs/config/reference.ts';
 import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/definitions/root.ts';
 
 /**

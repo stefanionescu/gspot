@@ -1,13 +1,13 @@
 import { fileURLToPath } from 'node:url';
 import starlight from '@astrojs/starlight';
-import { writeAgentFiles } from './src/agents.ts';
+import { writeAgentFiles } from '#docs/agents.ts';
 import starlightLlmsTxt from 'starlight-llms-txt';
-import { pruneUnusedStyles } from './src/styles.ts';
-import { SIDEBAR } from './src/config/navigation.ts';
-import { CLI_REFERENCE } from './src/reference/cli.ts';
+import { pruneUnusedStyles } from '#docs/styles.ts';
+import { SIDEBAR } from '#docs/config/navigation.ts';
+import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import { SCHEMA_FILE } from '#cli/config/files/names.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
-import { LLMS_PAGES, AGENT_STEPS } from './src/config/setup.ts';
+import { LLMS_PAGES, AGENT_STEPS } from '#docs/config/setup.ts';
 import { defineConfig, passthroughImageService } from 'astro/config';
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 
@@ -22,7 +22,7 @@ import {
     SOCIAL_IMAGE_ALT,
     SOCIAL_IMAGE_SIZE,
     FIRST_PAINT_ELEMENT,
-} from './src/config/site.ts';
+} from '#docs/config/site.ts';
 
 export default defineConfig({
     site: cliPackage.homepage,
@@ -32,6 +32,7 @@ export default defineConfig({
         resolve: {
             tsconfigPaths: true,
             alias: {
+                '#docs': fileURLToPath(new URL('src', import.meta.url)),
                 'starlight-llms-txt/markdown': fileURLToPath(
                     new URL('node_modules/starlight-llms-txt/entryToSimpleMarkdown.ts', import.meta.url),
                 ),

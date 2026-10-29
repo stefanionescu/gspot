@@ -1,4 +1,4 @@
-import type { GUIDES } from '../config/reference.ts';
+import type { GUIDES } from '#docs/config/reference.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { buildJsonSchema } from '#cli/settings/json-schema.ts';
 import type { Tool, Configuration, ConfigurationCheck } from '#cli/types/configurations.ts';

@@ -1,5 +1,5 @@
-import { CODE_TOKENS } from '../../../config/home.ts';
-import { type ExampleToken } from '../../../types/components.ts';
+import { CODE_TOKENS } from '#docs/config/home.ts';
+import { type ExampleToken } from '#docs/types/components.ts';
 
 /**
 Split one example line into syntax tokens.
