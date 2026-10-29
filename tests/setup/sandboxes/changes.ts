@@ -12,7 +12,21 @@ import type { SandboxChanges } from '#tests/types/samples.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { runGitStep, markExecutable } from '#tests/setup/system/git.ts';
-import { rm, mkdir, lstat, unlink, readFile, writeFile } from 'node:fs/promises';
+import { rm, mkdir, lstat, rmdir, unlink, readFile, writeFile } from 'node:fs/promises';
+
+async function deleteLeftover(root: string, path: string): Promise<void> {
+    await rm(join(root, path), { force: true });
+    for (let folder = dirname(path); folder !== '.'; folder = dirname(folder)) {
+        const removed = await rmdir(join(root, folder)).then(
+            () => true,
+            (error: unknown) => {
+                if (!hasErrorCode(error, 'ENOTEMPTY') && !hasErrorCode(error, 'ENOENT')) throw error;
+                return false;
+            },
+        );
+        if (!removed) return;
+    }
+}
 
 async function writeChanges(root: string, changes: SandboxWrite): Promise<void> {
     for (const path of changes.removed) await rm(join(root, path));
@@ -32,7 +46,8 @@ async function writeChanges(root: string, changes: SandboxWrite): Promise<void> 
 
 /**
 Change a sandbox, and on disposal restore its files, its index and `HEAD` from a savedTree taken before the change, so
-a failed change still restores them.
+a failed change still restores them. Disposal deletes new ignored files and the folders they leave empty, but cannot
+bring back an ignored file that the change deleted.
 */
 export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {
     const cwd = sandbox.root;
@@ -64,8 +79,7 @@ export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): 
             else if (runCommandBlocking(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: cwd, env: {} }).code === 0)
                 runGitStep(cwd, ['update-ref', '-d', 'HEAD']);
             runGitStep(cwd, ['read-tree', index]);
-            for (const path of ignoredAfter)
-                if (path !== '' && !ignored.has(path)) await rm(join(cwd, path), { force: true });
+            for (const path of ignoredAfter) if (path !== '' && !ignored.has(path)) await deleteLeftover(cwd, path);
         } finally {
             await unlink(savedIndex);
         }

@@ -2,22 +2,32 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/configurations/names.ts';
+import type { SandboxChanges } from '#tests/types/samples.ts';
 import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { GUIDE_READ_MARKDOWN, SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/documents.ts';
-import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { PACKAGE_STYLE_CASES } from '#tests/config/integration/checks/general/prose/scopes.ts';
+import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
+
+async function applyLevelChanges(changes: SandboxChanges): Promise<AsyncDisposable> {
+    await using resources = new AsyncDisposableStack();
+    resources.defer(async () => {
+        await runGspotStep(installedSandbox(), ['install']);
+    });
+    resources.use(await applySandboxChanges(installedSandbox(), changes));
+    return resources.move();
+}
 
 test.each([...LEVELS])(
     'prose/vale at level %s checks child files once at the root and reads the shared styles',
     async (level) => {
         const { root } = installedSandbox();
         const path = 'child/only.md';
-        await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+        await using _sourceChange = await applyLevelChanges({
             files: {
                 'gspot.toml': buildSandboxSettings([], {
                     level,
@@ -99,7 +109,7 @@ test.each([...LEVELS])(
         const sample = PACKAGE_STYLE_CASES.map(({ sample }) => sample).join('\n\n') + '\n';
         const path = 'sample.md';
         const settings = buildSandboxSettings(['prose'], { level });
-        await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+        await using _sourceChange = await applyLevelChanges({
             files: { 'gspot.toml': settings, [path]: sample },
         });
 
