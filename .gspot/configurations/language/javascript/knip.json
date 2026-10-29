@@ -117,8 +117,6 @@
             "entry": [
                 "tests/setup/runner/unit.ts",
                 "tests/setup/programs/**/*.ts",
-                "packages/eslint-plugin/local/plugin.mjs",
-                "packages/eslint-plugin/local/source-hook.ts",
                 "packages/eslint-plugin/src/plugin.ts",
                 "tests/setup/runner/prepare.ts",
                 "tests/setup/runner/integration.ts",
@@ -197,8 +195,6 @@
         },
         "packages/eslint-plugin": {
             "entry": [
-                "local/plugin.mjs",
-                "local/source-hook.ts",
                 "src/plugin.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",

@@ -292,28 +292,14 @@ USAGE = "mise uses USAGE in task argument directives."
 [tools.eslint]
 import_extension = "ts"
 
-[[tools.eslint.plugins]]
-name = "local"
-path = "packages/eslint-plugin/local/plugin.mjs"
-
-[tools.eslint.plugins.rules]
-no-promise-matchers = []
-schema-location = [{ folders = ["packages/cli/src/schemas", "tests/schemas"] }]
-
 [[tools.eslint.override]]
 paths = ["packages/cli/src/**"]
 
 [tools.eslint.override.rules]
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 
-[[tools.eslint.override]]
-paths = ["packages/eslint-plugin/local/source-hook.ts"]
-
-[tools.eslint.override.rules]
-"n/no-unsupported-features/node-builtins" = [{ version = ">=24", allowExperimental = true }]
-
 [tools.knip]
-entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/local/plugin.mjs", "packages/eslint-plugin/local/source-hook.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-middleware.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config-files/purgecss.ts", "packages/cli/linter-exports.ts", "packages/cli/pin-ages.ts"]
+entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-middleware.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config-files/purgecss.ts", "packages/cli/linter-exports.ts", "packages/cli/pin-ages.ts"]
 
 [[scope]]
 path = "docs"
@@ -407,11 +393,6 @@ can_import = []
 name = "plugin"
 paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/plugin.d.ts"]
 can_import = ["plugin-config", "plugin-types"]
-
-[[import_rule]]
-name = "plugin-local"
-paths = ["packages/eslint-plugin/local/**"]
-can_import = ["plugin", "plugin-config", "plugin-types"]
 
 [[import_rule]]
 name = "docs-config"

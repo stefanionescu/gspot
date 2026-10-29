@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-#MISE description="Lint the repository with the plugin source."
-set -euo pipefail
-
-git ls-files -z -- '*.js' '*.mjs' '*.cjs' '*.jsx' '*.ts' '*.mts' '*.cts' '*.tsx' '*.astro' '*.svelte' '*.vue' ':!.gspot/' |
-    xargs -0 node --import ./packages/eslint-plugin/local/source-hook.ts .gspot/node_modules/eslint/bin/eslint.js \
-        --no-warn-ignored --config .gspot/configurations/language/javascript/eslint/eslint.mjs

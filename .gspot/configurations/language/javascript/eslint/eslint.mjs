@@ -14,7 +14,6 @@ import regexp from "eslint-plugin-regexp";
 import security from "eslint-plugin-security";
 import perfectionist from "eslint-plugin-perfectionist";
 import boundaries from "eslint-plugin-boundaries";
-import localPlugin0 from "../../../../../packages/eslint-plugin/local/plugin.mjs";
 import typescriptBlocks from "../../typescript/eslint.mjs";
 import astroBlocks from "../../../framework/astro/eslint.mjs";
 import zodBlocks from "../../../library/zod/eslint.mjs";
@@ -193,8 +192,7 @@ export default [
             "regexp": regexp,
             "security": security,
             "perfectionist": perfectionist,
-            "boundaries": boundaries,
-            "local": localPlugin0
+            "boundaries": boundaries
         },
         linterOptions: {
             reportUnusedDisableDirectives: 'error'
@@ -529,7 +527,6 @@ export default [
                         "#tests/*": "tests/*",
                         "#cli-package": "packages/cli/package.json",
                         "#eslint-plugin/*": "packages/eslint-plugin/src/*",
-                        "#eslint-plugin-local/*": "packages/eslint-plugin/local/*",
                         "#eslint-plugin-package": "packages/eslint-plugin/package.json",
                         "#root-package": "package.json",
                         "#docs/*": "docs/src/*"
@@ -624,7 +621,6 @@ export default [
                         "#tests/*": "tests/*",
                         "#cli-package": "packages/cli/package.json",
                         "#eslint-plugin/*": "packages/eslint-plugin/src/*",
-                        "#eslint-plugin-local/*": "packages/eslint-plugin/local/*",
                         "#eslint-plugin-package": "packages/eslint-plugin/package.json",
                         "#root-package": "package.json",
                         "#docs/*": "docs/src/*"
@@ -655,7 +651,6 @@ export default [
                         "#tests/*": "tests/*",
                         "#cli-package": "packages/cli/package.json",
                         "#eslint-plugin/*": "packages/eslint-plugin/src/*",
-                        "#eslint-plugin-local/*": "packages/eslint-plugin/local/*",
                         "#eslint-plugin-package": "packages/eslint-plugin/package.json",
                         "#root-package": "package.json",
                         "#docs/*": "docs/src/*"
@@ -1115,12 +1110,6 @@ export default [
                             "packages/eslint-plugin/src/*.ts",
                             "packages/eslint-plugin/src/rules/**",
                             "packages/eslint-plugin/plugin.d.ts"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:plugin-local",
-                        "pattern": [
-                            "packages/eslint-plugin/local/**"
                         ]
                     },
                     {
@@ -1934,42 +1923,6 @@ export default [
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:plugin-local"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"plugin-local\" may import its own files and \"plugin\", \"plugin-config\", \"plugin-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:plugin-local"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:plugin-local",
-                                                "import-rule:plugin",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
                                     "categories": "import-rule:docs-config"
                                 }
                             },
@@ -2051,7 +2004,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"docs\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"settings\", \"planning\", \"tools\", \"installers\", \"generation\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"plugin-local\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"docs\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"settings\", \"planning\", \"tools\", \"installers\", \"generation\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2083,7 +2036,6 @@ export default [
                                                 "import-rule:plugin-config",
                                                 "import-rule:plugin-types",
                                                 "import-rule:plugin",
-                                                "import-rule:plugin-local",
                                                 "import-rule:docs-config",
                                                 "import-rule:docs-types"
                                             ]
@@ -2176,7 +2128,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tests-setup\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"settings\", \"planning\", \"tools\", \"installers\", \"generation\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"plugin-local\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"tests-setup\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"settings\", \"planning\", \"tools\", \"installers\", \"generation\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2208,7 +2160,6 @@ export default [
                                                 "import-rule:plugin-config",
                                                 "import-rule:plugin-types",
                                                 "import-rule:plugin",
-                                                "import-rule:plugin-local",
                                                 "import-rule:docs-config",
                                                 "import-rule:docs-types",
                                                 "import-rule:docs",
@@ -2233,7 +2184,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tests\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"settings\", \"planning\", \"tools\", \"installers\", \"generation\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"plugin-local\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"tests\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"settings\", \"planning\", \"tools\", \"installers\", \"generation\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2265,7 +2216,6 @@ export default [
                                                 "import-rule:plugin-config",
                                                 "import-rule:plugin-types",
                                                 "import-rule:plugin",
-                                                "import-rule:plugin-local",
                                                 "import-rule:docs-config",
                                                 "import-rule:docs-types",
                                                 "import-rule:docs",
@@ -2483,7 +2433,6 @@ export default [
                                             "import-rule:plugin-config",
                                             "import-rule:plugin-types",
                                             "import-rule:plugin",
-                                            "import-rule:plugin-local",
                                             "import-rule:docs-config",
                                             "import-rule:docs-types",
                                             "import-rule:docs",
@@ -2528,7 +2477,6 @@ export default [
                                                 "import-rule:plugin-config",
                                                 "import-rule:plugin-types",
                                                 "import-rule:plugin",
-                                                "import-rule:plugin-local",
                                                 "import-rule:docs-config",
                                                 "import-rule:docs-types",
                                                 "import-rule:docs",
@@ -2640,45 +2588,6 @@ export default [
             ]
         ]
     },
-    // javascript: your own rule options
-    {
-        "ignores": [],
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "version": ">=24",
-                    "allowExperimental": true
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(0, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(0, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(0, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(0, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ]
-        ]
-    },
     // javascript
     {
         languageOptions: {
@@ -2747,45 +2656,6 @@ export default [
             ]
         ]
     },
-    // javascript: your own rule options
-    {
-        "ignores": [],
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "version": ">=24",
-                    "allowExperimental": true
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(1, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(1, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(1, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(1, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ]
-        ]
-    },
     // javascript
     {
         languageOptions: {
@@ -2850,45 +2720,6 @@ export default [
             [
                 "**/*.astro",
                 runtimeMatches(2, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript: your own rule options
-    {
-        "ignores": [],
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "version": ">=24",
-                    "allowExperimental": true
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(2, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(2, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(2, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(2, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
             ]
         ]
     },
@@ -2960,45 +2791,6 @@ export default [
             ]
         ]
     },
-    // javascript: your own rule options
-    {
-        "ignores": [],
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "version": ">=24",
-                    "allowExperimental": true
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(3, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(3, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(3, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(3, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ]
-        ]
-    },
     // javascript
     {
         languageOptions: {
@@ -3063,45 +2855,6 @@ export default [
             [
                 "**/*.astro",
                 runtimeMatches(4, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript: your own rule options
-    {
-        "ignores": [],
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "version": ">=24",
-                    "allowExperimental": true
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(4, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(4, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(4, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(4, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
             ]
         ]
     },
@@ -3173,45 +2926,6 @@ export default [
             ]
         ]
     },
-    // javascript: your own rule options
-    {
-        "ignores": [],
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "version": ">=24",
-                    "allowExperimental": true
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(5, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(5, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(5, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(5, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ]
-        ]
-    },
     // javascript
     {
         languageOptions: {
@@ -3276,45 +2990,6 @@ export default [
             [
                 "**/*.astro",
                 runtimeMatches(6, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript: your own rule options
-    {
-        "ignores": [],
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "version": ">=24",
-                    "allowExperimental": true
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(6, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(6, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(6, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(6, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
             ]
         ]
     },
@@ -3386,45 +3061,6 @@ export default [
             ]
         ]
     },
-    // javascript: your own rule options
-    {
-        "ignores": [],
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "version": ">=24",
-                    "allowExperimental": true
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(7, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(7, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(7, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(7, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ]
-        ]
-    },
     // javascript
     {
         languageOptions: {
@@ -3489,45 +3125,6 @@ export default [
             [
                 "**/*.astro",
                 runtimeMatches(8, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript: your own rule options
-    {
-        "ignores": [],
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "version": ">=24",
-                    "allowExperimental": true
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(8, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(8, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(8, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(8, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
             ]
         ]
     },
@@ -3596,45 +3193,6 @@ export default [
             [
                 "**/*.astro",
                 runtimeMatches(9, runtimeDeclarations)
-            ]
-        ]
-    },
-    // javascript: your own rule options
-    {
-        "ignores": [],
-        rules: {
-            "n/no-unsupported-features/node-builtins": [
-                "error",
-                {
-                    "version": ">=24",
-                    "allowExperimental": true
-                }
-            ]
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(9, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                runtimeMatches(9, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(9, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts"
-            ],
-            [
-                "**/*.astro",
-                runtimeMatches(9, runtimeDeclarations),
-                "**/*",
-                "packages/eslint-plugin/local/source-hook.ts/**"
             ]
         ]
     },
@@ -5758,27 +5316,6 @@ export default [
                 "**/*",
                 "packages/eslint-plugin/package.json/**"
             ]
-        ]
-    },
-    // javascript
-    {
-        rules: {
-            "local/no-promise-matchers": [
-                "error"
-            ],
-            "local/schema-location": [
-                "error",
-                {
-                    "folders": [
-                        "packages/cli/src/schemas",
-                        "tests/schemas"
-                    ]
-                }
-            ]
-        },
-        files: [
-            "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-            "**/*.astro"
         ]
     },
 ];
