@@ -1,8 +1,8 @@
 import { join, posix } from 'node:path';
+import { isTable } from '#cli/system/tables.ts';
 import { statSync, readdirSync } from 'node:fs';
 import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import type { Session } from '#cli/types/session.ts';
-import type { NumberedLine } from '#cli/types/text.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
@@ -16,12 +16,13 @@ import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { LICENSE_FILE } from '#cli/config/repository/files/classify.ts';
 import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
+import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { MISE_FILES, MISE_TASK_FOLDERS } from '#cli/config/files/names.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
-import type { PathIndex, TaskNames } from '#cli/types/checks/general/docs.ts';
 import { replaceSettingPlaceholders } from '#cli/runs/command/placeholders.ts';
+import type { PathIndex, TaskNames, ProseLine } from '#cli/types/checks/general/docs.ts';
 import { listExecutableNames, includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
 
 import {
@@ -38,6 +39,7 @@ import {
     TITLE_ATTRIBUTE,
     EMPHASIS_MARKERS,
     PATH_TOKEN_SKIPS,
+    REMOTE_ARGUMENTS,
     TOKEN_SEPARATORS,
     MARKDOWN_EXTENSIONS,
     TRAILING_PUNCTUATION,
@@ -80,10 +82,11 @@ function isMissing(token: string, file: string, index: PathIndex): boolean {
     return !index.paths.has(clean) && (index.paths.has(first) || (!first.includes('.') && FILE_EXTENSION.test(clean)));
 }
 
-function validateProseLine(file: string, prose: NumberedLine, index: PathIndex): CheckFinding[] {
+function validateProseLine(file: string, prose: ProseLine, index: PathIndex): CheckFinding[] {
     const { number, text: line } = prose;
     const paths = extractPathTokens(line)
-        .filter((token) => isMissing(token, file, index))
+        .filter((token) => !prose.command || !posix.normalize(token).startsWith('../'))
+        .filter((token) => isMissing(token, prose.command ? '' : file, index))
         .map((token) => ({
             file,
             line: number,
@@ -113,6 +116,18 @@ function validateProseLine(file: string, prose: NumberedLine, index: PathIndex):
     return [...paths, ...runs];
 }
 
+function listPackageBinaries(session: Session, folders: string[]): string[] {
+    return folders.flatMap((folder) => {
+        const manifest = readCachedPackageJson(session.reads, posix.join(folder, PACKAGE_JSON));
+        const bin = manifest?.['bin'];
+        if (typeof bin === 'string') {
+            const name = manifest?.name?.split('/').at(-1);
+            return name === undefined ? [] : [name];
+        }
+        return isTable(bin) ? Object.keys(bin).filter((name) => typeof bin[name] === 'string') : [];
+    });
+}
+
 function readTaskNames(session: Session, scopePath: string): TaskNames {
     const ancestors = listEnclosingFolders(scopePath).flatMap((folder) =>
         session.repository.scopeFolders.filter((scopeFolder) => scopeFolder.path === folder),
@@ -128,10 +143,12 @@ function readTaskNames(session: Session, scopePath: string): TaskNames {
         ),
     ];
     let scripts: string[] = [];
+    let packages: string[] = [];
     for (const { path } of ancestors) {
         const found = readCachedPackageJson(session.reads, posix.join(path, PACKAGE_JSON));
         if (found === undefined) continue;
         scripts = found.scripts === undefined ? [] : Object.keys(found.scripts);
+        packages = [path, ...(path === '' ? listWorkspaceFolders(session.root) : [])];
         break;
     }
     return {
@@ -156,30 +173,40 @@ function readTaskNames(session: Session, scopePath: string): TaskNames {
             ),
         ]),
         scripts: new Set(scripts),
-        binaries: new Set(
-            ancestors.flatMap(({ path }) => {
+        binaries: new Set([
+            ...listPackageBinaries(session, packages),
+            ...ancestors.flatMap(({ path }) => {
                 const folder = join(session.root, path, NPM_BIN_FOLDER);
                 return statSync(folder, { throwIfNoEntry: false })?.isDirectory() === true ? readdirSync(folder) : [];
             }),
-        ),
+        ]),
     };
 }
 
-function extractProseLines(text: string): NumberedLine[] {
+function extractProseLines(text: string): ProseLine[] {
     const ignored = new Set<number>();
+    const commands = new Set<number>();
     for (const fence of listCodeFences(text)) {
         const titled = fence.attributes
             .split(WHITESPACE_RUN)
             .some((attribute) => attribute.startsWith(TITLE_ATTRIBUTE));
-        for (let line = fence.startLine; line <= fence.endLine; line += 1)
+        for (let line = fence.startLine; line <= fence.endLine; line += 1) {
             if (titled || [fence.startLine, fence.endLine].includes(line) || !COMMAND_FENCES.has(fence.language))
                 ignored.add(line);
+            else commands.add(line);
+        }
     }
-    return text.split('\n').flatMap((line, index) => (ignored.has(index + 1) ? [] : { number: index + 1, text: line }));
+    return text
+        .split('\n')
+        .flatMap((line, index) =>
+            ignored.has(index + 1) ? [] : { number: index + 1, text: line, command: commands.has(index + 1) },
+        );
 }
 
 function extractPathTokens(line: string): string[] {
-    return line
+    let text = line;
+    for (const pattern of REMOTE_ARGUMENTS) text = text.replaceAll(pattern, '');
+    return text
         .split(TOKEN_SEPARATORS)
         .map((token) => {
             let end = token.length;

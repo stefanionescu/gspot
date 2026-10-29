@@ -36,6 +36,7 @@
         "../../../../packages/eslint-plugin/docs/.stylelintrc.json",
         "../../../../packages/eslint-plugin/packages/cli/.markdownlint.jsonc",
         "../../../../packages/eslint-plugin/packages/eslint-plugin/.markdownlint.jsonc",
+        "../../../../packages/eslint-plugin/tests/.markdownlint.jsonc",
         "../../../../packages/eslint-plugin/packages/cli/configurations/**/eslint-presets.json",
         "../../../../packages/eslint-plugin/packages/cli/configurations/**/*-names.json",
         "../../../../packages/eslint-plugin/packages/cli/README.md",

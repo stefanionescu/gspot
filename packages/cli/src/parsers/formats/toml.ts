@@ -124,14 +124,16 @@ export function parseTomlFile(path: string, text: string, schema?: z.ZodType): u
     let value: Record<string, unknown>;
     try {
         value = parseToml(text) as Record<string, unknown>;
-    } catch (error_) {
-        const error = error_ as Error;
+    } catch (error) {
+        const issue = error as Error;
         const position =
-            'line' in error && typeof error.line === 'number' && 'column' in error && typeof error.column === 'number'
-                ? `${path}:${String(error.line)}:${String(error.column + 1)}`
+            'line' in issue && typeof issue.line === 'number' && 'column' in issue && typeof issue.column === 'number'
+                ? `${path}:${String(issue.line)}:${String(issue.column + 1)}`
                 : path;
-        const detail = error.message.trimEnd().split('\n').slice(-1).join('').replace(MESSAGE_END, '');
-        throw new GspotError('parse', `${position} is not valid TOML: ${detail}. Fix the file.`, { cause: error });
+        const detail = issue.message.trimEnd().split('\n').slice(-1).join('').replace(MESSAGE_END, '');
+        throw new GspotError('parse', `${position} is not valid TOML: ${detail}. Fix the file.`, {
+            cause: issue,
+        });
     }
     return schema === undefined ? value : parseFileFields(path, value, schema);
 }

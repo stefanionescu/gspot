@@ -17,3 +17,7 @@ export type PurgecssConstructor = new () => {
 export type PurgecssOutput = { file: string; rejected: string[] }[];
 
 export type PurgecssRequest = { configFile: string; css: string[]; content: string[] };
+
+export type AssetSource = { path: string; text: string; matches: (path: string) => boolean };
+
+export type AssetGlobImport = { patterns: string[]; text: string };

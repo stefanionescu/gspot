@@ -68,8 +68,8 @@ export function buildYamllintFile(planned: PlannedConfigFile): string {
         ...Object.fromEntries(YAMLLINT_RULES.map((rule) => [rule, {}])),
         ...YAMLLINT_RULE_OPTIONS,
     };
-    for (const [rule, chosen] of Object.entries(getTable(planned.scope.settings, 'tools.yamllint').rules))
-        rules[rule] = { ...(rules[rule] as Record<string, unknown>), ...chosen };
+    for (const [rule, ruleOptions] of Object.entries(getTable(planned.scope.settings, 'tools.yamllint').rules))
+        rules[rule] = { ...(rules[rule] as Record<string, unknown>), ...ruleOptions };
     Object.assign(
         rules,
         Object.fromEntries(listIgnoredRules(planned.scope, YAMLLINT_CHECK).map((name) => [name, 'disable'])),

@@ -14,6 +14,11 @@ export const COMMAND_FENCES = new Set(['sh', 'bash', 'console', 'shell', 'zsh', 
 
 export const PATH_TOKEN_SKIPS = [/^\.\.?\/?$/u, /^\d+\/\d+$/u, /^\//u] as const;
 
+export const REMOTE_ARGUMENTS = [
+    /\bgh\s+api\s+(?:"[^"\n]*"|'[^'\n]*'|[^\s`]+)/gu,
+    /\b(?:Accept|Content-Type):\s*[a-z]+\/[a-z0-9!#$&^_.+-]+/giu,
+] as const;
+
 export const MISE_RUN = 'mise run ';
 
 export const BUN_RUN = 'bun run ';

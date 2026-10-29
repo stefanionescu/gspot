@@ -28,6 +28,7 @@ node_modules/
 /packages/cli/.markdownlint.jsonc
 /packages/eslint-plugin/.markdownlint.jsonc
 /prettier.config.mjs
+/tests/.markdownlint.jsonc
 
 # Generator outputs
 docs/cloudflare-env.d.ts

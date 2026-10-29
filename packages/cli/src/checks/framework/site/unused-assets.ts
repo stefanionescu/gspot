@@ -1,11 +1,16 @@
+import ts from 'typescript';
 import { posix } from 'node:path';
 import type { Session } from '#cli/types/session.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
 import { FILENAME_TAGS } from '#cli/config/repository/files/classify.ts';
 import { SYMLINK_MODE, GIT_FILE_MODES } from '#cli/config/files/modes.ts';
+import type { AssetSource, AssetGlobImport } from '#cli/types/checks/framework/site.ts';
+import { ASTRO_EXTENSION, ASTRO_FRONT_MATTER } from '#cli/config/parsers/code/comments.ts';
+import { COMPONENT_SCRIPT, COMPONENT_EXTENSION } from '#cli/config/parsers/code/environment.ts';
 
 import {
     ASSET_FOLDER,
@@ -16,6 +21,66 @@ import {
     ASSET_REFERENCE_PREFIX,
     ASSET_REFERENCE_SUFFIX,
 } from '#cli/config/checks/framework/site/unused-assets.ts';
+
+function readGlobPatterns(node: ts.Node): string[] | undefined {
+    if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression)) return undefined;
+    const expression = node.expression;
+    if (expression.name.text !== 'glob' || !ts.isMetaProperty(expression.expression)) return undefined;
+    if (
+        expression.expression.keywordToken !== ts.SyntaxKind.ImportKeyword ||
+        expression.expression.name.text !== 'meta'
+    )
+        return undefined;
+    return readGlobArguments(node.arguments[0]);
+}
+
+function readGlobArguments(argument: ts.Expression | undefined): string[] | undefined {
+    if (argument === undefined) return undefined;
+    if (ts.isStringLiteralLike(argument)) return [argument.text];
+    if (!ts.isArrayLiteralExpression(argument)) return undefined;
+    const patterns = argument.elements.filter((element) => ts.isStringLiteralLike(element));
+    return patterns.length === argument.elements.length ? patterns.map((pattern) => pattern.text) : undefined;
+}
+
+function readGlobImports(path: string, script: string): AssetGlobImport[] {
+    const source = ts.createSourceFile(path, script, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const imports: AssetGlobImport[] = [];
+    const visit = (node: ts.Node): void => {
+        const patterns = readGlobPatterns(node);
+        if (patterns !== undefined) imports.push({ patterns, text: node.getText(source) });
+        ts.forEachChild(node, visit);
+    };
+    visit(source);
+    return imports;
+}
+
+function readAssetSource(path: string, text: string, scope: string): AssetSource {
+    const matchers: ((path: string) => boolean)[] = [];
+    let references = text;
+    const scripts = COMPONENT_EXTENSION.test(path)
+        ? [
+              ...(path.endsWith(ASTRO_EXTENSION) ? [ASTRO_FRONT_MATTER.exec(text)?.[1]] : []),
+              ...[...text.matchAll(COMPONENT_SCRIPT)].map((script) => script.groups?.['body']),
+          ]
+        : [text];
+    for (const script of scripts) {
+        if (script?.includes('glob') !== true) continue;
+        for (const imported of readGlobImports(path, script)) {
+            const patterns = imported.patterns.map((pattern) => {
+                const negative = pattern.startsWith('!');
+                const bare = negative ? pattern.slice(1) : pattern;
+                const target = bare.startsWith('/')
+                    ? posix.join(scope, bare.slice(1))
+                    : posix.join(extractParentFolder(path), bare);
+                return negative ? `!${target}` : target;
+            });
+            matchers.push(buildPathMatcher(patterns));
+            references = references.replaceAll(imported.text, '');
+        }
+    }
+
+    return { path, text: references, matches: (file) => matchers.some((match) => match(file)) };
+}
 
 /**
 Report assets absent from the text files and index. Exclude files that browsers and hosts load by name.
@@ -41,7 +106,7 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
         .filter((path) => TEXT_EXTENSIONS.has(posix.extname(path)))
         .map((path) => {
             const text = findCachedText(session.reads, path);
-            return text === undefined ? undefined : { path, text };
+            return text === undefined ? undefined : readAssetSource(path, text, planned.scope.path);
         })
         .filter((source) => source !== undefined)
         .toArray();
@@ -62,8 +127,10 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
                 'u',
             );
             return !texts.some(
-                ({ path, text }) =>
-                    reference.test(text) || text.includes(posix.relative(extractParentFolder(path), file.path)),
+                ({ path, text, matches }) =>
+                    matches(file.path) ||
+                    reference.test(text) ||
+                    text.includes(posix.relative(extractParentFolder(path), file.path)),
             );
         })
         .map((file) => ({

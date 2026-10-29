@@ -8,7 +8,12 @@ import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { SCOPE_ASSET_FILES, ASSET_REFERENCE_CASES } from '#tests/config/checks/framework/site/unused-assets.ts';
+
+import {
+    GLOB_ASSET_CASES,
+    SCOPE_ASSET_FILES,
+    ASSET_REFERENCE_CASES,
+} from '#tests/config/checks/framework/site/unused-assets.ts';
 
 async function prepareAssetRepository(resources: AsyncDisposableStack, files: Record<string, string>): Promise<string> {
     const sandbox = resources.use(
@@ -100,4 +105,16 @@ test('conventional assets pass and a nested asset needs its own path', async () 
     expect(await runSandboxCheck(sandbox.path, 'site/unused-assets')).toMatchObject([
         { file: 'public/b/logo.svg', rule: 'unused-asset' },
     ]);
+});
+
+test.each(GLOB_ASSET_CASES)('literal glob imports in $path retain matching assets', async ({ path, text, unused }) => {
+    await using resources = new AsyncDisposableStack();
+    const root = await prepareAssetRepository(resources, {
+        [path]: text,
+        'docs/assets/tools/logo.svg': '<svg/>',
+        'docs/assets/tools/spare.svg': '<svg/>',
+        'docs/assets/other.svg': '<svg/>',
+    });
+    const findings = await runSandboxCheck(root, 'site/unused-assets', { scope: 'docs' });
+    expect(findings.map((finding) => finding.file)).toStrictEqual([...unused]);
 });

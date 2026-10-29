@@ -1,5 +1,6 @@
 import { getLimit } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
+import { listCheckedFiles } from '#cli/planning/files.ts';
 import { countCodeLines } from '#cli/checks/code-lines.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
@@ -15,7 +16,7 @@ Reports source files over the code-line limit of their language.
 @param planned the scope files and limits.
 */
 export async function checkStructureLongFiles(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const sources = planned.files.flatMap((file) => {
+    const sources = listCheckedFiles(session.scopes, planned).flatMap((file) => {
         const tagged: GrammarName | 'sql' | undefined = file.tags.includes('sql')
             ? 'sql'
             : GRAMMAR_NAMES.find((name) => file.tags.includes(name));

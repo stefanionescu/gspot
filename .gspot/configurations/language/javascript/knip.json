@@ -22,6 +22,7 @@
         "docs/.stylelintrc.json",
         "packages/cli/.markdownlint.jsonc",
         "packages/eslint-plugin/.markdownlint.jsonc",
+        "tests/.markdownlint.jsonc",
         "packages/cli/configurations/**/eslint-presets.json",
         "packages/cli/configurations/**/*-names.json",
         "packages/cli/README.md",

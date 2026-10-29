@@ -36,8 +36,8 @@ export function buildMarkdownlintFile(planned: Pick<PlannedConfigFile, 'scope' |
         allLevelRules: new Set(MARKDOWNLINT_ALL_RULES),
         level: planned.level,
     });
-    for (const [rule, chosen] of Object.entries(options))
-        document[rule] = { ...(typeof document[rule] === 'object' && document[rule]), ...chosen };
+    for (const [rule, ruleOptions] of Object.entries(options))
+        document[rule] = { ...(typeof document[rule] === 'object' && document[rule]), ...ruleOptions };
     Object.assign(
         document,
         Object.fromEntries(listIgnoredRules(planned.scope, MARKDOWNLINT_CHECK).map((rule) => [rule, false])),

@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { LONG_PYTHON_FILE } from '#tests/config/checks/general/structure/long-files.ts';
+import { LONG_PYTHON_FILE, LONG_JAVASCRIPT_FILE } from '#tests/config/checks/general/structure/long-files.ts';
 
 test.each(['.sh', '.bats', ''])('Bash %s heredocs and multiline strings count as code lines', async (extension) => {
     const source = '#!/bin/sh\n# comment\ncat <<\'EOF\'\n# literal\nEOF\nvalue="first\n# literal\nlast"\n';
@@ -36,6 +36,24 @@ test('Python files count each executable line against the declared limit', async
     });
     expect(await runSandboxCheck(sandbox.path, 'structure/long-files')).toMatchObject([
         { file: 'example/big.py', rule: 'file-lines', line: 1 },
+    ]);
+});
+
+test('long files checks authored covered languages and leaves generated, vendored, and ESLint-owned files out', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['python', 'javascript'], {
+            level: 'all',
+            tables: '[limits]\nfile_lines = 2\n',
+        }),
+        'source.py': LONG_PYTHON_FILE,
+        '.gspot/configurations/language/javascript/eslint/eslint.mjs': LONG_JAVASCRIPT_FILE,
+        '.gspot/generated.py': LONG_PYTHON_FILE,
+        'vendor/copied.py': LONG_PYTHON_FILE,
+        'source.js': LONG_JAVASCRIPT_FILE,
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'structure/long-files');
+    expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
+        { file: 'source.py', rule: 'file-lines', message: 'This file has 13 code lines, over the limit of 2.' },
     ]);
 });
 

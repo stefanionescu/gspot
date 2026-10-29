@@ -82,9 +82,9 @@ function addToolOutput(target: string, group: BuiltConfigFile[], index: number, 
 function addSourceFiles(configFiles: OwnedConfigFile[], generated: ConfigFileBuildState): void {
     const sourced = configFiles.filter((each): each is OwnedSourceFile => each.configFile.source !== undefined);
     const sources = Map.groupBy(sourced, ({ configFile }) => configFile.target);
-    for (const [declared, ownedFiles] of sources) {
+    for (const [target, ownedFiles] of sources) {
         const groups = groupToolOutputs(ownedFiles, generated);
-        for (const [index, group] of groups.entries()) addToolOutput(declared, group, index, generated);
+        for (const [index, group] of groups.entries()) addToolOutput(target, group, index, generated);
     }
 }
 

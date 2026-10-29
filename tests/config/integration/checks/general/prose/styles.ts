@@ -2,6 +2,18 @@ import { TYPO } from '#tests/config/spelling.ts';
 
 export const STYLE_CASES = [
     {
+        rule: 'em-dashes',
+        path: 'directives.md',
+        source: '# Guide\n\nA sentence -- with punctuation.\n\nUse `// eslint-disable-next-line no-console -- reason: the command prints its result`.\n\nUse `value -- item`.\n\n```javascript\n// eslint-disable-next-line no-console -- reason: the command prints its result\n```\n',
+        findings: [
+            {
+                line: 3,
+                rule: 'gspot.em-dashes',
+                message: 'Em dash or double hyphen. Use a comma, colon, or period.',
+            },
+        ],
+    },
+    {
         path: 'prices.md',
         source: '# Prices\n\nThe price is $5.00.\n\nThe price is $15.\n\nThe price is 5 dollars.\n\nThe price is USD 5.\n',
         rule: 'currency',
@@ -207,6 +219,7 @@ export const SUPPRESSION_COMMENTS = [
     '// eslint-disable-line no-x -- reason: The external declaration requires this signature.',
     '// eslint-disable-next-line no-x -- reason: The vendor declaration fixes this signature.',
     '// Punctuation -- stays checked.',
+    'const value = 1; // eslint-disable-line no-x -- reason: The vendor declaration fixes this signature.',
     '',
 ] as const;
 

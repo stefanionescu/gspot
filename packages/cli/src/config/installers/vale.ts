@@ -25,7 +25,7 @@ export const BLOCK_IGNORES = [String.raw`(?s)^---\n.*?\n---\n`] as const;
 export const TOKEN_IGNORES = [
     String.raw`(?m)(^USAGE[ \t]+[^\r\n]*)`,
     String.raw`(?m)(^MISE[ \t]+[a-z_][a-z0-9_-]*[ \t]*=[^\r\n]*)`,
-    String.raw`((?:eslint|stylelint)-(?:disable|enable)(?:-next-line|-line)?\s+[^\n]*?--\s*(?:reason:\s*)?)`,
+    String.raw`(?m)(^[ \t]*(?://|/\*)?[ \t]*(?:eslint|stylelint)-(?:disable|enable)(?:-next-line|-line)?\s+[^\n]*?--\s*(?:reason:\s*)?)`,
     String.raw`(https?://[^\s)]+)`,
     String.raw`(@(?:param|template|typedef|property|prop|arg|argument|callback)\s+(?:\{[^\n]*\}\s+)?(?:\[[^\]\n]*\]|\S+))`,
     String.raw`(@(?:returns?|throws|type|see|example|deprecated|yields|enum|this|satisfies)\b(?:\s+\{[^\n]*\})?)`,
