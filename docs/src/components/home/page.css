@@ -1,7 +1,7 @@
-@import './hero.css';
-@import './setup.css';
-@import './example.css';
-@import './report.css';
+@import './hero/layout.css';
+@import './setup/controls.css';
+@import './example/layout.css';
+@import './example/report.css';
 
 .content-panel:has(.landing),
 main:has(.landing) {

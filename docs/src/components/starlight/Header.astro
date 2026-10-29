@@ -1,6 +1,6 @@
 ---
 import SiteTitle from './SiteTitle.astro';
-import ThemeSelect from './ThemeSelect.astro';
+import Select from './theme/Select.astro';
 import { DOCS_PATH } from '../../config/site.ts';
 import Search from '@astrojs/starlight/components/Search.astro';
 import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
@@ -24,7 +24,7 @@ const isHome = Astro.url.pathname === '/';
         <div class="social">
             <SocialIcons />
         </div>
-        <ThemeSelect />
+        <Select />
     </div>
 </div>
 <style>

@@ -1,8 +1,8 @@
 ---
-import ExampleRun from './ExampleRun.astro';
-import InlineText from '../InlineText.astro';
-import example from '../../config/example.json';
-import { tokenizeExampleLine } from './example.ts';
+import Run from './Run.astro';
+import InlineText from '../../InlineText.astro';
+import { tokenizeExampleLine } from './syntax.ts';
+import example from '../../../config/example.json';
 
 const beforeLines = example.agent.files
     .flatMap(({ content }) =>
@@ -71,7 +71,7 @@ const afterLines = example.fix.files
             ))}
         </ol>
     </figure>
-    <ExampleRun status="failed" summary={example.rejected_summary} />
+    <Run status="failed" summary={example.rejected_summary} />
     <figure class="panel after">
         <figcaption class="panel-head">
             <span>After: the fix</span>
@@ -98,5 +98,5 @@ const afterLines = example.fix.files
             <code class="inline-code">pay</code> now waits for the charge, and a failed payment reaches the caller.
         </p>
     </figure>
-    <ExampleRun status="passed" />
+    <Run status="passed" />
 </div>
