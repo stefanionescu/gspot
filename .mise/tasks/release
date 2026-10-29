@@ -64,6 +64,7 @@ main() {
     local cli_version
     local tag
 
+    bun packages/cli/pin-ages.ts
     assert_release_commit
     plugin_version=$(package_field packages/eslint-plugin version)
     cli_version=$(package_field packages/cli version)

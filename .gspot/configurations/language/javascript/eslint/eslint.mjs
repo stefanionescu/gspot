@@ -1094,7 +1094,8 @@ export default [
                         "pattern": [
                             "packages/cli/src/main.ts",
                             "packages/cli/src/bin.ts",
-                            "packages/cli/linter-exports.ts"
+                            "packages/cli/linter-exports.ts",
+                            "packages/cli/pin-ages.ts"
                         ]
                     },
                     {
