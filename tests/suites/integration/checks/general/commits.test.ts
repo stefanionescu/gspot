@@ -159,6 +159,7 @@ describe('a repository with the commit hooks installed', () => {
         expect(
             report.revisions[1]!.report.checks[0]!.findings.map(({ rule, message }) => ({ rule, message })),
         ).toStrictEqual(UNTYPED_MESSAGE_FINDINGS.map(({ rule, message }) => ({ rule, message: `${bad}: ${message}` })));
+        expect(report.revisions[1]!.report.checks[0]!.note).toBe('Checked 1 commit message.');
         const corrected = await spawnGspot(
             root,
             command,

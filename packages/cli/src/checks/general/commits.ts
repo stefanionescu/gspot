@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { runGit } from '#cli/system/git.ts';
 import { availableParallelism } from 'node:os';
+import { formatCount } from '#cli/system/text.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
@@ -56,6 +57,6 @@ export async function checkCommitsCommitlintPushed(session: CheckSession, planne
     let result = { ...buildBaseResult(planned, session), fileCount: 0 };
     for (const next of results) result = mergeCheckResults(result, next);
     return result.status === 'passed' || result.status === 'failed'
-        ? { ...result, note: `Checked ${String(commits.length)} commit messages.` }
+        ? { ...result, note: `Checked ${formatCount(commits.length, 'commit message')}.` }
         : result;
 }
