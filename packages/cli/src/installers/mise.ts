@@ -28,10 +28,12 @@ import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from
 
 import {
     MISE_TRUST_NOTE,
+    MISE_RELEASE_HOSTS,
     MISE_LOCK_ARGUMENTS,
     MISE_TRUST_ARGUMENTS,
     MISE_PLATFORM_PREFIX,
     MISE_CHECKSUM_PATTERN,
+    MISE_RELEASE_PROTOCOL,
     MISE_INSTALL_ARGUMENTS,
     MISE_LOCKED_ENVIRONMENT,
     MISE_TRUSTED_PATHS_VARIABLE,
@@ -58,20 +60,33 @@ function selectMiseTools(session: Session, tools: Tool[]) {
     return { pins, hookTools };
 }
 
-function hasMiseChecksums(locked: object): boolean {
+function isReleaseAddress(address: unknown): boolean {
+    if (typeof address !== 'string') return false;
+    const url = URL.parse(address);
+    return url?.protocol === MISE_RELEASE_PROTOCOL && MISE_RELEASE_HOSTS.has(url.hostname);
+}
+
+function isAuditedChecksum(pin: MiseToolPin, platform: string, checksum: unknown): boolean {
+    if (typeof checksum !== 'string' || !MISE_CHECKSUM_PATTERN.test(checksum)) return false;
+    const audited = pin.checksums?.[platform.slice(MISE_PLATFORM_PREFIX.length)];
+    return audited === undefined || audited === checksum;
+}
+
+function isLockedRelease(pin: MiseToolPin, locked: object): boolean {
     const platforms = Object.entries(locked).filter(([name]) => name.startsWith(MISE_PLATFORM_PREFIX));
     if (platforms.length === 0) return false;
     return platforms.every(
-        ([, value]) =>
+        ([name, value]) =>
             isTable(value) &&
-            typeof value['url'] === 'string' &&
-            typeof value['checksum'] === 'string' &&
-            MISE_CHECKSUM_PATTERN.test(value['checksum']),
+            isAuditedChecksum(pin, name, value['checksum']) &&
+            isReleaseAddress(value['url']) &&
+            (value['url_api'] === undefined || isReleaseAddress(value['url_api'])),
     );
 }
 
 /**
-Compare the mise pins with the versions recorded in the mise lockfile.
+Compare the mise pins with the versions recorded in the mise lockfile. Each locked download must come from a release
+host over HTTPS, and each locked checksum must equal the audited checksum of the pin where it has one.
 
 @param pins the mise pins of the configurations in use.
 @param lockfile the recorded lockfile, if present.
@@ -90,7 +105,7 @@ export function isMiseLockfileFresh(pins: MiseToolPin[], lockfile: string | unde
     return pins.every(
         (pin) =>
             parsed.data.tools[pin.name]?.some(
-                (locked) => locked.version === pin.version && hasMiseChecksums(locked),
+                (locked) => locked.version === pin.version && isLockedRelease(pin, locked),
             ) === true,
     );
 }

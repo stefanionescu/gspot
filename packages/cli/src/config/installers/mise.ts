@@ -15,6 +15,10 @@ export const MISE_CHECKSUM_PATTERN = /^(?:sha256|blake3):[a-f0-9]{64}$/u;
 
 export const MISE_PLATFORM_PREFIX = 'platforms.';
 
+export const MISE_RELEASE_HOSTS = new Set(['github.com', 'api.github.com', 'dl.deno.land']);
+
+export const MISE_RELEASE_PROTOCOL = 'https:';
+
 export const MISE_TRUST_NOTE = 'trusted .gspot/mise.toml for mise';
 
 export const MISE_TRUSTED_PATHS_VARIABLE = 'MISE_TRUSTED_CONFIG_PATHS';

@@ -21,7 +21,7 @@ import { installMiseTools, isMiseLockfileFresh } from '#cli/installers/mise.ts';
 test('mise lock freshness needs the tool, its version, a URL and a sha256 checksum', () => {
     const project = [{ name: 'vale', version: '1.2.3' }];
     const lock =
-        '[[tools.vale]]\nversion = "1.2.3"\n[tools.vale."platforms.linux-x64"]\nurl = "https://example.com/vale.zip"\nchecksum = "sha256:' +
+        '[[tools.vale]]\nversion = "1.2.3"\n[tools.vale."platforms.linux-x64"]\nurl = "https://github.com/vale-cli/vale/releases/download/v1.2.3/vale.zip"\nchecksum = "sha256:' +
         'a'.repeat(64) +
         '"\n';
     expect(isMiseLockfileFresh(project, lock)).toBe(true);
@@ -31,6 +31,30 @@ test('mise lock freshness needs the tool, its version, a URL and a sha256 checks
     expect(isMiseLockfileFresh(project, lock.replace(/url =[^\n]+/u, ''))).toBe(false);
     expect(isMiseLockfileFresh(project, '[[tools.')).toBe(false);
     expect(isMiseLockfileFresh(project, undefined)).toBe(false);
+});
+
+test('mise lock freshness refuses a download from another host and a checksum other than the audited one', () => {
+    const checksum = `sha256:${'a'.repeat(64)}`;
+    const project = [{ name: 'vale', version: '1.2.3', checksums: { 'linux-x64': checksum } }];
+    const lock = stringify({
+        tools: {
+            vale: [
+                {
+                    version: '1.2.3',
+                    'platforms.linux-x64': {
+                        url: 'https://github.com/vale-cli/vale/releases/download/v1.2.3/vale.zip',
+                        url_api: 'https://api.github.com/repos/vale-cli/vale/releases/assets/1',
+                        checksum,
+                    },
+                },
+            ],
+        },
+    });
+    expect(isMiseLockfileFresh(project, lock)).toBe(true);
+    expect(isMiseLockfileFresh(project, lock.replace(checksum, `sha256:${'b'.repeat(64)}`))).toBe(false);
+    expect(isMiseLockfileFresh(project, lock.replace('https://github.com/', 'https://example.com/'))).toBe(false);
+    expect(isMiseLockfileFresh(project, lock.replaceAll('https:', 'http:'))).toBe(false);
+    expect(isMiseLockfileFresh(project, lock.replace('https://api.github.com/', 'https://example.com/'))).toBe(false);
 });
 
 test.each(['commit', 'manual'] as const)(
@@ -46,6 +70,9 @@ test.each(['commit', 'manual'] as const)(
         const install = buildToolInstall(session, writer);
         install.misePath = 'mise';
         using _environment = overrideEnvironment({ MISE_CEILING_PATHS: sandbox.path });
+        const audited = new Map(
+            listMisePins(session.toolConfigurations).map((pin) => [pin.name, pin.checksums?.['linux-x64']]),
+        );
         const runBlocking = processes.spawnProcessBlocking;
         using _paths = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
             command[0] === 'mise' ? buildProcessResult() : runBlocking(command, options),
@@ -62,8 +89,8 @@ test.each(['commit', 'manual'] as const)(
                             {
                                 version: typeof version === 'string' ? version : version.version,
                                 'platforms.linux-x64': {
-                                    url: 'https://example.com/tool.zip',
-                                    checksum: `sha256:${'a'.repeat(64)}`,
+                                    url: 'https://github.com/example/tool/releases/download/v1.0.0/tool.zip',
+                                    checksum: audited.get(name) ?? `sha256:${'a'.repeat(64)}`,
                                 },
                             },
                         ],
@@ -97,7 +124,7 @@ test('mise fills missing release checksums from the audited pins without fetchin
     using writer = openWriter(sandbox.path);
     const install = buildToolInstall(session, writer);
     install.misePath = 'mise';
-    const url = 'https://example.com/taplo-linux-x86_64.gz';
+    const url = 'https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-x86_64.gz';
     const audited = listMisePins(session.toolConfigurations).find((pin) => pin.checksums !== undefined)!;
     const runBlocking = processes.spawnProcessBlocking;
     using _paths = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
@@ -167,7 +194,12 @@ test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps th
             : stringify({
                   tools: {
                       [pin.name]: [
-                          { version: pin.version, 'platforms.linux-x64': { url: 'https://example.com/tool.zip' } },
+                          {
+                              version: pin.version,
+                              'platforms.linux-x64': {
+                                  url: 'https://github.com/example/tool/releases/download/v1.0.0/tool.zip',
+                              },
+                          },
                       ],
                   },
               });

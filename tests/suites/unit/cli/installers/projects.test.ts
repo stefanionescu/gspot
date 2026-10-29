@@ -69,8 +69,8 @@ function buildToolLockfiles(configurations: Configuration[]): Record<string, str
                         {
                             version: pin.version,
                             'platforms.linux-x64': {
-                                url: 'https://example.com/tool.tar.gz',
-                                checksum: `sha256:${'a'.repeat(64)}`,
+                                url: 'https://github.com/example/tool/releases/download/v1.0.0/tool.tar.gz',
+                                checksum: pin.checksums?.['linux-x64'] ?? `sha256:${'a'.repeat(64)}`,
                             },
                         },
                     ],
