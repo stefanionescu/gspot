@@ -469,6 +469,12 @@ reason = "As checked on 2026-10-20, no release fixes the max-stale flaw: bun.loc
 until = 2026-11-19
 
 [[ignore]]
+check = "dependencies/osv-scanner"
+rule = "GHSA-gcqx-w48m-w2h4"
+reason = "As checked on 2026-10-29, no release fixes the prototype poisoning of mergeObject: deepmerge 4.3.1 stays the latest, and jest-config 30.5.2 still asks for ^4.3.1. jest-config merges only the globals of a Jest config and its preset, and Jest runs in the tests workspace on sandboxes that the tests write."
+until = 2026-11-27
+
+[[ignore]]
 check = "docs/missing-paths"
 paths = ["packages/cli/configurations/infrastructure/docker/rules/DOCKER.md", "packages/cli/configurations/language/html/rules/HTML.md", "packages/cli/configurations/platform/supabase/rules/SUPABASE.md"]
 reason = "Paths in shipped rules are examples for user projects."
