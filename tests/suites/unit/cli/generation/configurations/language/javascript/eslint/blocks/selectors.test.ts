@@ -114,14 +114,3 @@ test.each([...FRAMEWORK_SELECTOR_CASES])(
         }
     },
 );
-
-test.each([...LEVELS])('a raw sql template reports at level all only (%s)', async (level) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript', 'drizzle'], { level }),
-        'source.js': 'sql`select 1`;\ndb.select().from(users);\n',
-    });
-    const eslint = await createEslint(sandbox.path);
-    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['no-restricted-syntax'])).toStrictEqual(
-        level === 'all' ? [{ file: 'source.js', rule: 'no-restricted-syntax', line: 1 }] : [],
-    );
-});

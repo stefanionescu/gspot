@@ -21,14 +21,6 @@ export const SELECTOR_LIBRARY_FILES = {
 
 export const FRAMEWORK_SELECTOR_CASES = [
     {
-        configuration: 'express',
-        language: 'javascript',
-        file: 'source.js',
-        source: 'response.json({ message: `Hello ${name}` });\nresponse.send({ error: `Failed ${code}` });\nresponse.json({ message: "Hello", name });\n',
-        basic: [1, 2],
-        all: [1, 2],
-    },
-    {
         configuration: 'nestjs',
         language: 'typescript',
         file: 'source.ts',

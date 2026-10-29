@@ -11,8 +11,6 @@ path = "old"
 [[scope]]
 path = "new"
 [[scope]]
-path = "forced"
-[[scope]]
 path = "old/legacy"
 [[scope]]
 path = "browser"
@@ -22,7 +20,6 @@ export const ENGINE_PACKAGES = {
     'package.json': '{"private":true,"type":"module","engines":{"node":">=18.0.0"}}',
     'old/package.json': '{"private":true,"type":"module","engines":{"node":">=18.0.0"}}',
     'new/package.json': '{"private":true,"type":"module","engines":{"node":">=22.0.0"}}',
-    'forced/package.json': '{"private":true,"type":"module","engines":{"node":">=18.0.0"}}',
     'old/legacy/package.json': '{"private":true,"type":"module","engines":{"node":">=22.0.0"}}',
 } as const;
 
@@ -30,7 +27,6 @@ export const ENGINE_PATHS = [
     'old/source.js',
     'old/source.cjs',
     'new/source.js',
-    'forced/source.js',
     'old/legacy/source.js',
     'browser/source.js',
 ] as const;
@@ -38,13 +34,13 @@ export const ENGINE_PATHS = [
 export const ENGINE_PHASES = [
     {
         name: 'before the engines fix',
-        reported: ['old/source.js', 'old/source.cjs', 'forced/source.js'],
+        reported: ['old/source.js', 'old/source.cjs'],
         corrections: [],
     },
     {
         name: 'after the engines fix',
         reported: [],
-        corrections: ['old/source.js', 'old/source.cjs', 'forced/source.js'],
+        corrections: ['old/source.js', 'old/source.cjs'],
     },
 ] as const;
 

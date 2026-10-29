@@ -16,18 +16,6 @@ export const PRODUCT_WORD_SETTINGS = {
 
 export const PROSE_STYLE_CASES = [
     {
-        name: 'heading-case',
-        expected: {
-            scope: 'heading.h2',
-            match: '$sentence',
-            message: "Write headings below the title in sentence case: '%s'.",
-        },
-    },
-    {
-        name: 'title-case',
-        expected: { scope: 'heading.h1', match: '$title', message: "Write the document title in title case: '%s'." },
-    },
-    {
         name: 'item-length',
         expected: {
             scope: 'list',

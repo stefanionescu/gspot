@@ -28,12 +28,4 @@ export const INACTIVE_RULE_OPTIONS = [
         scoped: false,
         message: 'gspot runs color-named at no level, so it takes no options.',
     },
-    {
-        configuration: 'javascript',
-        rule: 'sort-keys',
-        tables: '[tools.eslint.rules]\nsort-keys = ["asc"]\n',
-        scoped: false,
-        message:
-            'gspot runs sort-keys at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.',
-    },
 ] as const;

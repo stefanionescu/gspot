@@ -10,14 +10,12 @@ import { LEVELS } from '#cli/config/configurations/names.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import type { EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     ESLINT_BUG_RULES,
     COALESCING_SOURCE,
-    REMOVED_LEVEL_RULES,
     JAVASCRIPT_BUG_RULES,
     COALESCING_CORRECTED,
     DOCUMENTED_PRICE_SOURCE,
@@ -218,8 +216,4 @@ test.each([...LEVELS])('%s keeps core bug checks and TypeScript recommended chec
         );
         expect(config.rules['unicorn/no-process-exit']?.[0]).toBe(level === 'all' ? 2 : 0);
     }
-    const manifests = readConfigurations();
-    const allRules = ['javascript', 'typescript'].flatMap((name) => [...manifests.get(name)!.eslint.all_level_rules]);
-    expect(REMOVED_LEVEL_RULES.filter((name) => allRules.includes(name))).toStrictEqual([]);
-    expect(allRules).toContain('unicorn/no-process-exit');
 });

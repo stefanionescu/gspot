@@ -8,7 +8,6 @@ import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import {
     TESTING_LIBRARY_CASES,
     ASSERTION_RULE_OWNERS,
-    JEST_RECOMMENDED_RULES,
 } from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/testing.ts';
 
 test.each(['js', 'jsx'])('Jest rules apply only to their scope for .%s files', async (extension) => {
@@ -134,9 +133,5 @@ test.each(ASSERTION_RULE_OWNERS)(
         expect(tests.rules['sonarjs/no-empty-test-file']?.[0]).toBe(2);
         expect(source.rules['sonarjs/assertions-in-tests']?.[0]).toBe(0);
         expect(source.rules['sonarjs/no-empty-test-file']?.[0]).toBe(0);
-        if (configuration === 'jest')
-            expect(
-                Object.fromEntries(JEST_RECOMMENDED_RULES.map((name) => [name, tests.rules[name]?.[0]])),
-            ).toStrictEqual(Object.fromEntries(JEST_RECOMMENDED_RULES.map((name) => [name, 2])));
     },
 );

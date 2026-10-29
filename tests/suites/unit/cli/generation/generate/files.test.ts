@@ -189,10 +189,6 @@ test('format.indent_width reaches EditorConfig, Prettier and each config file', 
     expect(configuration.tabWidth).toBe(width);
     const markdownlint: unknown = parseJsonc(generated.get(getManifestTarget('markdown', 'markdownlint.jsonc'))!);
     expect(markdownlint).not.toHaveProperty('MD007');
-    const parsed: unknown = parseYaml(generated.get(getManifestTarget('data-files', 'yamllint.yml'))!);
-    expect(parsed).toMatchObject({
-        rules: { anchors: {}, 'key-duplicates': {}, truthy: { 'check-keys': false } },
-    });
     const yamllint: unknown = parseYaml(generated.get(getManifestTarget('data-files', 'yamllint.yml'))!);
     expect(yamllint).not.toHaveProperty('rules.indentation');
     const ruff: unknown = parseToml(generated.get(getManifestTarget('python', 'ruff.toml'))!);

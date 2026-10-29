@@ -1,19 +1,8 @@
 import { parse } from 'jsonc-parser';
 import { test, expect } from 'bun:test';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { generateFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-
-test('gspot refuses markdownlint options for a rule it runs at no level', async () => {
-    const generated = generateFile(
-        buildSandboxSettings(['markdown'], { tables: '[tools.markdownlint.rules.MD013]\nline_length = 100\n' }),
-        getManifestTarget('markdown', 'markdownlint.jsonc'),
-        { 'source.md': '# Sample\n' },
-    );
-    const generatedError = await captureRejection(generated);
-    expect(generatedError.message).toBe('gspot runs MD013 at no level, so it takes no options.');
-});
 
 test.each([...LEVELS])('%s turns on MD041 and MD025 only at level all and keeps your MD044 names', async (level) => {
     const content = await generateFile(

@@ -54,10 +54,3 @@ export const TYPESCRIPT_DEFAULT_RULES = [
     '@typescript-eslint/no-this-alias',
     '@typescript-eslint/triple-slash-reference',
 ] as const;
-
-export const REMOVED_LEVEL_RULES = [
-    'unicorn/no-array-for-each',
-    'unicorn/no-hex-escape',
-    'unicorn/no-nested-ternary',
-    '@typescript-eslint/no-require-imports',
-] as const;

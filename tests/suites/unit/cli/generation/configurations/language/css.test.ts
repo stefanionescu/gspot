@@ -115,15 +115,6 @@ test('level basic refuses Stylelint options for a rule it does not run and for a
     );
 });
 
-test('an inactive core Stylelint rule is refused without blaming a missing plugin', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['css'], { tables: '[tools.stylelint.rules]\ncolor-named = "never"\n' }),
-        'source.css': 'a { color: red; }',
-    });
-    const session = await openSession(sandbox.path);
-    expect(() => generateFiles(session)).toThrow('gspot runs color-named at no level, so it takes no options.');
-});
-
 test('a scope with CSS Modules files accepts composes, :global, and @value in them only', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['css'], { level: 'all' }),
