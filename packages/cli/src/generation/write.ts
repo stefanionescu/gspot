@@ -3,6 +3,7 @@ import type { Session } from '#cli/types/session.ts';
 import { listExpectedPaths } from '#cli/generation/outdated.ts';
 import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
+import { listOwnablePaths } from '#cli/generation/config-files/pointers.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { type ApplyReport, type GenerationResult } from '#cli/types/generation/files.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
@@ -105,7 +106,7 @@ export async function writeGeneratedFiles(
         reviewed?.has(plan.path) === true ? { ...plan, before: reviewed.get(plan.path) } : plan,
     );
     const blocks = generated.blocks.map((block) => planBlock(writer, block.path, block.block, block.style));
-    const pruning = planRemovals(writer, listStrayPaths(session, paths));
+    const pruning = planRemovals(writer, listStrayPaths(session, paths, listOwnablePaths(session)));
     writePlans(writer, [...reviewedPlans, ...blocks, ...pruning]);
     removeUnusedToolFolders(writer, paths);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));

@@ -10,6 +10,7 @@ import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
 import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { listOwnablePaths } from '#cli/generation/config-files/pointers.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { selectToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/generation/outdated.ts';
@@ -90,17 +91,13 @@ Find changed, missing, or stray generated files. Managed blocks and file edits c
 @param generated the files that this run generates.
 @returns the outdated files in path order.
 */
-export async function listOutdatedFiles(
-    session: Pick<
-        Session,
-        'root' | 'packageManager' | 'repository' | 'toolsRoot' | 'reads' | 'timeoutSeconds' | 'toolConfigurations'
-    >,
-    generated: GenerationResult,
-): Promise<OutdatedFile[]> {
+export async function listOutdatedFiles(session: Session, generated: GenerationResult): Promise<OutdatedFile[]> {
     using files = openFiles(session.root);
     const expected = listExpectedPaths(session, generated);
     const lockfiles = await listStaleLockfiles(session, generated.files);
-    const strays = listStrayPaths(session, expected).map((path): OutdatedFile => ({ path, kind: 'stray' }));
+    const strays = listStrayPaths(session, expected, listOwnablePaths(session)).map(
+        (path): OutdatedFile => ({ path, kind: 'stray' }),
+    );
     return [
         ...lockfiles.flatMap(({ path, kind }) => (kind === undefined ? [] : [{ path, kind }])),
         ...listOutdatedOutputs(files, generated),

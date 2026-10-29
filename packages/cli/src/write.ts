@@ -101,9 +101,10 @@ function readGeneratedPatterns(disk: Files): string[] {
         .map(({ pattern }) => pattern);
 }
 
-function isOwned(path: string, disk: Files, generatedPatterns: string[]): boolean {
+function isOwned(path: string, disk: Files, generatedPatterns: string[], ownablePaths: ReadonlySet<string>): boolean {
     if (!isInside(path)) return false;
     if (path.startsWith(`${GSPOT_FOLDER}/`)) return true;
+    if (!ownablePaths.has(path)) return false;
     const file = disk.readKeepingLinks(path);
     if (file !== undefined && file.isLink !== true && hasGeneratedHeader(file.bytes.toString('utf8'))) return true;
     return generatedPatterns.some((pattern) => buildPathMatcher([pattern])(path));
@@ -114,9 +115,14 @@ Find owned files and managed blocks outside the generation plan.
 
 @param session the repository files.
 @param expected the generated destinations that remain.
+@param ownablePaths the destinations that the shipped manifests can write.
 @returns the stray generated paths.
 */
-export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, expected: ReadonlySet<string>): string[] {
+export function listStrayPaths(
+    session: Pick<Session, 'root' | 'repository'>,
+    expected: ReadonlySet<string>,
+    ownablePaths: ReadonlySet<string>,
+): string[] {
     using disk = openFiles(session.root);
     const blockPaths = new Set([AGENTS_FILE, GITIGNORE_FILE, GITATTRIBUTES_FILE]);
     const installations = [GSPOT_PATHS.state, ...Object.values(INSTALLED_TOOL_FOLDERS)];
@@ -139,7 +145,7 @@ export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, ex
     return [...writtenPaths].filter((path) => {
         if (installations.some((folder) => path === folder || path.startsWith(`${folder}/`))) return false;
         if (expected.has(path)) return false;
-        if (isOwned(path, disk, generatedPatterns)) return true;
+        if (isOwned(path, disk, generatedPatterns, ownablePaths)) return true;
         if (!blockPaths.has(path)) return false;
         const text = disk.read(path)?.bytes.toString('utf8');
         return text !== undefined && findBlockSpan(text, { path, style: getBlockStyle(path) }) !== undefined;
@@ -155,12 +161,13 @@ Plan replacements: refuse authored bytes that nobody reviewed.
 */
 export function planReplacements(writer: Files, requests: ReplacementRequest[]): WritePlan[] {
     const generatedPatterns = readGeneratedPatterns(writer);
+    const ownablePaths = new Set(requests.map(({ path }) => path));
     return requests.map(({ path, next, expected }): WritePlan => {
         const onDisk = next.isLink === true ? writer.readKeepingLinks(path) : writer.read(path);
         if (
             onDisk !== undefined &&
             !isSameContents(onDisk, next) &&
-            !isOwned(path, writer, generatedPatterns) &&
+            !isOwned(path, writer, generatedPatterns, ownablePaths) &&
             expected === undefined
         )
             return { path, before: onDisk, status: 'preserved' };
@@ -202,10 +209,11 @@ Plan the removal of owned files, or of their managed blocks.
 */
 export function planRemovals(writer: Files, paths: string[]): WritePlan[] {
     const generatedPatterns = readGeneratedPatterns(writer);
+    const ownablePaths = new Set(paths);
     return paths.map((path): WritePlan => {
         const onDisk = writer.readKeepingLinks(path);
         if (onDisk === undefined) return { path, before: onDisk, status: 'unchanged' };
-        if (isOwned(path, writer, generatedPatterns)) return { path, before: onDisk, status: 'changed' };
+        if (isOwned(path, writer, generatedPatterns, ownablePaths)) return { path, before: onDisk, status: 'changed' };
         const next = removeBlock(path, onDisk);
         return {
             path,

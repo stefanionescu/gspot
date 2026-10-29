@@ -38,6 +38,9 @@ the gspot markers. Files in `.gspot/` carry no header; the managed block of `.gi
 `gspot apply` replaces those files from your settings, even files with
 local edits or merge markers. Move any change you need into `gspot.toml` before you apply.
 
+A file outside `.gspot/` that starts with the gspot header belongs to gspot only when gspot writes that path. Any other
+file with the header stays yours, and `gspot apply` leaves it in place.
+
 ## Dependency bots
 
 gspot updates the files in `.gspot/` when you upgrade gspot. Tell dependency bots to skip that folder;

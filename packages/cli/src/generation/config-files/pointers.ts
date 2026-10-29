@@ -4,6 +4,7 @@ import { posix, dirname, relative } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { ManagedKeys } from '#cli/types/write.ts';
 import { formatHeader } from '#cli/generation/header.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
@@ -11,6 +12,7 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { listCheckTools, listConfiguredChecks } from '#cli/planning/tools.ts';
+import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
@@ -94,6 +96,34 @@ export function listPointerPaths(owner: ConfigFileOwner, configFile: ConfigFile)
         ),
     );
     return [...folders].map((folder) => `${folder}/${pointer.path}`);
+}
+
+/**
+List every path outside .gspot/ that gspot can write. Include manifest targets and pointers at each scope root and
+pointer folder, and both CI workflow paths.
+
+@param session the scopes and the configurations.
+@returns the paths, from the repository root.
+*/
+export function listOwnablePaths(session: Session): Set<string> {
+    const configFiles = session.scopes.flatMap((scope) =>
+        readConfigurations()
+            .values()
+            .flatMap((configuration) =>
+                configuration.configFiles.map((configFile) => ({
+                    owner: { session, scope, configuration },
+                    configFile,
+                })),
+            )
+            .toArray(),
+    );
+    const paths = configFiles.flatMap(({ owner, configFile }) => [
+        ...(configFile.source === undefined || configFile.target.startsWith(`${GSPOT_FOLDER}/`)
+            ? []
+            : [configFile.per_scope ? joinScope(owner.scope.path, configFile.target) : configFile.target]),
+        ...listPointerPaths(owner, configFile),
+    ]);
+    return new Set([GITHUB_WORKFLOW, GITLAB_WORKFLOW, ...paths]);
 }
 
 function listPointerFieldTargets({

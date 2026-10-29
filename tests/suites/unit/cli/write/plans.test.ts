@@ -1,10 +1,17 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { generate } from '#cli/generation/generate.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { GspotError } from '#cli/system/errors.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
+import { formatHeader } from '#cli/generation/header.ts';
 import { NON_UTF8_BLOCK_CASES } from '#tests/config/write.ts';
+import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { commitAll, createGitSandbox } from '#tests/setup/system/git.ts';
 import { planBlock, openWriter, writePlans, planRemovals } from '#cli/write.ts';
 
 test.each([...NON_UTF8_BLOCK_CASES])(
@@ -56,4 +63,22 @@ test('removing the only block deletes the file', async () => {
     writePlans(writer, [planBlock(writer, 'AGENTS.md', 'instructions', 'markdown')]);
     writePlans(writer, planRemovals(writer, ['AGENTS.md']));
     expect(writer.read('AGENTS.md')).toBeUndefined();
+});
+
+test('apply preserves a copied header example and removes an obsolete scoped pointer', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown'], { scopes: [{ path: 'docs', configurations: [] }] }),
+        'examples/.editorconfig': `${formatHeader('.editorconfig')}root = true\n`,
+        'docs/.markdownlint.jsonc': `${formatHeader('.markdownlint.jsonc')}{"extends":"../.markdownlint.jsonc"}\n`,
+        'README.md': '# Root\n',
+        'docs/README.md': '# Docs\n',
+    });
+    commitAll(sandbox.path);
+    const before = await readFile(join(sandbox.path, 'examples/.editorconfig'));
+    const session = await openSession(sandbox.path);
+    using writer = openWriter(sandbox.path);
+    const report = await writeGeneratedFiles(session, generate(session), writer);
+    expect(await readFile(join(sandbox.path, 'examples/.editorconfig'))).toStrictEqual(before);
+    expect(report.removed).toContain('docs/.markdownlint.jsonc');
+    expect(await isOnDisk(join(sandbox.path, 'docs/.markdownlint.jsonc'))).toBe(false);
 });
