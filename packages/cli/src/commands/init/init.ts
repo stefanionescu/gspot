@@ -45,6 +45,7 @@ import type {
     DetectionSummary,
 } from '#cli/types/commands/init.ts';
 import {
+    YES_FLAG,
     LEVEL_OPTION,
     CANCELED_MESSAGE,
     INIT_INSTALL_NOTES,
@@ -95,7 +96,7 @@ export function registerInit(program: Command, onResult: CommandCompletion): voi
         .summary(COMMAND_HELP.init.summary)
         .description(COMMAND_HELP.init.description)
         .option(FROM_OPTION, COMMAND_HELP.init.options[FROM_OPTION])
-        .option('--yes', COMMAND_HELP.init.options['--yes'])
+        .option(YES_FLAG, COMMAND_HELP.init.options[YES_FLAG])
         .option(DRY_RUN_FLAG, COMMAND_HELP.init.options[DRY_RUN_FLAG])
         .option(CONFIGURATIONS_OPTION, COMMAND_HELP.init.options[CONFIGURATIONS_OPTION])
         .option(NO_CONFIGURATIONS_FLAG, COMMAND_HELP.init.options[NO_CONFIGURATIONS_FLAG])

@@ -26,6 +26,7 @@ import { Command, type Argument, CommanderError } from '@commander-js/extra-typi
 
 import {
     HELP_FLAG,
+    JSON_FLAG,
     CODE_MARK,
     USAGE_LINE,
     GIT_COMMANDS,
@@ -144,7 +145,7 @@ export function buildProgram(onResult: CommandCompletion): Command {
         const help = COMMAND_HELP[command.name() as keyof typeof COMMAND_HELP];
         command.helpGroup(help.group);
         command.helpOption(HELP_FLAG, GLOBAL_OPTIONS[HELP_FLAG]);
-        command.option('--json', help.options['--json']);
+        command.option(JSON_FLAG, help.options[JSON_FLAG]);
         command.addHelpText(
             'after',
             `\nExit codes:\n${formatExitCodes(help.exitCodes)}\n\nExample:\n  ${help.example}\n`,
@@ -169,7 +170,7 @@ export async function runProgram(commandArguments: string[]): Promise<number> {
     const separator = commandArguments.indexOf('--');
     const options = separator === -1 ? commandArguments : commandArguments.slice(0, separator);
     setOutputOptions({
-        isJson: options.includes('--json'),
+        isJson: options.includes(JSON_FLAG),
         colored:
             [undefined, ''].includes(readEnvironmentVariable('NO_COLOR')) &&
             [process.stderr.isTTY, process.stdout.isTTY].every((tty: unknown) => tty === true),

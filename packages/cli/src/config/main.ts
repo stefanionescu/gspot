@@ -50,6 +50,8 @@ export const USAGE_LINE = 'Usage: gspot <command> [options]';
 
 export const HELP_FLAG = '-h, --help';
 
+export const JSON_FLAG = '--json';
+
 export const NEEDS_GIT_MESSAGE = 'gspot needs a Git repository. Run git init, then gspot init.';
 
 export const HELP_ERROR_CODE = 'commander.help';
