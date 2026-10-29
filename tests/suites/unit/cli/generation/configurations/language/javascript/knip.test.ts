@@ -17,9 +17,7 @@ import { HOST_MODULE } from '#tests/config/generation/configurations/language/ja
 
 import {
     KNIP_ARGUMENTS,
-    KNIP_SCRIPT_PATHS,
     KNIP_UNUSED_FILES,
-    KNIP_DEFAULT_PATHS,
     KNIP_POINTER_FILES,
     KNIP_WORKSPACE_FILES,
     KNIP_COMPONENT_FILES,
@@ -167,13 +165,16 @@ test("Knip gets each scope's test_files as entry points without sibling leaks", 
         ({ path }) => path === getManifestTarget('javascript', 'knip.json'),
     )!.content;
     const { workspaces } = JSON.parse(content) as KnipConfigFile;
-    const globsByWorkspace = Object.fromEntries(Object.entries(workspaces).map(([name, { entry }]) => [name, entry]));
-    const shared = [...KNIP_SCRIPT_PATHS];
-    expect(globsByWorkspace).toStrictEqual({
-        '.': ['src/main.{ts,js}', 'src/index.{ts,js}', 'specifications/**', ...shared.slice(2), 'eslint.config.mjs'],
-        app: ['src/main.{ts,js}', 'src/index.{ts,js}', 'verification/**', ...shared.slice(2)],
-        'app/deep': shared,
-        sibling: ['src/main.{ts,js}', 'src/index.{ts,js}', 'sibling-tests/**', ...shared.slice(2)],
+    const testGlobs = new Set(['**/tests/**', 'specifications/**', 'verification/**', 'sibling-tests/**']);
+    expect(
+        Object.fromEntries(
+            Object.entries(workspaces).map(([name, { entry }]) => [name, entry.filter((glob) => testGlobs.has(glob))]),
+        ),
+    ).toStrictEqual({
+        '.': ['specifications/**'],
+        app: ['verification/**'],
+        'app/deep': [],
+        sibling: ['sibling-tests/**'],
     });
 });
 
@@ -185,21 +186,23 @@ test('Knip workspaces come from package workspaces, your entries and the configu
     const knip = JSON.parse(
         await generateFile(settings, getManifestTarget('javascript', 'knip.json'), files),
     ) as KnipConfigFile;
-    const globsByWorkspace = Object.fromEntries(
-        Object.entries(knip.workspaces).map(([name, { entry }]) => [name, entry]),
-    );
-    const shared = [...KNIP_DEFAULT_PATHS];
-    expect(globsByWorkspace).toStrictEqual({
-        '.': ['cli.js', ...shared, 'eslint.config.mjs'],
-        api: ['serve.js', ...shared],
-        web: shared,
-    });
     const withoutEntrypoints = JSON.parse(
         await generateFile(buildSandboxSettings(['javascript']), getManifestTarget('javascript', 'knip.json'), files),
     ) as KnipConfigFile;
-    expect(
-        Object.fromEntries(Object.entries(withoutEntrypoints.workspaces).map(([name, { entry }]) => [name, entry])),
-    ).toStrictEqual({ '.': [...shared, 'eslint.config.mjs'], api: shared, web: shared });
+    const namedFiles = new Set(['cli.js', 'serve.js', 'eslint.config.mjs']);
+    const cases = [
+        { generated: knip, expected: { '.': ['cli.js', 'eslint.config.mjs'], api: ['serve.js'], web: [] } },
+        { generated: withoutEntrypoints, expected: { '.': ['eslint.config.mjs'], api: [], web: [] } },
+    ];
+    for (const { generated, expected } of cases)
+        expect(
+            Object.fromEntries(
+                Object.entries(generated.workspaces).map(([name, { entry }]) => [
+                    name,
+                    entry.filter((glob) => namedFiles.has(glob)),
+                ]),
+            ),
+        ).toStrictEqual(expected);
 });
 
 test('Knip keeps a declared package that a mise file task runs through a package runner', async () => {

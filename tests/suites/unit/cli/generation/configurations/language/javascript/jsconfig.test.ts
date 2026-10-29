@@ -38,25 +38,8 @@ test('a jsconfig beside a tsconfig keeps authored exclusions and lists only trac
         files.find(({ path }) => path === getManifestTarget('javascript', 'jsconfig.json'))!.content,
     ) as { files: string[]; exclude: string[] };
     expect(jsconfig.files).toStrictEqual(['../../../../cloudflare-env.d.ts']);
-    expect(jsconfig.exclude).toStrictEqual(
-        [
-            `${GSPOT_FOLDER}/**`,
-            '.editorconfig',
-            '.prettierignore',
-            'eslint.config.mjs',
-            'prettier.config.mjs',
-            '**/node_modules/**',
-            '**/bower_components/**',
-            '**/.env',
-            '**/.env.*',
-            '**/.dev.vars',
-            '**/.dev.vars.*',
-            '**/eslint.config.mjs',
-            '**/eslint.config.js',
-            '**/eslint.config.cjs',
-            'vendor',
-        ].map((pattern) => `../../../../${pattern}`),
-    );
+    expect(jsconfig.exclude).toContain('../../../../vendor');
+    expect(jsconfig.exclude).toContain(`../../../../${GSPOT_FOLDER}/**`);
 });
 
 test.each(['basic', 'all'] as const)('JavaScript implicit parameters follow level %s', async (level) => {

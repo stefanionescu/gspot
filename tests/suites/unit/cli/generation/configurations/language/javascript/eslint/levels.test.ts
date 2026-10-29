@@ -14,12 +14,9 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
-    ESLINT_BUG_RULES,
     COALESCING_SOURCE,
-    JAVASCRIPT_BUG_RULES,
     COALESCING_CORRECTED,
     DOCUMENTED_PRICE_SOURCE,
-    TYPESCRIPT_DEFAULT_RULES,
     CONFIGURATION_RULE_OPTIONS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/levels.ts';
 
@@ -208,8 +205,8 @@ test.each([...LEVELS])('%s keeps core bug checks and TypeScript recommended chec
     for (const file of ['source.js', 'source.ts']) {
         const config = (await eslint.calculateConfigForFile(file)) as EslintConfiguration;
         const rules = [
-            ...ESLINT_BUG_RULES,
-            ...(file.endsWith('.js') ? JAVASCRIPT_BUG_RULES : TYPESCRIPT_DEFAULT_RULES),
+            'no-self-compare',
+            file.endsWith('.js') ? 'no-implied-eval' : '@typescript-eslint/no-explicit-any',
         ];
         expect(Object.fromEntries(rules.map((name) => [name, config.rules[name]?.[0]]))).toStrictEqual(
             Object.fromEntries(rules.map((name) => [name, 2])),

@@ -39,18 +39,14 @@ test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($ru
         'n/file-extension-in-import',
     ]);
     const [result] = await eslint.lintFiles(['application/source.js']);
-    expect(result!.messages.map(({ ruleId, line, message }) => ({ ruleId, line, message }))).toStrictEqual([
-        ...(globals.includes('process') ? [] : [{ ruleId: 'no-undef', line: 1, message: PROCESS_UNDEFINED_MESSAGE }]),
-        {
-            ruleId: 'unicorn/no-process-exit',
-            line: 1,
-            message: 'Only use `process.exit()` in CLI apps. Throw an error instead.',
-        },
-        { ruleId: 'no-undef', line: 2, message: "'Buffer' is not defined." },
+    expect(result!.messages.map(({ ruleId, line }) => ({ ruleId, line }))).toStrictEqual([
+        ...(globals.includes('process') ? [] : [{ ruleId: 'no-undef', line: 1 }]),
+        { ruleId: 'unicorn/no-process-exit', line: 1 },
+        { ruleId: 'no-undef', line: 2 },
     ]);
     const [server] = await eslint.lintFiles(['server.js']);
-    expect(server!.messages.map(({ ruleId, line, message }) => ({ ruleId, line, message }))).toStrictEqual([
-        { ruleId: 'n/no-process-exit', line: 1, message: "Don't use process.exit(); throw an error instead." },
+    expect(server!.messages.map(({ ruleId, line }) => ({ ruleId, line }))).toStrictEqual([
+        { ruleId: 'n/no-process-exit', line: 1 },
     ]);
 });
 

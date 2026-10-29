@@ -55,26 +55,3 @@ export const KNIP_WORKSPACE_FILES = {
     'web/package.json': '{"name":"web","private":true}\n',
     'lib/index.js': '',
 } as const;
-
-export const KNIP_SCRIPT_PATHS = [
-    'src/main.{ts,js}',
-    'src/index.{ts,js}',
-    'scripts/**',
-    '**/*.config.{js,mjs,cjs,ts}',
-] as const;
-export const KNIP_DEFAULT_PATHS = [
-    'src/main.{ts,js}',
-    'src/index.{ts,js}',
-    '**/test/**',
-    '**/tests/**',
-    '**/__tests__/**',
-    '**/*.test.*',
-    '**/*.spec.*',
-    '**/test_*.py',
-    '**/*_test.py',
-    '**/conftest.py',
-    '**/Tests/**',
-    '**/*Tests.swift',
-    'scripts/**',
-    '**/*.config.{js,mjs,cjs,ts}',
-] as const;

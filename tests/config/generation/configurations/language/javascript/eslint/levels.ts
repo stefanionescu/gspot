@@ -32,25 +32,3 @@ export function addPrices(first, second) {
     return first + second;
 }
 `;
-
-export const ESLINT_BUG_RULES = [
-    'array-callback-return',
-    'no-constructor-return',
-    'no-new-func',
-    'no-promise-executor-return',
-    'no-return-assign',
-    'no-self-compare',
-    'no-template-curly-in-string',
-    'no-unmodified-loop-condition',
-    'no-unreachable-loop',
-    'no-var',
-] as const;
-
-export const JAVASCRIPT_BUG_RULES = ['no-implied-eval', 'no-throw-literal', 'no-unused-expressions'] as const;
-
-export const TYPESCRIPT_DEFAULT_RULES = [
-    '@typescript-eslint/no-explicit-any',
-    '@typescript-eslint/no-namespace',
-    '@typescript-eslint/no-this-alias',
-    '@typescript-eslint/triple-slash-reference',
-] as const;

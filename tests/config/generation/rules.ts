@@ -5,26 +5,6 @@ export const RUNTIME_RULE_CASES = [
     { name: 'a Node.js script in an Expo package', runtime: 'node', dependency: 'expo', rules: [] },
 ] as const;
 
-export const RULE_INDEX_PATHS = [
-    '.gspot/configurations/general/engineering/rules/WORKING.md',
-    '.gspot/configurations/general/prose/rules/WRITING.md',
-    '.gspot/configurations/general/engineering/rules/TALKING.md',
-    '.gspot/configurations/general/commits/rules/GIT.md',
-    '.gspot/configurations/general/dependencies/rules/DEPENDENCIES.md',
-    '.gspot/configurations/general/docs/rules/DOCS.md',
-    '.gspot/configurations/general/engineering/rules/CLI.md',
-    '.gspot/configurations/general/engineering/rules/COMMENTS.md',
-    '.gspot/configurations/general/engineering/rules/ERRORS.md',
-    '.gspot/configurations/general/engineering/rules/PLANNING.md',
-    '.gspot/configurations/general/engineering/rules/SETTINGS.md',
-    '.gspot/configurations/general/engineering/rules/TASKS.md',
-    '.gspot/configurations/general/engineering/rules/TESTING.md',
-    '.gspot/configurations/general/gspot/rules/GENERATED.md',
-    '.gspot/configurations/general/gspot/rules/SUPPRESSIONS.md',
-    '.gspot/configurations/general/secrets/rules/SECRETS.md',
-    '.gspot/configurations/general/security/rules/SECURITY.md',
-];
-
 export const COMMANDS_HEADING = '## Commands';
 
 export const COMMIT_CHECK_LINE = 'Before you commit, run `mise exec -- gspot check --staged`.';

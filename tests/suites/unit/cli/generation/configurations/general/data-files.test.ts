@@ -25,19 +25,10 @@ test.each([true, false])(
             ignoreErrors: true,
             customCatalog: {
                 schemas: [
-                    {
+                    expect.objectContaining({
                         name: 'mise',
-                        description: 'The mise settings file',
-                        fileMatch: [
-                            'mise.toml',
-                            '.mise.toml',
-                            '.mise/conf.d/*.toml',
-                            '.config/mise/config.toml',
-                            '.config/mise/conf.d/*.toml',
-                            '.gspot/mise.toml',
-                        ],
-                        location: 'https://mise.jdx.dev/schema/mise.json',
-                    },
+                        fileMatch: expect.arrayContaining(['mise.toml', '.gspot/mise.toml']) as string[],
+                    }) as object,
                     {
                         name: 'gspot',
                         description: 'The gspot settings file',

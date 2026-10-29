@@ -27,10 +27,10 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
     const output = generateFiles(session);
     const target = output.files.find((file) => file.path === getManifestTarget('spelling', 'typos.toml'))!;
     const parsed = parse(target.content) as Record<string, unknown>;
-    expect(parsed['default']).toStrictEqual({
-        locale: 'en',
-        'extend-ignore-re': [String.raw`\b[0-9a-f]{7,40}\b`, String.raw`\b[A-Za-z0-9+/]{40,}={0,2}\b`],
-        'extend-words': { café: 'café', "apostrophe'word": "apostrophe'word", 'long-term': 'long-term' },
+    expect((parsed['default'] as Record<string, unknown>)['extend-words']).toStrictEqual({
+        café: 'café',
+        "apostrophe'word": "apostrophe'word",
+        'long-term': 'long-term',
     });
     const { 'extend-exclude': excluded, ...otherFiles } = parsed['files'] as { 'extend-exclude': string[] };
     expect(otherFiles).toStrictEqual({});

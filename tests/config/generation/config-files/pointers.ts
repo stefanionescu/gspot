@@ -11,28 +11,31 @@ export const XCTEST_POINTER_CASES = [
     {
         scope: '',
         pointers: {
-            '.swiftlint.yml': { parent_config: './.gspot/configurations/language/swift/swiftlint.yml' },
+            '.swiftlint.yml': { parent: './.gspot/configurations/language/swift/swiftlint.yml', overrides: false },
             'AppTests/.swiftlint.yml': {
-                parent_config: '../.gspot/configurations/language/swift/swiftlint.yml',
-                disabled_rules: ['force_unwrapping', 'missing_docs', 'no_magic_numbers'],
+                parent: '../.gspot/configurations/language/swift/swiftlint.yml',
+                overrides: true,
             },
             'ChildTests/.swiftlint.yml': {
-                parent_config: '../.gspot/configurations/language/swift/swiftlint.yml',
-                disabled_rules: ['force_unwrapping', 'missing_docs', 'no_magic_numbers'],
+                parent: '../.gspot/configurations/language/swift/swiftlint.yml',
+                overrides: true,
             },
         },
     },
     {
         scope: 'ios # app',
         pointers: {
-            'ios # app/.swiftlint.yml': { parent_config: '../.gspot/configurations/language/swift/swiftlint.yml' },
+            'ios # app/.swiftlint.yml': {
+                parent: '../.gspot/configurations/language/swift/swiftlint.yml',
+                overrides: false,
+            },
             'ios # app/AppTests/.swiftlint.yml': {
-                parent_config: '../../.gspot/configurations/language/swift/swiftlint.yml',
-                disabled_rules: ['force_unwrapping', 'missing_docs', 'no_magic_numbers'],
+                parent: '../../.gspot/configurations/language/swift/swiftlint.yml',
+                overrides: true,
             },
             'ios # app/ChildTests/.swiftlint.yml': {
-                parent_config: '../../.gspot/configurations/language/swift/swiftlint.yml',
-                disabled_rules: ['force_unwrapping', 'missing_docs', 'no_magic_numbers'],
+                parent: '../../.gspot/configurations/language/swift/swiftlint.yml',
+                overrides: true,
             },
         },
     },
@@ -40,12 +43,12 @@ export const XCTEST_POINTER_CASES = [
         scope: 'AppTests',
         pointers: {
             'AppTests/.swiftlint.yml': {
-                parent_config: '../.gspot/configurations/language/swift/swiftlint.yml',
-                disabled_rules: ['force_unwrapping', 'missing_docs', 'no_magic_numbers'],
+                parent: '../.gspot/configurations/language/swift/swiftlint.yml',
+                overrides: true,
             },
             'AppTests/ChildTests/.swiftlint.yml': {
-                parent_config: '../../.gspot/configurations/language/swift/swiftlint.yml',
-                disabled_rules: ['force_unwrapping', 'missing_docs', 'no_magic_numbers'],
+                parent: '../../.gspot/configurations/language/swift/swiftlint.yml',
+                overrides: true,
             },
         },
     },
@@ -53,12 +56,12 @@ export const XCTEST_POINTER_CASES = [
         scope: 'AppTests/Helpers',
         pointers: {
             'AppTests/Helpers/.swiftlint.yml': {
-                parent_config: '../../.gspot/configurations/language/swift/swiftlint.yml',
-                disabled_rules: ['force_unwrapping', 'missing_docs', 'no_magic_numbers'],
+                parent: '../../.gspot/configurations/language/swift/swiftlint.yml',
+                overrides: true,
             },
             'AppTests/Helpers/ChildTests/.swiftlint.yml': {
-                parent_config: '../../../.gspot/configurations/language/swift/swiftlint.yml',
-                disabled_rules: ['force_unwrapping', 'missing_docs', 'no_magic_numbers'],
+                parent: '../../../.gspot/configurations/language/swift/swiftlint.yml',
+                overrides: true,
             },
         },
     },
