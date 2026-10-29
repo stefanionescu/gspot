@@ -228,14 +228,12 @@ test('configuration descriptions contain plain text', () => {
     }
 });
 
-test('a mise installer refuses a checksum without a sha256 digest', () => {
-    expect(
-        manifestToolSchema.safeParse({
-            name: 'taplo',
-            version: '0.10.0',
-            mise: { name: 'taplo', checksums: { 'linux-x64': 'invalid' } },
-        }).success,
-    ).toBe(false);
+test('a mise installer refuses a checksum without a sha256 digest and accepts one with it', () => {
+    const tool = { name: 'taplo', version: '0.10.0' };
+    const invalid = { ...tool, mise: { name: 'taplo', checksums: { 'linux-x64': 'invalid' } } };
+    const valid = { ...tool, mise: { name: 'taplo', checksums: { 'linux-x64': `sha256:${'a'.repeat(64)}` } } };
+    expect(manifestToolSchema.safeParse(invalid).success).toBe(false);
+    expect(manifestToolSchema.safeParse(valid).success).toBe(true);
 });
 
 test('each tool that the tests workspace declares has the version of its npm pin', () => {

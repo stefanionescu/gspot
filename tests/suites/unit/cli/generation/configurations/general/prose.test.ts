@@ -29,7 +29,7 @@ test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (
     expect(paths.has(getManifestTarget('prose', 'styles/gspot/link-text.yml'))).toBe(true);
     const configuration = output.files.find((file) => file.path === GSPOT_PATHS.valeConfigFile)!;
     expect(/^Packages = /mu.test(configuration.content)).toBe(level === 'all');
-    expect(configuration.content).toContain(
+    expect(configuration.content.split('\n')).toContain(
         level === 'all'
             ? 'BasedOnStyles = gspot, Vale, Google, write-good, proselint, alex, Harper'
             : GSPOT_STYLES_LINE,
@@ -135,7 +135,11 @@ test.each(['basic', 'all'] as const)('Vale limits code comments to mistake check
                 'gspot.straight-quotes = YES\n' +
                 'gspot.em-dashes = YES',
         );
-    expect(ini).toContain(level === 'all' ? 'BasedOnStyles = gspot, Vale, Google' : GSPOT_STYLES_LINE);
+    expect(ini.split('\n')).toContain(
+        level === 'all'
+            ? 'BasedOnStyles = gspot, Vale, Google, write-good, proselint, alex, Harper'
+            : GSPOT_STYLES_LINE,
+    );
 });
 
 test.each([...PROSE_STYLE_CASES])(

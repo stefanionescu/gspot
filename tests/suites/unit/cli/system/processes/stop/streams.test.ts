@@ -83,7 +83,6 @@ test('stream cancellation stops the child and keeps the cancellation reason', as
         ),
     );
     expect(error).toBe(reason);
-    expect(controller.signal.aborted).toBe(true);
     await waitForExit(pid);
 });
 

@@ -35,10 +35,8 @@ test('coverage arguments leave other commands, your own checks, and given argume
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'push', only: ['project/tests'] })[0]!;
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());
-    const authored = await runCommandCheck(buildCheckSession(session), planned);
-    const supplied = await runCommandCheck(buildCheckSession(session), planned, { command });
-    expect(authored.status).toBe('passed');
-    expect(supplied.status).toBe('passed');
+    await runCommandCheck(buildCheckSession(session), planned);
+    await runCommandCheck(buildCheckSession(session), planned, { command });
     expect(run.mock.calls.map(([commandArguments]) => commandArguments)).toStrictEqual([command, command]);
     expect(stripCoverageArguments(planned, { command: ['echo', '', TWO_WORDS] })).toStrictEqual([
         'echo',

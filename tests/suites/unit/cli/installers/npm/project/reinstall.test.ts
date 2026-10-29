@@ -31,7 +31,9 @@ test('npm skips a recorded install, but installs changed locks and missing modul
         ...buildToolInstall(session, writer),
         registryEnvironment: await readRegistryEnvironment(session.root),
     } as NpmToolInstall;
-    expect(await installNpmTools(first)).toContain('installed');
+    expect(await installNpmTools(first)).toMatch(
+        /^installed \d+ npm tools in \.gspot\/node_modules \(npm 0\.0\.0-test\)$/u,
+    );
     const recordPath = join(sandbox.path, GSPOT_PATHS.installRecord);
     const saved = await readFile(recordPath, 'utf8');
     const second = {
@@ -46,16 +48,20 @@ test('npm skips a recorded install, but installs changed locks and missing modul
         ...buildToolInstall(session, writer),
         registryEnvironment: await readRegistryEnvironment(session.root),
     } as NpmToolInstall;
-    expect(await installNpmTools(changed)).toContain('installed');
-    expect(changed.steps).toHaveLength(1);
+    expect(await installNpmTools(changed)).toMatch(
+        /^installed \d+ npm tools in \.gspot\/node_modules \(npm 0\.0\.0-test\)$/u,
+    );
+    expect(changed.steps).toStrictEqual([expect.arrayContaining(['npm', 'ci']) as string[]]);
     expect(await readFile(recordPath, 'utf8')).not.toBe(saved);
     await rm(join(sandbox.path, GSPOT_PATHS.nodeModules), { recursive: true });
     const missing = {
         ...buildToolInstall(session, writer),
         registryEnvironment: await readRegistryEnvironment(session.root),
     } as NpmToolInstall;
-    expect(await installNpmTools(missing)).toContain('installed');
-    expect(missing.steps).toHaveLength(1);
+    expect(await installNpmTools(missing)).toMatch(
+        /^installed \d+ npm tools in \.gspot\/node_modules \(npm 0\.0\.0-test\)$/u,
+    );
+    expect(missing.steps).toStrictEqual([expect.arrayContaining(['npm', 'ci']) as string[]]);
 });
 
 test('Bun keeps installed modules while it runs the frozen install', async () => {
@@ -75,8 +81,10 @@ test('Bun keeps installed modules while it runs the frozen install', async () =>
         ...buildToolInstall(session, writer),
         registryEnvironment: await readRegistryEnvironment(session.root),
     } as NpmToolInstall;
-    expect(await installNpmTools(install)).toContain('installed');
-    expect(install.steps).toHaveLength(1);
+    expect(await installNpmTools(install)).toMatch(
+        /^installed \d+ npm tools in \.gspot\/node_modules \(bun 0\.0\.0-test\)$/u,
+    );
+    expect(install.steps).toStrictEqual([expect.arrayContaining(['bun', 'install', '--frozen-lockfile']) as string[]]);
     expect(await readFile(installed, 'utf8')).toBe('keep these bytes');
 });
 
@@ -104,7 +112,7 @@ test.each(['{broken', '{"npm":"invalid"}', '{"other":"field"}'])(
         } as NpmToolInstall;
         const error = await captureRejection(installNpmTools(install));
         expect(error.message).toContain('Install failed');
-        expect(install.steps).toHaveLength(1);
+        expect(install.steps).toStrictEqual([expect.arrayContaining(['npm', 'ci']) as string[]]);
         expect(await readFile(join(sandbox.path, GSPOT_PATHS.installRecord), 'utf8')).toBe(record);
     },
 );

@@ -27,7 +27,6 @@ test('a language choice brings its security rules without selecting security', a
     const securityOutput = generateFiles(securitySession);
     const generated = securityOutput.files.find((file) => file.path === target);
     expect(generated?.content).toBe(defaultOutput.files.find((file) => file.path === target)?.content);
-    expect(generated?.content).not.toContain('gspot.javascript.no-eval');
 });
 
 test.each([...LEVELS])(

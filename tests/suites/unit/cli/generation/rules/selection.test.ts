@@ -135,11 +135,15 @@ test('YAML rules require a YAML file, including a nested workflow', async () => 
     expect(present.has(getRuleFilePath('data-files', 'YAML.md'))).toBe(true);
 });
 
-test('the Neon Postgres driver selects the Drizzle rule file', async () => {
-    const rules = await generateRuleFiles('all', {
+test('the Neon Postgres driver selects the Drizzle rule file, and drizzle-orm alone does not', async () => {
+    const alone = await generateRuleFiles('all', {
+        'package.json': '{"private":true,"dependencies":{"drizzle-orm":"1.0.0"}}',
+    });
+    const neon = await generateRuleFiles('all', {
         'package.json': '{"private":true,"dependencies":{"drizzle-orm":"1.0.0","@neondatabase/serverless":"1.0.0"}}',
     });
-    expect(rules.has(getRuleFilePath('drizzle', 'DRIZZLE.md'))).toBe(true);
+    expect(alone.has(getRuleFilePath('drizzle', 'DRIZZLE.md'))).toBe(false);
+    expect(neon.has(getRuleFilePath('drizzle', 'DRIZZLE.md'))).toBe(true);
 });
 
 test('a Supabase project selects Deno rules without a Deno settings file', async () => {
