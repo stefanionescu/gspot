@@ -122,3 +122,5 @@ export const FROZEN_INSTALLS = {
 export const YARN_BERRY_INSTALL = ['yarn', 'install', '--immutable'] as const;
 
 export const NEXT_TYPEGEN_LINE = 'npx --no -- next typegen';
+
+export const CI_DIFF_LINES = ['git add --intent-to-add -- .gspot', 'git diff --exit-code -- .gspot'] as const;

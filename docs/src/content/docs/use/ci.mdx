@@ -145,3 +145,6 @@ installs, so a run with findings still saves it.
 ## Turn CI off
 
 Run `gspot set ci.enabled false`. gspot deletes the workflow file.
+
+The job fails when `gspot install` changes a file in `.gspot/`. This includes missing and stale lockfiles.
+Run `gspot install` on your machine and commit the changed files.

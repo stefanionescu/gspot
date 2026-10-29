@@ -25,7 +25,8 @@ gspot check --only security/semgrep
 ```
 
 Add your rule files with `tools.semgrep.rule_files`, as paths of files in the repository; gspot refuses a path that
-names no file. To run public rule packs, list them in
+names no file. Without shipped rules, local rules, or selected registry packs, gspot does not install Semgrep.
+Registry packs default to an empty list. To run public rule packs, list them in
 `tools.semgrep.registry_packs` and run:
 
 ```shell

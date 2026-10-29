@@ -4,6 +4,7 @@ import { openSession } from '#cli/session.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { simulateOperatingSystem } from '#tests/setup/system/platform.ts';
 import { VUE_TSC_SKIP, NEXT_INTL_PROJECTS } from '#tests/config/planning/skips.ts';
@@ -89,4 +90,54 @@ test('a check whose tool has no Windows build is skipped on Windows', async () =
     expect(planChecks(session, { stage: 'all', only: ['security/semgrep'] })).toMatchObject([
         { check: { id: 'security/semgrep' }, skip: { cause: 'system' } },
     ]);
+});
+
+test.each([false, true])('Semgrep tools follow local rules at plan time (custom rules: %s)', async (hasRuleFiles) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['python'], {
+            tables: hasRuleFiles ? '[tools.semgrep]\nrule_files = ["rules.yml"]\n' : '',
+        }),
+        'rules.yml': 'rules: []\n',
+        'source.py': 'PORT = 8080\n',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planChecks(session, { stage: 'push', only: ['security/semgrep'] });
+    expect(planned[0]?.skip).toStrictEqual(
+        hasRuleFiles
+            ? undefined
+            : {
+                  cause: 'setting',
+                  note: 'No selected configuration or tools.semgrep.rule_files supplies local rules.',
+              },
+    );
+    expect(listToolProjectPins(session.toolConfigurations).python.some((pin) => pin.startsWith('semgrep=='))).toBe(
+        hasRuleFiles,
+    );
+});
+
+test('shipped Semgrep rules select its tool', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'package.json': '{"name":"example","version":"1.0.0"}',
+        'index.js': 'export const port = 8080;\n',
+    });
+    const session = await openSession(sandbox.path);
+    expect(planChecks(session, { stage: 'push', only: ['security/semgrep'] })[0]?.skip).toBeUndefined();
+    expect(listToolProjectPins(session.toolConfigurations).python.some((pin) => pin.startsWith('semgrep=='))).toBe(
+        true,
+    );
+});
+
+test('explicit registry packs select Semgrep without local rules', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['python'], {
+            tables: '[tools.semgrep]\nregistry_packs = ["p/owasp-top-ten"]\n',
+        }),
+        'source.py': 'PORT = 8080\n',
+    });
+    const session = await openSession(sandbox.path);
+    expect(planChecks(session, { stage: 'manual', only: ['security/semgrep-registry'] })[0]?.skip).toBeUndefined();
+    expect(listToolProjectPins(session.toolConfigurations).python.some((pin) => pin.startsWith('semgrep=='))).toBe(
+        true,
+    );
 });

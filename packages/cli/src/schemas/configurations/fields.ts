@@ -36,6 +36,7 @@ export const operatingSystemSchema = z.enum(OPERATING_SYSTEMS.map((system) => sy
 
 export const conditionSchema = z.strictObject({
     configuration: z.string().min(1),
+    config_file: z.string().min(1),
     level: levelSchema,
     setting: z.string().min(1),
     git: z.literal(true),

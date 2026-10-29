@@ -120,11 +120,14 @@ const checkFields = z.strictObject({
     when: (
         conditionSchema.pick({
             configuration: true,
+            config_file: true,
             setting: true,
             git: true,
             dependencies: true,
             tags: true,
-        }) satisfies z.ZodType<Pick<ConditionFields, 'configuration' | 'setting' | 'git' | 'dependencies' | 'tags'>>
+        }) satisfies z.ZodType<
+            Pick<ConditionFields, 'configuration' | 'setting' | 'git' | 'dependencies' | 'tags' | 'config_file'>
+        >
     )
         .partial()
         .optional(),

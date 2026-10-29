@@ -30,6 +30,7 @@ import {
     CI_JOB_NAME,
     GITLAB_RULES,
     CACHED_PATHS,
+    CI_DIFF_LINES,
     CI_CACHE_STEP,
     CI_STEP_NAMES,
     GITHUB_EVENTS,
@@ -106,7 +107,11 @@ function listInstallSteps(pipeline: Pipeline, command: string): Record<string, u
         ...(pipeline.projectInstall.length === 0
             ? []
             : [{ name: CI_STEP_NAMES.projectInstall, run: pipeline.projectInstall.join('\n') }]),
-        { name: CI_STEP_NAMES.install, env: { ...MISE_TOKEN_ENVIRONMENT }, run: `${command} install` },
+        {
+            name: CI_STEP_NAMES.install,
+            env: { ...MISE_TOKEN_ENVIRONMENT },
+            run: [`${command} install`, ...CI_DIFF_LINES].join('\n'),
+        },
     ];
 }
 
@@ -249,7 +254,7 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
             timeout: `${String(CI_TIMEOUT_MINUTES)}m`,
             variables: { GIT_DEPTH: '0' },
             rules: GITLAB_RULES,
-            script: ['set -euo pipefail', ...setup, `${command} install`, check, ...manual],
+            script: ['set -euo pipefail', ...setup, `${command} install`, ...CI_DIFF_LINES, check, ...manual],
         },
     });
     return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}`, kind: 'workflow' };

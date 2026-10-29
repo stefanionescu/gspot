@@ -28,6 +28,7 @@ name = "semgrep"
 output = { format = "semgrep" }
 stage = "push"
 summary = "Runs the Semgrep rules that each configuration ships, and the files in `tools.semgrep.rule_files`, over changed files."
+when = { config_file = "semgrep" }
 why = "An injection or a logged secret reads like ordinary code, and a pattern rule finds it before a reviewer has to."
 
 [[check]]

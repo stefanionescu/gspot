@@ -148,6 +148,11 @@ async function prepareMiseLockfile(install: ToolInstall): Promise<void> {
         readFileSync(join(scratch.path, MISE_LOCK_FILE), 'utf8'),
         output,
     );
+    const missing = listMisePins(install.session.toolConfigurations).filter(
+        (pin) => !isMiseLockfileFresh([pin], content),
+    );
+    const names = missing.map((pin) => `${pin.name} ${pin.version}`).join(', ');
+    if (missing.length > 0) throw new GspotError('install', `mise lock did not lock ${names}.\n${output}`);
     writePlans(
         install.writer,
         planReplacements(install.writer, [

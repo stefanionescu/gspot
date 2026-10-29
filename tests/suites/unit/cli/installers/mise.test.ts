@@ -131,3 +131,25 @@ test('mise lock that leaves a platform without a download URL is refused and wri
     expect(install.steps.some((command) => command[1] === 'install')).toBe(false);
     expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.miseLockfile))).toBe(false);
 });
+
+test('mise refuses a lock that omits pins and keeps the previous lock', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['spelling']),
+        [GSPOT_PATHS.miseLockfile]: '[tools]\n',
+    });
+    const session = await openSession(sandbox.path);
+    using writer = openWriter(sandbox.path);
+    const install = buildToolInstall(session, writer);
+    install.misePath = 'mise';
+    using _commands = fakeCommand('mise', async (command, options) => {
+        if (command[1] === 'lock') await writeFile(join(options.cwd, 'mise.lock'), '[tools]\n');
+        return buildProcessResult({ stderr: 'WARN skipped tool after rate limit' });
+    });
+    const error = await captureRejection(installMiseTools(install));
+    const names = listMisePins(session.toolConfigurations)
+        .map((pin) => `${pin.name} ${pin.version}`)
+        .join(', ');
+    expect(error.message).toBe(`mise lock did not lock ${names}.\nWARN skipped tool after rate limit`);
+    expect(install.steps.some((command) => command[1] === 'install')).toBe(false);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8')).toBe('[tools]\n');
+});

@@ -57,7 +57,7 @@ export const TOOL_SETTING_DEFINITIONS = {
     'tools.semgrep.registry_packs': {
         configurations: ['security'],
         description: 'The registry packs the manual registry check runs.',
-        default: ['p/owasp-top-ten'] as ['p/owasp-top-ten'],
+        default: [] as [],
     },
     'tools.semgrep.rule_files': {
         configurations: ['security'],

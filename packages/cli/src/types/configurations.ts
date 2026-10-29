@@ -123,7 +123,9 @@ export type ParsedCheck = {
     fix?: string[] | undefined;
     exit_codes?: number[] | undefined;
     instead_of?: string | undefined;
-    when?: Optional<Pick<ConditionFields, 'configuration' | 'setting' | 'git' | 'dependencies' | 'tags'>> | undefined;
+    when?:
+        | Optional<Pick<ConditionFields, 'configuration' | 'setting' | 'git' | 'dependencies' | 'tags' | 'config_file'>>
+        | undefined;
     needs?: (typeof CHECK_NEEDS)[number][] | undefined;
     operating_systems?: (typeof OPERATING_SYSTEMS)[number]['name'][] | undefined;
     tool?: string | undefined;
@@ -222,7 +224,7 @@ export type GeneratorOutput = NonNullable<Check['generator_outputs']>[number];
 export type ConditionFields = Pick<
     ParsedManifest['detect'],
     'dependencies' | 'absent_dependencies' | 'filenames' | 'tags' | 'runtimes'
-> & { configuration: string; level: Level; setting: string; git: true };
+> & { configuration: string; level: Level; setting: string; git: true; config_file: string };
 
 export type NameList = { package: string; version: string; names: string[] };
 

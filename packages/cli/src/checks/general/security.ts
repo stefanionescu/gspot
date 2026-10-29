@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
-import { buildBaseResult } from '#cli/runs/report.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
@@ -30,13 +29,6 @@ Runs Semgrep with the rule files of the scope.
 export async function checkSecuritySemgrep(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const command = planned.check.command as string[];
     const rules = listSemgrepRuleFiles(session, planned);
-    if (rules.length === 0)
-        return {
-            ...buildBaseResult(planned, session),
-            status: 'skipped',
-            cause: 'setting',
-            note: 'No selected configuration or tools.semgrep.rule_files supplies local rules.',
-        };
     return runCommandCheck(session, planned, {
         command: [...command, ...rules.flatMap((path) => ['--config', join(session.root, path)])],
     });

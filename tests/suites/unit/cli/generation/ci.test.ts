@@ -12,6 +12,7 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
 import { LINT_STEPS, SETUP_CASES, LINUX_PIPELINE, SETUP_ARGUMENTS } from '#tests/config/generation/ci.ts';
@@ -51,15 +52,22 @@ test('the Slow checks step names every slow check in one comma list', async () =
     const command = "mise exec node@24 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3' -- gspot";
     const expected = `${command} check --only 'docs/lychee-external,project/audit'`;
     const steps = (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps;
-    expect(steps.find((step) => step.name === 'Install gspot tools')?.run).toBe(`${command} install`);
+    expect(steps.find((step) => step.name === 'Install gspot tools')?.run).toBe(
+        `${command} install\ngit add --intent-to-add -- .gspot\ngit diff --exit-code -- .gspot`,
+    );
     expect(steps.find((step) => step.name === 'Slow checks')?.run).toBe(
         `(cd ${GSPOT_FOLDER} && mise install lychee)\n${expected}\n`,
     );
     expect(steps.find((step) => step.name === 'Lint')?.run).toBe(`${command} check --changed "\${GSPOT_CI_BASE}"\n`);
     expect(buildGitlabWorkflow(pipeline).content).toContain(expected);
-    expect((parse(buildGitlabWorkflow(pipeline).content) as GitlabPipeline).gspot.script).toContain(
+    const script = (parse(buildGitlabWorkflow(pipeline).content) as GitlabPipeline).gspot.script;
+    const install = script.indexOf(`${command} install`);
+    expect(install).toBeGreaterThanOrEqual(0);
+    expect(script.slice(install, install + 3)).toStrictEqual([
         `${command} install`,
-    );
+        'git add --intent-to-add -- .gspot',
+        'git diff --exit-code -- .gspot',
+    ]);
 });
 
 test('pushes run the job on the default branch only, and the slow checks only on those pushes', async () => {
@@ -123,7 +131,8 @@ test.each([...SETUP_CASES])(
     'the %s job keeps setup exit %i and literal arguments before gspot',
     async (provider, setupExit) => {
         const pipeline = await buildPipeline();
-        await using sandbox = await testdir();
+        await using sandbox = await createGitSandbox({ '.gspot/version': '1.2.3' });
+        runGitStep(sandbox.path, ['add', '.gspot/version']);
         const commands = join(sandbox.path, 'commands.log');
         const bin = await writeProgramCommand(sandbox.path, 'bin/mise', 'fakes/exec');
         await writeProgramCommand(sandbox.path, 'bin/gspot', 'fakes/tool', '--log-arguments', commands, '--');
