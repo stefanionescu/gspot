@@ -128,7 +128,7 @@ test('the summary counts skipped checks apart from passed ones, and an empty run
 
 test('a failed report prints each check with its findings, help, and reproduce line, the ignore count, and the summary', () => {
     expect(formatRunReport(FAILED_CHECK_REPORT, { verbose: false })).toBe(
-        'bash/shellcheck  failed  1 finding\n  a.sh:4:3  SC2086  Double quote to prevent globbing.\n  help: Quote it.\n  run again: gspot check --only bash/shellcheck\n\nmissing  format/prettier api\n  prettier is not installed. Run: mise install\n\nignores    1 (printed with --verbose)\nFailed: 1 check with 1 finding. Could not run: 1 check (a tool is missing; run gspot install). Passed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 1.\n',
+        'bash/shellcheck  failed  1 finding\n  a.sh:4:3  SC2086  Double quote to prevent globbing.\n  help: Quote it.\n  run again: gspot check --only bash/shellcheck\n\nmissing  format/prettier api\n  prettier is not installed. Run: mise install\n\nignores    1 (printed with --verbose)\nFailed: 1 check with 1 finding. Could not run: 1 check. Passed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 1.\n',
     );
 });
 

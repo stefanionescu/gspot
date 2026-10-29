@@ -4,7 +4,7 @@ import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { getTool } from '#cli/configurations/tools.ts';
-import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { ConfiguredCheck } from '#cli/types/planning.ts';
 import type { ProcessFailure } from '#cli/types/tools/run.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
@@ -88,7 +88,10 @@ Require the project's Python environment before running checks that read its ins
 @param planned the check and its project scope.
 @returns the missing-environment result, or undefined when the check can run.
 */
-export function findMissingProjectEnvironment(session: Session, planned: PlannedCheck): ProcessFailure | undefined {
+export function findMissingProjectEnvironment(
+    session: Session,
+    planned: Pick<ConfiguredCheck, 'check' | 'scope'>,
+): ProcessFailure | undefined {
     if (!PYTHON_ENVIRONMENT_CHECKS.has(planned.check.id)) return undefined;
     const scope = planned.scope.path;
     const project = joinScope(scope, PYPROJECT_TOML);

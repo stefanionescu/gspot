@@ -42,3 +42,5 @@ export const CI_OFF_NOTES = {
     github: 'off; gspot set ci.enabled true writes the check workflow',
     gitlab: 'off; gspot set ci.enabled true and gspot set ci.provider gitlab write the check workflow',
 } as const;
+
+export const ENVIRONMENT_MISSING_NOTE = 'The project environment is missing. Run uv sync in its folder.';

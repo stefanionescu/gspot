@@ -15,6 +15,7 @@ export type Suggestions = {
 export type DoctorReport = {
     submodules: string[];
     tools: ToolInspection[];
+    environments: string[];
     suggestions: Suggestions;
     hooks: string;
     ci: string;

@@ -97,7 +97,8 @@ function formatIgnores(report: RunReport, { verbose }: { verbose: boolean }): st
 
 function formatSummary(report: RunReport, { selectedOnly }: { selectedOnly: boolean }): string {
     const failed = report.checks.filter((check) => check.status === 'failed');
-    const missing = report.checks.filter((check) => check.status === 'missing').length;
+    const missing = report.checks.filter((check) => check.status === 'missing');
+    const needsInstall = missing.some((check) => (check.note ?? '').endsWith(STANDARD_INSTALL_HELP));
     const errors = report.checks.filter((check) => check.status === 'error').length;
     const passed = report.checks.filter((check) => check.status === 'passed').length;
     const skipped = report.checks.filter((check) => check.status === 'skipped').length;
@@ -105,9 +106,9 @@ function formatSummary(report: RunReport, { selectedOnly }: { selectedOnly: bool
     const sentences = [];
     if (failed.length > 0)
         sentences.push(`Failed: ${formatCount(failed.length, 'check')} with ${formatCount(findings, 'finding')}.`);
-    if (missing + errors > 0)
+    if (missing.length + errors > 0)
         sentences.push(
-            `Could not run: ${formatCount(missing + errors, 'check')}${missing > 0 && !selectedOnly ? TOOL_MISSING_MESSAGE : ''}.`,
+            `Could not run: ${formatCount(missing.length + errors, 'check')}${needsInstall && !selectedOnly ? TOOL_MISSING_MESSAGE : ''}.`,
         );
     sentences.push(`Passed: ${formatCount(passed, 'check')}.`, `Skipped: ${formatCount(skipped, 'check')}.`);
     const text = sentences.join(' ');

@@ -3,6 +3,7 @@ import { readGitSetting } from '#cli/system/git.ts';
 import { getColors } from '#cli/system/terminal.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import type { Session } from '#cli/types/session.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
@@ -17,12 +18,14 @@ import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
+import { findMissingProjectEnvironment } from '#cli/tools/uv.ts';
 import type { HookStatus } from '#cli/types/installers/hooks.ts';
 import { buildMiseProject } from '#cli/generation/tool-projects.ts';
 import { AVAILABLE_TOOL_STATES } from '#cli/config/tools/inspect.ts';
 import type { ToolInspection } from '#cli/types/tools/inspection.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { findMissingBuild, listDistinctTools } from '#cli/configurations/tools.ts';
@@ -38,6 +41,7 @@ import {
     REMOTE_URL_SCHEME,
     ORIGIN_URL_SETTING,
     SUGGESTION_SECTIONS,
+    ENVIRONMENT_MISSING_NOTE,
 } from '#cli/config/commands/doctor.ts';
 
 function formatToolVersion(tool: ToolInspection): string {
@@ -154,17 +158,27 @@ async function readHookState(session: Session, pin: string | undefined): Promise
     };
 }
 
+function listMissingEnvironments(session: Session): string[] {
+    const scopes = session.configuredChecks
+        .filter((planned) => findMissingProjectEnvironment(session, planned) !== undefined)
+        .map((planned) => joinScope(planned.scope.path, PYTHON_ENVIRONMENT_FOLDER));
+    return [...new Set(scopes)].toSorted((left, right) => compareText(left, right));
+}
+
 async function buildDoctorReport(session: Session, pin: string | undefined): Promise<DoctorReport> {
     const tools = inspectScopeTools(session);
+    const environments = listMissingEnvironments(session);
     const hooks = await readHookState(session, pin);
     const version = buildDoctorVersion(session, pin);
     const isBroken =
         !hooks.ready ||
+        environments.length > 0 ||
         tools.some((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined) ||
         version.installCommand !== undefined;
     return {
         submodules: listSubmodulePaths(session.repository.index),
         tools,
+        environments,
         suggestions: listSuggestions(session),
         hooks: hooks.text,
         ci: formatCiState(session),
@@ -183,6 +197,10 @@ function formatDoctorReport(report: DoctorReport): string {
             ? ['Run gspot install to install the missing or outdated tools.']
             : []),
         `tools: ${String(report.tools.filter((tool) => AVAILABLE_TOOL_STATES.has(tool.state) && tool.path !== undefined).length)} ready`,
+        ...report.environments.map(
+            (path) =>
+                `  ${getColors().red('missing'.padEnd(COLUMN_WIDTHS.label))} ${path}  ${ENVIRONMENT_MISSING_NOTE}`,
+        ),
         '',
         ...formatSuggestions(report.suggestions),
         ...(report.suggestions.detected.length === 0 ? [] : ['Run gspot add to add the detected configurations.', '']),

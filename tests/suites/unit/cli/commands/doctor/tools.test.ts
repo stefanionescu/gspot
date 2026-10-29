@@ -2,6 +2,7 @@ import semver from 'semver';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
+import { APP_PYPROJECT } from '#tests/config/toml.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { executableLayout } from '#cli/system/paths.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -207,6 +208,7 @@ test('doctor --json reports every field when the required tools are missing', as
     expect(JSON.parse(result.stdout)).toStrictEqual({
         submodules: [],
         tools,
+        environments: [],
         suggestions: { detected: [], suggested: [], undetected: [], unowned: [], lintJobs: [] },
         hooks: 'none',
         ci: 'none',
@@ -214,4 +216,20 @@ test('doctor --json reports every field when the required tools are missing', as
         version: { running: cliPackage.version },
         exitCode: 1,
     });
+});
+
+test('doctor reports a missing project environment of a Python scope and exits 1', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python'], { scopes: [{ path: 'api', configurations: ['python'] }] }),
+        'pyproject.toml': APP_PYPROJECT,
+        'api/pyproject.toml': APP_PYPROJECT,
+        'api/.venv/pyvenv.cfg': 'home = /usr/bin\n',
+    });
+    const diagnosed = await runGspot(sandbox.path, ['doctor', '--json']);
+    expect(diagnosed.code, diagnosed.stdout + diagnosed.stderr).toBe(1);
+    expect((JSON.parse(diagnosed.stdout) as DoctorReport).environments).toStrictEqual(['.venv']);
+    const text = await runGspot(sandbox.path, ['doctor']);
+    expect(text.stdout).toContain(
+        '  missing   .venv  The project environment is missing. Run uv sync in its folder.\n',
+    );
 });
