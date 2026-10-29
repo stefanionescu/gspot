@@ -127,6 +127,7 @@ export type RunOptions = PlanOptions & {
 };
 
 export type RunReport = {
+    notChecked?: { configuration: string; evidence: string }[];
     notes?: string[];
     comparison?: { content: 'working-tree' | 'index' | 'commit'; reference: string };
     version: string;

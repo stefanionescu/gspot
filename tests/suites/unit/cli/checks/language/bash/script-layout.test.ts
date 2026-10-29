@@ -2,13 +2,16 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { markExecutable } from '#tests/setup/system/git.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
+    LAYOUT_RULE_CASES,
     SCRIPT_LAYOUT_CASES,
     ENVIRONMENT_READER_SCOPE_TABLES,
 } from '#tests/config/checks/language/bash/script-layout.ts';
@@ -35,9 +38,12 @@ test('library declarations span array and heredoc lines without creating flow fi
         'library.sh': '#!/usr/bin/env bash\nvalues=(\n  first\n  second\n)\ntext=$(cat <<EOF\nmessage\nEOF\n)\n',
     });
     expect(await runSandboxCheck(sandbox.path, 'bash/script-layout')).toStrictEqual([]);
-    await writeFile(join(sandbox.path, 'library.sh'), '#!/usr/bin/env bash\necho ready\n');
+    await writeFile(
+        join(sandbox.path, 'library.sh'),
+        '#!/usr/bin/env bash\nexport LOG_DIR=/tmp/logs\ndeclare -g -x MODE=fast\necho ready\n',
+    );
     const found = await runSandboxCheck(sandbox.path, 'bash/script-layout');
-    expect(found.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([{ rule: 'library-flow', line: 2 }]);
+    expect(found.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([{ rule: 'library-flow', line: 4 }]);
 });
 
 test('Bash layout skips Bats tests, Zsh files and Korn shell shebangs', async () => {
@@ -47,5 +53,20 @@ test('Bash layout skips Bats tests, Zsh files and Korn shell shebangs', async ()
         'sample.zsh': 'print ready\n',
         'sample.sh': '#!/usr/bin/env ksh\nprint ready\n',
     });
+    expect(await runSandboxCheck(sandbox.path, 'bash/script-layout')).toStrictEqual([]);
+});
+
+test.each(LAYOUT_RULE_CASES)('Bash layout reports $rule and passes its repair', async (sample) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
+        'script.sh': sample.source,
+    });
+    if (sample.executable) await markExecutable(sandbox.path, 'script.sh');
+    const findings = await runSandboxCheck(sandbox.path, 'bash/script-layout');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'script.sh', rule: sample.rule },
+    ]);
+    await writeFile(join(sandbox.path, 'script.sh'), sample.corrected);
+    if (sample.rule === 'executable-bit') await markExecutable(sandbox.path, 'script.sh');
     expect(await runSandboxCheck(sandbox.path, 'bash/script-layout')).toStrictEqual([]);
 });

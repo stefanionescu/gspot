@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
@@ -63,7 +64,7 @@ test('the installed ESLint plugin loads through import and require and enforces 
         files
             .filter((file) => file.isFile())
             .map((file) => join(file.parentPath, file.name).slice(installedPath.length + 1))
-            .toSorted((left, right) => left.localeCompare(right)),
+            .toSorted(compareText),
     ).toStrictEqual([...PLUGIN_PACKED_FILES]);
     await assertPluginExports(consumer);
 });

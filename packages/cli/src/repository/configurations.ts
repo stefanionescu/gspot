@@ -156,7 +156,7 @@ Find newly detected configurations in each project scope, respecting removals.
 */
 export function listDetectedAdditions(
     session: Session,
-): { scope: string; configurations: string[]; evidence: string[] }[] {
+): { scope: string; configurations: string[]; evidence: ConfigurationEvidence[] }[] {
     const proposed = selectForInit({
         repository: session.repository,
         configurationsByName: session.configurationsByName,
@@ -182,9 +182,7 @@ export function listDetectedAdditions(
                   {
                       scope,
                       configurations,
-                      evidence: proposed.detected
-                          .filter((match) => configurations.includes(match.configuration))
-                          .map((match) => match.evidence),
+                      evidence: proposed.detected.filter((match) => configurations.includes(match.configuration)),
                   },
               ];
     });

@@ -7,6 +7,8 @@ import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakePlatform } from '#tests/setup/system/platform.ts';
+import { copyDependencies } from '#cli/runs/copy/dependencies.ts';
 import { DEPENDENCY_FILES_MESSAGE } from '#tests/config/messages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { lstat, mkdir, unlink, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
@@ -82,6 +84,30 @@ test('an installed package links to the working tree and a dot folder stays out'
     const source = await readFile(join(nextCopy.root, 'node_modules/example/index.js'), 'utf8');
     expect(source).toBe(VALUE_ONE_LINE);
     expect(await readFile(join(external.path, 'private.txt'), 'utf8')).toBe('outside bytes');
+});
+
+test('a Windows dependency copy links folders and copies executable files without file symlinks', async () => {
+    await using sandbox = await testdir({
+        'source/node_modules/package/index.js': 'export {};',
+        'target/.keep': '',
+    });
+    const root = join(sandbox.path, 'source');
+    const target = join(sandbox.path, 'target');
+    const names = ['eslint.cmd', 'eslint.ps1', 'eslint.exe'];
+    await createFileTree(root, Object.fromEntries(names.map((name) => [`node_modules/.bin/${name}`, name])));
+    using _platform = fakePlatform('win32');
+    await copyDependencies({ root, target, dependencies: ['node_modules'] });
+    const packageStats = await lstat(join(target, 'node_modules/package'));
+    expect(packageStats.isSymbolicLink()).toBe(true);
+    expect(await realpath(join(target, 'node_modules/package'))).toBe(
+        await realpath(join(root, 'node_modules/package')),
+    );
+    for (const name of names) {
+        const copied = join(target, 'node_modules/.bin', name);
+        const copiedStats = await lstat(copied);
+        expect(copiedStats.isFile()).toBe(true);
+        expect(await readFile(copied, 'utf8')).toBe(name);
+    }
 });
 
 test('a nested revision copy links each package of .gspot/node_modules', async () => {
@@ -182,6 +208,7 @@ test('a package.json checked out with CRLF matches its LF blob in the index copy
     using copy = await copyRevision(sandbox.path, { kind: 'index' });
     const source = await readFile(join(copy.root, 'node_modules/example/index.js'), 'utf8');
     expect(source).toBe(VALUE_ONE_LINE);
+    expect(copy.dependencyNote).toBeUndefined();
     await writeFile(join(sandbox.path, 'package.json'), '{\r\n    "name": "changed"\r\n}\r\n');
     using changed = await copyRevision(sandbox.path, { kind: 'index' });
     expect(changed.dependencyNote).toBe(DEPENDENCY_FILES_MESSAGE);

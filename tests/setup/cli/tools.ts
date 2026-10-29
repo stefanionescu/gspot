@@ -51,7 +51,7 @@ export function buildToolInstall(session: Session, writer: Files): ToolInstall {
 A program pin, with an npm installer when npm names a package.
 */
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 calls in 3 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The tool tests share the npm pin record.
 export function buildProgramPin(name: string, version: string, npmPackage?: string): Tool {
     return {
         name,
@@ -74,7 +74,7 @@ export async function listNpmInstallFiles(root: string): Promise<string[]> {
 What tool search reads, for tests that inspect installed tools.
 */
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 30 calls in 3 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, the tool search record makes duplication/jscpd clones in the tools tests.
 export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
     return {
         root,

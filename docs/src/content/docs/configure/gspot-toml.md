@@ -4,7 +4,7 @@ description: Choose configurations and a level, and change settings in gspot.tom
 ---
 
 `gspot.toml` holds your configurations, level, settings, and ignores. Setting commands edit the file and apply each
-change.
+change. The commands preserve existing comments and the order of untouched settings and tables.
 
 ## See the current choices
 
@@ -28,7 +28,12 @@ gspot remove nextjs --reason "The app no longer uses Next.js."
 
 `gspot remove` needs `--reason`. It writes `nextjs` into `removed_configurations` with that reason, so `gspot doctor`
 does not suggest it again; `gspot add nextjs` reverses that. gspot does not remove a configuration that another
-selected configuration needs. When the tools change, gspot prints a reminder to run `gspot install`.
+selected configuration needs. One reason covers the whole `removed_configurations` list; a later removal with a new
+`--reason` replaces that shared reason. When the tools change, gspot prints a reminder to run `gspot install`.
+
+Run `gspot add` without names to detect and select configurations from the current files and dependencies, then run
+`gspot install`. It leaves configurations listed in `removed_configurations` out. Name a configuration explicitly to
+select it again.
 
 gspot always selects most general configurations, such as `secrets`, `spelling`, and `security`, even when you write the
 list yourself, and `gspot add` and `gspot remove` refuse them. To run fewer of their checks, change the level, or turn
@@ -56,7 +61,8 @@ gspot install
 
 init selects the configurations of that file and the ones it detects here. It copies the settings that fit any
 repository: the level, limits and their reasons, naming, formatting, prose, coverage, and lint rule lists. It also
-copies word lists, the switches of `[hooks]` and `[rules]`, and each ignore of a whole check or lint rule.
+copies word lists and each ignore of a whole check or lint rule. init enables hooks and rules for the new repository;
+it does not copy their switches from the template.
 
 The plan lists under `left out` each setting that belongs to the other repository:
 
@@ -138,15 +144,15 @@ gspot set ci.setup_command -- bun install --frozen-lockfile
 
 ## Accept a banned name
 
-Allow an exact name only when an external contract requires it. Every shipped banned naming group applies at level
-`all`. The `roles` group rejects vague job labels such as `helper` and `manager`; `defensive` rejects qualifiers such as
+Allow an exact name only when an external contract requires it. Every shipped banned naming list applies at level
+`all`. The `roles` list rejects vague job labels such as `helper` and `manager`; `defensive` rejects qualifiers such as
 `ensure` and `maybe`; `marketing` rejects claims such as `advanced` and `enhanced`. `naming.banned_words` adds project
 words.
 
 For `export const helperCommand = 1;`, `naming/identifiers` reports:
 
 ```text
-javascript variable "helperCommand": "helper" is banned (roles group).
+javascript variable "helperCommand": "helper" is banned (roles list).
 ```
 
 This complete example accepts that exact variable name in one file:

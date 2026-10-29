@@ -33,7 +33,7 @@ Test scope containment. The empty root path matches every file.
 @param scope the folder that may contain the file.
 @returns whether the scope contains the file.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 44 calls in 25 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers test scope containment by this rule: the root scope, an empty path, holds every path.
 export function isInScope(path: string, scope: string): boolean {
     return scope === '' || path === scope || path.startsWith(`${scope}/`);
 }
@@ -45,7 +45,7 @@ Lists the scopes inside another scope, excluding that scope itself.
 @param scope the parent folder, empty for the repository root.
 @returns the nested paths in their original order.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 11 calls in 8 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks, generation, and planning list nested scopes by this rule: inside the scope, and not the scope itself.
 export function listNestedScopes(paths: readonly string[], scope: string): string[] {
     return paths.filter((path) => path !== scope && isInScope(path, scope));
 }
@@ -87,7 +87,7 @@ Resolve a scope-relative path within its repository.
 @param path the scope-relative file.
 @returns the repository-relative path.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 56 calls in 39 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers join a path to its scope by this rule: the root scope, an empty path, adds no prefix.
 export function joinScope(scope: string, path: string): string {
     return scope === '' ? path : `${scope}/${path}`;
 }

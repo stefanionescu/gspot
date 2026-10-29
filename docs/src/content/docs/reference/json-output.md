@@ -1,6 +1,6 @@
 ---
 title: JSON output
-description: The fields of `gspot check --json` and the error object of every `--json` command.
+description: Reports, setting changes, installations, and command errors under `--json`.
 ---
 
 Use `gspot check --json` to write one report to standard output. The process exit code matches `exitCode`.
@@ -28,11 +28,17 @@ gspot check --json
 | `failed`          | Check IDs that failed or stopped with an error, and the checks whose fixer failed.                                  |
 | `exitCode`        | The process exit code. See [Exit codes](/reference/commands/#exit-codes).                                           |
 
+When present, `notChecked` lists `{ configuration, evidence }` objects for detected configurations that your settings
+neither select nor record in `removed_configurations`. Both fields hold strings. gspot omits the array when empty.
+The list does not change `exitCode`. Run `gspot add` to select them, or
+`gspot remove <name> --reason "<why>"` to decline one.
+
 ## Check results
 
 Each `checks` item has `check`, `scope`, `status`, `fileCount`, `duration`, and `findings`.
 It can also have `files`, `note`, `reproduce`, and `command`. A skipped result carries its `cause`. The status takes one of `passed`, `failed`, `missing`, `error`, or
-`skipped`. `missing` and `error` make the run incomplete and produce exit code `2`.
+`skipped`. `missing` and `error` make the run incomplete and produce exit code `2`. An `error` result retains the
+findings collected before the check stopped.
 
 Each finding has `check`, `file`, `message`, and `fixable`. Optional fields include `line`, `column`, `rule`, `help`,
 and `name`, the definition that a `structure/trivial-functions` or `python/vulture` finding names. Source lines and columns start at `1`. A finding without a source location can have an empty `file`.
@@ -54,25 +60,43 @@ The `cause` of a skip takes one of `system`, `replaced`, `setting`, `condition`,
 Each `report` holds the report fields above. `shallow` holds `true` when the pushed history reaches the
 boundary of a shallow clone. Checks that read history then refuse to run.
 
+## Setting edits
+
+`add`, `remove`, `set`, `unset`, `ignore`, and `unignore` return `changed` and `summary`. `changed` says whether the
+command changed `gspot.toml`; `summary` describes the result, including a command that has nothing to change.
+Automatic `add` can include a summary line for each scope.
+
+When the command applies generated files, its object also has `written`, `updated`, `removed`, and `unchanged` arrays
+of repository-relative paths, plus a `notes` array. A no-op that returns before applying files can omit those arrays.
+Do not infer generated-file changes from `changed`: applying an unchanged setting can still repair stale files.
+`unignore` can also return `warning` when a path selection cannot remove an ignore that covers every path.
+
+## Installation
+
+`gspot install --json` returns `{ notes, steps }`. `notes` holds an array of nonempty text lines, including any hook
+installation instructions. `steps` holds an array of command argument arrays. When installation needs no notes,
+`notes` holds an empty array.
+
 ## Command errors
 
 Commands with `--json` report an error with `error` and `message`. `error` holds one of the codes below.
 `message` describes the failure and the action to take.
 
-| Code            | What failed                                                                             |
-| --------------- | --------------------------------------------------------------------------------------- |
-| `arguments`     | Command arguments or flags.                                                             |
-| `git`           | A Git operation.                                                                        |
-| `copy`          | Copying the files of a check into a temporary folder.                                   |
-| `writing`       | Writing `gspot.toml` or a generated file.                                               |
-| `filesystem`    | A file of the repository: missing, not readable, not valid, or at a path gspot refuses. |
-| `settings`      | A setting or the gspot.toml format.                                                     |
-| `configuration` | A shipped configuration.                                                                |
-| `install`       | Installing tools.                                                                       |
-| `tool`          | Finding or running a tool.                                                              |
-| `output`        | Reading a tool's output.                                                                |
-| `runtime`       | The running Node.js or Bun version does not meet the package minimum.                   |
-| `pin`           | The repository's version pin.                                                           |
-| `prompt`        | A question that asks you to accept a plan.                                              |
-| `unexpected`    | An unexpected error; the message names it.                                              |
-| `canceled`      | A signal stopped the command. The object also holds `exitCode`.                         |
+| Code            | What failed                                                                       |
+| --------------- | --------------------------------------------------------------------------------- |
+| `arguments`     | Command arguments or flags.                                                       |
+| `git`           | A Git operation.                                                                  |
+| `copy`          | Copying the files of a check into a temporary folder.                             |
+| `writing`       | Writing `gspot.toml` or a generated file.                                         |
+| `filesystem`    | A repository file is missing, unreadable, or at a path gspot refuses.             |
+| `parse`         | A file has invalid syntax or structure, including malformed TOML in `gspot.toml`. |
+| `settings`      | A parsed setting has an invalid key, value, or combination.                       |
+| `configuration` | A shipped configuration.                                                          |
+| `install`       | Installing tools.                                                                 |
+| `tool`          | Finding or running a tool.                                                        |
+| `output`        | Reading a tool's output.                                                          |
+| `runtime`       | The running Node.js or Bun version does not meet the package minimum.             |
+| `pin`           | The repository's version pin.                                                     |
+| `prompt`        | A question that asks you to accept a plan.                                        |
+| `unexpected`    | An unexpected error; the message names it.                                        |
+| `canceled`      | A signal stopped the command. The object also holds `exitCode`.                   |

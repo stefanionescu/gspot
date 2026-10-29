@@ -1,5 +1,5 @@
 import which from 'which';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { UV_TOOL } from '#cli/config/tools/uv.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -35,6 +35,7 @@ import {
     MISE_INSTALL_ARGUMENTS,
     MISE_LOCKED_ENVIRONMENT,
     MISE_TRUSTED_PATHS_VARIABLE,
+    MISE_CEILING_PATHS_VARIABLE,
 } from '#cli/config/installers/mise.ts';
 
 function selectMiseTools(session: Session, tools: Tool[]) {
@@ -121,7 +122,10 @@ async function prepareMiseLockfile(install: ToolInstall): Promise<void> {
     if (saved !== undefined) writeFileSync(join(scratch.path, MISE_LOCKFILE), saved.bytes);
     const result = await runRequiredInstallStep(install, MISE_LOCK_ARGUMENTS, {
         cwd: scratch.path,
-        env: { [MISE_TRUSTED_PATHS_VARIABLE]: scratch.path },
+        env: {
+            [MISE_TRUSTED_PATHS_VARIABLE]: scratch.path,
+            [MISE_CEILING_PATHS_VARIABLE]: dirname(scratch.path),
+        },
         name: `The command ${MISE_LOCK_ARGUMENTS.join(' ')}`,
     });
     const output = redactInstallOutput(result, []);

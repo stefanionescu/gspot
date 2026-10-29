@@ -6,8 +6,6 @@ export const CANCELED_CHECK_NOTE = 'The check was canceled.';
 
 export const FAILED_STATUSES = new Set<(typeof CHECK_STATUSES)[number]>(['failed', 'error']);
 
-export const NO_FILES_MESSAGE = 'No matching files.';
-
 export const CHECK_COMMAND = 'gspot check';
 
 export const HOOK_FLAG = '--hook';

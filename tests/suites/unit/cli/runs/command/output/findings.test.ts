@@ -21,7 +21,7 @@ import {
     FILELESS_CHECKS,
     REGEX_OUTPUT_CASES,
     MISSING_LOCATED_FILE,
-} from '#tests/config/runs/command.ts';
+} from '#tests/config/runs/command/check.ts';
 
 test.each([...REGEX_OUTPUT_CASES])('$title', async ({ result, expected }) => {
     await using sandbox = await testdir({ 'source.txt': 'source' });

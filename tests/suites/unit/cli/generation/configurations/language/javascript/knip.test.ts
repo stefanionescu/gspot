@@ -134,11 +134,19 @@ test('Knip treats script configuration files as entries and ignores pointer file
         Object.fromEntries([configuration, ...pointers].map(({ path, content }) => [path, content])),
     );
     await linkInstalledModules(join(sandbox.path, GSPOT_PATHS.nodeModules));
+    await writeFile(join(sandbox.path, 'unused.js'), 'export const unused = 1;\n');
     const result = await runCommand([...knipArguments, 'files'], { cwd: sandbox.path });
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path })).toStrictEqual(
-        [],
-    );
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path })).toStrictEqual([
+        {
+            check: check.id,
+            file: 'unused.js',
+            rule: 'files',
+            message: 'Unused file: unused.js',
+            help: check.help,
+            fixable: false,
+        },
+    ]);
 });
 
 test("Knip gets each scope's test_files as entry points without sibling leaks", async () => {

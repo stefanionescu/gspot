@@ -11,7 +11,7 @@ Convert a path to forward slashes on every system, for path patterns, stored pat
 @param path the path, with system separators.
 @returns the path with forward slashes.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 77 calls in 39 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers write stored and printed paths with forward slashes through this one Windows rule.
 export function convertToPosixPath(path: string): string {
     return sep === '/' ? path : path.split(sep).join('/');
 }
@@ -22,7 +22,7 @@ Check whether a path relative to a folder stays inside it: not absolute, not the
 @param local the path relative to the folder, with either separator.
 @returns whether the path stays inside the folder.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 files call it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers refuse a path outside its folder by this test, which accepts both separators.
 export function isInside(local: string): boolean {
     return !(local === '..' || isAbsolute(local) || local.startsWith('../') || local.startsWith(`..${sep}`));
 }
@@ -58,7 +58,7 @@ Extract the parent folder of a path, '' at the root.
 @param path the slash-separated location to split at the last separator.
 @returns everything before the last slash.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 18 calls in 15 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers take the parent folder by this rule, with an empty path at the root.
 export function extractParentFolder(path: string): string {
     const slash = path.lastIndexOf('/');
     return slash === -1 ? '' : path.slice(0, slash);
@@ -96,7 +96,7 @@ List the file names that an executable can have on this system, in the order the
 @param name the executable without a suffix.
 @returns the names to look for.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in 5 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks, tools, and tests list the executable names with the suffixes of this system.
 export function listExecutableNames(name: string): string[] {
     return executableLayout.executableSuffixes.map((suffix) => name + suffix);
 }
@@ -108,7 +108,7 @@ Locate one Python interpreter or console script inside its virtual environment.
 @param name the Python program or console script inside the environment.
 @returns the executable path, with the Python launcher suffix of this system.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 17 calls in 11 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks, tools, and tests find a program in a virtual environment by the folder and suffix of this system.
 export function buildVenvExecutablePath(folder: string, name: string): string {
     return join(join(folder, executableLayout.environmentFolder), name + executableLayout.environmentSuffix);
 }
@@ -135,7 +135,7 @@ Test whether a path passes through an installed dependency folder.
 @param path the repository-relative path.
 @returns whether a folder segment names installed dependencies.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks and repository reads skip installed dependency folders by this one rule.
 export function isInInstalledFolder(path: string): boolean {
     return path.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment));
 }
@@ -146,7 +146,7 @@ Escape a literal repository path for use within a glob.
 @param path the literal path.
 @returns the path with glob syntax escaped.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers escape a literal path for a glob with the one set of special characters.
 export function escapeGlob(path: string): string {
     return path.replaceAll(GLOB_SPECIAL_CHARACTERS, (match) => `\\${match}`);
 }

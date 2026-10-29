@@ -46,6 +46,12 @@ after `--only` names files to check, not another check.
 A check that reads the whole project, such as `typescript/tsc`, reads every file. With path arguments, the report keeps
 its findings in those paths only. A staged or pushed run keeps every finding.
 
+## Newly detected configurations
+
+Every check run, including hooks and CI, detects configurations that your settings neither select nor remove. It
+prints one warning before the summary, naming each configuration and the evidence from files or dependencies. Run `gspot add` to select the detected configurations, then `gspot install`. To decline one, run
+`gspot remove <name> --reason "<why>"`. The warning does not change the exit code.
+
 ## Fix findings automatically
 
 Run the formatters and the other fixers, then check again. Add `--dry-run` to see the changes without writing them:
@@ -63,13 +69,13 @@ names the file and exits with code 2. With `--dry-run`, gspot writes nothing, na
 
 ## Statuses and exit codes
 
-| Status    | Meaning                                           | Exit code |
-| --------- | ------------------------------------------------- | --------- |
-| `failed`  | The check reported findings.                      | 1         |
-| `missing` | The tool needs installation: run `gspot install`. | 2         |
-| `error`   | The check could not run; the line says why.       | 2         |
-| `passed`  | No findings.                                      | 0         |
-| `skipped` | The check did not run; the line says why.         | 0         |
+| Status    | Meaning                                                                                     | Exit code |
+| --------- | ------------------------------------------------------------------------------------------- | --------- |
+| `failed`  | The check reported findings.                                                                | 1         |
+| `missing` | The tool needs installation: run `gspot install`.                                           | 2         |
+| `error`   | The check stopped with an error; findings collected before it stopped remain in the report. | 2         |
+| `passed`  | No findings.                                                                                | 0         |
+| `skipped` | The check did not run; the line says why.                                                   | 0         |
 
 The report shows `failed`, `missing`, and `error` rows. Add `--verbose` for the `passed` and `skipped` rows, each
 command, and each ignore with its reason. `gspot check --json` prints the whole report as one JSON object.

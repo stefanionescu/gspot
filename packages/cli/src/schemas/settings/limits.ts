@@ -91,4 +91,10 @@ export const limitsSchema = z.strictObject({
         .optional(),
 } satisfies SchemaShape<TableSettings<'limits'>, WrittenLimits>);
 
+for (const [language, schema] of Object.entries(limitsSchema.shape))
+    if (schema instanceof z.ZodOptional && schema.unwrap() instanceof z.ZodObject)
+        z.globalRegistry.add(schema, {
+            description: `Size and complexity limits for ${language} files and functions.`,
+        });
+
 limitsSchema.register(z.globalRegistry, { id: 'limits' });

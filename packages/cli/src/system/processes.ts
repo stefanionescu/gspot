@@ -199,7 +199,7 @@ async function readProcessOutput(
     readStdout: StdoutReader,
 ): Promise<SpawnCompletion> {
     await readStdout({
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `for await` calls it by name.
         async *[Symbol.asyncIterator]() {
             yield* child.stdout;
             options.cancelSignal?.throwIfAborted();

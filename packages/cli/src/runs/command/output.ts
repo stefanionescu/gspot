@@ -65,7 +65,7 @@ function isSilentCrash(check: Check, result: SpawnResult, parsed: Finding[], pat
     const output = check.output;
     return (
         OUTPUT_FORMATS[output.format].namesFiles(output) &&
-        parsed.every((finding) => !isOnDisk(finding.file, [paths.cwd, paths.root]))
+        parsed.every((finding) => finding.file !== '' && !isOnDisk(finding.file, [paths.cwd, paths.root]))
     );
 }
 

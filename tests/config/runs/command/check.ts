@@ -132,3 +132,19 @@ export const CRASH_TAIL_CASES = [
         verbose: 'at error (stderr.js:2:3)\nError: stderr cause\nat output (stdout.js:1:2)\nError: stdout cause',
     },
 ] as const;
+
+export const BATCH_CHECK = {
+    id: 'project/batches',
+    stage: 'commit',
+    paths: ['*.txt'],
+    output: { format: 'json', fields: { file: 'file', rule: 'rule', message: 'message' } },
+};
+export const BATCH_FINDINGS = [
+    { file: 'one.txt', rule: 'kept', message: 'Kept finding.' },
+    { file: 'outside.txt', rule: 'outside', message: 'Outside finding.' },
+];
+export const BATCH_IGNORE = {
+    check: 'project/batches',
+    rule: 'kept',
+    reason: 'This case verifies ignores on error results.',
+};

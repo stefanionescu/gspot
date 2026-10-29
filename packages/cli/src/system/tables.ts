@@ -6,7 +6,7 @@ Drop the undefined entries of an object, so exact optional types hold.
 @param value any object.
 @returns the same object without its undefined entries.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 23 files call it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers drop undefined fields through it and keep their field types, which Object.fromEntries alone loses.
 export function stripUndefined<T extends object>(value: T): Defined<T> {
     return Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Defined<T>;
 }

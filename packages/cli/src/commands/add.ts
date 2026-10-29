@@ -38,12 +38,10 @@ async function addDetectedConfigurations(options: ConfigurationsOptions): Promis
         );
     const context = await prepareSettingsEdit(options.cwd);
     const additions = listDetectedAdditions(context.session);
-    if (additions.length === 0)
-        return {
-            text: 'No change: gspot.toml selects every configuration the code needs.\n',
-            json: { changed: false },
-            exitCode: 0,
-        };
+    if (additions.length === 0) {
+        const summary = 'No change: gspot.toml selects every configuration the code needs.';
+        return { text: summary + '\n', json: { changed: false, summary }, exitCode: 0 };
+    }
     for (const addition of additions) {
         const table = getScopeTable(context.edit.table, addition.scope);
         const previous = Array.isArray(table['configurations']) ? (table['configurations'] as unknown[]) : [];
@@ -52,7 +50,7 @@ async function addDetectedConfigurations(options: ConfigurationsOptions): Promis
     const summary = additions
         .map(({ scope, configurations, evidence }) => {
             const where = scope === '' ? '' : ' to scope ' + scope;
-            const found = evidence.length === 0 ? '' : ' (' + evidence.join('; ') + ')';
+            const found = evidence.length === 0 ? '' : ' (' + evidence.map((match) => match.evidence).join('; ') + ')';
             return `Added ${new Intl.ListFormat('en', { type: 'conjunction' }).format(configurations)}${where}${found}.`;
         })
         .join('\n');
@@ -69,9 +67,10 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     const { root, input, scope, scopeTable, scopeSettings, selected, context } =
         await prepareConfigurationEdit(options);
     if (options.configurations.every((name) => selected.includes(name))) {
+        const summary = `No change: ${new Intl.ListFormat('en', { type: 'conjunction' }).format(options.configurations)} ${options.configurations.length === 1 ? 'is' : 'are'} already selected.`;
         return {
-            text: `No change: ${new Intl.ListFormat('en', { type: 'conjunction' }).format(options.configurations)} ${options.configurations.length === 1 ? 'is' : 'are'} already selected.\n`,
-            json: { changed: false },
+            text: summary + '\n',
+            json: { changed: false, summary },
             exitCode: 0,
         };
     }

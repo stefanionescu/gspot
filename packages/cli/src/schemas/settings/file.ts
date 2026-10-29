@@ -149,7 +149,11 @@ const scopeBody = {
         >
     )
         .extend({
-            eslint: publicToolsSchema.shape.eslint.unwrap().omit({ override: true }).optional() satisfies z.ZodType<
+            eslint: publicToolsSchema.shape.eslint
+                .unwrap()
+                .omit({ override: true })
+                .optional()
+                .describe(publicToolsSchema.shape.eslint.description as string) satisfies z.ZodType<
                 NonNullable<NonNullable<ParsedSettings['scope']>[number]['tools']>['eslint'],
                 NonNullable<WrittenScope['tools']>['eslint']
             >,

@@ -94,7 +94,7 @@ export const KEY_PATH_CASES = [
         },
         correction: ['rulez', 'rules'],
         where: [
-            'gspot.toml:5: tools.eslint.override.0.rulez: rulez is not a gspot.toml setting. Did you mean rules? See generativespotting.com/reference/gspot-toml/ for every key.',
+            'gspot.toml:5: tools.eslint.override.0.rulez: rulez is not a field of [[tools.eslint.override]]. The allowed fields are paths, rules, and runtime. Did you mean rules?',
         ],
     },
 ] as const;
@@ -107,8 +107,7 @@ export const UNKNOWN_KEY_CASES = [
 enabled = true
 psh = "all"
 `,
-        message:
-            'gspot.toml:4: hooks.psh: psh is not a gspot.toml setting. See generativespotting.com/reference/gspot-toml/ for every key.',
+        message: 'gspot.toml:4: hooks.psh: psh is not a field of [hooks]. The allowed fields are enabled.',
         correction: ['psh = "all"\n', ''] as const,
     },
     {
@@ -119,7 +118,7 @@ path = "api"
 kitz = []
 `,
         message:
-            'gspot.toml:4: scope.0.kitz: kitz is not a field of [[scope]]. The allowed fields are path, configurations, removed_configurations, and test_files.',
+            'gspot.toml:4: scope.0.kitz: kitz is not a field of [[scope]]. The allowed fields are path, configurations, removed_configurations, test_files, format, limits, naming, cloudflare, coverage, dependencies, docs, drizzle, javascript, python, trpc, zustand, licenses, openapi, postgres, secrets, site, spelling, supabase, translations, swift, repository, prose, duplication, xcode, tools, and structure. Did you mean site?',
         correction: ['kitz', 'configurations'] as const,
     },
     {
@@ -128,7 +127,7 @@ kitz = []
 bun_scanners = "@socketsecurity/bun-security-scanner"
 `,
         message:
-            'gspot.toml:2: dependencies.bun_scanners: bun_scanners is not a gspot.toml setting. Did you mean bun_scanner? See generativespotting.com/reference/gspot-toml/ for every key.',
+            'gspot.toml:2: dependencies.bun_scanners: bun_scanners is not a field of [dependencies]. The allowed fields are min_release_age_days, allowed_registries, and bun_scanner. Did you mean bun_scanner?',
         correction: ['bun_scanners', 'bun_scanner'] as const,
     },
 ] as const;
@@ -197,5 +196,36 @@ export const SCOPE_CONFIGURATION_SETTINGS = [
         name: 'root settings remain available to a scope that selects their configuration',
         text: 'configurations = ["bash"]\n[tools.sqlfluff]\ndialect = "sqlite"\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n',
         messages: [],
+    },
+] as const;
+
+export const UNKNOWN_TABLE_FIELDS = [
+    {
+        text: '[format]\nlevel = true\n',
+        path: ['format', 'level'],
+        message:
+            'level is not a field of [format]. The allowed fields are indent_style, indent_width, print_width, line_ending, final_newline, quotes, trailing_commas, semicolons, and override.',
+    },
+    {
+        text: '[[scope]]\npath = "app"\n[scope.format]\nlevel = true\n',
+        path: ['scope', 0, 'format', 'level'],
+        message:
+            'level is not a field of [scope.format]. The allowed fields are indent_style, indent_width, print_width, line_ending, final_newline, quotes, trailing_commas, and semicolons.',
+    },
+    {
+        text: '[[tools.eslint.override]]\npaths = ["src/**"]\nlevel = true\n',
+        path: ['tools', 'eslint', 'override', 0, 'level'],
+        message: 'level is not a field of [[tools.eslint.override]]. The allowed fields are paths, rules, and runtime.',
+    },
+] as const;
+
+export const CONFIGURATION_CONFLICTS = [
+    {
+        text: 'configurations = ["bash"]\nremoved_configurations = { value = ["bash"], reason = "External checks cover Bash." }\n',
+        path: ['configurations'],
+    },
+    {
+        text: '[[scope]]\npath = "app"\nconfigurations = ["bash"]\nremoved_configurations = { value = ["bash"], reason = "External checks cover Bash." }\n',
+        path: ['scope', 0, 'configurations'],
     },
 ] as const;

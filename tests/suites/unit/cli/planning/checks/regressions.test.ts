@@ -1,9 +1,31 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
-import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { isActive, planChecks, stripCoverageArguments } from '#cli/planning/checks.ts';
+
+test('a shared function coverage limit enables Jest coverage without enabling pytest coverage', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['python', 'pytest', 'jest'], {
+            tables: '[coverage]\nlines = 0\nfunctions = 100\n',
+        }),
+        'test_math.py': 'def test_math():\n    assert 1 + 1 == 2\n',
+        'math.test.js': 'test("sum", () => expect(1 + 1).toBe(2));\n',
+    });
+    const plans = planChecks(await openSession(sandbox.path), {
+        stage: 'push',
+        only: ['pytest/coverage', 'jest/coverage'],
+    });
+    expect(
+        stripCoverageArguments(plans.find(({ check }) => check.id === 'pytest/coverage')!, {})!.some((argument) =>
+            argument.startsWith('--cov'),
+        ),
+    ).toBe(false);
+    expect(stripCoverageArguments(plans.find(({ check }) => check.id === 'jest/coverage')!, {})).toContain(
+        '--coverage',
+    );
+});
 
 test('stage all leaves out message checks even when only names one', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['commits'], { level: 'all' }) });

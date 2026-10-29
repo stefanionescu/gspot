@@ -18,3 +18,5 @@ export const MISE_PLATFORM_PREFIX = 'platforms.';
 export const MISE_TRUST_NOTE = 'trusted .gspot/mise.toml for mise';
 
 export const MISE_TRUSTED_PATHS_VARIABLE = 'MISE_TRUSTED_CONFIG_PATHS';
+
+export const MISE_CEILING_PATHS_VARIABLE = 'MISE_CEILING_PATHS';

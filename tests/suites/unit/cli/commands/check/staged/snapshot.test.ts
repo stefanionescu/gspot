@@ -64,7 +64,7 @@ test('a staged check reads index bytes and file modes, converts no line endings,
         '--executable',
         'task.sh',
         '--write',
-        'created.txt=snapshot output',
+        '{root}/created.txt=snapshot output',
     );
     await createFileTree(sandbox.path, {
         '.gitattributes': 'payload.dat text eol=crlf\n',
@@ -88,6 +88,9 @@ test('a staged check reads index bytes and file modes, converts no line endings,
     );
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.report.checks[0]?.status).toBe('passed');
+    expect(result.report.checks[0]?.command).toStrictEqual(
+        command.map((argument) => argument.replace('{root}', sandbox.path)),
+    );
     expect(await readFile(join(sandbox.path, 'payload.dat'))).toStrictEqual(Buffer.from([0, 1, 2]));
     const attributes = await stat(join(sandbox.path, 'task.sh'));
     expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o644 }));

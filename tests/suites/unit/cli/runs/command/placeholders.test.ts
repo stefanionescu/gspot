@@ -24,7 +24,7 @@ import {
     SHFMT_INDENT_CASES,
     GENERATE_ARGUMENTS,
     WORKSPACE_SCOPE_CASES,
-} from '#tests/config/runs/command.ts';
+} from '#tests/config/runs/command/check.ts';
 
 async function writeListSetting(root: string, placeholder: string, generateCommand: readonly string[]): Promise<void> {
     const command = [

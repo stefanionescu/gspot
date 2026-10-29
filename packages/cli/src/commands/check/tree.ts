@@ -179,7 +179,8 @@ export async function runTreeCheck(
     if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
     appendRevisionNotes(result.report, revision);
     const reportText =
-        formatAllFilesHeader(options, revision) + formatRunReport(result.report, { verbose: options.verbose });
+        formatAllFilesHeader(options, revision) +
+        formatRunReport(result.report, { verbose: options.verbose, selectedOnly: options.only !== undefined });
     const text = result.fixes
         ? `${formatFixes(result.fixes, { dryRun: options.dryRun }).join('\n')}\n${reportText}`
         : reportText;

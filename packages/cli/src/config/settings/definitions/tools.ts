@@ -27,7 +27,7 @@ export const TOOL_SETTING_DEFINITIONS = {
     'tools.eslint.rules': {
         configurations: ['javascript'],
         description:
-            'Option arrays by ESLint rule ID, without a severity, for rules that the level runs; gspot refuses options for any other rule. Accept a finding with gspot ignore javascript/eslint --rule `<rule>` --reason `<why>`.',
+            'Option arrays by ESLint rule ID, without a severity, for rules that the level runs; gspot refuses options for any other rule. Accept a finding with `gspot ignore javascript/eslint --rule <rule> --reason "<why>"`.',
         default: {},
     },
     'tools.eslint.plugins': {
@@ -111,25 +111,25 @@ export const TOOL_SETTING_DEFINITIONS = {
     'tools.commitlint.rules': {
         configurations: ['commits'],
         description:
-            'Options for active commitlint rules, by rule name: an always/never condition and an optional value, without a severity; the level decides which rules run. Accept a finding with gspot ignore commits/commitlint --rule `<rule>` --reason `<why>`.',
+            'Options for active commitlint rules, by rule name: an always/never condition and an optional value, without a severity; the level decides which rules run. Accept a finding with `gspot ignore commits/commitlint --rule <rule> --reason "<why>"`.',
         default: {},
     },
     'tools.yamllint.rules': {
         configurations: ['data-files'],
         description:
-            'Option tables for active YAML rules; the level decides which rules run, and [format] sets the width. Accept a finding with gspot ignore data-files/yamllint --rule `<rule>` --reason `<why>`.',
+            'Option tables for active YAML rules; the level decides which rules run, and [format] sets the width. Accept a finding with `gspot ignore data-files/yamllint --rule <rule> --reason "<why>"`.',
         default: {},
     },
     'tools.markdownlint.rules': {
         configurations: ['markdown'],
         description:
-            'Option tables by Markdown rule ID, such as MD024; the level decides which rules run. Accept a finding with gspot ignore markdown/markdownlint --rule `<rule>` --reason `<why>`.',
+            'Option tables by Markdown rule ID, such as MD024; the level decides which rules run. Accept a finding with `gspot ignore markdown/markdownlint --rule <rule> --reason "<why>"`.',
         default: {},
     },
     'tools.stylelint.rules': {
         configurations: ['css'],
         description:
-            'Options for the Stylelint rules that run at the level, which stay errors; gspot refuses options for any other rule. Accept a finding with gspot ignore css/stylelint --rule `<rule>` --reason `<why>`.',
+            'Options for the Stylelint rules that run at the level, which stay errors; gspot refuses options for any other rule. Accept a finding with `gspot ignore css/stylelint --rule <rule> --reason "<why>"`.',
         default: {},
     },
     'tools.squawk.assume_in_transaction': {

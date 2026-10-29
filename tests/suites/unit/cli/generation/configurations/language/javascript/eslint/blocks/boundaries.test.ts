@@ -18,12 +18,32 @@ import {
     ENVIRONMENT_TABLES,
     IMPORT_RULE_TABLES,
     TEST_IMPORT_TSCONFIG,
+    COMPONENT_IMPORT_CASES,
     BOUNDARY_IMPORT_TABLES,
     TEST_IMPORT_RULE_CASES,
     REFUSED_IMPORT_MESSAGES,
     TEST_IMPORT_RULE_TABLES,
     ENVIRONMENT_READER_PATHS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/blocks/boundaries.ts';
+
+test.each(COMPONENT_IMPORT_CASES)(
+    '$configuration component imports obey their import rule',
+    async ({ configuration, file, opening, closing }) => {
+        const path = `app/${file}`;
+        await using sandbox = await testdir({
+            ...IMPORT_RULE_FILES,
+            'tsconfig.json': '{"compilerOptions":{"strict":true,"types":[]},"include":["**/*"]}',
+            'gspot.toml': buildSandboxSettings(['typescript', configuration], { tables: IMPORT_RULE_TABLES.root }),
+            [path]: `${opening}\nimport { value } from '../storage/value.js';\nconst result = value;\n${closing}\n`,
+        });
+        const eslint = await createEslint(sandbox.path);
+        expect(await listLintFindings(eslint, sandbox.path, [path], ['boundaries/dependencies'])).toStrictEqual([
+            { file: path, rule: 'boundaries/dependencies', line: 2 },
+        ]);
+        await writeFile(join(sandbox.path, path), `${opening}\nconst result = 1;\n${closing}\n`);
+        expect(await listLintFindings(eslint, sandbox.path, [path], ['boundaries/dependencies'])).toStrictEqual([]);
+    },
+);
 
 test.each([...IMPORT_RULE_CASES])(
     '$level loads eslint-plugin-boundaries for $declarations import rules',

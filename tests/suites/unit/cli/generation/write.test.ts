@@ -4,11 +4,13 @@ import { unlinkSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { openWriter } from '#cli/repository/writer.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
+import { listOutdatedFiles } from '#cli/generation/outdated.ts';
+import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import type { PackageFieldScenario } from '#tests/types/write.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { formatUpToDate, writeGeneratedFiles } from '#cli/generation/write.ts';
 
@@ -88,13 +90,14 @@ test('removing css drops its managed stylelint field and keeps authored fields b
         ...STYLELINT_PACKAGE_FIELDS.project,
         'gspot.toml': buildSandboxSettings(STYLELINT_PACKAGE_FIELDS.configurations, {
             level: 'all',
+            rules: true,
             tables: STYLELINT_PACKAGE_FIELDS.tables,
         }),
     });
     const installed = await applyPackageFields(sandbox.path, STYLELINT_PACKAGE_FIELDS);
     await writeFile(join(sandbox.path, 'app/package.json'), EDITED_STYLELINT_PACKAGE);
     installed.set('app/package.json', EDITED_STYLELINT_PACKAGE);
-    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { level: 'all' }));
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { level: 'all', rules: true }));
     const session = await openSession(sandbox.path);
     const generated = generateFiles(session);
     expect(generated.managedKeys).toStrictEqual([
@@ -112,6 +115,10 @@ test('removing css drops its managed stylelint field and keeps authored fields b
             expect(contents).toStrictEqual(expected);
         } else expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
     }
+    const settled = await openSession(sandbox.path);
+    const output = generateFiles(settled);
+    expect(await listOutdatedFiles(settled, output)).toStrictEqual(await listStaleLockfiles(settled, output.files));
+    expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).not.toContain('`stylelint`');
 });
 
 test('a stale generated file removed before planning produces no removal report', async () => {
@@ -153,4 +160,24 @@ test('writing a mise project preserves its lockfile and reports a changed hook',
     const report = await writeGeneratedFiles(session, output, writer);
     expect(await readFile(join(sandbox.path, '.gspot/mise.lock'), 'utf8')).toBe('version = 1\n');
     expect(report.notes).toContain('Git hooks changed. Run gspot install.');
+    runGitStep(sandbox.path, ['init', '--quiet']);
+    runGitStep(sandbox.path, ['config', 'core.hooksPath', '.gspot/hooks']);
+    output.files[1]!.content = '#!/bin/sh\nexit 1\n';
+    const configured = await openSession(sandbox.path);
+    const changed = await writeGeneratedFiles(configured, output, writer);
+    expect(changed.written).toContain('.gspot/hooks/pre-commit');
+    expect(changed.notes).not.toContain('Git hooks changed. Run gspot install.');
+});
+
+test('at level basic, prose keeps its Vale configuration and removes installed style packages', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['prose']),
+        'guide.md': '# Guide\n',
+        '.gspot/vale/Google/Heading.yml': 'extends: existence\n',
+    });
+    const session = await openSession(sandbox.path);
+    using writer = openWriter(sandbox.path);
+    await writeGeneratedFiles(session, generateFiles(session), writer);
+    expect(await isOnDisk(join(sandbox.path, '.gspot/vale'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/general/prose/vale.ini'))).toBe(true);
 });

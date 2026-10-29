@@ -39,4 +39,15 @@ and every generated config file:
 gspot ignore --paths "vendor/**" --reason "Vendored releases of upstream packages."
 ```
 
-To leave a file out of one check, see [Ignore findings](/use/ignore/).
+gspot resolves paths and globs passed to `--paths` from your current folder. It saves them relative to the repository
+root in `gspot.toml`. To leave a file out of one check, see [Ignore findings](/use/ignore/).
+
+## Patterns in generated files
+
+gspot translates exclusions into the syntax of each tool. In an ordered section, it writes positive patterns before
+negative patterns, so a `!` pattern can keep a matching path in that section. This applies to Prettier, typos, and
+ESLint. Tools without exclusion negation, including the generated `jsconfig.json` and jscpd configuration, receive
+only positive exclusion patterns. A negative pattern cannot restore a path for those tools.
+
+ESLint cannot restore a file inside a directory that an earlier pattern excludes from traversal. Keep its parent
+directories available when you use a negative pattern for a file.

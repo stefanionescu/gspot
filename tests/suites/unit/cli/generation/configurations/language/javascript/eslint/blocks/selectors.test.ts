@@ -62,6 +62,7 @@ test.each([...LEVELS])('form validation and list security run at both levels (%s
         await listLintFindings(eslint, sandbox.path, ['native/App.jsx', 'forms/Fields.jsx'], ['no-restricted-syntax']),
     ).toStrictEqual([
         { file: 'forms/Fields.jsx', rule: 'no-restricted-syntax', line: 3 },
+        { file: 'forms/Fields.jsx', rule: 'no-restricted-syntax', line: 6 },
         { file: 'native/App.jsx', rule: 'no-restricted-syntax', line: 2 },
     ]);
 });

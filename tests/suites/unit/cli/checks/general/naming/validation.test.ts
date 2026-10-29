@@ -86,7 +86,7 @@ test('a number word such as base64 counts as one word, and repeated words, words
         },
     ]);
     expect(listRuleMessages({ ...declaration, name: 'base64Helper' }, context)).toStrictEqual([
-        { rule: 'banned-word', message: 'typescript variables "base64Helper": "helper" is banned (roles group).' },
+        { rule: 'banned-word', message: 'typescript variables "base64Helper": "helper" is banned (roles list).' },
     ]);
     expect(listRuleMessages({ ...declaration, name: 'user2' }, context)).toStrictEqual([
         { rule: 'digits', message: 'typescript variables "user2": a digit is not a word.' },
@@ -151,7 +151,7 @@ test('a word of the shipped tests list passes in a test file, and the same word 
     const declaration = buildIdentifier({ name: 'actualRoot' });
     expect(listRuleMessages(declaration, { ...readNaming(''), isTestFile: true })).toStrictEqual([]);
     expect(listRuleMessages(declaration, readNaming(''))).toStrictEqual([
-        { rule: 'banned-word', message: 'typescript functions "actualRoot": "actual" is banned (tests group).' },
+        { rule: 'banned-word', message: 'typescript functions "actualRoot": "actual" is banned (tests list).' },
     ]);
     expect(
         listRuleMessages(declaration, { ...readNaming('[naming]\nbanned_words = ["actual"]\n'), isTestFile: true }),
@@ -237,7 +237,7 @@ test('an ignored_prefix override strips handle from function and method names in
     ]);
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 11 calls in this file share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Naming tests share the settings parser and file context through it.
 function readNaming(tables: string): FileNaming {
     return buildFileNaming(
         buildScopeNamingSettings(
@@ -246,7 +246,7 @@ function readNaming(tables: string): FileNaming {
     );
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 36 calls in 1 file share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Naming tests compare rule IDs and messages through the same finding projection.
 function listRuleMessages(identifier: Identifier, naming: FileNaming): { rule: string | undefined; message: string }[] {
     return validateIdentifiers(
         { scope: { settings: { test_files: naming.isTestFile ? ['**'] : [] } } },
@@ -254,11 +254,11 @@ function listRuleMessages(identifier: Identifier, naming: FileNaming): { rule: s
         [identifier],
     ).map(({ rule, message }) => ({ rule, message }));
 }
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 1 file share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Naming tests share the non-test file context through it.
 function buildFileNaming(settings: NamingSettings): FileNaming {
     return { settings, isTestFile: false };
 }
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 23 calls in 1 file share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it makes duplication/jscpd clones.
 function buildIdentifier(fields: Pick<Identifier, 'name'> & Partial<Identifier>): Identifier {
     const { file = 'src/a.ts', language = 'typescript', category = 'functions', line = 1, column = 1 } = fields;
     return { file, language, category, line, column, label: `${language} ${category}`, ...fields };

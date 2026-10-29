@@ -25,11 +25,4 @@ functions = 80
 statements = 80
 `;
 
-export const JEST_MISSING_IMPORT = `jest failed with exit 1:
-FAIL ./math.test.cjs
-  ● Test suite failed to run
-
-    Cannot find module './missing-test-dependency.cjs' from 'math.test.cjs'
-`;
-
 export const COVERAGE_THRESHOLD_MESSAGE = 'coverage threshold for lines (80%) not met: 66.66%';

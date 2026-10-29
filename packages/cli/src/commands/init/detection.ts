@@ -22,7 +22,7 @@ import {
     DETECTION_LABEL_WIDTH,
 } from '#cli/config/commands/init/detection.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 10 calls in this file share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, formatDetectedTools passes the complexity limit.
 function formatDetectionRow(label: string, names: string[]): string | undefined {
     return names.length === 0
         ? undefined

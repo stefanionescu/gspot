@@ -104,7 +104,7 @@ You can edit the other keys of that file.
   `tests/suites/e2e/` installs the packed packages into a fresh project.
 - In unit check tests, choose the entrypoint for the assertion:
     - Use `runSandboxCheck` for one check's findings or error.
-    - Use `planSandboxCheck` with `findBuiltInCheck` when files or the read cache change after the session opens.
+    - Use `planSandboxCheck` with `getBuiltInCheck` when files or the read cache change after the session opens.
     - Use `runCheckCode` for a command check whose plan the test changes.
     - Use `runChecks` with `buildRunOptions` for status, notes, skip causes, or cancellation.
     - Use `assertCheckSample` for a sample that fails and passes after its fix.
@@ -188,9 +188,10 @@ repository.
 - A file of `config/`, `types/` and `schemas/` takes the name of the folder whose files read it.
   For example, `packages/cli/src/schemas/installers/npm.ts` holds the schemas of `packages/cli/src/installers/npm/`.
   `tests/types/` and `tests/schemas/` stay flat for that reason.
-- A value goes to `tests/config/` when a test file reads it more than once, or when two test files read it. It also goes
-  there when it forms a `test.each` table with expected results, or when it has more than five lines.
-- A value read once stays at its call. RuleTester cases and the arguments of a command stay beside their call.
+- A value goes to `tests/config/` when two tests share it.
+- A value that one test reads stays in that test, even when it reads it twice. File text that only makes a file exist,
+  and that no assertion compares, stays at each call that writes it.
+- RuleTester cases, command arguments, and sandbox file names stay beside their call.
 - `tests/suites/` holds the `unit/`, `integration/`, and `e2e/` suites. `tests/setup/` holds the code that tests share,
   in one subfolder per job; a job of one file, such as `matchers.ts`, sits at the top of `tests/setup/`.
 - `tests/types/` holds the types of the tests, and `tests/schemas/` the schemas that read tool output in tests.

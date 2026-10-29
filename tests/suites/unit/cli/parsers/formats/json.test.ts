@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { SYNTAX_ERRORS } from '#tests/config/parsers/formats/json.ts';
+import { openJsonFile, parseJsonFile } from '#cli/parsers/formats/json.ts';
 
 test.each(['null', '[]', '42'])(
     'a JSON file whose root is %s, not an object, fails with an error that names the file and the shape',
@@ -29,4 +29,8 @@ test('JSON files accept comments and trailing commas without a JSONC extension',
 
 test('a JSON file may begin with one byte order mark', () => {
     expect(parseJsonFile('example.json', '\uFEFF{"name":"project"}')).toStrictEqual({ name: 'project' });
+    const file = openJsonFile('example.json', '\uFEFF{"name":"project"}');
+    file.set(['name'], 'renamed');
+    expect(file.getText()).toBe('\uFEFF{"name":"renamed"}');
+    expect(parseJsonFile('example.json', file.getText())).toStrictEqual({ name: 'renamed' });
 });

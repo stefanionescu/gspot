@@ -9,6 +9,8 @@ storage.write(process.env.API_TOKEN);
 logger.info("Token refreshed");
 jwt.verify(token, key);
 jwt.verify(token, key, { algorithms: ["RS256"] });
+jwt.verify(token, key, { issuer });
+exec(\`ls \${dir}\`);
 `,
     'Logging.swift': String.raw`print("Token refreshed")
 print("Signed in with \(token)")
@@ -140,6 +142,16 @@ export const SENSITIVE_FINDINGS = [
         line: 8,
         rule: 'gspot.javascript.jwt-verify-without-algorithms',
     },
+    {
+        file: 'javascript.js',
+        line: 10,
+        rule: 'gspot.javascript.jwt-verify-without-algorithms',
+    },
+    {
+        file: 'javascript.js',
+        line: 11,
+        rule: 'gspot.javascript.interpolated-exec',
+    },
 ] as const;
 
 export const CORRECTED_SENSITIVE_FILES = {
@@ -152,6 +164,8 @@ storage.write(process.env.API_TOKEN);
 logger.info("Token refreshed");
 jwt.verify(token, key, { algorithms: ["RS256"] });
 jwt.verify(token, key, { algorithms: ["RS256"] });
+jwt.verify(token, key, { issuer, algorithms: ["RS256"] });
+execFile("ls", [dir]);
 `,
     'Logging.swift': String.raw`print("Token refreshed")
 print("Signed in with [redacted]")

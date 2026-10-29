@@ -34,7 +34,7 @@ main() (
     cli_version=$(package_field packages/cli version)
     publish_package packages/eslint-plugin "${plugin_version}"
     publish_package packages/cli "${cli_version}"
-    mise run docs:deploy || exit 1
+    mise run --skip-deps docs:deploy || exit 1
     publish_tags "${plugin_version}" "${cli_version}"
     printf 'Next commit: set npm:@gspothq/cli to %s in mise.toml, then run mise exec -- gspot apply and mise exec -- gspot install.\n' "${cli_version}"
 )

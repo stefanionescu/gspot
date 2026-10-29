@@ -1,5 +1,4 @@
 import { ARITHMETIC_MODULE } from '#tests/config/integration/checks/samples.ts';
-import { COVERAGE_ZERO_LIMITS } from '#tests/config/integration/checks/testing/samples.ts';
 
 export const PYTEST_PYPROJECT = `[project]
 name = "example"
@@ -32,30 +31,34 @@ export const PYTEST_SANDBOX = {
     },
 } as const;
 
+const HALF_COVERED_SOURCE =
+    'def first():\n    return 1\ndef second():\n    return 2\ndef third():\n    return 3\ndef fourth():\n    return 4\n';
+
 export const PYTEST_CASES = [
     {
         check: 'pytest/coverage',
         files: {
-            'tests/test_math.py': `"""Tests of the arithmetic."""
-
-from example.math import double, triple
-
-
-def test_multiplication() -> None:
-    """Both functions multiply."""
-    assert double(2) == 4
-`,
+            'example/__init__.py': '',
+            'example/math.py': HALF_COVERED_SOURCE,
+            'tests/test_math.py': `from example.math import first, second, third, fourth\n\ndef test_functions():\n${Array.from({ length: 40 }, () => '    assert callable(first) and callable(second) and callable(third) and callable(fourth)').join('\n')}\n`,
         },
-        settings: '[coverage]\nlines = 95\n',
-        expected: { message: 'FAIL Required test coverage of 95% not reached. Total coverage: 85.71%' },
-        corrected: { files: { 'tests/test_math.py': ARITHMETIC_TESTS } },
+        settings: '[coverage]\nlines = 80\n',
+        expected: { message: 'FAIL Required test coverage of 80% not reached. Total coverage: 50.00%' },
+        corrected: {
+            files: {
+                'example/__init__.py': '',
+                'example/math.py': HALF_COVERED_SOURCE,
+                'tests/test_math.py':
+                    'from example.math import first, second, third, fourth\n\ndef test_functions():\n    assert [first(), second(), third(), fourth()] == [1, 2, 3, 4]\n',
+            },
+        },
     },
 ] as const;
 
 export const COVERAGE_LIMIT_CASES = [
     {
         limit: 80,
-        coverage: COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80'),
+        coverage: '[coverage]\nlines = 80\n',
         code: 2,
         result: {
             status: 'missing',
@@ -65,7 +68,8 @@ export const COVERAGE_LIMIT_CASES = [
     },
     {
         limit: 0,
-        coverage: COVERAGE_ZERO_LIMITS,
+        coverage:
+            '[coverage]\nlines = { value = 0, reason = "This test checks execution without coverage collection." }\n',
         code: 0,
         result: { status: 'passed', note: undefined, coverage: false },
     },

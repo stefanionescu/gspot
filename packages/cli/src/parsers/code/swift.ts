@@ -56,7 +56,7 @@ Get the top-level module named by a Swift import declaration.
 @param node the import declaration.
 @returns the imported module, when the declaration names one.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Swift tags and the Swift import rules read the imported module by the same rule.
 export function getImportedModule(node: Node): string | undefined {
     return node.namedChildren.find((child) => child.type === SWIFT_IDENTIFIER_NODE)?.text.split('.', 1)[0];
 }

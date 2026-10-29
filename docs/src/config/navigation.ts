@@ -48,6 +48,7 @@ export const SIDEBAR = [
             { slug: 'checks/security' },
             { slug: 'checks/dependencies' },
             { slug: 'checks/testing' },
+            { slug: 'checks/site' },
             { slug: 'checks/prose' },
         ],
     },

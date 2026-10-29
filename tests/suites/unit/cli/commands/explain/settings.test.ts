@@ -208,3 +208,14 @@ test('explain shows a setting that no scope accepts, such as level, only at the 
         '',
     ]);
 });
+
+test('explain reads a shipped default before init and prints plain command examples', async () => {
+    await using sandbox = await createGitSandbox({});
+    const result = await runGspot(sandbox.path, ['explain', 'limits.file_lines', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({ kind: 'setting', key: 'limits.file_lines', default: 300 });
+    const rules = await runGspot(sandbox.path, ['explain', 'tools.eslint.rules']);
+    expect(rules.code, rules.stdout + rules.stderr).toBe(0);
+    expect(rules.stdout).toContain('gspot ignore javascript/eslint --rule <rule> --reason "<why>"');
+    expect(rules.stdout).not.toContain('`');
+});

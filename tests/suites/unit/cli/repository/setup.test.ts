@@ -15,6 +15,7 @@ import {
     HUSKY_STUBS,
     LEFTHOOK_FILES,
     CI_JOB_DOCUMENTS,
+    GITLAB_COMPONENT,
     LINKED_HOOK_FILES,
     HOOK_FOLDER_FILES,
     LINKED_HOOK_FOLDERS,
@@ -56,6 +57,16 @@ test('CI discovery reports malformed YAML', async () => {
                 '.gitlab-ci.yml is not valid YAML: Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 23:\n\nquality: [unterminated\n                      ^\n. Fix the file.',
         }),
     );
+});
+
+test('CI discovery reads jobs after a GitLab component specification and keeps reference tags quiet', async () => {
+    await using sandbox = await testdir({ '.gitlab/ci/quality.yml': GITLAB_COMPONENT });
+    const warnings: string[] = [];
+    using _warnings = spyOn(process, 'emitWarning').mockImplementation((warning) => {
+        warnings.push(String(warning));
+    });
+    expect(readLintJobs(sandbox.path, ['.gitlab/ci/quality.yml'])).toStrictEqual(['.gitlab/ci/quality.yml: quality']);
+    expect(warnings).toStrictEqual([]);
 });
 
 test('tool discovery reads tool sections through a link inside the repository', async () => {

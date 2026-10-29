@@ -206,6 +206,11 @@ const value = "<!-- marker: Literal sample text. -->";
 
 export const COMPONENT_SCRIPT_COMMENTS = [
     {
+        path: 'Component.vue',
+        source: '<script lang="tsx">const view = <p>// marker: JSX text.</p>;\n// marker: Script directive.\n</script>',
+        lines: [2],
+    },
+    {
         path: 'App.vue',
         source: '<template><p>// marker: Template text.</p></template>\n<script lang="ts">\n// marker: Script directive.\nconst sample = "// marker: String text.";\n</script>\n<!-- marker: Markup directive. -->\n',
         lines: [3, 6],

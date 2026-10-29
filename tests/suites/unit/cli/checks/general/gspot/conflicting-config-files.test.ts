@@ -1,4 +1,6 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -30,9 +32,17 @@ test('gspot/conflicting-config-files reports a settings file at a project root, 
 
 test('a conflicting config file that .gitattributes marks linguist-generated is not reported', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['commits']),
+        'gspot.toml': buildSandboxSettings(['commits'], { level: 'all' }),
         '.gitattributes': '.commitlintrc.json linguist-generated\n',
         '.commitlintrc.json': '{"extends":["@commitlint/config-conventional"]}\n',
     });
     expect(await runSandboxCheck(sandbox.path, 'gspot/conflicting-config-files')).toStrictEqual([]);
+    await writeFile(join(sandbox.path, '.gitattributes'), '');
+    const conflicts = await runSandboxCheck(sandbox.path, 'gspot/conflicting-config-files');
+    expect(
+        conflicts.map(({ file, rule }) => ({
+            file,
+            rule,
+        })),
+    ).toStrictEqual([{ file: '.commitlintrc.json', rule: 'conflicting-config-file' }]);
 });

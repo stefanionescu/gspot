@@ -94,3 +94,42 @@ export const SITE_DETECTION_PATHS = [
 ] as const;
 
 export const POSTGRESQL_PROVIDER = 'provider = "postgresql"\n';
+
+export const CONFIGURATION_EVIDENCE_CASES = [
+    {
+        name: 'Starlight without sitemap files',
+        files: { 'package.json': '{"dependencies":{"@astrojs/starlight":"0.0.0-test"}}' },
+        configuration: 'site',
+        selected: true,
+    },
+    {
+        name: 'a Django sitemap template',
+        files: { 'requirements.txt': 'django==0.0.0\n', 'templates/sitemap.xml': '<urlset />\n' },
+        configuration: 'site',
+        selected: false,
+    },
+    {
+        name: 'tRPC client without server',
+        files: { 'package.json': '{"dependencies":{"@trpc/client":"0.0.0-test"}}' },
+        configuration: 'trpc',
+        selected: true,
+    },
+    {
+        name: 'a Vitest configuration without dependencies',
+        files: { 'vitest.config.ts': 'export default {};\n' },
+        configuration: 'vitest',
+        selected: true,
+    },
+    {
+        name: 'a Vitest workspace without dependencies',
+        files: { 'vitest.workspace.ts': 'export default [];\n' },
+        configuration: 'vitest',
+        selected: true,
+    },
+    {
+        name: 'a Swagger YAML document',
+        files: { 'swagger.yml': 'openapi: 3.1.0\n' },
+        configuration: 'openapi',
+        selected: true,
+    },
+] as const;

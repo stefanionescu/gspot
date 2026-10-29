@@ -87,7 +87,7 @@ export const COMMAND_HELP = {
         summary: 'Add configurations',
         group: 'Change gspot.toml:',
         description:
-            'Select configurations in gspot.toml, then write the generated files again. gspot also selects the configurations that they need, but gspot.toml lists only the names you give.\n\nRun gspot install next when the configurations need new tools.',
+            'Select configurations in gspot.toml, then write the generated files again. gspot also selects the configurations that they need, but gspot.toml lists only the names you give.\n\nRun gspot add without names to detect new code and projects. It preserves your settings and explicit removals.\n\nRun gspot install next when the configurations need new tools.',
         arguments: {
             configuration: 'Configuration names, such as pytest. Run gspot list to see them',
         },
@@ -171,7 +171,8 @@ export const COMMAND_HELP = {
             '--reason <text>': 'Why you turn it off (required)',
             '--rule <rule>': 'Turn off only this lint rule',
             '--names <names...>': `Turn it off only for the definitions with these names, for ${new Intl.ListFormat('en', { type: 'conjunction' }).format(NAMED_FINDING_CHECKS)}`,
-            '--paths <path...>': 'Turn it off only for these paths (default: every path)',
+            '--paths <path...>':
+                'Turn it off only for these paths, relative to the current folder (default: every path)',
             '--until <date>': 'Report the ignore as expired from this date, YYYY-MM-DD (UTC)',
             '--json': 'Print the result as JSON',
         },
@@ -183,7 +184,7 @@ export const COMMAND_HELP = {
             'gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results."',
     },
     unignore: {
-        summary: 'Turn an ignored check on again',
+        summary: 'Delete ignores',
         group: 'Change gspot.toml:',
         description:
             'Delete the ignores of a check from gspot.toml, then write the generated files again.\n\nWith --rule, delete only the ignores of that lint rule. With --paths, take those paths out of the ignores. An ignore without paths covers every path, so --paths cannot narrow it. unignore keeps that ignore and says so.',
@@ -192,7 +193,7 @@ export const COMMAND_HELP = {
         },
         options: {
             '--rule <rule>': 'Delete only the ignores of this lint rule',
-            '--paths <path...>': 'Take only these paths out of the ignores',
+            '--paths <path...>': 'Take only these paths, relative to the current folder, out of the ignores',
             '--json': 'Print the result as JSON',
         },
         exitCodes: [

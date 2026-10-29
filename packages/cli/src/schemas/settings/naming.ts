@@ -15,18 +15,23 @@ import type {
 
 const languageSchema = namingCategorySchema.extend(
     Object.fromEntries(
-        NAMING_TABLE_CATEGORIES.map((category) => [category, namingCategorySchema.optional()]),
+        NAMING_TABLE_CATEGORIES.map((category) => [
+            category,
+            namingCategorySchema.optional().describe(`Naming rules for ${category}.`),
+        ]),
     ) as Record<NamingCategory, z.ZodOptional<typeof namingCategorySchema>>,
 ) satisfies z.ZodType<ParsedNamingLanguageFields>;
 
 const languageSchemas = Object.fromEntries(
     Object.entries(NAMING_LANGUAGE_CATEGORIES).map(([language, categories]) => [
         language,
-        languageSchema.pick(
-            Object.fromEntries(
-                [...Object.keys(namingCategorySchema.shape), ...categories].map((name) => [name, true]),
-            ) as Record<keyof typeof languageSchema.shape, true>,
-        ),
+        languageSchema
+            .pick(
+                Object.fromEntries(
+                    [...Object.keys(namingCategorySchema.shape), ...categories].map((name) => [name, true]),
+                ) as Record<keyof typeof languageSchema.shape, true>,
+            )
+            .describe(`Naming rules for ${language} files, folders, and identifiers.`),
     ]),
 ) as Record<SettingLanguage, typeof languageSchema>;
 

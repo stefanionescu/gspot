@@ -21,7 +21,7 @@ async function assertConflictingConfigFiles(root: string, output: string): Promi
         { path: '.editorconfig', note: 'replaces your file; read the old one with git show HEAD:.editorconfig' },
         {
             path: 'prettier.config.mjs',
-            note: 'replaces your file; read the old one with git show HEAD:prettier.config.mjs; gspot cannot read a JavaScript Prettier config, so set format.indent_width and format.print_width by hand',
+            note: 'replaces your file; read the old one with git show HEAD:prettier.config.mjs; gspot cannot read this Prettier config, so set format.indent_width and format.print_width by hand',
         },
     ]);
     expect(await isOnDisk(join(root, 'gspot.toml'))).toBe(true);

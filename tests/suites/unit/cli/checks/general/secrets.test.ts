@@ -5,7 +5,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { NO_FILES_MESSAGE } from '#cli/config/commands/check/run.ts';
+import { NO_FILES_MESSAGE } from '#cli/config/commands/check/results.ts';
 
 import {
     ENV_ACCESSOR_FILES,

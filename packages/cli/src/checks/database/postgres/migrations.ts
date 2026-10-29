@@ -108,13 +108,6 @@ export async function readParsedMigrations(session: Session, planned: PlannedChe
 }
 
 /**
-Extract the forward statements of a migration.
-
-@param text the migration source.
-@returns the text before the down-migration marker.
-*/
-
-/**
 Cut the text at the first MIGRATION_DOWN line outside every string and dollar-quoted body.
 
 @param text the migration SQL.

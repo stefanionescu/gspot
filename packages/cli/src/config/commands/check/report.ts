@@ -23,3 +23,5 @@ export const UNCHANGED_FIX_MESSAGE = 'No fixer changed anything.';
 export const WORKING_TREE = 'the working tree';
 
 export const RUN_AGAIN = 'run again:';
+
+export const STANDARD_INSTALL_HELP = ' Run gspot install.';

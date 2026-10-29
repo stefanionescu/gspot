@@ -10,16 +10,10 @@ files; GitHub runs every workflow file in parallel, so they never wait on gspot.
 or `pytest` runs its tests inside the gspot job. To run your tests only in your own workflow, leave those
 configurations out.
 
-`gspot init` plans a workflow for GitHub or GitLab. It picks the provider from `.github/workflows/` or `.gitlab-ci.yml`,
-or else from an `origin` remote on github.com or gitlab.com.
+`gspot init` leaves CI off and keeps your existing workflows. Run `gspot doctor` to see the commands that enable CI
+for your provider. It detects GitHub or GitLab from your CI files or the `origin` remote.
 
-init plans no workflow when a GitHub or GitLab CI file already has a lint job, such as a job that runs `eslint`,
-`ruff check`, or `gspot check`, and it keeps that job. A Jenkins, CircleCI, Bitbucket, Azure Pipelines, or Buildkite
-file does not stop it. If that pipeline runs gspot, turn the gspot workflow off:
-
-```shell
-gspot set ci.enabled false
-```
+If an existing pipeline already runs gspot, keep CI off and use that pipeline.
 
 ## Turn CI on
 
@@ -44,8 +38,8 @@ On GitHub, the workflow has one job, `lint`. It runs for pull requests, merge qu
 A push to another branch skips the job, so open a pull request to check a branch.
 
 The job checks the files changed after the pull or merge request base, or after the previous push. The first push of a
-branch checks every file. On pushes to the default branch, a last step, Slow checks, runs the manual checks that your
-configurations select, such as external links.
+branch checks every file. Manual checks run only when you name them with `--only`; the generated workflow does not
+run them automatically.
 
 ## Systems
 
@@ -69,8 +63,8 @@ Both settings work on GitHub only; gspot refuses them with `ci.provider = "gitla
 
 ## Install steps
 
-Each GitHub job installs mise, then runs `gspot install` with the gspot version pinned in the generated workflow. The
-GitLab job needs mise on the CI machine.
+Each GitHub job installs mise and the pinned gspot version once. It adds the installed programs to `PATH`, then uses
+that gspot executable for tool installation and checks. The GitLab job needs mise on the CI machine.
 
 Before `gspot install`, the GitHub job installs the locked dependencies of the root and of each scope, so the checks
 that read them find them:
@@ -108,8 +102,14 @@ gspot set ci.setup_command -- bun install --frozen-lockfile
 
 gspot quotes each argument, so spaces, quotes, and `$` reach the command as plain text.
 
-On GitHub, the install step gives mise the token of the job as `MISE_GITHUB_TOKEN`, so tool downloads skip the low rate
-limit for anonymous requests. In other pipelines, set `MISE_GITHUB_TOKEN` yourself.
+On GitHub, both the gspot installation step and the tool installation step give mise the job token as
+`MISE_GITHUB_TOKEN`, so tool downloads skip the low rate limit for anonymous requests. In other pipelines, set
+`MISE_GITHUB_TOKEN` yourself.
+
+The GitHub job caches mise and the package managers used by project lockfiles and the tool projects in `.gspot/`.
+It uses each runner system's cache paths. It restores only an exact match for the cache key, including the lockfile
+hashes; it never falls back to a cache with different lockfiles. A cache miss installs the tools, then saves the new
+cache immediately after installation, even when later checks report findings.
 
 ## Your own pipeline
 
@@ -139,8 +139,7 @@ Let the pipeline fail on the gspot exit code: `1` means findings, and `2` means 
 program gives exit 2, and the report names it. `gspot check --json` prints the report as JSON.
 
 Do not cache or upload `.gspot/state/` or credentials. To cache downloads and installed tools, key the cache on the gspot
-version, the tool files in `.gspot/`, and your lockfiles, as the GitHub job does. Save the cache right after the
-installs, so a run with findings still saves it.
+version, the tool files in `.gspot/`, and your lockfiles, as the GitHub job does.
 
 ## Turn CI off
 

@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
 import { readSettings } from '#cli/settings/read.ts';
+import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
@@ -104,7 +105,10 @@ test('remove writes the reason beside the removed names, and add takes a name ou
         'gspot.toml': buildSandboxSettings(['bash', 'python']),
     });
     const reason = 'The project uses another language.';
-    const removed = await runGspot(sandbox.path, ['remove', 'bash', 'python', '--reason', reason]);
+    const first = await runGspot(sandbox.path, ['remove', 'bash', '--reason', 'Bash runs in another project.']);
+    expect(first.code, first.stdout + first.stderr).toBe(0);
+    const removed = await runGspot(sandbox.path, ['remove', 'python', '--reason', reason]);
+    expect(removed.stdout).toContain('Updated the reason for every removed configuration.');
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const contents: unknown = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
     expect(contents).toHaveProperty('removed_configurations', {
@@ -172,7 +176,10 @@ test('remove reports no change for a configuration the root does not list', asyn
     const structured = await runGspot(sandbox.path, [...commandArguments, '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
-    expect(JSON.parse(structured.stdout)).toStrictEqual({ changed: false });
+    expect(JSON.parse(structured.stdout)).toStrictEqual({
+        changed: false,
+        summary: 'No change: bash is not selected.',
+    });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
@@ -225,4 +232,27 @@ test('remove notes the package.json keys that stay after css goes, and bash adds
     const bash = await runGspot(sandbox.path, ['remove', 'bash', '--reason', reason, '--json']);
     expect(bash.code, bash.stdout + bash.stderr).toBe(0);
     expect((JSON.parse(bash.stdout) as ApplyReport).notes).not.toContain(MANAGED_KEYS_NOTE);
+});
+
+test('removing automatically selected licenses records the choice for the next session', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'package.json': '{"name":"example","private":true,"dependencies":{"react":"19.1.1"}}\n',
+    });
+    const removed = await runGspot(sandbox.path, [
+        'remove',
+        'licenses',
+        '--reason',
+        'Legal reviews licenses outside this repository.',
+    ]);
+    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    const text = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
+    expect(parse(text)).toHaveProperty('removed_configurations', {
+        value: ['licenses'],
+        reason: 'Legal reviews licenses outside this repository.',
+    });
+    const session = await openSession(sandbox.path);
+    expect(
+        session.scopes.flatMap((scope) => scope.configurations.map((configuration) => configuration.name)),
+    ).not.toContain('licenses');
 });

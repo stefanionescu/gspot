@@ -7,6 +7,22 @@ export const IMPORT_RULE_CASES = [
     { level: 'all', declarations: 'scoped' },
 ] as const;
 
+export const COMPONENT_IMPORT_CASES = [
+    {
+        configuration: 'vue',
+        file: 'Card.vue',
+        opening: '<script lang="ts">',
+        closing: '</script><template><p>{{ result }}</p></template>',
+    },
+    {
+        configuration: 'svelte',
+        file: 'Card.svelte',
+        opening: '<script lang="ts">',
+        closing: '</script><p>{result}</p>',
+    },
+    { configuration: 'astro', file: 'Card.astro', opening: '---', closing: '---\n<p>{result}</p>' },
+] as const;
+
 export const IMPORT_RULE_TABLES = {
     none: `[[scope]]
 path = "apps/api"

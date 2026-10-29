@@ -22,7 +22,7 @@ export const INVALID_SETTING_MESSAGES = [
         name: 'an unknown scope key',
         text: '# The repository settings.\n[[scope]]\npath = "api"\nkitz = []\n',
         message:
-            'gspot.toml:4: scope.0.kitz: kitz is not a field of [[scope]]. The allowed fields are path, configurations, removed_configurations, and test_files.',
+            'gspot.toml:4: scope.0.kitz: kitz is not a field of [[scope]]. The allowed fields are path, configurations, removed_configurations, test_files, format, limits, naming, cloudflare, coverage, dependencies, docs, drizzle, javascript, python, trpc, zustand, licenses, openapi, postgres, secrets, site, spelling, supabase, translations, swift, repository, prose, duplication, xcode, tools, and structure. Did you mean site?',
     },
     {
         name: 'a wrong scope value after another record',

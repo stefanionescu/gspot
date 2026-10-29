@@ -6,7 +6,6 @@ import { quoteArgument } from '#cli/system/text.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
@@ -14,41 +13,34 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { DOCKER_TOOL } from '#cli/config/tools/inspect.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
+import { buildRunReport } from '#cli/commands/check/results.ts';
 import { type IgnoreRecord } from '#cli/types/settings/file.ts';
-import { INCOMPLETE_STATUSES } from '#cli/config/runs/results.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/terminal.ts';
 import { SHORT_HASH_LENGTH } from '#cli/config/commands/check/check.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
 import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
-import { listDetectedAdditions } from '#cli/repository/configurations.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { STAGED_FLAG, CHANGED_FLAG } from '#cli/config/commands/check/flags.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/runs/results.ts';
 import { type Finding, type CheckCode, type CheckResult, type CheckRunOptions } from '#cli/types/runs/check.ts';
 
 import {
-    HOOK_FLAG,
-    CHECK_COMMAND,
-    FAILED_STATUSES,
-    NO_FILES_MESSAGE,
-    CANCELED_CHECK_NOTE,
-    DOCKER_MISSING_MESSAGE,
-} from '#cli/config/commands/check/run.ts';
-import {
     type Run,
-    type FixReport,
     type RunResult,
-    type RunReport,
     type RunOptions,
-    type FinishedRun,
     type PlanAfterFixes,
     type ReproduceOptions,
 } from '#cli/types/commands/check.ts';
+import {
+    HOOK_FLAG,
+    CHECK_COMMAND,
+    FAILED_STATUSES,
+    CANCELED_CHECK_NOTE,
+    DOCKER_MISSING_MESSAGE,
+} from '#cli/config/commands/check/run.ts';
 
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     if ((['check', 'rule'] as const).some((key) => record[key] !== undefined && record[key] !== finding[key]))
@@ -221,59 +213,6 @@ async function planAfterFixes(session: CheckSession, options: RunOptions): Promi
         }),
     );
     return { session: fixed, planned: planChecks(fixed, options), fixes };
-}
-
-function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
-    const checks = results.filter((result) => FAILED_STATUSES.has(result.status)).map((result) => result.check);
-    const failedFixers = (fixes?.results ?? []).flatMap((result) => (result.status === 'failed' ? [result.check] : []));
-    return [...new Set([...checks, ...failedFixers])];
-}
-
-function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport | undefined): boolean {
-    return (
-        session.cancelSignal?.aborted === true ||
-        results.some((result) => INCOMPLETE_STATUSES.has(result.status)) ||
-        (fixes !== undefined && fixes.broken.length > 0) ||
-        fixes?.results.some((result) => result.status === 'failed') === true
-    );
-}
-
-function buildRunReport(run: FinishedRun): RunReport {
-    const { session, options, started, planned, results: ran, fixes } = run;
-    const results = new Map(run.active.map((check, index) => [check, ran[index] as CheckResult]));
-    const checks = planned.map<CheckResult>(
-        (check) =>
-            results.get(check) ?? {
-                ...buildBaseResult(check, session),
-                status: 'skipped' as const,
-                cause: check.skip?.cause ?? 'no-files',
-                note: check.skip?.note ?? NO_FILES_MESSAGE,
-            },
-    );
-    const failed = listFailedChecks(checks, fixes);
-    let code = failed.length > 0 ? EXIT_FINDINGS : 0;
-    if (isIncomplete(session, ran, fixes)) code = EXIT_ERROR;
-    if (session.cancelSignal?.aborted === true && typeof session.cancelSignal.reason === 'number')
-        code = session.cancelSignal.reason;
-    return {
-        ...(options.comparison !== undefined && { comparison: options.comparison }),
-        notes: listDetectedAdditions(session).map(
-            ({ scope, configurations }) =>
-                `Detected ${configurations.join(', ')}${scope === '.' || scope === '' ? '' : ' in ' + scope}. Run gspot add to enable the new configurations.`,
-        ),
-        version: cliPackage.version,
-        stage: options.stage,
-        started: started.toISOString(),
-        duration: Date.now() - started.getTime(),
-        checks,
-        ignores: session.settings.ignore.map(({ until, ...record }) =>
-            stripUndefined({ ...record, until: until?.toISOString() }),
-        ),
-        unstagedChanges: options.unstagedChanges ?? 0,
-        partial: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),
-        failed,
-        exitCode: code,
-    };
 }
 
 /**

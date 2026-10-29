@@ -67,10 +67,11 @@ gspot check --changed origin/main
 
 ## Large files
 
-When `.gitattributes` sends files through the `lfs` filter of Git Large File Storage (LFS), gspot writes the `pre-push`,
-`post-checkout`, `post-commit`, and `post-merge` hooks. When your `PATH` holds `git-lfs`, each one runs `git lfs` first,
-then the gspot checks of that hook. gspot replaces the stock hooks that `git lfs install` writes, so LFS needs no other
-hook manager.
+When a tracked file has the Git attribute `filter=lfs`, gspot writes the `pre-push`, `post-checkout`, `post-commit`,
+and `post-merge` hooks for Git Large File Storage (LFS). An unused attribute pattern does not enable these hooks.
+Each hook runs `git lfs` before its gspot checks. If `PATH` lacks `git-lfs`, the hook exits with code 2
+before any checks run and asks you to install it. gspot replaces the stock hooks that `git lfs install` writes, so LFS
+needs no other hook manager.
 
 ## When a hook fails
 

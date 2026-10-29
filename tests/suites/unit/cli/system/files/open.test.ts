@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
+import * as filesystem from 'node:fs';
+import { test, spyOn, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -70,6 +71,28 @@ test('deleteFolder refuses linked and outside parents and keeps folders that are
 test('opening a missing folder throws its ENOENT error', async () => {
     await using sandbox = await testdir();
     expect(() => openFiles(join(sandbox.path, 'missing'))).toThrow(matchFields({ code: 'ENOENT' }));
+});
+
+test('a refused file replacement keeps the original bytes and reports a filesystem error with its cause', async () => {
+    await using sandbox = await testdir({ 'settings.json': '{"kept":true}' });
+    using files = openFiles(sandbox.path);
+    const previous = files.read('settings.json')!;
+    const denied = Object.assign(new Error('Permission denied'), { code: 'EACCES' });
+    using _rename = spyOn(filesystem, 'renameSync').mockImplementation(() => {
+        throw denied;
+    });
+    expect(() => {
+        files.write('settings.json', { ...previous, bytes: Buffer.from('{}') }, previous);
+    }).toThrow(
+        matchFields({
+            code: 'filesystem',
+            message:
+                'Cannot write settings.json. Check its permissions and whether the filesystem is read-only, then run the command again.',
+            cause: denied,
+        }),
+    );
+    expect(files.read('settings.json')?.bytes).toEqual(previous.bytes);
+    expect(files.list('')).toStrictEqual(['settings.json']);
 });
 
 test.each(MODE_REPLACEMENTS.filter(({ posix }) => !posix || !isWindows))(

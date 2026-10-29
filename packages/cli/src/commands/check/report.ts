@@ -16,6 +16,7 @@ import {
     FIXER_ERROR_PREFIX,
     CHECK_STATUS_COLORS,
     TOOL_MISSING_MESSAGE,
+    STANDARD_INSTALL_HELP,
     UNCHANGED_FIX_MESSAGE,
     UNCHANGED_PREVIEW_MESSAGE,
 } from '#cli/config/commands/check/report.ts';
@@ -99,7 +100,7 @@ function formatIgnores(report: RunReport, { verbose }: { verbose: boolean }): st
     });
 }
 
-function formatSummary(report: RunReport): string {
+function formatSummary(report: RunReport, { selectedOnly }: { selectedOnly: boolean }): string {
     const failed = report.checks.filter((check) => check.status === 'failed');
     const missing = report.checks.filter((check) => check.status === 'missing').length;
     const errors = report.checks.filter((check) => check.status === 'error').length;
@@ -111,7 +112,7 @@ function formatSummary(report: RunReport): string {
         sentences.push(`Failed: ${formatCount(failed.length, 'check')} with ${formatCount(findings, 'finding')}.`);
     if (missing + errors > 0)
         sentences.push(
-            `Could not run: ${formatCount(missing + errors, 'check')}${missing > 0 ? TOOL_MISSING_MESSAGE : ''}.`,
+            `Could not run: ${formatCount(missing + errors, 'check')}${missing > 0 && !selectedOnly ? TOOL_MISSING_MESSAGE : ''}.`,
         );
     sentences.push(`Passed: ${formatCount(passed, 'check')}.`, `Skipped: ${formatCount(skipped, 'check')}.`);
     const text = sentences.join(' ');
@@ -157,39 +158,51 @@ export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: bool
     }
 }
 
-/**
-Format the check lines, the ignores, and the summary of a run.
-
-@param report the check results and totals.
-@param options how to show the report.
-@param options.verbose whether to show passing and skipped checks, their commands, every finding, and each ignore.
-*/
-export function formatRunReport(report: RunReport, options: { verbose: boolean }): string {
-    const { verbose } = options;
-    const checks = report.checks.filter(
-        (check) => verbose || (check.status !== 'passed' && check.status !== 'skipped'),
-    );
+function formatMissingChecks(checks: readonly CheckResult[], { selectedOnly }: { selectedOnly: boolean }): string[] {
     const grouped = new Map<string, CheckResult[]>();
     for (const check of checks) {
         if (check.status !== 'missing') continue;
         const note = check.note ?? '';
         grouped.set(note, [...(grouped.get(note) ?? []), check]);
     }
+    return [...grouped].flatMap(([note, missing]) => [
+        `missing  ${missing.map((check) => stripControlCharacters([check.check, check.scope].filter(Boolean).join(' '))).join(', ')}`,
+        `  ${stripControlCharacters(!selectedOnly && note.endsWith(STANDARD_INSTALL_HELP) ? note.slice(0, -STANDARD_INSTALL_HELP.length) : note)}`,
+        '',
+    ]);
+}
+
+function formatNotChecked(notChecked: RunReport['notChecked']): string[] {
+    if (notChecked === undefined) return [];
+    const choices = notChecked
+        .map(({ configuration, evidence }) => stripControlCharacters(`${configuration} (${evidence})`))
+        .join(', ');
+    return [`note     Not checked: ${choices}. Run gspot add, or gspot remove <name> --reason "<why>".`];
+}
+
+/**
+Format the check lines, the ignores, and the summary of a run.
+
+@param report the check results and totals.
+@param options how to show the report.
+@param options.selectedOnly whether the user selected checks explicitly.
+@param options.verbose whether to show passing and skipped checks, their commands, every finding, and each ignore.
+*/
+export function formatRunReport(report: RunReport, options: { verbose: boolean; selectedOnly?: boolean }): string {
+    const { verbose, selectedOnly = false } = options;
+    const checks = report.checks.filter(
+        (check) => verbose || (check.status !== 'passed' && check.status !== 'skipped'),
+    );
     const lines = checks
         .filter((check) => check.status !== 'missing')
         .flatMap((check) => [...formatCheck(check, { verbose }), '']);
-    for (const [note, missing] of grouped) {
-        lines.push(
-            `missing  ${missing.map((check) => stripControlCharacters([check.check, check.scope].filter(Boolean).join(' '))).join(', ')}`,
-            `  ${stripControlCharacters(note)}`,
-            '',
-        );
-    }
     lines.push(
+        ...formatMissingChecks(checks, { selectedOnly }),
+        ...formatNotChecked(report.notChecked),
         ...(report.notes ?? []).map((note) => `note     ${stripControlCharacters(note)}`),
         ...formatIgnores(report, { verbose }),
         ...formatUnstagedChanges(report),
-        formatSummary(report),
+        formatSummary(report, { selectedOnly }),
         `Time: ${(report.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s. Exit code ${String(report.exitCode)}.`,
     );
     return `${formatComparison(report.comparison)}${lines.join('\n')}\n`;

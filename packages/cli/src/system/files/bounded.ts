@@ -110,7 +110,7 @@ Build the absolute path of a file after a check that every parent names a real f
 @param bounds the root.
 @param path the root-relative file.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 3 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: This operation supplies lstatSync to the parent walker for its callers.
 export function buildContainedPath(bounds: FileBounds, path: string): string {
     return walkParentFolders(bounds, path, lstatSync);
 }

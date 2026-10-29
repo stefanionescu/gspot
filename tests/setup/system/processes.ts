@@ -108,7 +108,7 @@ export function spawnCommand(
 A process result for check tests, with these fields changed.
 */
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 89 calls in 31 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Process tests share the successful exit fields and override only the fields under test.
 export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnResult {
     return {
         timedOut: false,

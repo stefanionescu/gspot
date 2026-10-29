@@ -25,7 +25,7 @@ Build a source diff with the shared Git context.
 @param names labels for the previous and next text.
 @returns the unified diff.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Fixes and outdated generated files print a diff in the same format through it.
 export function buildDiff(path: string, before: string, after: string, names: [string, string]): string {
     return createTwoFilesPatch(
         `a/${convertToPosixPath(path)}`,

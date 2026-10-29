@@ -205,7 +205,7 @@ export const SUPPRESSION_COMMENTS = [
     '// eslint-disable -- reason: The external declaration requires this signature.',
     '// eslint-enable no-x, @scope/no-y -- reason: Checks resume here.',
     '// eslint-disable-line no-x -- reason: The external declaration requires this signature.',
-    '// eslint-disable-next-line no-x -- reason: Punctuation -- stays checked.',
+    '// eslint-disable-next-line no-x -- reason: The vendor declaration fixes this signature.',
     '// Punctuation -- stays checked.',
     '',
 ] as const;
@@ -231,3 +231,14 @@ export const VERSION_RANGE_SOURCE = [
     'Use version 3.2.0\nor later.',
     '',
 ].join('\n');
+
+export const ALT_TEXT_CASES = [
+    { tag: '<img title="no alt=here" src="a.png">', missing: true },
+    { tag: '<img src="a.png">', missing: true },
+    { tag: '<img data-alt="x" src="a.png">', missing: true },
+    { tag: '<img alt="A cat" src="a.png">', missing: false },
+    { tag: '<img alt src="a.png">', missing: false },
+    { tag: '<img alt="" src="a.png">', missing: false },
+    { tag: '<img src="a.png" alt="x" />', missing: false },
+    { tag: '<img src=a.png alt>', missing: false },
+] as const;

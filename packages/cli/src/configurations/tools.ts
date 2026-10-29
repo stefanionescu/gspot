@@ -51,7 +51,7 @@ Get the mise pin that the shipped Python configuration declares for uv.
 
 @returns the uv installer pin.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The mise pins and the CI install take the uv pin of the Python configuration through it.
 export function getUvPin(): MiseToolPin {
     return findMisePin(getTool(readConfigurations().values(), UV_TOOL)) as MiseToolPin;
 }
@@ -133,7 +133,7 @@ Get the tool that a check names, or the first word of its command.
 @param check the validated check.
 @returns undefined for a built-in check without a tool.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 5 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlining this step puts its callers over the complexity limit.
 export function getToolName(check: Check): string | undefined {
     return typeof check.tool === 'string' ? check.tool : check.command?.[0];
 }
@@ -196,7 +196,7 @@ Read the plugin prefix of a qualified lint rule.
 @param rule the rule name, optionally prefixed by its plugin.
 @returns undefined for an unqualified rule.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 2 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, its slash rule repeats at each call.
 export function extractRulePrefix(rule: string): string | undefined {
     const slash = rule.lastIndexOf('/');
     return slash === -1 ? undefined : rule.slice(0, slash);

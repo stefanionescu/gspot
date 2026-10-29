@@ -78,11 +78,17 @@ function formatSimilarKeys(segments: KeyPath, key: string): string {
     return table instanceof z.ZodObject ? formatSimilarNames(key, Object.keys(table.shape)) : '';
 }
 
-function formatUnknownRecordField(segments: KeyPath, key: string): string | undefined {
-    const fields = RECORD_FIELDS[String(segments[0])];
-    if (typeof segments[1] !== 'number' || fields === undefined) return undefined;
+function formatUnknownTableField(segments: KeyPath, key: string): string | undefined {
+    if (segments.length === 0) return undefined;
+    let schema: z.ZodType | undefined = settingsSchema;
+    for (const segment of segments) schema = findChildSchema(schema, segment);
+    const table = schema === undefined ? undefined : unwrapSettingSchema(schema);
+    if (!(table instanceof z.ZodObject)) return undefined;
+    const fields = Object.keys(table.shape);
     const allowed = new Intl.ListFormat('en', { type: 'conjunction' }).format(fields);
-    return `${key} is not a field of [[${String(segments[0])}]]. The allowed fields are ${allowed}.`;
+    const path = segments.filter((segment) => typeof segment === 'string').join('.');
+    const name = typeof segments.at(-1) === 'number' ? `[[${path}]]` : `[${path}]`;
+    return `${key} is not a field of ${name}. The allowed fields are ${allowed}.${formatSimilarNames(key, fields)}`;
 }
 
 function formatUnknownLimit(
@@ -104,7 +110,7 @@ function formatUnknownKey(segments: KeyPath, key: string): string {
     const recordName = [...scopeFields, key].map(String).join('.');
     if (record === 'scope' && Object.hasOwn(fields, recordName))
         return `Write [[${recordName}]] at the root.${fields[recordName]?.includes('paths') === true ? RECORD_PATHS_MESSAGE : ''}`;
-    const recordMessage = formatUnknownRecordField(segments, key);
+    const recordMessage = formatUnknownTableField(segments, key);
     if (recordMessage !== undefined) return recordMessage;
     return `${key} is not a gspot.toml setting.${formatSimilarKeys(segments, key)} See ${SETTINGS_REFERENCE_URL} for every key.`;
 }

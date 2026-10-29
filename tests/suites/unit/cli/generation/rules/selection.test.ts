@@ -141,3 +141,12 @@ test('the Neon Postgres driver selects the Drizzle rule file', async () => {
     });
     expect(rules.has(getRuleFilePath('drizzle', 'DRIZZLE.md'))).toBe(true);
 });
+
+test('a Supabase project selects Deno rules without a Deno settings file', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['supabase'], { rules: true }),
+        'supabase/config.toml': 'project_id = "example"\n',
+    });
+    const session = await openSession(sandbox.path);
+    expect(selectRuleFiles(session).map(({ path }) => path)).toContain('language/javascript/rules/DENO.md');
+});

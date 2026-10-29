@@ -39,3 +39,14 @@ test('at level basic, a rule file loses its level-all sections with their subsec
     const keptFiles = selectRuleFiles({ ...defaultLevel, scopes: defaultLevelScopes });
     expect(keptFiles.map(({ content }) => content)).toStrictEqual([before + after]);
 });
+
+test.each(['basic', 'all'] as const)('the shipped Git commit format section follows level %s', async (level) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['commits'], { rules: true, level }),
+    });
+    const rules = selectRuleFiles(await openSession(sandbox.path));
+    const git = rules.find(({ path }) => path === 'general/commits/rules/GIT.md')!;
+    expect(git.content.includes('### Commit message format')).toBe(level === 'all');
+    expect(git.content.includes('fix(api): reject an empty order')).toBe(level === 'all');
+    expect(git.content).toContain('## Branches and pull requests');
+});

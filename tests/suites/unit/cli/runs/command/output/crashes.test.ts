@@ -13,7 +13,7 @@ import {
     ASTRO_CHECK_OUTPUT,
     ASTRO_CHECK_SUMMARY,
     ESLINT_MANIFEST_TOOL,
-} from '#tests/config/runs/command.ts';
+} from '#tests/config/runs/command/check.ts';
 
 test('a shortened failure output keeps the last line of stdout and of stderr', () => {
     const progress = Array.from({ length: 30 }, (_, index) => `progress ${String(index)}`).join('\n');

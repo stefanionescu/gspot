@@ -4,6 +4,9 @@ export const SELECTOR_FILES = {
     'forms/Fields.jsx': `const checkbox = <input type="checkbox" value="a" {...register("choice")} />;
 const radio = <input type="radio" value="a" {...register("choice")} />;
 const text = <input type="text" value="a" {...register("choice")} />;
+const memberCheckbox = <input type="checkbox" value="a" {...form.register("choice")} />;
+const memberRadio = <input type="radio" value="a" {...form.register("choice")} />;
+const memberText = <input type="text" value="a" {...form.register("choice")} />;
 `,
 } as const;
 

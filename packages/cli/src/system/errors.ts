@@ -63,7 +63,7 @@ Check whether an operation failed with an operating-system error code.
 @param code the operating-system error code to match.
 @returns whether the error carries that code.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 25 calls in 13 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers test a caught Node.js error for its code through this one type check.
 export function hasErrorCode(error: unknown, code: string): boolean {
     return error instanceof Error && 'code' in error && error.code === code;
 }

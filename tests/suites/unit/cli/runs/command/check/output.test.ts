@@ -6,11 +6,11 @@ import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { PENDING_NOTE_RESULTS } from '#tests/config/runs/command.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { PENDING_NOTE_RESULTS } from '#tests/config/runs/command/check.ts';
 
 test('a command check runs its command and reports file and line through its output format', async () => {
     await using sandbox = await createGitSandbox({

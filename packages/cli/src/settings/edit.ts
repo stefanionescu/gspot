@@ -9,7 +9,7 @@ import { TOML_FORMAT, SETTINGS_FILE, SETTINGS_PREFACE } from '#cli/config/settin
 import type { SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
 import { parseTomlFile, parseTomlSyntax, buildPatchedToml } from '#cli/parsers/formats/toml.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, its key split repeats at each call.
 function splitKey(key: string): SettingKey {
     const boundary = key.lastIndexOf('.');
     return { path: boundary === -1 ? [] : key.slice(0, boundary).split('.'), name: key.slice(boundary + 1) };

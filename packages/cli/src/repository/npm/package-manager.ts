@@ -80,7 +80,7 @@ Check whether the package manager runs Yarn Berry, which has its own settings an
 @param packageManager the validated name and exact version.
 @returns whether the package manager uses Yarn Berry.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CI generation and the tool package manager tell Yarn Berry apart by its major version through it.
 export function isYarnBerry(packageManager: PackageManager): boolean {
     return packageManager.name === 'yarn' && semver.major(packageManager.version) >= YARN_BERRY_MAJOR;
 }
@@ -209,7 +209,7 @@ Run a declared package manager with its pinned runtime and version.
 @param commandArguments the executable options and operands to pass after its name.
 @returns the direct command or the mise command for the exact pin.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CI generation and the npm installer run a package manager at its version through mise by this one rule.
 export function buildPackageManagerCommand(
     packageManager: PackageManagerCommand,
     commandArguments: readonly string[],

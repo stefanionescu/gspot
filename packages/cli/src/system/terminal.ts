@@ -8,7 +8,7 @@ let options: OutputOptions = { isJson: false, colored: false };
 /**
 Read the palette for the configured command output.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 13 calls in 5 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Output options stay private to this module.
 export function getColors(): ReturnType<typeof pc.createColors> {
     return pc.createColors(options.colored);
 }
@@ -18,7 +18,7 @@ Set the output mode for the process.
 
 @param next the JSON and color choices.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Output options stay private to this module.
 export function setOutputOptions(next: OutputOptions): void {
     options = next;
 }

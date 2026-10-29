@@ -43,7 +43,7 @@ mise bin-paths node@24 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3' >> "$G
     expect(steps.find((step) => step.name === 'Lint')?.run).toBe('gspot check --changed "${GSPOT_CI_BASE}"\n');
     expect(
         steps.filter((step) => step.env?.['MISE_GITHUB_TOKEN'] !== undefined).map((step) => step.name),
-    ).toStrictEqual(['Install gspot']);
+    ).toStrictEqual(['Install gspot', 'Install gspot tools']);
 });
 
 test('GitLab installs gspot once, adds its bins to PATH, and checks the comparison revision', () => {

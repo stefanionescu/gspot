@@ -80,7 +80,7 @@ export async function runGspot(
 Parse the JSON report of a completed check run.
 */
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 240 calls in 71 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: This reader keeps the parsed report cast at one boundary.
 export function parseCheckReport(output: ProcessOutput): ProcessOutput & { report: RunReport & { fixes?: FixReport } } {
     return { ...output, report: JSON.parse(output.stdout) as RunReport & { fixes?: FixReport } };
 }
@@ -89,7 +89,7 @@ export function parseCheckReport(output: ProcessOutput): ProcessOutput & { repor
 Run gspot as a child process in a folder with color off and CI set.
 */
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 61 files call it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Sandbox.run takes it as a value.
 export async function spawnGspot(
     cwd: string,
     commandArguments: readonly string[],

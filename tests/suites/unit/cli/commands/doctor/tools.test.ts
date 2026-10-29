@@ -16,9 +16,9 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { join, dirname, extname, basename, delimiter } from 'node:path';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { MISSING_REPORT_TOOLS } from '#tests/config/commands/doctor/tools.ts';
 import { fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { getTool, listDistinctTools, findToolProjectPackage } from '#cli/configurations/tools.ts';
-import { ZERO_COVERAGE_TABLES, MISSING_REPORT_TOOLS } from '#tests/config/commands/doctor/tools.ts';
 
 test('doctor reports no unowned gspot files in a fresh clone', async () => {
     await using sandbox = await testdir();
@@ -142,7 +142,10 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
     ).toStrictEqual({ ...pytestCov, state: 'system', found: '7.1.0' });
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
-        buildSandboxSettings(['python', 'pytest'], { level: 'all', tables: ZERO_COVERAGE_TABLES }),
+        buildSandboxSettings(['python', 'pytest'], {
+            level: 'all',
+            tables: '[coverage]\nlines = { value = 0, reason = "This sandbox tests optional coverage." }\n',
+        }),
     );
     const zero = await runGspot(sandbox.path, ['doctor', '--json']);
     expect((JSON.parse(zero.stdout) as DoctorReport).tools.map((tool) => tool.name)).not.toContain('pytest-cov');

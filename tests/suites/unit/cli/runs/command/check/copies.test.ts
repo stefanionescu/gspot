@@ -45,9 +45,9 @@ test('a Python check that runs in a copy uses the environment that the working t
     const local = planChecks(inPlace, buildRunOptions({ only: ['python/basedpyright'] })).find(
         ({ check }) => check.id === 'python/basedpyright',
     )!;
-    expect(buildCommandSetup(inPlace, local, { options: {}, root: inPlace.root }).env).not.toHaveProperty(
-        'UV_PROJECT_ENVIRONMENT',
-    );
+    const setup = buildCommandSetup(inPlace, local, { options: {}, root: inPlace.root });
+    expect(listCopyPythonArguments(local.tool!, setup.env)).toStrictEqual([]);
+    expect(setup.env).not.toHaveProperty('UV_PROJECT_ENVIRONMENT');
 });
 
 test('a command run in a copy finds the other tools beside its program before a PATH folder', async () => {

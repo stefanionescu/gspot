@@ -26,6 +26,50 @@ import {
     PRETTIER_IGNORE_SETTINGS,
 } from '#tests/config/generation/config-files/ignore-files.ts';
 
+test('negative ignores follow positives for ordered tools and stay out of tools without negation', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'format', 'spelling', 'duplication'], {
+            level: 'all',
+            tables: '[[ignore]]\npaths = ["!src/keep.ts", "src/**"]\nreason = "Keep one authored file among generated sources."\n',
+        }),
+        'src/keep.ts': 'export const kept = 1;\n',
+        'src/omit.ts': 'export const omitted = 1;\n',
+    });
+    const output = generateFiles(await openSession(sandbox.path));
+    const prettierIgnore = output.files.find(({ path }) => path === '.prettierignore')!.content;
+    await writeFile(join(sandbox.path, '.prettierignore'), prettierIgnore);
+    expect(prettierIgnore).toContain('src/**\n!src/keep.ts');
+    const ignored = await prettier.getFileInfo(join(sandbox.path, 'src/keep.ts'), {
+        ignorePath: join(sandbox.path, '.prettierignore'),
+        resolveConfig: false,
+    });
+    expect(ignored.ignored).toBe(false);
+    const eslint = output.files.find(
+        ({ path }) => path === getManifestTarget('javascript', 'eslint/eslint.mjs'),
+    )!.content;
+    expect(eslint).toContain('"!src/keep.ts"');
+    expect(eslint.indexOf('"src/**"')).toBeLessThan(eslint.indexOf('"!src/keep.ts"'));
+    const typos: unknown = parse(output.files.find(({ path }) => path.endsWith('/typos.toml'))!.content);
+    const paths = getValueAt(typos, ['files', 'extend-exclude']) as string[];
+    expect(paths.indexOf('src/**')).toBeLessThan(paths.indexOf('!src/keep.ts'));
+    expect(paths).toContain('!src/keep.ts');
+    const knip = JSON.parse(output.files.find(({ path }) => path.endsWith('/knip.json'))!.content) as {
+        ignore: string[];
+    };
+    expect(knip.ignore).toContain('src/**');
+    expect(knip.ignore).toContain('!src/keep.ts');
+    const jsconfig = JSON.parse(output.files.find(({ path }) => path.endsWith('/jsconfig.json'))!.content) as {
+        exclude: string[];
+    };
+    expect(jsconfig.exclude).toContain('../../../../src/**');
+    expect(jsconfig.exclude.some((path) => path.includes('!'))).toBe(false);
+    const jscpd = JSON.parse(output.files.find(({ path }) => path.endsWith('/jscpd.json'))!.content) as {
+        ignore: string[];
+    };
+    expect(jscpd.ignore).toContain('src/**');
+    expect(jscpd.ignore.some((path) => path.startsWith('!'))).toBe(false);
+});
+
 test.each([true, false])('generated file lists include the CI workflow only when enabled: %s', async (enabled) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {

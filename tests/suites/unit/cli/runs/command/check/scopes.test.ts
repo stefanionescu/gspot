@@ -9,8 +9,8 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
 import { buildCommandSetup } from '#cli/runs/command/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { CHILD_SCOPE_SETTINGS } from '#tests/config/runs/command.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { CHILD_SCOPE_SETTINGS } from '#tests/config/runs/command/check.ts';
 
 test('a command in a scope runs in the scope folder with paths relative to it', async () => {
     await using sandbox = await createGitSandbox({});

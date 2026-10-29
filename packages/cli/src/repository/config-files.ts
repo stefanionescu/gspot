@@ -17,23 +17,9 @@ import { JSON_EXTENSION, INI_EXTENSIONS } from '#cli/config/repository/config-fi
 
 function listReplacementConflicts(
     root: string,
-    files: { inventory: Set<string>; projectFolders: Set<string> },
-    tool: string,
-    replacement: Pick<ConflictingConfigFile, 'path' | 'shared' | 'key' | 'table'>,
+    paths: string[],
+    replacement: ConflictingConfigFile,
 ): ConflictingConfigFile[] {
-    const { inventory, projectFolders } = files;
-    const depth = replacement.path.split('/').length;
-    const isDotfile = posix.basename(replacement.path).startsWith('.');
-    const matches = buildPathMatcher([replacement.path, `**/${replacement.path}`]);
-    const paths = [...inventory].filter(
-        (path) => matches(path) && (isDotfile || projectFolders.has(path.split('/').slice(0, -depth).join('/'))),
-    );
-    if (
-        !picomatch.scan(replacement.path).isGlob &&
-        !inventory.has(replacement.path) &&
-        findText(root, replacement.path) !== undefined
-    )
-        paths.push(replacement.path);
     return paths
         .filter((path) => {
             const source = findText(root, path);
@@ -44,12 +30,55 @@ function listReplacementConflicts(
             );
         })
         .map((path) => ({
-            tool,
+            tool: replacement.tool,
             path,
             shared: replacement.shared,
             ...(replacement.table !== undefined && { table: replacement.table }),
             ...(replacement.key !== undefined && { key: replacement.key }),
         }));
+}
+
+function listConfigurationConflicts(
+    root: string,
+    configuration: Configuration,
+    files: { inventory: Set<string>; projectFolders: Set<string> },
+): ConflictingConfigFile[] {
+    const replacements = configuration.tools.flatMap((tool) =>
+        [
+            ...(tool.replace ?? []).map((path) => ({ tool: tool.name, path, shared: false })),
+            ...(tool.replace_key ?? []).map(({ file, ...selector }) => ({
+                tool: tool.name,
+                path: file,
+                shared: true,
+                ...selector,
+            })),
+        ].map((replacement) => ({
+            replacement,
+            paths: [] as string[],
+            depth: replacement.path.split('/').length,
+            isDotfile: posix.basename(replacement.path).startsWith('.'),
+            matches: buildPathMatcher([replacement.path, `**/${replacement.path}`]),
+        })),
+    );
+    for (const path of files.inventory) {
+        for (const replacement of replacements) {
+            if (
+                replacement.matches(path) &&
+                (replacement.isDotfile ||
+                    files.projectFolders.has(path.split('/').slice(0, -replacement.depth).join('/')))
+            )
+                replacement.paths.push(path);
+        }
+    }
+    return replacements.flatMap(({ replacement, paths }) => {
+        if (
+            !picomatch.scan(replacement.path).isGlob &&
+            !files.inventory.has(replacement.path) &&
+            findText(root, replacement.path) !== undefined
+        )
+            paths.push(replacement.path);
+        return listReplacementConflicts(root, paths, replacement);
+    });
 }
 
 function parseSharedFile(text: string, extension: string, path: string): unknown {
@@ -96,12 +125,5 @@ export function listConflictingConfigFiles(
     );
     const selected = [...configurations];
     const located = { inventory, projectFolders: new Set(['', ...listProjectFolders(inventory, selected)]) };
-    return selected.flatMap((configuration) =>
-        configuration.tools.flatMap((tool) =>
-            [
-                ...(tool.replace ?? []).map((path) => ({ path, shared: false })),
-                ...(tool.replace_key ?? []).map(({ file, ...selector }) => ({ path: file, shared: true, ...selector })),
-            ].flatMap((replacement) => listReplacementConflicts(root, located, tool.name, replacement)),
-        ),
-    );
+    return selected.flatMap((configuration) => listConfigurationConflicts(root, configuration, located));
 }

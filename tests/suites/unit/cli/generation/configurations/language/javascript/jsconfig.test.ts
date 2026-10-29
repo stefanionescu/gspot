@@ -1,7 +1,7 @@
 import ts from 'typescript';
-import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { join, dirname, resolve } from 'node:path';
 import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
@@ -76,4 +76,23 @@ test.each(['basic', 'all'] as const)('JavaScript implicit parameters follow leve
     const errorCodes = new Set(program.getSemanticDiagnostics().map(({ code }) => code));
     expect(errorCodes.has(7006)).toBe(level === 'all');
     expect(errorCodes.has(2322)).toBe(true);
+});
+
+test('a scoped jsconfig anchors recursive excludes in its scope and other excludes at the repository root', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            scopes: [{ path: 'tests' }],
+            tables: '[[ignore]]\npaths = ["docs/**", "tests/fixtures/**", "**/cache/**"]\nreason = "These folders hold reference files."\n',
+        }),
+        'tests/source.js': 'export const value = 1;\n',
+    });
+    const output = generateFiles(await openSession(sandbox.path));
+    const file = output.files.find(({ path }) => path.endsWith('/scopes/tests/jsconfig.json'))!;
+    const config = JSON.parse(file.content) as { exclude: string[] };
+    const excluded = config.exclude.map((path) => resolve(dirname(file.path), path));
+    expect(excluded).toContain(resolve('tests/fixtures/**'));
+    expect(excluded).toContain(resolve('tests/**/cache/**'));
+    expect(excluded).not.toContain(resolve('tests/docs/**'));
+    expect(excluded).not.toContain(resolve('tests/.gspot/**'));
+    expect(excluded).not.toContain(resolve('docs/**'));
 });

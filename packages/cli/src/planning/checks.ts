@@ -123,7 +123,7 @@ Check whether a planned check has files, deleted trigger paths, a commit message
 
 @param planned the plan to inspect.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 12 calls in 6 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlining this step puts its callers over the complexity limit.
 export function isActive(planned: PlannedCheck): boolean {
     return (
         planned.files.length > 0 ||

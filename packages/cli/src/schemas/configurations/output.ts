@@ -58,7 +58,8 @@ export const outputSchema = z
                     .describe('For json: the field that is set when the tool can fix the finding.')
                     .optional(),
             } satisfies SchemaShape<NonNullable<CheckOutput['fields']>>)
-            .optional(),
+            .optional()
+            .describe('For json: the report fields that supply each finding property.'),
         pattern: z
             .string()
             .describe(

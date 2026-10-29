@@ -29,7 +29,7 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
     const npmPath = readNpmPath();
     const config = new Config({
         npmPath,
-        execPath: which.sync('node', { nothrow: true }) ?? process.execPath,
+        execPath: realpathSync(which.sync('node', { nothrow: true }) ?? process.execPath),
         definitions: npmDefinitions.definitions,
         flatten: npmDefinitions.flatten,
         shorthands: npmDefinitions.shorthands,

@@ -2,9 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { README, LICENSE } from '#tests/config/documents.ts';
@@ -29,7 +31,52 @@ import {
     MDX_MISSING_PATH_FINDINGS,
 } from '#tests/config/checks/general/docs.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in this file share it.
+test('required files run in root and child scopes even without any Markdown file', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['docs'], { level: 'all', scopes: [{ path: 'app' }] }),
+        'app/source.ts': 'export const value = 1;\n',
+    });
+    const { report } = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['docs/required-files'] }),
+    );
+    expect(
+        report.checks.map(({ scope, status, findings }) => ({
+            scope,
+            status,
+            findings: findings.map(({ file, rule }) => ({ file, rule })),
+        })),
+    ).toStrictEqual([
+        {
+            scope: '',
+            status: 'failed',
+            findings: [
+                { file: 'README.md', rule: 'missing-readme' },
+                { file: 'LICENSE', rule: 'missing-license' },
+            ],
+        },
+        { scope: 'app', status: 'failed', findings: [{ file: 'app/README.md', rule: 'missing-readme' }] },
+    ]);
+});
+
+test('Bun file commands validate tracked paths without treating them as package scripts', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
+        'guide.md': 'Run `bun run scripts/build.ts` and `bun run scripts/missing.ts`.\n',
+        'scripts/build.ts': 'console.info("built");\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'docs/missing-paths');
+    expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
+        {
+            file: 'guide.md',
+            line: 1,
+            rule: 'missing-path',
+            message: 'scripts/missing.ts names no tracked file or folder.',
+        },
+    ]);
+});
+
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it makes duplication/jscpd clones.
 async function runMissingPathsCheck(
     files: Record<string, string>,
     options: { paths?: string[] } = {},

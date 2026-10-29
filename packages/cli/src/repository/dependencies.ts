@@ -49,7 +49,7 @@ Read and validate the package.json fields that gspot uses.
 @param path the repository-relative package.json.
 @returns the validated package fields, or undefined when the file does not exist.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands, generation, and repository reads validate package.json with one schema through it.
 export function readPackageJson(root: string, path: string): PackageJson | undefined {
     const text = findText(root, path);
     return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
@@ -62,7 +62,7 @@ Read the package.json fields used by repository checks through the run cache.
 @param path the repository-relative package.json path.
 @returns the validated fields, or undefined when the file does not exist.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 3 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks and repository reads validate package.json from the run cache with one schema through it.
 export function readCachedPackageJson(reads: ReadCache, path: string): PackageJson | undefined {
     const text = findCachedText(reads, path);
     return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);

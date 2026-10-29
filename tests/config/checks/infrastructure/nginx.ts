@@ -34,11 +34,38 @@ export const NGINX_MOUNT_CASES = [
     { name: 'empty directives', source: '# Empty configuration.\n;{};', hosts: [], certificates: [] },
 ] as const;
 
-export const NGINX_EMERGENCY_CASES = [
+const NGINX_EMERGENCY_CASES = [
     {
         stderr: 'nginx: [emerg] unknown directive "invalid" in /etc/nginx/conf.d/site.conf:7',
         file: 'conf.d/site.conf',
         line: 7,
     },
     { stderr: 'nginx: [emerg] configuration could not be read', file: 'nginx.conf', line: 1 },
+] as const;
+
+export const NGINX_FAILURE_CASES = [
+    ...NGINX_EMERGENCY_CASES.map(({ stderr, file, line }) => ({
+        name: `an emergency at ${file}:${String(line)}`,
+        stderr,
+        status: 'failed' as const,
+        note: undefined,
+        findings: [
+            {
+                check: 'nginx/syntax',
+                file,
+                line,
+                rule: 'syntax',
+                fixable: false,
+                message: stderr,
+                help: 'Fix the line nginx names. Set `tools.nginx.image` to the one your deployment runs.',
+            },
+        ],
+    })),
+    {
+        name: 'an unavailable Docker daemon as missing',
+        stderr: 'Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?',
+        status: 'missing',
+        note: 'Start Docker: nginx/syntax runs nginx -T in a container.',
+        findings: [],
+    },
 ] as const;

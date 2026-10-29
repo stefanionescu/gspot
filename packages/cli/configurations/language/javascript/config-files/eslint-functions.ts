@@ -43,7 +43,7 @@ export function stripRuntimeGlobals(
 }
 
 /**
-⏎ Select the files that one runtime declaration covers: a later declaration that covers a file wins. ⏎  ⏎ @param index the position of the runtime declaration that this matcher stands for. ⏎ @param runtimes the runtime declarations, in order. ⏎
+Select the files that one runtime declaration covers. A later matching declaration wins.
 
 @param index the position of the runtime declaration that this matcher stands for.
 @param runtimes the runtime declarations, in order.
@@ -61,7 +61,8 @@ export function buildRuntimeMatcher(index: number, runtimes: EslintRuntime[]): (
 }
 
 /**
-⏎ Select the Vue or Svelte files whose script element asks for TypeScript. The final parser reports syntax errors, so a ⏎ file that does not parse counts as untyped. ⏎  ⏎ @param parser vue-eslint-parser or svelte-eslint-parser. ⏎ @param typescriptParser the parser of TypeScript script elements, which svelte-eslint-parser takes. ⏎
+Select Vue or Svelte files whose script element asks for TypeScript. The final parser reports syntax errors;
+a file that does not parse counts as untyped.
 
 @param parser vue-eslint-parser or svelte-eslint-parser.
 @param typescriptParser the parser of TypeScript script elements, which svelte-eslint-parser takes.

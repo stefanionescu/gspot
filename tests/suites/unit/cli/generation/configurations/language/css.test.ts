@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import stylelint, { type Config } from 'stylelint';
@@ -12,6 +13,33 @@ import {
     STYLELINT_SCOPE_FILES,
     COMPONENT_SYNTAX_OVERRIDES,
 } from '#tests/config/generation/configurations/language/css.ts';
+
+test.each(['vue', 'astro'])('a CSS-only scope checks properties inside a %s component style', async (extension) => {
+    const path = `Card.${extension}`;
+    const code = '<style>p { nonexistent-property: red; }</style>\n';
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['css']),
+        [path]: code,
+    });
+    const session = await openSession(sandbox.path);
+    const generated = generateFiles(session).files.find(
+        ({ path: file }) => file === getConfigFilePath(session, 'stylelint', ''),
+    )!;
+    const config = JSON.parse(generated.content) as Config;
+    const syntax = config.overrides?.find(({ files }) => files.includes(`**/*.${extension}`))?.customSyntax;
+    expect(syntax).toBe('postcss-html');
+    if (typeof syntax !== 'string') throw new TypeError('The generated CSS parser must name a package.');
+    expect(import.meta.resolve(syntax)).toBe(import.meta.resolve('postcss-html'));
+    const result = await stylelint.lint({
+        code,
+        codeFilename: join(sandbox.path, path),
+        config,
+        configBasedir: testModules,
+    });
+    expect(result.results.flatMap(({ warnings }) => warnings.map(({ rule }) => rule))).toStrictEqual([
+        'property-no-unknown',
+    ]);
+});
 
 test('every CSS scope selects Vue, Svelte and Astro syntax only for matching extensions', async () => {
     await using sandbox = await testdir({

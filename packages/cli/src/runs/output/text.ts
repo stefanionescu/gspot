@@ -13,7 +13,7 @@ function setMatchedFields(finding: Finding, groups: Record<string, string | unde
     return finding;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it puts parseRegexFindings over the complexity limit of 8.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, parseRegexFindings passes the complexity limit.
 function buildMatchedFinding(
     output: ToolOutput,
     fixable: RegExp | undefined,

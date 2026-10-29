@@ -3,9 +3,11 @@ import { testdir } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
@@ -15,7 +17,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import {
     NGINX_MOUNT_CASES,
     NGINX_UPSTREAM_CONF,
-    NGINX_EMERGENCY_CASES,
+    NGINX_FAILURE_CASES,
 } from '#tests/config/checks/infrastructure/nginx.ts';
 
 test.each([...NGINX_MOUNT_CASES])(
@@ -86,31 +88,21 @@ test.each(['stdout', 'stderr'])(
     },
 );
 
-test.each([...NGINX_EMERGENCY_CASES])(
-    'nginx/syntax reports an [emerg] line at $file:$line',
-    async ({ stderr, file, line }) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['nginx']),
-            'nginx.conf': 'events {}\nhttp { include /etc/nginx/conf.d/site.conf; }\n',
-            'conf.d/site.conf': 'server {}\n',
-        });
-        const session = await openSession(sandbox.path);
-        using _pins = fakeToolExecutables(
-            ['openssl', 'docker'].map((name) => getTool(session.configurationsByName.values(), name)),
-        );
-        using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command) =>
-            Promise.resolve(buildProcessResult(command.includes('--rm') ? { code: 1, stderr } : {})),
-        );
-        expect(await runSandboxCheck(sandbox.path, 'nginx/syntax')).toStrictEqual([
-            {
-                check: 'nginx/syntax',
-                file,
-                line,
-                rule: 'syntax',
-                fixable: false,
-                message: stderr,
-                help: 'Fix the line nginx names. Set `tools.nginx.image` to the one your deployment runs.',
-            },
-        ]);
-    },
-);
+test.each(NGINX_FAILURE_CASES)('nginx/syntax reports $name', async ({ stderr, status, note, findings }) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['nginx']),
+        'nginx.conf': 'events {}\nhttp { include /etc/nginx/conf.d/site.conf; }\n',
+        'conf.d/site.conf': 'server {}\n',
+    });
+    const session = await openSession(sandbox.path);
+    using _pins = fakeToolExecutables(
+        ['openssl', 'docker'].map((name) => getTool(session.configurationsByName.values(), name)),
+    );
+    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command) =>
+        Promise.resolve(buildProcessResult(command.includes('--rm') ? { code: 1, stderr } : {})),
+    );
+    const { report } = await runChecks(session, buildRunOptions({ only: ['nginx/syntax'] }));
+    expect(
+        report.checks.map((check) => ({ status: check.status, note: check.note, findings: check.findings })),
+    ).toStrictEqual([{ status, note, findings }]);
+});

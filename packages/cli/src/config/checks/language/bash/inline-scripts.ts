@@ -1,5 +1,5 @@
 export const RUNTIME_EMBEDS = [
-    [/\$(?:\w+|\{\w+\})"?\s+-[ce]\b/u, 'an inline command in an interpreter variable'],
+    [/\$(?:\w+|\{\w+(?::-[^}\n]*)?\})"?\s+-[ce]\b/u, 'an inline command in an interpreter variable'],
     [/\bpython[0-9.]*\s+-c\b/u, 'an inline Python command'],
     [/\bpython[0-9.]*\s+<</u, 'an inline Python heredoc'],
     [/\bpython[0-9.]*\s+-\s*<</u, 'an inline Python heredoc'],

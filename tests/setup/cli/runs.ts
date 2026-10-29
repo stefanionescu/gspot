@@ -8,7 +8,7 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 Options for an in-process run of every stage, with no fixes.
 */
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 115 calls in 43 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: `AGENTS.md` names it as the options of runChecks.
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
     return { stage: 'all', fix: false, dryRun: false, cwd: process.cwd(), pathArguments: [], ...overrides };
 }
@@ -26,7 +26,7 @@ export function planFixer(session: Session, fix: readonly string[]): PlannedChec
 Build the gspot.toml text of a fixer whose check passes and whose fix fails, both through the fake tool program.
 */
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 calls in 2 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, its gspot.toml text makes duplication/jscpd clones in the fixes tests.
 export function buildFixerSettings(paths: string[] = ['source.txt']): string {
     return `configurations = []
 [[command_check]]

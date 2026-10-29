@@ -67,6 +67,7 @@
         "next": "16.4.1",
         "picomatch": "4.0.7",
         "pnpm": "10.34.6",
+        "postcss-html": "2.0.0",
         "prettier": "3.9.10",
         "prettier-plugin-astro": "1.1.1",
         "purgecss": "8.0.0",

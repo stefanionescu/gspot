@@ -81,7 +81,7 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
     const terms = [
         ...Object.entries(shipped.lists).flatMap(([group, { words: terms }]) =>
             compileBannedWords(terms, {
-                setting: `${group} group`,
+                setting: `${group} list`,
                 list: group,
                 ...(group === 'folders' && { categories: ['folders'] }),
             }),

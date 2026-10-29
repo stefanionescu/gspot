@@ -143,6 +143,4 @@ export const VALE_PACKAGE_FOLDERS = [
 
 export const INHERITED_STREAMS = { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' } as const;
 
-export const CLIENT_ENV_RULE = 'gspot/no-client-env';
-
 export const LATER_TEST_MESSAGE = 'Later test ran';

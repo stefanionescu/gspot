@@ -9,6 +9,8 @@ gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "
 ```
 
 Every ignore needs a reason. Leave out `--rule` to ignore the whole check, and add `--paths` to select files.
+gspot resolves paths and globs passed to `--paths` from your current folder. It saves them relative to the repository
+root in `gspot.toml`; `gspot unignore --paths` uses the same conversion.
 
 To leave paths out of every check, see [Exclude files](/configure/files/).
 

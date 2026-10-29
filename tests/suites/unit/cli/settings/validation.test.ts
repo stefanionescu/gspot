@@ -162,7 +162,7 @@ test.each([...SETTING_RULE_OPTIONS])(
     },
 );
 
-test('options for import boundaries direct the reader to import_rule records', () => {
+test('options for import boundaries direct the reader to javascript.import_boundaries', () => {
     using sandbox = createTemporaryFolder();
     expect(() =>
         readSettings(
@@ -170,7 +170,7 @@ test('options for import boundaries direct the reader to import_rule records', (
             sandbox.path,
         ),
     ).toThrow(
-        'gspot.toml:3: tools.eslint.rules.gspot/import-boundaries: gspot writes the options of gspot/import-boundaries from the [[import_rule]] records. Change those records instead.',
+        'gspot.toml:3: tools.eslint.rules.gspot/import-boundaries: gspot writes the options of gspot/import-boundaries from javascript.import_boundaries. Change that setting instead: gspot set javascript.import_boundaries <value>, with --reason when you raise it.',
     );
 });
 

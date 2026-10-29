@@ -11,7 +11,6 @@ import {
     MATH_SOURCE,
     MATH_TEST_SOURCE,
     JEST_PROJECT_FILES,
-    JEST_MISSING_IMPORT,
     JEST_COVERAGE_TABLES,
     COVERAGE_THRESHOLD_MESSAGE,
     CORRECTED_MATH_TEST_SOURCE,
@@ -89,9 +88,11 @@ test('jest/coverage reports a test file with a missing import as a failed test a
         'gspot.toml': buildSandboxSettings(['jest'], { tables: JEST_COVERAGE_TABLES, level: 'all' }),
         'math.test.cjs': 'require("./missing-test-dependency.cjs");\n',
     });
-    const unavailable = await runJestCoverage(sandbox.path, 2);
-    expect(unavailable).toMatchObject([{ check: 'jest/coverage', status: 'error', findings: [] }]);
-    expect(unavailable[0]!.note).toStartWith(JEST_MISSING_IMPORT);
+    const unavailable = await runJestCoverage(sandbox.path, 1);
+    expect(unavailable).toMatchObject([
+        { check: 'jest/coverage', status: 'failed', findings: [{ file: '', message: '● Test suite failed to run' }] },
+    ]);
+    expect(unavailable[0]!.note).toBeUndefined();
     await writeFile(join(sandbox.path, 'math.test.cjs'), CORRECTED_MATH_TEST_SOURCE);
     const recovered = await runJestCoverage(sandbox.path, 0);
     expect(recovered).toMatchObject([{ check: 'jest/coverage', status: 'passed', findings: [] }]);

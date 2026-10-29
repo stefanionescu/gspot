@@ -6,9 +6,9 @@ description: Run your tests before every push and fail when coverage drops under
 gspot runs your test suite as a check at the push stage, and the check fails when coverage falls below the limits you
 set. Keep the test runner and its dependencies in your own project.
 
-At level `basic`, the coverage checks set no minimum. At level `all`, lines, branches, functions, and statements
-need 80%. A limit you set holds at both levels. For a test runner without a configuration, write a [command
-check](/configure/command-checks/).
+At level `basic`, the coverage checks set no minimum. At level `all`, Jest and Vitest require 80% for lines, branches,
+functions, and statements. pytest and Swift check line coverage only, with an 80% minimum. A limit you set holds at
+both levels. For a test runner without a configuration, write a [command check](/configure/command-checks/).
 
 ## Jest
 
@@ -19,8 +19,8 @@ Then run the coverage check:
 gspot check --only jest/coverage
 ```
 
-The check runs Jest in your working tree. Failed tests and missed coverage limits exit with `1`. A suite that cannot
-load, or a missing report, exits with `2`.
+The check runs Jest in your working tree. Failed tests, missed coverage limits, and a suite that cannot load report
+findings and exit with `1`. A missing report or a command that cannot run exits with `2`.
 
 To require full function coverage:
 
@@ -36,7 +36,8 @@ functions from `@jest/globals`.
 
 ## Vitest
 
-gspot selects `vitest` when your project depends on `vitest`; otherwise, run `gspot add vitest`. Install Vitest and its
+gspot selects `vitest` from its dependency or a `vitest.config.*` or `vitest.workspace.*` file. Otherwise, run
+`gspot add vitest`. Install Vitest and its
 coverage provider in your project. Then run:
 
 ```shell
@@ -56,6 +57,8 @@ gspot check --only pytest/coverage
 ```
 
 `coverage.lines` sets the line coverage limit. The check runs pytest with `--strict-markers` and `--strict-config`.
+The generated coverage defaults omit paths matched by `test_files`, so tests do not raise the measured coverage.
+When the project provides its own coverage configuration, that configuration decides which files to omit.
 
 ## Swift
 

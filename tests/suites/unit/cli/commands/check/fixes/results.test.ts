@@ -14,36 +14,44 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { FIXER_RESULTS } from '#tests/config/commands/check/fixes/results.ts';
 import { planFixer, buildRunOptions, buildFixerSettings } from '#tests/setup/cli/runs.ts';
 import { buildProgramCommand, buildProgramArguments } from '#tests/setup/system/programs.ts';
+import { FIXER_RESULTS, FIXER_CRASH_CASES } from '#tests/config/commands/check/fixes/results.ts';
 
-test.each([0, 3])('a crash pattern fails a fix that exits %p', async (code) => {
-    await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+test.each(FIXER_CRASH_CASES)(
+    'the fixer tool owns crash detection when dryRun is %p and exit is %p',
+    async (dryRun, code) => {
+        await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
-    const session = await openSession(sandbox.path);
-    const planned = planFixer(
-        session,
-        buildProgramCommand('fakes/tool', '--stderr', 'Fatal: cannot write\n', '--exit', String(code)),
-    );
-    planned.check.exit_codes = [3];
-    planned.tool!.crash_pattern = '^Fatal:';
-    const failedRun = await runFixers(buildCheckSession(session), [planned], { dryRun: false });
-    const failed = failedRun.results[0];
-    expect(failed).toMatchObject({
-        status: 'failed',
-        changed: [],
-        note: 'Fatal: cannot write',
-    });
-    const corrected = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'));
-    corrected.tool!.crash_pattern = planned.tool!.crash_pattern;
-    const correctedResultRun = await runFixers(buildCheckSession(session), [corrected], { dryRun: false });
-    const correctedResult = correctedResultRun.results[0];
-    expect(correctedResult).toMatchObject({
-        status: 'changed',
-        changed: ['source.txt'],
-    });
-});
+        const session = await openSession(sandbox.path);
+        const planned = planFixer(
+            session,
+            buildProgramCommand('fakes/tool', '--stderr', 'Fatal: cannot write\n', '--exit', String(code)),
+        );
+        planned.check.exit_codes = [3];
+        const configuration = session.configurationsByName.values().next().value!;
+        session.configurationsByName.set(configuration.name, {
+            ...configuration,
+            tools: [{ ...planned.tool!, crash_pattern: '^Fatal:' }, ...configuration.tools],
+        });
+        planned.tool = { ...planned.tool!, name: 'different-checker', crash_pattern: '^Checker-only:' };
+        const failedRun = await runFixers(buildCheckSession(session), [planned], { dryRun });
+        const failed = failedRun.results[0];
+        expect(failed).toMatchObject({
+            status: 'failed',
+            changed: [],
+            note: 'Fatal: cannot write',
+        });
+        const corrected = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'));
+        corrected.tool = planned.tool;
+        const correctedResultRun = await runFixers(buildCheckSession(session), [corrected], { dryRun });
+        const correctedResult = correctedResultRun.results[0];
+        expect(correctedResult).toMatchObject({
+            status: 'changed',
+            changed: ['source.txt'],
+        });
+    },
+);
 
 test.each([...FIXER_RESULTS])(
     '$name classifies $status from the exit code and the bytes it leaves',

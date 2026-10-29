@@ -44,6 +44,8 @@ reason = "Word splitting is intentional in this sandbox."
     const repeated = await runGspot(sandbox.path, commandArguments);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     expect(repeated.stdout).toBe(UNMATCHED_RULE_MESSAGE);
+    const json = await runGspot(sandbox.path, [...commandArguments, '--json']);
+    expect(JSON.parse(json.stdout)).toStrictEqual({ changed: false, summary: UNMATCHED_RULE_MESSAGE.trimEnd() });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(saved);
 });
 

@@ -300,7 +300,7 @@ Build the project table of the Python tool project: its name, its Python version
 @param configurations the configurations in use.
 @returns the project table that pyproject.toml holds.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 3 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The written pyproject.toml and the lockfile state of the installers build the same table through it.
 export function buildPythonProjectTable(configurations: Configuration[]): PythonToolProject {
     return { ...PYTHON_TOOL_PROJECT, dependencies: listToolProjectPins(configurations).python };
 }

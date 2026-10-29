@@ -79,7 +79,9 @@ test.each([false, true])(
         const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', ...(json ? ['--json'] : [])]);
         expect(result).toStrictEqual({
             code: 0,
-            stdout: json ? '{\n  "changed": false\n}\n' : 'No change: bash is already selected.\n',
+            stdout: json
+                ? '{\n  "changed": false,\n  "summary": "No change: bash is already selected."\n}\n'
+                : 'No change: bash is already selected.\n',
             stderr: '',
         });
         expect(await readTree(sandbox.path)).toStrictEqual(before);
@@ -145,6 +147,8 @@ test('add skips an explicitly removed configuration and writes nothing when noth
         stdout: 'No change: gspot.toml selects every configuration the code needs.\n',
         stderr: '',
     });
+    const json = await runGspot(sandbox.path, ['add', '--json']);
+    expect(JSON.parse(json.stdout)).toStrictEqual({ changed: false, summary: result.stdout.trimEnd() });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

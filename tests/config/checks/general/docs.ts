@@ -50,6 +50,11 @@ export const DOC_FENCE_PATH_CASES = [
 
 export const MISE_TASK_SOURCES = [
     {
+        name: 'default file tasks in an alternate task folder',
+        tasks: ['docs'],
+        files: { 'mise-tasks/docs/_default': '#!/usr/bin/env bash\ntrue\n' },
+    },
+    {
         name: 'task aliases in mise.toml',
         tasks: ['compile', 'verify', 'validate'],
         files: {

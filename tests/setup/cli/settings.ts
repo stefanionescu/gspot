@@ -58,7 +58,7 @@ Build the defaults of level basic for these shipped configurations.
 @param configurations the configuration names to select.
 @returns the settings and defaults they make available.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 17 calls in 6 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Settings tests share the configuration selection and default level through it.
 export function buildSelectedAvailableSettings(configurations: string[]): AvailableSettings {
     return buildAvailableSettings(selectConfigurations(configurations, readConfigurations()), 'basic');
 }
@@ -83,7 +83,7 @@ export function validateSettingsText(text: string, root?: string): string[] {
 /**
 Build a command check that prints each path it gets and fails.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in 4 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlining the command check record makes duplicate test code.
 export function buildReportingCheck(
     options: Pick<NonNullable<WrittenSettings['command_check']>[number], 'id' | 'paths' | 'stage'>,
 ): NonNullable<WrittenSettings['command_check']>[number] {

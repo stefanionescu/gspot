@@ -27,9 +27,10 @@ test.each([...INLINE_SCRIPT_CASES])(
 test('long Node flags and interpreter variable commands report their lines', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
-        'source.sh': 'node --eval "1"\nnode --print "1"\n"$runtime" -c "1"\n"${runtime}" -e "1"\n',
+        'source.sh':
+            'node --eval "1"\nnode --print "1"\n"$runtime" -c "1"\n"${runtime}" -e "1"\n"${PYTHON:-python3}" -c "print(1)"\n',
     });
     const findings = await runSandboxCheck(sandbox.path, 'bash/inline-scripts');
-    expect(findings.map(({ line }) => line)).toStrictEqual([1, 2, 3, 4]);
+    expect(findings.map(({ line }) => line)).toStrictEqual([1, 2, 3, 4, 5]);
     expect(findings.every(({ rule }) => rule === 'runtime-embed')).toBe(true);
 });

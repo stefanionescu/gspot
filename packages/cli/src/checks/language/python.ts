@@ -11,6 +11,7 @@ import { REQUIREMENTS_FILE } from '#cli/config/files/names.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
+import { splitWords } from '#cli/checks/general/naming/settings.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { PATH_SEPARATOR_PATTERN } from '#cli/config/files/path-patterns.ts';
 import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
@@ -212,7 +213,7 @@ export async function checkPythonPlaceholderDocstrings(
         const text = findDocstring(definition.node);
         if (text === undefined) return [];
         const lowered = text.toLowerCase().replaceAll(NON_WORD_RUN, ' ').trim();
-        const isName = lowered === definition.name.toLowerCase().replaceAll('_', ' ').trim();
+        const isName = lowered === splitWords(definition.name).join(' ');
         if (lowered !== '' && !isName && !PLACEHOLDERS.has(lowered)) return [];
         return [
             {
@@ -220,7 +221,7 @@ export async function checkPythonPlaceholderDocstrings(
                 line: definition.node.startPosition.row + 1,
                 column: definition.node.startPosition.column + 1,
                 rule: RULES.placeholderDocstring,
-                message: `The docstring of ${definition.name} says nothing the name does not. Say what the function does, or for whom.`,
+                message: `The docstring of ${definition.name} says nothing the name does not. Describe its purpose or behavior.`,
             },
         ];
     });

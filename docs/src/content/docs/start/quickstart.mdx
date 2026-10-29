@@ -22,8 +22,8 @@ Run these commands in the root of your repository.
 
 1. The first command adds gspot to the project, pinned to one version.
 2. `gspot init` shows a plan. When you accept it, gspot writes `gspot.toml`, the config files, `AGENTS.md` and the
-   rules, and the Git hooks, and deletes the config files it replaces. When the `origin` remote points to GitHub or
-   GitLab, it also writes the CI workflow.
+   rules, and the Git hooks, and deletes the config files it replaces. CI stays off until you enable it;
+   `gspot doctor` suggests the commands for your provider.
    [Read the plan](/start/migrate/#read-the-plan) first.
 3. `gspot install` installs the pinned tools and turns on the hooks. From then on, every commit runs the checks.
 

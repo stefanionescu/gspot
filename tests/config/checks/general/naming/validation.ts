@@ -64,7 +64,7 @@ export const OVERLONG_NAME_FINDINGS = [
     },
     {
         rule: 'banned-word',
-        message: `typescript functions "helperValue2UserUserWithMoreWordsHere": "helper" is banned (roles group).`,
+        message: `typescript functions "helperValue2UserUserWithMoreWordsHere": "helper" is banned (roles list).`,
     },
 ] as const;
 

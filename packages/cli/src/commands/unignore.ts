@@ -81,9 +81,10 @@ async function runUnignoreCommand(
     const warningFields = stripUndefined({ warning: everywhere === 0 ? undefined : warning.trim() });
     const target = formatIgnoreTarget(options);
     if (deleted + changedIgnores === 0) {
+        const summary = warning.trimEnd() || `No change: ${target.unmatched}.`;
         return {
-            text: warning || `No change: ${target.unmatched}.\n`,
-            json: { changed: false, ...warningFields },
+            text: summary + '\n',
+            json: { changed: false, summary, ...warningFields },
             exitCode: 0,
         };
     }

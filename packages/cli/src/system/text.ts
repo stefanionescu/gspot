@@ -43,7 +43,7 @@ Format the close names of an unknown name, or an empty string when none match.
 @param names the declared names.
 @returns the Did-you-mean clause.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 6 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands, configurations, and settings validation word the close-name suggestion through it.
 export function formatSimilarNames(name: string, names: string[]): string {
     const near = selectSimilarNames(name, names);
     return near.length === 0 ? '' : ` Did you mean ${formatCodeList(near)}?`;
@@ -56,7 +56,7 @@ Quote one argument for a POSIX shell command shown to the reader.
 
 @returns the argument with any required shell quoting.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands, CI generation, and settings messages quote a shell argument by this one rule.
 export function quoteArgument(argument: string): string {
     return UNQUOTED_ARGUMENT.test(argument) ? argument : `'${argument.replaceAll("'", "'\"'\"'")}'`;
 }
@@ -68,7 +68,7 @@ Quote each argument of a command for a POSIX shell, and join them with spaces.
 
 @returns the command line, which a shell runs as the same arguments.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 3 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers print a command line quoted by this one rule.
 export function quoteCommand(command: readonly string[]): string {
     return command.map((argument) => quoteArgument(argument)).join(' ');
 }
@@ -92,7 +92,7 @@ Format a count with its singular or plural noun.
 @param noun the singular word.
 @returns the count and the noun with the matching ending.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 23 calls in 8 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Messages in many layers form a counted noun with this one plural rule.
 export function formatCount(count: number, noun: string): string {
     return `${String(count)} ${noun}${count === 1 ? '' : 's'}`;
 }

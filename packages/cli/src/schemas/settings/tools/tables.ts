@@ -55,7 +55,7 @@ const commitlintRulesSchema = buildRuleTableSchema(commitlintValuesSchema, 'comm
 
 const yamlOptionsSchema = z
     .object({
-        level: z.literal('error').optional(),
+        level: z.literal('error').optional().describe('Report findings from this YAML rule as errors.'),
         ignore: z.never().optional(),
         'ignore-from-file': z.never().optional(),
     } satisfies SchemaShape<
@@ -64,7 +64,10 @@ const yamlOptionsSchema = z
     .catchall(z.json());
 
 const yamlIndentationSchema = yamlOptionsSchema.extend({
-    spaces: z.literal('consistent').optional(),
+    spaces: z
+        .literal('consistent')
+        .optional()
+        .describe('Require the same indentation width throughout each YAML file.'),
 }) satisfies z.ZodType<NonNullable<NonNullable<WrittenTools['yamllint']>['rules']>['indentation']>;
 
 const yamlRuleNameSchema = z.string().refine((name) => (YAMLLINT_RULES as readonly string[]).includes(name), {
@@ -73,7 +76,7 @@ const yamlRuleNameSchema = z.string().refine((name) => (YAMLLINT_RULES as readon
 
 const yamlRulesSchema = buildRuleTableSchema(
     z
-        .object({ indentation: yamlIndentationSchema.optional() })
+        .object({ indentation: yamlIndentationSchema.optional().describe('Options for YAML indentation consistency.') })
         .catchall(yamlOptionsSchema)
         .pipe(z.record(yamlRuleNameSchema, yamlOptionsSchema))
         .meta({ type: 'object' }),
@@ -259,3 +262,6 @@ export const toolsSchema = z.strictObject({
         } satisfies SchemaShape<TableSettings<'tools.v8r'>, NonNullable<WrittenTools['v8r']>>)
         .optional(),
 } satisfies SchemaShape<ParsedTools, WrittenTools>);
+
+for (const [tool, schema] of Object.entries(toolsSchema.shape))
+    z.globalRegistry.add(schema, { description: `Options that gspot writes to the ${tool} configuration.` });

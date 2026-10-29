@@ -44,7 +44,7 @@ Read the first bytes of a file, with the resolved root of the run and any cached
 @param limit the maximum byte count.
 @returns the bytes read.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 3 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Doctor and the repository read take a file prefix through the run cache and the link check of this module.
 export function readCachedPrefix(reads: ReadCache, path: string, limit: number): Buffer {
     const held = reads.sources.get(path);
     return held === undefined ? readFilePrefix(readContainedPath(reads.root, path), limit) : held.subarray(0, limit);
@@ -57,7 +57,7 @@ Read file bytes from disk inside the folder.
 @param path the root-relative file.
 @returns the file bytes.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 15 calls in 8 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers read a file without the run cache through it, and it refuses a link outside the root.
 export function readBytes(root: string, path: string): Buffer {
     return readFileSync(readContainedPath(realpathSync(root), path));
 }
@@ -83,7 +83,7 @@ Read UTF-8 text from disk, or return undefined for a missing file.
 @param path the root-relative file.
 @returns the file text.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 18 calls in 12 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: findText and findCachedText share the error mapping of readUtf8.
 export function findText(root: string, path: string): string | undefined {
     return readUtf8(path, () => readBytes(root, path));
 }
@@ -95,7 +95,7 @@ Read UTF-8 text through the run cache, or return undefined for a missing file.
 @param path the root-relative file.
 @returns the cached file text.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 22 calls in 19 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: findText and findCachedText share the error mapping of readUtf8.
 export function findCachedText(reads: ReadCache, path: string): string | undefined {
     return readUtf8(path, () => readCachedBytes(reads, path));
 }
@@ -155,7 +155,7 @@ Decode UTF-8 bytes as text.
 @param bytes the source buffer to validate before decoding.
 @returns the text, or undefined for invalid UTF-8.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 5 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers decode UTF-8 bytes, or get undefined, through this one test.
 export function decodeUtf8(bytes: Uint8Array): string | undefined {
     return isUtf8(bytes) ? Buffer.from(bytes).toString('utf8') : undefined;
 }

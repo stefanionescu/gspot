@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { pathToFileURL } from 'node:url';
 import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -7,6 +8,8 @@ import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { UNCLOSED_SEQUENCE } from '#tests/config/yaml.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildJsonSchema } from '#cli/settings/json-schema.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
@@ -156,4 +159,27 @@ test('v8r checks gspot.toml against the schema in .gspot, which accepts an unquo
     expect(rejected.report.checks).toMatchObject([
         { check: 'data-files/v8r', status: 'failed', findings: [matchFields({ file: SETTINGS_FILE })] },
     ]);
+});
+
+test('Taplo validates test file patterns and tool rule options against the local settings schema', async () => {
+    const { root } = installedSandbox();
+    const text =
+        'configurations = ["javascript"]\ntest_files = ["**/*.spec.ts"]\n[tools.eslint.rules]\ncurly = ["all"]\n';
+    await using _change = await applySandboxChanges(installedSandbox(), {
+        files: { 'editor.schema.json': JSON.stringify(buildJsonSchema()), 'editor-settings.toml': text },
+    });
+    const command = [
+        'taplo',
+        'lint',
+        '--no-auto-config',
+        '--schema',
+        pathToFileURL(join(root, 'editor.schema.json')).href,
+        'editor-settings.toml',
+    ];
+    const valid = await runCommand(command, { cwd: root });
+    expect(valid.code, valid.stdout + valid.stderr).toBe(0);
+    await writeFile(join(root, 'editor-settings.toml'), text.replace('["**/*.spec.ts"]', '42'));
+    const invalid = await runCommand(command, { cwd: root });
+    expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
+    expect(invalid.stderr).toContain('test_files');
 });

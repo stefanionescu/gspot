@@ -3,6 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parse as parseIni } from 'ini';
 import { parse as parseYaml } from 'yaml';
+import { writeFile } from 'node:fs/promises';
 import { getValueAt } from '#cli/system/tables.ts';
 import { join, extname, basename } from 'node:path';
 import { openSession } from '#cli/planning/session.ts';
@@ -13,6 +14,7 @@ import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
@@ -23,6 +25,28 @@ import {
     UNPARSED_CONFIG_FILES,
     NESTED_PYTHON_SETTINGS,
 } from '#tests/config/generation/config-files/selection.ts';
+
+test('a child project receives Python configuration only after its first Python file', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['python'], { scopes: [{ path: 'docs' }] }),
+        'docs/README.md': '# Guide\n',
+    });
+    const root = getManifestTarget('python', 'ruff.toml');
+    const before = generateFiles(await openSession(sandbox.path)).files.map(({ path }) => path);
+    expect(before).toContain(root);
+    expect(before).not.toContain('docs/ruff.toml');
+    expect(before.some((path) => path.includes('/scopes/docs/'))).toBe(false);
+    await writeFile(join(sandbox.path, 'docs/example.py'), 'VALUE = 1\n');
+    const after = generateFiles(await openSession(sandbox.path)).files.map(({ path }) => path);
+    expect(after).toContain(root);
+    expect(after).toContain('docs/ruff.toml');
+    expect(after).toContain(
+        getManifestTarget('python', 'basedpyright.json').replace(
+            '/basedpyright.json',
+            '/scopes/docs/basedpyright.json',
+        ),
+    );
+});
 
 test('a Ruff-only Python scope gets no type checker file or pointer', async () => {
     await using sandbox = await testdir({
@@ -181,7 +205,13 @@ function parseConfigFile(text: string, path: string): void {
         },
         '.yml': (text) => void parseYaml(text),
         '.yaml': (text) => void parseYaml(text),
-        '.mjs': parseModule,
+        '.mjs': (text, path) => {
+            const result = runCommandBlocking(['node', '--input-type=module', '--check'], {
+                cwd: process.cwd(),
+                stdin: text,
+            });
+            if (result.code !== 0) throw new Error(`${path}: ${result.stderr}`);
+        },
         '.cjs': parseModule,
         '.js': parseModule,
         '.ts': parseModule,

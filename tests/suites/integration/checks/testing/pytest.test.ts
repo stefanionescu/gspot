@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -26,7 +26,7 @@ test.each([...COVERAGE_LIMIT_CASES])(
     async ({ coverage, code, result }) => {
         const { root } = installedSandbox();
         const project = PYTEST_PYPROJECT.replace(', "pytest-cov==7.1.0"', '');
-        const change = await changeSandbox(installedSandbox(), {
+        const change = await applySandboxChanges(installedSandbox(), {
             files: {
                 'pyproject.toml': project,
                 'uv.lock': await readFile(join(root, 'uv.lock'), 'utf8'),

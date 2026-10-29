@@ -38,7 +38,7 @@ async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promis
     const { note, steps } = await installTools(session, writer, generated);
     return {
         text: `${note === '' ? TOOLS_INSTALLED_MESSAGE : note}\n`,
-        json: { notes: note === '' ? [] : [note], steps },
+        json: { notes: note.split('\n').filter((line) => line !== ''), steps },
         exitCode: 0,
     };
 }

@@ -30,19 +30,7 @@ function listSearchFolders(root: string, options: ExecutableSearch): string[] {
         return [join(join(root, GSPOT_PATHS.pythonEnvironment), executableLayout.environmentFolder)];
     return [...new Set(searchFolders)].flatMap((folder) => [
         join(folder, NPM_BIN_FOLDER),
-        join(
-            join(
-                join(
-                    join(
-                        join(join(folder, PYTHON_ENVIRONMENT_FOLDER), PYTHON_ENVIRONMENT_FOLDER),
-                        PYTHON_ENVIRONMENT_FOLDER,
-                    ),
-                    PYTHON_ENVIRONMENT_FOLDER,
-                ),
-                PYTHON_ENVIRONMENT_FOLDER,
-            ),
-            executableLayout.environmentFolder,
-        ),
+        join(folder, PYTHON_ENVIRONMENT_FOLDER, executableLayout.environmentFolder),
     ]);
 }
 

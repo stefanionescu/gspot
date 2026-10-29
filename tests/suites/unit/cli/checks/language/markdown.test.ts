@@ -15,3 +15,14 @@ test.each([...MARKDOWN_FENCE_CASES])(
         expect(found.map(({ line, rule }) => [line, rule])).toStrictEqual(lines.map((line) => [line, 'syntax']));
     },
 );
+
+test('a broken fence in MDX reports its source line', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['markdown']),
+        'guide.mdx': 'import Panel from "./Panel.jsx";\n\n# Guide\n\n<Panel />\n\n```json\n{broken\n```\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'markdown/fences');
+    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'guide.mdx', line: 8, rule: 'syntax' },
+    ]);
+});

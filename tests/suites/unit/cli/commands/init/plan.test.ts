@@ -34,6 +34,8 @@ test('init names pinned dependencies without proposing to delete the package man
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    expect(plan.configurations.find(({ configuration }) => configuration === 'javascript')?.origin).toBe('required');
+    expect(plan.configurations.map(({ configuration }) => configuration)).not.toContain('licenses');
     expect(plan.change).toStrictEqual([...EXACT_DEPENDENCY_CHANGES]);
     expect(plan.delete).toStrictEqual([]);
     expect(plan.lintFolders).toStrictEqual([]);
@@ -256,4 +258,14 @@ test('init identifies a configuration detected from a file', async () => {
     expect(text.code, text.stdout + text.stderr).toBe(0);
     expect(text.stdout).not.toContain('gspot replaces');
     expect(text.stdout).not.toContain('gspot leaves');
+});
+
+test('a runtime dependency selects licenses during init', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': '{"name":"example","private":true,"dependencies":{"react":"19.1.1"}}\n',
+    });
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { plan } = JSON.parse(result.stdout) as InitJson;
+    expect(plan.configurations.map(({ configuration }) => configuration)).toContain('licenses');
 });

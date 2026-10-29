@@ -20,7 +20,7 @@ import {
     OPENNEXT_TYPE_DEFAULTS,
 } from '#cli/config/settings/available.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, addDefault passes the complexity limit.
 function isScalarConflict(previous: SettingDefault, configuration: Configuration, setting: Setting): boolean {
     return (
         previous.configuration !== configuration.name &&

@@ -25,6 +25,12 @@ export const BUILD_SETTINGS_PBXPROJ =
 
 export const ASSET_SETTING_CASES = [
     {
+        title: 'An Info.plist image name',
+        scope: '',
+        path: 'Info.plist',
+        text: '<plist><dict><key>UIImageName</key><string>AccentColor</string></dict></plist>\n',
+    },
+    {
         title: 'A root Xcode project setting',
         scope: '',
         path: 'App.xcodeproj/project.pbxproj',

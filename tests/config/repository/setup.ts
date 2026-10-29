@@ -92,6 +92,9 @@ export const CI_JOB_DOCUMENTS = [
     { name: 'non-object jobs', path: '.github/workflows/check.yml', document: { jobs: 12 }, expected: [] },
 ] as const;
 
+export const GITLAB_COMPONENT =
+    'spec:\n  inputs:\n    stage:\n      default: test\n---\n.base:\n  script: echo ready\nquality:\n  script:\n    - !reference [.base, script]\n    - eslint src\n';
+
 export const PRETTIER_SETTINGS_FILES = {
     'src/.prettierrc.json': '{"semi":false}',
     'vendor/.prettierrc.json': '{"semi":true}',

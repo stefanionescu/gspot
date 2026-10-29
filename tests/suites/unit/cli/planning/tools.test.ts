@@ -18,6 +18,21 @@ import {
     ARCHITECTURE_REQUIREMENTS,
 } from '#tests/config/planning/tools.ts';
 
+test('basic tRPC server files select the boundaries plugin without import rules', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript', 'trpc'], {
+            tables: '[trpc]\nserver_files = ["server/**"]\n',
+        }),
+        'server/router.ts': 'export const router = {};\n',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planChecks(session, { stage: 'commit', only: ['javascript/eslint'] })[0]!;
+    expect(listCheckTools(planned)).toContain('eslint-plugin-boundaries');
+    expect(session.toolConfigurations.flatMap(({ tools }) => tools.map(({ name }) => name))).toContain(
+        'eslint-plugin-boundaries',
+    );
+});
+
 test.each([...NODE_REQUIREMENTS])(
     'the tools include Node only when an npm tool needs it: $name',
     async ({ configurations, tables, files, needs, skips }) => {

@@ -107,7 +107,7 @@ export async function applyGeneratedFiles(root: string): Promise<void> {
 Build the changes that replace the files of a sandbox plan with these files and keep its .gitignore.
 */
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 22 calls in 11 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, the removed-path filter makes duplication/jscpd clones and puts a test in express.test.ts past max-lines-per-function.
 export function buildSandboxChanges(
     planFiles: Readonly<Record<string, string>>,
     files: Record<string, string>,

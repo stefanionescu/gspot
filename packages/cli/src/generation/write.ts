@@ -37,7 +37,7 @@ Say that the generated files need no change.
 @param count how many files gspot generates.
 @returns the sentence, with the verb agreeing with the count.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The apply command and its dry run print this one sentence.
 export function formatUpToDate(count: number): string {
     return `No change: the ${formatCount(count, GENERATED_FILE_NOUN)} ${count === 1 ? 'is' : 'are'} up to date.`;
 }

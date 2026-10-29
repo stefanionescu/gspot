@@ -174,7 +174,7 @@ Split a package identity into its name and version. The separator follows the na
 @param identity the package as `name@version`.
 @returns the name and the version, or undefined without a version.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 4 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Lockfile parsers, installers, checks, and generation split a package at the same @, after a scoped name's first one.
 export function splitIdentity(identity: string): [string, string] | undefined {
     const separator = identity.indexOf('@', 1);
     return separator === -1 ? undefined : [identity.slice(0, separator), identity.slice(separator + 1)];

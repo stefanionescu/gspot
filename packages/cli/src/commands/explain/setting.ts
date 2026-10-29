@@ -59,7 +59,7 @@ function explainShippedSetting(key: string): Explanation | undefined {
         text: [
             key,
             '',
-            match.setting.description,
+            match.setting.description.replaceAll('`', ''),
             ...ownership,
             'No gspot.toml here: these are the shipped values',
             ...formatSettingScope(key, match.setting, scope),
@@ -101,7 +101,7 @@ export function explainSetting(session: Session | undefined, key: string): Expla
     const lines = [
         key,
         '',
-        first.setting.description,
+        first.setting.description.replaceAll('`', ''),
         ...(first.setting.reason_when === undefined ? [] : ['', `Reason: ${first.setting.reason_when} needs a reason`]),
         ...scopes.flatMap((each) => formatSettingScope(key, first.setting, each)),
     ];

@@ -27,7 +27,7 @@ export function fakePlatform(platform: NodeJS.Platform): Disposable {
     const descriptor = Object.getOwnPropertyDescriptor(process, 'platform')!;
     Object.defineProperty(process, 'platform', { value: platform });
     return {
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `using` calls it when the scope ends.
         [Symbol.dispose]() {
             Object.defineProperty(process, 'platform', descriptor);
         },

@@ -104,7 +104,11 @@ function buildJob(pipeline: Pipeline, platform: Pipeline['operatingSystems'][num
                 env: { ...MISE_TOKEN_ENVIRONMENT },
                 run: `mise install ${tools}\nmise bin-paths ${tools} >> "$GITHUB_PATH"`,
             },
-            { name: CI_STEP_NAMES.install, run: [CI_INSTALL_COMMAND, ...CI_DIFF_LINES].join('\n') },
+            {
+                name: CI_STEP_NAMES.install,
+                env: { ...MISE_TOKEN_ENVIRONMENT },
+                run: [CI_INSTALL_COMMAND, ...CI_DIFF_LINES].join('\n'),
+            },
             {
                 name: CI_STEP_NAMES.saveCache,
                 if: CI_CACHE_MISS_CONDITION,

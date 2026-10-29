@@ -1,5 +1,5 @@
-import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { join, dirname } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -16,6 +16,7 @@ import type { MiseProject } from '#cli/types/installers/mise.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { MISE_LOCK_ARGUMENTS } from '#cli/config/installers/mise.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { installMiseTools, isMiseLockfileFresh } from '#cli/installers/mise.ts';
 
 test('mise lock freshness needs the tool, its version, a URL and a sha256 checksum', () => {
@@ -33,49 +34,58 @@ test('mise lock freshness needs the tool, its version, a URL and a sha256 checks
     expect(isMiseLockfileFresh(project, undefined)).toBe(false);
 });
 
-test('mise prepares every platform before a locked install and keeps its checksum lock', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['spelling']) });
-    const session = await openSession(sandbox.path);
-    using writer = openWriter(sandbox.path);
-    const install = buildToolInstall(session, writer);
-    install.misePath = 'mise';
-    const runBlocking = processes.spawnProcessBlocking;
-    using _paths = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
-        command[0] === 'mise' ? buildProcessResult() : runBlocking(command, options),
-    );
-    using _commands = fakeCommand('mise', async (command, options) => {
-        if (command[1] === 'lock') {
-            expect(options.env).toHaveProperty('MISE_TRUSTED_CONFIG_PATHS', options.cwd);
-            const project = parse(await readFile(join(options.cwd, 'mise.toml'), 'utf8')) as MiseProject;
-            const tools = Object.fromEntries(
-                Object.entries(project.tools).map(([name, version]) => [
-                    name,
-                    [
-                        {
-                            version: typeof version === 'string' ? version : version.version,
-                            'platforms.linux-x64': {
-                                url: 'https://example.com/tool.zip',
-                                checksum: `sha256:${'a'.repeat(64)}`,
+test.each(['commit', 'manual'] as const)(
+    'mise installs tools of %s checks and keeps its checksum lock',
+    async (stage) => {
+        await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['spelling']) });
+        const session = await openSession(sandbox.path);
+        session.configuredChecks = session.configuredChecks.map((planned) => ({
+            ...planned,
+            check: { ...planned.check, stage },
+        }));
+        using writer = openWriter(sandbox.path);
+        const install = buildToolInstall(session, writer);
+        install.misePath = 'mise';
+        using _environment = overrideEnvironment({ MISE_CEILING_PATHS: sandbox.path });
+        const runBlocking = processes.spawnProcessBlocking;
+        using _paths = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
+            command[0] === 'mise' ? buildProcessResult() : runBlocking(command, options),
+        );
+        using _commands = fakeCommand('mise', async (command, options) => {
+            if (command[1] === 'lock') {
+                expect(options.env).toHaveProperty('MISE_TRUSTED_CONFIG_PATHS', options.cwd);
+                expect(options.env).toHaveProperty('MISE_CEILING_PATHS', dirname(options.cwd));
+                const project = parse(await readFile(join(options.cwd, 'mise.toml'), 'utf8')) as MiseProject;
+                const tools = Object.fromEntries(
+                    Object.entries(project.tools).map(([name, version]) => [
+                        name,
+                        [
+                            {
+                                version: typeof version === 'string' ? version : version.version,
+                                'platforms.linux-x64': {
+                                    url: 'https://example.com/tool.zip',
+                                    checksum: `sha256:${'a'.repeat(64)}`,
+                                },
                             },
-                        },
-                    ],
-                ]),
-            );
-            await writeFile(join(options.cwd, 'mise.lock'), stringify({ tools }, { inlineTableStart: 3 }));
-        } else if (command[1] === 'install') expect(options.env).toHaveProperty('MISE_LOCKED', '1');
-        return buildProcessResult();
-    });
-    await installMiseTools(install);
-    expect(install.steps[0]).toStrictEqual([...MISE_LOCK_ARGUMENTS]);
-    expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual([
-        ['mise', 'install', ...listMisePins(session.toolConfigurations).map((pin) => pin.name)],
-    ]);
-    const isContents = isMiseLockfileFresh(
-        listMisePins(session.toolConfigurations),
-        await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8'),
-    );
-    expect(isContents).toBe(true);
-});
+                        ],
+                    ]),
+                );
+                await writeFile(join(options.cwd, 'mise.lock'), stringify({ tools }, { inlineTableStart: 3 }));
+            } else if (command[1] === 'install') expect(options.env).toHaveProperty('MISE_LOCKED', '1');
+            return buildProcessResult();
+        });
+        await installMiseTools(install);
+        expect(install.steps[0]).toStrictEqual([...MISE_LOCK_ARGUMENTS]);
+        expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual([
+            ['mise', 'install', ...listMisePins(session.toolConfigurations).map((pin) => pin.name)],
+        ]);
+        const isContents = isMiseLockfileFresh(
+            listMisePins(session.toolConfigurations),
+            await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8'),
+        );
+        expect(isContents).toBe(true);
+    },
+);
 
 test('mise fills missing release checksums from the audited pins without fetching archives', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['spelling']) });
@@ -137,7 +147,7 @@ test('mise lock that leaves a platform without a download URL is refused and wri
     expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.miseLockfile))).toBe(false);
 });
 
-test('mise refuses a lock that omits pins and keeps the previous lock', async () => {
+test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps the previous lock', async (omitted) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['spelling']),
         [GSPOT_PATHS.miseLockfile]: '[tools]\n',
@@ -146,15 +156,30 @@ test('mise refuses a lock that omits pins and keeps the previous lock', async ()
     using writer = openWriter(sandbox.path);
     const install = buildToolInstall(session, writer);
     install.misePath = 'mise';
+    const pin = listMisePins(session.toolConfigurations).find((pin) => pin.checksums === undefined)!;
+    const lockfile =
+        omitted === 'pin'
+            ? '[tools]\n'
+            : stringify({
+                  tools: {
+                      [pin.name]: [
+                          { version: pin.version, 'platforms.linux-x64': { url: 'https://example.com/tool.zip' } },
+                      ],
+                  },
+              });
     using _commands = fakeCommand('mise', async (command, options) => {
-        if (command[1] === 'lock') await writeFile(join(options.cwd, 'mise.lock'), '[tools]\n');
+        if (command[1] === 'lock') await writeFile(join(options.cwd, 'mise.lock'), lockfile);
         return buildProcessResult({ stderr: 'WARN skipped tool after rate limit' });
     });
     const error = await captureRejection(installMiseTools(install));
     const names = listMisePins(session.toolConfigurations)
         .map((pin) => `${pin.name} ${pin.version}`)
         .join(', ');
-    expect(error.message).toBe(`mise lock did not lock ${names}.\nWARN skipped tool after rate limit`);
+    expect(error.message).toBe(
+        omitted === 'pin'
+            ? `mise lock did not lock ${names}.\nWARN skipped tool after rate limit`
+            : `mise lock omitted a checksum for ${pin.name} on linux-x64. Add an audited installer checksum before retrying.`,
+    );
     expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8')).toBe('[tools]\n');
 });

@@ -33,6 +33,7 @@ test('apply leaves generated files writable, keeps their bytes, and deletes a st
     await createFileTree(sandbox.path, { [`${GSPOT_FOLDER}/obsolete/old.txt`]: 'installed\n' });
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code).toBe(0);
+    expect((JSON.parse(applied.stdout) as ApplyReport).removed).toContain(`${GSPOT_FOLDER}/obsolete/old.txt`);
     expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/obsolete/old.txt`))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/obsolete`))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(true);
@@ -51,6 +52,7 @@ test('apply leaves generated files writable, keeps their bytes, and deletes a st
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([]));
     const pruned = await runGspot(sandbox.path, ['apply']);
     expect(pruned.code).toBe(0);
+    expect(pruned.stdout).toContain(`removed  ${rulePath}`);
     expect(await isOnDisk(join(sandbox.path, rulePath))).toBe(false);
 });
 

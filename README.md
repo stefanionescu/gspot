@@ -44,8 +44,8 @@ bun run --no-install gspot check
 
 1. `bun add --dev --exact @gspothq/cli` adds gspot as a development dependency, pinned to one version.
 2. `gspot init` shows a plan. When you accept it, gspot writes `gspot.toml`, the config files, the rules for coding
-   agents, and the Git hooks, and deletes the config files it replaces. When the `origin` remote points to GitHub or
-   GitLab, it also writes the CI workflow.
+   agents, and the Git hooks, and deletes the config files it replaces. CI stays off until you enable it;
+   `gspot doctor` suggests the commands for your provider.
 3. `gspot install` installs the pinned tools and turns on the Git hooks. With mise, it also installs the programs that
    do not come from npm or PyPI. Without mise, it names each program that you must install yourself.
 4. `gspot check` runs the checks on every file. From then on, the Git hooks check each commit and push.

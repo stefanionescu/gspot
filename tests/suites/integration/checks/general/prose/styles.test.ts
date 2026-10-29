@@ -9,14 +9,15 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { COMMENT_SOURCE } from '#tests/config/typescript.ts';
 import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { applySandboxChanges, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { VALE_INI, EXAMPLE_STYLE_FOLDER } from '#tests/config/integration/checks/general/prose/vale.ts';
 import { spawnGspot, spawnRootCheck, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     STYLE_CASES,
+    ALT_TEXT_CASES,
     LINK_TEXT_GUIDE,
     VOCABULARY_SOURCE,
     HEADING_CASE_GUIDE,
@@ -27,25 +28,34 @@ import {
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 
-test(`Vale's em-dashes rule checks code comments and skips ESLint directive comments`, async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['prose', 'typescript']),
-        [GSPOT_PATHS.valeConfigFile]: VALE_INI,
-        [`${EXAMPLE_STYLE_FOLDER}/Dashes.yml`]: readFileSync(
-            buildAssetPath('configurations/general/prose/config-files/styles/gspot/em-dashes.yml'),
-            'utf8',
-        ),
-        'source.ts': [...SUPPRESSION_COMMENTS].join('\n'),
+test('at level all, Vale skips ESLint and Stylelint directives and checks ordinary comment punctuation', async () => {
+    const { root } = installedSandbox();
+    await using _change = await applySandboxChanges(installedSandbox(), {
+        files: {
+            'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
+            'source.ts': [...SUPPRESSION_COMMENTS].join('\n'),
+            'style.css': '/* stylelint-disable color-no-invalid-hex -- The vendor sheet keeps its names. */\n',
+        },
     });
-
-    const failed = await spawnRootCheck(sandbox.path, 'prose/vale');
+    const failed = await spawnRootCheck(root, 'prose/vale');
     expect(failed.status, failed.note).toBe('failed');
-    expect(failed.findings).toStrictEqual([
-        matchFields({ file: 'source.ts', line: 5, column: 15, rule: 'Example.Dashes' }),
-    ]);
-    await writeFile(join(sandbox.path, 'source.ts'), '// Punctuation stays checked.\n');
-    const corrected = await spawnRootCheck(sandbox.path, 'prose/vale');
+    expect(failed.findings).toStrictEqual([matchFields({ file: 'source.ts', line: 5, rule: 'gspot.em-dashes' })]);
+    await writeFile(join(root, 'source.ts'), '// Punctuation stays checked.\n');
+    const corrected = await spawnRootCheck(root, 'prose/vale');
     expect(corrected.status, corrected.note).toBe('passed');
+});
+
+test.each(ALT_TEXT_CASES)('Vale identifies the alt attribute in $tag', async ({ tag, missing }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose']),
+        'image.md': `${tag}\n`,
+    });
+    await applyGeneratedFiles(sandbox.path);
+    const result = await spawnRootCheck(sandbox.path, 'prose/vale');
+    expect(result.status, result.note).toBe(missing ? 'failed' : 'passed');
+    expect(result.findings).toStrictEqual(
+        missing ? [matchFields({ file: 'image.md', line: 1, rule: 'gspot.alt-text' })] : [],
+    );
 });
 
 test("Vale's version-range rule accepts a minimum version and reports vague ranges", async () => {
@@ -87,14 +97,13 @@ test("Vale's heading-case rule accepts a reviewed product name and reports title
 });
 
 test('the generated vale.ini at level basic reports link text such as here', async () => {
-    const { root } = installedSandbox();
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-        files: {
-            'gspot.toml': buildSandboxSettings(['prose']),
-            'guide.md': LINK_TEXT_GUIDE,
-            'source.ts': 'const example = "[here](guide.md)";\n// Read [here](guide.md).\n',
-        },
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose']),
+        'guide.md': LINK_TEXT_GUIDE,
+        'source.ts': 'const example = "[here](guide.md)";\n// Read [here](guide.md).\n',
     });
+    const root = sandbox.path;
+    await applyGeneratedFiles(root);
     const failed = await spawnRootCheck(root, 'prose/vale');
     expect(failed.status, failed.note).toBe('failed');
     expect(failed.findings).toStrictEqual([matchFields({ file: 'guide.md', line: 3, rule: 'gspot.link-text' })]);

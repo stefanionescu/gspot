@@ -75,7 +75,7 @@ test('the release age can be written at the root and cannot be written in a scop
     expect(
         validateSettingsText('[[scope]]\npath = "api"\n[scope.dependencies]\nmin_release_age_days = 30\n'),
     ).toStrictEqual([
-        'gspot.toml:4: scope.0.dependencies.min_release_age_days: min_release_age_days is not a field of [[scope]]. The allowed fields are path, configurations, removed_configurations, and test_files.',
+        'gspot.toml:4: scope.0.dependencies.min_release_age_days: min_release_age_days is not a field of [scope.dependencies]. The allowed fields are allowed_registries and bun_scanner.',
     ]);
 });
 

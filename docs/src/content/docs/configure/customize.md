@@ -10,6 +10,7 @@ check weaker needs a reason beside it. gspot writes the config files from `gspot
 
 | You want to                                         | Do this                                                                            | Read                                                               |
 | --------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Detect new configurations                           | `gspot add`, then `gspot install`                                                  | [gspot.toml](/configure/gspot-toml/#choose-configurations)         |
 | Use a configuration                                 | `gspot add <configuration>`                                                        | [gspot.toml](/configure/gspot-toml/#choose-configurations)         |
 | Stop using a configuration                          | `gspot remove <configuration> --reason "<why>"`                                    | [gspot.toml](/configure/gspot-toml/#choose-configurations)         |
 | Run more or fewer checks                            | `gspot set level all` or `gspot unset level`                                       | [Levels](/start/concepts/#levels)                                  |

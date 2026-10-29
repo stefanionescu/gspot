@@ -8,7 +8,7 @@ import { APP_PYPROJECT } from '#tests/config/toml.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { CAFE_SOURCE_PATH } from '#tests/config/runs/command.ts';
+import { formatRunReport } from '#cli/commands/check/report.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -16,6 +16,7 @@ import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runCommandCheck, runCommandBatches } from '#cli/runs/command/check.ts';
 import { fakeCommand, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { BATCH_CHECK, BATCH_IGNORE, BATCH_FINDINGS, CAFE_SOURCE_PATH } from '#tests/config/runs/command/check.ts';
 
 test.skipIf(isWindows)('a command check whose program lost its execute bit errors with exit code 2', async () => {
     await using sandbox = await createGitSandbox({});
@@ -158,4 +159,46 @@ test('a fatal command group stops before the next group runs', async () => {
     ]);
     expect(result.status).toBe('error');
     expect(commands).toStrictEqual([[process.execPath, 'first']]);
+});
+
+test.each(['crash', 'parse'] as const)('a later %s preserves only selected, unignored findings', async (failure) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            tables: stringify({
+                command_check: [{ ...BATCH_CHECK, command: buildProgramCommand('fakes/tool', '{file}') }],
+            }),
+        }),
+        'one.txt': 'one',
+        'two.txt': 'two',
+        'outside.txt': 'outside',
+    });
+    const failed = failure === 'crash' ? { code: 2, stderr: 'Fatal failure.' } : { stdout: '{broken' };
+    using _commands = fakeCommand(process.execPath, (command) =>
+        Promise.resolve(
+            buildProcessResult(
+                command.at(-1) === 'one.txt' ? { code: 1, stdout: JSON.stringify(BATCH_FINDINGS) } : failed,
+            ),
+        ),
+    );
+    const session = await openSession(sandbox.path);
+    const options = buildRunOptions({ only: ['project/batches'], paths: ['one.txt', 'two.txt'] });
+    const result = await runChecks(session, options);
+    expect(result.report.exitCode).toBe(2);
+    expect(
+        result.report.checks.map(({ status, findings }) => ({
+            status,
+            findings: findings.map(({ file, rule, message }) => ({ file, rule, message })),
+        })),
+    ).toStrictEqual([{ status: 'error', findings: [{ file: 'one.txt', rule: 'kept', message: 'Kept finding.' }] }]);
+    for (const verbose of [false, true]) {
+        const text = formatRunReport(result.report, { verbose });
+        expect(text).toContain('Kept finding.');
+        expect(text).not.toContain('Outside finding.');
+    }
+    session.settings.ignore.push(BATCH_IGNORE);
+    const ignored = await runChecks(session, options);
+    expect(ignored.report.exitCode).toBe(2);
+    expect(ignored.report.checks.map(({ status, findings }) => ({ status, findings }))).toStrictEqual([
+        { status: 'error', findings: [] },
+    ]);
 });

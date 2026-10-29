@@ -443,12 +443,12 @@ summary = "Checks that pyproject.toml lists every dependency, with no hand-kept 
 why = "Two dependency lists drift apart, and the image installs packages the lockfile never pinned."
 
 [[check]]
-example = "A docstring that only repeats the function name reports a placeholder. Describe the behavior, the arguments, and the effects that the name leaves out."
+example = "A docstring that only repeats a function or class name reports a placeholder. Describe the behavior, the arguments, and the effects that the name leaves out."
 files = { extensions = [".py"] }
-help = "Say what the function does that its name does not, or for whom it exists."
+help = "Say what the function or class does that its name does not, or for whom it exists."
 level = "all"
 name = "placeholder-docstrings"
 runs = "scope"
 stage = "commit"
-summary = "Finds docstrings that hold a placeholder word, or the name of the function again."
+summary = "Finds docstrings that hold a placeholder word, or repeat the name of their function or class."
 why = "A docstring that says nothing satisfies the lint rule and wastes the line."
