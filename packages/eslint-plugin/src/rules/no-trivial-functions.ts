@@ -63,6 +63,15 @@ function isValueSlot(value: TSESTree.Expression): boolean {
     }
 }
 
+function isFrameworkMember(node: FunctionNode): boolean {
+    const { parent } = node;
+    return (
+        parent.type === AST_NODE_TYPES.MethodDefinition &&
+        (parent.decorators.length > 0 ||
+            node.params.some((parameter) => parameter.type === AST_NODE_TYPES.TSParameterProperty))
+    );
+}
+
 function isInlineValue(node: FunctionNode): boolean {
     if (node.type === AST_NODE_TYPES.FunctionDeclaration || node.id !== null) return false;
     const value = getOutermostValue(node);
@@ -79,7 +88,7 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
                 'The function `function one() { return 1; }` reports `trivial`. Replace its calls with the value `1` and delete the function. A function written inline as a value has no name and is not reported: a callback argument, an array element, a return value, or the value of an object-literal key. A function that must stay, such as a method that a framework or an interface calls by name, gets a suppression comment with its reason.',
             level: 'all',
             description:
-                'Reports each named function at or under the `trivialFunctionStatements` limit: function declarations, functions assigned to a name, methods, accessors, and constructors, exported or not. The count includes nested callbacks. A function written inline as a value is not reported: a callback argument, an array element, a return value, a default value, an assignment to a member, or the value of an object-literal key. Methods of object literals and classes are reported.',
+                'Reports each named function at or under the `trivialFunctionStatements` limit: function declarations, functions assigned to a name, methods, accessors, and constructors, exported or not. The count includes nested callbacks. A function written inline as a value is not reported: a callback argument, an array element, a return value, a default value, an assignment to a member, or the value of an object-literal key. A decorated method and a constructor with parameter properties are not reported, because a framework calls them. Other methods of object literals and classes are reported.',
             why: 'An unnecessary function adds another name and another place to read.',
             fix: 'Inline the function at its call sites and delete it. Keep a function whose identity matters, such as a listener that code adds and removes by name, and give its suppression that reason.',
         },
@@ -93,7 +102,7 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
         return {
             [`${FUNCTION_SELECTOR}:exit`](node: FunctionNode) {
                 const count = countStatements(node, context.sourceCode.visitorKeys);
-                if (count > limit || isInlineValue(node)) return;
+                if (count > limit || isInlineValue(node) || isFrameworkMember(node)) return;
                 context.report({
                     node,
                     messageId: 'trivial',

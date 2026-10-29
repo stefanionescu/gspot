@@ -32,6 +32,10 @@ createRuleTester().run<
         'function work() { if (ready) { first(); second(); } }',
         { code: 'function work() { first(); second(); }', options: [{ trivialFunctionStatements: 1 }] },
         'declare function required(): void;',
+        'class A { constructor(public value: number) {} }',
+        'class A { constructor(private readonly service: Service) {} }',
+        'class A { @decorate method() { return 1; } }',
+        "class A { @Get(':name') greet(@Param('name') name: string) { return this.service.greet(name); } }",
     ],
     invalid: [
         ...[
@@ -52,12 +56,10 @@ createRuleTester().run<
             'const options = { onValue: function named(value) { write(value); } };',
             "export class NotFound extends Error { constructor() { super('Not found'); } }",
             'class A { constructor() { setup(); } } new A(); new A();',
-            'class A { constructor(public value: number) {} }',
             'class A { constructor(value: number) { this.value = value; } }',
             'class Failure extends Error { constructor(message: string) { super(message); this.name = "Failure"; } }',
             'class A { get value() { return 1; } }',
             'class A { set value(value) { store(value); } }',
-            'class A { @decorate method() { return 1; } }',
             'class A extends B { override method() { return 1; } }',
             '@decorate class A { method() { return 1; } }',
             'const multiline = () => (\n first +\n second\n);',
