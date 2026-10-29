@@ -5,16 +5,19 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import type { Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { EXIT_FINDINGS } from '#cli/config/terminal.ts';
+import { spawnProcess } from '#cli/system/processes.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { readHookStatus } from '#cli/installers/hooks.ts';
 import type { Command } from '@commander-js/extra-typings';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { VERSION_FLAG } from '#cli/config/tools/versions.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
+import type { HookStatus } from '#cli/types/installers/hooks.ts';
 import { buildMiseProject } from '#cli/generation/tool-projects.ts';
 import { AVAILABLE_TOOL_STATES } from '#cli/config/tools/inspect.ts';
 import type { ToolInspection } from '#cli/types/tools/inspection.ts';
@@ -137,9 +140,23 @@ function formatCiState(session: Session): string {
     return provider === undefined ? 'none' : CI_OFF_NOTES[provider];
 }
 
-function buildDoctorReport(session: Session, pin: string | undefined): DoctorReport {
-    const tools = inspectScopeTools(session);
+async function readHookState(session: Session, pin: string | undefined): Promise<HookStatus> {
     const hooks = readHookStatus(session, session.repository);
+    if (!hooks.ready || session.settings.hooks?.enabled !== true) return hooks;
+    const { command, installCommand } = session.startRunner;
+    const versionCommand = [...command.split(' '), VERSION_FLAG];
+    const result = await spawnProcess(versionCommand, { cwd: session.root, timeoutSeconds: session.timeoutSeconds });
+    if (result.code === 0) return hooks;
+    const install = installCommand.replace('<version>', () => pin ?? cliPackage.version);
+    return {
+        ready: false,
+        text: `${hooks.text}, but ${versionCommand.join(' ')} fails. Install gspot with: ${install}`,
+    };
+}
+
+async function buildDoctorReport(session: Session, pin: string | undefined): Promise<DoctorReport> {
+    const tools = inspectScopeTools(session);
+    const hooks = await readHookState(session, pin);
     const version = buildDoctorVersion(session, pin);
     const isBroken =
         !hooks.ready ||
@@ -181,7 +198,7 @@ function formatDoctorReport(report: DoctorReport): string {
 async function runDoctorCommand(cwd: string): Promise<CommandResult> {
     const root = readRepositoryRoot(cwd);
     const session = await openSession(root);
-    const report = buildDoctorReport(session, readVersionPin(root));
+    const report = await buildDoctorReport(session, readVersionPin(root));
     return {
         text: formatDoctorReport(report),
         json: report,
