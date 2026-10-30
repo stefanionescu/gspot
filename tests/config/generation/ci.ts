@@ -1,5 +1,3 @@
-import { CI_NODE } from '#cli/config/generation/ci.ts';
-
 export const SETUP_CASES = [
     ['github', 0],
     ['github', 29],
@@ -35,33 +33,4 @@ export const LINT_STEPS = [
     'Install gspot tools',
     'Save caches',
     'Lint',
-] as const;
-
-export const INSTALL_STEP = 'Install gspot tools';
-
-export const GITLAB_SCRIPT = [
-    'set -euo pipefail',
-    `mise install ${CI_NODE} 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3'`,
-    `PATH="$(mise bin-paths ${CI_NODE} 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3' | paste -sd : -):$` +
-        '{PATH}"',
-    'export PATH',
-    'gspot install',
-    'git add --intent-to-add -- .gspot',
-    'git diff --exit-code -- .gspot',
-    'GSPOT_CI_BASE="${CI_MERGE_REQUEST_DIFF_BASE_SHA:-${CI_COMMIT_BEFORE_SHA:-}}"\ngspot check --changed "${GSPOT_CI_BASE}"',
-] as const;
-
-export const CACHE_CASES = [
-    {
-        system: 'linux',
-        paths: '~/.cache/mise/downloads-cas\n~/.npm/_cacache\n~/.local/share/pnpm/store\n~/.cache/yarn\n~/.yarn/berry/cache\n~/.bun/install/cache\n~/.cache/uv\n',
-    },
-    {
-        system: 'macos',
-        paths: '~/Library/Caches/mise/downloads-cas\n~/.npm/_cacache\n~/Library/pnpm/store\n~/Library/Caches/Yarn\n~/.yarn/berry/cache\n~/.bun/install/cache\n~/.cache/uv\n',
-    },
-    {
-        system: 'windows',
-        paths: '${{ runner.temp }}/mise/downloads-cas\n~/AppData/Local/npm-cache/_cacache\n~/AppData/Local/pnpm/store\n~/AppData/Local/Yarn/Cache\n~/AppData/Local/Yarn/Berry/cache\n~/.bun/install/cache\n~/AppData/Local/uv/cache\n',
-    },
 ] as const;

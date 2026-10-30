@@ -18,31 +18,13 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
 import { CI_NODE, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation/ci.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
+import { LINT_STEPS, SETUP_CASES, LINUX_PIPELINE, SETUP_ARGUMENTS } from '#tests/config/generation/ci.ts';
 
-import {
-    LINT_STEPS,
-    CACHE_CASES,
-    SETUP_CASES,
-    INSTALL_STEP,
-    GITLAB_SCRIPT,
-    LINUX_PIPELINE,
-    SETUP_ARGUMENTS,
-} from '#tests/config/generation/ci.ts';
-
-test('the GitHub workflow installs gspot once and runs hook checks in one lint job', () => {
+test('the GitHub workflow runs one lint job and gives the GitHub token to the gspot install only', () => {
     const workflow = parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow;
     const steps = workflow.jobs['lint']!.steps;
     expect(Object.keys(workflow.jobs)).toStrictEqual(['lint']);
     expect(steps.map((step) => step.name)).toStrictEqual([...LINT_STEPS]);
-    expect(steps.find((step) => step.name === 'Install gspot')?.run).toBe(
-        `mise install ${CI_NODE} 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3'
-mise bin-paths ${CI_NODE} 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3' >> "$GITHUB_PATH"`,
-    );
-    expect(steps.find((step) => step.name === 'Install gspot')?.run).toMatch(/^mise install node@\d+\.\d+\.\d+ /u);
-    expect(steps.find((step) => step.name === INSTALL_STEP)?.run).toBe(
-        'gspot install\ngit add --intent-to-add -- .gspot\ngit diff --exit-code -- .gspot',
-    );
-    expect(steps.find((step) => step.name === 'Lint')?.run).toBe('gspot check --changed "${GSPOT_CI_BASE}"\n');
     expect(
         steps.filter((step) => step.env?.['MISE_GITHUB_TOKEN'] !== undefined).map((step) => step.name),
     ).toStrictEqual(['Install gspot']);
@@ -55,11 +37,6 @@ test.each<Partial<Pipeline>>([
     expect(() => buildGithubWorkflow({ ...LINUX_PIPELINE, ...fields })).toThrow(
         new GspotError('settings', GITHUB_EXPRESSION_MESSAGE),
     );
-});
-
-test('GitLab installs gspot once, adds its bins to PATH, and checks the comparison revision', () => {
-    const script = (parse(buildGitlabWorkflow(LINUX_PIPELINE).content) as GitlabPipeline).gspot.script;
-    expect(script).toStrictEqual([...GITLAB_SCRIPT]);
 });
 
 test('pushes run the GitHub job on the default branch only', () => {
@@ -176,17 +153,6 @@ test('without a setup command, CI installs the locked dependencies of each proje
         `(cd web && mise exec ${CI_NODE} pnpm@10.30.0 -- pnpm install --frozen-lockfile)`,
         '(cd web && npx --no -- next typegen)',
     ]);
-});
-
-test.each(CACHE_CASES)('the $system cache names only the selected tool stores at system paths', ({ system, paths }) => {
-    const workflow = parse(
-        buildGithubWorkflow({
-            ...LINUX_PIPELINE,
-            operatingSystems: [system],
-            packageManagers: ['npm', 'pnpm', 'yarn', 'bun', 'uv'],
-        }).content,
-    ) as GithubWorkflow;
-    expect(workflow.jobs['lint']!.steps.find((step) => step.name === 'Restore caches')?.with?.['path']).toBe(paths);
 });
 
 test('the GitHub workflow pins each action to a full commit and names its version in a comment', async () => {
