@@ -2,7 +2,7 @@ import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { COMMITLINT_CHECK } from '#cli/config/checks/general/commits.ts';
-import { assertRuleOptionsRun } from '#cli/generation/config-files/rule-options.ts';
+import { refuseIdleRuleOptions } from '#cli/generation/config-files/rule-options.ts';
 
 import {
     COMMITLINT_RULES,
@@ -37,7 +37,7 @@ export function buildCommitlintFile(planned: PlannedConfigFile): string {
             .filter(([, value]) => value[0] !== 0)
             .map(([name]) => name),
     );
-    assertRuleOptionsRun({
+    refuseIdleRuleOptions({
         configured: Object.keys(options),
         running,
         allLevelRules: new Set<string>(),

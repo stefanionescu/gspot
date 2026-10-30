@@ -3,7 +3,7 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { assertRuleOptionsRun } from '#cli/generation/config-files/rule-options.ts';
+import { refuseIdleRuleOptions } from '#cli/generation/config-files/rule-options.ts';
 
 import {
     STYLELINT_CHECK,
@@ -77,7 +77,7 @@ export function buildStylelintFile(planned: PlannedConfigFile): string {
     const scopeDependencies = listProjectDependencyNames(dependencyFiles, scope.path);
     const off = listIgnoredRules(planned.scope, STYLELINT_CHECK);
     const configured = Object.keys(options.rules);
-    assertRuleOptionsRun({
+    refuseIdleRuleOptions({
         configured,
         running: new Set(configured.filter((rule) => isAll || !STYLELINT_DEFAULT_LEVEL_OFF.has(rule))),
         allLevelRules: STYLELINT_DEFAULT_LEVEL_OFF,

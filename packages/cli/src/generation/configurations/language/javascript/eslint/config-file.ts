@@ -6,7 +6,7 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
-import { assertRuleOptionsRun } from '#cli/generation/config-files/rule-options.ts';
+import { refuseIdleRuleOptions } from '#cli/generation/config-files/rule-options.ts';
 import type { BlockWriter, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
 import { buildRuntimes } from '#cli/generation/configurations/language/javascript/eslint/runtimes.ts';
 import type { GeneratedFile, ConfigFileOutput, PlannedConfigFile } from '#cli/types/generation/files.ts';
@@ -141,7 +141,7 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
 
 function serializeExport(blockTexts: string[], blockWriter: BlockWriter): string {
     const configured = blockWriter.ruleOptions.flatMap((options) => Object.keys(options.rules));
-    assertRuleOptionsRun({
+    refuseIdleRuleOptions({
         configured,
         running: new Set(
             configured.filter((rule) => blockWriter.level === 'all' || !blockWriter.allLevelRules.has(rule)),
