@@ -389,6 +389,11 @@ mobile-starlight-toc .display-current {
     line-height: 1.55;
 }
 
+.sl-markdown-content :is(th, td),
+.sl-markdown-content :is(th, td) code {
+    overflow-wrap: anywhere;
+}
+
 .sl-markdown-content :is(th, td) {
     padding: 10px 14px;
     border-color: var(--sl-color-gray-5);
