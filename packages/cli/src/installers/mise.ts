@@ -12,7 +12,6 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import type { MiseInstall } from '#cli/types/installers/mise.ts';
-import { runRequiredInstallStep } from '#cli/installers/steps.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { redactInstallOutput } from '#cli/installers/credentials.ts';
@@ -22,6 +21,7 @@ import type { Tool, MiseToolPin } from '#cli/types/configurations.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import { MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/files/names.ts';
+import { runInstallStep, runRequiredInstallStep } from '#cli/installers/steps.ts';
 import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
 import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/configurations/tools.ts';
 
@@ -31,8 +31,10 @@ import {
     MISE_TRUSTED_PATHS_VARIABLE,
 } from '#cli/config/tools/locate.ts';
 import {
+    GITHUB_RATE_LIMIT,
     MISE_RELEASE_HOSTS,
     MISE_LOCK_ARGUMENTS,
+    GITHUB_TOKEN_MESSAGE,
     MISE_PLATFORM_PREFIX,
     MISE_PROJECT_MESSAGE,
     MISE_CHECKSUM_PATTERN,
@@ -135,15 +137,20 @@ async function prepareMiseLockfile(install: ToolInstall, project: GeneratedFile)
     using scratch = createTemporaryFolder();
     writeFileSync(join(scratch.path, MISE_CONFIG_FILE), project.content);
     if (saved !== undefined) writeFileSync(join(scratch.path, MISE_LOCKFILE), saved.bytes);
-    const result = await runRequiredInstallStep(install, MISE_LOCK_ARGUMENTS, {
+    const result = await runInstallStep(install, MISE_LOCK_ARGUMENTS, {
         cwd: scratch.path,
         env: {
             [MISE_TRUSTED_PATHS_VARIABLE]: scratch.path,
             [MISE_CEILING_PATHS_VARIABLE]: dirname(scratch.path),
         },
-        name: `The command ${MISE_LOCK_ARGUMENTS.join(' ')}`,
     });
     const output = redactInstallOutput(result, []);
+    const tokenAdvice = GITHUB_RATE_LIMIT.test(output) ? `\n${GITHUB_TOKEN_MESSAGE}` : '';
+    if (result.code !== 0)
+        throw new GspotError(
+            'install',
+            `The command ${MISE_LOCK_ARGUMENTS.join(' ')} failed (exit ${String(result.code)}):\n${output}${tokenAdvice}`,
+        );
     const content = writeChecksums(
         readFileSync(join(scratch.path, MISE_LOCKFILE), 'utf8'),
         listMisePins(install.session.toolConfigurations),
@@ -152,7 +159,8 @@ async function prepareMiseLockfile(install: ToolInstall, project: GeneratedFile)
         (pin) => !isMiseLockfileFresh([pin], content),
     );
     const names = missing.map((pin) => `${pin.name} ${pin.version}`).join(', ');
-    if (missing.length > 0) throw new GspotError('install', `mise lock did not lock ${names}.\n${output}`);
+    if (missing.length > 0)
+        throw new GspotError('install', `mise lock did not lock ${names}.\n${output}${tokenAdvice}`);
     writePlans(
         install.writer,
         planReplacements(install.writer, [

@@ -218,7 +218,7 @@ test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps th
         .join(', ');
     expect(error.message).toBe(
         omitted === 'pin'
-            ? `mise lock did not lock ${names}.\nWARN skipped tool after rate limit`
+            ? `mise lock did not lock ${names}.\nWARN skipped tool after rate limit\nGitHub limits the release lookups of mise without a token. Set GITHUB_TOKEN to a GitHub token, then run gspot install again.`
             : `mise lock omitted a checksum for ${pin.name} on linux-x64. Add an audited installer checksum before retrying.`,
     );
     expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual([]);
