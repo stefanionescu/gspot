@@ -1,19 +1,16 @@
+import { formatCount } from '#cli/system/text.ts';
 import { getColors } from '#cli/system/terminal.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { compareText, formatCount } from '#cli/system/text.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { GENERATED_FILE_NOUN } from '#cli/config/generation/write.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { InitPlan, InitScan, InitFileRow } from '#cli/types/commands/init.ts';
 
 import {
-    HOOKS_ROW,
     COLUMN_GAP,
     ORIGIN_WIDTH,
     NPM_PIN_NOUN,
@@ -51,34 +48,6 @@ function buildToolProjectRows(configurations: Configuration[]): InitPlan['change
                   },
               ]),
     ];
-}
-
-function buildToolDependencyRows(
-    { repository, repositorySetup }: InitScan,
-    requirements: Configuration[],
-): InitFileRow[] {
-    const toolPackages = new Set(Object.keys(listToolProjectPins(requirements).npm));
-    return repositorySetup.toolOnlyPackages.flatMap((path) => {
-        const packageJson = readPackageJson(repository.root, path) as PackageJson;
-        const names = Object.keys({
-            ...packageJson.dependencies,
-            ...packageJson.devDependencies,
-            ...packageJson.peerDependencies,
-            ...packageJson.optionalDependencies,
-        })
-            .filter((name) => toolPackages.has(name))
-            .toSorted(compareText);
-        if (names.length === 0) return [];
-        const subject = names.join(', ');
-        const verb = names.length === 1 ? 'is' : 'are';
-        const pronoun = names.length === 1 ? 'it' : 'them';
-        return [
-            {
-                path,
-                note: `${subject} ${verb} now pinned in ${GSPOT_PATHS.npmProject}; remove ${pronoun} from package.json if nothing else uses ${pronoun}`,
-            },
-        ];
-    });
 }
 
 function formatFileSection(title: string, rows: InitFileRow[]): string[] {
@@ -129,7 +98,8 @@ export function planInitFiles(
     }: { settings: Settings; settingsText: string; requirements: Configuration[]; generated: Generation },
 ): InitPlan {
     const { repository, repositorySetup, conflicts } = scan;
-    const change: InitPlan['change'] = repository.hasGit ? [ATTRIBUTES_ROW, HOOKS_ROW] : [];
+    const attributes = repository.hasGit ? [ATTRIBUTES_ROW] : [];
+    const hasAttributes = repository.files.some((file) => file.path === ATTRIBUTES_ROW.path);
     const write: InitPlan['write'] = [
         {
             path: SETTINGS_FILE,
@@ -137,8 +107,9 @@ export function planInitFiles(
         },
         { path: `${GSPOT_FOLDER}/`, note: GSPOT_FOLDER_NOTE },
         ...buildToolProjectRows(requirements),
+        ...(hasAttributes ? [] : attributes),
         ...[...generated.files, ...generated.blocks]
-            .filter(({ path }) => !path.startsWith(`${GSPOT_FOLDER}/`) && change.every((row) => row.path !== path))
+            .filter(({ path }) => !path.startsWith(`${GSPOT_FOLDER}/`) && path !== ATTRIBUTES_ROW.path)
             .map(({ path }) => {
                 const replaced = conflicts.deleted.find((row) => row.path === path);
                 if (replaced !== undefined)
@@ -171,7 +142,7 @@ export function planInitFiles(
             ...repositorySetup.ci.map((path) => ({ path, note: CI_FILE_NOTE })),
             ...scan.foreignDisableComments,
         ],
-        change: [...change, ...conflicts.changed, ...buildToolDependencyRows(scan, requirements)],
+        change: [...(hasAttributes ? attributes : []), ...conflicts.changed],
         lintFolders: repositorySetup.lintFolders.map((folder) => ({
             path: `${folder}/`,
             note: LINT_FOLDER_MESSAGE,

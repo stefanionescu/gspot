@@ -180,10 +180,7 @@ test('init proposes a scope for a Swift package, not for a lint-only package, an
     expect(proposed.scope!.map(({ path }) => path)).toStrictEqual(['ios']);
     expect(proposed.scope!.find(({ path }) => path === 'ios')?.configurations).toStrictEqual(['swift']);
     expect(output.plan.lintFolders).toStrictEqual([]);
-    expect(output.plan.change).toContainEqual({
-        path: 'tools/lint/package.json',
-        note: 'eslint is now pinned in .gspot/package.json; remove it from package.json if nothing else uses it',
-    });
+    expect(output.plan.change.filter(({ path }) => path === 'tools/lint/package.json')).toStrictEqual([]);
 });
 
 test.each([...NEXTJS_LOCALE_CASES])(

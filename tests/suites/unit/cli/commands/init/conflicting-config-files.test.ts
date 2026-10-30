@@ -33,7 +33,6 @@ import {
     SQL_PACKAGE_FILES,
     SHARED_SETUP_CONFIG,
     LINKED_SETUP_CONFIG,
-    INACTIVE_PLAN_CHANGES,
     SYNCPACK_PACKAGE_FILES,
     INACTIVE_CONFIGURATIONS,
     REPLACED_CONFIG_DELETIONS,
@@ -233,7 +232,7 @@ test('at level basic, init keeps the config files of checks that are off', async
     ]);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
     expect(plan.delete).toStrictEqual([]);
-    expect(plan.change).toStrictEqual([...INACTIVE_PLAN_CHANGES]);
+    expect(plan.change).toStrictEqual([]);
     expect(plan.write.map(({ path }) => path).filter((path) => /commitlint|syncpack/u.test(path))).toStrictEqual([]);
     const written = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations', '--level', 'basic']);
     expect(written.code, written.stdout + written.stderr).toBe(0);

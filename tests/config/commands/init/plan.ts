@@ -5,7 +5,7 @@ export const GIT_PLAN_CASES = [
     {
         name: 'a Git repository',
         hasGit: true,
-        changes: ['.gitattributes', GSPOT_PATHS.hooks],
+        changes: [],
     },
 ] as const;
 
@@ -34,25 +34,7 @@ exclude_rules = LT01
     'query.sql': 'SELECT 1;\n',
 } as const;
 
-export const MANAGED_PLAN_CHANGES = [
-    {
-        path: '.gitattributes',
-        note: 'marks the generated files and keeps LF line endings',
-    },
-] as const;
-
-export const TOOL_PLAN_CHANGES = [
-    {
-        path: '.gspot/hooks',
-        note: 'gspot install points core.hooksPath here; a repository that already runs hooks gets the lines to add instead',
-    },
-] as const;
-
-export const EXACT_DEPENDENCY_CHANGES = [
-    ...MANAGED_PLAN_CHANGES,
-    TOOL_PLAN_CHANGES[0],
-    {
-        path: 'package.json',
-        note: 'typescript is now pinned in .gspot/package.json; remove it from package.json if nothing else uses it',
-    },
-] as const;
+export const ATTRIBUTES_PLAN_ROW = {
+    path: '.gitattributes',
+    note: 'marks the generated files and keeps LF line endings',
+} as const;

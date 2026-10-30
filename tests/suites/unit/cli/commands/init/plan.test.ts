@@ -15,13 +15,21 @@ import {
     GIT_PLAN_CASES,
     SHARED_SETUP_FILES,
     EDITORCONFIG_WRITE,
+    ATTRIBUTES_PLAN_ROW,
     QUALITY_PACKAGE_FILES,
-    EXACT_DEPENDENCY_CHANGES,
 } from '#tests/config/commands/init/plan.ts';
 
-test('init names pinned dependencies without proposing to delete the package manifest', async () => {
+test.each([
+    { name: 'a new .gitattributes under write', files: {}, attributes: 'write' },
+    {
+        name: 'an existing .gitattributes under change',
+        files: { '.gitattributes': '*.sh text\n' },
+        attributes: 'change',
+    },
+] as const)('the init plan keeps the project TypeScript pin and lists $name', async ({ files, attributes }) => {
     await using sandbox = await createGitSandbox({
         'package.json': '{"name":"example","private":true,"type":"module","devDependencies":{"typescript":"^5.0.0"}}\n',
+        ...files,
     });
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, [
@@ -36,7 +44,10 @@ test('init names pinned dependencies without proposing to delete the package man
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.configurations.find(({ configuration }) => configuration === 'javascript')?.origin).toBe('required');
     expect(plan.configurations.map(({ configuration }) => configuration)).not.toContain('licenses');
-    expect(plan.change).toStrictEqual([...EXACT_DEPENDENCY_CHANGES]);
+    expect(plan.change).toStrictEqual(attributes === 'change' ? [ATTRIBUTES_PLAN_ROW] : []);
+    expect(plan.write.filter(({ path }) => path === ATTRIBUTES_PLAN_ROW.path)).toStrictEqual(
+        attributes === 'write' ? [ATTRIBUTES_PLAN_ROW] : [],
+    );
     expect(plan.delete).toStrictEqual([]);
     expect(plan.lintFolders).toStrictEqual([]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);

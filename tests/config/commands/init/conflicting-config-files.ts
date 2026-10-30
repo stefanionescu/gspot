@@ -1,5 +1,4 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { TOOL_PLAN_CHANGES, MANAGED_PLAN_CHANGES } from '#tests/config/commands/init/plan.ts';
 import { COMMITLINT_PACKAGE, STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
 
 export const REPLACED_PYPROJECT_TABLES = [
@@ -102,8 +101,6 @@ export const HOOKS_PATH_CASES = [
 ] as const;
 
 export const HOOK_NAMED_SOURCE = 'export function useThing() { return true; }\n';
-
-export const INACTIVE_PLAN_CHANGES = [...MANAGED_PLAN_CHANGES, ...TOOL_PLAN_CHANGES] as const;
 
 export const SYNCPACK_FILES = [
     {
