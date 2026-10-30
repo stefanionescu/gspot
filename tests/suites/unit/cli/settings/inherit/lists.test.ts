@@ -6,11 +6,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { PURGECSS_SAFELIST_TABLES } from '#tests/config/settings/inherit.ts';
 
 test('an empty PurgeCSS safelist is inherited, and a scope value applies to its children', async () => {

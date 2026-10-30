@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { buildConfiguration } from '#tests/setup/cli/configurations.ts';
-import { selectConfigurations, listSelectedConfigurations } from '#cli/configurations/select.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
+import { selectConfigurations, listSelectedConfigurations } from '#cli/manifests/select.ts';
 
 test('adds required configurations, dependencies first, in order of first mention', () => {
     const configurationsByName = new Map([

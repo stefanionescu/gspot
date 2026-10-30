@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
-import type { Level } from '#cli/types/configurations.ts';
+import type { Level } from '#cli/types/manifests.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';

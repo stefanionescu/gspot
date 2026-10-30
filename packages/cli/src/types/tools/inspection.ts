@@ -1,4 +1,4 @@
-import type { Tool, ToolFolderKind } from '#cli/types/configurations.ts';
+import type { Tool, ToolFolderKind } from '#cli/types/manifests.ts';
 
 type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'system' | 'error';
 export type InspectedTool = {

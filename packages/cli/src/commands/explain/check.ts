@@ -9,25 +9,19 @@ import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { CommandCheck } from '#cli/types/settings/file.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
+import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { ruleDocumentationSchema } from '#cli/schemas/commands.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import { isConfigurationSelected } from '#cli/configurations/select.ts';
-import type { Tool, Check, ScopeCheck, Configuration } from '#cli/types/configurations.ts';
-import { listRuleFiles, listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
+import type { Tool, Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
+import { listRuleFiles, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import type { CheckFacts, CheckIgnore, Explanation, LintRuleDocs } from '#cli/types/commands/explain.ts';
+import { getTool, getToolName, hasRuleOutput, extractRulePrefix, extractConfigFileName } from '#cli/manifests/tools.ts';
 
 import {
     ESLINT_MANIFEST_TOOL,
     STYLELINT_MANIFEST_TOOL,
     JAVASCRIPT_CONFIGURATION,
-} from '#cli/config/configurations/names.ts';
-import {
-    getTool,
-    getToolName,
-    hasRuleOutput,
-    extractRulePrefix,
-    extractConfigFileName,
-} from '#cli/configurations/tools.ts';
+} from '#cli/config/manifests/names.ts';
 import {
     REPOSITORY_COMMAND,
     RUN_IN_COPY_MESSAGE,

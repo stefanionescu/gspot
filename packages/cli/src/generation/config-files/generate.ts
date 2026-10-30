@@ -2,7 +2,7 @@ import { join } from 'node:path/posix';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { remember } from '#cli/system/files/cache.ts';
-import type { ConfigFile } from '#cli/types/configurations.ts';
+import type { ConfigFile } from '#cli/types/manifests.ts';
 import { buildConfigFile } from '#cli/generation/config-files/build.ts';
 import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';
 import { CONFIG_FILE_SCOPES_FOLDER } from '#cli/config/generation/config-files/generate.ts';

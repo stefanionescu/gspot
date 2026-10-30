@@ -1,7 +1,7 @@
 import { listIgnores } from '#cli/settings/scopes.ts';
+import { findMissingBuild } from '#cli/manifests/tools.ts';
+import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
-import { findMissingBuild } from '#cli/configurations/tools.ts';
-import type { Tool, Check } from '#cli/types/configurations.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import { NO_HISTORY_MESSAGE } from '#cli/config/planning/skips.ts';

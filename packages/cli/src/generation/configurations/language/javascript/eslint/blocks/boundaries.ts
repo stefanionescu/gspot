@@ -1,6 +1,6 @@
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { TRPC_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { TRPC_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
 import { listCodeTestFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import { CODE_LANGUAGES } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';

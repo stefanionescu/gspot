@@ -1,15 +1,15 @@
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { type Repository } from '#cli/types/repository/files.ts';
 import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { ESLINT_MANIFEST_TOOL } from '#cli/config/manifests/names.ts';
 import { join, dirname, resolve, basename, relative } from 'node:path';
 import { EXECUTABLE_BITS } from '#cli/config/repository/files/tracked.ts';
-import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations/names.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { listConflictingConfigFiles } from '#cli/repository/config-files.ts';
 import { MARKDOWN_EXTENSION } from '#cli/config/repository/files/classify.ts';

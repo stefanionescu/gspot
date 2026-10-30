@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { getTool } from '#cli/configurations/tools.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { generateFiles } from '#cli/generation/generate.ts';

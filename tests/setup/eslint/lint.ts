@@ -4,7 +4,7 @@ import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { extractConfigFileName } from '#cli/configurations/tools.ts';
+import { extractConfigFileName } from '#cli/manifests/tools.ts';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';

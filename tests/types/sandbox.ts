@@ -1,4 +1,4 @@
-import type { Level } from '#cli/types/configurations.ts';
+import type { Level } from '#cli/types/manifests.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 
 export type SandboxPlan = {

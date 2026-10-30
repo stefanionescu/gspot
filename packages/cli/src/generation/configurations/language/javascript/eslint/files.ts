@@ -1,6 +1,6 @@
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
+import { EXTENSION_PATTERN } from '#cli/config/manifests/tool.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
-import { EXTENSION_PATTERN } from '#cli/config/configurations/tool.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { buildPathMatcher, includeFolderContents } from '#cli/system/matchers.ts';
 

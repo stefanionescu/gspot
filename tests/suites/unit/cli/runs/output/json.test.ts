@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { parseJsonFindings } from '#cli/runs/output/json.ts';
-import { outputSchema } from '#cli/schemas/configurations/output.ts';
+import { outputSchema } from '#cli/schemas/manifests/output.ts';
 
 import {
     FIX_FIELD_CASES,

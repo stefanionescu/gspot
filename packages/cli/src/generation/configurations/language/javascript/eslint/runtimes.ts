@@ -4,7 +4,7 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { EslintRuntime } from '#cli/types/generation/eslint.ts';
 import { joinScope, isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { splitGlobs } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
-import { NEXTJS_CONFIGURATION, REACT_NATIVE_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { NEXTJS_CONFIGURATION, REACT_NATIVE_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
 import {

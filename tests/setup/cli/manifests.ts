@@ -1,7 +1,7 @@
 import { parse } from '@decimalturn/toml-patch';
-import { manifestSchema } from '#cli/schemas/configurations/manifest.ts';
-import { type Check, type Configuration } from '#cli/types/configurations.ts';
-import { listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
+import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
+import { type Check, type Configuration } from '#cli/types/manifests.ts';
+import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 
 /**
 List the shipped configurations that gspot selects in every repository.

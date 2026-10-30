@@ -1,9 +1,9 @@
 import type { LimitFunction } from 'p-limit';
 import type { ReadCache } from '#cli/types/system/files.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import type { ConfiguredCheck } from '#cli/types/planning.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
 import type { ToolInspection } from '#cli/types/tools/inspection.ts';
 import type { RepositoryListing } from '#cli/types/repository/read.ts';
 import type { Settings, SettingsFile } from '#cli/types/settings/file.ts';

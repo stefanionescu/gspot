@@ -1,5 +1,5 @@
 import type { TextRange } from '#cli/types/text.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 
 export type RuleFile = {
     path: string;

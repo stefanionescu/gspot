@@ -4,15 +4,15 @@ import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { listDistinctTools } from '#cli/manifests/tools.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import type { Settings, TableSettings } from '#cli/types/settings/file.ts';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 
 import {
     convertToGlobs,

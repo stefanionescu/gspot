@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import semver from 'semver';
+import type { ToolInstallers } from '#cli/types/manifests.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
-import type { ToolInstallers } from '#cli/types/configurations.ts';
-import { MAX_EXIT_CODE } from '#cli/config/configurations/fields.ts';
-import { TOOL_KINDS, TOOL_BUILDS } from '#cli/config/configurations/names.ts';
-import { regexSchema, commandSchema, conditionSchema } from '#cli/schemas/configurations/fields.ts';
+import { MAX_EXIT_CODE } from '#cli/config/manifests/fields.ts';
+import { TOOL_KINDS, TOOL_BUILDS } from '#cli/config/manifests/names.ts';
+import { regexSchema, commandSchema, conditionSchema } from '#cli/schemas/manifests/fields.ts';
 
 import {
     EXTENSION_PATTERN,
@@ -12,7 +12,7 @@ import {
     NUMERIC_MINIMUM_MESSAGE,
     SHIPPED_CHECKSUM_PATTERN,
     INSTALLER_VERSION_MESSAGE,
-} from '#cli/config/configurations/tool.ts';
+} from '#cli/config/manifests/tool.ts';
 
 const minimumVersionSchema = z
     .string()

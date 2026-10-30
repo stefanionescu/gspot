@@ -1,10 +1,10 @@
 import type { Session } from '#cli/types/session.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import type { ScopeFolder } from '#cli/types/repository/files.ts';
 import { isInScope, selectScopePath } from '#cli/repository/scopes.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { detectConfigurations, listAutomaticConfigurations } from '#cli/repository/detect.ts';
-import { expandSuggestions, selectConfigurations, assertConfigurationsExist } from '#cli/configurations/select.ts';
+import { expandSuggestions, selectConfigurations, assertConfigurationsExist } from '#cli/manifests/select.ts';
 
 import type {
     InitRepository,

@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { getTool } from '#cli/manifests/tools.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, writeFile } from 'node:fs/promises';
-import { getTool } from '#cli/configurations/tools.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { type PathExplanation } from '#cli/types/commands/explain.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

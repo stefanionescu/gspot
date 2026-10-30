@@ -10,7 +10,7 @@ import {
     type ConfigFile,
     type Configuration,
     type SourcedConfigFile,
-} from '#cli/types/configurations.ts';
+} from '#cli/types/manifests.ts';
 
 type ManagedBlock = { path: string; body: string };
 

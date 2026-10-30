@@ -10,8 +10,8 @@ import type { Repository } from '#cli/types/repository/files.ts';
 import type { ScopeConfigurations } from '#cli/types/commands/init.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
 import type { ImportExtensionStyle } from '#cli/types/settings/tools.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { BUNDLER_PACKAGES, IMPORT_EXTENSION_SETTING } from '#cli/config/commands/init/import-extension.ts';
 
 function detectImportExtension(

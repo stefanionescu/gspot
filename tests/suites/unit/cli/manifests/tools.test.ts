@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildProgramPin } from '#tests/setup/cli/tools.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { TOOL_PROJECT_PACKAGES } from '#tests/config/configurations/tools.ts';
-import { hasRuleOutput, findMissingBuild, findToolProjectPackage } from '#cli/configurations/tools.ts';
+import { TOOL_PROJECT_PACKAGES } from '#tests/config/manifests/tools.ts';
+import { hasRuleOutput, findMissingBuild, findToolProjectPackage } from '#cli/manifests/tools.ts';
 
 test.each([...TOOL_PROJECT_PACKAGES])('$name: the installers give the expected tool project package', (row) => {
     const tool = { ...buildProgramPin(row.tool, row.version), system: row.system, installers: row.installers };

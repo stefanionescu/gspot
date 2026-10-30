@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { getTool } from '#cli/manifests/tools.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
-import { getTool } from '#cli/configurations/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { type SpawnResult } from '#cli/types/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { APP_FOLDERS, EXPO_PACKAGE_JSON, FAILED_DOCTOR_OUTPUT } from '#tests/config/checks/framework/expo.ts';
 

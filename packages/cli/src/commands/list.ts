@@ -7,13 +7,13 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
-import { listSelectedConfigurations } from '#cli/configurations/select.ts';
+import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { ListKind, SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 

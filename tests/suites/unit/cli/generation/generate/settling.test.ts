@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
 import { type DryRunJson } from '#cli/types/commands/apply.ts';
 import { type ApplyReport } from '#cli/types/generation/files.ts';
 import { readTree, isOnDisk } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { GROUP_CASES, LEVEL_CASES, SWITCH_CASES, PROJECT_FILES } from '#tests/config/generation/settling.ts';
 

@@ -1,8 +1,8 @@
 import { dirname } from 'node:path/posix';
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { buildZodBlocks } from '#cli/generation/configurations/library/zod.ts';
 import { buildVueBlocks } from '#cli/generation/configurations/framework/vue.ts';

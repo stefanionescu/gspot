@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import type { Finding } from '#cli/types/runs/check.ts';
-import type { CHECK_RUNS } from '#cli/config/configurations/names.ts';
-import type { outputSchema } from '#cli/schemas/configurations/output.ts';
+import type { CHECK_RUNS } from '#cli/config/manifests/names.ts';
+import type { outputSchema } from '#cli/schemas/manifests/output.ts';
 
 export type ToolOutput = OutputPaths & {
     check: string;

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { LEVELS } from '#cli/config/configurations/names.ts';
+import { LEVELS } from '#cli/config/manifests/names.ts';
 import type { SandboxChanges } from '#tests/types/samples.ts';
 import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

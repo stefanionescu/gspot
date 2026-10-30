@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { posix } from 'node:path';
 import { FILE_KINDS } from '#cli/config/files/kinds.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
+import { manifestToolSchema } from '#cli/schemas/manifests/tool.ts';
+import { writtenNamingOverrideSchema } from '#cli/schemas/manifests/naming.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
-import { writtenNamingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
-import { NAME_PATTERN, RULE_FILE_PATTERN } from '#cli/config/configurations/manifest.ts';
+import { NAME_PATTERN, RULE_FILE_PATTERN } from '#cli/config/manifests/manifest.ts';
 
 import {
     GROUPS,
@@ -13,7 +13,7 @@ import {
     CHECK_NEEDS,
     CHECK_CWD_VALUES,
     SHIPPED_CONFIG_FILES_FOLDER,
-} from '#cli/config/configurations/names.ts';
+} from '#cli/config/manifests/names.ts';
 import {
     levelSchema,
     regexSchema,
@@ -21,7 +21,7 @@ import {
     commandCheckFields,
     nonemptyStringSchema,
     operatingSystemSchema,
-} from '#cli/schemas/configurations/fields.ts';
+} from '#cli/schemas/manifests/fields.ts';
 
 const fileKindSchema = z.enum(FILE_KINDS);
 

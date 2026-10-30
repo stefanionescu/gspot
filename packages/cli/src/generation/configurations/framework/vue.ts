@@ -1,4 +1,4 @@
-import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { TYPESCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
 import { VUE_RULES, VUE_FILES } from '#cli/config/generation/configurations/framework/vue.ts';
 import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';

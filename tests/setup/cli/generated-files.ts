@@ -5,10 +5,10 @@ import { openSession } from '#cli/planning/session.ts';
 import { ROOT_LABEL } from '#tests/config/messages.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
-import { extractConfigFileName } from '#cli/configurations/tools.ts';
+import { extractConfigFileName } from '#cli/manifests/tools.ts';
+import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
-import { listRuleFiles, readConfigurations } from '#cli/configurations/manifests.ts';
 
 /**
 Find the generated config file for a tool and scope.

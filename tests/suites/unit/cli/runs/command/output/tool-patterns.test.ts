@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
-import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { TOOL_PATTERN_CASES } from '#tests/config/runs/command/output/tool-patterns.ts';
 

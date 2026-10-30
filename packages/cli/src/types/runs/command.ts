@@ -1,4 +1,4 @@
-import type { Tool } from '#cli/types/configurations.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { ProcessFailure } from '#cli/types/tools/run.ts';

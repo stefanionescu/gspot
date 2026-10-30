@@ -4,7 +4,7 @@ import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
 import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { commandSchema } from '#cli/schemas/configurations/fields.ts';
+import { commandSchema } from '#cli/schemas/manifests/fields.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, SettingsTable } from '#cli/types/settings/file.ts';
 import { SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/inheritance.ts';

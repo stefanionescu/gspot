@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { namingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
+import { namingOverrideSchema } from '#cli/schemas/manifests/naming.ts';
 import type { NamingCategory, SettingLanguage } from '#cli/types/settings/naming.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { nonemptyPathsSchema, namingCategorySchema } from '#cli/schemas/settings/fields.ts';

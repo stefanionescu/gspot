@@ -1,15 +1,15 @@
 import { join } from 'node:path';
+import { getTool } from '#cli/manifests/tools.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { getTool } from '#cli/configurations/tools.ts';
+import { listChecksById } from '#cli/manifests/read.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { listChecksById } from '#cli/configurations/manifests.ts';
-import type { ConfigurationCheck } from '#cli/types/configurations.ts';
+import type { ConfigurationCheck } from '#cli/types/manifests.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/checks/cross-configuration/tsc/compiler.ts';
 import { runTsc, restoreCommandPaths } from '#cli/checks/cross-configuration/tsc/compiler.ts';

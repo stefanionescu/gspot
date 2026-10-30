@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parseOutput } from '#cli/runs/output/formats.ts';
-import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 
 test('a Knip report with an export name that is not text is refused', async () => {
     const check = getShippedCheck('javascript/knip');

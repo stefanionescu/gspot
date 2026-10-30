@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { selectConfigurations } from '#cli/manifests/select.ts';
 import { SOURCE_KIND } from '#cli/config/repository/files/classify.ts';
 import { listCoveredFiles, buildFileMatcher } from '#cli/repository/files/selection.ts';
 

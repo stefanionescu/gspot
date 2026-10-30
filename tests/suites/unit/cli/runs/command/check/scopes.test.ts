@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { createFileTree } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
+import { getTool } from '#cli/manifests/tools.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import * as processes from '#cli/system/processes.ts';
-import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';

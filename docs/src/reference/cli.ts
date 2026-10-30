@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { compareText } from '#cli/system/text.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildJsonSchema } from '#cli/settings/json-schema.ts';
-import { listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
+import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import { buildAvailableSettings, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import type { CliReference, SettingVariant, CommandReference } from '#docs/types/reference.ts';
 

@@ -15,7 +15,7 @@ import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import type { PythonIndexSettings } from '#cli/types/installers/pypi.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 import type { ReplacementRequest } from '#cli/types/repository/writer.ts';
-import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
+import { listMisePins, listToolProjectPins } from '#cli/manifests/tools.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/installers/npm/project.ts';
 import { isLockfileFresh, selectLockfileName } from '#cli/installers/npm/lockfiles.ts';

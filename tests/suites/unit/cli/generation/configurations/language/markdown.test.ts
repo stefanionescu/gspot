@@ -1,6 +1,6 @@
 import { parse } from 'jsonc-parser';
 import { test, expect } from 'bun:test';
-import { LEVELS } from '#cli/config/configurations/names.ts';
+import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { generateFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 

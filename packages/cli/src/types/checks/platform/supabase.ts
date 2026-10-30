@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { supabaseProjectFileSchema } from '#cli/schemas/checks/supabase.ts';
+import type { supabaseProjectFileSchema } from '#cli/schemas/checks/platform/supabase.ts';
 
 export type SupabaseProjectFile = z.infer<typeof supabaseProjectFileSchema>;
 

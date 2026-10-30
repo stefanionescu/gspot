@@ -7,20 +7,20 @@ import type { Settings } from '#cli/types/settings/file.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
+import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
+import { getTool, findToolProjectPackage } from '#cli/manifests/tools.ts';
 import { isSettingEmpty, findSettingsSkip } from '#cli/planning/skips.ts';
 import type { PrettierPlugin } from '#cli/types/generation/formatting.ts';
-import { listSelectedConfigurations } from '#cli/configurations/select.ts';
+import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { PRETTIER_TOOL, STYLELINT_TOOL } from '#cli/config/planning/tools.ts';
 import { isCoverageOff, hasCoverageArguments } from '#cli/planning/checks.ts';
 import { selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
 import type { LicenseProject, ConfiguredCheck } from '#cli/types/planning.ts';
-import { getTool, findToolProjectPackage } from '#cli/configurations/tools.ts';
-import type { Tool, Check, Configuration } from '#cli/types/configurations.ts';
 import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/licenses.ts';
 import { STYLELINT_COMPONENTS } from '#cli/config/generation/configurations/language/css.ts';
-import { ESLINT_MANIFEST_TOOL, LICENSES_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { ESLINT_MANIFEST_TOOL, LICENSES_CONFIGURATION } from '#cli/config/manifests/names.ts';
 
 function isToolConditionMet(scope: Scope, conditions: Tool['when']): boolean {
     return (

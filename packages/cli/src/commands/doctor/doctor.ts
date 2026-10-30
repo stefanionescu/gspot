@@ -26,9 +26,9 @@ import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { listDetectedAdditions } from '#cli/repository/configurations.ts';
+import { findMissingBuild, listDistinctTools } from '#cli/manifests/tools.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { findMissingBuild, listDistinctTools } from '#cli/configurations/tools.ts';
 import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup.ts';
 
 import {

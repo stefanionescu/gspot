@@ -4,10 +4,10 @@ import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { Level, Configuration } from '#cli/types/manifests.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
+import { NESTJS_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import type { Level, Configuration } from '#cli/types/configurations.ts';
-import { NESTJS_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/checks/cross-configuration/tsc/compiler.ts';
 

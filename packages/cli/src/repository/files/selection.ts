@@ -1,9 +1,9 @@
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
-import { filterSourceConfigurations } from '#cli/configurations/select.ts';
+import { filterSourceConfigurations } from '#cli/manifests/select.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
 import { TEST_FILES_PLACEHOLDER } from '#cli/config/repository/files/selection.ts';
 import type { TrackedFile, CoveredFilesOptions } from '#cli/types/repository/files.ts';

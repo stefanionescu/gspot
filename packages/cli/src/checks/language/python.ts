@@ -1,9 +1,9 @@
 import { join, posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildUvRunCommand } from '#cli/tools/uv.ts';
+import type { Level } from '#cli/types/manifests.ts';
 import { find, read } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
-import type { Level } from '#cli/types/configurations.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getTable, getLimit } from '#cli/settings/scopes.ts';

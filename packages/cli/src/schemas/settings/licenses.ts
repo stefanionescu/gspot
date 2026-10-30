@@ -2,7 +2,7 @@ import { z } from 'zod';
 import semver from 'semver';
 import { isTable } from '#cli/system/tables.ts';
 import parseExpression from 'spdx-expression-parse';
-import { nonemptyStringSchema } from '#cli/schemas/configurations/fields.ts';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 
 const allowedPackageSchema = z.strictObject({

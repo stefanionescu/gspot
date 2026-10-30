@@ -10,8 +10,8 @@ import type { ToolTableSchemas } from '#cli/types/settings/tables.ts';
 import { TABLE_DESCRIPTIONS } from '#cli/config/settings/json-schema.ts';
 import { pythonSchema, javascriptSchema } from '#cli/schemas/settings/languages.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
+import { commandSchema, nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION } from '#cli/config/parsers/code/sql.ts';
-import { commandSchema, nonemptyStringSchema } from '#cli/schemas/configurations/fields.ts';
 import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
 
 import {

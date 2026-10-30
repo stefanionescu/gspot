@@ -1,4 +1,4 @@
-import { REACT_NATIVE_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { REACT_NATIVE_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { REACT_FILES } from '#cli/config/generation/configurations/framework/nextjs.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
 import { REACT_DOM_RULE_OPTIONS } from '#cli/config/generation/configurations/framework/react.ts';

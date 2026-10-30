@@ -1,11 +1,11 @@
+import { getTool } from '#cli/manifests/tools.ts';
 import { compareText } from '#cli/system/text.ts';
+import { type Tool } from '#cli/types/manifests.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { createCopy } from '#cli/runs/copy/files.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { getTool } from '#cli/configurations/tools.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { type Tool } from '#cli/types/configurations.ts';
 import { runToolProcess } from '#cli/runs/command/tool.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { isReportedCrash } from '#cli/runs/command/output.ts';

@@ -18,7 +18,7 @@ import { NODE_SHEBANG_TAG } from '#cli/config/repository/files/classify.ts';
 import { SWIFT_EXTENSION, MISE_TASKS_GLOB } from '#cli/config/files/names.ts';
 import { listSwiftModules } from '#cli/checks/general/structure/swift-modules.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
-import { SWIFT_CONFIGURATION, PYTHON_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { SWIFT_CONFIGURATION, PYTHON_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 import { IMPORT_RULE_CATEGORY } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/boundaries.ts';
 

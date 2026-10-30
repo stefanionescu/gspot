@@ -1,11 +1,11 @@
 import pLimit from 'p-limit';
 import { join, relative } from 'node:path';
 import { availableParallelism } from 'node:os';
+import { getTool } from '#cli/manifests/tools.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { remember } from '#cli/system/files/cache.ts';
-import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';

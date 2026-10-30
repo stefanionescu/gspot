@@ -1,11 +1,11 @@
 import which from 'which';
 import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { MISE_TOOL } from '#cli/config/tools/locate.ts';
-import type { Tool } from '#cli/types/configurations.ts';
 import type { ToolAvailability } from '#cli/types/tools/run.ts';
-import { findToolProjectPackage } from '#cli/configurations/tools.ts';
+import { findToolProjectPackage } from '#cli/manifests/tools.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';

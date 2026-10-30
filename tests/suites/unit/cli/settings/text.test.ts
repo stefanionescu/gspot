@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildSettingsText } from '#cli/settings/text.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildInitSettings } from '#cli/commands/init/settings-text.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { ARRAY_COMMENT_CASES } from '#tests/config/settings/text/array-comments.ts';

@@ -1,9 +1,9 @@
 import { isReasonedValue } from '#cli/settings/file.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import { selectConfigurations } from '#cli/manifests/select.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { findSettingSchema } from '#cli/settings/schema-lookup.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
 import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/scopes.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';

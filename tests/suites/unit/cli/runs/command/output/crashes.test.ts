@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { TYPE_ERROR_MESSAGE } from '#tests/config/typescript.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { isReportedCrash, formatOutputTail, parseCommandFindings } from '#cli/runs/command/output.ts';
 

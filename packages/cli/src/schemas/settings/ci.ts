@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CI_PROVIDERS, GITHUB_ONLY_CI_KEYS } from '#cli/config/settings/ci.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { commandSchema, operatingSystemSchema } from '#cli/schemas/configurations/fields.ts';
+import { commandSchema, operatingSystemSchema } from '#cli/schemas/manifests/fields.ts';
 
 export const ciFields = {
     enabled: z.boolean().default(SETTING_DEFINITIONS['ci.enabled'].default).meta(SETTING_DEFINITIONS['ci.enabled']),

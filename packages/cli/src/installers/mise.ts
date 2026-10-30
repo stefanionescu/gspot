@@ -13,18 +13,18 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import type { MiseInstall } from '#cli/types/installers/mise.ts';
+import type { Tool, MiseToolPin } from '#cli/types/manifests.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { redactInstallOutput } from '#cli/installers/credentials.ts';
 import { miseLockfileSchema } from '#cli/schemas/installers/mise.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import type { Tool, MiseToolPin } from '#cli/types/configurations.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import { MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/files/names.ts';
 import { runInstallStep, runRequiredInstallStep } from '#cli/installers/steps.ts';
 import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
-import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/configurations/tools.ts';
+import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/manifests/tools.ts';
 
 import {
     MISE_BIN_PATHS_ARGUMENTS,

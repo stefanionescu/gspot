@@ -10,8 +10,8 @@ import { type CommandResult } from '#cli/types/terminal.ts';
 import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { isInScope, buildArgumentPath } from '#cli/repository/scopes.ts';
+import { listChecksById, assertCheckExists } from '#cli/manifests/read.ts';
 import { EMPTY_BASE, CREATED_BRANCH_BASE } from '#cli/config/commands/check/tree.ts';
-import { listChecksById, assertCheckExists } from '#cli/configurations/manifests.ts';
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
 
 import {

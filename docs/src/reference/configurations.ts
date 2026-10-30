@@ -1,11 +1,11 @@
 import { posix } from 'node:path';
+import { listRuleFiles } from '#cli/manifests/read.ts';
 import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import { GROUP_LABELS } from '#cli/config/manifests/names.ts';
 import { formatSettingLink } from '#docs/reference/settings.ts';
-import { listRuleFiles } from '#cli/configurations/manifests.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
-import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
-import { findToolProjectPackage } from '#cli/configurations/tools.ts';
+import { findToolProjectPackage } from '#cli/manifests/tools.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { listSuppressions, formatCheckSection } from '#docs/reference/checks.ts';
 import type { GuideSlug, Suppression, ReferencePage } from '#docs/types/reference.ts';

@@ -10,11 +10,11 @@ import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
 import { buildPythonProjectTable } from '#cli/installers/pypi.ts';
 import type { NpmToolInstall } from '#cli/types/installers/npm.ts';
+import type { Tool, Configuration } from '#cli/types/manifests.ts';
 import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import type { Tool, Configuration } from '#cli/types/configurations.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
-import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
+import { listMisePins, listToolProjectPins } from '#cli/manifests/tools.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import type { ToolInstall, ToolPackageManager } from '#cli/types/installers/install.ts';
 

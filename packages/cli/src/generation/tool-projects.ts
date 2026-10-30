@@ -2,12 +2,12 @@ import { JSON_INDENT } from '#cli/config/text.ts';
 import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { type Configuration } from '#cli/types/manifests.ts';
 import { buildPythonProjectTable } from '#cli/installers/pypi.ts';
-import { type Configuration } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
-import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
+import { listMisePins, listToolProjectPins } from '#cli/manifests/tools.ts';
 
 /**
 Build the mise tool project without the runtime pins of the repository.

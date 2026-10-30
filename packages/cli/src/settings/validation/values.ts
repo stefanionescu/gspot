@@ -1,11 +1,11 @@
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { listRuleFiles } from '#cli/manifests/read.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { FIRST_READ } from '#cli/config/generation/rules.ts';
-import { listRuleFiles } from '#cli/configurations/manifests.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
 import type { Settings, SettingsError } from '#cli/types/settings/file.ts';

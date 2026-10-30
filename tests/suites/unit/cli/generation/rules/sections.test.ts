@@ -5,8 +5,8 @@ import { test, spyOn, expect } from 'bun:test';
 import * as assets from '#cli/system/assets.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 
 test('at level basic, a rule file loses its level-all sections with their subsections, but keeps fenced examples and the next heading of the same depth', async () => {
     const before = '# Guide\n\n## Required\n\n```md\n## Example\n<!-- level: all -->\n```\n\n';

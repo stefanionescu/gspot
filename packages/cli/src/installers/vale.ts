@@ -1,11 +1,11 @@
 import { createHash } from 'node:crypto';
 import { JSON_INDENT } from '#cli/config/text.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { CONFIG_FLAG } from '#cli/config/flags.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Level } from '#cli/types/manifests.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { getTool } from '#cli/configurations/tools.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { Level } from '#cli/types/configurations.ts';
 import { join, posix, dirname, resolve } from 'node:path';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { downloadArchive } from '#cli/installers/downloads.ts';

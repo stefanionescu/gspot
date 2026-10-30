@@ -4,11 +4,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { TWO_WORDS } from '#tests/config/ignores.ts';
 import { openSession } from '#cli/planning/session.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { setKey, getScopeTable } from '#cli/settings/edit.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 
 import {

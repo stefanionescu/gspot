@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { regexSchema } from '#cli/schemas/configurations/fields.ts';
-import { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/configurations/naming.ts';
+import { regexSchema } from '#cli/schemas/manifests/fields.ts';
+import { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/manifests/naming.ts';
 
 const pathContainerSchema = z.strictObject({
     open: z.string().min(1),

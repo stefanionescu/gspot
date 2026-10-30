@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 
 test('every shipped check without a command has runnable code', () => {
     const checks = [...readConfigurations().values()].flatMap((configuration) => configuration.checks);

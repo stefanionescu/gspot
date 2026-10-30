@@ -1,15 +1,15 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
+import { getTool } from '#cli/manifests/tools.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
-import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';

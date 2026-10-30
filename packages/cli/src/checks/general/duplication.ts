@@ -10,10 +10,10 @@ import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { filterSourceConfigurations } from '#cli/manifests/select.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
-import { filterSourceConfigurations } from '#cli/configurations/select.ts';
 import { parseJsonFile, parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { jscpdOutputSchema } from '#cli/schemas/checks/general/duplication.ts';
 

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
+import { getTool } from '#cli/manifests/tools.ts';
 import { compareText } from '#cli/system/text.ts';
 import { OS_SOURCE } from '#tests/config/python.ts';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { executableLayout } from '#cli/system/paths.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';

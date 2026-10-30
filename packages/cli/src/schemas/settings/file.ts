@@ -8,8 +8,8 @@ import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import { TABLE_DESCRIPTIONS } from '#cli/config/settings/json-schema.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
+import { levelSchema, commandCheckFields } from '#cli/schemas/manifests/fields.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { levelSchema, commandCheckFields } from '#cli/schemas/configurations/fields.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 import { DEVICE_NAME, UNSAFE_PATH_END, UNSAFE_CHARACTERS, RESERVED_SEGMENTS } from '#cli/config/system/files/names.ts';
 

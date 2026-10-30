@@ -3,7 +3,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import { filterSourceConfigurations } from '#cli/configurations/select.ts';
+import { filterSourceConfigurations } from '#cli/manifests/select.ts';
 import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 import { LONE_FILE_RULE } from '#cli/config/checks/general/structure/lone-files.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';

@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parseOutput } from '#cli/runs/output/formats.ts';
-import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { MARKDOWN_REPORT } from '#tests/config/runs/output/markdownlint.ts';
 
 test('a markdownlint JSON result becomes a finding', async () => {

@@ -1,7 +1,7 @@
 import { runTool } from '#cli/tools/run.ts';
 import { dirname, delimiter } from 'node:path';
+import { getTool } from '#cli/manifests/tools.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { getTool } from '#cli/configurations/tools.ts';
 import { listOtherTools } from '#cli/planning/tools.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';

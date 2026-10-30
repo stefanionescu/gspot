@@ -1,7 +1,7 @@
 import type { Session } from '#cli/types/session.ts';
 import type { Settings, WrittenSettings } from '#cli/types/settings/file.ts';
 import type { Scope, ScopeSettings } from '#cli/types/settings/inheritance.ts';
-import type { Level, Configuration, ParsedManifest } from '#cli/types/configurations.ts';
+import type { Level, Configuration, ParsedManifest } from '#cli/types/manifests.ts';
 import type { COMPONENT_CONFIGURATIONS } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
 type EslintSettings = NonNullable<NonNullable<WrittenSettings['tools']>['eslint']>;

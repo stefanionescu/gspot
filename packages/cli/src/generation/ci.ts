@@ -1,14 +1,14 @@
+import { getUvPin } from '#cli/manifests/tools.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { getUvPin } from '#cli/configurations/tools.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { PACKAGE_MANAGERS } from '#cli/config/repository/npm.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { NEXTJS_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { STRICT_MODE } from '#cli/config/checks/language/bash/script-layout.ts';
 import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation/ci.ts';

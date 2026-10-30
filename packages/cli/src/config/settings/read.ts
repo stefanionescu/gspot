@@ -1,4 +1,4 @@
-import type { Check } from '#cli/types/configurations.ts';
+import type { Check } from '#cli/types/manifests.ts';
 
 export const COMMAND_CHECK_DEFAULTS = {
     level: 'basic',

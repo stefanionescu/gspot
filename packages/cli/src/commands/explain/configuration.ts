@@ -1,10 +1,10 @@
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { checkStageSchema } from '#cli/schemas/manifests/fields.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import { checkStageSchema } from '#cli/schemas/configurations/fields.ts';
-import { listRuleFiles, readConfigurations } from '#cli/configurations/manifests.ts';
+import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import type { Explanation, ConfigurationExplanation } from '#cli/types/commands/explain.ts';
 
 import {

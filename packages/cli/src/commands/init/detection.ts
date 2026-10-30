@@ -1,6 +1,6 @@
 import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
+import { GROUP_LABELS } from '#cli/config/manifests/names.ts';
 import type { DetectionSummary } from '#cli/types/commands/init.ts';
 import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 

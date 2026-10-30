@@ -1,11 +1,11 @@
 import { test, expect } from 'bun:test';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
+import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
+import { manifestToolSchema } from '#cli/schemas/manifests/tool.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { buildConfiguration } from '#tests/setup/cli/configurations.ts';
-import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
 
 import {
     DECLARATION_ORDERS,
@@ -13,7 +13,7 @@ import {
     EXAMPLE_MANIFEST_PATH,
     MINIMUM_VERSION_CASES,
     MANIFEST_INVARIANT_CASES,
-} from '#tests/config/configurations/manifests.ts';
+} from '#tests/config/manifests/read.ts';
 
 async function readTestManifests(
     files: Record<string, string>,

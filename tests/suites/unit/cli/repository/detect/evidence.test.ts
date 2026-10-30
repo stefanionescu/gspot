@@ -1,9 +1,9 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { CONFIGURATION_EVIDENCE_CASES } from '#tests/config/repository/detect.ts';
 

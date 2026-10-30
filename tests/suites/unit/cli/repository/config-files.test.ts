@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { listConflictingConfigFiles } from '#cli/repository/config-files.ts';
 
 import {

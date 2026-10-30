@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { unlink, writeFile } from 'node:fs/promises';
+import { LEVELS } from '#cli/config/manifests/names.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';

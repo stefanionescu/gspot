@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
+import type { Level } from '#cli/types/manifests.ts';
 import type { Sandbox } from '#tests/types/sandbox.ts';
-import type { Level } from '#cli/types/configurations.ts';
+import { LEVELS } from '#cli/config/manifests/names.ts';
 import { COMMAND_PLAYBOOK } from '#tests/config/ansible.ts';
-import { LEVELS } from '#cli/config/configurations/names.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';

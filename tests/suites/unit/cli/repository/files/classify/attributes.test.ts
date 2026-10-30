@@ -3,11 +3,11 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 

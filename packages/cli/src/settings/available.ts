@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { mergeValue } from '#cli/settings/inherit.ts';
+import { readNamingDefaults } from '#cli/manifests/naming.ts';
 import { SETTING_LANGUAGES } from '#cli/config/settings/naming.ts';
-import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
+import type { Level, Configuration } from '#cli/types/manifests.ts';
 import { LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
-import type { Level, Configuration } from '#cli/types/configurations.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { getSettingType, unwrapSettingSchema } from '#cli/settings/schema-lookup.ts';
 import { TABLE_KEY_SEGMENTS, SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/inheritance.ts';

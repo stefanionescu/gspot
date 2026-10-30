@@ -1,4 +1,4 @@
-import type { Group } from '#cli/types/configurations.ts';
+import type { Group } from '#cli/types/manifests.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 
 export const ESLINT_MANIFEST_TOOL = 'eslint';

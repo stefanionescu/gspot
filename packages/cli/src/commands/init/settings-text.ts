@@ -7,16 +7,16 @@ import { selectForScope } from '#cli/settings/scopes.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { PBXPROJ_SUFFIX } from '#cli/config/files/names.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { stripDefaults } from '#cli/commands/init/defaults.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildFilenameMatcher } from '#cli/system/matchers.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
 import { readScopeFormat } from '#cli/commands/init/formatter-settings.ts';
 import { buildImportExtensionTables } from '#cli/commands/init/import-extension.ts';
-import { SWIFT_CONFIGURATION, OPENAPI_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { SWIFT_CONFIGURATION, OPENAPI_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { PREFACE_BODY, LEADING_COMMENTS, XCODE_DESTINATIONS } from '#cli/config/commands/init/settings-text.ts';
 import type { InitOptions, SettingsDraft, InitConfigurations, ScopeConfigurations } from '#cli/types/commands/init.ts';
 

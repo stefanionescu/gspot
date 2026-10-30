@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import { type Defined } from '#cli/types/shapes.ts';
-import { type Check } from '#cli/types/configurations.ts';
+import { type Check } from '#cli/types/manifests.ts';
 import { type ParsedTools } from '#cli/types/settings/tools.ts';
 import { type KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { formatSchema } from '#cli/schemas/settings/fields.ts';

@@ -7,8 +7,8 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { readNamingDefaults } from '#cli/manifests/naming.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
-import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/general/naming/paths.ts';
 

@@ -1,6 +1,6 @@
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 
 /**

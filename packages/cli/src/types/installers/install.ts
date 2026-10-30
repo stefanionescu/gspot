@@ -1,6 +1,6 @@
+import type { Tool } from '#cli/types/manifests.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import type { Tool } from '#cli/types/configurations.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
 import type { PackageManager, PackageManagerCommand } from '#cli/types/repository/npm/package-manager.ts';
 

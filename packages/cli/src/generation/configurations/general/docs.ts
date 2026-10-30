@@ -1,7 +1,7 @@
 import { getTable } from '#cli/settings/scopes.ts';
+import { SITE_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { SITE_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 
 import {

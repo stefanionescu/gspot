@@ -11,11 +11,11 @@ import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import { explainSetting } from '#cli/commands/explain/setting.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
+import { ESLINT_MANIFEST_TOOL } from '#cli/config/manifests/names.ts';
 import { ESLINT_BUILTIN_RULES } from '#cli/config/commands/explain.ts';
-import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations/names.ts';
+import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { explainConfiguration } from '#cli/commands/explain/configuration.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { listCheckIds, readConfigurations } from '#cli/configurations/manifests.ts';
 import { explainCheck, explainLintRule, importInstalledTool } from '#cli/commands/explain/check.ts';
 
 function formatUnknownSubject(session: Session | undefined, subject: string): string {

@@ -1,13 +1,13 @@
 import { testdir } from 'testdirs';
+import { type Level } from '#cli/types/manifests.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { type Level } from '#cli/types/configurations.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { test, expect, describe, beforeAll } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { RUNTIME_RULE_CASES } from '#tests/config/generation/rules.ts';
-import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 
 async function generateRuleFiles(level: Level, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir({

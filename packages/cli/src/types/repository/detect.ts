@@ -1,4 +1,4 @@
-import type { Group } from '#cli/types/configurations.ts';
+import type { Group } from '#cli/types/manifests.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 
 export type ScopeContents = {

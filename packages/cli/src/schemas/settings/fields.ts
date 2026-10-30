@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { MAX_PERCENTAGE } from '#cli/config/units.ts';
-import { CASE_NAMES } from '#cli/config/configurations/naming.ts';
+import { CASE_NAMES } from '#cli/config/manifests/naming.ts';
 import type { ReasonedValue } from '#cli/types/settings/values.ts';
-import { nonemptyStringSchema } from '#cli/schemas/configurations/fields.ts';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import type { ReasonedSettingDefinition } from '#cli/types/settings/definitions.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 

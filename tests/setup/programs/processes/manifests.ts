@@ -2,7 +2,7 @@ import { spyOn } from 'bun:test';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import * as assets from '#cli/system/assets.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { rmSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 
 const input = JSON.parse(process.argv[2] ?? '{}') as { files: Record<string, string>; assets: string[] };

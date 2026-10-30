@@ -1,9 +1,9 @@
 import semver from 'semver';
 import { realpathSync } from 'node:fs';
+import type { Tool } from '#cli/types/manifests.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import type { Tool } from '#cli/types/configurations.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { TOOL_ENVIRONMENT } from '#cli/config/tools/run.ts';

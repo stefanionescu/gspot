@@ -8,7 +8,7 @@ import { GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { MARKERS } from '#cli/config/parsers/formats/managed-blocks.ts';
-import type { ConfigFile, Configuration } from '#cli/types/configurations.ts';
+import type { ConfigFile, Configuration } from '#cli/types/manifests.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
 
 import type {

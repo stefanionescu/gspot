@@ -1,4 +1,4 @@
-import type { Configuration } from '#cli/types/configurations.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import type { ListedFile, Repository, ScopeFolder, GeneratedPaths } from '#cli/types/repository/files.ts';
 
 export type RepositoryReadOptions = {

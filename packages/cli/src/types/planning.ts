@@ -2,7 +2,7 @@ import type { Session } from '#cli/types/session.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { ConfigurationTables } from '#cli/types/settings/tables.ts';
-import type { Tool, Stage, Check, Configuration } from '#cli/types/configurations.ts';
+import type { Tool, Stage, Check, Configuration } from '#cli/types/manifests.ts';
 
 export type SkipCause = 'level' | 'system' | 'replaced' | 'setting' | 'condition' | 'ignore';
 

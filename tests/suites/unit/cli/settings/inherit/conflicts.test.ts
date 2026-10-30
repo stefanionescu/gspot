@@ -1,12 +1,12 @@
 import { test, expect } from 'bun:test';
 import { readSettings } from '#cli/settings/read.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { type AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { CONFLICTING_DEFAULT_ERRORS } from '#tests/config/settings/inherit.ts';
 

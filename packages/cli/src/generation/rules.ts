@@ -4,6 +4,7 @@ import { visit } from 'unist-util-visit';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
+import { listRuleFiles } from '#cli/manifests/read.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
@@ -11,11 +12,10 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { detectConditions } from '#cli/repository/detect.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { listRuleFiles } from '#cli/configurations/manifests.ts';
 import { type Repository } from '#cli/types/repository/files.ts';
-import { GROUPS, GROUP_LABELS } from '#cli/config/configurations/names.ts';
-import { listSelectedConfigurations } from '#cli/configurations/select.ts';
-import { type Level, type Configuration } from '#cli/types/configurations.ts';
+import { GROUPS, GROUP_LABELS } from '#cli/config/manifests/names.ts';
+import { listSelectedConfigurations } from '#cli/manifests/select.ts';
+import { type Level, type Configuration } from '#cli/types/manifests.ts';
 import type { RuleFile, RuleSection, ShippedRule, AgentsBlockContent } from '#cli/types/generation/rules.ts';
 
 import {

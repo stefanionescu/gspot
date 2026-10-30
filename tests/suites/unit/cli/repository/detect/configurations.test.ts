@@ -5,14 +5,14 @@ import { testdir, createFileTree } from 'testdirs';
 import { unlink, writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
+import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { SOURCE_KIND } from '#cli/config/repository/files/classify.ts';
-import { buildConfiguration } from '#tests/setup/cli/configurations.ts';
 import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/dependencies.ts';
 
 import {

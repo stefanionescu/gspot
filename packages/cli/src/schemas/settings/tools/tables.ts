@@ -1,6 +1,6 @@
 import { z } from 'zod';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import { buildRuleTableSchema } from '#cli/schemas/settings/tools/rules.ts';
-import { nonemptyStringSchema } from '#cli/schemas/configurations/fields.ts';
 import { stylelintRulesSchema } from '#cli/schemas/settings/tools/stylelint.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { COMMITLINT_RULES } from '#cli/config/generation/configurations/general/commits.ts';

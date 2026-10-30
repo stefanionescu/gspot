@@ -4,9 +4,9 @@ import { TYPO } from '#tests/config/spelling.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { TYPO_REPORT, TYPOS_REPORT_ERRORS, TYPOS_FINDING_CASES } from '#tests/config/runs/output/typos.ts';
 

@@ -1,5 +1,5 @@
+import type { GeneratorOutput } from '#cli/types/manifests.ts';
 import type { Substitutions } from '#cli/types/runs/command.ts';
-import type { GeneratorOutput } from '#cli/types/configurations.ts';
 
 export type GeneratorRun = {
     substitutions: Substitutions;

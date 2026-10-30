@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { LEVELS } from '#cli/config/manifests/names.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { APP_SCOPE_SETTINGS } from '#tests/config/toml.ts';
-import { LEVELS } from '#cli/config/configurations/names.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';

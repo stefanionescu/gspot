@@ -4,14 +4,14 @@ import { statSync, realpathSync } from 'node:fs';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { type Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { listMisePins } from '#cli/manifests/tools.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { TOOL_ENVIRONMENT } from '#cli/config/tools/run.ts';
-import { listMisePins } from '#cli/configurations/tools.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
+import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { ExecutableSearch } from '#cli/types/tools/inspection.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
-import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { MISE_CONFIG_FILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { executableLayout, convertToPosixPath, listExecutableNames } from '#cli/system/paths.ts';
 

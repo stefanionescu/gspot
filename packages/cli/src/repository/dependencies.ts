@@ -1,11 +1,11 @@
 import { posix } from 'node:path';
 import { find, read } from '#cli/system/files/reads.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { listNpmToolNames } from '#cli/manifests/tools.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/files/names.ts';
-import { listNpmToolNames } from '#cli/configurations/tools.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import { HOOK_PACKAGES } from '#cli/config/repository/dependencies.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';

@@ -1,5 +1,5 @@
+import type { Configuration } from '#cli/types/manifests.ts';
 import type { FileKind } from '#cli/types/repository/files.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
 import type { InheritedSetting } from '#cli/types/settings/inheritance.ts';
 
 export type Explanation = {

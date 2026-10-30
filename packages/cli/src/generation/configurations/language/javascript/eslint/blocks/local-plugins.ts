@@ -5,7 +5,7 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { escapeGlob, convertToPosixPath } from '#cli/system/paths.ts';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import type { EslintPlugins, EslintBlockFields } from '#cli/types/generation/eslint.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 

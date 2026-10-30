@@ -6,15 +6,15 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { RECORD_FIELDS } from '#cli/settings/schema-lookup.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
@@ -22,7 +22,7 @@ import { readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts
 import { getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import { FIX_APPLY_MESSAGE, ADD_REMOVE_MESSAGE } from '#cli/config/generation/settings-edit.ts';
 import type { Scope, SettingMatch, AvailableSettings } from '#cli/types/settings/inheritance.ts';
-import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/configurations/select.ts';
+import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
 
 import type {
     SettingsEditOptions,

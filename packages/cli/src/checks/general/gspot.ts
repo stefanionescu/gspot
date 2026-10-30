@@ -1,7 +1,7 @@
 import { read } from '#cli/system/files/reads.ts';
 import { type Session } from '#cli/types/session.ts';
+import { getToolName } from '#cli/manifests/tools.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
-import { getToolName } from '#cli/configurations/tools.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { INSTALL_HELP } from '#cli/config/tools/inspect.ts';
