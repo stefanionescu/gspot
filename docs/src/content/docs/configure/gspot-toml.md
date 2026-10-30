@@ -92,8 +92,8 @@ gspot remove nextjs --reason "The app no longer uses Next.js."
 
 `gspot remove` needs `--reason`. It writes `nextjs` into `removed_configurations` with that reason, so `gspot doctor`
 does not suggest it again; `gspot add nextjs` reverses that. gspot does not remove a configuration that another
-selected configuration needs. One reason covers the whole `removed_configurations` list; a later removal with a new
-`--reason` replaces that shared reason. When the tools change, gspot prints a reminder to run `gspot install`.
+selected configuration needs. `removed_configurations` keeps one reason for each removed configuration, such as
+`nextjs = "The app no longer uses Next.js."`. When the tools change, gspot prints a reminder to run `gspot install`.
 
 Run `gspot add` without names to detect and select configurations from the current files and dependencies, then run
 `gspot install`. It leaves configurations listed in `removed_configurations` out. Name a configuration explicitly to

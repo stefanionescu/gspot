@@ -11,16 +11,12 @@ import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { ConfigurationsOptions } from '#cli/types/generation/settings-edit.ts';
 import { applySettingsEdit, prepareSettingsEdit, prepareConfigurationEdit } from '#cli/generation/settings-edit.ts';
 
-function restoreConfigurations(table: TomlTable, removed: string[], added: string[]): void {
+function restoreConfigurations(table: TomlTable, added: string[]): void {
     const previous = table['removed_configurations'];
-    if (previous === undefined) return;
-    const remaining = removed.filter((name) => !added.includes(name));
+    if (!isTable(previous)) return;
+    const remaining = Object.entries(previous).filter(([name]) => !added.includes(name));
     if (remaining.length === 0) Reflect.deleteProperty(table, 'removed_configurations');
-    else
-        table['removed_configurations'] = {
-            value: remaining,
-            reason: isTable(previous) ? previous['reason'] : undefined,
-        };
+    else table['removed_configurations'] = Object.fromEntries(remaining);
 }
 
 function formatConfigurationChange(changed: string[], unchanged: string[], where: string): string {
@@ -75,12 +71,11 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
         };
     }
     const scopeConfigurations = scopeSettings.configurations;
-    const removed = scopeSettings.removed_configurations;
     const list = [...scopeConfigurations];
     const additions = options.configurations.filter((name) => !selected.includes(name));
     list.push(...additions.filter((name) => !list.includes(name)));
     scopeTable['configurations'] = list;
-    restoreConfigurations(scopeTable, removed, options.configurations);
+    restoreConfigurations(scopeTable, options.configurations);
     const where = scope === '' ? '' : ` to scope ${scope}`;
     const added = options.configurations.filter((name) => !selected.includes(name));
     const unchanged = options.configurations.filter((name) => selected.includes(name));

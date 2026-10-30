@@ -16,6 +16,8 @@ export type ReasonedValue<Value> = { value: Value; reason: string };
 
 export type SettingValue<Value> = Value | ReasonedValue<Value>;
 
+export type RemovedConfigurations = Record<string, string> | SettingValue<string[]>;
+
 export type LimitFields<NumberValue> = Partial<Record<keyof ParsedLimitFields, NumberValue | undefined>>;
 
 type LimitDefinition = (typeof LIMIT_DEFINITIONS)[keyof typeof LIMIT_DEFINITIONS];

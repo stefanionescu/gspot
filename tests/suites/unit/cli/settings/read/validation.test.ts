@@ -86,6 +86,11 @@ test('a removed configuration without a reason names the remove command', () => 
     expect(validateSettingsText('[[scope]]\npath = "app"\nremoved_configurations = ["docs"]\n')).toStrictEqual([
         'gspot.toml:3: scope.0.removed_configurations.reason: scope.0.removed_configurations needs a reason. Run gspot remove <configuration> --reason "<why>".',
     ]);
+    expect(
+        validateSettingsText('[removed_configurations]\ndocs = "The docs live elsewhere."\nbash = "none"\n'),
+    ).toStrictEqual([
+        'gspot.toml:3: removed_configurations.bash: removed_configurations.bash needs a reason of two or more words that says why: "none" is refused.',
+    ]);
 });
 
 test('a list without its required reason names the inline value and set command', () => {

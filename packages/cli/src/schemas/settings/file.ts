@@ -20,8 +20,8 @@ import {
     formatSchema,
     localDateSchema,
     relativePathSchema,
-    allowReasonedValue,
     nonemptyPathsSchema,
+    removedConfigurationsSchema,
 } from '#cli/schemas/settings/fields.ts';
 import {
     COMMAND_CHECK_ID,
@@ -196,7 +196,9 @@ export const scopeSchema = z.strictObject({
         .array()
         .default(SETTING_DEFINITIONS['scope.configurations'].default)
         .meta(SETTING_DEFINITIONS['scope.configurations']),
-    removed_configurations: allowReasonedValue(z.string().array(), SETTING_DEFINITIONS['scope.removed_configurations']),
+    removed_configurations: removedConfigurationsSchema
+        .default(SETTING_DEFINITIONS['scope.removed_configurations'].default)
+        .meta(SETTING_DEFINITIONS['scope.removed_configurations']),
     test_files: relativePathSchema.array().optional().meta(SETTING_DEFINITIONS['scope.test_files']),
     ...scopeBody,
 } satisfies SchemaShape<NonNullable<ParsedSettings['scope']>[number], WrittenScope>);
@@ -223,7 +225,9 @@ export const settingsSchema = z
             .array()
             .default(SETTING_DEFINITIONS['configurations'].default)
             .meta(SETTING_DEFINITIONS['configurations']),
-        removed_configurations: allowReasonedValue(z.string().array(), SETTING_DEFINITIONS['removed_configurations']),
+        removed_configurations: removedConfigurationsSchema
+            .default(SETTING_DEFINITIONS['removed_configurations'].default)
+            .meta(SETTING_DEFINITIONS['removed_configurations']),
         scope: scopeSchema.array().optional(),
         ...rootBody,
         import_rule: importRulesSchema,

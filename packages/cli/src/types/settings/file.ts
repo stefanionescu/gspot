@@ -28,6 +28,7 @@ import {
     type LimitLanguage,
     type ParsedStructure,
     type LanguageLimitFields,
+    type RemovedConfigurations,
 } from '#cli/types/settings/values.ts';
 
 export type TableValues = {
@@ -215,7 +216,7 @@ export type WrittenSettings = Optional<
     >
 > &
     WrittenConfigurationTables & {
-        removed_configurations?: SettingValue<string[]> | undefined;
+        removed_configurations?: RemovedConfigurations | undefined;
         scope?: WrittenScope[] | undefined;
         limits?: WrittenLimits | undefined;
         naming?: WrittenNaming | undefined;

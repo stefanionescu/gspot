@@ -5,10 +5,10 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 import { CASE_NAMES } from '#cli/config/configurations/naming.ts';
 import { nonemptyStringSchema } from '#cli/schemas/configurations/fields.ts';
 import type { WrittenFormat, TableSettings } from '#cli/types/settings/file.ts';
-import type { SettingValue, ReasonedValue } from '#cli/types/settings/values.ts';
 import type { ReasonedSettingDefinition } from '#cli/types/settings/definitions.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import type { NamingCase, NamingFields, ParsedNamingFields } from '#cli/types/settings/naming.ts';
+import type { SettingValue, ReasonedValue, RemovedConfigurations } from '#cli/types/settings/values.ts';
 
 import {
     INDENT_MAX,
@@ -20,10 +20,23 @@ import {
     REASON_DESCRIPTIONS,
     FORMAT_INDENT_STYLES,
     RELATIVE_PATH_PATTERN,
+    REMOVAL_REASON_DESCRIPTION,
     FORMAT_OVERRIDE_MIN_FIELDS,
+    SHARED_REMOVALS_DESCRIPTION,
 } from '#cli/config/settings/fields.ts';
 
 export const nonemptyStringsSchema = nonemptyStringSchema.array() satisfies z.ZodType<string[]>;
+
+export const removedConfigurationsSchema = z.union([
+    z.string().array(),
+    z
+        .strictObject({
+            value: z.string().array().describe(SHARED_REMOVALS_DESCRIPTION),
+            reason: z.string().describe(REMOVAL_REASON_DESCRIPTION),
+        })
+        .transform((reasoned) => reasoned.value),
+    z.record(z.string(), z.string().describe(REMOVAL_REASON_DESCRIPTION)).transform((reasons) => Object.keys(reasons)),
+]) satisfies z.ZodType<string[], RemovedConfigurations>;
 
 export const nonnegativeIntegerSchema = z.number().int().nonnegative() satisfies z.ZodType<number>;
 

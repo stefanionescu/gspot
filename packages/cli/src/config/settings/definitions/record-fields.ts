@@ -54,7 +54,8 @@ export const RECORD_FIELD_DEFINITIONS = {
     },
     'scope.removed_configurations': {
         reason_when: 'adding',
-        description: 'Configurations removed in this folder; only `gspot add` and `gspot remove` write this list.',
+        description:
+            'Configurations removed in this folder, each with the reason why; only `gspot add` and `gspot remove` write this table.',
         default: [] as [],
     },
     'scope.test_files': { description: 'More test files for this folder, added to the root list.' },

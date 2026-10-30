@@ -147,5 +147,13 @@ Read the bytes and mode of gspot.toml before an edit.
 export function readSettingsEdit(root: string): SettingsEdit {
     const { text, previous } = readSettingsFile(root);
     const table = parseTomlFile(SETTINGS_FILE, text);
+    const scopes = Array.isArray(table['scope']) ? table['scope'].filter((scope) => isTable(scope)) : [];
+    for (const written of [table, ...scopes]) {
+        const removed = written['removed_configurations'];
+        if (isReasonedValue(removed) && Array.isArray(removed.value))
+            written['removed_configurations'] = Object.fromEntries(
+                removed.value.map((name: unknown) => [name, removed.reason]),
+            );
+    }
     return { text, table, previous };
 }

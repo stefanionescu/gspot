@@ -101,7 +101,7 @@ test('remove without --reason exits 2 and writes nothing', async () => {
     });
 });
 
-test('remove writes the reason beside the removed names, and add takes a name out and keeps the reason', async () => {
+test('remove keeps the reason of each removed configuration, and add takes a name out and keeps the others', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash', 'python']),
     });
@@ -109,20 +109,17 @@ test('remove writes the reason beside the removed names, and add takes a name ou
     const first = await runGspot(sandbox.path, ['remove', 'bash', '--reason', 'Bash runs in another project.']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
     const removed = await runGspot(sandbox.path, ['remove', 'python', '--reason', reason]);
-    expect(removed.stdout).toContain('Updated the reason for every removed configuration.');
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    expect(removed.stdout.split('\n', 1)[0]).toBe('Removed python.');
     const contents: unknown = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
     expect(contents).toHaveProperty('removed_configurations', {
-        value: ['bash', 'python'],
-        reason,
+        bash: 'Bash runs in another project.',
+        python: reason,
     });
     const added = await runGspot(sandbox.path, ['add', 'bash']);
     expect(added.code, added.stdout + added.stderr).toBe(0);
     const removedSettings: unknown = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
-    expect(removedSettings).toHaveProperty('removed_configurations', {
-        value: ['python'],
-        reason,
-    });
+    expect(removedSettings).toHaveProperty('removed_configurations', { python: reason });
     const restored = await runGspot(sandbox.path, ['add', 'python']);
     expect(restored.code, restored.stdout + restored.stderr).toBe(0);
     const restoredSettings: unknown = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
@@ -153,9 +150,7 @@ test('remove --scope writes removed_configurations with its reason and applies i
     expect(saved.scopes.get('api')!.configurations).toStrictEqual([]);
     expect(saved.configurations).toStrictEqual(['markdown']);
     const contents = (parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['scope'];
-    expect(contents).toStrictEqual([
-        { path: 'api', configurations: [], removed_configurations: { value: ['bash'], reason } },
-    ]);
+    expect(contents).toStrictEqual([{ path: 'api', configurations: [], removed_configurations: { bash: reason } }]);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')))).toBe(false);
@@ -249,8 +244,7 @@ test('removing automatically selected licenses records the choice for the next s
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const text = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     expect(parse(text)).toHaveProperty('removed_configurations', {
-        value: ['licenses'],
-        reason: 'Legal reviews licenses outside this repository.',
+        licenses: 'Legal reviews licenses outside this repository.',
     });
     const session = await openSession(sandbox.path);
     expect(
@@ -279,4 +273,29 @@ test('remove after add says nothing about tools once the tool lockfiles match ag
     ]);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect((JSON.parse(removed.stdout) as ApplyReport).notes).toStrictEqual([]);
+});
+
+test('the next remove rewrites a shared reason of earlier removals into one reason per configuration', async () => {
+    const shared = 'Both languages moved to another repository.';
+    const scopeReason = 'The API scope builds no Swift code.';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': `configurations = ["markdown"]
+removed_configurations = { value = ["bash", "python"], reason = "${shared}" }
+
+[[scope]]
+path = "api"
+removed_configurations = { value = ["swift"], reason = "${scopeReason}" }
+
+[rules]
+enabled = false
+`,
+        'api/notes.txt': 'API notes\n',
+    });
+    const reason = 'The project keeps no Markdown files.';
+    const result = await runGspot(sandbox.path, ['remove', 'markdown', '--reason', reason]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'))).toMatchObject({
+        removed_configurations: { bash: shared, python: shared, markdown: reason },
+        scope: [{ path: 'api', removed_configurations: { swift: scopeReason } }],
+    });
 });

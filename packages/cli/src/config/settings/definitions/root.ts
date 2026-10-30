@@ -17,7 +17,7 @@ export const ROOT_SETTING_DEFINITIONS = {
         default: [] as [],
         reason_when: 'adding',
         description:
-            'Configurations you removed, which detection does not add back; only `gspot add` and `gspot remove` write this list.',
+            'Configurations you removed, each with the reason why, which detection does not add back; only `gspot add` and `gspot remove` write this table.',
     },
     import_rule: {
         configurations: ['structure'],

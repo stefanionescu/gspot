@@ -1,14 +1,13 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { buildSettings } from '#cli/settings/read.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
-import { isReasonedValue } from '#cli/settings/file.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import { removeKey, getScopeTable } from '#cli/settings/edit.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation/write.ts';
@@ -66,12 +65,6 @@ function removeUnusedSettings(
     return removed.length === 0 ? '' : ` Removed settings ${removed.join(', ')}.`;
 }
 
-function formatRemovedReason(previous: unknown, reason: string, scope: string): string {
-    if (!isReasonedValue(previous) || previous.reason === reason) return '';
-    const where = scope === '' ? '' : ' in scope ' + scope;
-    return ` Updated the reason for every removed configuration${where}.`;
-}
-
 async function runRemoveCommand(options: ConfigurationsOptions & { reason: string }): Promise<CommandResult> {
     const {
         root,
@@ -98,19 +91,17 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         };
     }
     const previous = scopeTable['removed_configurations'];
-    const scopeConfigurations = scopeSettings.configurations;
     const removed = options.configurations.filter((name) => selected.includes(name));
-    scopeTable['configurations'] = scopeConfigurations.filter((name) => !removed.includes(name));
+    scopeTable['configurations'] = scopeSettings.configurations.filter((name) => !removed.includes(name));
     scopeTable['removed_configurations'] = {
-        value: [...new Set([...scopeSettings.removed_configurations, ...removed])],
-        reason: options.reason,
+        ...(isTable(previous) ? previous : {}),
+        ...Object.fromEntries(removed.map((name) => [name, options.reason])),
     };
     const where = scope === '' ? '' : ` from scope ${scope}`;
     const unchanged = options.configurations.filter((name) => !selected.includes(name));
     const summary =
         formatConfigurationChange(removed, unchanged, where) +
-        removeUnusedSettings(input.table, configurationsByName, scope) +
-        formatRemovedReason(previous, options.reason, scope);
+        removeUnusedSettings(input.table, configurationsByName, scope);
     const ownsManagedKeys = configurationsByName
         .values()
         .filter((configuration) => removed.includes(configuration.name))
