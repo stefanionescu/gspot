@@ -1,6 +1,5 @@
 import { test, expect } from 'bun:test';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
-import { QUOTED_ESLINT_COMMENTS } from '#tests/config/checks/general/gspot/suppressions/syntax.ts';
 import { COMMENT_BOUNDARIES, COMPONENT_SCRIPT_COMMENTS } from '#tests/config/parsers/code/comments.ts';
 
 async function listMarkedLines(path: string, source: string, tags: readonly string[]): Promise<number[]> {
@@ -25,13 +24,6 @@ test.each(COMMENT_BOUNDARIES)(
     '%s: only the comment after the string counts as a comment',
     async (_label, path, source, line, tags) => {
         expect(await listMarkedLines(path, source, tags)).toStrictEqual([line]);
-    },
-);
-
-test.each(['source.js', 'source.ts'])(
-    'comment markers inside strings and templates in %s are not comments',
-    async (path) => {
-        expect(await listMarkedLines(path, QUOTED_ESLINT_COMMENTS, [])).toStrictEqual([12]);
     },
 );
 

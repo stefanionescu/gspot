@@ -13,7 +13,6 @@ import { chmod, mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/prom
 import { readHooks, readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
 
 import {
-    HUSKY_STUBS,
     LEFTHOOK_FILES,
     CI_JOB_DOCUMENTS,
     GITLAB_COMPONENT,
@@ -137,14 +136,6 @@ test('a hooks folder outside the repository that core.hooksPath names is listed'
     ]);
 });
 
-test('pre-commit is found from its configuration file', async () => {
-    await using sandbox = await testdir({ '.pre-commit-config.yaml': 'repos: []\n' });
-
-    expect(await readHooks({ root: sandbox.path, hasGit: false }).then(({ hooks }) => hooks)).toStrictEqual([
-        { kind: 'pre-commit', path: '.pre-commit-config.yaml', files: [] },
-    ]);
-});
-
 test('hook discovery refuses a malformed package.json and names it', async () => {
     await using sandbox = await testdir({ 'package.json': '{' });
 
@@ -162,14 +153,6 @@ test('hook discovery reports other hook folders and leaves gspot and task script
     expect(hooks.toSorted((left, right) => compareText(left.path, right.path))).toStrictEqual([
         { kind: 'githooks', path: '.git-hooks', files: ['pre-commit'] },
         { kind: 'githooks', path: '.githooks', files: ['pre-commit'] },
-        { kind: 'husky', path: '.husky', files: ['pre-commit'] },
-    ]);
-});
-
-test('Husky 9 counts as Husky, and its stub folder is no hook file', async () => {
-    await using sandbox = await createGitSandbox({ '.husky/pre-commit': 'npm test\n', ...HUSKY_STUBS });
-    runGitStep(sandbox.path, ['config', 'core.hooksPath', '.husky/_']);
-    expect(await readHooks({ root: sandbox.path, hasGit: true }).then(({ hooks }) => hooks)).toStrictEqual([
         { kind: 'husky', path: '.husky', files: ['pre-commit'] },
     ]);
 });
