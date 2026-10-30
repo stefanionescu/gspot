@@ -1,4 +1,5 @@
 import type { Sandbox } from '#tests/types/sandbox.ts';
+import type { MiseVersion } from '#cli/types/installers/mise.ts';
 import type { ToolPackageManager } from '#cli/types/installers/install.ts';
 
 export type GspotProject = AsyncDisposable & {
@@ -45,3 +46,11 @@ export type PythonProject = AsyncDisposable & {
 };
 
 export type IndexedPythonProject = PythonProject & { files: ToolProjectFiles };
+
+export type MiseProject = { tools: Record<string, string | MiseVersion> };
+
+export type ToolPackageJson = {
+    name: 'tools';
+    private: true;
+    devDependencies: Record<string, string>;
+};

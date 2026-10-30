@@ -35,12 +35,6 @@ export type PnpmPackage = {
     resolution: { integrity: string; tarball?: string | undefined };
 };
 
-export type ToolPackageJson = {
-    name: 'tools';
-    private: true;
-    devDependencies: Record<string, string>;
-};
-
 export type Lockfile = (typeof LOCKFILES)[number];
 
 export type ToolProjectLockfileName = Extract<Lockfile, { toolProject: true }>['file'];

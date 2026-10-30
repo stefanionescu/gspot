@@ -6,7 +6,7 @@ import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
-import type { ToolPackageJson } from '#cli/types/installers/npm.ts';
+import type { ToolPackageJson } from '#tests/types/packages.ts';
 import { YARN_CLIENTS } from '#tests/config/installers/projects.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
