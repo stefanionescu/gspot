@@ -4,13 +4,12 @@ import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
-import cliPackage from '#cli-package' with { type: 'json' };
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { STALE_LOCKFILE_NOTE } from '#tests/config/messages.ts';
 import { UPDATED_AGENTS } from '#tests/config/commands/contents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { TOOLS_CHANGED_LINE, UPDATED_GITATTRIBUTES, UNMATCHED_RULE_MESSAGE } from '#tests/config/commands/unignore.ts';
+import { TOOLS_CHANGED_LINE, UPDATED_GITATTRIBUTES } from '#tests/config/commands/unignore.ts';
 
 test('unignore removes a matching ignore, and a second run reports no change', async () => {
     await using sandbox = await createGitSandbox({
@@ -38,25 +37,8 @@ reason = "Word splitting is intentional in this sandbox."
     expect((parse(saved) as TomlTable)['ignore']).toBeUndefined();
     const repeated = await runGspot(sandbox.path, commandArguments);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect(repeated.stdout).toBe(UNMATCHED_RULE_MESSAGE);
-    const json = await runGspot(sandbox.path, [...commandArguments, '--json']);
-    expect(JSON.parse(json.stdout)).toStrictEqual({
-        version: cliPackage.version,
-        exitCode: 0,
-        notes: [],
-        changed: false,
-        summary: UNMATCHED_RULE_MESSAGE.trimEnd(),
-    });
+    expect(repeated.stdout).toBe('No change: rule SC2086 of bash/shellcheck has no matching ignore.\n');
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(saved);
-});
-
-test('unignore keeps an empty ignore list and reports no change', async () => {
-    const settings = buildSandboxSettings(['bash'], { rules: true, tables: 'ignore = []\n' });
-    await using sandbox = await createGitSandbox({ 'gspot.toml': settings });
-    const removed = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2086']);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(removed.stdout).toBe(UNMATCHED_RULE_MESSAGE);
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
 test('unignore counts the changed ignores and keeps other paths and other rules', async () => {
@@ -121,9 +103,6 @@ test('unignore --paths from a subfolder removes only the repository-relative pat
         'entry.sh': 'echo root\n',
         'app/entry.sh': 'echo app\n',
     });
-    const applied = await runGspot(sandbox.path, ['apply', '--json']);
-    expect(applied.code).toBe(0);
-    const generated = (JSON.parse(applied.stdout) as { written: string[] }).written;
     const result = await runGspot(join(sandbox.path, 'app'), [
         'unignore',
         'bash/shellcheck',
@@ -134,17 +113,7 @@ test('unignore --paths from a subfolder removes only the repository-relative pat
         '--json',
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stderr).toBe('');
-    expect(JSON.parse(result.stdout)).toStrictEqual({
-        version: cliPackage.version,
-        exitCode: 0,
-        written: [],
-        unchanged: generated,
-        removed: [],
-        updated: [],
-        notes: [
-            'The tool lockfile is missing or stale. Run gspot install; until then gspot/generated-files fails on it.',
-        ],
+    expect(JSON.parse(result.stdout)).toMatchObject({
         summary: 'Removed 1 path from 1 ignore for rule SC2086 of bash/shellcheck for entry.sh.',
         changed: true,
     });

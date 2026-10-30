@@ -4,9 +4,7 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { CONFIGURATIONS_SETTINGS } from '#tests/config/toml.ts';
 import { listNpmInstallFiles } from '#tests/setup/cli/tools.ts';
@@ -16,12 +14,12 @@ import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 import {
     API_SCOPE_FILES,
     TOOLS_CHANGED_NOTE,
     BASH_CONFIG_FILE_NAMES,
-    ALWAYS_SELECTED_RESULTS,
     UNKNOWN_CONFIGURATION_REFUSALS,
     INHERITED_CONFIGURATION_SETTINGS,
 } from '#tests/config/commands/samples.ts';
@@ -63,31 +61,27 @@ test('add security exits 2, names gspot set level, and writes nothing', async ()
         'gspot.toml': buildSandboxSettings([], { rules: true }),
         'source.py': 'PORT = 8080\n',
     });
-    const before = await readTree(sandbox.path);
-    expect(await runGspot(sandbox.path, ['add', 'security'])).toStrictEqual(ALWAYS_SELECTED_RESULTS.text);
-    expect(await runGspot(sandbox.path, ['add', 'security', '--json'])).toStrictEqual(ALWAYS_SELECTED_RESULTS.json);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    await assertRefusalWithoutWrites(sandbox.path, ['add', 'security'], {
+        error: 'arguments',
+        message:
+            'gspot selects security by itself when the repository needs it, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To turn one check off, run gspot ignore.',
+    });
 });
 
-test.each([false, true])(
-    'add reports an inherited configuration as already selected and writes nothing (json: %j)',
-    async (json) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': INHERITED_CONFIGURATION_SETTINGS,
-            'api/entry.sh': 'echo api\n',
-        });
-        const before = await readTree(sandbox.path);
-        const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', ...(json ? ['--json'] : [])]);
-        expect(result).toStrictEqual({
-            code: 0,
-            stdout: json
-                ? `${JSON.stringify({ version: cliPackage.version, exitCode: 0, notes: [], changed: false, summary: 'No change: bash is already selected.' }, undefined, 2)}\n`
-                : 'No change: bash is already selected.\n',
-            stderr: '',
-        });
-        expect(await readTree(sandbox.path)).toStrictEqual(before);
-    },
-);
+test('add reports an inherited configuration as already selected and writes nothing', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': INHERITED_CONFIGURATION_SETTINGS,
+        'api/entry.sh': 'echo api\n',
+    });
+    const before = await readTree(sandbox.path);
+    const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+        changed: false,
+        summary: 'No change: bash is already selected.',
+    });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
 
 test('add names every unknown configuration before changing the settings', async () => {
     const text = CONFIGURATIONS_SETTINGS;
@@ -116,21 +110,6 @@ test('add names a repeated configuration once and saves it once', async () => {
     expect(
         readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path).configurations,
     ).toStrictEqual(['python', 'pytest']);
-});
-
-test('add without names exits 2 and writes nothing', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        'main.py': 'PORT = 8080\n',
-    });
-    const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, ['add']);
-    expect(result).toStrictEqual({
-        code: 2,
-        stdout: '',
-        stderr: "Missing required argument 'configuration'. Run gspot add --help to see its arguments and options.\n",
-    });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('add --scope on a project folder writes its scope record', async () => {

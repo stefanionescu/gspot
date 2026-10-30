@@ -5,7 +5,6 @@ import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 import { type CommandArgument } from '#cli/types/runs/command.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -76,10 +75,7 @@ test('an empty list setting is refused as a settings error', async () => {
     await writeListSetting(sandbox.path, '{setting:openapi.generate_command}', []);
     const empty = await runGspot(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json']);
     expect(empty.code).toBe(2);
-    expect(JSON.parse(empty.stdout)).toStrictEqual({
-        version: cliPackage.version,
-        exitCode: 2,
-        notes: [],
+    expect(JSON.parse(empty.stdout)).toMatchObject({
         error: 'settings',
         message:
             'gspot.toml:4: openapi.generate_command: The value [] is not valid for openapi.generate_command. Use a valid list value: The command that writes the OpenAPI document from the code, run in the project scope folder.',

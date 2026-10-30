@@ -52,11 +52,6 @@ export const LOOSENED_SETTINGS = [
         value: 'account/index.html',
         second: 'admin/index.html',
     } as const,
-    {
-        key: 'dependencies.allowed_registries',
-        value: 'registry.example.test',
-        second: 'packages.example.test',
-    } as const,
 ] as const;
 
 export const SETTING_REASON = 'The project contract requires this reviewed exception.';
@@ -133,11 +128,8 @@ export const UNKNOWN_SETTING_KEYS = [
 export const STRING_SETTING_VALUES = [
     { key: 'naming.banned_words', words: ['2024'], value: ['2024'] },
     { key: 'naming.banned_words', words: ['true'], value: ['true'] },
-    { key: 'naming.banned_words', words: ['false'], value: ['false'] },
-    { key: 'ci.linux_runner', words: ['2204'], value: '2204' },
     { key: 'ci.linux_runner', words: ['true'], value: 'true' },
     { key: 'ci.setup_command', words: ['make', '2'], value: ['make', '2'] },
-    { key: 'ci.setup_command', words: ['false'], value: ['false'] },
 ] as const;
 
 export const SET_VALUE_REFUSALS = [

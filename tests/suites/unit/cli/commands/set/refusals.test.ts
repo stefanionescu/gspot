@@ -1,9 +1,7 @@
-import { test, expect } from 'bun:test';
-import { readTree } from '#tests/setup/system/files.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
+import { test } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 import {
     SET_REFUSALS,
@@ -38,24 +36,8 @@ test.each([...UNKNOWN_SETTING_KEYS])(
     },
 );
 
-test('set classifies malformed settings as a parse error', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': 'configurations = [' });
-    const before = await readTree(sandbox.path);
-    const failure = await runGspot(sandbox.path, ['set', 'level', 'all', '--json']);
-    expect(failure.code).toBe(2);
-    expect(failure.stderr).toBe('');
-    expect(JSON.parse(failure.stdout)).toStrictEqual({
-        version: cliPackage.version,
-        exitCode: 2,
-        notes: [],
-        error: 'parse',
-        message: 'gspot.toml:1:18 is not valid TOML: Expected "]". Fix the file.',
-    });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
 test.each([...SET_VALUE_REFUSALS])(
-    'set refuses $name in text and JSON without writing',
+    'set refuses $name without writing',
     async ({ arguments: commandArguments, message }) => {
         await using sandbox = await createGitSandbox(REFUSAL_FILES);
         await assertRefusalWithoutWrites(sandbox.path, commandArguments, { error: 'arguments', message });

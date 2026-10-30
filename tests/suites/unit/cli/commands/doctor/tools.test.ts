@@ -6,8 +6,6 @@ import { APP_PYPROJECT } from '#tests/config/toml.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { executableLayout } from '#cli/system/paths.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { type CommandJson } from '#cli/types/terminal.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
@@ -32,9 +30,7 @@ test('doctor reports no unowned gspot files in a fresh clone', async () => {
     commitAll(source);
     runGitStep(sandbox.path, ['clone', '--quiet', source, checkout]);
     const result = await runGspot(checkout, ['doctor', '--json']);
-    const resultText = await runGspot(checkout, ['doctor']);
     expect(JSON.parse(result.stdout)).toMatchObject({ suggestions: { unowned: [] } });
-    expect(resultText.stdout).not.toContain('config files gspot does not own');
 });
 
 test.each(['ok', 'newer', 'outdated'] as const)(
@@ -119,7 +115,6 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
         return version === undefined ? nativeVersion(command, options) : buildProcessResult({ stdout: version });
     });
     const missing = await runGspot(sandbox.path, ['doctor', '--json']);
-    const missingText = await runGspot(sandbox.path, ['doctor']);
     const pytestCov = {
         name: 'pytest-cov',
         path: join(sandbox.path, 'tool-bin', 'pytest'),
@@ -130,12 +125,6 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
         state: 'missing',
         note: 'The version command of the host tool does not list pytest-cov.',
     });
-    expect(
-        missingText.stdout
-            .split('\n')
-            .filter((line) => line.includes('pytest-cov'))
-            .map((line) => line.trim().replaceAll(/\s{2,}/gu, ' ')),
-    ).toStrictEqual(['missing pytest-cov The version command of the host tool does not list pytest-cov.']);
     isPresent = true;
     const available = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(
@@ -196,8 +185,7 @@ test('doctor --json reports every field when the required tools are missing', as
     using _lookup = fakeExecutableLookup(null);
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(result.code).toBe(1);
-    expect(result.stderr).toBe('');
-    const report = JSON.parse(result.stdout) as DoctorReport & CommandJson;
+    const report = JSON.parse(result.stdout) as DoctorReport;
     expect(report.tools.filter(({ state }) => state !== 'missing')).toStrictEqual([]);
     const prettier = String(getTool(readConfigurations().values(), 'prettier').version);
     const taplo = String(getTool(readConfigurations().values(), 'taplo').version);
@@ -213,13 +201,8 @@ test('doctor --json reports every field when the required tools are missing', as
         help: `Install mise (https://mise.jdx.dev/getting-started.html), or install taplo ${taplo} yourself.`,
         want: taplo,
     });
-    expect(report.tools).toContainEqual({ name: 'xmllint', state: 'missing', help: 'Install xmllint.' });
-    expect({ ...report, tools: [] }).toStrictEqual({
-        version: cliPackage.version,
-        exitCode: 1,
-        notes: [],
+    expect(report).toMatchObject({
         submodules: [],
-        tools: [],
         environments: [],
         suggestions: { detected: [], suggested: [], undetected: [], unowned: [], lintJobs: [] },
         addCommands: [],

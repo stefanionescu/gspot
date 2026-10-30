@@ -1,8 +1,3 @@
-import cliPackage from '#cli-package' with { type: 'json' };
-
-const ALWAYS_SELECTED_REFUSAL =
-    'gspot selects security by itself when the repository needs it, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To turn one check off, run gspot ignore.';
-
 export const INHERITED_CONFIGURATION_SETTINGS = `configurations = ["markdown", "bash"]
 [rules]
 enabled = false
@@ -12,15 +7,6 @@ path = "api"
 
 export const TOOLS_CHANGED_NOTE =
     'The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.';
-
-export const ALWAYS_SELECTED_RESULTS = {
-    text: { code: 2, stdout: '', stderr: `${ALWAYS_SELECTED_REFUSAL}\n` },
-    json: {
-        code: 2,
-        stdout: `${JSON.stringify({ version: cliPackage.version, exitCode: 2, notes: [], error: 'arguments', message: ALWAYS_SELECTED_REFUSAL }, undefined, 2)}\n`,
-        stderr: '',
-    },
-} as const;
 
 export const UNKNOWN_CONFIGURATION_REFUSALS = ['not-a-real-config-a', 'not-a-real-config-b']
     .map(

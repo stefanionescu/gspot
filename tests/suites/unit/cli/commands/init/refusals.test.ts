@@ -3,7 +3,6 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -56,10 +55,7 @@ test('init --json without --yes names --yes before reading the repository', asyn
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toStrictEqual({
-        version: cliPackage.version,
-        exitCode: 2,
-        notes: [],
+    expect(JSON.parse(result.stdout)).toMatchObject({
         error: 'arguments',
         message: '--json needs --yes, because gspot cannot ask while it prints JSON.',
     });

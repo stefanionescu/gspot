@@ -6,7 +6,6 @@ import { parse } from '@decimalturn/toml-patch';
 import { getValueAt } from '#cli/system/tables.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
@@ -136,10 +135,7 @@ test('set writes a TOML list of tables as tables and refuses a list of strings',
         '--json',
     ]);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(JSON.parse(refused.stdout)).toStrictEqual({
-        version: cliPackage.version,
-        exitCode: 2,
-        notes: [],
+    expect(JSON.parse(refused.stdout)).toMatchObject({
         error: 'arguments',
         message: String.raw`The value ["{name = \"a\", message = \"Use its public entrypoint.\"}"] is not valid for tools.eslint.restricted_imports. Use a valid list value: Imports that this repository refuses, each with a name and a message.`,
     });

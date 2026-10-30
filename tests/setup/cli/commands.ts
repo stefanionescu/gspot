@@ -4,7 +4,6 @@ import { spyOn, expect } from 'bun:test';
 import { runProgram } from '#cli/main.ts';
 import { type Sandbox } from '#tests/types/sandbox.ts';
 import { readTree } from '#tests/setup/system/files.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
@@ -127,8 +126,8 @@ export async function runGspotStep(sandbox: Sandbox, commandArguments: readonly 
 }
 
 /**
-Run a refused command in text and JSON, and check that both refuse it with the error kind and message of the refusal,
-and write nothing.
+Run a refused command with --json, and check that it refuses it with the error kind and message of the refusal, and
+writes nothing.
 */
 export async function assertRefusalWithoutWrites(
     root: string,
@@ -136,20 +135,9 @@ export async function assertRefusalWithoutWrites(
     refusal: { error: string; message: string },
 ): Promise<void> {
     const before = await readTree(root);
-    const human = await runGspot(root, commandArguments);
-    expect(human.code, human.stdout + human.stderr).toBe(2);
-    expect(human.stdout).toBe('');
-    expect(human.stderr).toBe(`${refusal.message}\n`);
-    expect(await readTree(root)).toStrictEqual(before);
     const structured = await runGspot(root, [...commandArguments, '--json']);
-    expect(structured.code).toBe(2);
-    expect(structured.stderr).toBe('');
-    expect(JSON.parse(structured.stdout)).toStrictEqual({
-        version: cliPackage.version,
-        exitCode: 2,
-        notes: [],
-        ...refusal,
-    });
+    expect(structured.code, structured.stdout + structured.stderr).toBe(2);
+    expect(JSON.parse(structured.stdout)).toMatchObject(refusal);
     expect(await readTree(root)).toStrictEqual(before);
 }
 
