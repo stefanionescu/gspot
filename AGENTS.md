@@ -169,7 +169,7 @@ repository.
 - `system/` holds the code every layer may import: access to files, processes, Git, the environment, and the terminal,
   and the pure text and value helpers that `parsers/` needs.
 - A unit test file mirrors the source file it tests, with the same name. `tests/suites/unit/<package>/<path>.test.ts` tests
-  `packages/<package>/src/<path>.ts`. A test of a whole source folder takes the folder name, such as `tests/suites/unit/docs.test.ts` for `docs/src/`.
+  `packages/<package>/src/<path>.ts`. A test of a whole source folder takes the folder name.
 - When the tests of one source file or folder pass 300 lines, they become a folder of that name with one file per
   scenario.
 - An integration test mirrors what it runs: `tests/suites/integration/checks/<group>/<configuration>.test.ts`,

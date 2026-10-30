@@ -13,7 +13,6 @@ import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 import {
     FAVICON,
     EDIT_URL,
-    DESCRIPTION,
     SOCIAL_IMAGE,
     FONT_PACKAGES,
     REPOSITORY_URL,
@@ -59,7 +58,7 @@ export default defineConfig({
             plugins: [
                 starlightLlmsTxt({
                     projectName: 'gspot',
-                    description: DESCRIPTION,
+                    description: cliPackage.description,
                     details: AGENT_STEPS,
                     ...LLMS_PAGES,
                 }),

@@ -5,9 +5,9 @@ import Example from '#docs/components/home/example/Example.astro';
 import { TOOLS, USE_CASES, HOME_TITLE } from '#docs/config/home.ts';
 import '#docs/components/home/page.css';
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
+import { NPM_URL, DOCS_PATH, REPOSITORY_URL } from '#docs/config/site.ts';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { REFERENCE_PATH, REFERENCE_FOLDERS } from '#docs/config/reference.ts';
-import { NPM_URL, DOCS_PATH, DESCRIPTION, REPOSITORY_URL } from '#docs/config/site.ts';
 
 const images = import.meta.glob<ImageMetadata>('../assets/tools/*', { eager: true, import: 'default' });
 const tools = TOOLS.map(({ name, icon }) => {
@@ -20,7 +20,7 @@ const tools = TOOLS.map(({ name, icon }) => {
 <StarlightPage
     frontmatter={{
         title: HOME_TITLE,
-        description: DESCRIPTION,
+        description: cliPackage.description,
         hero: { title: HOME_TITLE },
         template: 'splash',
         editUrl: false,

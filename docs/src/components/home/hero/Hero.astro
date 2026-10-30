@@ -1,14 +1,15 @@
 ---
 import hero from '#docs/assets/hero.webp';
+import { DOCS_PATH } from '#docs/config/site.ts';
 import { HOME_TITLE } from '#docs/config/home.ts';
 import Setup from '#docs/components/home/setup/Setup.astro';
-import { DOCS_PATH, DESCRIPTION } from '#docs/config/site.ts';
+import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 ---
 
 <section class="hero" aria-labelledby="_top">
     <div class="hero-copy">
         <h1 id="_top">{HOME_TITLE}</h1>
-        <p class="lead">{DESCRIPTION}</p>
+        <p class="lead">{cliPackage.description}</p>
         <Setup />
         <a class="hero-docs" href={DOCS_PATH}>
             Read the docs →

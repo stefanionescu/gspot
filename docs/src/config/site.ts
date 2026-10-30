@@ -1,8 +1,5 @@
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 
-export const DESCRIPTION =
-    'gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.';
-
 export const REPOSITORY_URL = 'https://github.com/stefanionescu/gspot';
 
 export const DOCS_PATH = '/start/overview/';
