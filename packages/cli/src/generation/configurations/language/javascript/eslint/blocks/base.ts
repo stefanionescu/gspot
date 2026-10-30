@@ -1,6 +1,8 @@
+import { basename } from 'node:path/posix';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { MISE_TASKS_GLOB } from '#cli/config/files/names.ts';
 import { readScopeAliases } from '#cli/repository/npm/aliases.ts';
+import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
@@ -38,12 +40,15 @@ import {
     CONSOLE_RULES,
     NODE_RUNTIMES,
     RUNTIME_GLOBALS,
+    PIN_RANGES_RULE,
     TEST_CHECK_RULES,
     JAVASCRIPT_RULES,
     GSPOT_RULE_PREFIX,
     GSPOT_PRESET_LEVELS,
     IMPORT_LAYOUT_RULES,
+    PRIVATE_PIN_OPTIONS,
     PACKAGE_JSON_PATTERN,
+    PUBLISHED_PIN_OPTIONS,
     ESLINT_PLUGIN_IMPORTS,
     IMPORT_BOUNDARIES_RULE,
     ROOT_PACKAGE_JSON_RULES,
@@ -202,6 +207,13 @@ export function buildClosingBlocks(
     const { level } = planned.blockWriter;
     const rules = planned.levelRules;
     const presets = planned.eslintPresets.get(JAVASCRIPT_CONFIGURATION);
+    const privatePackages = session.repository.files
+        .filter(
+            (file) =>
+                basename(file.path) === PACKAGE_JSON &&
+                readCachedPackageJson(session.reads, file.path)?.['private'] === true,
+        )
+        .map((file) => escapeGlob(file.path));
     const selectorGroups = buildSelectorBlocks(session.scopes, level, session.settings.structure.reexports);
     return [
         ...buildRuntimeBlocks(eslintFiles, runtimeBlocks),
@@ -223,12 +235,10 @@ export function buildClosingBlocks(
         { fields: { files: eslintFiles.scripts, rules: SCRIPT_RULES } },
         { fields: { files: eslintFiles.tests, rules: TEST_RULES } },
         ...buildBasePresetBlocks(presets, PRESETS_AFTER_CONFIGURATIONS, eslintFiles.code),
-        {
-            fields: {
-                files: [PACKAGE_JSON_PATTERN],
-                rules: { 'package-json/restrict-dependency-ranges': ['error', { rangeType: 'pin' }] },
-            },
-        },
+        { fields: { files: [PACKAGE_JSON_PATTERN], rules: { [PIN_RANGES_RULE]: ['error', PUBLISHED_PIN_OPTIONS] } } },
+        ...(privatePackages.length === 0
+            ? []
+            : [{ fields: { files: privatePackages, rules: { [PIN_RANGES_RULE]: ['error', PRIVATE_PIN_OPTIONS] } } }]),
         { fields: { files: [PACKAGE_JSON], rules: ROOT_PACKAGE_JSON_RULES } },
         {
             fields: {

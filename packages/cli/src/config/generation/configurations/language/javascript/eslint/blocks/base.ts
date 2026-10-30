@@ -118,6 +118,12 @@ export const IMPORT_BOUNDARIES_RULE = 'gspot/import-boundaries';
 
 export const PACKAGE_JSON_PATTERN = '**/package.json';
 
+export const PIN_RANGES_RULE = 'package-json/restrict-dependency-ranges';
+
+export const PUBLISHED_PIN_OPTIONS = { forDependencyTypes: ['devDependencies'], rangeType: 'pin' } as const;
+
+export const PRIVATE_PIN_OPTIONS = { rangeType: 'pin' } as const;
+
 export const GSPOT_RULE_PREFIX = 'gspot/';
 
 export const BOUNDARIES_FILES_SETTING = 'boundaries/files';
