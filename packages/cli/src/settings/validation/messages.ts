@@ -15,6 +15,7 @@ function formatValueAdvice(
     let inner = schema === undefined ? undefined : unwrapSettingSchema(schema);
     if (inner instanceof z.ZodUnion) inner = inner.options[0] as z.ZodType;
     if (inner instanceof z.ZodNumber) return `a whole number of ${String(inner.minValue ?? 0)} or more`;
+    if (inner instanceof z.ZodBoolean) return 'true or false';
     const description = setting.description.replace(TRAILING_PERIOD, '');
     return `a valid ${setting.type} value${description === '' ? '' : ': ' + description}`;
 }

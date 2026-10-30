@@ -1,3 +1,4 @@
+import { RECORD_FIELDS } from '#cli/settings/schema-lookup.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/inheritance.ts';
@@ -20,7 +21,7 @@ function formatLooseningError(key: string, written: WrittenSetting, shipped: unk
     const scopeFlag = scopePath === '' ? '' : ` --scope ${quoteArgument(scopePath)}`;
     const value = JSON.stringify(written.value);
     const argument = typeof written.value === 'string' ? written.value : value;
-    return `${key} = ${value} is looser than the shipped ${shown}, so it needs a reason. Run: gspot set ${quoteArgument(key)} ${quoteArgument(argument)}${scopeFlag} --reason "<why>"`;
+    return `${value} is looser than the shipped ${shown}, so it needs a reason. Run: gspot set ${quoteArgument(key)} ${quoteArgument(argument)}${scopeFlag} --reason "<why>"`;
 }
 
 function validateWrittenReason(
@@ -111,9 +112,12 @@ export function formatUnknownSetting(availableSettings: AvailableSettings, key: 
     if (key.startsWith('limits.')) return formatUnknownLimitSetting(key, all);
     const depth = key.startsWith('tools.') ? TABLE_KEY_SEGMENTS : 1;
     const prefix = key.includes('.') ? key.split('.').slice(0, depth).join('.') : '';
-    const keys = all
-        .filter((name) => (prefix === '' ? !name.includes('.') : name.startsWith(`${prefix}.`)))
-        .map((name) => (prefix === '' ? name : name.slice(prefix.length + 1)));
+    const keys =
+        prefix === ''
+            ? [...new Set(all.map((name) => name.split('.', 1)[0] as string))].filter(
+                  (name) => !Object.hasOwn(RECORD_FIELDS, name),
+              )
+            : all.filter((name) => name.startsWith(`${prefix}.`)).map((name) => name.slice(prefix.length + 1));
     const near = selectSimilarNames(prefix === '' ? key : key.slice(prefix.length + 1), keys);
     const rest = keys.filter((each) => !near.includes(each));
     const suggestions = [...near, ...rest];

@@ -1,4 +1,4 @@
-export const TYPO_MIN = 2;
+export const TYPO_MIN = 1;
 
 export const TYPO_FRACTION = 3;
 

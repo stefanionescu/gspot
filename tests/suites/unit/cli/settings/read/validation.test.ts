@@ -156,7 +156,7 @@ test('a limit looser than the default needs a reason, and a tighter one does not
             name: 'GspotError',
             code: 'settings',
             message:
-                'gspot.toml:3: limits.file_lines: limits.file_lines = 1000 is looser than the shipped default 300, so it needs a reason. Run: gspot set limits.file_lines 1000 --reason "<why>"',
+                'gspot.toml:3: limits.file_lines: 1000 is looser than the shipped default 300, so it needs a reason. Run: gspot set limits.file_lines 1000 --reason "<why>"',
         }),
     );
     expect(validateSettingsText('configurations = ["bash"]\n[limits]\nfile_lines = 100\n')).toStrictEqual([]);
@@ -240,10 +240,10 @@ test('unknown configurations are refused where they are written, with a suggesti
     );
     const suggestion = 'See https://generativespotting.com/reference/configurations/ for the available configurations.';
     expect(errors).toStrictEqual([
-        `gspot.toml:2: configurations.0: There is no configuration called bas. Did you mean bash, css, supabase? ${suggestion}`,
-        `gspot.toml:2: configurations.2: There is no configuration called bas. Did you mean bash, css, supabase? ${suggestion}`,
+        `gspot.toml:2: configurations.0: There is no configuration called bas. Did you mean bash, supabase? ${suggestion}`,
+        `gspot.toml:2: configurations.2: There is no configuration called bas. Did you mean bash, supabase? ${suggestion}`,
         `gspot.toml:5: scope.0.configurations.0: There is no configuration called pythonn. Did you mean python? ${suggestion}`,
-        `gspot.toml:5: scope.0.configurations.1: There is no configuration called bas. Did you mean bash, css, supabase? ${suggestion}`,
+        `gspot.toml:5: scope.0.configurations.1: There is no configuration called bas. Did you mean bash, supabase? ${suggestion}`,
     ]);
 });
 

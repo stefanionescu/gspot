@@ -3,7 +3,7 @@ export const INVALID_SETTING_MESSAGES = [
         name: 'an unknown root key',
         text: '# The repository settings.\nnope = true\n',
         message:
-            'gspot.toml:2: nope: nope is not a gspot.toml setting. Did you mean scope? See generativespotting.com/reference/gspot-toml/ for every key.',
+            'gspot.toml:2: nope: nope is not a gspot.toml setting. See generativespotting.com/reference/gspot-toml/ for every key.',
     },
     {
         name: 'a wrong root enum type',
