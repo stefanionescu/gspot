@@ -1,3 +1,5 @@
+import { CI_NODE } from '#cli/config/generation/ci.ts';
+
 export const SETUP_CASES = [
     ['github', 0],
     ['github', 29],
@@ -39,8 +41,9 @@ export const INSTALL_STEP = 'Install gspot tools';
 
 export const GITLAB_SCRIPT = [
     'set -euo pipefail',
-    "mise install node@24 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3'",
-    `PATH="$(mise bin-paths node@24 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3' | paste -sd : -):$` + '{PATH}"',
+    `mise install ${CI_NODE} 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3'`,
+    `PATH="$(mise bin-paths ${CI_NODE} 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3' | paste -sd : -):$` +
+        '{PATH}"',
     'export PATH',
     'gspot install',
     'git add --intent-to-add -- .gspot',

@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
+import { CI_NODE } from '#cli/config/generation/ci.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { openWriter } from '#cli/repository/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -118,7 +119,7 @@ test('an npm install that runs past the time limit names the limit', async () =>
     const error = await captureRejection(installNpmTools(await buildNpmToolInstall(session, owner)));
     const message = error.message;
     expect(message).toStartWith(
-        'The command mise exec node@24 bun@1.4.2 -- bun install --frozen-lockfile --linker hoisted --config=',
+        `The command mise exec ${CI_NODE} bun@1.4.2 -- bun install --frozen-lockfile --linker hoisted --config=`,
     );
     expect(message).toEndWith(
         `bunfig.toml ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>.`,

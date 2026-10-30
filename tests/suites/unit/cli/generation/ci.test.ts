@@ -14,9 +14,9 @@ import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation/ci.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
+import { CI_NODE, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation/ci.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
 
 import {
@@ -35,9 +35,10 @@ test('the GitHub workflow installs gspot once and runs hook checks in one lint j
     expect(Object.keys(workflow.jobs)).toStrictEqual(['lint']);
     expect(steps.map((step) => step.name)).toStrictEqual([...LINT_STEPS]);
     expect(steps.find((step) => step.name === 'Install gspot')?.run).toBe(
-        `mise install node@24 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3'
-mise bin-paths node@24 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3' >> "$GITHUB_PATH"`,
+        `mise install ${CI_NODE} 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3'
+mise bin-paths ${CI_NODE} 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3' >> "$GITHUB_PATH"`,
     );
+    expect(steps.find((step) => step.name === 'Install gspot')?.run).toMatch(/^mise install node@\d+\.\d+\.\d+ /u);
     expect(steps.find((step) => step.name === INSTALL_STEP)?.run).toBe(
         'gspot install\ngit add --intent-to-add -- .gspot\ngit diff --exit-code -- .gspot',
     );
@@ -170,9 +171,9 @@ test('without a setup command, CI installs the locked dependencies of each proje
     const session = await openSession(sandbox.path);
     const uv = session.configurationsByName.get('python')!.tools.find(({ name }) => name === 'uv')?.version;
     expect(listProjectInstallLines(session)).toStrictEqual([
-        'mise exec node@24 npm@11.10.1 -- npm ci',
-        `mise exec node@24 uv@${String(uv)} -- uv sync --locked`,
-        '(cd web && mise exec node@24 pnpm@10.30.0 -- pnpm install --frozen-lockfile)',
+        `mise exec ${CI_NODE} npm@11.10.1 -- npm ci`,
+        `mise exec ${CI_NODE} uv@${String(uv)} -- uv sync --locked`,
+        `(cd web && mise exec ${CI_NODE} pnpm@10.30.0 -- pnpm install --frozen-lockfile)`,
         '(cd web && npx --no -- next typegen)',
     ]);
 });

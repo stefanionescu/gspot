@@ -1,6 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
+import { CI_NODE } from '#cli/config/generation/ci.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { openWriter } from '#cli/repository/writer.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
@@ -48,9 +49,7 @@ test.each(PACKAGE_MANAGER_AGE_CASES)(
                 `gspot install needs ${name} ${minimum} or later, which holds back new releases for dependencies.min_release_age_days. Found ${version}.`,
             );
         }
-        expect(context.steps).toStrictEqual([
-            ['mise', 'exec', 'node@24', `${name}@${version}`, '--', name, '--version'],
-        ]);
+        expect(context.steps).toStrictEqual([['mise', 'exec', CI_NODE, `${name}@${version}`, '--', name, '--version']]);
     },
 );
 
@@ -65,9 +64,9 @@ test('a package manager version timeout names the install command and configured
     using _bun = fakeCommand('mise', () => Promise.resolve(buildProcessResult(PACKAGE_MANAGER_TIMEOUT)));
     const timeoutError = await captureRejection(assertPackageManagerVersion(context));
     expect(timeoutError.message).toBe(
-        `The command mise exec node@24 bun@1.4.2 -- bun --version ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>.`,
+        `The command mise exec ${CI_NODE} bun@1.4.2 -- bun --version ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>.`,
     );
-    expect(context.steps).toStrictEqual([['mise', 'exec', 'node@24', 'bun@1.4.2', '--', 'bun', '--version']]);
+    expect(context.steps).toStrictEqual([['mise', 'exec', CI_NODE, 'bun@1.4.2', '--', 'bun', '--version']]);
 });
 
 test('a pinned pnpm runs through mise instead of the older PATH executable', async () => {
@@ -86,5 +85,5 @@ test('a pinned pnpm runs through mise instead of the older PATH executable', asy
     using writer = openWriter(sandbox.path);
     const install = buildToolInstall(session, writer);
     await assertPackageManagerVersion(install);
-    expect(install.steps).toStrictEqual([['mise', 'exec', 'node@24', 'pnpm@10.30.0', '--', 'pnpm', '--version']]);
+    expect(install.steps).toStrictEqual([['mise', 'exec', CI_NODE, 'pnpm@10.30.0', '--', 'pnpm', '--version']]);
 });

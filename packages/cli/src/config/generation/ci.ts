@@ -107,7 +107,7 @@ export const GITLAB_RULES = [
     { if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH', interruptible: false },
 ] as const;
 
-export const CI_NODE = 'node@24';
+export const CI_NODE = 'node@24.20.0';
 
 export const CI_STEP_NAMES = {
     checkout: 'Check out source',
