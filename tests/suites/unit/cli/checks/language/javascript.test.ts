@@ -12,11 +12,11 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
 import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
+import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/checks/language/javascript.ts';
 
 test('javascript/tsc checks a stale jsconfig and skips an absent one with apply advice', async () => {

@@ -7,10 +7,16 @@ import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
-import { TYPESCRIPT_TAG } from '#cli/config/checks/tsc/compiler.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { runTsc, listCompilerFiles, restoreCommandPaths, writeReferenceProjects } from '#cli/checks/tsc/compiler.ts';
+import { TYPESCRIPT_TAG } from '#cli/config/checks/cross-configuration/tsc/compiler.ts';
+
+import {
+    runTsc,
+    listCompilerFiles,
+    restoreCommandPaths,
+    writeReferenceProjects,
+} from '#cli/checks/cross-configuration/tsc/compiler.ts';
 
 /**
 Runs tsc on a project, or on every project that a solution tsconfig names.

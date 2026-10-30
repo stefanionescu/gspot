@@ -13,10 +13,10 @@ import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
+import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 
 /**
 Keep the compiler cache in a temporary folder until the test ends.

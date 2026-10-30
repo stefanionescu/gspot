@@ -14,9 +14,9 @@ import { CALLER_WORKFLOW } from '#tests/config/github-actions.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 
 import {
     ACTIONLINT_EXITS,

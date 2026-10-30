@@ -5,9 +5,9 @@ import type { Node, DefElem, TypeName } from '@pgsql/types';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { getNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { PUBLIC_SCHEMA } from '#cli/config/checks/database/postgres/schema.ts';
-import type { Migration, FunctionSecurity } from '#cli/types/checks/postgres.ts';
 import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import type { SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
+import type { Migration, FunctionSecurity } from '#cli/types/checks/database/postgres.ts';
 
 import {
     SECURITY_DEFINER_MESSAGE,

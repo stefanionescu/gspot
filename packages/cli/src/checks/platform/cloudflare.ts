@@ -2,10 +2,10 @@ import { read } from '#cli/system/files/reads.ts';
 import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
-import { SYNTAX_RULE } from '#cli/config/checks/syntax.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
+import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/syntax.ts';
 import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/checks/platform/cloudflare.ts';
 
 import {

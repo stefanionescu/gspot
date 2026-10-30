@@ -5,7 +5,7 @@ import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { SQUAWK_CHECK } from '#cli/config/checks/database/postgres/migrations.ts';
-import { SQUAWK_TABLE, SQUAWK_DEFAULT_LEVEL_OFF } from '#cli/config/generation/configurations/postgres.ts';
+import { SQUAWK_TABLE, SQUAWK_DEFAULT_LEVEL_OFF } from '#cli/config/generation/configurations/database/postgres.ts';
 
 /**
 Build squawk.toml: the disabled Squawk migration rules.

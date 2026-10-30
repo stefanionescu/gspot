@@ -2,7 +2,6 @@ import { parseAllDocuments } from 'yaml';
 import { read } from '#cli/system/files/reads.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
-import { SYNTAX_RULE } from '#cli/config/checks/syntax.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
@@ -10,6 +9,7 @@ import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import { JSONC_OPTIONS } from '#cli/config/parsers/formats/json.ts';
 import type { CodeFence } from '#cli/types/parsers/formats/markdown.ts';
+import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/syntax.ts';
 import type { ParseCache, GrammarName } from '#cli/types/parsers/code/grammars.ts';
 import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser';
 

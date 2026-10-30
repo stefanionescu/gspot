@@ -13,7 +13,7 @@ import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/code/environment.ts';
 import { type CheckResult, type CheckFinding } from '#cli/types/runs/check.ts';
-import { getSiblingCommand, listPushedCommits } from '#cli/checks/pushed-commits.ts';
+import { getSiblingCommand, listPushedCommits } from '#cli/checks/cross-configuration/pushed-commits.ts';
 import { listPythonEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
 
 import {

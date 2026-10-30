@@ -8,9 +8,7 @@ import type { Parsed } from '#cli/types/shapes.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { find, read } from '#cli/system/files/reads.ts';
-import { parseCheckedFile } from '#cli/checks/syntax.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
-import { SYNTAX_RULE } from '#cli/config/checks/syntax.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
@@ -20,11 +18,13 @@ import type { Session, CheckSession } from '#cli/types/session.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { getNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { parseCheckedFile } from '#cli/checks/cross-configuration/syntax.ts';
+import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/syntax.ts';
 import type { SqlStatement, SqlNodeFields } from '#cli/types/parsers/code/sql.ts';
 import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { formatOutputTail, assertToolFindings } from '#cli/runs/command/output.ts';
-import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/checks/supabase.ts';
 import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/checks/platform/supabase.ts';
+import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/checks/platform/supabase.ts';
 
 import {
     RULES,

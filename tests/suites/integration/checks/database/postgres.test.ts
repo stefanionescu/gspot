@@ -10,7 +10,7 @@ import {
     UNWRAPPED_MIGRATION_SQL,
     SQUAWK_ROOT_MIGRATION_PATH,
     SQUAWK_CHILD_MIGRATION_PATH,
-} from '#tests/config/integration/checks/postgres.ts';
+} from '#tests/config/integration/checks/database/postgres.ts';
 
 test("Squawk uses each scope's assume_in_transaction setting", async () => {
     await using sandbox = await createGitSandbox({

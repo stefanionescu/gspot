@@ -4,13 +4,13 @@ import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { remember } from '#cli/system/files/cache.ts';
-import { SYNTAX_RULE } from '#cli/config/checks/syntax.ts';
 import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
-import { type Migration, type MigrationRead } from '#cli/types/checks/postgres.ts';
+import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/syntax.ts';
 import { readHead, readBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
+import { type Migration, type MigrationRead } from '#cli/types/checks/database/postgres.ts';
 
 import {
     parseSqlFile,

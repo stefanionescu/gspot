@@ -11,7 +11,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { DATABASE_SCHEMAS, SUPABASE_TYPES_OUTPUT } from '#tests/config/checks/generator-outputs.ts';
+import { DATABASE_SCHEMAS, SUPABASE_TYPES_OUTPUT } from '#tests/config/checks/cross-configuration/generator-outputs.ts';
 
 async function prepareSupabaseCheck(
     root: string,

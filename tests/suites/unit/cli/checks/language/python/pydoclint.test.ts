@@ -17,8 +17,8 @@ import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
+import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 
 import {
     FAILED_STYLE_BATCH,

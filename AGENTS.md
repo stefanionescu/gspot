@@ -146,21 +146,14 @@ repository.
   its folder in `packages/cli/configurations/`.
 - When the checks of a configuration pass the file length limit, they move to a folder `checks/<group>/<configuration>/`. That
   folder has one file per check, named after it, or per input that several checks read.
-- Code that checks of several configurations share sits at the top of `checks/`. Code that belongs to one
-  configuration stays in its folder when another configuration reuses it, such as the Postgres migrations reader that
-  supabase reads.
-- The code of one configuration sits at the same path in every tree. Its shipped files sit in
-  `packages/cli/configurations/<group>/<configuration>/`, and its checks in `packages/cli/src/checks/<group>/`.
+- Code that several configurations share sits in `checks/cross-configuration/` or `generation/config-files/`. Code
+  that belongs to one configuration stays in its folder when another configuration reuses it, such as the Postgres
+  migrations reader that supabase reads.
+- The code of one configuration sits at `<group>/<configuration>` in every tree: its shipped files in
+  `packages/cli/configurations/`, its checks, its generators, their `config/`, `types/`, and `schemas/` files, and its
+  tests. One code file sits at `<group>/<configuration>.ts`, and more files make the folder `<group>/<configuration>/`.
 - The code that writes a config file sits in `packages/cli/src/generation/configurations/<group>/<configuration>/`,
   named for the file it writes. gspot writes that file to `.gspot/configurations/<group>/<configuration>/`.
-- A folder of one code file merges into its parent folder, and this rule wins over the same-path rule. For example,
-  the one generator of the `dependencies` configuration sits in
-  `packages/cli/src/generation/configurations/general/dependencies.ts`.
-- A group folder of one code file merges into its parent too: the PostgreSQL generator sits in
-  `packages/cli/src/generation/configurations/postgres.ts`, and the translations check in
-  `packages/cli/src/checks/translations.ts`. A group folder that holds one configuration folder stays, with an
-  `[[ignore]]` record for `structure/pass-through-folders` in `gspot.toml`.
-- Code that several configurations share stays at the top of `checks/` or in `generation/config-files/`.
 - `packages/cli/src/commands/` has one file per command, `commands/<command>.ts`. A command that needs more files gets
   a folder `commands/<command>/` with the entry file `<command>.ts`.
 - A command's folder holds the code that only that command uses. Code on the subject of another layer, such as Git

@@ -5,9 +5,9 @@ import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
-import { MISSING_OPENAPI_FINDINGS } from '#tests/config/checks/generator-outputs.ts';
+import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
+import { MISSING_OPENAPI_FINDINGS } from '#tests/config/checks/cross-configuration/generator-outputs.ts';
 
 test('a missing OpenAPI document is reported before generation', async () => {
     using resources = new DisposableStack();

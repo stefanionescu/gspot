@@ -7,13 +7,18 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { buildTsconfig } from '#cli/checks/tsc/scope-tsconfig.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { REFERENCE_BUILD_FILES, REFERENCE_BUILD_RESULTS, IMPLICIT_RETURNS_IGNORE } from '#tests/config/checks/tsc.ts';
+import { buildTsconfig } from '#cli/checks/cross-configuration/tsc/scope-tsconfig.ts';
+
+import {
+    REFERENCE_BUILD_FILES,
+    REFERENCE_BUILD_RESULTS,
+    IMPLICIT_RETURNS_IGNORE,
+} from '#tests/config/checks/cross-configuration/tsc.ts';
 
 test('a project with its own tsconfig.json keeps its own compiler options', async () => {
     await using sandbox = await createGitSandbox({

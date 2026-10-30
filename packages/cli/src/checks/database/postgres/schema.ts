@@ -10,7 +10,7 @@ import type {
     SchemaState,
     StatementReader,
     SchemaAlterations,
-} from '#cli/types/checks/postgres.ts';
+} from '#cli/types/checks/database/postgres.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlining raises five schema readers above the complexity limit.
 function qualifyName(schema: string | undefined, name: string | undefined = ''): string {

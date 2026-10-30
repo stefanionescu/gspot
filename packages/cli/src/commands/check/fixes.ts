@@ -15,11 +15,11 @@ import { type CommandLaunch } from '#cli/types/runs/command.ts';
 import { listCopyFiles } from '#cli/runs/command/placeholders.ts';
 import { type SpawnResult } from '#cli/types/system/processes.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
-import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { prepareCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/commands/check/fixes.ts';
+import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 import { type FixReport, type FixResult, type FixRounds, type PathBytes } from '#cli/types/commands/check.ts';
 
 function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {

@@ -16,11 +16,16 @@ import type { Session, CheckSession } from '#cli/types/session.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
-import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/checks/tsc/compiler.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers/projects/tsconfig.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import { listCompilerFiles, addTsbuildinfoFlag, restoreCommandPaths } from '#cli/checks/tsc/compiler.ts';
+import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/checks/cross-configuration/tsc/compiler.ts';
 import { JSCONFIG_TSBUILDINFO, JAVASCRIPT_TSC_COMMAND } from '#cli/config/checks/language/javascript.ts';
+
+import {
+    listCompilerFiles,
+    addTsbuildinfoFlag,
+    restoreCommandPaths,
+} from '#cli/checks/cross-configuration/tsc/compiler.ts';
 
 function buildScopeCompilerProject(
     session: Session,

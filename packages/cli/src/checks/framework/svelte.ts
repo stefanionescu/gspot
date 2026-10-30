@@ -9,10 +9,10 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
-import { buildTsconfig } from '#cli/checks/tsc/scope-tsconfig.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
-import { TSCONFIG_COPY_FOLDER } from '#cli/config/checks/tsc/compiler.ts';
+import { buildTsconfig } from '#cli/checks/cross-configuration/tsc/scope-tsconfig.ts';
+import { TSCONFIG_COPY_FOLDER } from '#cli/config/checks/cross-configuration/tsc/compiler.ts';
 import { svelteFindingSchema, failureMessageSchema } from '#cli/schemas/checks/framework/svelte.ts';
 
 import {

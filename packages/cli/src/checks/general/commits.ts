@@ -9,7 +9,7 @@ import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/runs/results.ts';
 import { type CheckResult, type CheckFinding } from '#cli/types/runs/check.ts';
-import { getSiblingCommand, listPushedCommits } from '#cli/checks/pushed-commits.ts';
+import { getSiblingCommand, listPushedCommits } from '#cli/checks/cross-configuration/pushed-commits.ts';
 
 import {
     MESSAGE_FILE,

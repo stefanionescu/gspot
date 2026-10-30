@@ -5,11 +5,11 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
-import { claimProjectCheck } from '#cli/checks/tsc/compiler.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
-import { selectRequiredTsconfigOptions } from '#cli/checks/tsc/scope-tsconfig.ts';
+import { claimProjectCheck } from '#cli/checks/cross-configuration/tsc/compiler.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { TYPESCRIPT_TAG, PARENT_TSCONFIG_SKIP } from '#cli/config/checks/tsc/compiler.ts';
+import { selectRequiredTsconfigOptions } from '#cli/checks/cross-configuration/tsc/scope-tsconfig.ts';
+import { TYPESCRIPT_TAG, PARENT_TSCONFIG_SKIP } from '#cli/config/checks/cross-configuration/tsc/compiler.ts';
 
 import {
     OPTION_HELP,

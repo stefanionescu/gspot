@@ -378,6 +378,12 @@ reason = "This literal supplies a deliberate misspelling to the spelling checks 
 [[ignore]]
 check = "structure/lone-files"
 rule = "lone-file"
+paths = ["**/{checks,configurations}/{database,framework,general,infrastructure,language,library,platform,testing}/*"]
+reason = "Each group folder keeps the code of a configuration at <group>/<configuration>, also when the group holds one configuration."
+
+[[ignore]]
+check = "structure/lone-files"
+rule = "lone-file"
 paths = ["docs/src/pages/index.astro"]
 reason = "Astro builds the routes of the site only from files in src/pages/."
 
@@ -389,8 +395,8 @@ reason = "The manifest loader discovers config files in config-files/ and names 
 
 [[ignore]]
 check = "structure/pass-through-folders"
-paths = ["packages/cli/src/checks/database", "packages/cli/src/config/checks/database", "tests/config/checks/database", "tests/suites/unit/cli/checks/database"]
-reason = "The database group holds one configuration, postgres, and every group keeps each configuration in its own folder."
+paths = ["**/{checks,configurations}/{database,framework,general,infrastructure,language,library,platform,testing}"]
+reason = "Each group folder keeps the code of a configuration at <group>/<configuration>, also when the group holds one configuration."
 
 [[ignore]]
 check = "structure/shared-prefixes"

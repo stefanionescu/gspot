@@ -9,9 +9,9 @@ import { symlink, readFile, writeFile } from 'node:fs/promises';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
-import { BINARY_OUTPUT_HEX } from '#tests/config/checks/generator-outputs.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
+import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
+import { BINARY_OUTPUT_HEX } from '#tests/config/checks/cross-configuration/generator-outputs.ts';
 
 test('a [[command_check]] with outputs reports an output that differs from what its command writes', async () => {
     await using sandbox = await testdir();

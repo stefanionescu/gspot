@@ -10,14 +10,18 @@ import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { runSandboxCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { runCommand, buildProcessResult } from '#tests/setup/system/processes.ts';
-import { CLOUDFLARE_ENV_SOURCE, UNTRACKED_CLOUDFLARE_FINDINGS } from '#tests/config/checks/generator-outputs.ts';
+import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
+
+import {
+    CLOUDFLARE_ENV_SOURCE,
+    UNTRACKED_CLOUDFLARE_FINDINGS,
+} from '#tests/config/checks/cross-configuration/generator-outputs.ts';
 
 async function fakeWrangler(root: string): Promise<DisposableStack> {
     const pin = getTool(readConfigurations().values(), 'wrangler');

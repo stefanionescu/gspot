@@ -5,7 +5,6 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
 import { MISE_FILES } from '#cli/config/files/names.ts';
 import { read, find } from '#cli/system/files/reads.ts';
-import { parseCheckedFile } from '#cli/checks/syntax.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
@@ -13,6 +12,7 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
+import { parseCheckedFile } from '#cli/checks/cross-configuration/syntax.ts';
 import { miseToolsSchema } from '#cli/schemas/checks/general/dependencies.ts';
 import { readCachedPackageJson, readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 

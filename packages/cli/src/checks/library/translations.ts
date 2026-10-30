@@ -2,15 +2,15 @@ import { posix } from 'node:path';
 import { read } from '#cli/system/files/reads.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
-import { parseCheckedFile } from '#cli/checks/syntax.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { parseTree, findNodeAtLocation } from 'jsonc-parser';
 import { getPosition, compareText } from '#cli/system/text.ts';
-import { messagesSchema } from '#cli/schemas/checks/translations.ts';
-import type { MessageFiles, ParsedMessage } from '#cli/types/checks/translations.ts';
+import { parseCheckedFile } from '#cli/checks/cross-configuration/syntax.ts';
+import { messagesSchema } from '#cli/schemas/checks/library/translations.ts';
 import { TYPE, parse, type MessageFormatElement } from '@formatjs/icu-messageformat-parser';
+import type { MessageFiles, ParsedMessage } from '#cli/types/checks/library/translations.ts';
 
 import {
     RULES,
@@ -18,7 +18,7 @@ import {
     PLURAL_FORMAT,
     ARGUMENT_FORMATS,
     MESSAGE_FILE_SUFFIX,
-} from '#cli/config/checks/translations.ts';
+} from '#cli/config/checks/library/translations.ts';
 
 function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
     if (value === null || typeof value !== 'object') return new Map();

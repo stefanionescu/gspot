@@ -9,9 +9,14 @@ import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
-import { PROJECT_NOTES, GENERATOR_CASES, UNTRACKED_NOTES } from '#tests/config/checks/generator-outputs.ts';
+import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
+
+import {
+    PROJECT_NOTES,
+    GENERATOR_CASES,
+    UNTRACKED_NOTES,
+} from '#tests/config/checks/cross-configuration/generator-outputs.ts';
 
 async function prepareGeneratorCheck(root: string, scenario: (typeof GENERATOR_CASES)[number]) {
     await createFileTree(root, {

@@ -21,9 +21,9 @@ import { type IgnoreRecord } from '#cli/types/settings/file.ts';
 import { buildMiseProject } from '#cli/generation/tool-projects.ts';
 import { SHORT_HASH_LENGTH } from '#cli/config/commands/check/check.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
-import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { STAGED_FLAG, CHANGED_FLAG } from '#cli/config/commands/check/flags.ts';
+import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/runs/results.ts';
 import { type Finding, type CheckCode, type CheckResult, type CheckRunOptions } from '#cli/types/runs/check.ts';
 

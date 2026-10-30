@@ -2,11 +2,11 @@ import { read } from '#cli/system/files/reads.ts';
 import { getLimit } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
-import { countCodeLines } from '#cli/checks/code-lines.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { GRAMMAR_NAMES } from '#cli/config/parsers/code/grammars.ts';
 import type { GrammarName } from '#cli/types/parsers/code/grammars.ts';
+import { countCodeLines } from '#cli/checks/cross-configuration/code-lines.ts';
 import { FILE_LINES_RULE } from '#cli/config/checks/general/structure/long-files.ts';
 
 /**

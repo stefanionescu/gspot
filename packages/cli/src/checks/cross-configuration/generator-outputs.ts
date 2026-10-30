@@ -15,9 +15,9 @@ import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { type GeneratorOutput } from '#cli/types/configurations.ts';
 import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
-import type { GeneratorRun } from '#cli/types/checks/generator-outputs.ts';
-import { RULES, GENERATOR_IGNORED_FOLDERS } from '#cli/config/checks/generator-outputs.ts';
+import type { GeneratorRun } from '#cli/types/checks/cross-configuration/generator-outputs.ts';
 import { expandCommand, replacePlaceholders, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
+import { RULES, GENERATOR_IGNORED_FOLDERS } from '#cli/config/checks/cross-configuration/generator-outputs.ts';
 
 function listMissingOutputs(
     session: Session,
