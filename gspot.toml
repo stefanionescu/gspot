@@ -234,8 +234,8 @@ name = "planning"
 paths = ["packages/cli/src/planning/**"]
 
 [[import_rule]]
-name = "tools"
-paths = ["packages/cli/src/tools/**"]
+name = "executables"
+paths = ["packages/cli/src/executables/**"]
 
 [[import_rule]]
 name = "installers"

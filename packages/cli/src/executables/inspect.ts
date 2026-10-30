@@ -3,16 +3,16 @@ import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { MISE_TOOL } from '#cli/config/tools/locate.ts';
-import type { ToolAvailability } from '#cli/types/tools/run.ts';
+import { MISE_TOOL } from '#cli/config/executables/locate.ts';
 import { findToolProjectPackage } from '#cli/manifests/tools.ts';
+import type { ToolAvailability } from '#cli/types/executables/run.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
-import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
+import { readToolVersion, classifyToolVersion } from '#cli/executables/versions.ts';
 import type { InstalledDependency } from '#cli/types/repository/npm/installed-packages.ts';
-import type { ToolSearch, InspectedTool, ToolInspection } from '#cli/types/tools/inspection.ts';
-import { INSTALL_HELP, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/inspect.ts';
+import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/executables/locate.ts';
+import type { ToolSearch, InspectedTool, ToolInspection } from '#cli/types/executables/inspection.ts';
+import { INSTALL_HELP, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/executables/inspect.ts';
 import { readToolProjectPackage, findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
 
 function buildInstallHelp(tool: Tool): string {

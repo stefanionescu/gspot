@@ -1,4 +1,4 @@
-import type { ToolInspection } from '#cli/types/tools/inspection.ts';
+import type { ToolInspection } from '#cli/types/executables/inspection.ts';
 
 type ConfigurationSuggestion = { configuration: string; evidence: string; command: string };
 

@@ -4,9 +4,9 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import type { ConfiguredCheck } from '#cli/types/planning.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
-import type { ToolInspection } from '#cli/types/tools/inspection.ts';
 import type { RepositoryListing } from '#cli/types/repository/read.ts';
 import type { Settings, SettingsFile } from '#cli/types/settings/file.ts';
+import type { ToolInspection } from '#cli/types/executables/inspection.ts';
 import { type StartRunner, type PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
 
 export type Session = {

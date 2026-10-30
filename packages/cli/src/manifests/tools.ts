@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
-import { UV_TOOL } from '#cli/config/tools/uv.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Host } from '#cli/types/planning.ts';
+import { UV_TOOL } from '#cli/config/executables/uv.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { NODE_TOOL } from '#cli/config/installers/npm/project.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';

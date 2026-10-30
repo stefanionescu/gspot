@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
-import { runTool } from '#cli/tools/run.ts';
+import { runTool } from '#cli/executables/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';

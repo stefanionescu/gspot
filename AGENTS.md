@@ -163,8 +163,8 @@ repository.
 - `system/` holds the code every layer may import: access to files, processes, Git, the environment, and the terminal,
   and the pure text and value helpers that `parsers/` needs.
 - The layers of `packages/cli/src/` run from the base up: `system/`, `parsers/`, `manifests/`, `repository/`,
-  `settings/`, `planning/`, `tools/`, `installers/`, `generation/`, `runs/`, `checks/`, `commands/`, then `main.ts`
-  and `bin.ts`.
+  `settings/`, `planning/`, `executables/`, `installers/`, `generation/`, `runs/`, `checks/`, `commands/`, then
+  `main.ts` and `bin.ts`.
 - A layer imports only the layers before it. Every layer may import `config/` and `types/`, and the `schemas/` files
   of a layer belong to that layer. `types/` imports the schemas of any layer, to infer types from them.
 - The `[[import_rule]]` records in `gspot.toml` list the layers in this order, and `gspot check` reports an import

@@ -1,4 +1,4 @@
-import { runTool } from '#cli/tools/run.ts';
+import { runTool } from '#cli/executables/run.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';

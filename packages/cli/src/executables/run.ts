@@ -1,8 +1,8 @@
 import { spawnProcess } from '#cli/system/processes.ts';
 import { buildGitEnvironment } from '#cli/system/git.ts';
-import { TOOL_ENVIRONMENT } from '#cli/config/tools/run.ts';
-import type { ToolRunOptions } from '#cli/types/tools/run.ts';
+import { TOOL_ENVIRONMENT } from '#cli/config/executables/run.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
+import type { ToolRunOptions } from '#cli/types/executables/run.ts';
 
 /**
 Run a tool command with the shared output environment and the timeout from the settings.

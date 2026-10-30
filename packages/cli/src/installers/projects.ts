@@ -1,10 +1,10 @@
 import which from 'which';
-import { UV_TOOL } from '#cli/config/tools/uv.ts';
 import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { UV_TOOL } from '#cli/config/executables/uv.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import { listExecutablePaths } from '#cli/tools/locate.ts';
 import { isMiseLockfileFresh } from '#cli/installers/mise.ts';
+import { listExecutablePaths } from '#cli/executables/locate.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import type { NpmToolInstall } from '#cli/types/installers/npm.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';

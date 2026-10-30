@@ -1,11 +1,11 @@
 import which from 'which';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
-import { MISE_TOOL } from '#cli/config/tools/locate.ts';
 import { installHooks } from '#cli/installers/hooks.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { installMiseTools } from '#cli/installers/mise.ts';
 import { listDistinctTools } from '#cli/manifests/tools.ts';
+import { MISE_TOOL } from '#cli/config/executables/locate.ts';
 import { installValePackages } from '#cli/installers/vale.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import type { Generation } from '#cli/types/generation/files.ts';

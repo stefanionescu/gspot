@@ -1,5 +1,5 @@
 import { join, resolve } from 'node:path';
-import { runTool } from '#cli/tools/run.ts';
+import { runTool } from '#cli/executables/run.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';

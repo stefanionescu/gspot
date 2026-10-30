@@ -5,9 +5,9 @@ import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { ConfiguredCheck } from '#cli/types/planning.ts';
-import type { ProcessFailure } from '#cli/types/tools/run.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { ProcessFailure } from '#cli/types/executables/run.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import type { Tool, VersionedInstaller } from '#cli/types/manifests.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
@@ -21,7 +21,7 @@ import {
     UV_PROJECT_ENVIRONMENT,
     PYTHON_ENVIRONMENT_CHECKS,
     PROJECT_ENVIRONMENT_MESSAGE,
-} from '#cli/config/tools/uv.ts';
+} from '#cli/config/executables/uv.ts';
 
 /**
 List the interpreter arguments for a tool in the Python environment of a copy.

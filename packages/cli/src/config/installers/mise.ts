@@ -1,4 +1,4 @@
-import { MISE_TOOL } from '#cli/config/tools/locate.ts';
+import { MISE_TOOL } from '#cli/config/executables/locate.ts';
 
 export const MISE_INSTALL_ARGUMENTS = [MISE_TOOL, 'install'] as const;
 

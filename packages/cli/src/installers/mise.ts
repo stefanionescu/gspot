@@ -1,11 +1,11 @@
 import which from 'which';
 import { join, dirname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
-import { UV_TOOL } from '#cli/config/tools/uv.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { UV_TOOL } from '#cli/config/executables/uv.ts';
 import { findSystemSkip } from '#cli/planning/skips.ts';
 import { listCheckTools } from '#cli/planning/tools.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
@@ -23,14 +23,14 @@ import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import { MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/files/names.ts';
 import { runInstallStep, runRequiredInstallStep } from '#cli/installers/steps.ts';
-import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
+import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/executables/locate.ts';
 import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/manifests/tools.ts';
 
 import {
     MISE_BIN_PATHS_ARGUMENTS,
     MISE_CEILING_PATHS_VARIABLE,
     MISE_TRUSTED_PATHS_VARIABLE,
-} from '#cli/config/tools/locate.ts';
+} from '#cli/config/executables/locate.ts';
 import {
     MISE_TOOL_NOUN,
     GITHUB_RATE_LIMIT,

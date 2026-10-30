@@ -8,7 +8,7 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import type { SpawnOptions } from '#cli/types/system/processes.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { readMiseBinPaths, listExecutablePaths } from '#cli/tools/locate.ts';
+import { readMiseBinPaths, listExecutablePaths } from '#cli/executables/locate.ts';
 
 test('project pytest is found in its virtual environment before the global executable', async () => {
     const executable = isWindows ? '.venv/Scripts/pytest.exe' : '.venv/bin/pytest';

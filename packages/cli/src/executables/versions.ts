@@ -6,15 +6,15 @@ import { openFiles } from '#cli/system/files/open.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import { TOOL_ENVIRONMENT } from '#cli/config/tools/run.ts';
-import { NPM_BIN_FOLDER } from '#cli/config/tools/locate.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
+import { TOOL_ENVIRONMENT } from '#cli/config/executables/run.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import { NO_VERSION, VERSION_FLAG } from '#cli/config/tools/versions.ts';
+import { NPM_BIN_FOLDER } from '#cli/config/executables/locate.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
+import { NO_VERSION, VERSION_FLAG } from '#cli/config/executables/versions.ts';
 import { readHostPackage, readToolProjectPackage } from '#cli/repository/npm/installed-packages.ts';
-import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/tools/inspection.ts';
+import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/executables/inspection.ts';
 
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {

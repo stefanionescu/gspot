@@ -9,19 +9,23 @@ import { RAN_STATUSES } from '#cli/config/runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import type { ProcessFailure } from '#cli/types/tools/run.ts';
 import { buildCommandLines } from '#cli/runs/command/batches.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
+import type { ProcessFailure } from '#cli/types/executables/run.ts';
 import { PYTHON_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/runs/results.ts';
-import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
 import type { CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
+import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts';
 import { hasProjectCoverage, stripCoverageArguments } from '#cli/planning/checks.ts';
 import { runToolProcess, buildOtherToolEnvironment } from '#cli/runs/command/tool.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/runs/command/output.ts';
-import { listCopyPythonArguments, buildCopyPythonEnvironment, findMissingProjectEnvironment } from '#cli/tools/uv.ts';
 
+import {
+    listCopyPythonArguments,
+    buildCopyPythonEnvironment,
+    findMissingProjectEnvironment,
+} from '#cli/executables/uv.ts';
 import type {
     FolderRun,
     CommandRun,
