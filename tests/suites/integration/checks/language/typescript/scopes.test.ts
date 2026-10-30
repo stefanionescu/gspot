@@ -113,7 +113,7 @@ test('typescript/tsc checks a scope through the parent tsconfig, alone when name
             level: 'all',
             scopes: [{ path: 'app', configurations: ['typescript'] }],
         }),
-        '.gitignore': `${GSPOT_FOLDER}/\nnode_modules/\n`,
+        '.gitignore': 'node_modules/\n',
         'tsconfig.json': tsconfig,
         'root.ts': 'export const total = 3;\n',
         'app/source.ts': 'export const active: boolean = 3;\n',
