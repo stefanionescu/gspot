@@ -30,6 +30,7 @@ import {
     TASKKILL_PID_FLAG,
     TASKKILL_GONE_CODE,
     EMPTY_COMMAND_MESSAGE,
+    CANCELED_START_MESSAGE,
     PROCESS_CLEANUP_MESSAGE,
     EXIT_CLEANUP_MILLISECONDS,
     OUTPUT_CLOSE_MILLISECONDS,
@@ -225,6 +226,27 @@ function findMissingExecutable(command: readonly string[], cwd: string, started:
     );
 }
 
+function findUnstartedProcess(
+    command: readonly string[],
+    options: AsyncSpawnOptions,
+    started: number,
+): SpawnResult | undefined {
+    const missing = findMissingExecutable(command, options.cwd, started);
+    if (missing !== undefined || options.cancelSignal?.aborted !== true) return missing;
+    return buildSpawnResult(
+        {
+            code: undefined,
+            failed: true,
+            shortMessage: CANCELED_START_MESSAGE,
+            stdout: '',
+            stderr: '',
+            timedOut: false,
+            isCanceled: true,
+        } satisfies SpawnCompletion,
+        started,
+    );
+}
+
 function watchProcess(child: WatchedProcess, options: AsyncSpawnOptions): ProcessTreeControl {
     const supervision = trackProcessTree(child, options);
     if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
@@ -251,8 +273,8 @@ Run a supervised process tree and capture its text.
 */
 export async function spawnProcess(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
     const started = performance.now();
-    const missing = findMissingExecutable(command, options.cwd, started);
-    if (missing !== undefined) return missing;
+    const unstarted = findUnstartedProcess(command, options, started);
+    if (unstarted !== undefined) return unstarted;
     const { child, supervision } = launchProcess(command, options, {});
     return finishProcess(child, supervision, started, child);
 }
@@ -271,8 +293,8 @@ export async function streamProcess(
     readStdout: StdoutReader,
 ): Promise<SpawnResult> {
     const started = performance.now();
-    const missing = findMissingExecutable(command, options.cwd, started);
-    if (missing !== undefined) return missing;
+    const unstarted = findUnstartedProcess(command, options, started);
+    if (unstarted !== undefined) return unstarted;
     const { child, supervision } = launchProcess(command, options, { buffer: { stdout: false } });
     return finishProcess(child, supervision, started, readProcessOutput(child, options, readStdout));
 }

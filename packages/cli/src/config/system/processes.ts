@@ -20,6 +20,8 @@ export const TASKKILL_PID_FLAG = '/pid';
 
 export const PROCESS_CLEANUP_MESSAGE = 'Tool execution and process cleanup failed.';
 
+export const CANCELED_START_MESSAGE = 'The command was canceled before it started.';
+
 export const EMPTY_COMMAND_MESSAGE = 'An empty command cannot run.';
 
 export const OUTPUT_LIMIT = 256 * 1024 * 1024;
