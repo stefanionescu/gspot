@@ -168,7 +168,6 @@ Build the managed block for the rules.
 @param block.files the rules with their content.
 @param block.generatedPaths the files gspot writes outside .gspot.
 @param block.managedKeys the keys that gspot manages inside authored config files.
-@param block.hasChecks whether any configuration runs a check.
 @param block.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
 @param block.startCommand the command that starts gspot.
 */
@@ -176,7 +175,6 @@ export function buildAgentsBlock({
     files,
     generatedPaths,
     managedKeys,
-    hasChecks,
     startCommand,
     hasOwnTitle,
 }: AgentsBlockContent): string {
@@ -192,7 +190,6 @@ export function buildAgentsBlock({
         '',
         `The rules write \`gspot\` for \`${startCommand}\`.`,
         '',
-        ...(hasChecks ? [`Before you commit, run \`${startCommand} check --staged\`.`, ''] : []),
         `After you add code in a new language, framework or tool, run \`${startCommand} add\`, then \`${startCommand} install\`.`,
         '',
         `To change \`gspot.toml\`, run ${formatSettingsCommands(startCommand)}.`,

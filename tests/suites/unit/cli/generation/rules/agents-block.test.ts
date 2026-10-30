@@ -7,9 +7,9 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { COMMANDS_HEADING } from '#tests/config/generation/rules.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { COMMANDS_HEADING, COMMIT_CHECK_LINE } from '#tests/config/generation/rules.ts';
 
 function listIndexPaths(block: string): (string | undefined)[] {
     const index = block.slice(0, block.indexOf(COMMANDS_HEADING));
@@ -35,7 +35,7 @@ test('the AGENTS.md block names the folders of a scoped rule without parentheses
     ]);
 });
 
-test('with no configurations the block still lists the general rules and the check command', async () => {
+test('with no configurations the block still lists the general rules', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([], { rules: true }) });
     const block = generateFiles(await openSession(sandbox.path)).blocks.find(({ path }) => path === 'AGENTS.md')!.body;
     const paths = listIndexPaths(block);
@@ -45,11 +45,10 @@ test('with no configurations the block still lists the general rules and the che
         '.gspot/configurations/general/engineering/rules/TALKING.md',
     ]);
     expect(paths).toContain('.gspot/configurations/general/engineering/rules/TESTING.md');
-    expect(block).toContain(COMMIT_CHECK_LINE);
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
-test('with a check selected the block names the command, and an excluded file leaves the index', async () => {
+test('a rule file that rules.exclude names leaves the index', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['spelling'], {
             rules: true,
@@ -61,7 +60,6 @@ test('with a check selected the block names the command, and an excluded file le
     const paths = listIndexPaths(block);
     expect(paths).not.toContain('.gspot/configurations/general/engineering/rules/CLI.md');
     expect(paths).toContain('.gspot/configurations/general/engineering/rules/TESTING.md');
-    expect(block).toContain(COMMIT_CHECK_LINE);
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
@@ -86,23 +84,19 @@ test('the AGENTS.md block moves its headings one level down in a file with its o
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(agents);
 });
 
-test.each([true, false])(
-    'the AGENTS.md Commands section names the start command, and the staged check only when checks run (%p)',
-    (hasChecks) => {
-        const command = 'pnpm exec gspot';
-        const block = buildAgentsBlock({
-            files: [],
-            generatedPaths: [],
-            managedKeys: [],
-            hasOwnTitle: false,
-            hasChecks,
-            startCommand: command,
-        });
-        const commands = block.slice(block.indexOf(COMMANDS_HEADING), block.indexOf('\n## Generated files'));
-        expect(commands).toContain(`The rules write \`gspot\` for \`${command}\`.`);
-        expect(commands.includes(`Before you commit, run \`${command} check --staged\`.`)).toBe(hasChecks);
-    },
-);
+test('the AGENTS.md Commands section names the start command and leaves the staged check to the hooks', () => {
+    const command = 'pnpm exec gspot';
+    const block = buildAgentsBlock({
+        files: [],
+        generatedPaths: [],
+        managedKeys: [],
+        hasOwnTitle: false,
+        startCommand: command,
+    });
+    const commands = block.slice(block.indexOf(COMMANDS_HEADING), block.indexOf('\n## Generated files'));
+    expect(commands).toContain(`The rules write \`gspot\` for \`${command}\`.`);
+    expect(commands).not.toContain('check --staged');
+});
 
 test('the AGENTS.md index keeps a rule opening that wraps onto a second line', () => {
     const block = buildAgentsBlock({
@@ -119,7 +113,6 @@ test('the AGENTS.md index keeps a rule opening that wraps onto a second line', (
         generatedPaths: [],
         managedKeys: [],
         hasOwnTitle: false,
-        hasChecks: true,
         startCommand: 'gspot',
     });
     expect(block).toContain('/SAFETY.md`: when a shell script deletes files, or parses JSON or YAML.\n');

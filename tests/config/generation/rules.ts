@@ -6,5 +6,3 @@ export const RUNTIME_RULE_CASES = [
 ] as const;
 
 export const COMMANDS_HEADING = '## Commands';
-
-export const COMMIT_CHECK_LINE = 'Before you commit, run `mise exec -- gspot check --staged`.';

@@ -13,6 +13,7 @@ import { buildJsonSchema } from '#cli/settings/json-schema.ts';
 import type { RuleFile } from '#cli/types/generation/rules.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
@@ -23,7 +24,6 @@ import type { FrozenLockfile, CiPackageManager } from '#cli/types/generation/ci.
 import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files/classify.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildBunScannerEdits } from '#cli/generation/configurations/general/dependencies.ts';
-import { isConfigurationSelected, listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/tool-projects.ts';
 
 import {
@@ -124,7 +124,6 @@ function addManagedBlocks(session: Session, rules: RuleFile[], generated: Genera
             .filter(({ keys }) => keys.length > 0),
         startCommand: session.startRunner.command,
         files: rules,
-        hasChecks: listSelectedConfigurations(session.scopes).some((configuration) => configuration.checks.length > 0),
     });
     generated.blocks.push({ path: AGENTS_FILE, body: block });
 }
