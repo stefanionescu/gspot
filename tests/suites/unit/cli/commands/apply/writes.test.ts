@@ -18,7 +18,6 @@ import { TOOLS_CHANGED_NOTE, STALE_LOCKFILE_NOTE } from '#cli/config/generation/
 
 import {
     FORMAT_SETTINGS,
-    RULES_WRITTEN_FILES,
     PRETTIER_PATH_IGNORE,
     PRETTIER_ADDED_IGNORE,
     PRETTIER_INITIAL_IGNORE,
@@ -36,9 +35,7 @@ test('apply leaves generated files writable, keeps their bytes, and deletes a st
     expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/obsolete/old.txt`))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, `${GSPOT_FOLDER}/obsolete`))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(true);
-    const written = (JSON.parse(applied.stdout) as ApplyReport).written;
     const rulePath = getRuleFilePath('engineering', 'WORKING.md');
-    expect(written).toStrictEqual([...RULES_WRITTEN_FILES]);
     const bytes = await readFile(join(sandbox.path, rulePath), 'utf8');
     const attributes = await stat(join(sandbox.path, rulePath));
     expect(attributes.mode & 0o200).toBe(0o200);

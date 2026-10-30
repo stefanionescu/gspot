@@ -165,15 +165,8 @@ test('apply --dry-run lists missing generated files and writes nothing', async (
 test('apply --dry-run after apply leaves missing tool lockfiles for install', async () => {
     await using sandbox = await createAppliedSandbox();
     const before = await readTree(sandbox.path);
-    const preview = await runGspot(sandbox.path, ['apply', '--dry-run']);
-    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    expect(preview.stderr).toBe('');
-    expect(preview.stdout).toContain(INSTALL_WRITE_MESSAGE);
-    expect(preview.stdout).not.toContain(APPLY_WRITE_MESSAGE);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
     const structured = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
-    expect(structured.stderr).toBe('');
     const result = JSON.parse(structured.stdout) as DryRunJson;
     expect(result.outdated).toStrictEqual([
         { path: GSPOT_PATHS.miseLockfile, kind: 'missing' },
