@@ -6,7 +6,12 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { ConfigurationsOptions } from '#cli/types/generation/settings-edit.ts';
-import { applySettingsEdit, prepareConfigurationEdit } from '#cli/generation/settings-edit.ts';
+
+import {
+    applySettingsEdit,
+    prepareConfigurationEdit,
+    formatConfigurationChange,
+} from '#cli/generation/settings-edit.ts';
 
 function restoreConfigurations(table: TomlTable, added: string[]): void {
     const previous = table['removed_configurations'];
@@ -14,13 +19,6 @@ function restoreConfigurations(table: TomlTable, added: string[]): void {
     const remaining = Object.entries(previous).filter(([name]) => !added.includes(name));
     if (remaining.length === 0) delete table['removed_configurations'];
     else table['removed_configurations'] = Object.fromEntries(remaining);
-}
-
-function formatConfigurationChange(changed: string[], unchanged: string[], where: string): string {
-    let summary = `Added ${new Intl.ListFormat('en', { type: 'conjunction' }).format(changed)}${where}.`;
-    if (unchanged.length > 0)
-        summary += ` ${new Intl.ListFormat('en', { type: 'conjunction' }).format(unchanged)} ${unchanged.length === 1 ? 'is' : 'are'} already selected.`;
-    return summary;
 }
 
 async function runAddCommand(options: ConfigurationsOptions): Promise<CommandResult> {
@@ -43,7 +41,13 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     const where = scope === '' ? '' : ` to scope ${scope}`;
     const added = options.configurations.filter((name) => !selected.includes(name));
     const unchanged = options.configurations.filter((name) => selected.includes(name));
-    const summary = formatConfigurationChange(added, unchanged, where);
+    const summary = formatConfigurationChange({
+        action: 'Added',
+        changed: added,
+        where,
+        unchanged,
+        state: 'already selected',
+    });
     return await applySettingsEdit(root, {
         reads: context.reads,
         listing: context.listing,

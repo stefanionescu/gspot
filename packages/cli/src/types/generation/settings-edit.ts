@@ -14,6 +14,14 @@ export type SettingsEditOptions = {
 
 export type ConfigurationsOptions = { cwd: string; configurations: string[]; scope?: string };
 
+export type ConfigurationChange = {
+    action: string;
+    changed: string[];
+    where: string;
+    unchanged: string[];
+    state: string;
+};
+
 export type SettingsEditContext = {
     root: string;
     edit: SettingsEdit;

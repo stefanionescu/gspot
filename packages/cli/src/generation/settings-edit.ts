@@ -27,6 +27,7 @@ import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/co
 
 import type {
     SettingsEditOptions,
+    ConfigurationChange,
     SettingsEditContext,
     ConfigurationsOptions,
 } from '#cli/types/generation/settings-edit.ts';
@@ -128,6 +129,23 @@ export async function prepareConfigurationEdit(options: ConfigurationsOptions): 
         (configuration) => configuration.name,
     );
     return { root, input, scope, scopeTable, scopeSettings, selected, configurationsByName, context };
+}
+
+/**
+Summarize an add or remove edit: the configurations it changed, and the ones it left alone.
+
+@param change what the edit did.
+@param change.action the verb of the edit, such as Added.
+@param change.changed the configurations that the edit changed.
+@param change.where the scope phrase, or empty text for the root scope.
+@param change.unchanged the configurations that the edit left alone.
+@param change.state the state of those configurations, such as already selected.
+*/
+export function formatConfigurationChange({ action, changed, where, unchanged, state }: ConfigurationChange): string {
+    const list = new Intl.ListFormat('en', { type: 'conjunction' });
+    const summary = `${action} ${list.format(changed)}${where}.`;
+    if (unchanged.length === 0) return summary;
+    return `${summary} ${list.format(unchanged)} ${unchanged.length === 1 ? 'is' : 'are'} ${state}.`;
 }
 
 /**

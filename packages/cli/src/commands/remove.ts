@@ -20,7 +20,12 @@ import type { ConfigurationsOptions } from '#cli/types/generation/settings-edit.
 import { selectForInit, listDetectedAdditions } from '#cli/repository/configurations.ts';
 import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/remove.ts';
 import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
-import { applySettingsEdit, prepareConfigurationEdit } from '#cli/generation/settings-edit.ts';
+
+import {
+    applySettingsEdit,
+    prepareConfigurationEdit,
+    formatConfigurationChange,
+} from '#cli/generation/settings-edit.ts';
 
 function assertRemovable(names: string[], kept: string[], configurationsByName: Map<string, Configuration>): void {
     for (const configuration of names) {
@@ -33,13 +38,6 @@ function assertRemovable(names: string[], kept: string[], configurationsByName: 
                 `Cannot remove ${configuration}: ${chain.join(' requires ')}. Remove ${chain[0] as string} first, or keep ${configuration}.`,
             );
     }
-}
-
-function formatConfigurationChange(changed: string[], unchanged: string[], where: string): string {
-    let summary = `Removed ${new Intl.ListFormat('en', { type: 'conjunction' }).format(changed)}${where}.`;
-    if (unchanged.length > 0)
-        summary += ` ${new Intl.ListFormat('en', { type: 'conjunction' }).format(unchanged)} ${unchanged.length === 1 ? 'was' : 'were'} not selected.`;
-    return summary;
 }
 
 function removeUnusedSettings(
@@ -114,7 +112,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const where = scope === '' ? '' : ` from scope ${scope}`;
     const unchanged = options.configurations.filter((name) => !selected.includes(name));
     const summary =
-        formatConfigurationChange(removed, unchanged, where) +
+        formatConfigurationChange({ action: 'Removed', changed: removed, where, unchanged, state: 'not selected' }) +
         removeUnusedSettings(input.table, configurationsByName, scope);
     const ownsManagedKeys = configurationsByName
         .values()

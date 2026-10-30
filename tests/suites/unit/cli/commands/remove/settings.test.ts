@@ -50,7 +50,7 @@ test('remove names only removed configurations in a mixed request', async () => 
         'The scripts moved to another repository.',
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout.split('\n', 1)[0]).toBe('Removed bash. python was not selected.');
+    expect(result.stdout.split('\n', 1)[0]).toBe('Removed bash. python is not selected.');
     const settings = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
     expect(settings.configurations).toStrictEqual([]);
     expect(settings.removed_configurations).toStrictEqual(['bash']);
