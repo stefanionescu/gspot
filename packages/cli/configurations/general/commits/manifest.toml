@@ -34,6 +34,14 @@ summary = "Checks a new commit message for a conventional type, an optional know
 why = "Release notes, blame, and bisect depend on typed, scoped subjects, and a free-form message hides the change."
 
 [[check]]
+example = "The trailer `Claude-Session: https://claude.ai/code/session_01Abc` reports `session-link`. Remove the line, and describe the change in the message itself."
+help = "Remove the line that the finding names. For a reviewed exception, run `gspot ignore commits/references --rule <rule> --reason \"<why>\"`."
+name = "references"
+stage = "message"
+summary = "Checks a new commit message for links to AI chat sessions, such as `claude.ai/code/session_` and `chatgpt.com/share/` links, and the `Claude-Session:` trailer."
+why = "A reader of the history cannot open a chat session, and a session link shares the chat with everyone who can read the repository."
+
+[[check]]
 example = "A commit with the message `changed stuff` in the push fails. Reword it as `fix(cli): report missing configuration`, and coordinate first when others share that history."
 help = "Reword the commits that fail with `git rebase -i`, or change the rule with `gspot set tools.commitlint.rules`."
 level = "all"

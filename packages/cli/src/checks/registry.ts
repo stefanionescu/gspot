@@ -21,7 +21,6 @@ import { checkDuplicationJscpd } from '#cli/checks/general/duplication.ts';
 import { checkSwiftCoverage } from '#cli/checks/language/swift/coverage.ts';
 import { checkTypescriptTsconfig } from '#cli/checks/language/typescript.ts';
 import { checkPostgresGrants } from '#cli/checks/database/postgres/grants.ts';
-import { checkCommitsCommitlintPushed } from '#cli/checks/general/commits.ts';
 import { checkBashShellcheck } from '#cli/checks/language/bash/shellcheck.ts';
 import { checkSwiftPeriphery } from '#cli/checks/language/swift/periphery.ts';
 import { checkReactDomReactVersions } from '#cli/checks/framework/react-dom.ts';
@@ -49,6 +48,7 @@ import { checkStructureTrivialFunctions } from '#cli/checks/general/structure/tr
 import { checkSecretsEnvExamples, checkSecretsGitleaksPushed } from '#cli/checks/general/secrets.ts';
 import { checkPostgresDefinerSearchPath } from '#cli/checks/database/postgres/definer-search-path.ts';
 import { checkPostgresForeignKeyIndexes } from '#cli/checks/database/postgres/foreign-key-indexes.ts';
+import { checkCommitsReferences, checkCommitsCommitlintPushed } from '#cli/checks/general/commits.ts';
 import { checkCloudflareHeaders, checkCloudflareRedirects } from '#cli/checks/platform/cloudflare.ts';
 import { checkStructureFileFolderClashes } from '#cli/checks/general/structure/file-folder-clashes.ts';
 import { checkStructureEnvironmentReaders } from '#cli/checks/general/structure/environment-readers.ts';
@@ -115,6 +115,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'cloudflare/headers': { check: checkCloudflareHeaders },
     'cloudflare/redirects': { check: checkCloudflareRedirects },
     'commits/commitlint-pushed': { run: checkCommitsCommitlintPushed },
+    'commits/references': { check: checkCommitsReferences },
     'dependencies/lockfiles': { check: checkDependenciesLockfiles },
     'dependencies/package-manager-pin': { check: checkDependenciesPackageManagerPin },
     'dependencies/stale-lockfile': { check: checkDependenciesStaleLockfile },
