@@ -1,3 +1,3 @@
-export const CHECK_STATUSES = ['passed', 'failed', 'missing', 'skipped', 'error'] as const;
+import type { CheckStatus } from '#cli/types/runs/check.ts';
 
-export const RAN_STATUSES = new Set<(typeof CHECK_STATUSES)[number]>(['passed', 'failed']);
+export const RAN_STATUSES = new Set<CheckStatus>(['passed', 'failed']);

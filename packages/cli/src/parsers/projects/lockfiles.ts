@@ -10,8 +10,8 @@ import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
 import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
-import { type LockfileName } from '#cli/types/parsers/projects/lockfiles.ts';
 import { PACKAGE_JSON, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
+import { type LockfileName, type LockedPackageLockfile } from '#cli/types/parsers/projects/lockfiles.ts';
 
 import {
     uvLockfileSchema,
@@ -30,7 +30,6 @@ import {
     DEPENDENCY_SECTIONS,
     YARN_CLASSIC_PROPERTY,
     type IMPORTER_LOCKFILES,
-    type LOCKED_PACKAGE_LOCKFILES,
 } from '#cli/config/parsers/projects/lockfiles.ts';
 
 function parseNpmPackages(path: string, text: string): string[] {
@@ -60,9 +59,7 @@ function parseYarnPackages(path: string, text: string): string[] {
     });
 }
 
-export const PACKAGE_PARSERS: Readonly<
-    Record<(typeof LOCKED_PACKAGE_LOCKFILES)[number], (path: string, text: string) => string[]>
-> = {
+export const PACKAGE_PARSERS: Readonly<Record<LockedPackageLockfile, (path: string, text: string) => string[]>> = {
     'package-lock.json': parseNpmPackages,
     'npm-shrinkwrap.json': parseNpmPackages,
     'bun.lock': (path, text) =>

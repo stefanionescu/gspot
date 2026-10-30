@@ -1,7 +1,5 @@
 import type { FenceParser } from '#cli/types/checks/language/markdown.ts';
 
-export const FORMAT_FENCE_PARSERS = ['json', 'jsonc', 'toml', 'yaml'] as const;
-
 export const GRAMMAR_FENCE_PARSERS = ['bash', 'typescript', 'tsx', 'javascript', 'python'] as const;
 
 export const ELLIPSIS_LINE = /^[\s#/]*\.\.\.\s*$/u;

@@ -15,7 +15,6 @@ import {
     type TOOL_BUILDS,
     type CHECK_NEEDS,
     type CHECK_CWD_VALUES,
-    type TOOL_FOLDER_KINDS,
 } from '#cli/config/configurations/names.ts';
 
 type ConfigFilePointer = {
@@ -163,7 +162,7 @@ export type MiseToolPin = {
     checksums?: Record<string, string> | undefined;
 };
 
-export type ToolFolderKind = (typeof TOOL_FOLDER_KINDS)[number];
+export type ToolFolderKind = 'npm' | 'python' | 'vale';
 
 export type Level = (typeof LEVELS)[number];
 

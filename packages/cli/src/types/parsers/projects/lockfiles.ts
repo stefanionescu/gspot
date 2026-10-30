@@ -1,6 +1,12 @@
-import { type DEPENDENCY_SECTIONS, type JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
+import {
+    type PYTHON_LOCKFILES,
+    type DEPENDENCY_SECTIONS,
+    type JAVASCRIPT_LOCKFILES,
+} from '#cli/config/parsers/projects/lockfiles.ts';
 
 export type LockfileName = (typeof JAVASCRIPT_LOCKFILES)[number];
+
+export type LockedPackageLockfile = LockfileName | (typeof PYTHON_LOCKFILES)[number];
 
 export type DependencySections = Partial<
     Record<(typeof DEPENDENCY_SECTIONS)[number] | 'peerDependencies', Record<string, unknown> | undefined>

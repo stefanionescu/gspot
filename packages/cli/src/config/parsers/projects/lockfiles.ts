@@ -10,8 +10,6 @@ export const JAVASCRIPT_LOCKFILES = [
     'npm-shrinkwrap.json',
 ] as const;
 
-export const LOCKED_PACKAGE_LOCKFILES = [...JAVASCRIPT_LOCKFILES, ...PYTHON_LOCKFILES] as const;
-
 export const PNPM_PEER_START = '(';
 
 export const IMPORTER_LOCKFILES = ['bun.lock', 'package-lock.json', 'pnpm-lock.yaml'] as const;

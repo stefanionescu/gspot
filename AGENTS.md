@@ -136,9 +136,10 @@ repository.
 - Write each exported type in plain TypeScript. Do not export a `z.infer` type.
 - Check the shape of each Zod object schema with `satisfies SchemaShape<T>`, and any other schema with
   `satisfies z.ZodType<T>`. Give each schema one check.
-- Declare a list of allowed names as an `as const` array in `config/`, its type as `(typeof LIST)[number]` in
-  `types/`, and its schema as `z.enum(LIST)`. A list whose values each carry a description keeps its schema literals
-  as the one list.
+- When runtime code reads a list of allowed names, declare it as an `as const` array in `config/`, its type as
+  `(typeof LIST)[number]` in `types/`, and its schema as `z.enum(LIST)`. A list whose values each carry a description
+  keeps its schema literals as the one list.
+- When only types read a list of names, write it as a union type in `types/`, with no array.
 - `packages/cli/src/checks/` has one file per configuration, `checks/<group>/<configuration>.ts`, under the group of
   its folder in `packages/cli/configurations/`.
 - When the checks of a configuration pass the file length limit, they move to a folder `checks/<group>/<configuration>/`. That

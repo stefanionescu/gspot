@@ -2,7 +2,6 @@ import type { Configuration } from '#cli/types/configurations.ts';
 import type { ScopeFolder } from '#cli/types/repository/files.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { PATH_ROLES } from '#cli/config/settings/available.ts';
-import type { SETTING_TYPES } from '#cli/config/settings/inheritance.ts';
 import type { ReasonRequirement } from '#cli/types/settings/definitions.ts';
 import type { Settings, TableValues, IgnoreRecord, SettingsTable } from '#cli/types/settings/file.ts';
 
@@ -16,7 +15,7 @@ export type SelectedConfigurations = {
 
 export type Setting = {
     name: string;
-    type: (typeof SETTING_TYPES)[number];
+    type: 'number' | 'string' | 'path' | 'boolean' | 'list' | 'table';
     path_role?: (typeof PATH_ROLES)[number];
     default?: unknown;
     default_all?: unknown;

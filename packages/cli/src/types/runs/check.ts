@@ -1,8 +1,7 @@
-import type { CHECK_STATUSES } from '#cli/config/runs/check.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import type { SkipCause, PlannedCheck } from '#cli/types/planning.ts';
 
-type CheckStatus = (typeof CHECK_STATUSES)[number];
+export type CheckStatus = 'passed' | 'failed' | 'missing' | 'skipped' | 'error';
 
 export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun; check?: never }) &
     Pick<CheckRunOptions, 'listFileArguments' | 'listConfigFiles'>;

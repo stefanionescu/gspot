@@ -53,8 +53,6 @@ export const SWIFT_CONFIGURATION = 'swift';
 
 export const JAVASCRIPT_CONFIGURATION = 'javascript';
 
-export const TOOL_FOLDER_KINDS = ['npm', 'python', 'vale'] as const;
-
 export const NEXTJS_CONFIGURATION = 'nextjs';
 
 export const NESTJS_CONFIGURATION = 'nestjs';
