@@ -63,11 +63,17 @@ test('a changed Vale archive is refused before sync and preserves installed pack
     });
     const session = await openSession(sandbox.path);
     const tool = getTool(session.configurationsByName.values(), 'vale');
-    await writeProgramCommand(sandbox.path, 'node_modules/.bin/vale', 'fakes/tool', '--line', String(tool.version));
+    const miseBin = await writeProgramCommand(
+        sandbox.path,
+        'mise/bin/vale',
+        'fakes/tool',
+        '--line',
+        String(tool.version),
+    );
     using _request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('replaced archive'));
     using writer = openWriter(sandbox.path);
     const install = buildToolInstall(session, writer);
-    const error = await captureRejection(installValePackages(install, []));
+    const error = await captureRejection(installValePackages(install, [miseBin]));
     expect(error.message).toBe(
         'The Vale package Google failed SHA-256 verification. gspot kept the installed packages.',
     );

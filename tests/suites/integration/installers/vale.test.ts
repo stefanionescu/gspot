@@ -94,7 +94,8 @@ test.each([...VALE_INSTALL_FAILURES])(
 
         const session = await openSession(sandbox.path);
         const tool = getTool(session.configurationsByName.values(), 'vale');
-        const executable = join(sandbox.path, 'node_modules/.bin', listExecutableNames('vale')[0]!);
+        const miseBin = join(sandbox.path, 'mise/bin');
+        const executable = join(miseBin, listExecutableNames('vale')[0]!);
         const runBlocking = processes.spawnProcessBlocking;
         using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
             command[0] === executable && command[1] === '--version'
@@ -104,7 +105,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         const version = String(tool.version);
         await writeProgramCommand(
             sandbox.path,
-            'node_modules/.bin/vale',
+            'mise/bin/vale',
             'fakes/tool',
             '--version-line',
             version,
@@ -112,7 +113,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         );
         using writer = openWriter(sandbox.path);
         const request = buildToolInstall(session, writer);
-        const failure = await captureRejection(installValePackages(request, []));
+        const failure = await captureRejection(installValePackages(request, [miseBin]));
         expect(failure.message).toEndWith(message);
         expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
             PREVIOUS_BYTES,
@@ -120,10 +121,12 @@ test.each([...VALE_INSTALL_FAILURES])(
         expect(request.steps).toStrictEqual([
             [executable, '--config', expect.stringContaining('vale-') as string, 'sync'],
         ]);
-        await writeProgramCommand(sandbox.path, 'node_modules/.bin/vale', 'fakes/vale', '../../../vale', version);
+        await writeProgramCommand(sandbox.path, 'mise/bin/vale', 'fakes/vale', '../../../vale', version);
         await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['prose'], { level: 'all' }));
         const fixed = buildToolInstall(await openSession(sandbox.path), writer);
-        expect(await installValePackages(fixed, [])).toBe(`installed Vale packages in ${GSPOT_PATHS.valePackages}`);
+        expect(await installValePackages(fixed, [miseBin])).toBe(
+            `installed Vale packages in ${GSPOT_PATHS.valePackages}`,
+        );
         expect(fixed.steps).toStrictEqual([
             [executable, '--config', expect.stringContaining('vale-') as string, 'sync'],
         ]);
