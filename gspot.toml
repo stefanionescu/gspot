@@ -280,7 +280,6 @@ tools.knip.ignore_dependencies = { value = ["satteri"], reason = "Astro prerende
 [[scope]]
 path = "packages/cli"
 configurations = ["zod"]
-tools.knip.ignore_dependencies = { value = ["tree-sitter-bash", "tree-sitter-css", "tree-sitter-html", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript"], reason = "The build copies these grammar files by path." }
 
 [[scope]]
 path = "tests"

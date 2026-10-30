@@ -178,14 +178,7 @@
                 "**/Tests/**",
                 "**/*Tests.swift"
             ],
-            "ignoreDependencies": [
-                "tree-sitter-bash",
-                "tree-sitter-css",
-                "tree-sitter-html",
-                "tree-sitter-javascript",
-                "tree-sitter-python",
-                "tree-sitter-typescript"
-            ]
+            "ignoreDependencies": []
         },
         "packages/eslint-plugin": {
             "entry": [
