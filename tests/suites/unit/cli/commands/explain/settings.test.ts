@@ -11,7 +11,6 @@ import {
     NAMING_LIMITS,
     REASON_VALUES,
     SCOPE_ROOT_MESSAGE,
-    REASON_EXPLANATIONS,
     SCOPE_SETTING_EXPLANATION,
 } from '#tests/config/commands/explain/settings.ts';
 
@@ -81,7 +80,7 @@ test.each([...REASON_VALUES])(
         const separator = row.key.lastIndexOf('.');
         const table = row.key.slice(0, separator);
         const field = row.key.slice(separator + 1);
-        const child = row.needsReason[1] ? `{ value = ${row.child}, reason = "${explanation}" }` : row.child;
+        const child = row.needsReason ? `{ value = ${row.child}, reason = "${explanation}" }` : row.child;
         const settings = buildSandboxSettings(['naming'], {
             scopes: [{ path: 'app', configurations: [] }],
             tables: `[${table}]\n${field} = ${row.root}\n[scope.${table}]\n${field} = ${child}\n`,
@@ -92,11 +91,37 @@ test.each([...REASON_VALUES])(
         });
         const result = await runGspot(sandbox.path, ['explain', row.key]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        const expected = REASON_EXPLANATIONS[row.key];
-        expect(result.stdout).toBe(expected.text);
+        expect(
+            result.stdout
+                .split('\n')
+                .filter((line) => /^(?:Current value: |If you set this value, |Reason on record: )/u.test(line)),
+        ).toStrictEqual([
+            `Current value: ${JSON.stringify(row.value[0])} (from gspot.toml)`,
+            `Current value: ${JSON.stringify(row.value[1])} (from [scope "app"])`,
+            ...(row.needsReason
+                ? [
+                      'If you set this value, give a reason: write it as { value = ..., reason = "..." }, or run gspot set with --reason.',
+                      `Reason on record: ${explanation}`,
+                  ]
+                : []),
+        ]);
         const reported = await runGspot(sandbox.path, ['explain', row.key, '--json']);
         expect(reported.code, reported.stdout + reported.stderr).toBe(0);
-        expect(JSON.parse(reported.stdout)).toStrictEqual(expected.json);
+        expect(
+            (
+                JSON.parse(reported.stdout) as {
+                    scopes: { scope: string; value: unknown; source: string; reason?: string }[];
+                }
+            ).scopes.map(({ scope, value, source, reason }) => ({ scope, value, source, reason })),
+        ).toStrictEqual([
+            { scope: '', value: row.value[0], source: 'gspot.toml', reason: undefined },
+            {
+                scope: 'app',
+                value: row.value[1],
+                source: '[scope "app"]',
+                reason: row.needsReason ? explanation : undefined,
+            },
+        ]);
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     },
 );

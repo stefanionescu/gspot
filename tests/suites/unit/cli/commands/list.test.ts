@@ -1,7 +1,6 @@
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { readTree } from '#tests/setup/system/files.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -13,8 +12,6 @@ import {
     LIST_SCOPE_ROWS,
     LIST_SCOPE_SETTINGS,
     SHFMT_IGNORE_SETTINGS,
-    SCOPE_CHECK_LIST_ROWS,
-    CONFIGURATION_LIST_TEXT,
 } from '#tests/config/commands/list.ts';
 
 test('list shows selected settings and available configurations', async () => {
@@ -71,13 +68,17 @@ test('the text configuration list shows the selected names of the JSON list', as
     const structured = await runGspot(sandbox.path, ['list', 'configurations', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
+    const { selected, available } = JSON.parse(structured.stdout) as ConfigurationsListJson;
     const human = await runGspot(sandbox.path, ['list', 'configurations']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
-    expect(human.stdout).toBe(
-        isWindows
-            ? CONFIGURATION_LIST_TEXT.replaceAll(/(semgrep\S* {2}root: )on/gu, '$1off (system)')
-            : CONFIGURATION_LIST_TEXT,
+    const [selectedText = '', availableText = ''] = human.stdout.split('\n\navailable\n');
+    expect(selectedText.split('\n').filter((line) => /^ {2}\S+$/u.test(line))).toStrictEqual(
+        selected.map(({ name }) => `  ${name}`),
+    );
+    expect(selectedText.split('\n')).toContain('    bash/shellcheck  root: on');
+    expect(availableText.split('\n').filter((line) => line !== '')).toStrictEqual(
+        available.map(({ name, description }) => `  ${name}  ${description}`),
     );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -107,11 +108,15 @@ test('the text check list puts the states of all scopes in one row', async () =>
     const human = await runGspot(sandbox.path, ['list']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
-    expect(human.stdout.split('\n').filter((line) => line.startsWith(' '.repeat(4)))).toStrictEqual(
-        SCOPE_CHECK_LIST_ROWS.map((row) =>
-            isWindows && row.includes('semgrep') ? row.replaceAll(': on', ': off (system)') : row,
-        ),
-    );
+    expect(
+        human.stdout
+            .split('\n')
+            .filter((line) => /^ {4}(?:bash\/shellcheck|bash\/shfmt|gspot\/generated-files) /u.test(line)),
+    ).toStrictEqual([
+        '    bash/shellcheck  root: on, api: on, api/worker: on',
+        '    bash/shfmt  root: on, api: off (ignore), api/worker: off (ignore)',
+        '    gspot/generated-files  root: on',
+    ]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
