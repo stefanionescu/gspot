@@ -150,11 +150,8 @@ export async function assertRefusalWithoutWrites(
 /**
 Run apply and install in a sandbox.
 */
-export async function applyThenInstall(root: string, environment: Record<string, string> = {}): Promise<void> {
-    const sandbox = {
-        root,
-        run: (cwd: string, commandArguments: readonly string[]) => spawnGspot(cwd, commandArguments, environment),
-    };
+export async function applyThenInstall(root: string): Promise<void> {
+    const sandbox = { root, run: spawnGspot };
     await runGspotStep(sandbox, ['apply']);
     await runGspotStep(sandbox, ['install']);
 }

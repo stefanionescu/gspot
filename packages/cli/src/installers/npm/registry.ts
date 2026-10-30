@@ -16,12 +16,8 @@ import {
     CERTIFICATE_KEYS,
     REGISTRY_AUTH_KEY,
     CONNECTION_URL_KEY,
-    SETTINGS_FILE_KEYS,
-    INSECURE_TLS_MESSAGE,
     REGISTRY_URL_MESSAGE,
-    SETTINGS_FILE_MESSAGE,
     READ_REGISTRY_MESSAGE,
-    PROJECT_SETTINGS_LEVEL,
     NPMRC_SETTINGS_MESSAGE,
     NPM_SCOPE_REGISTRY_KEY,
     ENCODED_CREDENTIAL_KEY,
@@ -57,24 +53,8 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
         throw error;
     }
     if (!valid) throw new GspotError('install', NPMRC_SETTINGS_MESSAGE);
-    return mergeToolSettings(config);
-}
-
-function mergeToolSettings(config: Config): Record<string, unknown> {
     const merged: Record<string, unknown> = {};
-    for (const [level, { data }] of config.data) {
-        if (level !== PROJECT_SETTINGS_LEVEL) {
-            Object.assign(merged, data);
-            continue;
-        }
-        if (SETTINGS_FILE_KEYS.some((key) => Object.hasOwn(data, key)))
-            throw new GspotError('install', SETTINGS_FILE_MESSAGE);
-        Object.assign(
-            merged,
-            Object.fromEntries(Object.entries(data).filter(([key]) => NPM_SCOPE_REGISTRY_KEY.test(key))),
-        );
-    }
-    if (merged['strict-ssl'] === false) throw new GspotError('install', INSECURE_TLS_MESSAGE);
+    for (const layer of config.list.toReversed()) Object.assign(merged, layer);
     return merged;
 }
 

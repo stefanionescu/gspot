@@ -35,8 +35,6 @@ import {
     UV_VENV_ARGUMENTS,
     PYTHON_TOOL_PROJECT,
     UV_INSTALL_ARGUMENTS,
-    INSECURE_HOST_SETTING,
-    INSECURE_HOST_MESSAGE,
     UV_LOCKFILE_ARGUMENTS,
     PYTHON_PACKAGE_ORIGINS,
     REQUIREMENT_PACKAGE_NAME,
@@ -277,7 +275,6 @@ export function readPythonSettings(root: string): PythonIndexSettings {
         uv === undefined
             ? parseTomlFile(PYPROJECT_TOML, project ?? '', uvProjectSettingsSchema).tool.uv
             : parseTomlFile(UV_SETTINGS_FILE, uv, uvSettingsSchema);
-    if (table[INSECURE_HOST_SETTING] !== undefined) throw new GspotError('install', INSECURE_HOST_MESSAGE);
     const selected = Object.fromEntries(Object.entries(table).filter(([key]) => INDEX_SETTINGS.has(key)));
     if (table['find-links'] !== undefined)
         selected['find-links'] = table['find-links'].map((value) => normalizeIndexLocation(root, value));

@@ -34,13 +34,9 @@ export const INDEX_SETTINGS = new Set([
     'keyring-provider',
     'native-tls',
     'system-certs',
+    'allow-insecure-host',
     'offline',
 ]);
-
-export const INSECURE_HOST_SETTING = 'allow-insecure-host';
-
-export const INSECURE_HOST_MESSAGE =
-    'The uv settings of the repository set allow-insecure-host. gspot installs its Python tools only over checked TLS. Remove allow-insecure-host from uv.toml or from [tool.uv] in pyproject.toml.';
 
 export const UV_SETTINGS_FILE = 'uv.toml';
 

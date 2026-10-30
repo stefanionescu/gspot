@@ -30,14 +30,14 @@ test('after init and install, apply has nothing to write', async () => {
 
 test('install refuses an npm tool project edited to run scripts, before it contacts the registry', async () => {
     await using sandbox = await createNpmProject(...PACKAGE_MANAGER_CASES[0]);
-    const { root, environment, registry } = sandbox;
+    const { root, registry } = sandbox;
     const packageJsonPath = join(root, GSPOT_PATHS.npmProject);
     const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8')) as object;
     await chmod(packageJsonPath, 0o644);
     const scriptedPackage = JSON.stringify({ ...packageJson, scripts: { postinstall: 'exit 42' } });
     await writeFile(packageJsonPath, scriptedPackage);
     const requests = registry.requests;
-    const refused = await spawnGspot(root, ['install', '--json'], environment);
+    const refused = await spawnGspot(root, ['install', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(JSON.parse(refused.stdout)).toStrictEqual({
         error: 'install',
@@ -75,8 +75,8 @@ test.each([true, false])(
 
 test('a repeated npm install skips npm ci and keeps modules with the registry offline', async () => {
     await using sandbox = await createNpmProject('npm', 'package.json');
-    const { root, environment, registry } = sandbox;
-    const first = await spawnGspot(root, ['install'], environment);
+    const { root, registry } = sandbox;
+    const first = await spawnGspot(root, ['install']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
     const record = await readFile(join(root, GSPOT_PATHS.installRecord), 'utf8');
     const marker = join(root, GSPOT_PATHS.nodeModules, 'keep.txt');
@@ -84,7 +84,7 @@ test('a repeated npm install skips npm ci and keeps modules with the registry of
     const requests = registry.requests;
     for (const online of [true, false]) {
         if (!online) registry[Symbol.dispose]();
-        const next = await spawnGspot(root, ['install', '--json'], environment);
+        const next = await spawnGspot(root, ['install', '--json']);
         expect(next.code, next.stdout + next.stderr).toBe(0);
         const result = JSON.parse(next.stdout) as InstallCommandJson;
         expect(result.steps.filter((step) => step.includes('ci'))).toStrictEqual([]);
