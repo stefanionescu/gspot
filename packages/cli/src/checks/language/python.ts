@@ -313,8 +313,8 @@ function parseVultureFinding(line: string, selected: ReadonlySet<string>): Check
                 message: `The code after ${String(statement)} never runs. Delete it.`,
             },
         ];
-    const message = `No code uses the ${kind} ${name}. Delete it, or, when code that vulture cannot see uses it by name, record that with gspot ignore python/vulture --names ${name} and a reason.`;
-    return [{ ...at, rule: `unused-${kind}`, message: message, name }];
+    const message = `No code uses the ${kind} ${name}. Delete it, or, when code that vulture cannot see uses it by name, record that with gspot ignore python/vulture --paths ${file} and a reason.`;
+    return [{ ...at, rule: `unused-${kind}`, message: message }];
 }
 
 /**

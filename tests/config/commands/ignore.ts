@@ -43,15 +43,6 @@ export const REMAINING_EXPIRY_IGNORES = [
     },
 ];
 
-export const FUNCTION_NAME_IGNORES = [
-    {
-        check: 'structure/trivial-functions',
-        names: ['define_schema', 'execute'],
-        paths: ['nodes/**'],
-        reason: 'The host application calls these hooks by name.',
-    },
-];
-
 export const IGNORE_HOOK_TABLES = `[rules]
 enabled = false
 [hooks]

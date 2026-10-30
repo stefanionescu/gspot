@@ -257,31 +257,6 @@ test('progress is reported as soon as each check ends, with ignores applied to t
     ]);
 });
 
-test('an ignore with names keeps them in the run report and in the verbose ignore line', async () => {
-    const reason = 'The public hook serves the script caller.';
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash'], {
-            level: 'all',
-            tables: stringify({ ignore: [{ check: 'structure/trivial-functions', names: ['useThing'], reason }] }),
-        }),
-        'source.sh':
-            'useThing() { printf "%s\\n" ready; }\nuseOther() { printf "%s\\n" ready; }\nprintf "%s\\n" complete\n',
-    });
-    const command = ['check', '--only', 'structure/trivial-functions'];
-    const json = parseCheckReport(await runGspot(sandbox.path, [...command, '--json']));
-    const verbose = await runGspot(sandbox.path, [...command, '--verbose']);
-    expect({ code: json.code, stderr: json.stderr }).toStrictEqual({ code: 1, stderr: '' });
-    expect({ code: verbose.code, stderr: verbose.stderr }).toStrictEqual({ code: 1, stderr: '' });
-    expect(json.report.checks.flatMap(({ findings }) => findings.map(({ name }) => name))).toStrictEqual(['useOther']);
-    expect({
-        ignores: json.report.ignores,
-        lines: verbose.stdout.split('\n').filter((line) => line.startsWith('ignore     ')),
-    }).toStrictEqual({
-        ignores: [{ check: 'structure/trivial-functions', names: ['useThing'], reason }],
-        lines: [`ignore     structure/trivial-functions names useThing  ${reason}`],
-    });
-});
-
 test.each([...SCOPE_FINDINGS])("each check in a scope reads only that scope's files: $check", async (row) => {
     await using sandbox = await createGitSandbox({
         ...SCOPE_CHECK_FILES,

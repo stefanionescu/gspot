@@ -46,10 +46,7 @@ import {
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     if ((['check', 'rule'] as const).some((key) => record[key] !== undefined && record[key] !== finding[key]))
         return false;
-    return (
-        (record.names === undefined || (finding.name !== undefined && record.names.includes(finding.name))) &&
-        (record.paths === undefined || record.paths.length === 0 || buildPathMatcher(record.paths)(finding.file))
-    );
+    return record.paths === undefined || record.paths.length === 0 || buildPathMatcher(record.paths)(finding.file);
 }
 
 const DOCKER_AVAILABILITY = { create: () => new Map<string, Promise<SpawnResult>>() };

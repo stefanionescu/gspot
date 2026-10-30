@@ -1,7 +1,5 @@
 export const GLOB_BRACKETS = /[()[\]]/u;
 
-export const NAMES_OPTION = '--names <names...>';
-
 export const UNTIL_OPTION = '--until <date>';
 
 export const IGNORE_CHECK_MESSAGE = 'Run gspot ignore <check> --reason "<why>".';

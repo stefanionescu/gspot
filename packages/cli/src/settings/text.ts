@@ -206,7 +206,7 @@ export function buildSettingsToml(previous: TomlSyntax, written: TomlTable): str
 }
 
 /**
-Add an ignore to the list, or merge its paths into the record with the same check, rule, names, reason, and until.
+Add an ignore to the list, or merge its paths into the record with the same check, rule, reason, and until.
 When either record has no paths, the merged record has none. Changes ignores in place.
 
 @param ignores the written [[ignore]] records.

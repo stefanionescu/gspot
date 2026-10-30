@@ -51,7 +51,6 @@ export type Finding = {
     column?: number;
     rule?: string;
     help?: string;
-    name?: string;
 };
 
 export type FindingPlace = Pick<Finding, 'file' | 'line' | 'column'>;

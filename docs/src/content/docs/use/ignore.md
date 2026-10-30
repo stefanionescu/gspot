@@ -14,13 +14,6 @@ root in `gspot.toml`; `gspot unignore --paths` uses the same conversion.
 
 To leave paths out of every check, see [Exclude files](/configure/files/).
 
-For `structure/trivial-functions` and `python/vulture`, `--names` limits the ignore to the definitions with those
-names, such as the hooks that a framework calls by name:
-
-```shell
-gspot ignore structure/trivial-functions --names define_schema execute --reason "ComfyUI calls these node hooks."
-```
-
 Add `--until YYYY-MM-DD` to set the date the ignore expires, at 00:00 UTC. The ignore stays in effect. From that
 date, `gspot/suppressions` fails on it until you fix the findings and run `gspot unignore`, or write a later date.
 

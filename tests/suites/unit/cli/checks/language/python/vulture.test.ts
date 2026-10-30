@@ -30,9 +30,9 @@ test('vulture reads every Python file of the scope and reports unused definition
     );
     const checked = await runChecks(session, buildRunOptions({ only: ['python/vulture'] }));
     const findings = checked.report.checks.flatMap((check) => check.findings);
-    expect(findings.map(({ file, line, rule, name }) => ({ file, line, rule, name }))).toStrictEqual([
-        { file: 'app/nodes.py', line: 1, rule: 'unused-function', name: 'helper' },
-        { file: 'app/nodes.py', line: 3, rule: 'unreachable-code', name: undefined },
+    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'app/nodes.py', line: 1, rule: 'unused-function' },
+        { file: 'app/nodes.py', line: 3, rule: 'unreachable-code' },
     ]);
     const command = spawn.mock.calls
         .map(([commandArguments]) => commandArguments)

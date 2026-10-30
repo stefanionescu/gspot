@@ -185,18 +185,6 @@ test.each(['constructor', 'toString', 'prototype'])(
     },
 );
 
-test('names in an ignore is refused for a check whose findings name no definition', () => {
-    using sandbox = createTemporaryFolder();
-    expect(() =>
-        readSettings(
-            '[[ignore]]\ncheck = "python/ruff"\nnames = ["read"]\npaths = ["interfaces.py"]\nreason = "The framework calls these by name."\n',
-            sandbox.path,
-        ),
-    ).toThrow(
-        'names applies only to structure/trivial-functions and python/vulture, whose findings name a definition.',
-    );
-});
-
 test.each(['latest', 'v20240101', 'V', '20240101__init.sql'])(
     'the freeze cutoff refuses an invalid version: %s',
     (through) => {

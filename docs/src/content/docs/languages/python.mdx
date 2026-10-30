@@ -58,10 +58,10 @@ gspot finds each module.
 ## Unused code and long functions
 
 At level `all`, `python/vulture` finds functions, classes, and attributes that no file of the scope uses, and code that
-never runs. A framework can call a definition by name; record it with a reason:
+never runs. A framework can call a definition by name; ignore the file that holds it, with a reason:
 
 ```shell
-gspot ignore python/vulture --names execute --reason "ComfyUI calls the execute method of each node."
+gspot ignore python/vulture --paths nodes.py --reason "ComfyUI calls the execute method of each node."
 ```
 
 `python/function-size` checks each function against `limits.function_lines`.

@@ -1,5 +1,3 @@
-import { NAMED_FINDING_CHECKS } from '#cli/config/settings/file.ts';
-
 export const COMMAND_HELP = {
     init: {
         summary: 'Find what this repository needs, then write gspot.toml and the generated files',
@@ -170,7 +168,6 @@ export const COMMAND_HELP = {
         options: {
             '--reason <text>': 'Why you turn it off (required)',
             '--rule <rule>': 'Turn off only this lint rule',
-            '--names <names...>': `Turn it off only for the definitions with these names, for ${new Intl.ListFormat('en', { type: 'conjunction' }).format(NAMED_FINDING_CHECKS)}`,
             '--paths <path...>':
                 'Turn it off only for these paths, relative to the current folder (default: every path)',
             '--until <date>': 'Report the ignore as expired from this date, YYYY-MM-DD (UTC)',

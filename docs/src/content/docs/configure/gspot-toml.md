@@ -26,7 +26,6 @@ the order of untouched settings and tables.
 | --------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------- |
 | Turn a check or a lint rule off                           | `gspot ignore <check> [--rule <rule>] [--paths "<path>"] --reason "<why>"` | [Ignore findings](/use/ignore/)             |
 | Turn it off until a date                                  | Add `--until YYYY-MM-DD`                                                   | [Ignore findings](/use/ignore/)             |
-| Accept a function that a framework calls by name          | `gspot ignore <check> --names <name> --reason "<why>"`                     | [Ignore findings](/use/ignore/)             |
 | Keep generated or vendored files out                      | Mark them `linguist-generated` or `linguist-vendored` in `.gitattributes`  | [Exclude files](/configure/files/)          |
 | Keep your own files out of every check                    | `gspot ignore --paths "<path>" --reason "<why>"`                           | [Exclude files](/configure/files/)          |
 | Change the options of a lint rule                         | `tools.<tool>.rules`, or `[[tools.eslint.override]]` for some paths        | [Lint rule options](/configure/lint-rules/) |
@@ -134,7 +133,7 @@ The plan lists under `left out` each setting that belongs to the other repositor
 - Settings and command checks that run code.
 - Settings that describe that repository, such as `tools.eslint.import_extension`.
 - `ci.enabled` and `ci.provider`, because CI stays off until you run `gspot set ci.enabled true`.
-- Ignores with paths, names, or a date.
+- Ignores with paths or a date.
 
 What init reads here wins over the file: the formatting of an existing Prettier, EditorConfig, or Ruff file.
 `--level` wins over the level of the file.

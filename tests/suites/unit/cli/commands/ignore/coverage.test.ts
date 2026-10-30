@@ -12,10 +12,10 @@ import { rm, unlink, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { LITERAL_ROUTE_CASES } from '#tests/config/commands/ignore.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { LITERAL_ROUTE_CASES, FUNCTION_NAME_IGNORES } from '#tests/config/commands/ignore.ts';
 
 test('an ignore without paths stops a command check and its fixer until unignore', async () => {
     await using sandbox = await createGitSandbox({});
@@ -150,24 +150,3 @@ test.each([...LITERAL_ROUTE_CASES])(
         expect(contents).not.toHaveProperty('ignore');
     },
 );
-
-test('gspot ignore --names writes the names of a structure/trivial-functions ignore', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['python'], { level: 'all' }),
-        'main.py': '',
-    });
-    const result = await runGspot(sandbox.path, [
-        'ignore',
-        'structure/trivial-functions',
-        '--names',
-        'define_schema',
-        'execute',
-        '--paths',
-        'nodes/**',
-        '--reason',
-        'The host application calls these hooks by name.',
-    ]);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    expect(written['ignore']).toStrictEqual(FUNCTION_NAME_IGNORES);
-});

@@ -36,7 +36,6 @@ function hasPathRole(node: unknown): boolean {
 
 function findIgnoreNote(ignore: TomlTable, commandChecks: Set<unknown>): string | undefined {
     if (ignore['paths'] !== undefined) return LEFT_OUT_NOTES.paths;
-    if (ignore['names'] !== undefined) return LEFT_OUT_NOTES.repository;
     if (ignore['until'] !== undefined) return LEFT_OUT_NOTES.date;
     return commandChecks.has(ignore['check']) ? LEFT_OUT_NOTES.check : undefined;
 }

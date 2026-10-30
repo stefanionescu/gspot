@@ -27,7 +27,6 @@ import {
     GSPOT_FOLDER_PATH,
     SETTINGS_EXAMPLES,
     SCOPE_PATH_MESSAGES,
-    NAMED_FINDING_CHECKS,
     NO_CHECK_RULE_MESSAGE,
     NO_CHECK_PATHS_MESSAGE,
 } from '#cli/config/settings/file.ts';
@@ -36,7 +35,6 @@ export const ignoreSchema = z
     .strictObject({
         check: z.string().optional().meta(SETTING_DEFINITIONS['ignore.check']),
         rule: z.string().optional().meta(SETTING_DEFINITIONS['ignore.rule']),
-        names: z.string().min(1).array().min(1).optional().meta(SETTING_DEFINITIONS['ignore.names']),
         paths: nonemptyPathsSchema.optional().meta(SETTING_DEFINITIONS['ignore.paths']),
         reason: z
             .string({ error: 'needs a reason. Add reason = "..." to this record.' })
@@ -46,14 +44,6 @@ export const ignoreSchema = z
         NonNullable<ParsedSettings['ignore']>[number],
         NonNullable<WrittenSettings['ignore']>[number]
     >)
-    .superRefine((ignore, context) => {
-        if (ignore.names !== undefined && !NAMED_FINDING_CHECKS.has(ignore.check ?? ''))
-            context.addIssue({
-                code: 'custom',
-                path: ['names'],
-                message: `names applies only to ${new Intl.ListFormat('en', { type: 'conjunction' }).format(NAMED_FINDING_CHECKS)}, whose findings name a definition.`,
-            });
-    })
     .superRefine((ignore, context) => {
         if (ignore.check !== undefined) {
             return;

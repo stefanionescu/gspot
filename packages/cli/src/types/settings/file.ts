@@ -243,7 +243,6 @@ export type ParsedSettings = ParsedRoot & {
         | {
               check?: string | undefined;
               rule?: string | undefined;
-              names?: string[] | undefined;
               paths?: string[] | undefined;
               reason: string;
               until?: TomlDate | undefined;

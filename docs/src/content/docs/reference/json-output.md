@@ -20,7 +20,7 @@ gspot check --json
 | `duration`        | Elapsed run time in milliseconds.                                                                                   |
 | `comparison`      | When present, the selected content (`working-tree`, `index`, or `commit`) and its reference.                        |
 | `checks`          | The result of every planned check, skipped ones included, with their findings.                                      |
-| `ignores`         | Ignores in effect, with their check, optional lint rule, paths, and names, and reason.                              |
+| `ignores`         | Ignores in effect, with their check, optional lint rule, paths, and reason.                                         |
 | `unstagedChanges` | Number of changed files left out when the run reads the staging area.                                               |
 | `partial`         | Whether the run selected only staged files, changed files, or named paths.                                          |
 | `notes`           | Notes about the run, such as skipped preparation or file selection.                                                 |
@@ -40,8 +40,8 @@ It can also have `files`, `note`, `reproduce`, and `command`. A skipped result c
 `skipped`. `missing` and `error` make the run incomplete and produce exit code `2`. An `error` result retains the
 findings collected before the check stopped.
 
-Each finding has `check`, `file`, `message`, and `fixable`. Optional fields include `line`, `column`, `rule`, `help`,
-and `name`, the definition that a `structure/trivial-functions` or `python/vulture` finding names. Source lines and columns start at `1`. A finding without a source location can have an empty `file`.
+Each finding has `check`, `file`, `message`, and `fixable`. Optional fields include `line`, `column`, `rule`, and
+`help`. Source lines and columns start at `1`. A finding without a source location can have an empty `file`.
 
 The `cause` of a skip takes one of `system`, `replaced`, `setting`, `condition`, `ignore`, or
 `no-files`.

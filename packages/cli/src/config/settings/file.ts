@@ -59,8 +59,6 @@ export const SETTINGS_EXAMPLES = [
     { import_rule: [{ name: 'core', paths: ['src/core/**'] }] },
 ] as const;
 
-export const NAMED_FINDING_CHECKS: ReadonlySet<string> = new Set(['structure/trivial-functions', 'python/vulture']);
-
 export const GSPOT_FOLDER_PATH = new RegExp(`^\\${GSPOT_FOLDER}(?:/|$)`, 'iu');
 
 export const SCOPE_PATH_MESSAGES = {

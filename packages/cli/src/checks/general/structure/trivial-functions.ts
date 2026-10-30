@@ -133,8 +133,6 @@ function listTrivialFunctions(planned: PlannedCheck, source: ParsedSource): Chec
                 column: node.startPosition.column + 1,
                 rule: RULES.trivialFunction,
                 message: message,
-
-                name,
             },
         ];
     });

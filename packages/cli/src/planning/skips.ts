@@ -51,9 +51,7 @@ function findConditionSkip(planned: PlannedCheck, repository: Repository): Skip 
 function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
     const ignored = listIgnores(scope.settings, check.id).find(
         (ignore) =>
-            ignore.rule === undefined &&
-            ignore.names === undefined &&
-            (ignore.paths.length === 0 || isScopeCovered(ignore.paths, scope.path)),
+            ignore.rule === undefined && (ignore.paths.length === 0 || isScopeCovered(ignore.paths, scope.path)),
     );
     if (ignored === undefined) return undefined;
     return { cause: 'ignore', note: `turned off by an ignore in gspot.toml: ${ignored.reason}` };

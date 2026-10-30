@@ -21,7 +21,6 @@ import { RULE_OPTION, PATHS_OPTION, REASON_OPTION } from '#cli/config/commands/f
 import { applySettingsEdit, prepareSettingsEdit } from '#cli/generation/settings-edit.ts';
 
 import {
-    NAMES_OPTION,
     UNTIL_OPTION,
     GLOB_BRACKETS,
     PAST_UNTIL_MESSAGE,
@@ -53,7 +52,6 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
     const record = stripUndefined({
         check: options.check,
         rule: options.rule,
-        names: options.names,
         paths: options.paths,
         reason: options.reason,
         until: options.until === undefined ? undefined : parseExpiryDate(options.until),
@@ -74,7 +72,6 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
         stripUndefined({
             check: options.check,
             rule: options.rule,
-            names: options.names,
             paths,
             reason: options.reason,
             until: options.until === undefined ? undefined : parseExpiryDate(options.until),
@@ -111,7 +108,6 @@ export function registerIgnore(program: Command, onResult: CommandCompletion): v
         .description(COMMAND_HELP.ignore.description)
         .requiredOption(REASON_OPTION, COMMAND_HELP.ignore.options[REASON_OPTION])
         .option(RULE_OPTION, COMMAND_HELP.ignore.options[RULE_OPTION])
-        .option(NAMES_OPTION, COMMAND_HELP.ignore.options[NAMES_OPTION])
         .option(PATHS_OPTION, COMMAND_HELP.ignore.options[PATHS_OPTION])
         .option(UNTIL_OPTION, COMMAND_HELP.ignore.options[UNTIL_OPTION])
         .action(async (check, flags) => {
@@ -124,7 +120,6 @@ export function registerIgnore(program: Command, onResult: CommandCompletion): v
                         check,
                         paths: flags.paths,
                         rule: flags.rule,
-                        names: flags.names,
                         reason: flags.reason,
                         until: flags.until,
                     }),

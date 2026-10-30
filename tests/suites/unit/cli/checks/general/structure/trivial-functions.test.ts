@@ -1,8 +1,5 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runChecks } from '#cli/commands/check/run.ts';
-import { openSession } from '#cli/planning/session.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
@@ -96,23 +93,6 @@ test('Python reports overloads, abstract and protocol methods, properties, sette
     expect(findings.map(({ rule, line }) => ({ rule, line }))).toStrictEqual(
         [5, 9, 14, 17, 19, 22, 24, 25].map((line) => ({ rule: 'trivial-function', line })),
     );
-});
-
-test('an ignore with names keeps those functions out of the findings', async () => {
-    const ignore =
-        '[[ignore]]\ncheck = "structure/trivial-functions"\nnames = ["read", "save", "size", "hook", "parse"]\npaths = ["interfaces.py"]\nreason = "The framework calls these by name."\n';
-    await using sandbox = await testdir({
-        'interfaces.py': PYTHON_INTERFACES,
-        'gspot.toml': buildSandboxSettings(['python'], {
-            level: 'all',
-            tables: `[limits.python]\ntrivial_function_statements = 2\n${ignore}`,
-        }),
-    });
-    const { report } = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['structure/trivial-functions'] }),
-    );
-    expect(report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
 test.each([...STATEMENT_COUNT_CASES])(

@@ -3,8 +3,6 @@ import type { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { planChecks } from '#cli/planning/checks.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -236,27 +234,3 @@ test.each([...LEVEL_REEXPORT_CASES])(
         );
     },
 );
-
-test('a built-in trivial-function name ignore leaves the TypeScript ESLint rule active', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['typescript'], {
-            level: 'all',
-            tables: '[[ignore]]\ncheck = "structure/trivial-functions"\nnames = ["launch"]\npaths = ["source.ts"]\nreason = "The external interface keeps this name."\n',
-        }),
-        'package.json': '{"private":true,"type":"module"}\n',
-        'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["source.ts"]}\n',
-        'source.ts': 'function launch() { return execute(); }\nexport const result = launch();\n',
-    });
-    const eslint = await createEslint(sandbox.path);
-    const session = await openSession(sandbox.path);
-    const planned = planChecks(session, {
-        stage: 'commit',
-        only: ['structure/trivial-functions', 'javascript/eslint'],
-    });
-    const builtIn = planned.find(({ check }) => check.id === 'structure/trivial-functions');
-    expect(builtIn?.files).toStrictEqual([]);
-    const lintFiles = planned.find(({ check }) => check.id === 'javascript/eslint')?.files.map(({ path }) => path);
-    expect(lintFiles).toContain('source.ts');
-    const findings = await listLintFindings(eslint, sandbox.path, ['source.ts'], ['gspot/no-trivial-functions']);
-    expect(findings).toStrictEqual([{ file: 'source.ts', line: 1, rule: 'gspot/no-trivial-functions' }]);
-});
