@@ -78,11 +78,6 @@ allowed_names = ["customSyntax"]
 reason = "Stylelint names its parser option customSyntax."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/shapes.ts"]
-allowed_names = ["_zod"]
-reason = "Zod names its schema information property _zod."
-
-[[naming.override]]
 paths = ["packages/cli/src/types/parsers/projects/xcode.ts"]
 allowed_names = ["objects"]
 reason = "Xcode project files name the object table objects."
@@ -167,7 +162,6 @@ reason = "Vite depends on it to build the docs site; the license binds changes t
 
 [spelling.allowed_words]
 vertica = "SQLFluff names its Vertica dialect vertica."
-optin = "Zod names its optional input marker optin."
 IIF = "ESLint names immediately invoked functions IIFEs."
 next-intl = "The next-intl package name."
 udid = "Apple names the device identifier udid."

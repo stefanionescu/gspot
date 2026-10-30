@@ -58,7 +58,6 @@ NGINX
 node
 Node
 npm
-optin
 osv-scanner
 picomatch
 pip-licenses

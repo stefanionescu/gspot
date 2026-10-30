@@ -94,7 +94,6 @@ exceptions:
   - eslint\-plugin\-zod
   - Zod
   - vertica
-  - optin
   - IIF
   - next\-intl
   - udid
