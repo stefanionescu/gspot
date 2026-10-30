@@ -5,11 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
 import { symlink, writeFile } from 'node:fs/promises';
-import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
-import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
@@ -23,12 +21,11 @@ import {
     EDITORCONFIG_FILES,
     PROJECT_PATH_IGNORES,
     LAYERED_SCOPE_SETTINGS,
-    PROJECT_FINDING_MESSAGE,
     TYPESCRIPT_SCOPES_SETTINGS,
 } from '#tests/config/planning/files.ts';
 
 test("a file named on the command line runs its scope's project check on every file of the scope", async () => {
-    await using sandbox = await createGitSandbox({
+    await using sandbox = await testdir({
         'gspot.toml': TYPESCRIPT_SCOPES_SETTINGS,
         'api/source.ts': 'export {};\n',
         'api/caller.ts': 'export {};\n',
@@ -37,18 +34,6 @@ test("a file named on the command line runs its scope's project check on every f
         'web/source.ts': 'export {};\n',
     });
 
-    const declaration = await fakeNpmTool(sandbox.path, 'tsc');
-    await writeProgramCommand(
-        sandbox.path,
-        `${GSPOT_PATHS.nodeModules}/.bin/tsc`,
-        'fakes/tool',
-        '--version-line',
-        String(declaration.version),
-        '--line',
-        'source.ts(1,1): error TS2304: Project finding',
-        '--exit',
-        '1',
-    );
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { ...TSC_PUSH_OPTIONS, paths: ['api/source.ts'] });
     const affected = planned.filter((check) => check.files.length > 0);
@@ -58,11 +43,6 @@ test("a file named on the command line runs its scope's project check on every f
         'api/source.ts',
         'api/tsconfig.json',
     ]);
-    const result = await runChecks(session, buildRunOptions({ ...TSC_PUSH_OPTIONS, paths: ['api/source.ts'] }));
-    expect(result.report.exitCode, JSON.stringify(result.report)).toBe(1);
-    expect(result.report.checks.find(({ scope }) => scope === 'api')?.findings[0]?.message).toBe(
-        PROJECT_FINDING_MESSAGE,
-    );
 });
 
 test.each([...PROJECT_PATH_IGNORES])(

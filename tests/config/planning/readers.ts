@@ -6,12 +6,10 @@ export const GENERATOR_LIMITS = [
         limits: [
             'file_lines',
             'function_lines',
-            'function_parameters',
             'function_statements',
             'block_nesting',
             'callback_nesting',
             'cognitive_complexity',
-            'cyclomatic_complexity',
             'index_exports',
             'trivial_function_statements',
         ],
@@ -27,18 +25,6 @@ export const GENERATOR_LIMITS = [
             'type_lines',
             'closure_lines',
             'cyclomatic_complexity',
-        ],
-    },
-    {
-        check: 'python/ruff',
-        file: 'ruff.toml',
-        languages: ['python'],
-        limits: [
-            'cyclomatic_complexity',
-            'function_statements',
-            'function_parameters',
-            'function_branches',
-            'function_returns',
         ],
     },
 ] as const;

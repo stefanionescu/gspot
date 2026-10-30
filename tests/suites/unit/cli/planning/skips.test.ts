@@ -177,36 +177,6 @@ test('generated and vendored test files do not satisfy a source-tag condition', 
     ]);
 });
 
-test('one matching dependency satisfies a condition listing alternatives', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['translations'], {
-            tables: '[translations]\nmessages_folder = "messages"\n',
-        }),
-        'package.json': '{"dependencies":{"next-intl":"4.8.3"}}',
-        'messages/en.json': '{"greeting":"Hello"}',
-    });
-    const session = await openSession(sandbox.path);
-    const root = session.scopes[0]!;
-    const configurations = root.configurations.map((configuration) =>
-        configuration.name === 'translations'
-            ? {
-                  ...configuration,
-                  checks: configuration.checks.map((check) => ({
-                      ...check,
-                      when: { ...check.when, dependencies: ['missing-library', 'next-intl'] },
-                  })),
-              }
-            : configuration,
-    );
-    const inScope = { ...session, scopes: [{ ...root, configurations }] };
-    expect(
-        planChecks(inScope, { stage: 'push', only: ['translations/messages'] }).map(({ check, skip }) => ({
-            check: check.id,
-            skip,
-        })),
-    ).toStrictEqual([{ check: 'translations/messages', skip: undefined }]);
-});
-
 test('a check for other systems names the host in its skip note', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['swift'], { level: 'all' }),

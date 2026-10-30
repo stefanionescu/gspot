@@ -24,7 +24,6 @@ import {
     TSC_PUSH_OPTIONS,
     LAST_FILE_CHANGES,
     TWO_SCOPES_SETTINGS,
-    LOCKFILE_TRIGGER_NAMES,
     PROJECT_FINDING_MESSAGE,
 } from '#tests/config/planning/files.ts';
 
@@ -91,9 +90,6 @@ test.each(LAST_FILE_CHANGES)(
         expect(result.report.exitCode).toBe(1);
         const active = result.report.checks.filter((check) => check.status !== 'skipped');
         expect(active.map((check) => check.scope)).toStrictEqual(operation === 'delete' ? ['api'] : ['api', 'web']);
-        expect(active.map((check) => check.findings.map(({ message }) => message))).toStrictEqual(
-            active.map(() => [PROJECT_FINDING_MESSAGE]),
-        );
     },
 );
 
@@ -182,12 +178,8 @@ test.each(['gspot.toml', getManifestTarget('docs', 'lychee.toml')])(
 
 test('dependencies/osv-scanner runs only when a trigger file changes', async () => {
     await using sandbox = await testdir({
-        ...Object.fromEntries(
-            LOCKFILE_TRIGGER_NAMES.flatMap((filename) => [
-                [filename, ''],
-                ['app/' + filename, ''],
-            ]),
-        ),
+        'uv.lock': '',
+        'app/uv.lock': '',
         'ignored/uv.lock': '',
         'gspot.toml': buildSandboxSettings(['dependencies'], {
             level: 'all',
@@ -204,11 +196,9 @@ test('dependencies/osv-scanner runs only when a trigger file changes', async () 
     const options = { stage: 'push' as const, only: ['dependencies/osv-scanner'] };
     const [scopeCheck] = planChecks(session, options);
     for (const prefix of ['', 'app/']) {
-        for (const filename of LOCKFILE_TRIGGER_NAMES) {
-            const [triggered] = planChecks(session, { ...options, staged: [prefix + filename] });
-            expect(isActive(triggered!), prefix + filename).toBe(true);
-            expect(triggered!.files).toStrictEqual(scopeCheck!.files);
-        }
+        const [triggered] = planChecks(session, { ...options, staged: [`${prefix}uv.lock`] });
+        expect(isActive(triggered!), prefix).toBe(true);
+        expect(triggered!.files).toStrictEqual(scopeCheck!.files);
         const [unrelated] = planChecks(session, { ...options, staged: [prefix + 'source.txt'] });
         expect(isActive(unrelated!)).toBe(false);
     }

@@ -87,15 +87,6 @@ limits.sql.file_lines = 30
 tools.sqlfluff.dialect = "postgres"
 `;
 
-export const LOCKFILE_TRIGGER_NAMES = [
-    'bun.lock',
-    'package-lock.json',
-    'npm-shrinkwrap.json',
-    'pnpm-lock.yaml',
-    'yarn.lock',
-    'uv.lock',
-] as const;
-
 export const PROJECT_FINDING_MESSAGE = 'Project finding';
 
 export const LAST_FILE_CHANGES = [

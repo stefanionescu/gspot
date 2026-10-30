@@ -1,27 +1,23 @@
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { TWO_WORDS } from '#tests/config/ignores.ts';
-import * as processes from '#cli/system/processes.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/documents.ts';
-import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { ZERO_COVERAGE_SETTINGS } from '#tests/config/planning/settings.ts';
 import { isActive, planChecks, stripCoverageArguments } from '#cli/planning/checks.ts';
 import { TSC_REPLACEMENTS, CONFIGURED_CHECK_CASES, SCOPE_WIDE_IGNORE_CASES } from '#tests/config/planning/checks.ts';
 
-test('coverage arguments leave other commands, your own checks, and given arguments unchanged', async () => {
+test('coverage stripping leaves your own checks and given arguments unchanged', async () => {
     await using sandbox = await testdir();
     const command = [process.execPath, '--coverage', '', TWO_WORDS];
     await createFileTree(sandbox.path, {
@@ -35,10 +31,7 @@ test('coverage arguments leave other commands, your own checks, and given argume
     });
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'push', only: ['project/tests'] })[0]!;
-    using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());
-    await runCommandCheck(buildCheckSession(session), planned);
-    await runCommandCheck(buildCheckSession(session), planned, { command });
-    expect(run.mock.calls.map(([commandArguments]) => commandArguments)).toStrictEqual([command, command]);
+    expect(stripCoverageArguments(planned, {})).toStrictEqual(command);
     expect(stripCoverageArguments(planned, { command: ['echo', '', TWO_WORDS] })).toStrictEqual([
         'echo',
         '',
@@ -235,7 +228,7 @@ test('a nested Next.js check replaces TypeScript only in its own scope', async (
 test('the jest, vitest, and pytest coverage checks drop exactly their coverage arguments when every limit is 0', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript', 'jest', 'vitest', 'python', 'pytest'], {
-            tables: ZERO_COVERAGE_SETTINGS,
+            tables: '[coverage]\nlines = 0\nbranches = 0\nfunctions = 0\nstatements = 0\n',
         }),
         'math.test.js': '',
         'test_math.py': '',

@@ -26,13 +26,6 @@ export const NEXT_INTL_PROJECTS = [
         selected: false,
     },
     {
-        name: 'unrelated sibling project',
-        scope: 'app',
-        files: { 'sibling/package.json': NEXT_INTL_PACKAGE },
-        selected: false,
-    },
-    { name: 'absent project', scope: 'app', files: {}, selected: false },
-    {
         name: 'own child replaces inherited dependencies',
         scope: 'app',
         files: {

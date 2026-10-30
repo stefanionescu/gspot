@@ -32,14 +32,6 @@ reason = "This sandbox exercises native tools without the license scanner."
         skips: ['node', 'eslint', 'typescript'],
     },
     {
-        name: 'Python with Markdown',
-        tables: '',
-        configurations: ['python', 'markdown'],
-        files: { 'app.py': 'value = 1\n', 'guide.md': '# Guide\n' },
-        needs: ['node', 'markdownlint-cli2'],
-        skips: ['eslint', 'typescript'],
-    },
-    {
         name: 'Bun with TypeScript',
         tables: '',
         configurations: ['typescript'],

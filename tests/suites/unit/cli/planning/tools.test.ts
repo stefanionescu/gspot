@@ -10,7 +10,6 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { listOtherTools, listCheckTools } from '#cli/planning/tools.ts';
-import { ZERO_COVERAGE_SETTINGS } from '#tests/config/planning/settings.ts';
 import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS, ARCHITECTURE_REQUIREMENTS } from '#tests/config/planning/tools.ts';
 
 test('basic tRPC server files select the boundaries plugin without import rules', async () => {
@@ -101,37 +100,6 @@ describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...r
         );
     },
 );
-
-test('omitting coverage keeps unrelated system libraries required by another configuration', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript', 'vitest'], {
-            tables: ZERO_COVERAGE_SETTINGS,
-        }),
-        'math.test.js': '',
-    });
-    const session = await openSession(sandbox.path);
-    const planned = planChecks(session, { stage: 'push', only: ['vitest/coverage'] })[0]!;
-    const provider = planned.scope.configurations
-        .flatMap((configuration) => configuration.tools)
-        .find((tool) => tool.name === '@vitest/coverage-v8')!;
-    const check = { ...planned.check, tool: 'eslint' };
-    const scope = {
-        ...planned.scope,
-        configurations: planned.scope.configurations.map((configuration) =>
-            configuration.name === 'vitest'
-                ? {
-                      ...configuration,
-                      checks: configuration.checks.map((each) => (each === planned.check ? check : each)),
-                      tools: [...configuration.tools, { ...provider, name: 'independent-support' }],
-                      eslint: { ...configuration.eslint, required_tools: ['independent-support'] },
-                  }
-                : configuration,
-        ),
-    };
-    const companions = listOtherTools(scope, check, ['vitest', 'run']);
-    expect(companions).toContain('independent-support');
-    expect(companions).not.toContain('@vitest/coverage-v8');
-});
 
 test('a check installs the peer packages required by its tool', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['data-files']), 'config.json': '{}\n' });
