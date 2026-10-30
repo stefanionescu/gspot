@@ -10,6 +10,7 @@ import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import type { Level } from '#cli/types/configurations.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
@@ -31,7 +32,7 @@ test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting,
     using prepared = await preparePydoclintCheck(
         sandbox.path,
         { 'pyproject.toml': project, 'source.py': 'value = 1\n' },
-        setting === undefined ? '' : `[tools.ruff]\ndocstring_convention = "${setting}"\n`,
+        { tables: setting === undefined ? '' : `[tools.ruff]\ndocstring_convention = "${setting}"\n` },
     );
     const { session, planned } = prepared;
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());
@@ -52,17 +53,35 @@ test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting,
     }).toStrictEqual({ style: expected, typeFlags: [...typeFlags] });
 });
 
+test.each([
+    { level: 'basic', project: '', checked: [] },
+    { level: 'all', project: '', checked: ['--skip-checking-short-docstrings', 'false'] },
+    { level: 'all', project: '[tool.pydoclint]\nskip-checking-short-docstrings = true\n', checked: [] },
+] as const)('pydoclint at level $level checks one-line docstrings: $checked', async ({ level, project, checked }) => {
+    await using sandbox = await testdir();
+    using prepared = await preparePydoclintCheck(
+        sandbox.path,
+        { 'pyproject.toml': `${PYPROJECT}${project}`, 'source.py': 'value = 1\n' },
+        { level },
+    );
+    using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());
+    await runCheckCode(buildCheckSession(prepared.session), prepared.planned, CHECK_CODE['python/pydoclint']);
+    const commandArguments = run.mock.calls[0]![0];
+    const index = commandArguments.indexOf('--skip-checking-short-docstrings');
+    expect(index === -1 ? [] : commandArguments.slice(index, index + 2)).toStrictEqual([...checked]);
+});
+
 async function preparePydoclintCheck(
     root: string,
     files: Record<string, string>,
-    tables = '',
+    settings: { tables?: string; level?: Level } = {},
 ): Promise<DisposableStack & { session: Session; planned: PlannedCheck }> {
     using cleanup = new DisposableStack();
     const resources = cleanup.use(new DisposableStack());
     const executable = buildVenvExecutablePath(GSPOT_PATHS.pythonEnvironment, 'pydoclint');
     await createFileTree(root, {
         ...files,
-        'gspot.toml': buildSandboxSettings(['python'], { tables }),
+        'gspot.toml': buildSandboxSettings(['python'], settings),
         [executable]: '',
     });
     await chmod(join(root, executable), EXECUTABLE_FILE);

@@ -78,6 +78,7 @@ text: changing it changes runtime output.
 <!-- level: all -->
 
 - A class docstring says what an instance represents, never `Class that...`.
+- A function docstring documents each argument, even when the summary fits on one line.
 - A function that mutates an argument says so.
 
 ## Constants, globals, and mutable state

@@ -3,6 +3,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { buildUvRunCommand } from '#cli/tools/uv.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
+import type { Level } from '#cli/types/configurations.ts';
 import { countCodeLines } from '#cli/checks/code-lines.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
@@ -48,6 +49,7 @@ import {
     PYDOCLINT_DEFAULT_STYLE,
     REQUIREMENTS_FOLDER_FILE,
     REQUIREMENTS_FILE_MESSAGE,
+    PYDOCLINT_ALL_LEVEL_OPTIONS,
 } from '#cli/config/checks/language/python.ts';
 
 function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
@@ -259,12 +261,14 @@ async function groupByDocstringStyle(
     );
 }
 
-function parsePydoclintOptions(path: string, text: string, convention: unknown): PydoclintOptions {
+function parsePydoclintOptions(path: string, text: string, convention: unknown, level: Level): PydoclintOptions {
     const { tool } = parseTomlFile(path, text, docstringStyleSchema);
     const inherited = tool.ruff.lint.pydocstyle.convention ?? convention;
     const style = tool.pydoclint.style ?? (inherited === 'google' || inherited === 'numpy' ? inherited : undefined);
     const written = new Set(Object.keys(tool.pydoclint).map((name) => name.replaceAll('_', '-')));
-    const defaults = PYDOCLINT_TYPE_OPTIONS.flatMap((name) => (written.has(name) ? [] : [`--${name}`, 'false']));
+    const options =
+        level === 'all' ? [...PYDOCLINT_TYPE_OPTIONS, ...PYDOCLINT_ALL_LEVEL_OPTIONS] : PYDOCLINT_TYPE_OPTIONS;
+    const defaults = options.flatMap((name) => (written.has(name) ? [] : [`--${name}`, 'false']));
     return { command: [...PYDOCLINT_COMMAND, ...defaults], style };
 }
 
@@ -281,6 +285,7 @@ export async function checkPythonPydoclint(session: CheckSession, planned: Plann
         pyproject,
         findCachedText(session.reads, pyproject) ?? '',
         planned.scope.settings.tables[RUFF_TABLE]?.docstring_convention,
+        session.settings.level,
     );
     const groups = await groupByDocstringStyle(session, planned.files, configured.style);
     return runCommandBatches(

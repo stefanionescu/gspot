@@ -24,6 +24,8 @@ export const PYDOCLINT_TYPE_OPTIONS = [
     'check-yield-types',
 ] as const;
 
+export const PYDOCLINT_ALL_LEVEL_OPTIONS = ['skip-checking-short-docstrings'] as const;
+
 export const PYDOCLINT_COMMAND = ['pydoclint', '--allow-init-docstring', 'true', '--quiet', '{files}'] as const;
 
 export const PYDOCLINT_STYLE_FLAG = '--style';
