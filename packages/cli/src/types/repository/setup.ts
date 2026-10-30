@@ -1,3 +1,6 @@
+import type { z } from 'zod';
+import type { ciJobSchema } from '#cli/schemas/repository/setup.ts';
+
 export type RepositorySetup = {
     conflictingConfigFiles: ConflictingConfigFile[];
     hooks: {
@@ -20,12 +23,6 @@ export type ConflictingConfigFile = {
     key?: string;
 };
 
-export type CiJob = {
-    script?: string | string[] | undefined;
-    steps?: CiStep[] | undefined;
-    extends?: unknown;
-};
+export type CiJob = z.infer<typeof ciJobSchema>;
 
 export type RepositoryHooks = { hooksPath: string; hooks: RepositorySetup['hooks'] };
-
-export type CiStep = { run?: string | undefined };

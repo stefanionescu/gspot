@@ -1,7 +1,9 @@
+import type { z } from 'zod';
 import type ts from 'typescript';
+import type { tsconfigSchema } from '#cli/schemas/parsers/projects/tsconfig.ts';
 
 export type ParsedTsconfig = Omit<ts.ParsedCommandLine, 'raw'> & {
-    raw: { [key: string]: unknown; compilerOptions?: Record<string, unknown> | undefined };
+    raw: z.infer<typeof tsconfigSchema>;
     tsconfigFiles: string[];
     extendedTsconfigFiles: string[];
 };

@@ -1,6 +1,4 @@
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { CheckOutput, WrittenOutput } from '#cli/types/runs/output/formats.ts';
 import { DEFAULT_PATTERN, DEFAULT_FILE_PATTERN, DEFAULT_GROUPED_PATTERN } from '#cli/config/configurations/output.ts';
 
 export const outputSchema = z
@@ -34,18 +32,13 @@ export const outputSchema = z
                     .meta({ description: 'Report each nonempty output line as a finding without a source location.' }),
                 z.literal('none').meta({ description: 'Use the exit status without parsing output into findings.' }),
             ])
-            .describe(
-                'How gspot reads the output: json, regex, grouped, lines, none, or the format of a named tool.',
-            ) satisfies z.ZodType<WrittenOutput['format']>,
+            .describe('How gspot reads the output: json, regex, grouped, lines, none, or the format of a named tool.'),
         list: z.string().describe('For json: the path to the list of findings.').optional(),
         children: z.string().describe('For json: the field of each item that holds its findings.').optional(),
-        line_base: (
-            z
-                .union([z.literal(0), z.literal(1)])
-                .describe('Whether the tool counts lines from 0 or 1.') satisfies z.ZodType<
-                NonNullable<WrittenOutput['line_base']>
-            >
-        ).optional(),
+        line_base: z
+            .union([z.literal(0), z.literal(1)])
+            .describe('Whether the tool counts lines from 0 or 1.')
+            .optional(),
         fields: z
             .strictObject({
                 file: z.string().describe('For json: the field that holds the file.').optional(),
@@ -57,7 +50,7 @@ export const outputSchema = z
                     .string()
                     .describe('For json: the field that is set when the tool can fix the finding.')
                     .optional(),
-            } satisfies SchemaShape<NonNullable<CheckOutput['fields']>>)
+            })
             .optional()
             .describe('For json: the report fields that supply each finding property.'),
         pattern: z
@@ -76,15 +69,15 @@ export const outputSchema = z
             .describe('For regex: the message of every finding whose pattern has no message group.')
             .optional(),
     })
-    .transform((output): CheckOutput => {
+    .transform((output) => {
         switch (output.format) {
             case 'regex': {
-                return { ...output, format: 'regex', pattern: output.pattern ?? DEFAULT_PATTERN };
+                return { ...output, format: 'regex' as const, pattern: output.pattern ?? DEFAULT_PATTERN };
             }
             case 'grouped': {
                 return {
                     ...output,
-                    format: 'grouped',
+                    format: 'grouped' as const,
                     pattern: output.pattern ?? DEFAULT_GROUPED_PATTERN,
                     file_pattern: output.file_pattern ?? DEFAULT_FILE_PATTERN,
                 };
@@ -93,4 +86,4 @@ export const outputSchema = z
                 return { ...output, format: output.format };
             }
         }
-    }) satisfies z.ZodType<CheckOutput, WrittenOutput>;
+    });

@@ -45,8 +45,6 @@ export type ConfigurationExplanation = {
     removed: { scope: string; reason: string; command: string }[];
 };
 
-export type RuleDocumentation = { docs?: { description?: string; url?: string }; url?: string };
-
 export type LintRuleDocs = { description: string | undefined; url: string | undefined };
 
 export type CheckFacts = {

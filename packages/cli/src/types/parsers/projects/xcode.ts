@@ -1,21 +1,7 @@
-export type PbxElement = {
-    isa: string;
-    buildSettings?: { SDKROOT?: string | undefined; SWIFT_VERSION?: string | undefined } | undefined;
-    name?: string | undefined;
-    path?: string | undefined;
-    sourceTree?: string | undefined;
-    children?: string[] | undefined;
-    fileRef?: string | undefined;
-    files?: string[] | undefined;
-    buildPhases?: string[] | undefined;
-    fileSystemSynchronizedGroups?: string[] | undefined;
-    exceptions?: string[] | undefined;
-    membershipExceptions?: string[] | undefined;
-    target?: string | undefined;
-    mainGroup?: string | undefined;
-    targets?: string[] | undefined;
-    projectDirPath?: string | undefined;
-};
+import type { z } from 'zod';
+import type { pbxprojSchema } from '#cli/schemas/parsers/projects/xcode.ts';
+
+export type PbxElement = z.infer<typeof pbxprojSchema>['objects'][string];
 
 export type ParsedPbxproj = { objects: Record<string, PbxElement>; root: PbxElement };
 

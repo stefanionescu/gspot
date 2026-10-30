@@ -1,4 +1,6 @@
+import type { z } from 'zod';
 import { type LOCKFILES } from '#cli/config/files/lockfiles.ts';
+import type { bunPackageSchema } from '#cli/schemas/installers/npm.ts';
 import { type ToolInstall, type ToolPackageManager } from '#cli/types/installers/install.ts';
 
 export type NpmToolInstall = ToolInstall & {
@@ -19,21 +21,9 @@ export type PackageManagerRun = {
     credentials: string[];
 };
 
-export type BunPackage = [identity: string, address: string, metadata: Record<string, unknown>, integrity: string];
+export type BunPackage = z.infer<typeof bunPackageSchema>;
 
 export type LockedTarball = { name: string; version: string; address: string; integrity: string };
-
-export type NpmPackage = {
-    name?: string | undefined;
-    version: string;
-    resolved?: string | undefined;
-    integrity: string;
-};
-
-export type PnpmPackage = {
-    name?: string | undefined;
-    resolution: { integrity: string; tarball?: string | undefined };
-};
 
 export type Lockfile = (typeof LOCKFILES)[number];
 

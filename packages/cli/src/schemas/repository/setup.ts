@@ -1,19 +1,17 @@
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { CiJob, CiStep } from '#cli/types/repository/setup.ts';
 
-const ciStepSchema = z.object({ run: z.string().optional() } satisfies SchemaShape<CiStep>);
+const ciStepSchema = z.object({ run: z.string().optional() });
 
 export const ciJobSchema = z.object({
-    script: (
-        z.union([
+    script: z
+        .union([
             z.string(),
             z
                 .unknown()
                 .array()
                 .transform((commands) => commands.filter((command) => typeof command === 'string')),
-        ]) satisfies z.ZodType<string | string[]>
-    ).optional(),
+        ])
+        .optional(),
     steps: z
         .unknown()
         .array()
@@ -25,6 +23,6 @@ export const ciJobSchema = z.object({
         )
         .optional(),
     extends: z.unknown().optional(),
-} satisfies SchemaShape<CiJob>);
+});
 
-export const ciDocumentSchema = z.record(z.string(), z.unknown()) satisfies z.ZodType<Record<string, unknown>>;
+export const ciDocumentSchema = z.record(z.string(), z.unknown());

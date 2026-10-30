@@ -15,11 +15,6 @@ enabled = true
 banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling", "implementation", "candidate", "fragment", "invocation", "lexeme", "substantial", "substance", "floor", "hint", "sink", "inputs", "memo", "collect", "summarize", "verdict", "your", "odd", "qa", "cfg", "obsolete", "release hold", "installed root", "working folder", "root path", "entry", "entries", "item", "items", "part", "parts", "data", "known", "declared", "needed", "prepared", "pinned", "existing", "current", "extra", "complete", "whole", "plain", "raw", "full", "real", "additional", "given", "retained", "observed", "computed", "actual", "effective", "original", "specific", "captured", "recorded", "chosen", "internal", "helper", "helpers", "util", "utils", "payload", "fallback", "attempt", "normalized", "expanded", "composed", "thing", "things", "misc", "info", "details", "meta", "stuff", "perform", "execute", "ensure", "wrapper", "temp", "tmp", "various", "several", "certain", "resulting", "handled", "wrapped", "underlying", "corresponding", "relevant", "appropriate", "proper", "basic", "generic", "overall"]
 
 [[naming.override]]
-paths = ["packages/cli/src/types/settings/tools.ts", "packages/cli/src/types/settings/values.ts"]
-allowed_names = ["final_newline", "v8r", "ParsedV8r"]
-reason = "gspot.toml names the key final_newline, and v8r is the name of the tool."
-
-[[naming.override]]
 paths = ["docs/src/content/docs/404.md"]
 allow_digits = true
 reason = "Starlight routes the HTTP 404 page by this filename."
@@ -46,47 +41,6 @@ allowed_names = ["PurgeCSS"]
 reason = "PurgeCSS exports its class under this exact name."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/general/licenses.ts"]
-allowed_names = ["Name", "Version"]
-reason = "pip-licenses identifies these JSON fields with this exact capitalization."
-
-[[naming.override]]
-paths = ["packages/cli/src/schemas/checks/general/prose.ts", "packages/cli/src/types/checks/general/prose.ts"]
-allowed_names = ["Check", "Line", "Message", "Span"]
-reason = "Vale identifies these JSON diagnostic fields with this exact capitalization."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/checks/infrastructure/docker.ts"]
-allowed_names = ["PkgName", "Results", "RuleID", "Secrets", "Title", "Vulnerabilities", "VulnerabilityID"]
-reason = "Trivy identifies these JSON report fields with these exact names."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/checks/infrastructure/xcode.ts"]
-allowed_names = ["shouldTranslate"]
-reason = "The Xcode string format names its translation control shouldTranslate."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/checks/language/python.ts"]
-allowed_names = ["extend_exclude", "known_first_party"]
-reason = "deptry names these TOML settings extend_exclude and known_first_party."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/checks/language/swift.ts"]
-allowed_names = ["module_type"]
-reason = "SwiftPM package descriptions name the module type field module_type."
-
-[[naming.override]]
-paths = ["packages/cli/src/schemas/parsers/projects/xcode.ts"]
-allowed_names = ["rootObject", "objects"]
-reason = "Xcode project files name the object table objects."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/checks/platform/supabase.ts"]
-categories = ["properties"]
-allowed_names = ["diagnostics"]
-reason = "Deno names its lint findings diagnostics."
-
-[[naming.override]]
 paths = ["packages/cli/src/checks/framework/svelte.ts"]
 categories = ["functions"]
 allowed_names = ["checkSvelteCheck"]
@@ -99,11 +53,6 @@ allowed_names = ["checkSupabaseDenoCheck"]
 reason = "Check functions start with check and spell the supabase/deno-check check ID."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/runs/output/outputs.ts"]
-allowed_names = ["fixInfo"]
-reason = "markdownlint names its fix field fixInfo."
-
-[[naming.override]]
 paths = ["tests/suites/unit/cli/generation/configurations/general/data-files.test.ts"]
 allow_digits = true
 reason = "v8r is the name of the tool."
@@ -114,25 +63,14 @@ allowed_names = ["with"]
 reason = "GitHub Actions calls its action argument record with."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/configurations.ts"]
-categories = ["properties"]
-allowed_names = ["when"]
-reason = "The shipped configuration manifest format names its selection condition when."
-
-[[naming.override]]
 paths = ["packages/cli/src/generation/configurations/general/data-files.ts", "packages/cli/src/config/generation/configurations/general/data-files.ts"]
 allow_digits = true
 reason = "v8r is the name of the tool."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/parsers/projects/lockfiles.ts", "tests/suites/e2e/cli.test.ts"]
+paths = ["tests/suites/e2e/cli.test.ts"]
 allowed_names = ["resolved"]
 reason = "npm and Yarn lockfiles name each package download URL resolved."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/installers/npm.ts"]
-allowed_names = ["resolved", "resolution"]
-reason = "npm and pnpm lockfiles call their download fields resolved and resolution."
 
 [[naming.override]]
 paths = ["packages/cli/src/types/generation/css.ts"]
@@ -146,8 +84,8 @@ reason = "Zod names its schema information property _zod."
 
 [[naming.override]]
 paths = ["packages/cli/src/types/parsers/projects/xcode.ts"]
-allowed_names = ["objects", "fileSystemSynchronizedGroups"]
-reason = "Xcode project files name these keys objects and fileSystemSynchronizedGroups."
+allowed_names = ["objects"]
+reason = "Xcode project files name the object table objects."
 
 [[naming.override]]
 paths = ["packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/types/generation/markdownlint-cli2.ts"]
@@ -170,16 +108,6 @@ allowed_names = ["DERIVED_DATA_FLAG", "DERIVED_DATA_FOLDER"]
 reason = "Xcode names its build folder DerivedData and its flag -derivedDataPath."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/language/swift.ts"]
-allowed_names = ["data"]
-reason = "llvm-cov export reports keep their coverage under data."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/runs/output/outputs.ts"]
-allowed_names = ["extra"]
-reason = "Semgrep reports keep the details of each result under extra."
-
-[[naming.override]]
 paths = ["packages/cli/src/generation/configurations/language/python.ts", "tests/suites/unit/cli/generation/configurations/language/python.test.ts"]
 allowed_names = ["extraPaths"]
 reason = "basedpyright names its import search setting extraPaths."
@@ -190,7 +118,7 @@ allowed_names = ["raw"]
 reason = "toml-patch and the TypeScript compiler API name the source text raw."
 
 [[naming.override]]
-paths = ["packages/cli/src/config/generation/configurations/language/javascript/knip.ts", "packages/cli/src/generation/configurations/language/javascript/knip.ts", "packages/cli/src/types/settings/tools.ts", "tests/types/tools.ts"]
+paths = ["packages/cli/src/config/generation/configurations/language/javascript/knip.ts", "packages/cli/src/generation/configurations/language/javascript/knip.ts", "tests/types/tools.ts"]
 allowed_names = ["KNIP_JAVASCRIPT_ENTRY_FILES", "selectEntryFiles", "entry", "entries"]
 reason = "knip names its start files entry, and tools.knip.entry passes them on."
 
@@ -204,11 +132,6 @@ paths = ["packages/cli/src/checks/database/postgres/definer-search-path.ts", "pa
 categories = ["functions"]
 allowed_names = ["checkPostgresDefinerSearchPath", "checkPostgresRowLevelSecurity", "checkPostgresForeignKeyIndexes", "checkReactDomReactVersions", "checkDependenciesPackageManagerPin", "checkGspotConflictingConfigFiles", "checkStructureFileFolderClashes", "checkStructurePassThroughFolders", "checkXcodeFilesWithoutTarget", "checkXcodeAppTransportSecurity", "checkSupabaseServiceRoleKey"]
 reason = "Each check function is named check, then its configuration, then its check name."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/settings/file.ts", "packages/cli/src/types/settings/tables.ts"]
-allowed_names = ["max_list_item_words"]
-reason = "gspot.toml names this setting prose.max_list_item_words."
 
 [[naming.override]]
 paths = ["packages/cli/configurations/general/data-files/**", "packages/cli/src/config/generation/configurations/general/data-files.ts", "packages/cli/src/generation/configurations/general/data-files.ts", "tests/config/generation/configurations/general/data-files.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/suites/unit/cli/generation/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/checks/general/security/sensitive-data.test.ts"]
@@ -290,6 +213,7 @@ can_import = ["cli-types"]
 [[import_rule]]
 name = "cli-types"
 paths = ["packages/cli/src/types/**"]
+can_import = ["cli-config", "parsers", "configurations", "repository", "settings", "installers", "runs", "checks", "commands"]
 
 [[import_rule]]
 name = "system"

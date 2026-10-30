@@ -1,13 +1,10 @@
 import { z } from 'zod';
 import { MAX_PERCENTAGE } from '#cli/config/units.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
 import { CASE_NAMES } from '#cli/config/configurations/naming.ts';
+import type { ReasonedValue } from '#cli/types/settings/values.ts';
 import { nonemptyStringSchema } from '#cli/schemas/configurations/fields.ts';
-import type { WrittenFormat, TableSettings } from '#cli/types/settings/file.ts';
 import type { ReasonedSettingDefinition } from '#cli/types/settings/definitions.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import type { NamingCase, NamingFields, ParsedNamingFields } from '#cli/types/settings/naming.ts';
-import type { SettingValue, ReasonedValue, RemovedConfigurations } from '#cli/types/settings/values.ts';
 
 import {
     INDENT_MAX,
@@ -24,7 +21,7 @@ import {
     SHARED_REMOVALS_DESCRIPTION,
 } from '#cli/config/settings/fields.ts';
 
-export const nonemptyStringsSchema = nonemptyStringSchema.array() satisfies z.ZodType<string[]>;
+export const nonemptyStringsSchema = nonemptyStringSchema.array();
 
 export const removedConfigurationsSchema = z.union([
     z.string().array(),
@@ -35,11 +32,11 @@ export const removedConfigurationsSchema = z.union([
         })
         .transform((reasoned) => reasoned.value),
     z.record(z.string(), z.string().describe(REMOVAL_REASON_DESCRIPTION)).transform((reasons) => Object.keys(reasons)),
-]) satisfies z.ZodType<string[], RemovedConfigurations>;
+]);
 
-export const nonnegativeIntegerSchema = z.number().int().nonnegative() satisfies z.ZodType<number>;
+export const nonnegativeIntegerSchema = z.number().int().nonnegative();
 
-export const percentageSchema = z.number().min(0).max(MAX_PERCENTAGE) satisfies z.ZodType<number>;
+export const percentageSchema = z.number().min(0).max(MAX_PERCENTAGE);
 
 const formatFieldsSchema = z.strictObject({
     indent_style: z
@@ -84,7 +81,7 @@ const formatFieldsSchema = z.strictObject({
         .optional()
         .default(SETTING_DEFINITIONS['format.semicolons'].default)
         .meta(SETTING_DEFINITIONS['format.semicolons']),
-} satisfies SchemaShape<Omit<TableSettings<'format'>, 'override'>, Omit<WrittenFormat, 'override'>>);
+});
 
 export const relativePathSchema = z
     .string()
@@ -97,19 +94,19 @@ export const relativePathSchema = z
         const relative = path.startsWith('!') ? path.slice(1) : path;
         return !relative.startsWith('/') && !relative.split('/').includes('..');
     }, 'Use a relative path with forward slashes, without parent traversal or a drive prefix.')
-    .meta({ path_role: 'source' }) satisfies z.ZodType<string>;
+    .meta({ path_role: 'source' });
 
-export const destinationPathSchema = relativePathSchema.meta({ path_role: 'destination' }) satisfies z.ZodType<string>;
+export const destinationPathSchema = relativePathSchema.meta({ path_role: 'destination' });
 
-const relativePathsSchema = relativePathSchema.array() satisfies z.ZodType<string[]>;
+const relativePathsSchema = relativePathSchema.array();
 
-export const nonemptyPathsSchema = relativePathsSchema.min(1) satisfies z.ZodType<string[]>;
+export const nonemptyPathsSchema = relativePathsSchema.min(1);
 
 export const namingCategorySchema = z.strictObject({
     max_characters: allowReasonedValue(z.number().int().positive(), SETTING_DEFINITIONS['naming.max_characters']),
     max_words: allowReasonedValue(z.number().int().positive(), SETTING_DEFINITIONS['naming.max_words']),
     cases: allowReasonedValue(z.enum(CASE_NAMES).array(), SETTING_DEFINITIONS['naming.cases']),
-} satisfies SchemaShape<ParsedNamingFields, NamingFields<SettingValue<number>, SettingValue<NamingCase[]>>>);
+});
 
 namingCategorySchema.register(z.globalRegistry, { id: 'namingCategory' });
 
@@ -138,10 +135,7 @@ const formatOverrideSchema = z
         semicolons: formatFieldsSchema.shape.semicolons
             .unwrap()
             .describe(formatFieldsSchema.shape.semicolons.description as string),
-    } satisfies SchemaShape<
-        TableSettings<'format'>['override'][number],
-        NonNullable<WrittenFormat['override']>[number]
-    >)
+    })
     .refine((override) => Object.keys(override).length > 1, {
         message: 'A format override needs at least one formatting option.',
     })
@@ -152,7 +146,7 @@ export const formatSchema = formatFieldsSchema.extend({
         .array()
         .default(SETTING_DEFINITIONS['format.override'].default)
         .meta(SETTING_DEFINITIONS['format.override']),
-} satisfies SchemaShape<Pick<TableSettings<'format'>, 'override'>, Pick<WrittenFormat, 'override'>>);
+});
 
 /**
 Accept a setting value, or a reasoned value with the same value schema.
@@ -173,7 +167,7 @@ export function allowReasonedValue<Output, Input>(
                     value: schema.describe(definition.description),
                     reason: z.string().describe(REASON_DESCRIPTIONS[definition.reason_when]),
                 })
-                .transform((reasoned) => reasoned.value) satisfies z.ZodType<Output, ReasonedValue<Input>>,
+                .transform((reasoned) => reasoned.value),
         ])
         .default(definition.default)
         .meta(definition);

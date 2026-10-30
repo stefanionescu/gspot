@@ -1,6 +1,4 @@
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/shapes.ts';
-import { type ReportedTypo } from '#cli/types/runs/output/outputs.ts';
 
 export const reportedTypoSchema = z.object({
     type: z.literal('typo'),
@@ -9,4 +7,4 @@ export const reportedTypoSchema = z.object({
     byte_offset: z.number().int().nonnegative(),
     typo: z.string().min(1),
     corrections: z.string().array().nullable(),
-} satisfies SchemaShape<ReportedTypo>);
+});

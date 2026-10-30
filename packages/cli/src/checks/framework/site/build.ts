@@ -5,6 +5,7 @@ import { remember } from '#cli/system/files/cache.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import type { CheckSession } from '#cli/types/session.ts';
+import { type SiteBuild } from '#cli/types/checks/site.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
@@ -12,7 +13,6 @@ import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { compareText, quoteCommand } from '#cli/system/text.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import { type SiteBuild } from '#cli/types/checks/framework/site.ts';
 import { BUILD_RULE, UNBUILT_SITE_NOTE } from '#cli/config/checks/framework/site/build.ts';
 
 const SITE_BUILDS = Symbol('site builds');

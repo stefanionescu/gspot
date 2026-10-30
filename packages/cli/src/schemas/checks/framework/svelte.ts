@@ -1,15 +1,13 @@
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { SvelteFinding } from '#cli/types/checks/framework/svelte.ts';
 
 export const svelteFindingSchema = z.object({
     filename: z.string().min(1),
     start: z.object({
         line: z.number().int().nonnegative(),
         character: z.number().int().nonnegative(),
-    } satisfies SchemaShape<SvelteFinding['start']>),
+    }),
     message: z.string(),
-    code: (z.union([z.string(), z.number()]) satisfies z.ZodType<string | number>).optional(),
-} satisfies SchemaShape<SvelteFinding>);
+    code: z.union([z.string(), z.number()]).optional(),
+});
 
-export const failureMessageSchema = z.string() satisfies z.ZodType<string>;
+export const failureMessageSchema = z.string();

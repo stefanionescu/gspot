@@ -1,8 +1,9 @@
-import type { GIT_MODES } from '#cli/config/parsers/git.ts';
+import type { z } from 'zod';
+import type { gitFileSchema, gitIndexFileSchema } from '#cli/schemas/parsers/git.ts';
 
-export type GitFile = { mode: (typeof GIT_MODES)[number]; hash: string; path: string };
+export type GitFile = z.infer<typeof gitFileSchema>;
 
-export type GitIndexFile = GitFile & { stage: number };
+export type GitIndexFile = z.infer<typeof gitIndexFileSchema>;
 
 export type GitStream = { chunks: AsyncIterator<Buffer>; chunk: Buffer; cursor: number };
 

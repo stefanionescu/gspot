@@ -1,4 +1,6 @@
-import { type START_RUNNERS, type PACKAGE_MANAGERS } from '#cli/config/repository/npm.ts';
+import type { z } from 'zod';
+import { type START_RUNNERS } from '#cli/config/repository/npm.ts';
+import type { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository/npm.ts';
 
 export type StartRunner = {
     name: keyof typeof START_RUNNERS;
@@ -7,9 +9,9 @@ export type StartRunner = {
     installCommand: string;
 };
 
-export type PackageManager = { name: (typeof PACKAGE_MANAGERS)[number]; version: string };
+export type PackageManager = z.infer<typeof packageManagerSchema>;
 
-export type PackageManagerPin = { name: (typeof PACKAGE_MANAGERS)[number]; version?: string | undefined };
+export type PackageManagerPin = z.infer<typeof packageManagerPinSchema>;
 
 export type PackageManagerField = PackageManagerPin & { written: string; field: string };
 

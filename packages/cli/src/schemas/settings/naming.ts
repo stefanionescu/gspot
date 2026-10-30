@@ -1,17 +1,9 @@
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/shapes.ts';
 import { namingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
+import type { NamingCategory, SettingLanguage } from '#cli/types/settings/naming.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { nonemptyPathsSchema, namingCategorySchema } from '#cli/schemas/settings/fields.ts';
-import type { TableSettings, WrittenNaming, WrittenNamingOverride } from '#cli/types/settings/file.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
-
-import type {
-    NamingCategory,
-    SettingLanguage,
-    ParsedNamingOverride,
-    ParsedNamingLanguageFields,
-} from '#cli/types/settings/naming.ts';
 
 const languageSchema = namingCategorySchema.extend(
     Object.fromEntries(
@@ -20,7 +12,7 @@ const languageSchema = namingCategorySchema.extend(
             namingCategorySchema.optional().describe(`Naming rules for ${category}.`),
         ]),
     ) as Record<NamingCategory, z.ZodOptional<typeof namingCategorySchema>>,
-) satisfies z.ZodType<ParsedNamingLanguageFields>;
+);
 
 const languageSchemas = Object.fromEntries(
     Object.entries(NAMING_LANGUAGE_CATEGORIES).map(([language, categories]) => [
@@ -60,10 +52,7 @@ const lists = {
                 SETTING_DEFINITIONS['naming.override.allow_repeated_words'].default,
             ),
             reason: z.string().describe(namingOverrideSchema.shape.reason.description as string),
-        } satisfies SchemaShape<
-            Pick<ParsedNamingOverride, 'paths' | 'languages' | 'allow_digits' | 'allow_repeated_words' | 'reason'>,
-            Pick<WrittenNamingOverride, 'paths' | 'languages' | 'allow_digits' | 'allow_repeated_words' | 'reason'>
-        >)
+        })
         .array()
         .default(SETTING_DEFINITIONS['naming.override'].default)
         .meta(SETTING_DEFINITIONS['naming.override']),
@@ -80,4 +69,4 @@ export const namingSchema = z.strictObject({
     sql: languageSchemas['sql'].optional(),
     css: languageSchemas['css'].optional(),
     html: languageSchemas['html'].optional(),
-} satisfies SchemaShape<TableSettings<'naming'>, WrittenNaming>);
+});

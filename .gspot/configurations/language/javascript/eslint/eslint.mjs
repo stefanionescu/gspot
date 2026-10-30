@@ -1260,7 +1260,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"cli-types\" may import its own files and \"cli-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"cli-types\" may import its own files and \"cli-config\", \"parsers\", \"configurations\", \"repository\", \"settings\", \"installers\", \"runs\", \"checks\", \"commands\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -1274,7 +1274,15 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:cli-types",
-                                                "import-rule:cli-config"
+                                                "import-rule:cli-config",
+                                                "import-rule:parsers",
+                                                "import-rule:configurations",
+                                                "import-rule:repository",
+                                                "import-rule:settings",
+                                                "import-rule:installers",
+                                                "import-rule:runs",
+                                                "import-rule:checks",
+                                                "import-rule:commands"
                                             ]
                                         }
                                     }

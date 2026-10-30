@@ -1,8 +1,7 @@
 import { z } from 'zod';
 import semver from 'semver';
-import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { Tool } from '#cli/types/configurations.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
+import type { ToolInstallers } from '#cli/types/configurations.ts';
 import { MAX_EXIT_CODE } from '#cli/config/configurations/fields.ts';
 import { TOOL_KINDS, TOOL_BUILDS } from '#cli/config/configurations/names.ts';
 import { regexSchema, commandSchema, conditionSchema } from '#cli/schemas/configurations/fields.ts';
@@ -25,39 +24,21 @@ const minimumVersionSchema = z
             return z.NEVER;
         }
         return version.version;
-    }) satisfies z.ZodType<string>;
+    });
 
-const installerDefinitionSchema = z.strictObject({ name: z.string(), version: z.string() } satisfies SchemaShape<{
-    name: string;
-    version: string;
-}>);
+const installerDefinitionSchema = z.strictObject({ name: z.string(), version: z.string() });
 
-const installerSchema = z.union([z.string(), installerDefinitionSchema]) satisfies z.ZodType<
-    string | { name: string; version: string }
->;
+const installerSchema = z.union([z.string(), installerDefinitionSchema]);
 
-const installerOptionsSchema = z.record(z.string(), z.union([z.string(), z.boolean()])) satisfies z.ZodType<
-    Record<string, string | boolean>
->;
+const installerOptionsSchema = z.record(z.string(), z.union([z.string(), z.boolean()]));
 
 const miseInstallerSchema = z.union([
     z.string(),
     installerDefinitionSchema.partial({ version: true }).extend({
         options: installerOptionsSchema.optional(),
         checksums: z.record(z.string().min(1), z.string().regex(SHIPPED_CHECKSUM_PATTERN)).optional(),
-    } satisfies SchemaShape<{
-        options?: Record<string, string | boolean> | undefined;
-        checksums?: Record<string, string> | undefined;
-    }>),
-]) satisfies z.ZodType<
-    | string
-    | {
-          name: string;
-          version?: string | undefined;
-          options?: Record<string, string | boolean> | undefined;
-          checksums?: Record<string, string> | undefined;
-      }
->;
+    }),
+]);
 
 const installerFields = {
     npm: installerSchema.optional(),
@@ -65,31 +46,27 @@ const installerFields = {
     mise: miseInstallerSchema.optional(),
 };
 
-const toolConditionSchema = conditionSchema.pick({ setting: true, level: true }).partial() satisfies z.ZodType<
-    NonNullable<Tool['when']>[number]
->;
+const toolConditionSchema = conditionSchema.pick({ setting: true, level: true }).partial();
 
 const replacementSchema = z.strictObject({
     file: z.string().min(1),
     table: z.string().min(1).optional(),
     key: z.string().min(1).optional(),
-} satisfies SchemaShape<{ file: string; table?: string | undefined; key?: string | undefined }>);
+});
 
 const overrideSchema = z.strictObject({
     files: z.string().min(1),
     options: z.record(z.string(), z.unknown()),
-} satisfies SchemaShape<NonNullable<Tool['prettier']>['overrides'][number]>);
+});
 
 const replacementKeySchema = z.discriminatedUnion('pointer', [
-    replacementSchema.extend({ pointer: z.literal(false).optional() } satisfies SchemaShape<{
-        pointer?: false | undefined;
-    }>),
+    replacementSchema.extend({ pointer: z.literal(false).optional() }),
     replacementSchema.extend({
         file: z.literal('package.json'),
         key: z.string().min(1),
         pointer: z.literal(true),
-    } satisfies SchemaShape<{ file: 'package.json'; key: string; pointer: true }>),
-]) satisfies z.ZodType<NonNullable<Tool['replace_key']>[number]>;
+    }),
+]);
 
 const toolSchema = z
     .strictObject({
@@ -117,7 +94,7 @@ const toolSchema = z
                 reason: regexSchema,
                 forbidden: z.boolean().optional(),
                 example: z.string().optional(),
-            } satisfies SchemaShape<NonNullable<Tool['suppression']>>)
+            })
             .refine((form) => form.forbidden === true || form.example !== undefined, {
                 message: 'A suppression that gspot accepts shows an example with a reason.',
                 path: ['example'],
@@ -128,13 +105,9 @@ const toolSchema = z
                 module: z.string().min(1),
                 extensions: z.string().regex(EXTENSION_PATTERN).array().default([]),
                 overrides: overrideSchema.array().default([]),
-            } satisfies SchemaShape<NonNullable<Tool['prettier']>>)
+            })
             .optional(),
-        eslint: z
-            .strictObject({ extensions: z.string().regex(EXTENSION_PATTERN).array().min(1) } satisfies SchemaShape<
-                NonNullable<Tool['eslint']>
-            >)
-            .optional(),
+        eslint: z.strictObject({ extensions: z.string().regex(EXTENSION_PATTERN).array().min(1) }).optional(),
         requires: z.string().min(1).array().optional(),
         when: toolConditionSchema.array().min(1).optional(),
         replace: z.string().min(1).array().optional(),
@@ -158,7 +131,7 @@ const toolSchema = z
     })
     .transform(({ npm, pypi, mise, ...tool }) => {
         const definitions = { npm, pypi, mise };
-        const installers: Tool['installers'] = {};
+        const installers: ToolInstallers = {};
         for (const [name, definition] of Object.entries(definitions)) {
             if (definition === undefined) continue;
             installers[name] =
@@ -167,15 +140,15 @@ const toolSchema = z
                     : { ...definition, version: definition.version ?? tool.version };
         }
         return { ...tool, installers };
-    }) satisfies z.ZodType<Tool>;
+    });
 
 export const manifestToolSchema = z.union([
     z
-        .looseObject({ name: z.string() } satisfies SchemaShape<{ name: string }>)
+        .looseObject({ name: z.string() })
         .refine((reference) => Object.keys(reference).length === 1, {
             abort: true,
             message: 'A tool reference contains only its name.',
         })
         .transform(({ name }) => name),
     toolSchema,
-]) satisfies z.ZodType<string | Tool>;
+]);

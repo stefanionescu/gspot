@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { SettingsError } from '#cli/types/settings/file.ts';
 import { nonemptyPathsSchema } from '#cli/schemas/settings/fields.ts';
 import type { ImportRule } from '#cli/types/settings/import-rules.ts';
@@ -9,7 +8,7 @@ const importRuleSchema = z.strictObject({
     name: z.string().min(1).meta(SETTING_DEFINITIONS['import_rule.name']),
     paths: nonemptyPathsSchema.meta(SETTING_DEFINITIONS['import_rule.paths']),
     can_import: z.string().array().optional().meta(SETTING_DEFINITIONS['import_rule.can_import']),
-} satisfies SchemaShape<ImportRule>);
+});
 
 function validateImportRules(rules: ImportRule[]): SettingsError[] {
     const names = new Set(rules.map((rule) => rule.name));
@@ -29,4 +28,4 @@ export const importRulesSchema = importRuleSchema
             context.addIssue({ code: 'custom', path: [...path], message });
     })
     .default(SETTING_DEFINITIONS['import_rule'].default)
-    .meta(SETTING_DEFINITIONS['import_rule']) satisfies z.ZodType<ImportRule[]>;
+    .meta(SETTING_DEFINITIONS['import_rule']);

@@ -9,6 +9,7 @@ import { generateFiles } from '#cli/generation/generate.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import type { SourcedConfigFile } from '#cli/types/configurations.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { buildPointerFiles } from '#cli/generation/config-files/pointers.ts';
@@ -61,7 +62,7 @@ test('JavaScript pointers import modules from folders with URI characters and Un
     const session = await openSession(sandbox.path);
     const configuration = session.configurationsByName.get('javascript')!;
     const configFile = configuration.configFiles
-        .filter((file) => file.source !== undefined)
+        .filter((file): file is SourcedConfigFile => file.source !== undefined)
         .find((file) => file.pointer?.body.includes('{target_module}') === true)!;
     const components = ['100%', '#fragment', '?query', "author's", 'café'].filter(
         (component) => !isWindows || !component.includes('?'),

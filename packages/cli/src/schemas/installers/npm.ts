@@ -1,14 +1,7 @@
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { BunPackage, NpmPackage, PnpmPackage } from '#cli/types/installers/npm.ts';
 import { npmLockfileSchema, bunLockfileSchema, pnpmLockfileSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
 
-export const bunPackageSchema = z.tuple([
-    z.string(),
-    z.string(),
-    z.record(z.string(), z.unknown()),
-    z.string(),
-]) satisfies z.ZodType<BunPackage>;
+export const bunPackageSchema = z.tuple([z.string(), z.string(), z.record(z.string(), z.unknown()), z.string()]);
 
 export const npmToolLockSchemas = { npm: npmLockfileSchema, bun: bunLockfileSchema, pnpm: pnpmLockfileSchema } as const;
 
@@ -17,11 +10,9 @@ export const npmToolPackageSchema = z.looseObject({
     version: z.string(),
     resolved: z.string().optional(),
     integrity: z.string(),
-} satisfies SchemaShape<NpmPackage>);
+});
 
 export const pnpmToolPackageSchema = z.looseObject({
     name: z.string().optional(),
-    resolution: z.looseObject({ integrity: z.string(), tarball: z.string().optional() } satisfies SchemaShape<
-        PnpmPackage['resolution']
-    >),
-} satisfies SchemaShape<PnpmPackage>);
+    resolution: z.looseObject({ integrity: z.string(), tarball: z.string().optional() }),
+});

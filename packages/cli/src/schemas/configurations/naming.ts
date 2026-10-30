@@ -1,23 +1,18 @@
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { NamedCategory } from '#cli/types/settings/naming.ts';
 import { regexSchema } from '#cli/schemas/configurations/fields.ts';
 import { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/configurations/naming.ts';
-import type { PathContainer, NamingDefaults, NamingOverride } from '#cli/types/configurations.ts';
 
 const pathContainerSchema = z.strictObject({
     open: z.string().min(1),
     close: z.string(),
     category: z.enum(NAMED_CATEGORIES),
-} satisfies SchemaShape<PathContainer>);
+});
 
-const identifierCategorySchema = z.enum(NAMED_CATEGORIES) satisfies z.ZodType<NamedCategory>;
+const identifierCategorySchema = z.enum(NAMED_CATEGORIES);
 
-const sourcePathSchema = z.string().min(1).meta({ pathRole: 'source' }) satisfies z.ZodType<string>;
+const sourcePathSchema = z.string().min(1).meta({ pathRole: 'source' });
 
-const wordListSchema = z.strictObject({ words: z.string().array() } satisfies SchemaShape<
-    NamingDefaults['lists'][string]
->);
+const wordListSchema = z.strictObject({ words: z.string().array() });
 
 export const namingOverrideSchema = z.strictObject({
     paths: sourcePathSchema.array().min(1).optional().meta({ description: 'Where the override applies.' }),
@@ -35,27 +30,23 @@ export const namingOverrideSchema = z.strictObject({
     allowed_names: z.string().array().optional().meta({ description: 'Names accepted despite the naming rules.' }),
     cases: z.enum(CASE_NAMES).array().optional().meta({ description: 'The cases accepted here.' }),
     reason: z.string().optional().meta({ description: 'Why these names may break the rules.' }),
-} satisfies SchemaShape<NamingOverride>);
+});
 
 export const writtenNamingOverrideSchema = namingOverrideSchema.extend({
     reason: z.string().min(1),
-}) satisfies z.ZodType<NamingOverride>;
+});
 
-const categoryCasesSchema = z.strictObject({ cases: z.enum(CASE_NAMES).array() } satisfies SchemaShape<
-    NamingDefaults['languages'][string]['categories'][string]
->);
+const categoryCasesSchema = z.strictObject({ cases: z.enum(CASE_NAMES).array() });
 
 const languageSchema = z.strictObject({
     categories: z.record(z.string(), categoryCasesSchema),
-} satisfies SchemaShape<NamingDefaults['languages'][string]>);
+});
 
 export const namingDefaultsSchema = z.strictObject({
     path_containers: pathContainerSchema.array(),
-    lists: z
-        .object({ folders: wordListSchema } satisfies SchemaShape<{ folders: NamingDefaults['lists'][string] }>)
-        .catchall(wordListSchema),
+    lists: z.object({ folders: wordListSchema }).catchall(wordListSchema),
     allowed_names: z.string().array(),
     allowed_phrases: z.string().array(),
     languages: z.record(z.string(), languageSchema),
     override: writtenNamingOverrideSchema.array(),
-} satisfies SchemaShape<NamingDefaults>);
+});

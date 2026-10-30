@@ -2,9 +2,7 @@ import { z } from 'zod';
 import semver from 'semver';
 import { isTable } from '#cli/system/tables.ts';
 import parseExpression from 'spdx-expression-parse';
-import type { SchemaShape } from '#cli/types/shapes.ts';
 import { nonemptyStringSchema } from '#cli/schemas/configurations/fields.ts';
-import type { TableSettings, WrittenLicenses } from '#cli/types/settings/file.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 
 const allowedPackageSchema = z.strictObject({
@@ -17,7 +15,7 @@ const allowedPackageSchema = z.strictObject({
         )
         .meta(SETTING_DEFINITIONS['licenses.allowed_package.version']),
     reason: z.string().meta(SETTING_DEFINITIONS['licenses.allowed_package.reason']),
-} satisfies SchemaShape<TableSettings<'licenses'>['allowed_package'][number]>);
+});
 
 export const licensesSchema = z.strictObject({
     allowed: nonemptyStringSchema
@@ -36,4 +34,4 @@ export const licensesSchema = z.strictObject({
         .array()
         .default(SETTING_DEFINITIONS['licenses.allowed_package'].default)
         .meta(SETTING_DEFINITIONS['licenses.allowed_package']),
-} satisfies SchemaShape<TableSettings<'licenses'>, WrittenLicenses>);
+});

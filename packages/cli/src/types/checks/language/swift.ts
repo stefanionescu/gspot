@@ -1,4 +1,6 @@
+import type { z } from 'zod';
 import type { Files } from '#cli/types/system/files.ts';
+import type { xccovSchema } from '#cli/schemas/checks/language/swift.ts';
 
 export type SwiftBuildPlan =
     | {
@@ -23,12 +25,4 @@ export type SwiftBuildPurpose = 'compile' | 'analyze' | 'coverage' | 'periphery'
 
 export type SwiftBuildSetup = { files: Files; source: string };
 
-export type CoverageOutput = { targets: { name: string; lineCoverage: number }[] };
-
-export type SwiftPackageDescription = {
-    targets: { name: string; path: string; type: string; module_type: string; sources: string[] }[];
-};
-
-export type SwiftCoverage = {
-    data: { files: { filename: string; summary: { lines: { count: number; covered: number } } }[] }[];
-};
+export type CoverageOutput = z.infer<typeof xccovSchema>;

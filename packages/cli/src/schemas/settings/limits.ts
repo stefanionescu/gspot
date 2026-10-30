@@ -1,10 +1,8 @@
 import { z } from 'zod';
-import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { LimitSchemas } from '#cli/types/settings/limits.ts';
 import { allowReasonedValue } from '#cli/schemas/settings/fields.ts';
+import type { LanguageLimitField } from '#cli/types/settings/values.ts';
 import { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';
-import type { WrittenLimits, TableSettings } from '#cli/types/settings/file.ts';
-import type { LimitFields, LanguageLimitField } from '#cli/types/settings/values.ts';
 
 const limitFields = Object.fromEntries(
     Object.entries(LIMIT_DEFINITIONS).map(([key, definition]) => [
@@ -19,7 +17,7 @@ const limitFields = Object.fromEntries(
     ]),
 ) as LimitSchemas;
 
-const languageLimitFieldsSchema = z.strictObject(limitFields).partial() satisfies z.ZodType<LimitFields<number>>;
+const languageLimitFieldsSchema = z.strictObject(limitFields).partial();
 
 export const limitsSchema = z.strictObject({
     ...limitFields,
@@ -89,7 +87,7 @@ export const limitsSchema = z.strictObject({
             ) as Record<LanguageLimitField<'sql'>, true>,
         )
         .optional(),
-} satisfies SchemaShape<TableSettings<'limits'>, WrittenLimits>);
+});
 
 for (const [language, schema] of Object.entries(limitsSchema.shape))
     if (schema instanceof z.ZodOptional && schema.unwrap() instanceof z.ZodObject)

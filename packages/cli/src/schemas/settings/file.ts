@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { ciSchema } from '#cli/schemas/settings/ci.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { hooksSchema } from '#cli/schemas/settings/hooks.ts';
 import { rulesSchema } from '#cli/schemas/settings/rules.ts';
@@ -12,7 +11,6 @@ import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { levelSchema, commandCheckFields } from '#cli/schemas/configurations/fields.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools/tables.ts';
-import type { WrittenScope, ParsedSettings, WrittenSettings } from '#cli/types/settings/file.ts';
 import { DEVICE_NAME, UNSAFE_PATH_END, UNSAFE_CHARACTERS, RESERVED_SEGMENTS } from '#cli/config/system/files/names.ts';
 
 import {
@@ -38,10 +36,7 @@ export const ignoreSchema = z
         reason: z
             .string({ error: 'needs a reason. Add reason = "..." to this record.' })
             .meta(SETTING_DEFINITIONS['ignore.reason']),
-    } satisfies SchemaShape<
-        NonNullable<ParsedSettings['ignore']>[number],
-        NonNullable<WrittenSettings['ignore']>[number]
-    >)
+    })
     .superRefine((ignore, context) => {
         if (ignore.check !== undefined) {
             return;
@@ -70,10 +65,7 @@ export const commandCheckSchema = z.strictObject({
     fix: commandCheckFields.fix.meta(SETTING_DEFINITIONS['command_check.fix']),
     exit_codes: commandCheckFields.exit_codes.meta(SETTING_DEFINITIONS['command_check.exit_codes']),
     output: commandCheckFields.output.meta(SETTING_DEFINITIONS['command_check.output']),
-} satisfies SchemaShape<
-    NonNullable<ParsedSettings['command_check']>[number],
-    NonNullable<WrittenSettings['command_check']>[number]
->);
+});
 
 const { structure: rootStructure, ...scopeTables } = configurationTableSchemas;
 
@@ -84,70 +76,30 @@ const rootBody = {
 
 const scopeBody = {
     ...rootBody,
-    dependencies: configurationTableSchemas.dependencies
-        .unwrap()
-        .omit({ min_release_age_days: true })
-        .optional() satisfies z.ZodType<
-        NonNullable<ParsedSettings['scope']>[number]['dependencies'],
-        WrittenScope['dependencies']
-    >,
-    prose: configurationTableSchemas.prose.unwrap().omit({ banned_headings: true }).optional() satisfies z.ZodType<
-        NonNullable<ParsedSettings['scope']>[number]['prose'],
-        WrittenScope['prose']
-    >,
+    dependencies: configurationTableSchemas.dependencies.unwrap().omit({ min_release_age_days: true }).optional(),
+    prose: configurationTableSchemas.prose.unwrap().omit({ banned_headings: true }).optional(),
     coverage: z
         .strictObject({
             lines: configurationTableSchemas.coverage.unwrap().shape.lines,
             branches: configurationTableSchemas.coverage.unwrap().shape.branches,
             functions: configurationTableSchemas.coverage.unwrap().shape.functions,
             statements: configurationTableSchemas.coverage.unwrap().shape.statements,
-        } satisfies SchemaShape<
-            NonNullable<NonNullable<ParsedSettings['scope']>[number]['coverage']>,
-            NonNullable<WrittenScope['coverage']>
-        >)
+        })
         .optional(),
-    licenses: configurationTableSchemas.licenses
-        .unwrap()
-        .omit({ allowed_package: true })
-        .optional() satisfies z.ZodType<
-        NonNullable<ParsedSettings['scope']>[number]['licenses'],
-        WrittenScope['licenses']
-    >,
-    site: configurationTableSchemas.site.unwrap().omit({ size_limit: true }).optional() satisfies z.ZodType<
-        NonNullable<ParsedSettings['scope']>[number]['site'],
-        WrittenScope['site']
-    >,
-    naming: namingSchema.omit({ override: true }).optional() satisfies z.ZodType<
-        NonNullable<ParsedSettings['scope']>[number]['naming'],
-        WrittenScope['naming']
-    >,
-    structure: rootStructure.unwrap().pick({ environment_readers: true }).optional() satisfies z.ZodType<
-        NonNullable<ParsedSettings['scope']>[number]['structure'],
-        WrittenScope['structure']
-    >,
-    format: formatSchema.omit({ override: true }).optional() satisfies z.ZodType<
-        NonNullable<ParsedSettings['scope']>[number]['format'],
-        WrittenScope['format']
-    >,
-    tools: (
-        publicToolsSchema.omit({ v8r: true }) satisfies z.ZodType<
-            Omit<NonNullable<ParsedSettings['tools']>, 'v8r'>,
-            Omit<NonNullable<WrittenSettings['tools']>, 'v8r'>
-        >
-    )
+    licenses: configurationTableSchemas.licenses.unwrap().omit({ allowed_package: true }).optional(),
+    site: configurationTableSchemas.site.unwrap().omit({ size_limit: true }).optional(),
+    naming: namingSchema.omit({ override: true }).optional(),
+    structure: rootStructure.unwrap().pick({ environment_readers: true }).optional(),
+    format: formatSchema.omit({ override: true }).optional(),
+    tools: publicToolsSchema
+        .omit({ v8r: true })
         .extend({
             eslint: publicToolsSchema.shape.eslint
                 .unwrap()
                 .omit({ override: true })
                 .optional()
-                .describe(publicToolsSchema.shape.eslint.description as string) satisfies z.ZodType<
-                NonNullable<NonNullable<ParsedSettings['scope']>[number]['tools']>['eslint'],
-                NonNullable<WrittenScope['tools']>['eslint']
-            >,
-        } satisfies SchemaShape<
-            Pick<NonNullable<NonNullable<ParsedSettings['scope']>[number]['tools']>, 'eslint'>,
-            Pick<NonNullable<WrittenScope['tools']>, 'eslint'>
-        >)
+                .describe(publicToolsSchema.shape.eslint.description as string),
+        })
         .optional(),
 };
 
@@ -185,7 +137,7 @@ export const scopeSchema = z.strictObject({
         .meta(SETTING_DEFINITIONS['scope.removed_configurations']),
     test_files: relativePathSchema.array().optional().meta(SETTING_DEFINITIONS['scope.test_files']),
     ...scopeBody,
-} satisfies SchemaShape<NonNullable<ParsedSettings['scope']>[number], WrittenScope>);
+});
 
 export const rootSettingSchemas = {
     level: levelSchema.default(SETTING_DEFINITIONS['level'].default).meta(SETTING_DEFINITIONS['level']),
@@ -258,7 +210,7 @@ export const settingsSchema = z
             }
         }
     })
-    .meta({ examples: SETTINGS_EXAMPLES }) satisfies z.ZodType<ParsedSettings, WrittenSettings>;
+    .meta({ examples: SETTINGS_EXAMPLES });
 
 for (const [name, schema] of Object.entries(settingsSchema.shape)) {
     const description = TABLE_DESCRIPTIONS[name];

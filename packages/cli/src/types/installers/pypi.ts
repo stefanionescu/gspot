@@ -1,3 +1,6 @@
+import type { z } from 'zod';
+import type { uvProjectSettingsSchema } from '#cli/schemas/installers/pypi.ts';
+
 export type UvCommand = {
     runFolder: string;
     commandArguments: readonly string[];
@@ -7,12 +10,8 @@ export type UvCommand = {
 };
 
 export type PythonIndexSettings = {
-    settings: Record<string, unknown> & { 'find-links'?: string[] | undefined; index?: PythonIndex[] | undefined };
+    settings: z.infer<typeof uvProjectSettingsSchema>['tool']['uv'];
     credentials: string[];
 };
-
-export type PythonProjectSettings = { tool: { uv: PythonIndexSettings['settings'] } };
-
-export type PythonIndex = { url: string; [key: string]: unknown };
 
 export type PythonToolProject = { name: string; version: string; 'requires-python': string; dependencies: string[] };

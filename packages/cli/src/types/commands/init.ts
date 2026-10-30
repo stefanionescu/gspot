@@ -1,8 +1,9 @@
+import type { z } from 'zod';
 import { type Session } from '#cli/types/session.ts';
 import { type TomlTable } from '#cli/types/settings/file.ts';
 import { type FileContents } from '#cli/types/system/files.ts';
-import { type TRAILING_COMMAS } from '#cli/config/settings/fields.ts';
 import { type RepositorySetup } from '#cli/types/repository/setup.ts';
+import type { prettierSettingsSchema } from '#cli/schemas/commands.ts';
 import { type AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { type ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { type Level, type Configuration } from '#cli/types/configurations.ts';
@@ -99,22 +100,7 @@ export type ConfigurationChoices = {
     written: Set<string>;
 };
 
-export type PrettierOptions = {
-    tabWidth?: number | undefined;
-    printWidth?: number | undefined;
-    singleQuote?: boolean | undefined;
-    useTabs?: boolean | undefined;
-    semi?: boolean | undefined;
-    trailingComma?: (typeof TRAILING_COMMAS)[number] | undefined;
-    overrides?: { files: string | string[]; options: Omit<PrettierOptions, 'overrides'> }[] | undefined;
-};
-
-type RuffFormatOptions = { 'quote-style'?: string | undefined };
-
-export type RuffFormatSettings = {
-    format?: RuffFormatOptions | undefined;
-    tool?: { ruff?: { format?: RuffFormatOptions | undefined } | undefined } | undefined;
-};
+export type PrettierOptions = z.infer<typeof prettierSettingsSchema>;
 
 export type ScopeConfigurations = { scope: string; selected: Configuration[] };
 

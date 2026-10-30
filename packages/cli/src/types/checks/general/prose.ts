@@ -3,5 +3,3 @@ export type ProseRoute = { path: string; mode: 'path' | 'stdin'; extension: stri
 export type ProseRouteBatch = [ProseRoute, ...ProseRoute[]];
 
 export type ValeAlert = { file: string; line: number; column: number; check: string; message: string };
-
-export type ValeOutput = Record<string, { Line: number; Span: [number, number]; Check: string; Message: string }[]>;

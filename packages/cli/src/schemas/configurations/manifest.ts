@@ -1,21 +1,12 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import { FILE_KINDS } from '#cli/config/files/kinds.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import type { FileKind } from '#cli/types/repository/files.ts';
 import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
 import { writtenNamingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
 import { NAME_PATTERN, RULE_FILE_PATTERN } from '#cli/config/configurations/manifest.ts';
 
-import type {
-    ConfigFile,
-    ParsedCheck,
-    ParsedManifest,
-    ConditionFields,
-    GeneratorOutput,
-} from '#cli/types/configurations.ts';
 import {
     GROUPS,
     CHECK_RUNS,
@@ -32,9 +23,9 @@ import {
     operatingSystemSchema,
 } from '#cli/schemas/configurations/fields.ts';
 
-const fileKindSchema = z.enum(FILE_KINDS) satisfies z.ZodType<FileKind>;
+const fileKindSchema = z.enum(FILE_KINDS);
 
-const stringsSchema = z.string().array().default([]) satisfies z.ZodType<string[]>;
+const stringsSchema = z.string().array().default([]);
 
 const filesSchema = z.strictObject({
     extensions: stringsSchema,
@@ -45,14 +36,14 @@ const filesSchema = z.strictObject({
     prettier_plugins: z.boolean().default(false),
     eslint_plugins: z.boolean().default(false),
     kinds: fileKindSchema.array().default(['source']),
-} satisfies SchemaShape<ParsedManifest['files']>);
+});
 
 const selectorSchema = z.strictObject({
     level: levelSchema.default('basic'),
     selector: z.string().min(1),
     message: z.string().min(1),
     paths_setting: z.string().min(1).optional(),
-} satisfies SchemaShape<ParsedManifest['eslint']['selectors'][number]>);
+});
 
 const pointerSchema = z.strictObject({
     path: z.string(),
@@ -61,12 +52,12 @@ const pointerSchema = z.strictObject({
     note: z.string().min(1).optional(),
     inherit: z.boolean().optional(),
     overrides: z.boolean().optional(),
-} satisfies SchemaShape<NonNullable<ConfigFile['pointer']>>);
+});
 
 const consumerNamesSchema = z
     .union([z.string().min(1), z.string().min(1).array().min(1)])
     .transform((names) => (typeof names === 'string' ? [names] : names))
-    .default([]) satisfies z.ZodType<string[], string | string[] | undefined>;
+    .default([]);
 
 const configFileSchema = z
     .strictObject({
@@ -93,21 +84,19 @@ const configFileSchema = z
             file: configFile.target,
             source: posix.join(SHIPPED_CONFIG_FILES_FOLDER, configFile.source ?? configFile.target),
         };
-    }) satisfies z.ZodType<ConfigFile>;
+    });
 
 const generatorOutputSchema = z.union([
-    z
-        .strictObject({ path: z.string() })
-        .transform(({ path }) => ({ kind: 'path' as const, path })) satisfies z.ZodType<GeneratorOutput>,
+    z.strictObject({ path: z.string() }).transform(({ path }) => ({ kind: 'path' as const, path })),
     z.strictObject({ pattern: z.string().min(1) }).transform(({ pattern }) => ({
         kind: 'pattern' as const,
         path: pattern,
-    })) satisfies z.ZodType<GeneratorOutput>,
+    })),
     z.strictObject({ stdout: z.string() }).transform(({ stdout }) => ({
         kind: 'stdout' as const,
         path: stdout,
-    })) satisfies z.ZodType<GeneratorOutput>,
-]) satisfies z.ZodType<GeneratorOutput>;
+    })),
+]);
 
 const checkFieldsSchema = z.strictObject({
     ...commandCheckFields,
@@ -119,18 +108,15 @@ const checkFieldsSchema = z.strictObject({
     run_in_copy: z.boolean().optional(),
     env: z.record(z.string(), z.string()).optional(),
     instead_of: z.string().optional(),
-    when: (
-        conditionSchema.pick({
+    when: conditionSchema
+        .pick({
             configuration: true,
             config_file: true,
             setting: true,
             git: true,
             dependencies: true,
             tags: true,
-        }) satisfies z.ZodType<
-            Pick<ConditionFields, 'configuration' | 'setting' | 'git' | 'dependencies' | 'tags' | 'config_file'>
-        >
-    )
+        })
         .partial()
         .optional(),
     needs: z.enum(CHECK_NEEDS).array().min(1).optional(),
@@ -142,9 +128,9 @@ const checkFieldsSchema = z.strictObject({
     example: z.string().trim().min(1),
     why: nonemptyStringSchema,
     help: nonemptyStringSchema,
-} satisfies SchemaShape<Omit<ParsedCheck, 'tool' | 'other_tools'> & { tool?: string | string[] | undefined }>);
+});
 
-const checkSchema = checkFieldsSchema.transform(({ tool, ...check }) => {
+export const checkSchema = checkFieldsSchema.transform(({ tool, ...check }) => {
     const [first, ...others] = Array.isArray(tool) ? tool : [];
     const executable = Array.isArray(tool) ? first : tool;
     return {
@@ -152,7 +138,7 @@ const checkSchema = checkFieldsSchema.transform(({ tool, ...check }) => {
         ...(executable !== undefined && { tool: executable }),
         ...(others.length > 0 && { other_tools: others }),
     };
-}) satisfies z.ZodType<ParsedCheck>;
+});
 
 const detectionSchema = z.strictObject({
     content: z.record(z.string().min(1), regexSchema).default({}),
@@ -165,19 +151,19 @@ const detectionSchema = z.strictObject({
     tags: stringsSchema,
     paths: stringsSchema,
     project_files: stringsSchema,
-} satisfies SchemaShape<ParsedManifest['detect']>);
+});
 
 const allLevelRulesSchema = z
     .string()
     .min(1)
     .array()
-    .transform((rules) => new Set(rules)) satisfies z.ZodType<Set<string>>;
+    .transform((rules) => new Set(rules));
 
 const rulesOffSchema = z.strictObject({
     rules: z.string().min(1).array().min(1),
     reason: nonemptyStringSchema,
     files: z.string().min(1).array().min(1).optional(),
-} satisfies SchemaShape<ParsedManifest['eslint']['rules_off'][number]>);
+});
 
 export const manifestSchema = z
     .strictObject({
@@ -189,13 +175,9 @@ export const manifestSchema = z
                 selectors: selectorSchema.array().default([]),
                 rules_off: rulesOffSchema.array().default([]),
                 required_tools: z.string().min(1).array().default([]),
-            } satisfies SchemaShape<ParsedManifest['eslint']>)
+            })
             .prefault({}),
-        shared_prefixes: z
-            .strictObject({ prefixes: stringsSchema, kinds: stringsSchema } satisfies SchemaShape<
-                ParsedManifest['shared_prefixes']
-            >)
-            .prefault({}),
+        shared_prefixes: z.strictObject({ prefixes: stringsSchema, kinds: stringsSchema }).prefault({}),
         ignored_paths: z.string().min(1).array().default([]),
         route_files: z.string().min(1).array().default([]),
         generated: z.string().min(1).array().default([]),
@@ -207,9 +189,9 @@ export const manifestSchema = z
             requires: stringsSchema,
             suggests: stringsSchema,
             always_selected: z.boolean().default(false),
-            when: (conditionSchema.pick({ git: true }) satisfies z.ZodType<Pick<ConditionFields, 'git'>>).optional(),
+            when: conditionSchema.pick({ git: true }).optional(),
             description: nonemptyStringSchema,
-        } satisfies SchemaShape<ParsedManifest['configuration']>),
+        }),
         detect: detectionSchema.optional(),
         files: filesSchema.prefault({}),
         tool: manifestToolSchema.array().default([]),
@@ -218,32 +200,24 @@ export const manifestSchema = z
         naming: z
             .strictObject({
                 override: writtenNamingOverrideSchema.array().default([]),
-            } satisfies SchemaShape<NonNullable<ParsedManifest['naming']>>)
+            })
             .optional(),
         rules: z
             .record(
                 z.string().regex(RULE_FILE_PATTERN),
-                (
-                    conditionSchema.pick({
+                conditionSchema
+                    .pick({
                         dependencies: true,
                         absent_dependencies: true,
                         filenames: true,
                         tags: true,
                         runtimes: true,
-                    }) satisfies z.ZodType<
-                        Pick<
-                            ConditionFields,
-                            'dependencies' | 'absent_dependencies' | 'filenames' | 'tags' | 'runtimes'
-                        >
-                    >
-                )
+                    })
                     .partial()
                     .pipe(detectionSchema),
             )
             .default({}),
-        ruff: z
-            .strictObject({ basic: stringsSchema, all: stringsSchema } satisfies SchemaShape<ParsedManifest['ruff']>)
-            .prefault({}),
+        ruff: z.strictObject({ basic: stringsSchema, all: stringsSchema }).prefault({}),
     })
     .transform(({ tool, config_file: configFiles, check, detect, ...rest }) => ({
         ...rest,
@@ -261,4 +235,4 @@ export const manifestSchema = z
                   ),
         })),
         checks: check.map(({ name, ...fields }) => ({ ...fields, id: `${rest.configuration.name}/${name}` })),
-    })) satisfies z.ZodType<ParsedManifest>;
+    }));
