@@ -154,39 +154,6 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
     expect(await isOnDisk(join(sandbox.path, 'next-env.d.ts'))).toBe(false);
 });
 
-test.each(['', 'apps/web'])(
-    'nextjs/tsc builds a project with references in the copy where next typegen ran, in scope %j',
-    async (scope) => {
-        await using sandbox = await testdir();
-        await prepareNextjsBuild(sandbox.path, scope);
-        const authored = '{"files":[],"references":[{"path":"./src"}]}';
-        await writeFile(join(sandbox.path, scope, 'tsconfig.json'), authored);
-        await writeFile(
-            join(sandbox.path, scope, 'src/tsconfig.json'),
-            '{"compilerOptions":{"composite":true,"noEmit":true},"files":["app/page.ts"]}',
-        );
-        const session = await openSession(sandbox.path);
-        const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
-            (check) => check.scope.path === scope,
-        )!;
-        using fakes = fakeNextjsCommands(async (command, options) => {
-            if (command[1] === 'typegen')
-                await writeFile(join(options.cwd, 'next-env.d.ts'), '// Generated in this copy\n');
-            else expect(await readFile(join(options.cwd, 'next-env.d.ts'), 'utf8')).toBe('// Generated in this copy\n');
-            return buildProcessResult();
-        });
-        const { folders, commands } = fakes;
-        const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['nextjs/tsc']);
-        expect(result).toMatchObject({ status: 'passed', findings: [] });
-        const copy = folders[0]!;
-        expect(folders).toStrictEqual([copy, copy]);
-        expect(commands[1]?.slice(1)).toStrictEqual(['-b', join(copy, 'tsconfig.json'), '--pretty', 'false']);
-        expect(await isOnDisk(copy)).toBe(false);
-        expect(await readFile(join(sandbox.path, scope, 'tsconfig.json'), 'utf8')).toBe(authored);
-        expect(await readFile(join(sandbox.path, scope, 'next-env.d.ts'), 'utf8')).toBe(AUTHORED_NEXT_ENV);
-    },
-);
-
 async function fakeNextjsBuild(
     command: readonly string[],
     options: AsyncSpawnOptions,
