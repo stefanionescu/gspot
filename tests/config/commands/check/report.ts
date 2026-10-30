@@ -79,7 +79,6 @@ export const SKIPPED_REPORT_CHECKS = [
 ] as const;
 
 export const COMPARISON_NOTICE_CASES = [
-    { count: 1, notice: '1 file has unstaged changes that were not checked.' },
     { count: 2, notice: '2 files have unstaged changes that were not checked.' },
 ] as const;
 

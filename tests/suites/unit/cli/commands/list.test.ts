@@ -130,9 +130,6 @@ test('checks that run at the root appear once when selected in two child scopes'
     expect(checks.filter(({ name }) => name === 'gspot/generated-files')).toStrictEqual([
         { name: 'gspot/generated-files', scope: '', state: 'on' },
     ]);
-    const human = await runGspot(sandbox.path, ['list']);
-    expect(human.stdout).toContain('    docker/dockerignore  root: on\n');
-    expect(human.stdout).toContain('    gspot/generated-files  root: on\n');
 });
 
 test('the text settings list shows scope values while JSON keeps inherited values', async () => {

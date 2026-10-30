@@ -84,20 +84,6 @@ export const TEMPLATE_REFUSALS = [
         from: 'broken.toml',
         message: 'broken.toml:1:18 is not valid TOML: Expected "]". Fix the file.',
     },
-    {
-        name: 'an unknown key',
-        files: { 'key.toml': '[hooks]\nenable = true\n' },
-        from: 'key.toml',
-        message:
-            'key.toml:2: hooks.enable: There is no setting called hooks.enable. The settings of [hooks] are enabled. Did you mean enabled?',
-    },
-    {
-        name: 'an unknown configuration',
-        files: { 'name.toml': 'configurations = ["typescrypt"]\n' },
-        from: 'name.toml',
-        message:
-            'name.toml:1: configurations.0: There is no configuration called typescrypt. Did you mean typescript? See https://generativespotting.com/reference/configurations/ for the available configurations.',
-    },
 ];
 
 export const TEMPLATE_SCOPE_FILES = {

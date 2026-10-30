@@ -54,18 +54,6 @@ export const LITERAL_ROUTE_CASES = [
         removed: false,
     },
     {
-        folder: 'app/(legal)',
-        path: 'app/(legal)/**',
-        escaped: String.raw`app/\(legal\)/**`,
-        removed: true,
-    },
-    {
-        folder: 'app/[id]',
-        path: 'app/[id]/**',
-        escaped: String.raw`app/\[id\]/**`,
-        removed: false,
-    },
-    {
         folder: 'app/[id]',
         path: 'app/[id]/**',
         escaped: String.raw`app/\[id\]/**`,

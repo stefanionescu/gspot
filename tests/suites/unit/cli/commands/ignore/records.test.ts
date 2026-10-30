@@ -120,7 +120,7 @@ test('a rule ignore summary names the rule and its paths', async () => {
 });
 
 test.each([...IGNORE_REFUSALS])(
-    'ignore refuses $name in text and JSON without writing',
+    'ignore refuses $name without writing',
     async ({ arguments: commandArguments, message }) => {
         await using sandbox = await createGitSandbox(REFUSAL_FILES);
         await assertRefusalWithoutWrites(sandbox.path, commandArguments, { error: 'arguments', message });
