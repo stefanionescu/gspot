@@ -16,11 +16,9 @@
     "keywords": [
         "lint",
         "linter",
+        "llm",
         "ai",
-        "coding-agents",
-        "git-hooks",
-        "eslint",
-        "cli"
+        "coding-agents"
     ],
     "type": "module",
     "bin": {
