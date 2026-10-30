@@ -1,6 +1,5 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
@@ -27,16 +26,3 @@ test.each([...DUPLICATE_RULE_CASES])(
         ).toStrictEqual([kept]);
     },
 );
-
-test('a missing scope with rule options leaves apply usable and unmatched paths reports the typo', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript'], {
-            tables: '[[scope]]\npath = "missing"\ntools.eslint.rules = { eqeqeq = ["always"] }\n',
-        }),
-        'source.js': 'export const ready = true;\n',
-    });
-    await createEslint(sandbox.path);
-    expect(await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths')).toMatchObject([
-        { file: 'gspot.toml', message: 'missing under scope.0.path matches no tracked file or folder.' },
-    ]);
-});

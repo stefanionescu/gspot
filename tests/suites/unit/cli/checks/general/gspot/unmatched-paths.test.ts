@@ -3,6 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { TERMS_SOURCE } from '#tests/config/typescript.ts';
+import { createEslint } from '#tests/setup/eslint/lint.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { UNMATCHED_PATH_CASES } from '#tests/config/checks/general/gspot/unmatched-paths.ts';
@@ -51,4 +52,17 @@ test('an unmatched ignore points at its written record', async () => {
     commitAll(sandbox.path);
     const findings = await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths');
     expect(findings).toMatchObject([{ file: 'gspot.toml', line: text.split('\n').indexOf('[[ignore]]') + 1 }]);
+});
+
+test('a missing scope with rule options leaves apply usable and unmatched paths reports the typo', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            tables: '[[scope]]\npath = "missing"\ntools.eslint.rules = { eqeqeq = ["always"] }\n',
+        }),
+        'source.js': 'export const ready = true;\n',
+    });
+    await createEslint(sandbox.path);
+    expect(await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths')).toMatchObject([
+        { file: 'gspot.toml', message: 'missing under scope.0.path matches no tracked file or folder.' },
+    ]);
 });
