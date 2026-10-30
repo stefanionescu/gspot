@@ -1,10 +1,7 @@
-import { readFileSync } from 'node:fs';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { buildAssetPath } from '#cli/system/assets.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { assertRuleOptionsRun } from '#cli/generation/config-files/rule-options.ts';
 
@@ -14,7 +11,6 @@ import {
     STYLELINT_COMPONENTS,
     CSS_MODULES_OVERRIDE,
     STYLELINT_BASE_RULES,
-    STYLELINT_RULE_NAMES_FILE,
     STYLELINT_DEFAULT_LEVEL_OFF,
 } from '#cli/config/generation/configurations/language/css.ts';
 
@@ -79,18 +75,11 @@ export function buildStylelintFile(planned: PlannedConfigFile): string {
     const options = getTable(scope.settings, 'tools.stylelint');
     const isAll = planned.level === 'all';
     const scopeDependencies = listProjectDependencyNames(dependencyFiles, scope.path);
-    const ruleNamesFile = buildAssetPath(STYLELINT_RULE_NAMES_FILE);
-    const stylelintRuleNames = nameListSchema.parse(JSON.parse(readFileSync(ruleNamesFile, 'utf8'))).names;
-
     const off = listIgnoredRules(planned.scope, STYLELINT_CHECK);
-    const activeRules = new Set(
-        [...stylelintRuleNames, 'function-no-unknown'].filter(
-            (rule) => isAll || !STYLELINT_DEFAULT_LEVEL_OFF.has(rule),
-        ),
-    );
+    const configured = Object.keys(options.rules);
     assertRuleOptionsRun({
-        configured: Object.keys(options.rules),
-        running: activeRules,
+        configured,
+        running: new Set(configured.filter((rule) => isAll || !STYLELINT_DEFAULT_LEVEL_OFF.has(rule))),
         allLevelRules: STYLELINT_DEFAULT_LEVEL_OFF,
         level: planned.level,
     });

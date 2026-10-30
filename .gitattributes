@@ -1,8 +1,5 @@
 * text=auto eol=lf
 
-packages/cli/configurations/**/eslint-presets.json linguist-generated
-packages/cli/configurations/**/*-names.json linguist-generated
-
 packages/cli/README.md linguist-generated
 packages/cli/LICENSE.md linguist-generated
 packages/eslint-plugin/LICENSE.md linguist-generated

@@ -6,7 +6,6 @@ import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
-import { getPreset } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 import { buildSelectorBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/selectors.ts';
 import { buildScopeFiles, listCodeTestFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import { buildRestrictedImportBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
@@ -17,22 +16,21 @@ import {
     PRESETS_BEFORE_CONFIGURATIONS,
 } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 import {
+    type EslintBlock,
+    type EslintFiles,
+    type EslintPlugins,
+    type EslintRuntime,
+    type EslintBlockFields,
+    type PlannedEslintFile,
+    type ConfigurationBlocks,
+} from '#cli/types/generation/eslint.ts';
+import {
     buildImportIgnores,
     buildNodeScriptBlocks,
     buildImportStyleBlocks,
     buildScopeImportBlocks,
     buildImportBoundariesRule,
 } from '#cli/generation/configurations/language/javascript/eslint/blocks/imports.ts';
-import {
-    type EslintBlock,
-    type EslintFiles,
-    type EslintPlugins,
-    type EslintPresets,
-    type EslintRuntime,
-    type EslintBlockFields,
-    type PlannedEslintFile,
-    type ConfigurationBlocks,
-} from '#cli/types/generation/eslint.ts';
 import {
     NODE_RULES,
     TEST_RULES,
@@ -90,11 +88,10 @@ export function buildOpeningBlocks(
 ): ConfigurationBlocks['blocks'] {
     const { eslintFiles } = planned;
     return [
-        ...buildBasePresetBlocks(
-            planned.eslintPresets.get(JAVASCRIPT_CONFIGURATION),
-            PRESETS_BEFORE_CONFIGURATIONS,
-            eslintFiles.code,
-        ),
+        ...PRESETS_BEFORE_CONFIGURATIONS.map(({ importName, path }) => ({
+            fields: { files: eslintFiles.code },
+            presets: [{ importName, path, merge: 'fields' as const }],
+        })),
         buildRootBlock(planned, plugins, boundaryBlocks, ignoredGlobs),
         {
             fields: { files: eslintFiles.javascript, rules: JAVASCRIPT_RULES },
@@ -152,10 +149,7 @@ function buildRootBlock(
             },
         },
         calls: buildRootCalls(plugins, boundaryBlocks.length > 0),
-        preset: {
-            sources: [{ importName: 'gspot', path: `configs.${GSPOT_PRESET_LEVELS[blockWriter.level]}` }],
-            rules: {},
-        },
+        presets: [{ importName: 'gspot', path: `configs.${GSPOT_PRESET_LEVELS[blockWriter.level]}`, merge: 'rules' }],
     };
 }
 
@@ -206,7 +200,6 @@ export function buildClosingBlocks(
     const { eslintFiles, session } = planned;
     const { level } = planned.blockWriter;
     const rules = planned.levelRules;
-    const presets = planned.eslintPresets.get(JAVASCRIPT_CONFIGURATION);
     const privatePackages = session.repository.files
         .filter(
             (file) =>
@@ -235,7 +228,10 @@ export function buildClosingBlocks(
         })),
         { fields: { files: eslintFiles.scripts, rules: SCRIPT_RULES } },
         { fields: { files: eslintFiles.tests, rules: TEST_RULES } },
-        ...buildBasePresetBlocks(presets, PRESETS_AFTER_CONFIGURATIONS, eslintFiles.code),
+        ...PRESETS_AFTER_CONFIGURATIONS.map((preset) => ({
+            fields: { files: 'files' in preset ? [...preset.files] : eslintFiles.code },
+            presets: [{ importName: preset.importName, path: preset.path, merge: 'fields' as const }],
+        })),
         { fields: { files: [PACKAGE_JSON_PATTERN], rules: { [PIN_RANGES_RULE]: ['error', PUBLISHED_PIN_OPTIONS] } } },
         ...(privatePackages.length === 0
             ? []
@@ -288,22 +284,4 @@ export function selectPlugins(planned: PlannedEslintFile, boundaryBlocks: Eslint
             }),
         ...(boundaryBlocks.length > 0 && BOUNDARIES_PLUGIN_IMPORT),
     };
-}
-
-function buildBasePresetBlocks(
-    presets: EslintPresets | undefined,
-    sources: readonly (readonly [string, string])[],
-    codeFiles: string[],
-): ConfigurationBlocks['blocks'] {
-    return sources.map(([name, importName]) => {
-        const selected = getPreset(presets, name);
-        const { parser: _parser, ...fields } = selected.blocks[0];
-        return {
-            fields: { ...fields, files: fields.files ?? codeFiles },
-            preset: {
-                sources: [{ importName: importName, path: selected.source, includeFields: true }],
-                rules: fields.rules,
-            },
-        };
-    });
 }

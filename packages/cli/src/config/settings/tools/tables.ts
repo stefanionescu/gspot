@@ -1,8 +1,6 @@
 export const MARKDOWNLINT_RULE_ID_REFUSAL =
     'Name a rule by its ID, such as MD010 = { spaces_per_tab = 4 }. This table holds rule options only.';
 
-export const ESLINT_GLOBAL_NAMES_FILE = 'configurations/language/javascript/eslint-global-names.json';
-
 export const MARKDOWNLINT_RULE_ID = /^MD\d{3}$/u;
 
 export const KNIP_PACKAGE_NAME = /^[^*+\\(|{^$\s]+$/u;

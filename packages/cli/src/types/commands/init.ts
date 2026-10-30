@@ -16,7 +16,6 @@ export type InitScan = {
     configurations: InitConfigurations;
     everySelected: Configuration[];
     conflicts: ConflictingConfigFiles;
-    foreignDisableComments: InitFileRow[];
 };
 
 export type InitPlan = {

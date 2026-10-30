@@ -1,4 +1,5 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
+import { PACKAGE_JSON_PATTERN } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
 
 export const ESLINT_FUNCTIONS_FILE = 'functions.mjs';
 
@@ -11,14 +12,19 @@ export const NAME_HYPHEN = /-(?<letter>[a-z0-9])/gu;
 export const ESLINT_BASE_LABEL = 'javascript';
 
 export const PRESETS_AFTER_CONFIGURATIONS = [
-    ['packageJson', 'packageJson'],
-    ['prettier', 'prettierConfig'],
+    {
+        importName: 'packageJson',
+        package: 'eslint-plugin-package-json',
+        path: 'configs.recommended',
+        files: [PACKAGE_JSON_PATTERN],
+    },
+    { importName: 'prettierConfig', package: 'eslint-config-prettier', path: '' },
 ] as const;
 
 export const PRESETS_BEFORE_CONFIGURATIONS = [
-    ['eslint', 'eslint'],
-    ['sonar', 'sonarjs'],
-    ['unicorn', 'unicorn'],
+    { importName: 'eslint', package: '@eslint/js', path: 'configs.recommended' },
+    { importName: 'sonarjs', package: 'eslint-plugin-sonarjs', path: 'configs.recommended' },
+    { importName: 'unicorn', package: 'eslint-plugin-unicorn', path: 'configs.recommended' },
 ] as const;
 
 export const ESLINT_SETTINGS_TABLE = 'tools.eslint';
@@ -69,13 +75,14 @@ export const BASE_SELECTORS = [
     },
 ] as const;
 
-export const PLUGIN_RECORD_HELP = ' For a rule of your own, add a [[tools.eslint.plugins]] record.';
-
 export const ESLINT_FUNCTIONS = [
     'buildBlock',
     'readPreset',
     'mergePreset',
     'mergePresetRules',
+    'spreadPreset',
+    'mergeRuleOptions',
+    'setRuleOptions',
     'setLevelRules',
     'addPlugins',
     'setRootFolder',

@@ -6,9 +6,7 @@ export const NEXT_RULES = {
     'gspot/require-server-only': 'error',
 } as const;
 
-export const REFRESH_RULE = 'react-refresh/only-export-components';
-
-export const NEXT_ERROR_HOCS = ['catchError'] as const;
+export const NEXT_RULE_OPTIONS = { 'react-refresh/only-export-components': { extraHOCs: ['catchError'] } };
 
 export const NEXT_SERVER_FILES = ['**/server/**', '**/*.server.*'] as const;
 

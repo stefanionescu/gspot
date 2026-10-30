@@ -45,7 +45,8 @@ runtime = "serviceworker"
 
 Use an explicit `node` runtime for server code inside a browser or React Native project. Runtime names follow the
 pinned [globals package](https://github.com/sindresorhus/globals). Use `serviceworker` for service workers, which have
-other APIs than Web Workers. An unknown runtime name stops gspot before it writes config files.
+other APIs than Web Workers. An unknown runtime name stops ESLint when it loads the config, and the error lists the
+names that the globals package knows.
 
 Browser and native files get no Node.js lint rules. React Native files keep the `process` and `require` globals, but
 get no other Node.js globals, such as `Buffer` and `__dirname`.

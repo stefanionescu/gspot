@@ -8,11 +8,13 @@ import {
     addPlugins,
     setRuntime,
     mergePreset,
+    spreadPreset,
     setLevelRules,
     setRootFolder,
     setJestGlobals,
     setImportLookup,
     setScriptParser,
+    mergeRuleOptions,
     mergePresetRules,
     setBoundaryLookup,
     setComponentParser,
@@ -97,4 +99,48 @@ test('plugin and parser calls preserve the other language settings', () => {
     expect(
         setJestGlobals(block, { environments: { globals: { globals: { test: false } } } }).languageOptions,
     ).toStrictEqual({ parserOptions: { sourceType: 'module' }, globals: { test: false } });
+});
+
+test('preset lists keep their files inside the scope, and rule options keep the severity of the preset', () => {
+    const preset = {
+        configs: {
+            list: [
+                { plugins: {}, languageOptions: { globals: { window: false, defineProps: false } } },
+                { files: ['**/*.vue'], rules: { first: ['warn', { kept: true }] } },
+            ],
+        },
+    };
+    expect(
+        spreadPreset({ files: [['**/*.js', 'app/**/*']], ignores: ['app/child/**'] }, preset, 'configs.list', {
+            files: 'app/**/*',
+            globals: { browser: { window: false } },
+        }),
+    ).toStrictEqual([
+        {
+            plugins: {},
+            languageOptions: { globals: { defineProps: false } },
+            files: [['**/*.js', 'app/**/*']],
+            ignores: ['app/child/**'],
+        },
+        { files: [['**/*.vue', 'app/**/*']], rules: { first: ['warn', { kept: true }] }, ignores: ['app/child/**'] },
+    ]);
+    expect(mergePresetRules({ rules: { second: 'off' } }, preset, 'configs.list').rules).toStrictEqual({
+        first: ['warn', { kept: true }],
+        second: 'off',
+    });
+    expect(
+        mergeRuleOptions(
+            { rules: { first: ['warn', { kept: true }], plain: 'error' } },
+            {
+                first: { added: 1 },
+                plain: { added: 1 },
+            },
+        ).rules,
+    ).toStrictEqual({ first: ['warn', { kept: true, added: 1 }], plain: 'error' });
+});
+
+test('a runtime that the globals package does not name stops the config', () => {
+    expect(() => setRuntime({}, { node: {}, browser: {} }, 'nodejs', 'module')).toThrow(
+        'The globals package has no runtime named nodejs. Set tools.eslint.override.runtime to one of: node, browser.',
+    );
 });

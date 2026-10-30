@@ -140,7 +140,6 @@ export function planInitFiles(
             ...conflicts.kept,
             ...listSubmodulePaths(repository.index).map((path) => ({ path, note: UNREAD_SUBMODULE_MESSAGE })),
             ...repositorySetup.ci.map((path) => ({ path, note: CI_FILE_NOTE })),
-            ...scan.foreignDisableComments,
         ],
         change: [...(hasAttributes ? attributes : []), ...conflicts.changed],
         lintFolders: repositorySetup.lintFolders.map((folder) => ({

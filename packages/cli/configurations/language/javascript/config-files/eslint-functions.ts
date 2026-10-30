@@ -4,7 +4,13 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { sep, join, dirname, relative } from 'node:path';
 import type { EslintRuntime } from '#cli/types/generation/eslint.ts';
-import type { EslintGlobals, ComponentParser, JavascriptBlock } from '#cli/types/generation/eslint-functions.ts';
+
+import type {
+    EslintGlobals,
+    ComponentParser,
+    JavascriptBlock,
+    EslintRuleOptionBlock,
+} from '#cli/types/generation/eslint-functions.ts';
 
 export const root = fileURLToPath(new URL('../../../../..', import.meta.url)).replace(/[\\/]$/u, '');
 
@@ -178,17 +184,121 @@ export function mergePreset(block: JavascriptBlock, preset: unknown, path: strin
 }
 
 /**
-Put the rules of one config of an imported preset before the rules of the block, without its other fields.
+Put the rules of an imported preset before the rules of the block, without its other fields. A preset list gives the
+rules of each config in order.
 
 @param block the block that the generated file writes.
 @param preset the default export of the preset package.
-@param path the dotted path of the config in that export, empty for the export itself.
+@param path the dotted path of the config or list in that export, empty for the export itself.
 @returns a new block.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function mergePresetRules(block: JavascriptBlock, preset: unknown, path: string): JavascriptBlock {
-    const selected = readPreset(preset, path) as JavascriptBlock;
-    return { ...block, rules: { ...selected.rules, ...block.rules } };
+    const selected = readPreset(preset, path) as JavascriptBlock | JavascriptBlock[];
+    const rules = [selected, block]
+        .flat()
+        .flatMap((config) => (config.rules === undefined ? [] : Object.entries(config.rules)));
+    return { ...block, rules: Object.fromEntries(rules) };
+}
+
+/**
+Copy each config of an imported preset list into one scope. A config that names files keeps them inside the scope. A
+config without files takes the files of the block. Every config takes the ignores of the block and loses the host
+runtime globals, as stripRuntimeGlobals removes them.
+
+@param block the files and ignores of the scope.
+@param preset the default export of the preset package.
+@param path the dotted path of the list in that export.
+@param scope the scope folder glob and the globals tables of the globals package.
+@param scope.files the glob of the scope folder, such as docs/**\/*.
+@param scope.globals the globals tables of the globals package, keyed by runtime name.
+@returns one block per config of the preset.
+*/
+export function spreadPreset(
+    block: JavascriptBlock & { files: unknown[] },
+    preset: unknown,
+    path: string,
+    scope: { files: string; globals: Record<string, EslintGlobals> },
+): JavascriptBlock[] {
+    return (readPreset(preset, path) as JavascriptBlock[]).map((config) =>
+        stripRuntimeGlobals(
+            {
+                ...config,
+                files: config.files?.map((pattern) => [...[pattern].flat(), scope.files]) ?? block.files,
+                ignores: [...(config.ignores ?? []), ...(block.ignores ?? [])],
+            },
+            scope.globals,
+        ),
+    );
+}
+
+/**
+Add options to rules that the block already sets, and keep their severity. A rule that the block sets without options
+keeps its value.
+
+@param block the block after its preset.
+@param options the added options of each rule.
+@returns a new block.
+*/
+export function mergeRuleOptions(
+    block: JavascriptBlock,
+    options: Record<string, Record<string, unknown>>,
+): JavascriptBlock {
+    const rules = { ...block.rules };
+    for (const [name, added] of Object.entries(options)) {
+        const value = rules[name];
+        if (Array.isArray(value)) rules[name] = [value[0], { ...(value[1] as object | undefined), ...added }];
+    }
+    return { ...block, rules };
+}
+
+/**
+Give your rule options to each rule that a block turns on, in a block right after it that keeps its severity. Refuse
+options for a rule that no block turns on.
+
+@param blocks the blocks of the ESLint config, in order.
+@param ruleOptions the options of each scope and path override, with the file patterns that they cover.
+@returns the blocks with the option blocks after them.
+*/
+export function setRuleOptions(blocks: JavascriptBlock[], ruleOptions: EslintRuleOptionBlock[]): JavascriptBlock[] {
+    const pairs = blocks.map((block) => ({
+        block,
+        picked: ruleOptions.flatMap((options) => pickRuleOptions(block, options)),
+    }));
+    const applied = new Set(pairs.flatMap(({ picked }) => picked.flatMap((option) => Object.keys(option.rules))));
+    const refused = [...new Set(ruleOptions.flatMap((options) => Object.keys(options.rules)))].filter(
+        (name) => !applied.has(name),
+    );
+    if (refused.length > 0)
+        throw new Error(
+            refused
+                .map(
+                    (name) =>
+                        `gspot runs ${name} at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.`,
+                )
+                .join('\n'),
+        );
+    return pairs.flatMap(({ block, picked }) => [block, ...picked]);
+}
+
+function pickRuleOptions(
+    block: JavascriptBlock,
+    options: EslintRuleOptionBlock,
+): (JavascriptBlock & { rules: Record<string, unknown> })[] {
+    const rules = block.rules === undefined ? [] : Object.entries(block.rules);
+    const picked = rules.flatMap(([name, value]): [string, unknown][] => {
+        const override = options.rules[name];
+        const severity: unknown = Array.isArray(value) ? value[0] : value;
+        return override === undefined || severity === 'off' || severity === 0 ? [] : [[name, [severity, ...override]]];
+    });
+    if (picked.length === 0) return [];
+    const files = block.files?.flatMap((file) => options.paths.map((path) => [...[file].flat(), ...path]));
+    return [
+        {
+            files: files ?? options.paths,
+            ignores: [...(block.ignores ?? []), ...options.ignores],
+            rules: Object.fromEntries(picked),
+        },
+    ];
 }
 
 /**
@@ -298,7 +408,7 @@ export function setBoundaryLookup(block: JavascriptBlock, projects: string[]): J
 }
 
 /**
-Set the source type and the globals of the block.
+Set the source type and the globals of the block. Refuse a runtime that the globals package does not name.
 
 @param block the block that the generated file writes.
 @param globals the default export of the globals package.
@@ -306,17 +416,18 @@ Set the source type and the globals of the block.
 @param sourceType commonjs for CommonJS files.
 @returns a new block.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Generated ESLint files import this transformation by name.
 export function setRuntime(
     block: JavascriptBlock,
     globals: Record<string, EslintGlobals>,
     names: string,
     sourceType: string,
 ): JavascriptBlock {
-    return {
-        ...block,
-        languageOptions: { ...block.languageOptions, sourceType, globals: globals[names] as EslintGlobals },
-    };
+    const selected = globals[names];
+    if (selected === undefined)
+        throw new Error(
+            `The globals package has no runtime named ${names}. Set tools.eslint.override.runtime to one of: ${Object.keys(globals).join(', ')}.`,
+        );
+    return { ...block, languageOptions: { ...block.languageOptions, sourceType, globals: selected } };
 }
 
 /**

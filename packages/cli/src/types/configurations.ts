@@ -228,8 +228,6 @@ export type ConditionFields = Pick<
     'dependencies' | 'absent_dependencies' | 'filenames' | 'tags' | 'runtimes'
 > & { configuration: string; level: Level; setting: string; git: true; config_file: string };
 
-export type NameList = { package: string; version: string; names: string[] };
-
 export type PathContainer = { open: string; close: string; category: NamedCategory };
 
 export type NamingDefaults = {

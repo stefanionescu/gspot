@@ -135,8 +135,6 @@ export default [
             "packages/cli/.markdownlint.jsonc",
             "packages/eslint-plugin/.markdownlint.jsonc",
             "tests/.markdownlint.jsonc",
-            "packages/cli/configurations/**/eslint-presets.json",
-            "packages/cli/configurations/**/*-names.json",
             "packages/cli/README.md",
             "packages/cli/LICENSE.md",
             "packages/eslint-plugin/LICENSE.md",
@@ -1086,9 +1084,7 @@ export default [
                         "category": "import-rule:main",
                         "pattern": [
                             "packages/cli/src/main.ts",
-                            "packages/cli/src/bin.ts",
-                            "packages/cli/linter-exports.ts",
-                            "packages/cli/src/schemas/linter-exports.ts"
+                            "packages/cli/src/bin.ts"
                         ]
                     },
                     {

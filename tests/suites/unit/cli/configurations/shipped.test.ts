@@ -1,20 +1,16 @@
 import semver from 'semver';
 import { posix } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { listAssets } from '#cli/system/assets.ts';
+import type { Tool, Check } from '#cli/types/configurations.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
-import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
-import type { Tool, Check, NameList } from '#cli/types/configurations.ts';
-import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { EACH_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
 import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
-import { eslintPresetsSchema } from '#cli/schemas/configurations/eslint-presets.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { ESLINT_PRESETS_FILE } from '#cli/config/generation/configurations/language/javascript/eslint/presets.ts';
 
 test('each accepted suppression example matches its marker and gives a reason', () => {
     const forms = readConfigurations()
@@ -71,17 +67,6 @@ function readInstallerVersions(): Map<string, string> {
     for (const [installer, pin] of pins)
         if (pin.version !== undefined) versions.set(`${installer}:${pin.name}`, pin.version);
     return versions;
-}
-
-function readExportedNameLists(folder: string): Pick<NameList, 'package' | 'version'>[] {
-    return listAssets(`${folder}/`)
-        .filter((path) => path.endsWith('-names.json') || path.endsWith(`/${ESLINT_PRESETS_FILE}`))
-        .flatMap((path): Pick<NameList, 'package' | 'version'>[] => {
-            const parsed: unknown = JSON.parse(readFileSync(buildAssetPath(path), 'utf8'));
-            return path.endsWith('-names.json')
-                ? [nameListSchema.parse(parsed)]
-                : Object.values(eslintPresetsSchema.parse(parsed));
-        });
 }
 
 function hasEmptyDefault(definition: SettingDefinition | undefined, value: unknown): boolean {
@@ -161,17 +146,6 @@ test('each conditional rule of a configuration has a shipped rule file', () => {
                 .filter((name) => !rules.has(name))
                 .map((name) => `${configuration.name}: conditional rule ${name} has no shipped rule file.`);
         })
-        .toArray();
-    expect(errors).toStrictEqual([]);
-});
-
-test('each copied linter name list and preset matches the npm pin of its package', () => {
-    const versions = readInstallerVersions();
-    const errors = readConfigurations()
-        .values()
-        .flatMap((configuration) => readExportedNameLists(configuration.folder))
-        .filter((exported) => versions.get(`npm:${exported.package}`) !== exported.version)
-        .map((exported) => `${exported.package} snapshot version ${exported.version} does not match its npm pin.`)
         .toArray();
     expect(errors).toStrictEqual([]);
 });

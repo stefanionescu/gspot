@@ -33,8 +33,6 @@ node_modules/
 # Generator outputs
 docs/cloudflare-env.d.ts
 docs/worker-configuration.d.ts
-packages/cli/configurations/**/*-names.json
-packages/cli/configurations/**/eslint-presets.json
 packages/cli/LICENSE.md
 packages/cli/README.md
 packages/eslint-plugin/LICENSE.md

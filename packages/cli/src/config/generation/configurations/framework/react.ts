@@ -6,3 +6,7 @@ export const REACT_RULES = {
     '@eslint-react/no-unstable-context-value': 'error',
     '@eslint-react/no-unstable-default-props': 'error',
 } as const;
+
+export const FOCUSABLE_ROLES = ['tabpanel', 'region'] as const;
+
+export const REACT_DOM_RULE_OPTIONS = { 'jsx-a11y-x/no-noninteractive-tabindex': { roles: [...FOCUSABLE_ROLES] } };

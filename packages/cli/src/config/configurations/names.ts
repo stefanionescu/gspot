@@ -3,6 +3,8 @@ import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 
 export const ESLINT_MANIFEST_TOOL = 'eslint';
 
+export const STYLELINT_MANIFEST_TOOL = 'stylelint';
+
 export const CONFIGURATIONS_FOLDER = 'configurations';
 
 export const GROUPS = [

@@ -3,26 +3,15 @@ import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generatio
 import { SVELTE_RULES, SVELTE_FILES } from '#cli/config/generation/configurations/framework/svelte.ts';
 import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
-import {
-    getPreset,
-    buildArrayPresetBlocks,
-    convertWarningsToErrors,
-} from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
-
 /**
 Apply the Svelte presets and the Svelte component parser.
 
 @param scope the planned ESLint file of the scope.
 */
-export function buildSvelteBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>): ConfigurationBlocks {
-    const { presets, settings } = scope;
-    const recommended = getPreset(presets, 'recommended');
-    const isTyped = settings.configurations.includes(TYPESCRIPT_CONFIGURATION);
+export function buildSvelteBlocks(scope: Pick<EslintScope, 'settings'>): ConfigurationBlocks {
+    const isTyped = scope.settings.configurations.includes(TYPESCRIPT_CONFIGURATION);
     const blocks: ConfigurationBlocks['blocks'] = [
-        ...buildArrayPresetBlocks(recommended, 'sveltePlugin', (block) => {
-            const { parser: _parser, ...fields } = block;
-            return { ...fields, ...(block.rules !== undefined && { rules: convertWarningsToErrors(block.rules) }) };
-        }),
+        { fields: {}, presets: [{ importName: 'sveltePlugin', path: 'configs.recommended', merge: 'spread' }] },
         {
             fields: {
                 files: SVELTE_FILES,

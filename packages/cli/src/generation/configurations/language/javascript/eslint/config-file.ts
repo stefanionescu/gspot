@@ -1,23 +1,20 @@
 import ts from 'typescript';
 import { JSON_INDENT } from '#cli/config/text.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { assertRuleOptionsRun } from '#cli/generation/config-files/rule-options.ts';
 import type { BlockWriter, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
-import { getPreset } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 import { buildRuntimes } from '#cli/generation/configurations/language/javascript/eslint/runtimes.ts';
 import type { GeneratedFile, ConfigFileOutput, PlannedConfigFile } from '#cli/types/generation/files.ts';
+import { buildBlockCalls } from '#cli/generation/configurations/language/javascript/eslint/block-calls.ts';
 import { buildPlannedEslintFile } from '#cli/generation/configurations/language/javascript/eslint/plan.ts';
 import { splitSettingsBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 import { buildBoundaryBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/boundaries.ts';
 import { listConfigurationBlocks } from '#cli/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
-import {
-    buildBlockCalls,
-    listUnappliedRules,
-} from '#cli/generation/configurations/language/javascript/eslint/block-calls.ts';
 import {
     convertToGlobs,
     buildIgnoreSections,
@@ -39,7 +36,6 @@ import {
     GLOBALS_IMPORT,
     ESLINT_FUNCTIONS,
     ESLINT_BASE_LABEL,
-    PLUGIN_RECORD_HELP,
     ESLINT_FUNCTIONS_FILE,
     ESLINT_PLUGIN_IMPORTERS,
     IMPORT_NAME_PUNCTUATION,
@@ -98,12 +94,10 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
     const { configurationBlocks, configurationImports } = listConfigurationBlocks(eslintFile);
     const shipped = selectPlugins(eslintFile, boundaryBlocks);
     const plugins = { ...shipped, ...listLocalPlugins(session.scopes, planned.targetPath, shipped) };
-    const presets = eslintFile.eslintPresets.get(JAVASCRIPT_CONFIGURATION);
     const imports = [
         GLOBALS_IMPORT,
-
         ...[...PRESETS_BEFORE_CONFIGURATIONS, ...PRESETS_AFTER_CONFIGURATIONS].map(
-            ([name, importName]) => [importName, getPreset(presets, name).package] as const,
+            (preset) => [preset.importName, preset.package] as const,
         ),
         ...Object.values(plugins),
         ...Object.values(configurationImports),
@@ -121,16 +115,18 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
                 ...splitSettingsBlocks(eslintFile),
                 ...buildLocalPluginBlocks(session.scopes, eslintFile.eslintFiles.code),
             ].map((fields) => ({ fields })),
+            ...(blockWriter.level === 'all'
+                ? []
+                : [
+                      {
+                          fields: {
+                              rules: Object.fromEntries([...blockWriter.allLevelRules].map((rule) => [rule, 'off'])),
+                          },
+                      },
+                  ]),
         ].map((block) => buildBlockCalls(blockWriter, { ...block, label: ESLINT_BASE_LABEL })),
     ];
-    const body = `export default [\n${blockTexts.join(',\n')},\n];\n`;
-    assertRuleOptionsRun({
-        configured: listUnappliedRules(blockWriter),
-        running: blockWriter.applied,
-        allLevelRules: blockWriter.allLevelRules,
-        level: blockWriter.level,
-        suffix: PLUGIN_RECORD_HELP,
-    });
+    const body = serializeExport(blockTexts, blockWriter);
     return {
         content:
             serializeImports(
@@ -140,6 +136,26 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
             ) + body,
         companions: configurationFiles.map(({ file }) => file),
     };
+}
+
+function serializeExport(blockTexts: string[], blockWriter: BlockWriter): string {
+    const configured = blockWriter.ruleOptions.flatMap((options) => Object.keys(options.rules));
+    assertRuleOptionsRun({
+        configured,
+        running: new Set(
+            configured.filter((rule) => blockWriter.level === 'all' || !blockWriter.allLevelRules.has(rule)),
+        ),
+        allLevelRules: blockWriter.allLevelRules,
+        level: blockWriter.level,
+    });
+    const blocks = `[\n${blockTexts.join(',\n')},\n]`;
+    if (blockWriter.ruleOptions.length === 0) return `export default ${blocks};\n`;
+    const ruleOptions = blockWriter.ruleOptions.map((options) => ({
+        paths: options.includes.map((path) => [joinScope(escapeGlob(options.scope), '**/*'), path]),
+        ignores: options.excludes,
+        rules: options.rules,
+    }));
+    return `export default setRuleOptions(${blocks}, ${JSON.stringify(ruleOptions, null, JSON_INDENT)});\n`;
 }
 
 function listReadNames(text: string): Set<string> {

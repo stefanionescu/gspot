@@ -150,11 +150,6 @@ allowed_names = ["objects", "fileSystemSynchronizedGroups"]
 reason = "Xcode project files name these keys objects and fileSystemSynchronizedGroups."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/linter-exports.ts"]
-allowed_names = ["resolveConfig"]
-reason = "Prettier and Stylelint name their configuration methods resolveConfig."
-
-[[naming.override]]
 paths = ["packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/types/generation/markdownlint-cli2.ts"]
 allowed_names = ["markdownlint-cli2"]
 reason = "The manifest names the source after its markdownlint-cli2 target, and the placeholder uses that name."
@@ -289,7 +284,7 @@ paths = ["packages/cli/src/**"]
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 
 [tools.knip]
-entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config-files/purgecss.ts", "packages/cli/linter-exports.ts"]
+entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config-files/purgecss.ts"]
 
 [[scope]]
 path = "docs"
@@ -367,7 +362,7 @@ paths = ["packages/cli/src/commands/**", "packages/cli/src/schemas/commands.ts"]
 
 [[import_rule]]
 name = "main"
-paths = ["packages/cli/src/main.ts", "packages/cli/src/bin.ts", "packages/cli/linter-exports.ts", "packages/cli/src/schemas/linter-exports.ts"]
+paths = ["packages/cli/src/main.ts", "packages/cli/src/bin.ts"]
 
 [[import_rule]]
 name = "plugin-config"

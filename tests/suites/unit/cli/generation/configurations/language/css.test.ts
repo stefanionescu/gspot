@@ -101,17 +101,17 @@ test("your Stylelint rule options reach each scope's file", async () => {
     }
 });
 
-test('level basic refuses Stylelint options for a rule it does not run and for an unknown rule', async () => {
+test('level basic refuses Stylelint options for a rule of level all', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['css'], {
             level: 'basic',
-            tables: '[tools.stylelint.rules]\ncolor-hex-length = "long"\nnumber-max-precision = 0\nunknown-rule = true\n',
+            tables: '[tools.stylelint.rules]\ncolor-hex-length = "long"\nnumber-max-precision = 0\n',
         }),
         'source.css': 'a { color: #fff; }',
     });
     const session = await openSession(sandbox.path);
     expect(() => generateFiles(session)).toThrow(
-        'number-max-precision runs only at level all. gspot sets options only for the rules that run at level basic.\ngspot runs unknown-rule at no level, so it takes no options.',
+        'number-max-precision runs only at level all. gspot sets options only for the rules that run at level basic.',
     );
 });
 

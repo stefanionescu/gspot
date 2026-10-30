@@ -75,10 +75,8 @@ function buildConfigurationBlocks(
         {
             settings: scope.settings,
             projects: planned.projects,
-            eslintPresets: planned.eslintPresets,
             path: scopePath,
             projectPath: configuration.name === 'nextjs' ? nextProject : scopePath,
-            presets: planned.eslintPresets.get(configuration.name),
             dependencies: listProjectDependencyNames(session.repository.dependencyFiles, scopePath),
             eslintFiles: {
                 ...planned.eslintFiles,

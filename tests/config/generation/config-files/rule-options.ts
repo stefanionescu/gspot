@@ -21,11 +21,4 @@ export const INACTIVE_RULE_OPTIONS = [
         message:
             'gspot.toml:3: tools.yamllint.rules.line-length: Unknown yamllint rule. Accepted rules: anchors, key-duplicates, octal-values, truthy.',
     },
-    {
-        configuration: 'css',
-        rule: 'color-named',
-        tables: '[tools.stylelint.rules]\ncolor-named = "never"\n',
-        scoped: false,
-        message: 'gspot runs color-named at no level, so it takes no options.',
-    },
 ] as const;

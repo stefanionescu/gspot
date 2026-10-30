@@ -1,5 +1,4 @@
 import type { Session } from '#cli/types/session.ts';
-import type { JsonValue } from '#cli/types/shapes.ts';
 import type { Settings, WrittenSettings } from '#cli/types/settings/file.ts';
 import type { Scope, ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import type { Level, Configuration, ParsedManifest } from '#cli/types/configurations.ts';
@@ -26,7 +25,6 @@ export type EslintRuleOptions = PathExpressions & { scope: string; rules: NonNul
 
 export type BlockWriter = {
     runtimes?: EslintRuntime[];
-    applied: Set<string>;
     allLevelRules: Set<string>;
     level: Level;
     codeFiles: string[];
@@ -99,23 +97,6 @@ export type EslintFiles = {
     scripts: string[][];
 };
 
-type EslintPresetBlock = {
-    parser: boolean;
-    files?: (string | string[])[];
-    ignores?: string[];
-    basePath?: string;
-    rules?: Record<string, JsonValue>;
-};
-
-export type EslintPreset = {
-    package: string;
-    version: string;
-    source: string;
-    blocks: [EslintPresetBlock, ...EslintPresetBlock[]];
-};
-
-export type EslintPresets = Record<string, EslintPreset>;
-
 export type PlannedEslintFile = {
     session: Session;
     scope: Scope;
@@ -124,13 +105,10 @@ export type PlannedEslintFile = {
     blockWriter: BlockWriter;
     eslintFiles: EslintFiles;
     levelRules: EslintLevelRules;
-    eslintPresets: Map<string, EslintPresets>;
     configurations: Configuration[];
 };
 
-type EslintPresetSource = { importName: string; path: string; includeFields?: boolean };
-
-export type EslintPresetRules = { sources: EslintPresetSource[]; rules: Record<string, unknown> | undefined };
+type EslintPresetSource = { importName: string; path: string; merge: 'fields' | 'rules' | 'spread' };
 
 export type EslintCallArgument =
     | { importName: string; path?: string }
@@ -156,7 +134,7 @@ export type EslintImportBoundaryRule = [
 export type PlannedEslintBlock = {
     fields: EslintBlockFields;
     calls?: readonly EslintCall[];
-    preset?: EslintPresetRules;
+    presets?: EslintPresetSource[];
     scope?: { path: string; excluded: string[] };
     label: string;
 };
@@ -166,8 +144,6 @@ export type EslintScope = {
     path: string;
     settings: ScopeSettings;
     eslintFiles: EslintFiles;
-    presets: EslintPresets | undefined;
-    eslintPresets: Map<string, EslintPresets>;
     dependencies: string[];
     sourceFiles: string[];
     projects: string[];

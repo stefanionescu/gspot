@@ -1,17 +1,40 @@
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
 import type { Session } from '#cli/types/session.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { CommandCheck } from '#cli/types/settings/file.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
+import { ruleDocumentationSchema } from '#cli/schemas/commands.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
-import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations/names.ts';
-import type { CheckFacts, Explanation } from '#cli/types/commands/explain.ts';
 import type { Tool, Check, ScopeCheck, Configuration } from '#cli/types/configurations.ts';
+import type { CheckFacts, Explanation, LintRuleDocs } from '#cli/types/commands/explain.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
-import { getTool, getToolName, hasRuleOutput, extractRulePrefix } from '#cli/configurations/tools.ts';
-import { REPOSITORY_COMMAND, RUN_IN_COPY_MESSAGE, SELECTED_YES_MESSAGE } from '#cli/config/commands/explain.ts';
+
+import {
+    ESLINT_MANIFEST_TOOL,
+    STYLELINT_MANIFEST_TOOL,
+    JAVASCRIPT_CONFIGURATION,
+} from '#cli/config/configurations/names.ts';
+import {
+    getTool,
+    getToolName,
+    hasRuleOutput,
+    extractRulePrefix,
+    extractConfigFileName,
+} from '#cli/configurations/tools.ts';
+import {
+    REPOSITORY_COMMAND,
+    RUN_IN_COPY_MESSAGE,
+    SELECTED_YES_MESSAGE,
+    ESLINT_BUILTIN_RULES,
+    INSTALL_FOR_RULES_MESSAGE,
+} from '#cli/config/commands/explain.ts';
 
 function findRulePlugin(prefix: string, configurationsByName: Map<string, Configuration>): Tool | undefined {
     return configurationsByName
@@ -161,13 +184,100 @@ export function explainCheck(session: Session | undefined, checkId: string): Exp
 }
 
 /**
-Explain one lint rule: its page, and how to turn it off or change its options.
+Import a tool from the npm tool project of the repository.
 
+@param root the repository root.
+@param specifier the package or its export, such as eslint/use-at-your-own-risk.
+@returns undefined when the tool project does not hold it.
+*/
+export async function importInstalledTool(root: string, specifier: string): Promise<unknown> {
+    let path: string;
+    try {
+        path = createRequire(join(root, GSPOT_PATHS.npmProject)).resolve(specifier);
+    } catch (error) {
+        if (!hasErrorCode(error, 'MODULE_NOT_FOUND')) throw error;
+        return undefined;
+    }
+    return import(pathToFileURL(path).href);
+}
+
+async function readEslintPluginRule(root: string, identifier: string): Promise<unknown> {
+    const configFile = readConfigurations()
+        .get(JAVASCRIPT_CONFIGURATION)
+        ?.configFiles.find((file) => extractConfigFileName(file.file) === ESLINT_MANIFEST_TOOL);
+    if (configFile === undefined) return undefined;
+    let config: { default: { plugins?: Record<string, { rules?: Record<string, unknown> }> }[] };
+    try {
+        config = (await import(pathToFileURL(join(root, configFile.target)).href)) as typeof config;
+    } catch (error) {
+        if (hasErrorCode(error, 'ERR_MODULE_NOT_FOUND')) throw new GspotError('tool', INSTALL_FOR_RULES_MESSAGE);
+        throw error;
+    }
+    return config.default
+        .flatMap((block) => (block.plugins === undefined ? [] : Object.entries(block.plugins)))
+        .map(([prefix, plugin]) =>
+            identifier.startsWith(`${prefix}/`) ? plugin.rules?.[identifier.slice(prefix.length + 1)] : undefined,
+        )
+        .find((found) => found !== undefined);
+}
+
+async function readLintRule(root: string, tool: string, identifier: string): Promise<unknown> {
+    const installed = await importInstalledTool(
+        root,
+        tool === STYLELINT_MANIFEST_TOOL ? STYLELINT_MANIFEST_TOOL : ESLINT_BUILTIN_RULES,
+    );
+    if (installed === undefined) throw new GspotError('tool', INSTALL_FOR_RULES_MESSAGE);
+    if (tool === STYLELINT_MANIFEST_TOOL)
+        return (installed as { default: { rules: Record<string, unknown> } }).default.rules[identifier];
+    if (extractRulePrefix(identifier) === undefined)
+        return (installed as { builtinRules: Map<string, unknown> }).builtinRules.get(identifier);
+    return readEslintPluginRule(root, identifier);
+}
+
+async function readLintRuleDocs(root: string, tool: string, identifier: string): Promise<LintRuleDocs | undefined> {
+    if (tool !== ESLINT_MANIFEST_TOOL && tool !== STYLELINT_MANIFEST_TOOL)
+        return { description: undefined, url: undefined };
+    const rule = await readLintRule(root, tool, identifier);
+    if (rule === undefined) return undefined;
+    const documentation = ruleDocumentationSchema.default({}).parse(Reflect.get(rule as object, 'meta'));
+    return { description: documentation.docs?.description, url: documentation.docs?.url ?? documentation.url };
+}
+
+function formatLintRuleLines(
+    found: { check: Check; configuration: Configuration },
+    rule: { tool: string; identifier: string; page: string | undefined; description: string | undefined },
+): string[] {
+    const { check, configuration } = found;
+    const { tool, identifier, page } = rule;
+    const key = quoteArgument(`tools.${tool}.rules`);
+    const ruleExample = quoteArgument(`{ ${JSON.stringify(identifier)} = [<options>] }`);
+    const optionLines = (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []).some(
+        (setting) => setting.name === `tools.${tool}.rules`,
+    )
+        ? [`Change its options: gspot set ${key} ${ruleExample}`]
+        : [];
+    return [
+        `${tool}/${identifier}  (run by ${check.id})`,
+        '',
+        ...(rule.description === undefined ? [] : [`What it looks for: ${rule.description}`]),
+        page === undefined ? `Read the ${tool} documentation for ${identifier}.` : `The tool's page: ${page}`,
+        '',
+        `Turn it off everywhere: gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(identifier)} --reason "<why>"`,
+        `Turn it off for some paths: gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(identifier)} --paths "<glob>" --reason "<why>"`,
+        ...optionLines,
+    ];
+}
+
+/**
+Explain one lint rule: its page, its description from the installed tool, and how to turn it off or change its
+options. ESLint and Stylelint rules must exist in the tools that gspot installed.
+
+@param root the repository root, whose tool project holds ESLint and Stylelint.
 @param tool the command or plugin prefix.
 @param rule the ID without its prefix, such as no-console.
-@returns undefined when no check runs the tool.
+@returns undefined when no check runs the tool, or when ESLint or Stylelint has no such rule.
 */
-export function explainLintRule(tool: string, rule: string): Explanation | undefined {
+export async function explainLintRule(root: string, tool: string, rule: string): Promise<Explanation | undefined> {
     const configurationsByName = readConfigurations();
     const qualified = `${tool}/${rule}`;
     const plugin = findRulePlugin(extractRulePrefix(qualified) ?? tool, configurationsByName);
@@ -179,30 +289,25 @@ export function explainLintRule(tool: string, rule: string): Explanation | undef
                 getToolName(declaration) === ruleTool || declaration.id.endsWith(`/${ruleTool}`),
         );
     if (!found) return undefined;
-    const { check, configuration } = found;
-    const page = findRulePage(ruleTool, identifier, configurationsByName);
-    const key = quoteArgument(`tools.${ruleTool}.rules`);
-    const ruleExample = quoteArgument(`{ ${JSON.stringify(identifier)} = [<options>] }`);
-    const optionLines = (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []).some(
-        (setting) => setting.name === `tools.${ruleTool}.rules`,
-    )
-        ? [`Change its options: gspot set ${key} ${ruleExample}`]
-        : [];
-    const description =
-        page === undefined ? `Read the ${ruleTool} documentation for ${identifier}.` : `The tool's page: ${page}`;
-    const lines = [
-        `${ruleTool}/${identifier}  (run by ${check.id})`,
-        '',
-        description,
-        '',
-        `Turn it off everywhere: gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(identifier)} --reason "<why>"`,
-        `Turn it off for some paths: gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(identifier)} --paths "<glob>" --reason "<why>"`,
-        ...optionLines,
-    ];
+    const docs = await readLintRuleDocs(root, ruleTool, identifier);
+    if (docs === undefined) return undefined;
+    const page = findRulePage(ruleTool, identifier, configurationsByName) ?? docs.url;
+    const lines = formatLintRuleLines(found, {
+        tool: ruleTool,
+        identifier,
+        page,
+        description: docs.description,
+    });
     return {
         kind: 'lint-rule',
         subject: `${ruleTool}/${identifier}`,
         text: `${lines.join('\n')}\n`,
-        facts: { tool: ruleTool, rule: identifier, check: check.id, page: page ?? null },
+        facts: {
+            tool: ruleTool,
+            rule: identifier,
+            check: found.check.id,
+            page: page ?? null,
+            description: docs.description ?? null,
+        },
     };
 }

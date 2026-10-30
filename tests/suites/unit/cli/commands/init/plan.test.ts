@@ -109,20 +109,6 @@ test('init plans no scope for an old lint folder, and --level all replaces the c
     ]);
 });
 
-test('init names disable comments for rules that the new setup does not load', async () => {
-    await using sandbox = await createGitSandbox({
-        'package.json': '{"name":"app","private":true,"type":"module"}\n',
-        'src/old.js':
-            '// eslint-disable-next-line local-rules/no-legacy -- the old setup had this rule\nexport const value = 1;\n/* eslint-disable no-console, unicorn/no-null */\n',
-    });
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
-    expect(plan.keep).toStrictEqual([
-        { path: 'src/old.js', note: 'local-rules/no-legacy: gspot does not load these rules; delete the comments' },
-    ]);
-});
-
 test('init lists your .editorconfig under write and not under delete when the generated one replaces it', async () => {
     const authored = 'root = true\n[*]\nindent_style = space\nindent_size = 2\n';
     await using sandbox = await createGitSandbox({ '.editorconfig': authored });

@@ -1,12 +1,16 @@
 export type EslintGlobals = Record<string, boolean | 'readonly' | 'writable' | 'writeable' | 'off'>;
 
 export type JavascriptBlock = {
+    files?: unknown[];
+    ignores?: string[];
     rules?: Record<string, unknown>;
     plugins?: Record<string, unknown>;
     settings?: Record<string, unknown>;
     languageOptions?: { globals?: EslintGlobals; [option: string]: unknown };
     [field: string]: unknown;
 };
+
+export type EslintRuleOptionBlock = { paths: unknown[][]; ignores: string[]; rules: Record<string, unknown[]> };
 
 type VueAttribute = { key?: { name?: string }; value?: { value?: string } | null };
 

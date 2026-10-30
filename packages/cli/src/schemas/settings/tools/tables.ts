@@ -1,9 +1,6 @@
 import { z } from 'zod';
-import { readFileSync } from 'node:fs';
-import { buildAssetPath } from '#cli/system/assets.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { TableSettings } from '#cli/types/settings/file.ts';
-import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { buildRuleTableSchema } from '#cli/schemas/settings/tools/rules.ts';
 import { nonemptyStringSchema } from '#cli/schemas/configurations/fields.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tools.ts';
@@ -27,18 +24,8 @@ import {
     MARKDOWNLINT_RULE_ID,
     DOCSTRING_CONVENTIONS,
     IMPORT_EXTENSION_STYLES,
-    ESLINT_GLOBAL_NAMES_FILE,
     MARKDOWNLINT_RULE_ID_REFUSAL,
 } from '#cli/config/settings/tools/tables.ts';
-
-let eslintRuntimeNames: string[] | undefined;
-
-function readEslintRuntimeNames(): string[] {
-    if (eslintRuntimeNames !== undefined) return eslintRuntimeNames;
-    const text = readFileSync(buildAssetPath(ESLINT_GLOBAL_NAMES_FILE), 'utf8');
-    eslintRuntimeNames = nameListSchema.parse(JSON.parse(text)).names;
-    return eslintRuntimeNames;
-}
 
 const commitlintRuleNames = [...Object.keys(COMMITLINT_RULES), 'type-enum', 'scope-enum'];
 
@@ -103,10 +90,7 @@ const eslintTableSchema = z.strictObject({
         .strictObject({
             paths: nonemptyPathsSchema.meta(SETTING_DEFINITIONS['tools.eslint.override.paths']),
             rules: eslintRulesSchema.optional().meta(SETTING_DEFINITIONS['tools.eslint.override.rules']),
-            runtime: z
-                .lazy(() => z.enum(readEslintRuntimeNames()))
-                .optional()
-                .meta(SETTING_DEFINITIONS['tools.eslint.override.runtime']),
+            runtime: nonemptyStringSchema.optional().meta(SETTING_DEFINITIONS['tools.eslint.override.runtime']),
         } satisfies SchemaShape<NonNullable<NonNullable<WrittenTools['eslint']>['override']>[number]>)
         .array()
         .default(SETTING_DEFINITIONS['tools.eslint.override'].default)

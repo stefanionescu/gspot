@@ -12,7 +12,15 @@ export const RULE_PAGES = [
         'https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/prefer-set-has.md',
     ],
     ['eslint/@typescript-eslint/no-explicit-any', 'https://typescript-eslint.io/rules/no-explicit-any'],
-    ['eslint/sonarjs/no-identical-functions', null],
+    ['stylelint/color-no-invalid-hex', 'https://stylelint.io/user-guide/rules/color-no-invalid-hex'],
+] as const;
+
+export const UNKNOWN_RULES = [
+    'eslint/no-consolee',
+    'eslint/unicorn/no-such-rule',
+    'eslint/unknown/no-such-rule',
+    'eslint/typescript-eslint/no-explicit-any',
+    'stylelint/no-such-rule',
 ] as const;
 
 export const CHILD_RULE_PAGE = {
@@ -35,20 +43,6 @@ configurations = ["python"]
 path = "app"
 configurations = ["swift"]
 `;
-
-export const NPM_SCOPE_RULE_PAGE = {
-    subject: 'eslint/@next/next/no-html-link-for-pages',
-    tool: 'eslint',
-    rule: '@next/next/no-html-link-for-pages',
-    page: null,
-} as const;
-
-export const UNKNOWN_RULE_PREFIX = {
-    kind: 'lint-rule',
-    tool: 'eslint',
-    rule: 'unknown/no-such-rule',
-    page: null,
-} as const;
 
 export const SHELLCHECK_RULE_PAGE = {
     kind: 'lint-rule',

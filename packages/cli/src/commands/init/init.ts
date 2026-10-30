@@ -30,7 +30,6 @@ import { planInitFiles, formatInitPlan } from '#cli/commands/init/plan.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { Files, ReadCache, FileContents } from '#cli/types/system/files.ts';
-import { listForeignDisableComments } from '#cli/commands/init/eslint-disable-comments.ts';
 import { FROM_OPTION, FROM_CONFLICT_MESSAGE } from '#cli/config/commands/init/template.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings-text.ts';
 import { readRepository, readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts';
@@ -184,7 +183,6 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         configurations: initConfigurations,
         everySelected,
         conflicts,
-        foreignDisableComments: listForeignDisableComments(session),
         ...stripUndefined({ template: options.template }),
     };
     const plan = planInitFiles(planning, { settings, settingsText, requirements: applicable, generated });

@@ -1,9 +1,7 @@
-import { readFileSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { buildAssetPath } from '#cli/system/assets.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
 import type { Command } from '@commander-js/extra-typings';
 import { explainPath } from '#cli/commands/explain/path.ts';
@@ -13,22 +11,12 @@ import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import { explainSetting } from '#cli/commands/explain/setting.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
-import { ESLINT_RULE_NAMES_FILE } from '#cli/config/commands/explain.ts';
+import { ESLINT_BUILTIN_RULES } from '#cli/config/commands/explain.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations/names.ts';
-import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { explainConfiguration } from '#cli/commands/explain/configuration.ts';
-import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { listCheckIds, readConfigurations } from '#cli/configurations/manifests.ts';
-
-let eslintRuleNames: Set<string> | undefined;
-
-function hasEslintRule(name: string): boolean {
-    if (eslintRuleNames !== undefined) return eslintRuleNames.has(name);
-    const text = readFileSync(buildAssetPath(ESLINT_RULE_NAMES_FILE), 'utf8');
-    eslintRuleNames = new Set(nameListSchema.parse(JSON.parse(text)).names);
-    return eslintRuleNames.has(name);
-}
+import { explainCheck, explainLintRule, importInstalledTool } from '#cli/commands/explain/check.ts';
 
 function formatUnknownSubject(session: Session | undefined, subject: string): string {
     const subjects = [
@@ -42,25 +30,27 @@ function formatUnknownSubject(session: Session | undefined, subject: string): st
     return `gspot cannot explain ${subject}. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).${similar}`;
 }
 
-function explainSlashed(
+async function explainSlashed(
+    root: string,
     session: Session | undefined,
-    subject: string,
-    file: Explanation | undefined,
-): Explanation | undefined {
+    { subject, file }: { subject: string; file: Explanation | undefined },
+): Promise<Explanation | undefined> {
     const check = explainCheck(session, subject);
     if (check !== undefined) return check;
     if (file !== undefined) return file;
     const slash = subject.indexOf('/');
-    const tool = subject.slice(0, slash);
-    const rule = subject.slice(slash + 1);
-    if (tool === ESLINT_MANIFEST_TOOL && !rule.includes('/') && !hasEslintRule(rule)) return undefined;
-    return explainLintRule(tool, rule);
+    return explainLintRule(root, subject.slice(0, slash), subject.slice(slash + 1));
 }
 
-function explainNamed(session: Session | undefined, subject: string): Explanation | undefined {
+async function explainNamed(
+    root: string,
+    session: Session | undefined,
+    subject: string,
+): Promise<Explanation | undefined> {
     const named = explainSetting(session, subject) ?? explainConfiguration(session, subject);
     if (named !== undefined) return named;
-    return hasEslintRule(subject) ? explainLintRule(ESLINT_MANIFEST_TOOL, subject) : undefined;
+    if ((await importInstalledTool(root, ESLINT_BUILTIN_RULES)) === undefined) return undefined;
+    return explainLintRule(root, ESLINT_MANIFEST_TOOL, subject);
 }
 
 async function runExplainCommand(cwd: string, subject: string): Promise<CommandResult> {
@@ -68,7 +58,7 @@ async function runExplainCommand(cwd: string, subject: string): Promise<CommandR
 
     const session = findText(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
 
-    const result = explainSubject(session, subject, cwd);
+    const result = await explainSubject(root, session, { subject, cwd });
     return {
         text: result.text,
         json: { ...result.facts, kind: result.kind, subject: result.subject },
@@ -76,13 +66,17 @@ async function runExplainCommand(cwd: string, subject: string): Promise<CommandR
     };
 }
 
-function explainSubject(session: Session | undefined, subject: string, cwd: string): Explanation {
+async function explainSubject(
+    root: string,
+    session: Session | undefined,
+    { subject, cwd }: { subject: string; cwd: string },
+): Promise<Explanation> {
     const file = explainPath(session, subject, cwd);
     if (file !== undefined && (subject.startsWith('./') || subject.startsWith('../'))) return file;
     let explanation: Explanation | undefined;
-    if (subject.includes('/')) explanation = explainSlashed(session, subject, file);
+    if (subject.includes('/')) explanation = await explainSlashed(root, session, { subject, file });
     else if (subject.includes('.')) explanation = explainSetting(session, subject);
-    else explanation = explainNamed(session, subject);
+    else explanation = await explainNamed(root, session, subject);
     if (explanation !== undefined) return explanation;
     if (file !== undefined) return file;
     throw new GspotError('arguments', formatUnknownSubject(session, subject));

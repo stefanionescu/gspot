@@ -47,8 +47,6 @@ extend-exclude = [
   "packages/eslint-plugin/.markdownlint.jsonc",
   "tests/.markdownlint.jsonc",
   # Generator outputs
-  "packages/cli/configurations/**/eslint-presets.json",
-  "packages/cli/configurations/**/*-names.json",
   "packages/cli/README.md",
   "packages/cli/LICENSE.md",
   "packages/eslint-plugin/LICENSE.md",

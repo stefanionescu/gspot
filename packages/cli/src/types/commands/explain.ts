@@ -42,6 +42,10 @@ export type ConfigurationExplanation = {
     alwaysSelected: boolean;
 };
 
+export type RuleDocumentation = { docs?: { description?: string; url?: string }; url?: string };
+
+export type LintRuleDocs = { description: string | undefined; url: string | undefined };
+
 export type CheckFacts = {
     source: string;
     settings: string[];

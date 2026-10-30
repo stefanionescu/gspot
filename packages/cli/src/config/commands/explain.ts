@@ -1,4 +1,7 @@
-export const ESLINT_RULE_NAMES_FILE = 'configurations/language/javascript/eslint-rule-names.json';
+export const ESLINT_BUILTIN_RULES = 'eslint/use-at-your-own-risk';
+
+export const INSTALL_FOR_RULES_MESSAGE =
+    'gspot explain reads lint rules from the tools that gspot install puts in .gspot/node_modules. Run gspot install.';
 
 export const RUN_IN_COPY_MESSAGE = 'Runs on a copy of the selected files in a temporary folder.';
 

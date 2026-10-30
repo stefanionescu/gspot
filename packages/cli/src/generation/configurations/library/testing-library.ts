@@ -3,13 +3,9 @@ import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/lan
 
 import {
     TESTING_LIBRARY_SCOPE,
+    TESTING_LIBRARY_PRESETS,
     TESTING_LIBRARY_DEFAULT_PRESET,
 } from '#cli/config/generation/configurations/library/testing-library.ts';
-import {
-    getPreset,
-    buildPresetRules,
-    convertWarningsToErrors,
-} from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 
 /**
 Apply the Testing Library presets of the frameworks in use.
@@ -17,29 +13,22 @@ Apply the Testing Library presets of the frameworks in use.
 @param scope the planned ESLint file of the scope.
 */
 export function buildTestingLibraryBlocks(
-    scope: Pick<EslintScope, 'presets' | 'eslintFiles' | 'dependencies'>,
+    scope: Pick<EslintScope, 'eslintFiles' | 'dependencies'>,
 ): ConfigurationBlocks {
-    const { presets, eslintFiles, dependencies: scopeDependencies } = scope;
+    const { eslintFiles, dependencies: scopeDependencies } = scope;
     const dependencies = scopeDependencies.filter((name) => name.startsWith(TESTING_LIBRARY_SCOPE));
     const presetNames = dependencies
         .map((name) => name.slice(TESTING_LIBRARY_SCOPE.length))
-        .filter((name) => presets?.[name] !== undefined);
+        .filter((name) => TESTING_LIBRARY_PRESETS.includes(name));
     const selected =
         dependencies.length === 0
             ? []
             : [...new Set(presetNames.length === 0 ? [TESTING_LIBRARY_DEFAULT_PRESET] : presetNames)];
-    const blocks: ConfigurationBlocks['blocks'] = selected.map((name) => {
-        const preset = getPreset(presets, name);
-        const block = preset.blocks[0];
-        return {
-            fields: {
-                files: eslintFiles.tests,
-                ...(block.rules !== undefined && { rules: convertWarningsToErrors(block.rules) }),
-            },
-            calls: [{ name: 'addPlugins', args: [{ imports: { 'testing-library': 'testingLibrary' } }] }],
-            preset: buildPresetRules([['testingLibrary', preset]]),
-        };
-    });
+    const blocks: ConfigurationBlocks['blocks'] = selected.map((name) => ({
+        fields: { files: eslintFiles.tests },
+        presets: [{ importName: 'testingLibrary', path: `configs.flat/${name}`, merge: 'rules' }],
+        calls: [{ name: 'addPlugins', args: [{ imports: { 'testing-library': 'testingLibrary' } }] }],
+    }));
     return {
         imports: CONFIGURATION_PLUGINS['testing-library'],
         blocks,

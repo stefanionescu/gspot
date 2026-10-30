@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { TRAILING_COMMAS } from '#cli/config/settings/fields.ts';
+import type { RuleDocumentation } from '#cli/types/commands/explain.ts';
 import type { PrettierOptions, RuffFormatSettings } from '#cli/types/commands/init.ts';
 
 const prettierOptionsSchema = z.object({
@@ -35,3 +36,13 @@ export const ruffFormatSchema = z.looseObject({
         } satisfies SchemaShape<NonNullable<RuffFormatSettings['tool']>>)
         .optional(),
 } satisfies SchemaShape<RuffFormatSettings>);
+
+const lintRuleDocsSchema = z.looseObject({
+    description: z.string().exactOptional(),
+    url: z.string().exactOptional(),
+} satisfies SchemaShape<NonNullable<RuleDocumentation['docs']>>);
+
+export const ruleDocumentationSchema = z.looseObject({
+    docs: lintRuleDocsSchema.exactOptional(),
+    url: z.string().exactOptional(),
+} satisfies SchemaShape<RuleDocumentation>);

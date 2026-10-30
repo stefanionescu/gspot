@@ -1,25 +1,21 @@
 import type { EslintScope, ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
 import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
-import {
-    getPreset,
-    buildArrayPresetBlocks,
-    convertWarningsToErrors,
-} from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
-
 /**
-Apply the TanStack Query presets with enabled warnings raised to errors.
+Apply the TanStack Query presets to the code files.
 
-@param scope the preset exports and code selectors.
+@param scope the code selectors.
+@returns the plugin and the preset blocks.
 */
-export function buildTanstackQueryBlocks(scope: Pick<EslintScope, 'presets' | 'eslintFiles'>): ConfigurationBlocks {
-    const { presets, eslintFiles } = scope;
-    const recommended = getPreset(presets, 'recommended');
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The configuration builder table or shared block builders call this function.
+export function buildTanstackQueryBlocks(scope: Pick<EslintScope, 'eslintFiles'>): ConfigurationBlocks {
     return {
         imports: CONFIGURATION_PLUGINS['tanstack-query'],
-        blocks: buildArrayPresetBlocks(recommended, 'tanstackQuery', ({ rules }) => ({
-            files: eslintFiles.code,
-            ...(rules !== undefined && { rules: convertWarningsToErrors(rules) }),
-        })),
+        blocks: [
+            {
+                fields: { files: scope.eslintFiles.code },
+                presets: [{ importName: 'tanstackQuery', path: 'configs.flat/recommended', merge: 'spread' }],
+            },
+        ],
     };
 }

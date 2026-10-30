@@ -1,8 +1,6 @@
-import { isDeepStrictEqual } from 'node:util';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { buildScopeFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import { ESLINT_INDENT } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 import { PRESET_IMPORTERS } from '#cli/config/generation/configurations/language/javascript/eslint/block-calls.ts';
 import { GSPOT_PRESET_LEVELS } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
@@ -14,31 +12,6 @@ import {
     type EslintCallArgument,
     type PlannedEslintBlock,
 } from '#cli/types/generation/eslint.ts';
-
-function buildOptionBlocks(
-    block: EslintBlockFields & { rules: Record<string, unknown> },
-    blockOptions: BlockWriter,
-): EslintBlockFields[] {
-    return blockOptions.ruleOptions.flatMap((options): EslintBlockFields[] => {
-        const pickedRules = Object.entries(block.rules).flatMap(([name, value]): [string, unknown][] => {
-            const override = options.rules[name];
-            const severity: unknown = Array.isArray(value) ? value[0] : value;
-            return override === undefined || severity === 'off' || severity === 0
-                ? []
-                : [[name, [severity, ...override]]];
-        });
-        for (const [name] of pickedRules) blockOptions.applied.add(name);
-        if (pickedRules.length === 0) return [];
-        return [
-            {
-                ...block,
-                files: buildScopeFiles(block.files ?? blockOptions.codeFiles, options.scope, options.includes),
-                ignores: [...(block.ignores ?? []), ...options.excludes],
-                rules: Object.fromEntries<unknown>(pickedRules),
-            },
-        ];
-    });
-}
 
 function serializePresetImport(importName: string, path?: string): string {
     const importer = PRESET_IMPORTERS[importName];
@@ -77,26 +50,10 @@ function serializeFields(block: EslintBlockFields, runtimes: EslintRuntime[]): s
     return `{${members.join(',\n')}}`;
 }
 
-function serializeBlockFields(block: EslintBlockFields, planned: PlannedEslintBlock, options: BlockWriter): string {
-    const { ignores, rules, ...fields } = block;
-    const preset = planned.preset;
-    const rulePairs = rules === undefined ? [] : Object.entries(rules);
-    const changed =
-        preset === undefined
-            ? rules
-            : Object.fromEntries(rulePairs.filter(([name, value]) => !isDeepStrictEqual(value, preset.rules?.[name])));
-    const printed = {
-        ...fields,
-        ...(ignores !== undefined && ignores.length > 0 && { ignores }),
-        ...(changed !== undefined && { rules: changed }),
-    };
-    return `buildBlock(${serializeFields(printed, options.runtimes ?? [])})`;
-}
-
 function wrapBlockCalls(source: string, planned: PlannedEslintBlock, options: BlockWriter): string {
     let value = source;
-    for (const preset of (planned.preset?.sources ?? []).toReversed()) {
-        value = `${preset.includeFields === true ? 'mergePreset' : 'mergePresetRules'}(${value}, ${serializePresetImport(preset.importName)}, ${JSON.stringify(preset.path)})`;
+    for (const preset of (planned.presets ?? []).toReversed()) {
+        value = `${preset.merge === 'fields' ? 'mergePreset' : 'mergePresetRules'}(${value}, ${serializePresetImport(preset.importName)}, ${JSON.stringify(preset.path)})`;
     }
     if (planned.scope === undefined)
         value = `setLevelRules(${value}, gspot, ${JSON.stringify(GSPOT_PRESET_LEVELS[options.level])})`;
@@ -107,70 +64,42 @@ function wrapBlockCalls(source: string, planned: PlannedEslintBlock, options: Bl
     return value;
 }
 
-function formatBlocks(blocks: EslintBlockFields[], planned: PlannedEslintBlock, options: BlockWriter): string {
-    return blocks
-        .map((block, index) => {
-            const selected =
-                index === 0
-                    ? planned
-                    : {
-                          label: planned.label,
-                          fields: block,
-                          ...(planned.scope === undefined ? {} : { scope: planned.scope }),
-                      };
-            const source = serializeBlockFields(block, selected, options);
-            const calls = wrapBlockCalls(source, selected, options);
-            const value = selected.scope === undefined ? calls : `stripRuntimeGlobals(${calls}, globals)`;
-            return value
-                .split('\n')
-                .map((line) => ESLINT_INDENT + line)
-                .join('\n');
-        })
-        .join(',\n');
+function buildScopeFields(blockWriter: BlockWriter, block: PlannedEslintBlock): EslintBlockFields {
+    const { fields, scope } = block;
+    const { ignores: _ignores, ...blockFields } = fields;
+    const ignores = [...(fields.ignores ?? []), ...(scope?.excluded ?? [])];
+    return {
+        ...blockFields,
+        ...(scope !== undefined && {
+            files: (fields.files ?? blockWriter.codeFiles).map((pattern) => [
+                ...(Array.isArray(pattern) ? pattern : [pattern]),
+                joinScope(escapeGlob(scope.path), '**/*'),
+            ]),
+        }),
+        ...(ignores.length > 0 && { ignores }),
+    };
 }
 
 /**
-Print a block and record the rule options it applies.
+Print a block: its fields, the presets under it, and the calls that finish it. A preset list prints one block per config.
 
-@param blockOptions the file's rule options and shared applied set.
+@param blockWriter the level, the code files, and the runtimes of the file.
 @param block the block, its scope, and its label.
-@returns the serialized block and any applicable option blocks.
+@returns the serialized block.
 */
-export function buildBlockCalls(blockOptions: BlockWriter, block: PlannedEslintBlock): string {
-    const { allLevelRules, level, codeFiles } = blockOptions;
-    const { fields: blockFields, scope } = block;
-    const rules: Record<string, unknown> = Object.fromEntries(
-        (blockFields.rules === undefined ? [] : Object.entries(blockFields.rules)).map(([name, value]) => [
-            name,
-            level !== 'all' && allLevelRules.has(name) ? 'off' : value,
-        ]),
-    );
-    const ignores = [...(blockFields.ignores ?? []), ...(scope?.excluded ?? [])];
-    const nested =
-        scope === undefined
-            ? {}
-            : {
-                  files: (blockFields.files ?? codeFiles).map((pattern) => [
-                      ...(Array.isArray(pattern) ? pattern : [pattern]),
-                      joinScope(escapeGlob(scope.path), '**/*'),
-                  ]),
-                  ...(ignores.length > 0 && { ignores }),
-              };
-    const fields = { ...blockFields, ...nested, rules };
-    return formatBlocks([fields, ...buildOptionBlocks(fields, blockOptions)], block, blockOptions);
-}
-
-/**
-List your rule options that no enabled block accepted.
-
-@param blockOptions the options and the shared applied set.
-*/
-export function listUnappliedRules(blockOptions: BlockWriter): string[] {
-    return [
-        ...new Set(
-            blockOptions.ruleOptions
-                .flatMap((options) => Object.keys(options.rules))
-                .filter((rule) => !blockOptions.applied.has(rule)),
-        ),
-    ];
+export function buildBlockCalls(blockWriter: BlockWriter, block: PlannedEslintBlock): string {
+    const source = `buildBlock(${serializeFields(buildScopeFields(blockWriter, block), blockWriter.runtimes ?? [])})`;
+    const spread = block.presets?.find((preset) => preset.merge === 'spread');
+    let value: string;
+    if (spread === undefined) {
+        const calls = wrapBlockCalls(source, block, blockWriter);
+        value = block.scope === undefined ? calls : `stripRuntimeGlobals(${calls}, globals)`;
+    } else {
+        const scopeFiles = JSON.stringify(joinScope(escapeGlob(block.scope?.path ?? ''), '**/*'));
+        value = `...spreadPreset(${source}, ${serializePresetImport(spread.importName)}, ${JSON.stringify(spread.path)}, { files: ${scopeFiles}, globals })`;
+    }
+    return value
+        .split('\n')
+        .map((line) => ESLINT_INDENT + line)
+        .join('\n');
 }

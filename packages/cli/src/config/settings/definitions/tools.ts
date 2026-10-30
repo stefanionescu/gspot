@@ -27,7 +27,7 @@ export const TOOL_SETTING_DEFINITIONS = {
     'tools.eslint.rules': {
         configurations: ['javascript'],
         description:
-            'Option arrays by ESLint rule ID, without a severity, for rules that the level runs; gspot refuses options for any other rule. Accept a finding with `gspot ignore javascript/eslint --rule <rule> --reason "<why>"`.',
+            'Option arrays by ESLint rule ID, without a severity, for rules that the level runs. gspot refuses options for a rule of level all at a lower level, and ESLint refuses options for a rule that no block turns on. Accept a finding with `gspot ignore javascript/eslint --rule <rule> --reason "<why>"`.',
         default: {},
     },
     'tools.eslint.plugins': {
@@ -129,7 +129,7 @@ export const TOOL_SETTING_DEFINITIONS = {
     'tools.stylelint.rules': {
         configurations: ['css'],
         description:
-            'Options for the Stylelint rules that run at the level, which stay errors; gspot refuses options for any other rule. Accept a finding with `gspot ignore css/stylelint --rule <rule> --reason "<why>"`.',
+            'Options for Stylelint rules, which stay errors. gspot refuses options for a rule of level all at a lower level, and Stylelint reports a rule that it does not know. Accept a finding with `gspot ignore css/stylelint --rule <rule> --reason "<why>"`.',
         default: {},
     },
     'tools.squawk.assume_in_transaction': {

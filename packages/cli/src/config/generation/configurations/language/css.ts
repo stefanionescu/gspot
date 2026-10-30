@@ -13,8 +13,6 @@ const SVELTE_STYLELINT_OVERRIDE = {
     ignorePseudoClasses: ['global'],
 } as const;
 
-export const STYLELINT_RULE_NAMES_FILE = 'configurations/language/css/stylelint-rule-names.json';
-
 export const STYLELINT_BASE_RULES = { 'import-notation': 'string', 'function-no-unknown': true } as const;
 
 export const TAILWIND_AT_RULES = [

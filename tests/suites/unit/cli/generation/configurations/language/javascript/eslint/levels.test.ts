@@ -6,6 +6,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import type { EslintConfiguration } from '#tests/types/tools.ts';
@@ -83,11 +84,11 @@ test('all applies your rule options except in script and test files', async () =
     expect(source.rules['gspot/no-trivial-functions']).toStrictEqual([2, { trivialFunctionStatements: 4 }]);
 });
 
-test('level basic refuses options for a rule of level all, a rule that runs at no level, and a rule of no loaded plugin', async () => {
+test('apply refuses options for a rule of level all at level basic, and ESLint refuses options for a rule that no block turns on', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'basic',
-            tables: '[tools.eslint.rules]\n"n/no-process-exit" = []\n"id-length" = []\n"acme/foo" = []\n',
+            tables: '[tools.eslint.rules]\n"n/no-process-exit" = []\n',
         }),
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',
@@ -95,12 +96,22 @@ test('level basic refuses options for a rule of level all, a rule that runs at n
     const refused = await runGspot(sandbox.path, ['apply']);
     expect(refused.code).toBe(2);
     expect(refused.stderr).toBe(
-        `${[
-            'n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level basic.',
+        'n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level basic.\n',
+    );
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['javascript'], {
+            level: 'basic',
+            tables: '[tools.eslint.rules]\n"id-length" = []\n"acme/foo" = []\n',
+        }),
+    );
+    const eslint = await createEslint(sandbox.path);
+    expect(await captureRejection(eslint.calculateConfigForFile('source.js'))).toMatchObject({
+        message: [
             'gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.',
             'gspot runs acme/foo at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.',
-        ].join('\n')}\n`,
-    );
+        ].join('\n'),
+    });
 });
 
 test.each([...LEVELS])(

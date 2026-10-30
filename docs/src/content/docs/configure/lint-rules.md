@@ -64,8 +64,12 @@ The table holds options only. gspot refuses a severity, such as `eqeqeq = "off"`
 This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".
 ```
 
-`gspot explain eslint/eqeqeq` links the documentation of the lint rule, which lists its options, and prints the
-commands that set its options or ignore it.
+Options for a rule that no block turns on stop ESLint when it loads the config. The error names the rule.
+
+`gspot explain eslint/eqeqeq` reads the rule from the ESLint that `gspot install` put in `.gspot/node_modules`. It
+prints what the rule looks for, links its documentation, which lists its options, and prints the commands that set its
+options or ignore it. Before `gspot install`, explain asks you to run it. Stylelint rules work the same way, such as
+`gspot explain stylelint/color-no-invalid-hex`.
 
 ## Your own ESLint rules
 

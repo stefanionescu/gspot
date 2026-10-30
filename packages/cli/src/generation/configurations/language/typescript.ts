@@ -3,28 +3,26 @@ import type { EslintScope, ConfigurationBlocks } from '#cli/types/generation/esl
 import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES } from '#cli/config/generation/configurations/language/typescript.ts';
 import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
-import {
-    getPreset,
-    buildArrayPresetBlocks,
-} from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
-
 /**
-Apply the typed presets and the project files.
+Apply the parser of typescript-eslint to TypeScript files, its strict typed rules to every typed file, and the
+project files.
 
-@param scope the presets and file selectors of the scope.
+@param scope the file selectors and projects of the scope.
 */
-export function buildTypescriptBlocks(
-    scope: Pick<EslintScope, 'presets' | 'eslintFiles' | 'projects'>,
-): ConfigurationBlocks {
-    const { presets, eslintFiles, projects } = scope;
-    const strict = getPreset(presets, 'strict');
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The configuration builder table or shared block builders call this function.
+export function buildTypescriptBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'projects'>): ConfigurationBlocks {
+    const { eslintFiles, projects } = scope;
     return {
         imports: CONFIGURATION_PLUGINS.typescript,
         blocks: [
-            ...buildArrayPresetBlocks(strict, 'tseslint', ({ parser, ...block }) => ({
-                ...block,
-                files: parser ? eslintFiles.typescript : eslintFiles.typed,
-            })),
+            {
+                fields: { files: eslintFiles.typescript },
+                presets: [{ importName: 'tseslint', path: 'configs.base', merge: 'fields' }],
+            },
+            {
+                fields: { files: eslintFiles.typed },
+                presets: [{ importName: 'tseslint', path: 'configs.strictTypeChecked', merge: 'rules' }],
+            },
             {
                 fields: {
                     files: eslintFiles.typed,
