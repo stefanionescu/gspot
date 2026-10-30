@@ -47,7 +47,7 @@ async function runCommands(
         launch,
         base,
     }: {
-        session: Session;
+        session: CheckSession;
         verbose: boolean | undefined;
         tool: Tool;
         launch: CommandLaunch;
@@ -59,12 +59,14 @@ async function runCommands(
     const state: CommandRun = { root: launch.root, cwd, findings: [], failed: false };
     const started = performance.now();
     for (const commandLine of launch.commandLines) {
-        const { result, failure } = await runToolProcess(commandLine.commandArguments, {
-            ...launch,
-            cancelSignal: session.cancelSignal,
-            timeoutSeconds: session.timeoutSeconds,
-            name: tool.name,
-        });
+        const { result, failure } = await session.limitProcess(() =>
+            runToolProcess(commandLine.commandArguments, {
+                ...launch,
+                cancelSignal: session.cancelSignal,
+                timeoutSeconds: session.timeoutSeconds,
+                name: tool.name,
+            }),
+        );
         if (failure !== undefined)
             return {
                 ...base,

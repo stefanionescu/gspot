@@ -1,3 +1,4 @@
+import type { LimitFunction } from 'p-limit';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { ConfiguredCheck } from '#cli/types/planning.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
@@ -27,7 +28,7 @@ export type Session = {
     scopes: Scope[];
 };
 
-export type CheckSession = Session & { readMiseBinPaths: () => string[] };
+export type CheckSession = Session & { readMiseBinPaths: () => string[]; limitProcess: LimitFunction };
 
 export type SessionOptions = {
     toolsRoot?: string;

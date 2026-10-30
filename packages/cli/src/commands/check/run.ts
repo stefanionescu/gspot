@@ -171,21 +171,18 @@ function finishResult(run: Run, result: CheckResult): void {
 }
 
 async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckResult[]> {
-    const limiter = pLimit(availableParallelism());
     let finished = 0;
     const settled = await Promise.allSettled(
-        checks.map((planned) =>
-            limiter(async () => {
-                const result = await runPlannedCheck(run, planned);
-                finishResult(run, result);
-                run.options.onProgress?.({
-                    finished: ++finished,
-                    total: checks.length,
-                    comparison: run.options.comparison,
-                });
-                return result;
-            }),
-        ),
+        checks.map(async (planned) => {
+            const result = await runPlannedCheck(run, planned);
+            finishResult(run, result);
+            run.options.onProgress?.({
+                finished: ++finished,
+                total: checks.length,
+                comparison: run.options.comparison,
+            });
+            return result;
+        }),
     );
     return settled.map((result) => {
         if (result.status === 'rejected') throw result.reason;
@@ -233,7 +230,7 @@ export async function runChecks(session: Session, options: RunOptions): Promise<
 
 /**
 Give a session the reader of the program folders of its mise tools, which asks mise once, when a check first needs a
-tool.
+tool. The session also gets the one limiter that every tool process of its checks waits for.
 
 @param session the repository and its tools.
 */
@@ -241,6 +238,7 @@ export function buildCheckSession(session: Session): CheckSession {
     let miseBinPaths: string[] | undefined;
     return {
         ...session,
+        limitProcess: pLimit(availableParallelism()),
         readMiseBinPaths: () => {
             miseBinPaths ??= readToolBinPaths(session, buildMiseProject(session.toolConfigurations).content);
             return miseBinPaths;

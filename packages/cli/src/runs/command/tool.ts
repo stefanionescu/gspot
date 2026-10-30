@@ -114,13 +114,15 @@ export async function runCheckTool(
     );
     const commandArguments =
         'tool' in command ? [process.execPath, command.modulePath, path] : [path, ...command.slice(1)];
-    const { result, failure } = await runToolProcess(commandArguments, {
-        ...options,
-        env: buildOtherToolEnvironment(session, listOtherTools(planned.scope, planned.check), env),
-        cancelSignal: session.cancelSignal,
-        timeoutSeconds: session.timeoutSeconds,
-        name,
-    });
+    const { result, failure } = await session.limitProcess(() =>
+        runToolProcess(commandArguments, {
+            ...options,
+            env: buildOtherToolEnvironment(session, listOtherTools(planned.scope, planned.check), env),
+            cancelSignal: session.cancelSignal,
+            timeoutSeconds: session.timeoutSeconds,
+            name,
+        }),
+    );
     if (failure?.status === 'missing') throw new GspotError('tool', failure.note);
     if (failure !== undefined) throw new Error(failure.note);
     return result;

@@ -1,5 +1,3 @@
-import pLimit from 'p-limit';
-import { availableParallelism } from 'node:os';
 import { CONFIG_FLAG } from '#cli/config/flags.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
@@ -133,13 +131,12 @@ export async function checkProseVale(session: CheckSession, planned: PlannedChec
             (file) => file.kind === 'source' && (session.settings.level === 'all' || file.tags.includes('markdown')),
         ),
     );
-    const limit = pLimit(availableParallelism());
     const batches: Promise<ValeAlert[]>[] = [];
     for (const group of groups) {
         const [first] = group;
         if (first.mode === 'path')
             batches.push(Promise.resolve(await runValeOnPaths(session, planned, group, command, folder)));
-        else batches.push(limit(() => runValeOnStdin(session, planned, first, command, folder)));
+        else batches.push(runValeOnStdin(session, planned, first, command, folder));
     }
     const results = await Promise.all(batches);
     return results.flatMap((alerts) =>
