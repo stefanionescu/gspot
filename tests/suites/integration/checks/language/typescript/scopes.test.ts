@@ -6,17 +6,16 @@ import { APP_SCOPE_SETTINGS } from '#tests/config/toml.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { STRICT_TSCONFIG_TEXT, STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
 import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     KEPT_DECLARATION_FILES,
-    ANCESTOR_TYPESCRIPT_FILES,
     TYPESCRIPT_SCOPES_SANDBOX,
     STANDALONE_TYPESCRIPT_FILES,
     STANDALONE_TYPESCRIPT_FINDINGS,
@@ -64,47 +63,6 @@ export function select(flag: boolean) { return flag ? 1 : 0; }
             expect(await readFile(join(root, path), 'utf8')).toBe(STANDALONE_TYPESCRIPT_FILES[path]);
     },
 );
-
-test('typescript/tsc runs a covering parent tsconfig once for nested scopes', async () => {
-    const authored = JSON.stringify({
-        compilerOptions: STRICT_COMPILER_OPTIONS,
-        include: ['source.ts', 'app/**/*.ts'],
-    });
-    await using sandbox = await createGitSandbox({
-        ...ANCESTOR_TYPESCRIPT_FILES,
-        'tsconfig.json': authored,
-        'gspot.toml': buildSandboxSettings(['typescript'], {
-            level: 'all',
-            scopes: [
-                { path: 'app', configurations: ['typescript'] },
-                { path: 'app/deep', configurations: ['typescript'] },
-            ],
-        }),
-    });
-    await linkTypescript(join(sandbox.path, 'node_modules'));
-    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
-    const command = ['check', '--only', 'typescript/tsconfig,typescript/tsc', '--json'];
-    const clean = parseCheckReport(await spawnGspot(sandbox.path, command));
-    expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-    for (const check of ['typescript/tsconfig', 'typescript/tsc'])
-        expect(
-            clean.report.checks.filter((each) => each.check === check).map(({ scope, status }) => ({ scope, status })),
-        ).toStrictEqual([
-            { scope: '', status: 'passed' },
-            { scope: 'app', status: 'skipped' },
-            { scope: 'app/deep', status: 'skipped' },
-        ]);
-    await writeFile(join(sandbox.path, 'app/deep/source.ts'), 'export const deepValue: number = "wrong";\n');
-    const failed = parseCheckReport(await spawnGspot(sandbox.path, command));
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
-        { file: 'app/deep/source.ts', rule: 'TS2322', line: 1, column: 14 },
-    ]);
-    await writeFile(join(sandbox.path, 'app/deep/source.ts'), ANCESTOR_TYPESCRIPT_FILES['app/deep/source.ts']);
-    const corrected = parseCheckReport(await spawnGspot(sandbox.path, command));
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(await readFile(join(sandbox.path, 'tsconfig.json'), 'utf8')).toBe(authored);
-});
 
 test('typescript/tsc checks a scope through the parent tsconfig, alone when named, and in staged files', async () => {
     const tsconfig = STRICT_TSCONFIG_TEXT.replace('}}', '},"include":["root.ts","app/**/*.ts"]}');

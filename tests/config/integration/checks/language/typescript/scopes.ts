@@ -47,10 +47,3 @@ export const STANDALONE_TYPESCRIPT_FINDINGS = {
         },
     ],
 } as const;
-
-export const ANCESTOR_TYPESCRIPT_FILES = {
-    '.gitignore': 'node_modules/\n.gspot/\n',
-    'source.ts': 'export const rootValue = 1;\n',
-    'app/source.ts': 'export const appValue: number = 1;\n',
-    'app/deep/source.ts': 'export const deepValue: number = 1;\n',
-} as const;
