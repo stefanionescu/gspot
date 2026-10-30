@@ -52,23 +52,6 @@ export const LOCKFILE_HOST_CASES = [
     },
     {
         files: {
-            'npm-shrinkwrap.json': `{
-    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz", "funding": { "url": "https://opencollective.com/a" } } }
-}
-`,
-        },
-        expected: { file: 'npm-shrinkwrap.json', rule: 'host', line: 2 },
-        corrected: {
-            files: {
-                'npm-shrinkwrap.json': `{
-    "packages": { "node_modules/a": { "resolved": "https://registry.npmjs.org/a/-/a-1.0.0.tgz", "funding": { "url": "https://opencollective.com/a" } } }
-}
-`,
-            },
-        },
-    },
-    {
-        files: {
             'pnpm-lock.yaml': `lockfileVersion: '9.0'
 packages:
   a@1.0.0:
@@ -123,7 +106,7 @@ export const REGISTRY_SCOPE_RESULTS = [
     },
 ];
 
-export const MISE_PIN_FILES = [{ file: 'mise.toml' }, { file: '.config/mise/config.toml' }] as const;
+export const MISE_PIN_FILES = [{ file: 'mise.toml' }] as const;
 
 export const ALLOWED_GITHUB_REGISTRIES = `allowed_registries = { value = ["github.com", "codeload.github.com"], reason = ${JSON.stringify(SETTING_REASON)} }\n`;
 

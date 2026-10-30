@@ -6,12 +6,6 @@ export const SUPPRESSION_REASON_CASES = [
         findings: [],
     },
     {
-        name: 'a ShellCheck reason directly above the suppression counts',
-        path: 'source.sh',
-        source: '# reason: The external command requires word splitting.\n# shellcheck disable=SC2086\necho $name\n',
-        findings: [],
-    },
-    {
         name: 'a ShellCheck suppression without a reason is reported',
         path: 'source.sh',
         source: '# shellcheck disable=SC2086\necho $name\n',

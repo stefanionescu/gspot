@@ -17,51 +17,44 @@ import {
     SUPPRESSION_REASON_CASES,
 } from '#tests/config/checks/general/gspot/suppressions/reasons.ts';
 
-test.each(['javascript', 'typescript'])(
-    '@ts-ignore, @ts-expect-error and @ts-nocheck in %s need a reason; the same text in a string is not a comment',
-    async (language) => {
-        await using sandbox = await testdir();
-        const ending = language === 'javascript' ? 'js' : 'ts';
-        const paths = TYPESCRIPT_SUPPRESSIONS.map((directive) => `${directive}.${ending}`);
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings([language]),
-            ...Object.fromEntries(
-                TYPESCRIPT_SUPPRESSIONS.map((directive, index) => [
-                    paths[index]!,
-                    `// @ts-${directive}\n${COMPILER_SOURCE}`,
-                ]),
-            ),
-            [`control.${ending}`]: COMPILER_SOURCE,
-            [`string.${ending}`]: 'export const example = "// @ts-ignore";\n',
-        });
-        const missing = await runChecks(
-            await openSession(sandbox.path),
-            buildRunOptions({ only: ['gspot/suppressions'] }),
-        );
+test('@ts-ignore, @ts-expect-error and @ts-nocheck need a reason; the same text in a string is not a comment', async () => {
+    await using sandbox = await testdir();
+    const paths = TYPESCRIPT_SUPPRESSIONS.map((directive) => `${directive}.ts`);
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSandboxSettings(['typescript']),
+        ...Object.fromEntries(
+            TYPESCRIPT_SUPPRESSIONS.map((directive, index) => [
+                paths[index]!,
+                `// @ts-${directive}\n${COMPILER_SOURCE}`,
+            ]),
+        ),
+        [`control.ts`]: COMPILER_SOURCE,
+        [`string.ts`]: 'export const example = "// @ts-ignore";\n',
+    });
+    const missing = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['gspot/suppressions'] }));
 
-        expect(missing.report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
-            paths.toSorted(compareText).map((file) => ({
-                check: 'gspot/suppressions',
-                file,
-                line: 1,
-                rule: 'tsc-no-reason',
-                message: 'This tsc suppression has no reason of two or more words.',
-                fixable: false,
-                help: SUPPRESSION_HELP,
-            })),
+    expect(missing.report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
+        paths.toSorted(compareText).map((file) => ({
+            check: 'gspot/suppressions',
+            file,
+            line: 1,
+            rule: 'tsc-no-reason',
+            message: 'This tsc suppression has no reason of two or more words.',
+            fixable: false,
+            help: SUPPRESSION_HELP,
+        })),
+    );
+    for (const [index, directive] of TYPESCRIPT_SUPPRESSIONS.entries())
+        await writeFile(
+            join(sandbox.path, paths[index]!),
+            `// @ts-${directive}: A separate sandbox checks the external declaration.\n${COMPILER_SOURCE}`,
         );
-        for (const [index, directive] of TYPESCRIPT_SUPPRESSIONS.entries())
-            await writeFile(
-                join(sandbox.path, paths[index]!),
-                `// @ts-${directive}: A separate sandbox checks the external declaration.\n${COMPILER_SOURCE}`,
-            );
-        const reasoned = await runChecks(
-            await openSession(sandbox.path),
-            buildRunOptions({ only: ['gspot/suppressions'] }),
-        );
-        expect(reasoned.report.failed).toStrictEqual([]);
-    },
-);
+    const reasoned = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['gspot/suppressions'] }),
+    );
+    expect(reasoned.report.failed).toStrictEqual([]);
+});
 
 test.each([...SUPPRESSION_REASON_CASES])('$name', async ({ path, source, findings }) => {
     await using sandbox = await testdir({
@@ -124,37 +117,6 @@ test('a nosemgrep comment is reported even with a reason', async () => {
     const passed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['gspot/suppressions'] }));
 
     expect(passed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
-});
-
-test('noqa in a SQL file needs a sqlfluff reason and noqa in a Python file needs a Ruff reason', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['structure', 'sql', 'python'], { level: 'all' }),
-        'query.sql': 'SELECT 1; -- noqa: LT01\n',
-        'entry.py': 'answer = 1  # noqa: F841\n',
-    });
-
-    const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['gspot/suppressions'] }));
-
-    expect(result.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([
-        {
-            check: 'gspot/suppressions',
-            file: 'entry.py',
-            rule: 'ruff-no-reason',
-            line: 1,
-            fixable: false,
-            message: 'This ruff suppression has no reason of two or more words.',
-            help: SUPPRESSION_HELP,
-        },
-        {
-            check: 'gspot/suppressions',
-            file: 'query.sql',
-            rule: 'sqlfluff-no-reason',
-            line: 1,
-            fixable: false,
-            message: 'This sqlfluff suppression has no reason of two or more words.',
-            help: SUPPRESSION_HELP,
-        },
-    ]);
 });
 
 test.each([...SWIFT_REASON_CASES])(

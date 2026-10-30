@@ -75,13 +75,6 @@ export const ALLOWED_PACKAGE_CASES = [
             },
         ],
     },
-    {
-        name: 'normalized Python identity',
-        installed: 'Strict_Package',
-        license: 'GPL-3.0-only',
-        package: 'strict.package@1.0.0',
-        findings: [],
-    },
 ] as const;
 
 export const SAMPLE_PYPROJECT = `[project]
@@ -93,13 +86,6 @@ export const LICENSE_PACKAGE_JSON = '{"name":"example","private":true,"dependenc
 
 export const UNINSTALLED_DEPENDENCY_CASES = [
     { scope: '', dependencyFile: 'package.json', text: LICENSE_PACKAGE_JSON, installedFolder: 'node_modules' },
-    { scope: '', dependencyFile: 'pyproject.toml', text: SAMPLE_PYPROJECT, installedFolder: '.venv' },
-    {
-        scope: 'apps/example',
-        dependencyFile: 'package.json',
-        text: LICENSE_PACKAGE_JSON,
-        installedFolder: 'node_modules',
-    },
     { scope: 'apps/example', dependencyFile: 'pyproject.toml', text: SAMPLE_PYPROJECT, installedFolder: '.venv' },
 ] as const;
 

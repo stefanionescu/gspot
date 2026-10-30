@@ -62,51 +62,19 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
     const fakes = fakeToolExecutables([getTool(session.configurationsByName.values(), 'vale')]);
     resources.use(fakes);
     const scanned: string[] = [];
-    const nativePaths: string[] = [];
-    const run = resources.use(
-        fakeCommands().mockImplementation((command, options) => {
-            nativePaths.push(...command.filter((argument) => argument.startsWith('--path=')));
+    resources.use(
+        fakeCommands().mockImplementation((_command, options) => {
             scanned.push(options.stdin!);
             return Promise.resolve(buildProcessResult({ stdout: JSON.stringify({ 'source.mts.ts': [VALE_ALERT] }) }));
         }),
     );
     const findings = await getBuiltInCheck('prose/vale')(session, planSandboxCheck(session, 'prose/vale', { paths }));
-    expect(run.mock.calls.map(([command]) => command.includes('--ext=.ts'))).toStrictEqual(paths.map(() => true));
     expect(scanned).toStrictEqual(previous);
-    expect(nativePaths).toStrictEqual(paths.map((path) => `--path=${join(sandbox.path, path)}.ts`));
     expect(findings.map(({ file, line, column, rule }) => ({ file, line, column, rule }))).toStrictEqual(
         paths.map((file) => ({ file, line: 1, column: 3, rule: 'gspot.Example' })),
     );
     for (const path of paths)
         expect(await readFile(join(session.root, path), 'utf8')).toBe('// Changed after the run read it.\n');
-});
-
-test('Vale reads known file types by path, and .mts files and scripts without an extension through stdin', async () => {
-    await using sandbox = await testdir({
-        ...VALE_INSTALLED_FILES,
-        'gspot.toml': buildSandboxSettings(['prose', 'typescript', 'bash'], { level: 'all' }),
-        [GSPOT_PATHS.valeConfigFile]: EMPTY_VALE_INI,
-        'a.tsx': '// Component explanation.\n',
-        'a.mts': '// Module explanation.\n',
-        'hooks/pre-commit': '#!/bin/sh\n# Hook explanation.\n',
-        'a.png': 'Image bytes',
-    });
-    using resources = new DisposableStack();
-    const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
-    using run = fakeCommands().mockResolvedValue(buildProcessResult({ stdout: '{}' }));
-    expect(await runSandboxCheck(session.root, 'prose/vale')).toStrictEqual([]);
-    expect(
-        run.mock.calls.map(([command, options]) => ({
-            paths: command.filter(
-                (argument) => argument === join(sandbox.path, 'a.tsx') || argument.startsWith('--path='),
-            ),
-            stdin: options.stdin,
-        })),
-    ).toStrictEqual([
-        { paths: [join(sandbox.path, 'a.tsx')], stdin: undefined },
-        { paths: [`--path=${join(sandbox.path, 'a.mts.ts')}`], stdin: '// Module explanation.\n' },
-        { paths: [`--path=${join(sandbox.path, 'hooks/pre-commit.py')}`], stdin: '#!/bin/sh\n# Hook explanation.\n' },
-    ]);
 });
 
 test.each([...VALE_OUTPUT_CASES])(

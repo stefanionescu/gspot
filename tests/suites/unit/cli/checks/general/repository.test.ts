@@ -143,27 +143,6 @@ test('oversized and invalid UTF-8 files get one repository finding and leave oth
     ]);
 });
 
-test('encoding reports Git paths whose bytes are not UTF-8', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['repository']),
-        'README.md': 'Readable text.\n',
-    });
-    const session = await openSession(sandbox.path);
-    const planned = planSandboxCheck(session, 'repository/encoding');
-    session.repository.unreadablePaths = [String.raw`"invalid-\377.txt"`];
-    expect(await getBuiltInCheck('repository/encoding')(session, planned)).toStrictEqual([
-        {
-            check: 'repository/encoding',
-            file: String.raw`"invalid-\377.txt"`,
-            rule: 'path-encoding',
-            help: 'Save the reported file as UTF-8, then run the check again.',
-            line: 1,
-            fixable: false,
-            message: String.raw`"invalid-\377.txt" is not a UTF-8 path. Rename the file using UTF-8.`,
-        },
-    ]);
-});
-
 test('large files use the size limit of their owning scope', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], {

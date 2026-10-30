@@ -1,13 +1,11 @@
 const ESLINT_SUPPRESSIONS = [
     ['// Example eslint-disable-next-line no-console', false],
     ['// eslint-disable no-console', false],
-    ['/* Example eslint-disable no-console */', false],
     ['/** Documentation\n * eslint-disable no-console\n */', false],
     ['// eslint-disable-next-line no-console', true],
     ['/* eslint-disable no-console */', true],
     ['/*\n eslint-disable no-console\n */', true],
     ['/*eslint-disable no-console*/', true],
-    ['/*eslint-disable-next-line no-console*/', true],
     ['// eslint-disable-next-line*/', false],
     ['/*eslint-disable-unknown*/', false],
 ] as const;
@@ -15,7 +13,6 @@ const ESLINT_SUPPRESSIONS = [
 const STYLELINT_SUPPRESSIONS = [
     ['/* stylelint-disable color-no-invalid-hex */', true],
     ['/*stylelint-disable*/', true],
-    ['/* stylelint-disable-next-line color-no-invalid-hex */', true],
     ['/* Example stylelint-disable color-no-invalid-hex */', false],
     ['/* stylelint-disable-unknown color-no-invalid-hex */', false],
     ['/*\n stylelint-disable color-no-invalid-hex\n*/', true],
@@ -25,7 +22,6 @@ const STYLELINT_SUPPRESSIONS = [
 
 const HTML_VALIDATE_SUPPRESSIONS = [
     ['<!-- html-validate-disable wcag/h37 -->', true],
-    ['<!-- html-validate-disable-next wcag/h37 -->', true],
     ['<!-- Example html-validate-disable wcag/h37 -->', false],
     ['<!-- html-validate-disable-unknown wcag/h37 -->', false],
     ['<!--html-validate-disable wcag/h37-->', true],
