@@ -181,8 +181,7 @@ repository.
   `tests/config/integration/`.
 - In `config/`, `types/`, `schemas/` and `tests/`, move a file up until it has a neighbor, as
   `structure/lone-files` asks. Keep the test name.
-- `tests/suites/unit/sandboxes.test.ts` tests `tests/setup/sandboxes/`.
-  `tests/suites/integration/ci.test.ts` tests `packages/cli/src/generation/ci.ts`.
+- `tests/suites/integration/ci.test.ts` tests `packages/cli/src/generation/ci.ts`.
 - A file of `config/`, `types/` and `schemas/` takes the name of the folder whose files read it.
   For example, `packages/cli/src/schemas/installers/npm.ts` holds the schemas of `packages/cli/src/installers/npm/`.
   `tests/types/` and `tests/schemas/` stay flat for that reason.

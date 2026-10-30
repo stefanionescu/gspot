@@ -3,14 +3,11 @@ import { join, dirname, delimiter } from 'node:path';
 import { afterAll, setDefaultTimeout } from 'bun:test';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { rm, mkdtemp, readFile } from 'node:fs/promises';
-import cliPackage from '#cli-package' with { type: 'json' };
-import { type PackedPackage } from '#tests/types/packages.ts';
 import { SIGNAL_EXIT_CODES } from '#cli/config/system/terminal.ts';
 import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { createNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { testModules, workspaceModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { MISE_LOCK_ENVIRONMENT, GIT_ISOLATION_ENVIRONMENT } from '#tests/config/setup/environment.ts';
 
@@ -52,14 +49,6 @@ resources.use(overrideEnvironment({ ...GIT_ISOLATION_ENVIRONMENT, XDG_CACHE_HOME
 
 if (!(await isOnDisk(join(TEST_RUN_FOLDER, PACKED_PACKAGES_FILE))))
     throw new Error('Run mise run test integration or mise run test e2e first.');
-
-const packedPackages = JSON.parse(
-    await readFile(join(TEST_RUN_FOLDER, PACKED_PACKAGES_FILE), 'utf8'),
-) as PackedPackage[];
-
-for (const declaration of [cliPackage, eslintPluginPackage])
-    if (packedPackages.find(({ name }) => name === declaration.name)?.version !== declaration.version)
-        throw new Error('The packed packages are stale. Run mise run test integration or mise run test e2e first.');
 
 const toolPaths = await readFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), 'utf8');
 

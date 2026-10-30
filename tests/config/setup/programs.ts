@@ -31,8 +31,6 @@ export const PROGRAM_NAMES = [
     'fakes/generator',
     'fakes/site-build',
     'fakes/package-bin',
-    'runner/environment',
-    'runner/interrupt',
 ] as const;
 
 export const WAIT_INTERVAL_MILLISECONDS = 60_000;
@@ -133,5 +131,3 @@ export const REPORT_SWIFT_COVERAGE_OPTIONS = {
 } as const;
 
 export const INHERITED_STREAMS = { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' } as const;
-
-export const LATER_TEST_MESSAGE = 'Later test ran';
