@@ -210,6 +210,7 @@ export function buildClosingBlocks(
     const privatePackages = session.repository.files
         .filter(
             (file) =>
+                file.kind === 'source' &&
                 basename(file.path) === PACKAGE_JSON &&
                 readCachedPackageJson(session.reads, file.path)?.['private'] === true,
         )
