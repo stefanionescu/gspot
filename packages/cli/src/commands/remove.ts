@@ -22,9 +22,9 @@ import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands
 import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
 
 import {
-    applySettingsEdit,
-    prepareConfigurationEdit,
+    writeSettingsEdit,
     formatConfigurationChange,
+    readConfigurationEditContext,
 } from '#cli/generation/settings-edit.ts';
 
 function assertRemovable(names: string[], kept: string[], configurationsByName: Map<string, Configuration>): void {
@@ -84,7 +84,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         selected: selectedNames,
         configurationsByName,
         context,
-    } = await prepareConfigurationEdit(options);
+    } = await readConfigurationEditContext(options);
     const detected = listDetectedAdditions(context.session)
         .filter((addition) => addition.scope === scope)
         .flatMap((addition) => addition.configurations);
@@ -119,7 +119,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         .filter((configuration) => removed.includes(configuration.name))
         .flatMap((configuration) => configuration.tools)
         .some((tool) => tool.replace_key?.some((replacement) => replacement.pointer === true) === true);
-    return applySettingsEdit(root, {
+    return writeSettingsEdit(root, {
         cache: context.cache,
         listing: context.listing,
         edit: input,

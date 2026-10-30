@@ -179,7 +179,7 @@ Apply defaults detected from the package manager and project dependencies.
 @param detected.packageManagerName the package manager when the scope holds a site build default.
 @param detected.dependencyNames the package names recorded in the scope.
 */
-export function applyDetectedDefaults(
+export function mergeDetectedDefaults(
     availableSettings: AvailableSettings,
     detected: { packageManagerName: string | undefined; dependencyNames: string[] },
 ): void {

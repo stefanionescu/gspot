@@ -15,7 +15,7 @@ import { validateReason } from '#cli/settings/validation/reasons.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { GLOB_BRACKETS, IGNORE_CHECK_MESSAGE } from '#cli/config/commands/ignore.ts';
 import { RULE_OPTION, PATHS_OPTION, REASON_OPTION } from '#cli/config/commands/flags.ts';
-import { applySettingsEdit, prepareSettingsEdit } from '#cli/generation/settings-edit.ts';
+import { writeSettingsEdit, readSettingsEditContext } from '#cli/generation/settings-edit.ts';
 
 function escapeLiteralPaths(root: string, paths: string[] | undefined): string[] | undefined {
     return paths?.map((path) => {
@@ -50,7 +50,7 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
             'arguments',
             valid.error.issues.map((issue) => `--${issue.path.join('.')}: ${issue.message}`).join('\n'),
         );
-    const context = await prepareSettingsEdit(options.cwd);
+    const context = await readSettingsEditContext(options.cwd);
     const { root, edit: input, settings } = context;
     if (options.check !== undefined) assertCheckExists(options.check, settings);
     const paths = escapeLiteralPaths(root, buildArgumentPaths(root, options.cwd, options.paths));
@@ -62,7 +62,7 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
         reason: options.reason,
     });
     input.table['ignore'] = list;
-    return await applySettingsEdit(root, {
+    return await writeSettingsEdit(root, {
         cache: context.cache,
         listing: context.listing,
         edit: input,

@@ -18,8 +18,8 @@ import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { SettingsEditContext } from '#cli/types/generation/settings-edit.ts';
 import type { Setting, InheritedSetting } from '#cli/types/settings/inheritance.ts';
 import { NUMBER_TEXT, DASH_VALUE_HELP, TOML_COMPOUND_START } from '#cli/config/commands/set.ts';
-import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/generation/settings-edit.ts';
 import type { SetOptions, ParsedSettingValue, SettingReasonContext } from '#cli/types/commands/set.ts';
+import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/generation/settings-edit.ts';
 
 function parseInlineValue(text: string): unknown {
     try {
@@ -149,12 +149,12 @@ function readSettingChange(
 }
 
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {
-    const edit = await prepareSettingsEdit(options.cwd, options.scope);
+    const edit = await readSettingsEditContext(options.cwd, options.scope);
     const { root, edit: input, scopeTable } = edit;
     const { setting, change, summary, notes } = readSettingChange(edit, options);
     try {
         editSetting(scopeTable, change, setting, options);
-        return await applySettingsEdit(root, { edit: input, summary, notes, cache: edit.cache, listing: edit.listing });
+        return await writeSettingsEdit(root, { edit: input, summary, notes, cache: edit.cache, listing: edit.listing });
     } catch (error) {
         if (error instanceof GspotError && error.code === 'settings')
             throw new GspotError('arguments', error.message, { cause: error });

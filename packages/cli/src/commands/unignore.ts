@@ -11,7 +11,7 @@ import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
 import { RULE_WITHOUT_CHECK_MESSAGE } from '#cli/config/commands/ignore.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { IgnoreTarget, IgnoreRemoval } from '#cli/types/commands/unignore.ts';
-import { applySettingsEdit, prepareSettingsEdit } from '#cli/generation/settings-edit.ts';
+import { writeSettingsEdit, readSettingsEditContext } from '#cli/generation/settings-edit.ts';
 import { NO_CHECK_IGNORE_TEXTS, ESCAPED_GLOB_CHARACTERS } from '#cli/config/commands/unignore.ts';
 
 function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
@@ -72,7 +72,7 @@ function formatEverywhereNote(everywhere: number, check: string | undefined): st
 async function runUnignoreCommand(
     options: Pick<IgnoreOptions, 'cwd' | 'check' | 'rule' | 'paths'>,
 ): Promise<CommandResult> {
-    const context = await prepareSettingsEdit(options.cwd);
+    const context = await readSettingsEditContext(options.cwd);
     const { root, edit: input, settings } = context;
     if (options.check !== undefined) assertCheckExists(options.check, settings);
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, {
@@ -104,7 +104,7 @@ async function runUnignoreCommand(
         .join(' ');
     if (kept.length === 0) delete input.table['ignore'];
     else input.table['ignore'] = kept;
-    return await applySettingsEdit(root, {
+    return await writeSettingsEdit(root, {
         cache: context.cache,
         listing: context.listing,
         edit: input,

@@ -9,7 +9,7 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { UnsetOptions } from '#cli/types/commands/unset.ts';
 import { removeKey, removeFromList } from '#cli/settings/edit.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/generation/settings-edit.ts';
+import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/generation/settings-edit.ts';
 
 function removeTableKeys(scopeTable: TomlTable, key: string, names: string[]): void {
     const written = getValueAt(scopeTable, key.split('.'));
@@ -22,7 +22,7 @@ function removeTableKeys(scopeTable: TomlTable, key: string, names: string[]): v
 async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     const { key, keys } = options;
 
-    const edit = await prepareSettingsEdit(options.cwd, options.scope);
+    const edit = await readSettingsEditContext(options.cwd, options.scope);
     const { root, edit: input, scopeTable } = edit;
     const { match } = readSetting(edit, key);
 
@@ -34,7 +34,7 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     if (keys.length === 0) removeKey(scopeTable, key);
     else if (match.setting.type === 'list') removeFromList(scopeTable, key, keys);
     else removeTableKeys(scopeTable, key, keys);
-    return await applySettingsEdit(root, {
+    return await writeSettingsEdit(root, {
         cache: edit.cache,
         listing: edit.listing,
         edit: input,

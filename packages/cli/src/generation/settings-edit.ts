@@ -37,7 +37,7 @@ Edit settings, check them, and write them and their generated files. Installs no
 @param root the folder where gspot writes settings and generated files.
 @param options the edit and the text the report adds.
 */
-export async function applySettingsEdit(
+export async function writeSettingsEdit(
     root: string,
     options: SettingsEditOptions,
 ): Promise<CommandResult<ApplyReport & { changed: boolean; summary: string }>> {
@@ -85,7 +85,7 @@ writes into.
 @param cwd the folder where the command starts.
 @param scopePath the --scope path as typed, relative to cwd, or absent for the top level.
 */
-export async function prepareSettingsEdit(cwd: string, scopePath?: string): Promise<SettingsEditContext> {
+export async function readSettingsEditContext(cwd: string, scopePath?: string): Promise<SettingsEditContext> {
     const root = await readRepositoryRoot(cwd);
     const input = readSettingsEdit(root);
     const cache = createRunCache(root);
@@ -108,7 +108,7 @@ Validate the configuration names and the scope for add and remove before either 
 
 @param options where the command starts, the configurations, and the scope.
 */
-export async function prepareConfigurationEdit(options: ConfigurationsOptions): Promise<{
+export async function readConfigurationEditContext(options: ConfigurationsOptions): Promise<{
     root: string;
     input: SettingsEdit;
     scope: string;
@@ -118,7 +118,7 @@ export async function prepareConfigurationEdit(options: ConfigurationsOptions): 
     configurationsByName: Map<string, Configuration>;
     context: SettingsEditContext;
 }> {
-    const context = await prepareSettingsEdit(options.cwd, options.scope);
+    const context = await readSettingsEditContext(options.cwd, options.scope);
     const { root, edit: input, settings, scope, scopeTable } = context;
     const configurationsByName = readConfigurations();
     assertConfigurationsExist(options.configurations, configurationsByName);

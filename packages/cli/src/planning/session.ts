@@ -18,7 +18,7 @@ import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 import type { PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
-import { applyDetectedDefaults, buildAvailableSettings } from '#cli/settings/available.ts';
+import { mergeDetectedDefaults, buildAvailableSettings } from '#cli/settings/available.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/npm/package-manager.ts';
 
 function buildScopes(
@@ -34,7 +34,7 @@ function buildScopes(
         const selected = selectForScope(active, scope.path, configurationsByName);
         const available = buildAvailableSettings(selected, settings.level);
         const packageManager = available.defaults.has('site.build_command') ? readPackageManager() : undefined;
-        applyDetectedDefaults(available, {
+        mergeDetectedDefaults(available, {
             packageManagerName: packageManager?.name,
             dependencyNames: listProjectDependencyNames(repository.dependencyFiles, scope.path),
         });

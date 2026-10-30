@@ -8,9 +8,9 @@ import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { ConfigurationsOptions } from '#cli/types/generation/settings-edit.ts';
 
 import {
-    applySettingsEdit,
-    prepareConfigurationEdit,
+    writeSettingsEdit,
     formatConfigurationChange,
+    readConfigurationEditContext,
 } from '#cli/generation/settings-edit.ts';
 
 function restoreConfigurations(table: TomlTable, added: string[]): void {
@@ -23,7 +23,7 @@ function restoreConfigurations(table: TomlTable, added: string[]): void {
 
 async function runAddCommand(options: ConfigurationsOptions): Promise<CommandResult> {
     const { root, input, scope, scopeTable, scopeSettings, selected, context } =
-        await prepareConfigurationEdit(options);
+        await readConfigurationEditContext(options);
     if (options.configurations.every((name) => selected.includes(name))) {
         const summary = `No change: ${new Intl.ListFormat('en', { type: 'conjunction' }).format(options.configurations)} ${options.configurations.length === 1 ? 'is' : 'are'} already selected.`;
         return {
@@ -48,7 +48,7 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
         unchanged,
         state: 'already selected',
     });
-    return await applySettingsEdit(root, {
+    return await writeSettingsEdit(root, {
         cache: context.cache,
         listing: context.listing,
         edit: input,
