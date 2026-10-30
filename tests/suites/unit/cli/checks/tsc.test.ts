@@ -8,7 +8,6 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildTsconfig } from '#cli/checks/tsc/scope-tsconfig.ts';
-import { STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { join, parse, dirname, resolve, relative } from 'node:path';
@@ -23,24 +22,19 @@ import {
     DEFAULT_TSCONFIG_PROJECTS,
 } from '#tests/config/checks/tsc.ts';
 
-test('a project with its own tsconfig.json gets a tsconfig that extends it and adds only typeRoots', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['typescript'], {
-            tables: IMPLICIT_RETURNS_IGNORE,
-            level: 'all',
-        }),
-        'source.ts': 'export const value = 1;',
-        'tsconfig.json': STRICT_TSCONFIG_TEXT,
+test('a project with its own tsconfig.json keeps its own compiler options', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":false,"types":[]},"include":["*.ts"]}',
+        'source.ts': 'export function echo(value) { return value; }\n',
     });
-
-    const session = await openSession(sandbox.path);
-    const scope = session.scopes[0]!;
-    const path = join(sandbox.path, GSPOT_PATHS.state, 'tsconfig.json');
-    const parsed = buildTsconfig(session, scope, path);
-    expect(parsed).toMatchObject({
-        extends: '../../tsconfig.json',
-    });
-    expect(Object.keys(parsed['compilerOptions']!)).toStrictEqual(['typeRoots']);
+    await linkInstalledModules(join(sandbox.path, 'node_modules'));
+    await applyGeneratedFiles(sandbox.path);
+    const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['typescript/tsc'] }));
+    expect(result.report.checks.map(({ status, findings }) => ({ status, findings }))).toStrictEqual([
+        { status: 'passed', findings: [] },
+    ]);
 });
 
 test('projects without tsconfig.json get required options and framework options only in their scope', async () => {

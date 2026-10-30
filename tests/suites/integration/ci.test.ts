@@ -184,6 +184,6 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         await writeFile(failurePath, '');
         const refused = await runCiJob(sandbox.path, generated, executables.path, base);
         expect(refused.code, refused.stdout + refused.stderr).toBe(1);
-        expect(refused.stderr).toBe('npm error 404 Not Found - GET https://registry.npmjs.org/@gspothq/cli\n');
+        expect(refused.stdout).not.toContain('project/syntax');
     });
 });

@@ -123,10 +123,6 @@ export const FAKE_CI_MISE_OPTIONS = {
 
 export const CLI_PACKAGE_REQUEST = 'npm:@gspothq/cli[allow_low_downloads=true]@';
 
-export const REPORT_SWIFT_COVERAGE_OPTIONS = {
-    report: { type: 'string' },
-    targets: { type: 'string' },
-    'log-arguments': { type: 'string' },
-} as const;
+export const REPORT_SWIFT_COVERAGE_OPTIONS = { report: { type: 'string' }, targets: { type: 'string' } } as const;
 
 export const INHERITED_STREAMS = { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' } as const;

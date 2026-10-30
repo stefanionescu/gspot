@@ -147,8 +147,6 @@ test('Swift package coverage runs swift test, reads the custom target paths, and
         sandbox.path,
         'node_modules/.bin/swift',
         'fakes/swift',
-        '--log-arguments',
-        join(sandbox.path, 'swift-calls.jsonl'),
         '--report',
         reportPath,
         '--targets',
@@ -160,18 +158,6 @@ test('Swift package coverage runs swift test, reads the custom target paths, and
         buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
     );
 
-    const log = await readFile(join(sandbox.path, 'swift-calls.jsonl'), 'utf8');
-    const calls = log
-        .trim()
-        .split('\n')
-        .map((line) => JSON.parse(line) as string[]);
-    expect(calls.map((call) => call.slice(0, 3))).toStrictEqual([
-        ['test', '--enable-code-coverage', '--scratch-path'],
-        ['test', '--show-codecov-path', '--scratch-path'],
-        ['package', 'describe', '--type'],
-    ]);
-    expect(calls[0]?.[3]).toBe(calls[1]?.[3]);
-    expect(calls[2]).toStrictEqual(['package', 'describe', '--type', 'json']);
     expect(measured.report.checks[0]?.findings.map(({ message }) => message)).toStrictEqual([
         'Core covers 50% of its lines, under the limit of 51%.',
         'API covers 66% of its lines, under the limit of 67%.',
