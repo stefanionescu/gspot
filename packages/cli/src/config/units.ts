@@ -7,5 +7,3 @@ export const BYTES_PER_KILOBYTE = 1024;
 export const OCTAL_RADIX = 8;
 
 export const HEXADECIMAL_RADIX = 16;
-
-export const MILLISECONDS_PER_DAY = 86_400_000;
