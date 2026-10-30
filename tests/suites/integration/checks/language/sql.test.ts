@@ -3,7 +3,7 @@ import { test, expect, beforeAll } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -30,7 +30,7 @@ beforeAll(async () => {
 
 test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL default", async () => {
     const { root } = installedSandbox();
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['sql'], SQLFLUFF_DIALECT_SETTINGS),
             'query.sql': 'PRAGMA table_info (users);\n',
@@ -72,7 +72,7 @@ test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL defau
 
 test('SQLFluff reports and fixes uppercase function names', async () => {
     const { root } = installedSandbox();
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['sql'], {
                 level: 'all',

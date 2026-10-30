@@ -6,7 +6,7 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { changeSandbox, applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { changeSandbox, writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     SPELLING_SANDBOX,
@@ -95,7 +95,7 @@ test('typos reports Unicode columns in files whose names hold a space, a typo, o
 
 async function runTyposCheck(files: Record<string, string>) {
     const sandbox = installedSandbox();
-    await using _sourceChange = await applySandboxChanges(sandbox, buildSandboxChanges(SPELLING_SANDBOX.files, files));
+    await using _sourceChange = await writeSandboxChanges(sandbox, buildSandboxChanges(SPELLING_SANDBOX.files, files));
     const checked = parseCheckReport(await spawnGspot(sandbox.root, ['check', '--only', 'spelling/typos', '--json']));
     return {
         ...checked,

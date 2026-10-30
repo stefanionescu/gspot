@@ -17,7 +17,7 @@ import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 import { ruffRulesSchema, ruffConfigurationSchema } from '#tests/schemas/ruff.ts';
 import { RUFF_SANDBOX } from '#tests/config/integration/checks/language/python/sandboxes.ts';
 import { buildSandboxSettings, prepareParameterProject } from '#tests/setup/cli/settings.ts';
-import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -50,7 +50,7 @@ reason = "Test assertions deliberately verify the behavior."
         'tests/test_example.py': PYTEST_SAMPLE,
         'app/tests/test_example.py': PYTEST_SAMPLE,
     };
-    await using _sourceChange = await applySandboxChanges(
+    await using _sourceChange = await writeSandboxChanges(
         installedSandbox(),
         buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
     );
@@ -88,7 +88,7 @@ test.each([...LEVELS])(
             'gspot.toml': buildSandboxSettings(['python'], { level }),
             'sample.py': '"""An arithmetic example."""\n\nanswer = missing_name\nprint(answer)\n',
         };
-        await using _sourceChange = await applySandboxChanges(
+        await using _sourceChange = await writeSandboxChanges(
             installedSandbox(),
             buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
         );
@@ -146,7 +146,7 @@ line_ending = "lf"
         'sample.py': 'VALUE = "example"\n',
         'app/sample.py': 'VALUE = "example"\n',
     };
-    await using _sourceChange = await applySandboxChanges(
+    await using _sourceChange = await writeSandboxChanges(
         installedSandbox(),
         buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
     );
@@ -175,7 +175,7 @@ test('Ruff alone reports an unused import, and basedpyright still reports the ty
         'gspot.toml': buildSandboxSettings(['python'], { level: 'all' }),
         'sample.py': UNUSED_IMPORT_SOURCE,
     };
-    await using _sourceChange = await applySandboxChanges(
+    await using _sourceChange = await writeSandboxChanges(
         installedSandbox(),
         buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
     );
@@ -221,7 +221,7 @@ requires-python = "${requires}"
         ]),
     );
     const sourceFiles = { 'gspot.toml': buildSandboxSettings(['python'], { level: 'all', tables }), ...files };
-    await using _sourceChange = await applySandboxChanges(
+    await using _sourceChange = await writeSandboxChanges(
         installedSandbox(),
         buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
     );

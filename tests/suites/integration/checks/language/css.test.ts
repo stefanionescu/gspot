@@ -6,7 +6,7 @@ import { LEVELS } from '#cli/config/manifests/names.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -30,7 +30,7 @@ test.each([...LEVELS])(
     "Stylelint at level %s applies each scope's lint rule options and no other lint rules",
     async (level) => {
         const root = installedSandbox().root;
-        await using _change = await applySandboxChanges(installedSandbox(), {
+        await using _change = await writeSandboxChanges(installedSandbox(), {
             files: {
                 'gspot.toml': buildSandboxSettings(['css'], {
                     level,
@@ -67,7 +67,7 @@ test.each([...LEVELS])(
 
 test("Stylelint run by an editor finds the scope's config file and checks the build folder", async () => {
     const root = installedSandbox().root;
-    await using _change = await applySandboxChanges(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['css'], { level: 'all', tables: ALL_LEVEL_STYLELINT_TABLES }),
             'package.json': '{"private":true}\n',
@@ -97,7 +97,7 @@ test("Stylelint run by an editor finds the scope's config file and checks the bu
 
 test('Stylelint accepts Tailwind syntax only in the scope that declares Tailwind', async () => {
     const root = installedSandbox().root;
-    await using _change = await applySandboxChanges(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['css', 'nextjs'], {
                 level: 'all',

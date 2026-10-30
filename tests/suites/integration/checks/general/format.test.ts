@@ -7,7 +7,7 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/format.ts';
@@ -27,7 +27,7 @@ const installedSandbox = shareInstalledSandbox({
 
 test('Prettier writes each file with the tab width, quotes, semicolons, and line ending of its format override', async () => {
     const root = installedSandbox().root;
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': FORMAT_OVERRIDES_SETTINGS,
             ...Object.fromEntries(
@@ -67,7 +67,7 @@ test('Prettier writes each file with the tab width, quotes, semicolons, and line
 
 test('editorconfig-checker leaves indentation to the formatter and checks line endings, the final newline, and trailing spaces', async () => {
     const root = installedSandbox().root;
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['format'], { level: 'all' }),
             'indented.txt': '\tcontent\n',
@@ -96,7 +96,7 @@ test('editorconfig-checker leaves indentation to the formatter and checks line e
 
 test('check --staged formats with the staged Prettier config file after a later apply changes it, and leaves the working files and the index unchanged', async () => {
     const root = installedSandbox().root;
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['format'], {
                 tables: '[format]\nindent_width = 2\n',

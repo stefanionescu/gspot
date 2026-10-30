@@ -101,7 +101,7 @@ export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): 
 /**
 Write the sample files and run apply. Disposal restores the working files, index, and current commit.
 */
-export async function applySandboxChanges(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {
+export async function writeSandboxChanges(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
     resources.use(await changeSandbox(sandbox, changes));
     await runGspotStep(sandbox, ['apply']);

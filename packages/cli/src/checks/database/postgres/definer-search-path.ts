@@ -26,7 +26,7 @@ function buildFunctionKey(names: Node[] | undefined, parameters: (TypeName | und
     ]);
 }
 
-function applySecurityAction(security: FunctionSecurity, action: DefElem): boolean {
+function setFunctionSecurity(security: FunctionSecurity, action: DefElem): boolean {
     if (action.defname === 'security') {
         security.definer = getNodeFields(action.arg, 'Boolean')?.boolval === true;
         return true;
@@ -65,7 +65,7 @@ function listLooseDefiners(migrations: Migration[]): FunctionSecurity[] {
             const key = buildFunctionKey(fields.func?.objname, listNodeFields(fields.func?.objargs, 'TypeName'));
             const security = functions.get(key) ?? { migration, statement, definer: false, path: false };
             for (const action of listNodeFields(fields.actions, 'DefElem')) {
-                if (!applySecurityAction(security, action)) continue;
+                if (!setFunctionSecurity(security, action)) continue;
                 security.migration = migration;
                 security.statement = statement;
             }

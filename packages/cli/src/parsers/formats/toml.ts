@@ -60,7 +60,7 @@ export function buildPatchedToml(
     values: Record<string, unknown>,
     format: Parameters<typeof patch>[2],
 ): string {
-    const { patched, suffix } = patchTomlValues(previous, values, format);
+    const { patched, suffix } = replaceTomlValues(previous, values, format);
     const reparsed = parseTomlSyntax(patched, values);
     const kept = new Set(reparsed.pathNodes.map(({ kind, path }) => JSON.stringify([kind, ...path])));
     const comments: TomlComments = new Map();
@@ -333,7 +333,7 @@ function addTomlComment(comments: TomlComments, commentPlacement: TomlCommentPla
     comments.set(id, block);
 }
 
-function patchTomlValues(previous: TomlSyntax, values: Record<string, unknown>, format: Parameters<typeof patch>[2]) {
+function replaceTomlValues(previous: TomlSyntax, values: Record<string, unknown>, format: Parameters<typeof patch>[2]) {
     const appended: Record<string, unknown> = {};
     const assigned: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(values)) {

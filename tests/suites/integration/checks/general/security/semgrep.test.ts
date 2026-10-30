@@ -13,7 +13,7 @@ import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { changeSandbox, applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { changeSandbox, writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     SEMGREP_CHECK,
@@ -86,7 +86,7 @@ async function assertLanguageRules(sandbox: Sandbox): Promise<void> {
         'script.sh': BASH_DOWNLOAD_SAMPLE,
         'Value.swift': SWIFT_SAMPLE,
     };
-    await using _sourceChange = await applySandboxChanges(
+    await using _sourceChange = await writeSandboxChanges(
         sandbox,
         buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
     );
@@ -118,7 +118,7 @@ async function assertPlatformRules(sandbox: Sandbox, level: Level): Promise<void
         ),
         ...PLATFORM_SOURCES,
     };
-    await using _sourceChange = await applySandboxChanges(
+    await using _sourceChange = await writeSandboxChanges(
         sandbox,
         buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
     );
@@ -186,7 +186,7 @@ async function assertNextjsOptions(
         'gspot.toml': buildSandboxSettings(['nextjs']),
         'next.config.ts': source,
     };
-    await using _sourceChange = await applySandboxChanges(
+    await using _sourceChange = await writeSandboxChanges(
         sandbox,
         buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
     );

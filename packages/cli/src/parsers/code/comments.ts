@@ -4,7 +4,7 @@ import type { Node } from 'web-tree-sitter';
 import { extractExtension } from '#cli/system/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { listSqlTokens } from '#cli/parsers/code/sql.ts';
-import { getPosition, spliceRanges } from '#cli/system/text.ts';
+import { getPosition, replaceRanges } from '#cli/system/text.ts';
 import { NOT_LINE_BREAK } from '#cli/config/parsers/code/bash.ts';
 import type { TextRange, SourcePosition } from '#cli/types/text.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
@@ -80,7 +80,7 @@ function extractMarkdownHtml(text: string): string {
         const { start, end } = node.position as SourcePosition;
         ranges.push({ start: start.offset, end: end.offset });
     });
-    return spliceRanges(masked, text, ranges);
+    return replaceRanges(masked, text, ranges);
 }
 
 function parseTomlComments(text: string, path: string): SourceComment[] {
@@ -102,7 +102,7 @@ async function parseComponentComments(text: string, path: string): Promise<Sourc
         const start = text.indexOf('\n') + 1;
         scripts.push({
             grammar: 'typescript',
-            source: spliceRanges(masked, text, [{ start, end: start + (front[1] as string).length }]),
+            source: replaceRanges(masked, text, [{ start, end: start + (front[1] as string).length }]),
         });
     }
     const comments: SourceComment[] = [];
@@ -202,7 +202,7 @@ async function parseMdxComments(text: string): Promise<SourceComment[]> {
         ranges.push({ start: start.offset, end: end.offset });
     });
     const blank = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
-    masked = spliceRanges(masked, blank, ranges).replaceAll(MDX_ESM, (segment) =>
+    masked = replaceRanges(masked, blank, ranges).replaceAll(MDX_ESM, (segment) =>
         segment.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length)),
     );
     const expressions = [...masked.matchAll(MDX_COMMENT)].map((match) => {
@@ -237,6 +237,6 @@ function listComponentScripts(element: Node, text: string, masked: string): Comp
         .filter((child) => child.type === 'raw_text')
         .map((node) => ({
             grammar,
-            source: spliceRanges(masked, text, [{ start: node.startIndex, end: node.endIndex }]),
+            source: replaceRanges(masked, text, [{ start: node.startIndex, end: node.endIndex }]),
         }));
 }

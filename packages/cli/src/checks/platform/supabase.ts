@@ -89,7 +89,7 @@ function removePolicies(
     }
 }
 
-function updatePolicy(
+function setPolicy(
     statement: SqlStatement<'CreatePolicyStmt' | 'AlterPolicyStmt'>,
     policies: Map<string, SqlNodeFields['CreatePolicyStmt']>,
 ): void {
@@ -105,7 +105,7 @@ function listCoveredBuckets(statements: SqlStatement[]): Set<string> {
     for (const statement of statements) {
         if (statement.kind === 'DropStmt') removePolicies(statement.fields, policies);
         if (statement.kind === 'CreatePolicyStmt' || statement.kind === 'AlterPolicyStmt')
-            updatePolicy(statement, policies);
+            setPolicy(statement, policies);
     }
     return new Set(
         [...policies.values()].flatMap((policy) =>

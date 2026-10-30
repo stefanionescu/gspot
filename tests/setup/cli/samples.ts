@@ -6,7 +6,7 @@ import { type Sandbox } from '#tests/types/sandbox.ts';
 import { type ProcessOutput } from '#tests/types/processes.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
-import { changeSandbox, applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { changeSandbox, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { type SampleFix, type CheckSample, type SampleResult, type SandboxChanges } from '#tests/types/samples.ts';
 
 /**
@@ -18,7 +18,7 @@ export async function runAppliedSample(
     options: { commandArguments: readonly string[]; corrected: SampleFix['files'] },
 ): Promise<SampleResult & AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
-    resources.use(await applySandboxChanges(sandbox, changes));
+    resources.use(await writeSandboxChanges(sandbox, changes));
     const failed = parseCheckReport(await sandbox.run(sandbox.root, options.commandArguments));
     for (const [path, source] of Object.entries(options.corrected)) await writeFile(join(sandbox.root, path), source);
     const passed = parseCheckReport(await sandbox.run(sandbox.root, options.commandArguments));

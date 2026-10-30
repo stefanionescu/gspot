@@ -139,7 +139,7 @@ Replace ranges of one text with the same ranges of another text of the same leng
 @param overlay the text inside the ranges.
 @param ranges the start and end offsets, in order.
 */
-export function spliceRanges(base: string, overlay: string, ranges: readonly TextRange[]): string {
+export function replaceRanges(base: string, overlay: string, ranges: readonly TextRange[]): string {
     const pieces: string[] = [];
     let offset = 0;
     for (const { start, end } of ranges) {

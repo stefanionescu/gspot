@@ -8,7 +8,7 @@ import type { LinterJsonFinding } from '#tests/types/tools.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
@@ -130,7 +130,7 @@ test.skipIf(!hasToolBuild('swiftlint'))(
     'SwiftLint and SwiftFormat read the configuration of their scope, and the findings keep the scope path',
     async () => {
         const { root } = installedSandbox();
-        await using _change = await applySandboxChanges(installedSandbox(), {
+        await using _change = await writeSandboxChanges(installedSandbox(), {
             removed: Object.keys(SWIFT_SANDBOX.files),
             files: {
                 'ios/Sources/App/Greeting.swift': CLEAN_SWIFT,

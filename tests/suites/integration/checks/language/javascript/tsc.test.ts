@@ -18,7 +18,7 @@ import { rm, stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     AUTHORED_CACHE,
@@ -40,7 +40,7 @@ test("javascript/tsc uses gspot's own TypeScript when the project has none", asy
         'package.json': '{"private":true,"type":"module"}\n',
         'source.js': COMPILER_SOURCE,
     };
-    await using _sourceChange = await applySandboxChanges(
+    await using _sourceChange = await writeSandboxChanges(
         installedSandbox(),
         buildSandboxChanges(JSCONFIG_SANDBOX.files, sourceFiles),
     );
@@ -63,7 +63,7 @@ test.each([...JSCONFIG_CASES])('javascript/tsc checks $name and keeps the author
         ...row.files,
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: row.tables }),
     };
-    await using _sourceChange = await applySandboxChanges(
+    await using _sourceChange = await writeSandboxChanges(
         installedSandbox(),
         buildSandboxChanges(JSCONFIG_SANDBOX.files, sourceFiles),
     );
@@ -237,7 +237,7 @@ async function prepareJsconfigScopes(root: string): Promise<{ config: string; co
 
 test('Knip checks an independent package with directory instead of workspace', async () => {
     const { root } = installedSandbox();
-    await using _changes = await applySandboxChanges(
+    await using _changes = await writeSandboxChanges(
         installedSandbox(),
         buildSandboxChanges(JSCONFIG_SANDBOX.files, {
             'gspot.toml': buildSandboxSettings(['javascript'], { scopes: [{ path: 'docs', configurations: [] }] }),

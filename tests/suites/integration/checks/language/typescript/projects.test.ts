@@ -12,7 +12,7 @@ import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { stat, chmod, readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     OUTDIR_CASES,
@@ -33,7 +33,7 @@ const installedSandbox = shareInstalledSandbox(TYPESCRIPT_PROJECTS_SANDBOX);
 test('typescript/tsc reports a type error in a tsconfig.json project without files or include, and leaves tsconfig.json unchanged', async () => {
     const { root } = installedSandbox();
 
-    await using _sourceChange = await applySandboxChanges(
+    await using _sourceChange = await writeSandboxChanges(
         installedSandbox(),
         buildSandboxChanges(TYPESCRIPT_PROJECTS_SANDBOX.files, {
             ...IMPLICIT_PROJECT_FILES,
@@ -68,7 +68,7 @@ test.each([...LEVELS])(
             [`${scope}/src/main.ts`]: 'export const echo: number = "wrong";\n',
             [`${scope}/build/cache.tsbuildinfo`]: 'authored metadata\n',
         };
-        await using _sourceChange = await applySandboxChanges(
+        await using _sourceChange = await writeSandboxChanges(
             installedSandbox(),
             buildSandboxChanges(TYPESCRIPT_PROJECTS_SANDBOX.files, sourceFiles),
         );

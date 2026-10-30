@@ -12,7 +12,7 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { GUIDE, README, LICENSE } from '#tests/config/documents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -33,7 +33,7 @@ test.each([...LEVELS])(
     `markdownlint at level %s adds MD041 only at level all and applies each scope's lint rule options`,
     async (level) => {
         const { root } = installedSandbox();
-        await using _change = await applySandboxChanges(installedSandbox(), {
+        await using _change = await writeSandboxChanges(installedSandbox(), {
             files: {
                 ...MARKDOWN_FILES,
                 'gspot.toml': buildSandboxSettings(['markdown'], { level, tables: MARKDOWNLINT_TABLES }),
@@ -76,7 +76,7 @@ test.each([...LEVELS])(
 
 test("markdownlint run by an editor reads the link files with each scope's options", async () => {
     const { root } = installedSandbox();
-    await using _change = await applySandboxChanges(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: {
             ...MARKDOWN_FILES,
             'gspot.toml': buildSandboxSettings(['markdown', 'javascript'], {
@@ -113,7 +113,7 @@ test("markdownlint run by an editor reads the link files with each scope's optio
 
 test('markdownlint honors a lint rule ignore in the root and scope config files', async () => {
     const { root } = installedSandbox();
-    await using _change = await applySandboxChanges(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: {
             ...MARKDOWN_FILES,
             'app/guide.md': `${MARKDOWN_FILES['app/guide.md']}\n![](diagram.png)\n`,
@@ -145,7 +145,7 @@ test('markdownlint honors a lint rule ignore in the root and scope config files'
 test('markdownlint reports line, column, and fixable for findings in files whose names hold a space, a colon, or a line break', async () => {
     const { root } = installedSandbox();
     const paths = ['space name.md', ...(isWindows ? [] : ['name:5.md', 'line\nbreak.md'])];
-    await using _change = await applySandboxChanges(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['markdown'], { level: 'all' }),
             ...Object.fromEntries(paths.map((path) => [path, 'café <img src="example.png"> https://example.com\n'])),
@@ -175,7 +175,7 @@ test('markdownlint reports line, column, and fixable for findings in files whose
 
 test('markdownlint reads an MDX page from after its import and export blocks', async () => {
     const { root } = installedSandbox();
-    await using _change = await applySandboxChanges(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: { 'gspot.toml': buildSandboxSettings(['markdown'], { level: 'all' }), ...MDX_FILES },
     });
     const command = ['check', ...Object.keys(MDX_FILES), '--only', 'markdown/markdownlint', '--json'];

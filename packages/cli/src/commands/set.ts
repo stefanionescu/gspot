@@ -82,7 +82,7 @@ function setSettingValue(scopeTable: TomlTable, change: ParsedSettingValue, sett
     } else setKey(scopeTable, key, change.value);
 }
 
-function editSetting(scopeTable: TomlTable, change: ParsedSettingValue, setting: Setting, options: SetOptions): void {
+function setSetting(scopeTable: TomlTable, change: ParsedSettingValue, setting: Setting, options: SetOptions): void {
     setSettingValue(scopeTable, change, setting, options.key);
     if (options.reason === undefined || setting.reason_values === true) return;
     const written = getValueAt(scopeTable, options.key.split('.'));
@@ -153,7 +153,7 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
     const { root, edit: input, scopeTable } = edit;
     const { setting, change, summary, notes } = readSettingChange(edit, options);
     try {
-        editSetting(scopeTable, change, setting, options);
+        setSetting(scopeTable, change, setting, options);
         return await writeSettingsEdit(root, { edit: input, summary, notes, cache: edit.cache, listing: edit.listing });
     } catch (error) {
         if (error instanceof GspotError && error.code === 'settings')

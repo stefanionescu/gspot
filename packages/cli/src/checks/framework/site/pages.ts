@@ -56,7 +56,7 @@ function listPossiblePages(pathname: string): [string, ...string[]] {
     return path.endsWith(HTML_EXTENSION) ? [path] : [path, `${path}${HTML_EXTENSION}`, `${path}/${INDEX_PAGE}`];
 }
 
-function appendBuildFindings(findings: CheckFinding[], parsed: CheckFinding[], folder: string): void {
+function addBuildFindings(findings: CheckFinding[], parsed: CheckFinding[], folder: string): void {
     for (const finding of parsed) {
         const file = `${folder}/${convertToPosixPath(normalize(finding.file))}`;
         findings.push({ ...finding, file });
@@ -100,7 +100,7 @@ export async function checkSiteLychee(session: CheckSession, planned: PlannedChe
             parseOutput(planned.check, result.stdout, result.stderr, { root: build.folder, cwd: build.folder }),
             LYCHEE_TOOL,
         );
-        appendBuildFindings(findings, parsed, getTable(planned.scope.settings, 'site').build_folder);
+        addBuildFindings(findings, parsed, getTable(planned.scope.settings, 'site').build_folder);
     }
     return findings;
 }
@@ -136,7 +136,7 @@ export async function checkSiteHtmlValidate(session: CheckSession, planned: Plan
         });
         if (result.code === 1 && parsed.length === 0)
             throw new GspotError('check', `HTML validation failed without findings: ${result.stderr}`);
-        appendBuildFindings(findings, parsed, getTable(planned.scope.settings, 'site').build_folder);
+        addBuildFindings(findings, parsed, getTable(planned.scope.settings, 'site').build_folder);
     }
     return findings;
 }

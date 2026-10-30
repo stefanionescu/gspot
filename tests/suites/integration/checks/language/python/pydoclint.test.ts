@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PYPROJECT, GOOGLE_PYPROJECT } from '#tests/config/python.ts';
-import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { ARITHMETIC_MODULE } from '#tests/config/integration/checks/samples.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -21,7 +21,7 @@ test('pydoclint finds the docstring style of each file and does not ask for type
     const files = Object.fromEntries(
         ['', 'app/'].flatMap((scope) => Object.entries(DOCSTRING_MODULES).map(([file, text]) => [scope + file, text])),
     );
-    await using _change = await applySandboxChanges(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['python'], {
                 level: 'all',
@@ -62,7 +62,7 @@ test('pydoclint keeps the authored settings that ask for types in docstrings', a
 check_return_types = true
 check-yield-types = true
 `;
-    await using _change = await applySandboxChanges(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['python']),
             'pyproject.toml': project,

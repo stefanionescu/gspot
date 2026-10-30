@@ -168,13 +168,13 @@ export async function runTreeCheck(
         resources,
         cancelSignal,
     });
-    appendRevisionPaths(session, revision);
+    addRevisionPaths(session, revision);
     assertOnlyChecks(session, options.only);
     const filters = await readRunFilters(session, options, cancelSignal, revision);
     await warnMissingHooks(session, revision);
     const result = await runChecks(session, buildRunOptions(options, filters, revision));
     if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
-    appendRevisionNotes(result.report, revision);
+    addRevisionNotes(result.report, revision);
     const reportText =
         formatAllFilesHeader(options, revision) +
         formatRunReport(result.report, { verbose: options.verbose, selectedOnly: options.only !== undefined });
@@ -186,13 +186,13 @@ export async function runTreeCheck(
     };
 }
 
-function appendRevisionPaths(session: Session, revision: RevisionSource | undefined): void {
+function addRevisionPaths(session: Session, revision: RevisionSource | undefined): void {
     const paths = revision?.unreadablePaths;
     if (paths === undefined) return;
     session.repository.unreadablePaths.push(...paths);
 }
 
-function appendRevisionNotes(report: RunReport, revision: RevisionSource | undefined): void {
+function addRevisionNotes(report: RunReport, revision: RevisionSource | undefined): void {
     const note = revision?.dependencyNote;
     if (note === undefined) return;
     report.notes.push(note);

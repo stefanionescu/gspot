@@ -11,7 +11,7 @@ import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { applySandboxChanges, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges, applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { VALE_INI, EXAMPLE_STYLE_FOLDER } from '#tests/config/integration/checks/general/prose/vale.ts';
 import { spawnGspot, spawnRootCheck, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -30,7 +30,7 @@ const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 
 test('at level all, Vale skips ESLint and Stylelint directives and checks ordinary comment punctuation', async () => {
     const { root } = installedSandbox();
-    await using _change = await applySandboxChanges(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
             'source.ts': [...SUPPRESSION_COMMENTS].join('\n'),
@@ -82,7 +82,7 @@ test("Vale's version-range rule accepts a minimum version and reports vague rang
 
 test("Vale's heading-case rule accepts a reviewed product name and reports title case", async () => {
     const { root } = installedSandbox();
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['prose'], {
                 level: 'all',
@@ -121,7 +121,7 @@ test.each([...STYLE_CASES])(
     'Vale $rule reports the expected lines of $path and leaves its code notation alone',
     async (row) => {
         const { root } = installedSandbox();
-        await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+        await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
             files: {
                 'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
                 [row.path]: row.source,
@@ -144,7 +144,7 @@ test('Vale accepts the words listed in gspot.toml, and typos reports the misspel
         scopes: [{ path: scope, configurations: ['sql'] }],
         tables: '[spelling]\nallowed_words = { NebulaProduct = "The project product." }\n',
     });
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: { 'gspot.toml': settings, [join(scope, 'guide.md')]: VOCABULARY_SOURCE },
     });
     const result = parseCheckReport(
@@ -167,7 +167,7 @@ test('Vale accepts the words listed in gspot.toml, and typos reports the misspel
 
 test('Vale accepts passive code comments and reports passive prose in Markdown', async () => {
     const { root } = installedSandbox();
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
             'source.ts': COMMENT_SOURCE,

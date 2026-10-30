@@ -8,7 +8,7 @@ import { COMMAND_PLAYBOOK } from '#tests/config/ansible.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { spawnGspot, listFindingRows, parseCheckReport, listScopeFindingRows } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -22,7 +22,7 @@ describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
 
     test('reports command-instead-of-module in the root and in a scope without ansible.cfg, and passes after the fix', async () => {
         const { root } = installedSandbox();
-        await using _sourceChange = await applySandboxChanges(
+        await using _sourceChange = await writeSandboxChanges(
             installedSandbox(),
             buildSandboxChanges(ANSIBLE_SANDBOX.files, {
                 'gspot.toml': buildSandboxSettings(['ansible'], {
@@ -63,7 +63,7 @@ describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
 async function assertLevelProfile(sandbox: Sandbox, level: Level): Promise<void> {
     const { root } = sandbox;
     const source = ANSIBLE_PLAYBOOK.replace('ansible.builtin.systemd:', 'systemd:');
-    await using _sourceChange = await applySandboxChanges(sandbox, {
+    await using _sourceChange = await writeSandboxChanges(sandbox, {
         files: {
             'gspot.toml': buildSandboxSettings(['ansible'], {
                 level,

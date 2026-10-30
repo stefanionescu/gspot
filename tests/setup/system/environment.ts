@@ -1,4 +1,4 @@
-function applyEnvironment(
+function setEnvironmentVariables(
     environment: Record<string, string | undefined>,
     changes: Readonly<Record<string, string | undefined>>,
 ): void {
@@ -13,10 +13,10 @@ Set environment variables for a test and restore them when the scope ends, even 
 */
 export function overrideEnvironment(variables: Record<string, string | undefined>): Disposable {
     const previous = Object.fromEntries(Object.keys(variables).map((name) => [name, process.env[name]]));
-    applyEnvironment(process.env, variables);
+    setEnvironmentVariables(process.env, variables);
     return {
         [Symbol.dispose]: () => {
-            applyEnvironment(process.env, previous);
+            setEnvironmentVariables(process.env, previous);
         },
     };
 }

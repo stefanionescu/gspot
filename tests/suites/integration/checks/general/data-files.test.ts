@@ -10,7 +10,7 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildJsonSchema } from '#cli/settings/json-schema.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -49,7 +49,7 @@ test('v8r validates a staged JSON file with a non-ASCII path against its schema'
 
         fetch: async () => new Response(await readFile(join(root, 'schema.json'))),
     });
-    await using _change = await applySandboxChanges(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: { 'settings/café.json': JSON.stringify({ count: 'invalid' }), '.v8rrc.yml': UNCLOSED_SEQUENCE },
         settings: stringify({
             tools: {
@@ -88,7 +88,7 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
         },
     });
     const directive = `#:schema ${server.url.href}schema.json\n`;
-    await using _change = await applySandboxChanges(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: { 'settings/schema.toml': directive + 'value =\n' },
     });
     const command = ['check', 'settings/schema.toml', '--only', 'data-files/taplo-format', '--json'];
@@ -108,7 +108,7 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
 
 test("yamllint applies each scope's lint rule options, and Prettier keeps two-space YAML", async () => {
     const { root } = installedSandbox();
-    await using _change = await applySandboxChanges(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         removed: Object.keys(FILES_SANDBOX.files),
         files: {
             'gspot.toml': buildSandboxSettings([], { tables: YAML_SCOPE_TABLES }),
@@ -138,7 +138,7 @@ test('Taplo validates test file patterns and tool rule options against the local
     const { root } = installedSandbox();
     const text =
         'configurations = ["javascript"]\ntest_files = ["**/*.spec.ts"]\n[tools.eslint.rules]\ncurly = ["all"]\n';
-    await using _change = await applySandboxChanges(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: { 'editor.schema.json': JSON.stringify(buildJsonSchema()), 'editor-settings.toml': text },
     });
     const command = [

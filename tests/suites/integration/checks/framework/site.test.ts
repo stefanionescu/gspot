@@ -6,7 +6,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -29,7 +29,7 @@ test.each([...OUTPUT_CASES])(
             level,
             tables: `[site]\nbuild_command = ${JSON.stringify(buildProgramCommand('fakes/site-build', '--copy', 'pages=dist'))}\n${tables}`,
         });
-        await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+        await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
             files: { 'gspot.toml': settings, ...files },
         });
 
@@ -57,7 +57,7 @@ test.each([...BUILT_HTML_SITES])(
             level: 'all',
             tables: `[site]\nbuild_command = ${JSON.stringify(build)}\n${TWO_SITE_TABLES}`,
         });
-        await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+        await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
             files: {
                 'gspot.toml': settings,
                 ...repository.files,
@@ -88,7 +88,7 @@ test.each([...BUILT_HTML_SITES])(
 
 test('HTML Validate reports all 400 missing alt attributes in a built page', async () => {
     const { root } = installedSandbox();
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': buildSandboxSettings(['site'], {
                 level: 'all',

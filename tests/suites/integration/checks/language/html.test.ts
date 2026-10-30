@@ -6,7 +6,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     HTML_SANDBOX,
@@ -34,7 +34,7 @@ test.each([...AUTOPLAY_CHECKS])(
             'index.html': AUTOPLAY_PAGE,
             'app/page.html': AUTOPLAY_PAGE,
         };
-        await using _sourceChange = await applySandboxChanges(
+        await using _sourceChange = await writeSandboxChanges(
             installedSandbox(),
             buildSandboxChanges(HTML_SANDBOX.files, sourceFiles),
         );

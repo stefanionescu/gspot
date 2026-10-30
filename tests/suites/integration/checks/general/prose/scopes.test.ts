@@ -5,7 +5,7 @@ import { LEVELS } from '#cli/config/manifests/names.ts';
 import type { SandboxChanges } from '#tests/types/samples.ts';
 import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { GUIDE_READ_MARKDOWN, SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/documents.ts';
 import { PACKAGE_STYLE_CASES } from '#tests/config/integration/checks/general/prose/scopes.ts';
@@ -18,7 +18,7 @@ async function applyLevelChanges(changes: SandboxChanges): Promise<AsyncDisposab
     resources.defer(async () => {
         await runGspotStep(installedSandbox(), ['install']);
     });
-    resources.use(await applySandboxChanges(installedSandbox(), changes));
+    resources.use(await writeSandboxChanges(installedSandbox(), changes));
     return resources.move();
 }
 
@@ -60,7 +60,7 @@ Read [here](only.md).
 test('a Vale ignore with a lint rule and a path keeps findings in other files', async () => {
     const { root } = installedSandbox();
     const settings = buildSandboxSettings([]);
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+    await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
         files: {
             'gspot.toml': settings,
             'guide.md': SCHEDULE_RELEASE_MARKDOWN,

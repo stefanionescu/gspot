@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import { spliceRanges } from '#cli/system/text.ts';
+import { replaceRanges } from '#cli/system/text.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { ParseCache } from '#cli/types/parsers/code/grammars.ts';
@@ -250,7 +250,7 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
         .descendantsOfType('comment')
         .map((comment) => ({ start: comment.startIndex, end: comment.endIndex }));
     const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
-    const codeText = spliceRanges(text, masked, comments);
+    const codeText = replaceRanges(text, masked, comments);
 
     const commands = tree.rootNode
         .descendantsOfType(['command', 'declaration_command'])
