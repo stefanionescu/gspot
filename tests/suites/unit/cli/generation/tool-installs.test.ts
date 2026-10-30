@@ -12,7 +12,7 @@ import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { PythonToolProject } from '#cli/types/installers/pypi.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
-import { STYLESHEET_CASES, LICENSE_TOOL_CASES, REACT_NATIVE_TSCONFIG } from '#tests/config/generation/tool-projects.ts';
+import { STYLESHEET_CASES, LICENSE_TOOL_CASES, REACT_NATIVE_TSCONFIG } from '#tests/config/generation/tool-installs.ts';
 
 test.each([...STYLESHEET_CASES])('$name installs postcss-html when Stylelint is selected', async (row) => {
     await using sandbox = await testdir({

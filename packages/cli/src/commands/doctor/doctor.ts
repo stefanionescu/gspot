@@ -18,7 +18,7 @@ import { getOperatingSystem } from '#cli/system/environment.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
 import type { HookStatus } from '#cli/types/installers/hooks.ts';
 import { VERSION_FLAG } from '#cli/config/executables/versions.ts';
-import { buildMiseProject } from '#cli/generation/tool-projects.ts';
+import { buildMiseInstall } from '#cli/generation/tool-installs.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
@@ -86,7 +86,7 @@ function inspectScopeTools(session: Session): ToolInspection[] {
     const pins = listDistinctTools(session.toolConfigurations).filter(
         (tool) => findMissingBuild(tool, { platform, arch: process.arch }) === undefined,
     );
-    const miseBinPaths = readToolBinPaths(session, buildMiseProject(session.toolConfigurations).content);
+    const miseBinPaths = readToolBinPaths(session, buildMiseInstall(session.toolConfigurations).content);
     for (const { path: scopePath, configurations } of session.scopes) {
         const toolNames = new Set(
             configurations.flatMap((configuration) => configuration.tools).map((tool) => tool.name),

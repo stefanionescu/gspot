@@ -1,4 +1,5 @@
 import { basename } from 'node:path/posix';
+import { JSON_INDENT } from '#cli/config/text.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
@@ -7,6 +8,7 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
+import { listToolProjectPins } from '#cli/manifests/tools.ts';
 import { FROZEN_INSTALLS } from '#cli/config/generation/ci.ts';
 import type { RuleFile } from '#cli/types/generation/rules.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
@@ -20,9 +22,9 @@ import { buildPointerFieldEdits } from '#cli/generation/config-files/pointers.ts
 import { readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 import type { FrozenLockfile, CiPackageManager } from '#cli/types/generation/ci.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files/classify.ts';
+import { buildMiseInstall, buildPythonInstall } from '#cli/generation/tool-installs.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildBunScannerEdits } from '#cli/generation/configurations/general/dependencies.ts';
-import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/tool-projects.ts';
 
 import {
     buildGithubWorkflow,
@@ -32,6 +34,7 @@ import {
 } from '#cli/generation/ci.ts';
 import {
     LF_ATTRIBUTES,
+    NPM_TOOL_PROJECT,
     AUTO_LF_ATTRIBUTES,
     TOOL_FOLDER_IGNORES,
     GIT_ATTRIBUTES_BLOCK,
@@ -156,9 +159,20 @@ export function generateFiles(session: Session): Generation {
                       .some((attributes) => attributes[FILTER_ATTRIBUTE] === LFS_FILTER),
               })
             : []),
-        ...(packageManager === undefined ? [] : buildNpmProject(toolConfigurations)),
-        ...buildPythonProject(toolConfigurations),
-        buildMiseProject(toolConfigurations),
+        ...(packageManager === undefined
+            ? []
+            : [
+                  {
+                      path: GSPOT_PATHS.npmProject,
+                      content: `${JSON.stringify(
+                          { ...NPM_TOOL_PROJECT, devDependencies: listToolProjectPins(toolConfigurations).npm },
+                          null,
+                          JSON_INDENT,
+                      )}\n`,
+                  },
+              ]),
+        ...buildPythonInstall(toolConfigurations),
+        buildMiseInstall(toolConfigurations),
     );
     addWorkflow(session, generated);
     const rules = selectRuleFiles(session);

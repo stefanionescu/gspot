@@ -14,3 +14,5 @@ ${GSPOT_FOLDER}/** ${LF_ATTRIBUTES}
 .gitattributes ${LF_ATTRIBUTES}`;
 
 export const TOOL_FOLDER_IGNORES = ['node_modules/', '.venv/', 'vale/'] as const;
+
+export const NPM_TOOL_PROJECT = { name: 'tools', private: true } as const;

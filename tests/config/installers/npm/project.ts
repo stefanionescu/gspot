@@ -1,4 +1,4 @@
-import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
+import { NPM_TOOL_PROJECT } from '#cli/config/generation/generate.ts';
 
 export const PACKAGE_MANAGER_TIMEOUT = {
     code: 1,

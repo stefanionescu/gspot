@@ -18,7 +18,7 @@ import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { buildRunReport } from '#cli/commands/check/results.ts';
 import { type IgnoreRecord } from '#cli/types/settings/file.ts';
 import { DOCKER_TOOL } from '#cli/config/executables/inspect.ts';
-import { buildMiseProject } from '#cli/generation/tool-projects.ts';
+import { buildMiseInstall } from '#cli/generation/tool-installs.ts';
 import { SHORT_HASH_LENGTH } from '#cli/config/commands/check/check.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
 import { STAGED_FLAG, CHANGED_FLAG } from '#cli/config/commands/check/flags.ts';
@@ -235,7 +235,7 @@ export function buildCheckSession(session: Session): CheckSession {
         ...session,
         limitProcess: pLimit(availableParallelism()),
         readMiseBinPaths: () => {
-            miseBinPaths ??= readToolBinPaths(session, buildMiseProject(session.toolConfigurations).content);
+            miseBinPaths ??= readToolBinPaths(session, buildMiseInstall(session.toolConfigurations).content);
             return miseBinPaths;
         },
     };

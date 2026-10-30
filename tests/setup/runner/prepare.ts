@@ -6,7 +6,7 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { runNpmPack } from '#tests/setup/runner/npm-registry.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { buildMiseProject } from '#cli/generation/tool-projects.ts';
+import { buildMiseInstall } from '#cli/generation/tool-installs.ts';
 import { MISE_INSTALL_ARGUMENTS } from '#cli/config/installers/mise.ts';
 import { findMisePin, listDistinctTools } from '#cli/manifests/tools.ts';
 import { MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/executables/locate.ts';
@@ -42,7 +42,7 @@ async function installTestTools(): Promise<string[]> {
         .filter((tool) => tool.system !== true && hasToolBuild(tool.name))
         .flatMap((tool) => findMisePin(tool)?.name ?? []);
     await mkdir(folder);
-    await writeFile(config, buildMiseProject(configurations).content);
+    await writeFile(config, buildMiseInstall(configurations).content);
     for (const commandArguments of [
         [...MISE_TRUST, config],
         [...MISE_INSTALL_ARGUMENTS, ...names],

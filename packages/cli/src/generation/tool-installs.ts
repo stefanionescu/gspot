@@ -1,20 +1,18 @@
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
+import { listMisePins } from '#cli/manifests/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { type Configuration } from '#cli/types/manifests.ts';
 import { buildPythonProjectTable } from '#cli/installers/pypi.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
-import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
-import { listMisePins, listToolProjectPins } from '#cli/manifests/tools.ts';
 
 /**
-Build the mise tool project without the runtime pins of the repository.
+Build the mise install of the tools, without the runtime pins of the repository.
 
 @param configurations the configurations in use.
 */
-export function buildMiseProject(configurations: Configuration[]): GeneratedFile {
+export function buildMiseInstall(configurations: Configuration[]): GeneratedFile {
     const tools = Object.fromEntries(
         listMisePins(configurations)
             .toSorted((left, right) => compareText(left.name, right.name))
@@ -33,35 +31,12 @@ export function buildMiseProject(configurations: Configuration[]): GeneratedFile
 }
 
 /**
-Build the npm tools as a tool project, and add no dependencies to the repository.
-
-@param configurations the configurations with npm tools.
-*/
-export function buildNpmProject(configurations: Configuration[]): GeneratedFile[] {
-    const pins = listToolProjectPins(configurations).npm;
-    const files: GeneratedFile[] = [
-        {
-            path: GSPOT_PATHS.npmProject,
-            content: `${JSON.stringify(
-                {
-                    ...NPM_TOOL_PROJECT,
-                    devDependencies: pins,
-                },
-                null,
-                JSON_INDENT,
-            )}\n`,
-        },
-    ];
-    return files;
-}
-
-/**
-Build the Python tool project that holds the Python lint tools.
+Build the Python install that holds the Python lint tools.
 
 @param configurations the configurations in use.
 @returns an empty list without Python tools.
 */
-export function buildPythonProject(configurations: Configuration[]): GeneratedFile[] {
+export function buildPythonInstall(configurations: Configuration[]): GeneratedFile[] {
     const project = buildPythonProjectTable(configurations);
     if (project.dependencies.length === 0) return [];
     return [
