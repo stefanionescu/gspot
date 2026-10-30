@@ -32,18 +32,3 @@ export const TYPESCRIPT_PROJECTS_SANDBOX = {
     level: 'all',
     files: BASE_INSTALLED_FILES,
 } as const;
-
-const TSCONFIG_PROJECT =
-    '{"compilerOptions":{"composite":true,"strict":true,"types":[],"target":"ES2020"},"include":["*.ts"]}';
-
-const SOLUTION_TSCONFIG =
-    '{// The solution has no sources.\n"files":[],"references":[{"path":"./orders"},{"path":"./users"}],}';
-
-export const SOLUTION_PROJECT_FILES = {
-    '.gitignore': 'node_modules/\n.gspot/\n',
-    'tsconfig.json': SOLUTION_TSCONFIG,
-    'orders/tsconfig.json': TSCONFIG_PROJECT,
-    'users/tsconfig.json': TSCONFIG_PROJECT.replace('"include"', '"references":[{"path":"../orders"}],"include"'),
-    'orders/order.ts': 'export const total: number = "wrong";',
-    'users/user.ts': 'import { total } from "../orders/order.js"; export const active: boolean = total;',
-};

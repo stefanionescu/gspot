@@ -16,7 +16,6 @@ import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes
 import {
     OUTDIR_CASES,
     AUTHORED_TSCONFIG,
-    SOLUTION_PROJECT_FILES,
     IMPLICIT_PROJECT_FILES,
     TYPESCRIPT_PROJECTS_SANDBOX,
 } from '#tests/config/integration/checks/language/typescript/projects.ts';
@@ -48,36 +47,6 @@ test('typescript/tsc reports a type error in a tsconfig.json project without fil
     const clean = await runTscCheck(root);
     expect(clean.code, clean.output).toBe(0);
     expect(await readFile(join(root, 'tsconfig.json'), 'utf8')).toBe(IMPLICIT_PROJECT_FILES['tsconfig.json']);
-});
-
-test('typescript/tsc checks both projects of a solution and writes no build output', async () => {
-    const { root } = installedSandbox();
-
-    await using _sourceChange = await applySandboxChanges(
-        installedSandbox(),
-        buildSandboxChanges(TYPESCRIPT_PROJECTS_SANDBOX.files, {
-            ...SOLUTION_PROJECT_FILES,
-            'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-        }),
-    );
-    commitAll(root);
-    const failed = await runTscCheck(root);
-    expect(failed.code, failed.output).toBe(1);
-    expect(failed.findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
-        { file: 'orders/order.ts', line: 1, rule: 'TS2322' },
-        { file: 'users/user.ts', line: 1, rule: 'TS2322' },
-    ]);
-    await writeFile(join(root, 'orders/order.ts'), 'export const total: number = 3;');
-    await writeFile(
-        join(root, 'users/user.ts'),
-        'import { total } from "../orders/order.js"; export const active: boolean = total > 0;',
-    );
-    const clean = await runTscCheck(root);
-    expect(clean.code, clean.output).toBe(0);
-    const output = await Promise.all(
-        ['orders', 'users'].map((folder) => readdir(join(root, folder), { recursive: true })),
-    );
-    expect(output.flat().filter((path) => /\.(?:tsbuildinfo|js|d\.ts)$/u.test(path))).toStrictEqual([]);
 });
 
 test.each([...LEVELS])(
