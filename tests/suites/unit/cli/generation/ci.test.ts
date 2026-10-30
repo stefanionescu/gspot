@@ -79,9 +79,7 @@ test('the cache key covers version and lockfiles without restoring another key, 
         "gspot-${{ runner.os }}-${{ runner.arch }}-1.2.3-${{ hashFiles('.gspot/package.json', '.gspot/*lock*', '.gspot/pyproject.toml', '.gspot/mise.toml', 'package-lock.json', 'web/pnpm-lock.yaml', 'team''s/bun.lock') }}",
     );
     expect(restore.with?.['restore-keys']).toBeUndefined();
-    expect(restore.with?.['path']).toBe(
-        '~/.cache/mise\n~/.local/share/mise/installs\n~/.npm/_cacache\n~/.local/share/pnpm/store\n',
-    );
+    expect(restore.with?.['path']).toBe('~/.cache/mise/downloads-cas\n~/.npm/_cacache\n~/.local/share/pnpm/store\n');
     const save = steps.find((step) => step.name === 'Save caches')!;
     expect(save).toMatchObject({
         if: "steps.cache.outputs.cache-hit != 'true'",

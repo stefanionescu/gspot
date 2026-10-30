@@ -51,14 +51,14 @@ export const GITLAB_SCRIPT = [
 export const CACHE_CASES = [
     {
         system: 'linux',
-        paths: '~/.cache/mise\n~/.local/share/mise/installs\n~/.npm/_cacache\n~/.local/share/pnpm/store\n~/.cache/yarn\n~/.yarn/berry/cache\n~/.bun/install/cache\n~/.cache/uv\n',
+        paths: '~/.cache/mise/downloads-cas\n~/.npm/_cacache\n~/.local/share/pnpm/store\n~/.cache/yarn\n~/.yarn/berry/cache\n~/.bun/install/cache\n~/.cache/uv\n',
     },
     {
         system: 'macos',
-        paths: '~/Library/Caches/mise\n~/.local/share/mise/installs\n~/.npm/_cacache\n~/Library/pnpm/store\n~/Library/Caches/Yarn\n~/.yarn/berry/cache\n~/.bun/install/cache\n~/.cache/uv\n',
+        paths: '~/Library/Caches/mise/downloads-cas\n~/.npm/_cacache\n~/Library/pnpm/store\n~/Library/Caches/Yarn\n~/.yarn/berry/cache\n~/.bun/install/cache\n~/.cache/uv\n',
     },
     {
         system: 'windows',
-        paths: '~/AppData/Local/mise\n~/AppData/Local/npm-cache/_cacache\n~/AppData/Local/pnpm/store\n~/AppData/Local/Yarn/Cache\n~/AppData/Local/Yarn/Berry/cache\n~/.bun/install/cache\n~/AppData/Local/uv/cache\n',
+        paths: '${{ runner.temp }}/mise/downloads-cas\n~/AppData/Local/npm-cache/_cacache\n~/AppData/Local/pnpm/store\n~/AppData/Local/Yarn/Cache\n~/AppData/Local/Yarn/Berry/cache\n~/.bun/install/cache\n~/AppData/Local/uv/cache\n',
     },
 ] as const;

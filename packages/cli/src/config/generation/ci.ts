@@ -2,7 +2,7 @@ import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 
 export const CACHED_PATHS = {
     linux: {
-        mise: ['~/.cache/mise', '~/.local/share/mise/installs'],
+        mise: ['~/.cache/mise/downloads-cas'],
         npm: ['~/.npm/_cacache'],
         pnpm: ['~/.local/share/pnpm/store'],
         yarn: ['~/.cache/yarn', '~/.yarn/berry/cache'],
@@ -10,7 +10,7 @@ export const CACHED_PATHS = {
         uv: ['~/.cache/uv'],
     },
     macos: {
-        mise: ['~/Library/Caches/mise', '~/.local/share/mise/installs'],
+        mise: ['~/Library/Caches/mise/downloads-cas'],
         npm: ['~/.npm/_cacache'],
         pnpm: ['~/Library/pnpm/store'],
         yarn: ['~/Library/Caches/Yarn', '~/.yarn/berry/cache'],
@@ -18,7 +18,7 @@ export const CACHED_PATHS = {
         uv: ['~/.cache/uv'],
     },
     windows: {
-        mise: ['~/AppData/Local/mise'],
+        mise: ['${{ runner.temp }}/mise/downloads-cas'],
         npm: ['~/AppData/Local/npm-cache/_cacache'],
         pnpm: ['~/AppData/Local/pnpm/store'],
         yarn: ['~/AppData/Local/Yarn/Cache', '~/AppData/Local/Yarn/Berry/cache'],
