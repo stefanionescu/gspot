@@ -88,7 +88,6 @@ test('the AGENTS.md Commands section names the start command and leaves the stag
     const command = 'pnpm exec gspot';
     const block = buildAgentsBlock({
         files: [],
-        generatedPaths: [],
         managedKeys: [],
         hasOwnTitle: false,
         startCommand: command,
@@ -110,10 +109,18 @@ test('the AGENTS.md index keeps a rule opening that wraps onto a second line', (
                 group: 'language',
             },
         ],
-        generatedPaths: [],
         managedKeys: [],
         hasOwnTitle: false,
         startCommand: 'gspot',
     });
     expect(block).toContain('/SAFETY.md`: when a shell script deletes files, or parses JSON or YAML.\n');
+});
+
+test('the AGENTS.md Generated files section points at .gitattributes instead of listing the files', () => {
+    const block = buildAgentsBlock({ files: [], managedKeys: [], hasOwnTitle: false, startCommand: 'gspot' });
+    expect(block.slice(block.indexOf('## Generated files'))).toBe(
+        '## Generated files\n\n' +
+            '`.gitattributes` marks each file that gspot writes `linguist-generated`, in the block between the gspot markers.\n' +
+            'Do not edit these files. Change `gspot.toml`, then run `gspot apply`.',
+    );
 });

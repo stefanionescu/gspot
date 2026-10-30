@@ -28,9 +28,9 @@ import {
     RULE_INDEX_LINES,
     ALL_LEVEL_MARKER,
     MARKDOWN_HEADING,
-    GSPOT_FOLDER_LINE,
     SETTINGS_COMMANDS,
     RULE_OPENING_PREFIX,
+    GENERATED_FILES_LINE,
     GENERATED_FILES_HEADING,
 } from '#cli/config/generation/rules.ts';
 
@@ -166,22 +166,12 @@ Build the managed block for the rules.
 
 @param block what the block lists.
 @param block.files the rules with their content.
-@param block.generatedPaths the files gspot writes outside .gspot.
 @param block.managedKeys the keys that gspot manages inside authored config files.
 @param block.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
 @param block.startCommand the command that starts gspot.
 */
-export function buildAgentsBlock({
-    files,
-    generatedPaths,
-    managedKeys,
-    startCommand,
-    hasOwnTitle,
-}: AgentsBlockContent): string {
+export function buildAgentsBlock({ files, managedKeys, startCommand, hasOwnTitle }: AgentsBlockContent): string {
     const index = files.length > 0 ? formatRulesIndex(files) : [];
-    const outside = generatedPaths
-        .toSorted((first, second) => compareText(first, second))
-        .map((path) => `- \`${path}\``);
     const lines = [
         RULES_HEADING,
         '',
@@ -197,10 +187,8 @@ export function buildAgentsBlock({
         '',
         GENERATED_FILES_HEADING,
         '',
+        GENERATED_FILES_LINE,
         `Do not edit these files. Change \`gspot.toml\`, then run \`${startCommand} apply\`.`,
-        '',
-        GSPOT_FOLDER_LINE,
-        ...outside,
         ...managedKeys.flatMap(({ path, keys }) => [
             '',
             `gspot also sets ${keys.length === 1 ? 'one key' : 'these keys'} in \`${path}\`: ${keys.map((key) => '`' + key + '`').join(' and ')}.`,

@@ -20,7 +20,8 @@ export const COMMANDS_HEADING = '## Commands';
 
 export const GENERATED_FILES_HEADING = '## Generated files';
 
-export const GSPOT_FOLDER_LINE = '- every file under `.gspot/`';
+export const GENERATED_FILES_LINE =
+    '`.gitattributes` marks each file that gspot writes `linguist-generated`, in the block between the gspot markers.';
 
 export const EDIT_KEYS_LINE = 'You can edit the other keys of that file.';
 

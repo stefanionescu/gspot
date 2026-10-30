@@ -11,7 +11,6 @@ export type RuleFile = {
 
 export type AgentsBlockContent = {
     files: RuleFile[];
-    generatedPaths: string[];
     managedKeys: { path: string; keys: string[] }[];
     startCommand: string;
     hasOwnTitle: boolean;
