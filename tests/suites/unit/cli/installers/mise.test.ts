@@ -2,9 +2,9 @@ import { realpathSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -68,7 +68,7 @@ test.each(['commit', 'manual'] as const)(
             ...planned,
             check: { ...planned.check, stage },
         }));
-        using writer = openWriter(sandbox.path);
+        const writer = openFiles(sandbox.path);
         const install = buildToolInstall(session, writer);
         install.misePath = 'mise';
         const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
@@ -124,7 +124,7 @@ test.each(['commit', 'manual'] as const)(
 test('mise fills missing release checksums from the audited pins without fetching archives', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['spelling']) });
     const session = await openSession(sandbox.path);
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const install = buildToolInstall(session, writer);
     install.misePath = 'mise';
     const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
@@ -160,7 +160,7 @@ test('mise fills missing release checksums from the audited pins without fetchin
 test('mise lock that leaves a platform without a download URL is refused and writes no lockfile', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['spelling']) });
     const session = await openSession(sandbox.path);
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const install = buildToolInstall(session, writer);
     install.misePath = 'mise';
     using _commands = fakeCommand('mise', async (command, options) => {
@@ -189,7 +189,7 @@ test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps th
         [GSPOT_PATHS.miseLockfile]: '[tools]\n',
     });
     const session = await openSession(sandbox.path);
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const install = buildToolInstall(session, writer);
     install.misePath = 'mise';
     const pin = listMisePins(session.toolConfigurations).find((pin) => pin.checksums === undefined)!;

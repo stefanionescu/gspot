@@ -10,15 +10,7 @@ test('a failed staged write removes its temporary file and preserves the destina
         throw failure;
     });
     expect(() => {
-        replaceBounded(
-            { root: sandbox.path, locks: new Map() },
-            'source.txt',
-            {
-                bytes: Buffer.from('after'),
-                mode: 0o644,
-            },
-            { bytes: Buffer.from('before'), mode: 0o644 },
-        );
+        replaceBounded({ root: sandbox.path }, 'source.txt', { bytes: Buffer.from('after'), mode: 0o644 });
     }).toThrow(failure);
     expect(fs.readdirSync(sandbox.path)).toStrictEqual(['source.txt']);
     expect(fs.readFileSync(`${sandbox.path}/source.txt`, 'utf8')).toBe('before');

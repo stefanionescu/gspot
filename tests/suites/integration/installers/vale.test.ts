@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/vale.ts';
@@ -111,7 +111,7 @@ test.each([...VALE_INSTALL_FAILURES])(
             version,
             ...fakeArguments,
         );
-        using writer = openWriter(sandbox.path);
+        const writer = openFiles(sandbox.path);
         const request = buildToolInstall(session, writer);
         const failure = await captureRejection(installValePackages(request, [miseBin]));
         expect(failure.message).toEndWith(message);

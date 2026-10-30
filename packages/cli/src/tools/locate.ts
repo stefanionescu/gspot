@@ -76,7 +76,7 @@ List the executables of the repository or its tool project, without the system s
 */
 export function listRepositoryExecutablePaths(root: string, name: string, options: ExecutableSearch): string[] {
     if (isAbsolute(name)) return statSync(name, { throwIfNoEntry: false }) === undefined ? [] : [name];
-    using files = openFiles(root);
+    const files = openFiles(root);
     const paths = listSearchFolders(root, options).flatMap((folder) =>
         listExecutableNames(name).map((file) => join(folder, file)),
     );
@@ -92,7 +92,7 @@ that gspot generates and no other mise config file sits in .gspot. mise then rea
 @returns the variables, or undefined when mise must not read .gspot.
 */
 export function buildMiseTrust(root: string, project: string): Record<string, string> | undefined {
-    using files = openFiles(root);
+    const files = openFiles(root);
     if (files.read(GSPOT_PATHS.miseProject)?.bytes.toString('utf8') !== project) return undefined;
     const names = files.list(GSPOT_FOLDER);
     if (names.some((name) => MISE_CONFIG_NAME.test(name) && !MISE_PROJECT_FILES.has(name))) return undefined;

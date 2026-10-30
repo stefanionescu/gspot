@@ -87,7 +87,7 @@ test('a fresh Git clone keeps the committed generated files byte for byte and mo
         env: {},
     });
     expect(cloned.code, cloned.stderr).toBe(0);
-    using files = openFiles(clone.path);
+    const files = openFiles(clone.path);
     const config = getManifestTarget('bash', 'shellcheckrc');
     const initial = files.read(config)!;
     const applied = await runGspot(clone.path, ['apply', '--json']);

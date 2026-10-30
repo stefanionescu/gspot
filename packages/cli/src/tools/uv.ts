@@ -96,7 +96,7 @@ export function findMissingProjectEnvironment(
     const scope = planned.scope.path;
     const project = joinScope(scope, PYPROJECT_TOML);
     if (session.repository.files.every((file) => file.path !== project)) return undefined;
-    using files = openFiles(session.toolsRoot);
+    const files = openFiles(session.toolsRoot);
     return files.readStats(joinScope(scope, PYTHON_ENVIRONMENT_FOLDER))?.isDirectory() === true
         ? undefined
         : { status: 'missing', note: PROJECT_ENVIRONMENT_MESSAGE };

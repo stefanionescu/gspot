@@ -26,7 +26,7 @@ function readInstallPackageManager(session: Session): ToolPackageManager | undef
 Install the tools in their tool projects and set the hooks of this clone.
 
 @param session the repository to install for.
-@param writer the locked repository handle.
+@param writer the repository handle.
 @param generated the tool projects to install.
 */
 export async function installTools(session: Session, writer: Files, generated: Generation): Promise<InstallResult> {

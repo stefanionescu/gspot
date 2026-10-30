@@ -1,8 +1,8 @@
 import { gt } from 'semver';
 import { formatCount } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { type Command } from '@commander-js/extra-typings';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
@@ -66,7 +66,7 @@ async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
     if (pin !== undefined && gt(pin, cliPackage.version)) assertVersionPin(root);
     const session = await openSession(root);
     if (options.dryRun) return buildDryRunResult(session);
-    using writer = openWriter(root);
+    const writer = openFiles(root);
     const report = await writeGeneratedFiles(session, generateFiles(session), writer);
     const version = pin === cliPackage.version ? '' : `version ${pin ?? 'unpinned'} -> ${cliPackage.version}\n`;
     return { text: version + formatApplyReport(report), json: report, exitCode: 0 };

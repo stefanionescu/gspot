@@ -1,9 +1,9 @@
 import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
+import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
 import { CI_NODE } from '#cli/config/generation/ci.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
@@ -23,7 +23,7 @@ test('npm in place of Yarn 1 refuses to run without the minimum release age', as
     );
     using _npm = fakeCommand('npm', () => Promise.resolve(buildProcessResult({ stdout: '11.18.0\n' })));
     const session = await openSession(sandbox.path);
-    using owner = openWriter(sandbox.path);
+    const owner = openFiles(sandbox.path);
     const versionError = await captureRejection(assertPackageManagerVersion(buildToolInstall(session, owner)));
     expect(versionError.message).toBe(
         'gspot install needs npm 11.19.0 or later, which holds back new releases for dependencies.min_release_age_days. Found 11.18.0.',
@@ -39,7 +39,7 @@ test.each(PACKAGE_MANAGER_AGE_CASES)(
         });
         using _manager = fakeCommand('mise', () => Promise.resolve(buildProcessResult({ stdout: `${version}\n` })));
         const session = await openSession(sandbox.path);
-        using owner = openWriter(sandbox.path);
+        const owner = openFiles(sandbox.path);
         const context = buildToolInstall(session, owner);
         const checked = assertPackageManagerVersion(context);
         if (accepted) await checked;
@@ -59,7 +59,7 @@ test('a package manager version timeout names the install command and configured
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
     });
     const session = await openSession(sandbox.path);
-    using owner = openWriter(sandbox.path);
+    const owner = openFiles(sandbox.path);
     const context = buildToolInstall(session, owner);
     using _bun = fakeCommand('mise', () => Promise.resolve(buildProcessResult(PACKAGE_MANAGER_TIMEOUT)));
     const timeoutError = await captureRejection(assertPackageManagerVersion(context));
@@ -82,7 +82,7 @@ test('a pinned pnpm runs through mise instead of the older PATH executable', asy
             : run(command, options);
     });
     const session = await openSession(sandbox.path);
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const install = buildToolInstall(session, writer);
     await assertPackageManagerVersion(install);
     expect(install.steps).toStrictEqual([['mise', 'exec', CI_NODE, 'pnpm@10.30.0', '--', 'pnpm', '--version']]);

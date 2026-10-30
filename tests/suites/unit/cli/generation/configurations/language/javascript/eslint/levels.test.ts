@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
@@ -150,7 +150,7 @@ test('switching the level and back writes the same files', async () => {
         await writeFile(join(sandbox.path, 'gspot.toml'), settings);
         const session = await openSession(sandbox.path);
         const output = generateFiles(session);
-        using writer = openWriter(sandbox.path);
+        const writer = openFiles(sandbox.path);
         await writeGeneratedFiles(session, output, writer);
         outputs.push(output.files.map(({ path, content }) => ({ path, content })));
     }

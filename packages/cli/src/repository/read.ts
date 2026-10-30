@@ -81,7 +81,7 @@ export async function readRepository(
     { generatedPaths, scopes, configurationsByName }: RepositoryReadOptions,
 ): Promise<Repository> {
     const { root, hasGit, index, attributes, unreadablePaths } = listing;
-    using files = openFiles(root);
+    const files = openFiles(root);
     const tracked: TrackedFile[] = [];
     for (const listedFile of listing.files) {
         const file = classifyFile(root, listedFile, listedFile.prefix, { generatedPaths, attributes });

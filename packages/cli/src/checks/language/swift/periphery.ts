@@ -31,8 +31,7 @@ export async function checkSwiftPeriphery(session: CheckSession, planned: Planne
     );
     const configFile = join(session.root, getConfigFilePath(session, planned, PERIPHERY_TOOL));
     const commandArguments = [...PERIPHERY_COMMAND, configFile];
-    const setup = prepareBuild(session.root, planned.files, folder);
-    using files = setup.files;
+    const { files } = prepareBuild(session.root, planned.files, folder);
     return await runCopiedTool(session, planned, {
         source: files.readCanonicalPath(BUILD_SOURCE_FOLDER),
         commandArguments,

@@ -95,9 +95,7 @@ export async function runSwiftBuild(
     plan: SwiftBuildPlan,
 ): Promise<SwiftBuildOutput> {
     return getCachedMapValue(session.reads, SWIFT_BUILD_OUTPUTS, plan.folder, async () => {
-        const setup = prepareBuild(session.root, planned.files, plan.folder);
-        using files = setup.files;
-        const { source } = setup;
+        const { files, source } = prepareBuild(session.root, planned.files, plan.folder);
         if (plan.kind === 'package' && plan.purpose === 'analyze')
             files.deleteTree(convertToPosixPath(relative(plan.folder, plan.scratch)));
         const cwd = join(source, planned.scope.path);
@@ -112,7 +110,7 @@ export async function runSwiftBuild(
             )
             .join('\n');
         const log = convertToPosixPath(relative(plan.folder, plan.log));
-        files.write(log, { bytes: Buffer.from(output), mode: PRIVATE_FILE }, files.read(log));
+        files.write(log, { bytes: Buffer.from(output), mode: PRIVATE_FILE });
         return { output, code: result.code, source };
     });
 }

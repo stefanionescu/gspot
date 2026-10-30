@@ -1,13 +1,14 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { BUN_SCANNER_SETTINGS } from '#tests/config/toml.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { openWriter, writePlans, planManagedKeys } from '#cli/repository/writer.ts';
+import { writePlans, planManagedKeys } from '#cli/repository/writer.ts';
 import { BUN_SCANNER_KEYS } from '#tests/config/generation/configurations/general/dependencies.ts';
 
 test('a scope that uses Bun gets the scanner that gspot.toml names in its bunfig.toml', async () => {
@@ -37,7 +38,7 @@ test('a new Bun scanner file has one table and a final newline, and keeps its ke
     const generated = generateFiles(await openSession(sandbox.path)).managedKeys.find(
         ({ path }) => path === 'bunfig.toml',
     )!;
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     writePlans(writer, [planManagedKeys(writer, generated.path, generated.keys)]);
     expect(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8')).toBe(
         '[install.security]\nscanner = "@socketsecurity/bun-security-scanner"\n',

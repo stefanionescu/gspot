@@ -53,7 +53,7 @@ List every file under a folder as sorted relative paths.
 */
 export function listBuiltFiles(folder: string): string[] {
     const root = realpathSync.native(folder);
-    using files = openFiles(root);
+    const files = openFiles(root);
     const found: string[] = [];
     walkFiles(files, '', (path) => {
         const absolute = join(root, path);

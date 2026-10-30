@@ -1,10 +1,3 @@
-export const CSS_MANAGED_PLAN_CHANGES = [
-    {
-        path: 'package.json',
-        note: 'managed stylelint fields; other content stays',
-    },
-] as const;
-
 export const GENERATED_WRITE_MESSAGE = 'Generated write denied';
 
 export const STOPPED_ERROR_MESSAGE =

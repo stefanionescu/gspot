@@ -2,8 +2,8 @@ import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { writeSettings } from '#cli/settings/file.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
@@ -42,7 +42,7 @@ export async function applySettingsEdit(
     options: SettingsEditOptions,
 ): Promise<CommandResult<ApplyReport & { changed: boolean; summary: string }>> {
     const { edit, summary } = options;
-    using writer = openWriter(root);
+    const writer = openFiles(root);
     const result = buildEditedSettings(root, edit);
     options.reads?.sources.set(SETTINGS_FILE, Buffer.from(result.text));
     const session = await openSession(root, {

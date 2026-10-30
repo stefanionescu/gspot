@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { unlinkSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { formatHeader } from '#cli/generation/header.ts';
@@ -28,7 +28,7 @@ async function applyPackageFields(root: string, scenario: PackageFieldScenario):
     const session = await openSession(root);
     const generated = generateFiles(session);
     expect(generated.managedKeys).toStrictEqual(scenario.changes);
-    using writer = openWriter(root);
+    const writer = openFiles(root);
     await writeGeneratedFiles(session, generated, writer);
     const authored = new Map<string, string>(Object.entries(scenario.project));
     for (const path of scenario.unchanged) expect(await readFile(join(root, path), 'utf8')).toBe(authored.get(path)!);
@@ -50,7 +50,7 @@ test.each([...TOOL_FOLDERS])(
         });
 
         const session = await openSession(sandbox.path);
-        using writer = openWriter(sandbox.path);
+        const writer = openFiles(sandbox.path);
         await writeGeneratedFiles(session, { files: [], blocks: [], managedKeys: [] }, writer);
         expect(await isOnDisk(join(sandbox.path, folder))).toBe(false);
     },
@@ -77,7 +77,7 @@ test('leaving level all removes the managed commitlint field from every package.
             keys: [{ key: ['commitlint'], value: undefined }],
         })),
     );
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     await writeGeneratedFiles(session, generated, writer);
     for (const [path, source] of installed) {
         const expected = JSON.parse(source) as Record<string, unknown>;
@@ -107,7 +107,7 @@ test('removing css drops its managed stylelint field and keeps authored fields b
         { path: 'app/child/package.json', keys: [{ key: ['stylelint'], value: undefined }] },
         { path: 'other/package.json', keys: [{ key: ['stylelint'], value: undefined }] },
     ]);
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     await writeGeneratedFiles(session, generated, writer);
     for (const [path, source] of installed) {
         if (['package.json', 'app/child/package.json', 'other/package.json'].includes(path)) {
@@ -129,7 +129,7 @@ test('a stale generated file removed before planning produces no removal report'
         '.gspot/stale.txt': 'stale\n',
     });
     const session = await openSession(sandbox.path);
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const readKeepingLinks = writer.readKeepingLinks.bind(writer);
     using _disappear = spyOn(writer, 'readKeepingLinks').mockImplementation((path) => {
         if (path === '.gspot/stale.txt') unlinkSync(join(sandbox.path, path));
@@ -150,7 +150,7 @@ test('writing a mise project preserves its lockfile and reports a changed hook',
         '.gspot/mise.lock': 'version = 1\n',
     });
     const session = await openSession(sandbox.path);
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const output = {
         files: [
             { path: '.gspot/mise.toml', content: '[tools]\n' },
@@ -178,7 +178,7 @@ test('at level basic, prose keeps its Vale configuration and removes installed s
         '.gspot/vale/Google/Heading.yml': 'extends: existence\n',
     });
     const session = await openSession(sandbox.path);
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     await writeGeneratedFiles(session, generateFiles(session), writer);
     expect(await isOnDisk(join(sandbox.path, '.gspot/vale'))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/general/prose/vale.ini'))).toBe(true);
@@ -195,7 +195,7 @@ test('apply preserves a copied header example and removes an obsolete scoped poi
     commitAll(sandbox.path);
     const before = await readFile(join(sandbox.path, 'examples/.editorconfig'));
     const session = await openSession(sandbox.path);
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const report = await writeGeneratedFiles(session, generateFiles(session), writer);
     expect(await readFile(join(sandbox.path, 'examples/.editorconfig'))).toStrictEqual(before);
     expect(report.removed).toContain('docs/.markdownlint.jsonc');

@@ -102,7 +102,7 @@ async function selectRevisionDependencies(
     indexFiles: GitFile[],
     cancelSignal?: AbortSignal,
 ): Promise<RevisionDependencies> {
-    using installed = openFiles(root);
+    const installed = openFiles(root);
     const dependencyFiles = indexFiles.filter((indexFile) => {
         const name = basename(indexFile.path);
         const lockfile = LOCKFILES.find((each) => each.file === name);

@@ -97,7 +97,7 @@ function findMissingConfigFile(
         configFiles,
     }: { session: Session; command: string[]; base: CheckResult; configFiles: string[] },
 ): CheckResult | undefined {
-    using files = openFiles(session.root);
+    const files = openFiles(session.root);
     const missing = [...configFiles, ...listCommandConfigFiles(session, planned, command)].find(
         (path) =>
             (path.startsWith(`${GSPOT_FOLDER}/`) ? files.read(path) : findCachedText(session.reads, path)) ===

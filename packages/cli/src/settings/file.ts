@@ -29,7 +29,7 @@ Read gspot.toml without following a link out of the repository.
 @param root the folder that contains gspot.toml.
 */
 export function readSettingsFile(root: string): SettingsFileContents {
-    using files = openFiles(root);
+    const files = openFiles(root);
     const previous = files.read(SETTINGS_FILE);
     if (previous === undefined) throw new GspotError('settings', NO_SETTINGS_MESSAGE);
     const text = decodeUtf8(previous.bytes);
@@ -38,7 +38,7 @@ export function readSettingsFile(root: string): SettingsFileContents {
 }
 
 /**
-Write gspot.toml only while the file on disk still matches the one that the edit read.
+Write gspot.toml when its bytes or mode change.
 
 @param writer the file writer for settings.
 @param text the new gspot.toml contents.
@@ -47,13 +47,7 @@ Write gspot.toml only while the file on disk still matches the one that the edit
 export function writeSettings(writer: Files, text: string, previous: FileContents | undefined): void {
     const next = { bytes: Buffer.from(text), mode: previous?.mode ?? OWNER_WRITABLE_FILE };
     if (isDeepStrictEqual(next, previous)) return;
-    writePlans(
-        writer,
-        planReplacements(writer, [{ path: SETTINGS_FILE, next, expected: previous }]).map((plan) => ({
-            ...plan,
-            before: previous,
-        })),
-    );
+    writePlans(writer, planReplacements(writer, [{ path: SETTINGS_FILE, next, expected: previous }]));
 }
 
 /**

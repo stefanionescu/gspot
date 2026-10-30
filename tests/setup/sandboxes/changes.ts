@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { hasErrorCode } from '#cli/system/errors.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import type { Sandbox } from '#tests/types/sandbox.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { runGspotStep } from '#tests/setup/cli/commands.ts';
@@ -112,7 +112,7 @@ export async function applySandboxChanges(sandbox: Sandbox, changes: SandboxChan
 Write the generated files for an existing test repository.
 */
 export async function applyGeneratedFiles(root: string): Promise<void> {
-    using writer = openWriter(root);
+    const writer = openFiles(root);
     const session = await openSession(root);
     await writeGeneratedFiles(session, generateFiles(session), writer);
 }

@@ -1,6 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { installTools } from '#cli/installers/install.ts';
 import { type Command } from '@commander-js/extra-typings';
@@ -33,7 +33,7 @@ async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promis
     const root = readRepositoryRoot(cwd);
     const session = await openSession(root, { cancelSignal });
     const generated = generateFiles(session);
-    using writer = openWriter(root);
+    const writer = openFiles(root);
     if (hasOutdatedToolProjects(writer, generated)) throw new GspotError('install', TOOL_PROJECTS_MESSAGE);
     const { note, steps } = await installTools(session, writer, generated);
     return {

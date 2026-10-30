@@ -5,6 +5,7 @@ import * as systemEnvironment from 'std-env';
 import { testdir, createFileTree } from 'testdirs';
 import { mock, test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -12,57 +13,10 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { fakeTerminals } from '#tests/setup/system/fakes.ts';
 import { TEST_VERSION } from '#tests/config/commands/samples.ts';
-import { rm, stat, readFile, writeFile } from 'node:fs/promises';
-import { INVALID_CSS } from '#tests/config/commands/init/sources.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { SQLFLUFF_KEPT_NOTE } from '#tests/config/commands/init/messages.ts';
-import { EDITED_STYLELINT_PACKAGE } from '#tests/config/generation/write.ts';
-import { STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
-
-import {
-    STOPPED_ERROR_MESSAGE,
-    GENERATED_WRITE_MESSAGE,
-    CSS_MANAGED_PLAN_CHANGES,
-} from '#tests/config/commands/init/write.ts';
-
-test.each([
-    [
-        'changes',
-        async (path: string) => {
-            await writeFile(path, 'disable=SC2034\n');
-        },
-    ],
-    ['vanishes', rm],
-])('init refuses to delete a conflicting config file that %p after the plan', async (kind, change) => {
-    using mockResources = new DisposableStack();
-    await using sandbox = await createGitSandbox({ '.shellcheckrc': 'disable=SC2086\n', 'entry.sh': 'echo example\n' });
-
-    commitAll(sandbox.path);
-
-    const preview = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'bash', '--json']);
-    const plan = (JSON.parse(preview.stdout) as InitJson).plan;
-    expect(plan.delete).toStrictEqual([
-        { path: '.shellcheckrc', note: 'replaced by the generated shellcheck config file' },
-    ]);
-    await using _terminal = await fakeInteractiveTerminal();
-    mockResources.use(
-        spyOn(clack, 'confirm').mockImplementation(async () => {
-            await change(join(sandbox.path, '.shellcheckrc'));
-            return true;
-        }),
-    );
-    const refused = await runGspot(sandbox.path, ['init', '--configurations', 'bash']);
-    expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe('.shellcheckrc changed before removal. Run the command again.\n');
-    if (kind === 'changes')
-        expect(await readFile(join(sandbox.path, '.shellcheckrc'), 'utf8')).toBe('disable=SC2034\n');
-    else expect(await isOnDisk(join(sandbox.path, '.shellcheckrc'))).toBe(false);
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(
-        (JSON.parse(preview.stdout) as InitJson).settings,
-    );
-    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.versionPin))).toBe(true);
-});
+import { STOPPED_ERROR_MESSAGE, GENERATED_WRITE_MESSAGE } from '#tests/config/commands/init/write.ts';
 
 test('a failed init keeps the version pin it already wrote', async () => {
     await using sandbox = await testdir({ [GSPOT_PATHS.versionPin]: `${TEST_VERSION}\n` });
@@ -97,36 +51,6 @@ test('init keeps the old config file when the generated one cannot be written', 
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
     const exists = await isOnDisk(join(sandbox.path, getManifestTarget('spelling', 'typos.toml')));
     expect(exists).toBe(false);
-});
-
-test('init refuses to write package.json when one of its managed fields changed after the plan, and keeps its bytes and mode', async () => {
-    using mockResources = new DisposableStack();
-    await using sandbox = await createGitSandbox({ 'package.json': STYLELINT_PACKAGE_JSON, 'source.css': INVALID_CSS });
-
-    const preview = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'css', '--json']);
-    const plan = (JSON.parse(preview.stdout) as InitJson).plan;
-    expect(plan.change).toStrictEqual([...CSS_MANAGED_PLAN_CHANGES]);
-    expect(plan.delete.map(({ path }) => path)).not.toContain('package.json');
-    let mode = 0;
-    await using _terminal = await fakeInteractiveTerminal();
-    mockResources.use(
-        spyOn(clack, 'confirm').mockImplementation(async () => {
-            await writeFile(join(sandbox.path, 'package.json'), EDITED_STYLELINT_PACKAGE);
-            const fileAttributes = await stat(join(sandbox.path, 'package.json'));
-            mode = fileAttributes.mode;
-            return true;
-        }),
-    );
-    const refused = await runGspot(sandbox.path, ['init', '--configurations', 'css']);
-    expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe('package.json changed while gspot wrote it. Run the command again.\n');
-    expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(EDITED_STYLELINT_PACKAGE);
-    const after = await stat(join(sandbox.path, 'package.json'));
-    expect(after.mode & 0o777).toBe(mode & 0o777);
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(
-        (JSON.parse(preview.stdout) as InitJson).settings,
-    );
-    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.versionPin))).toBe(true);
 });
 
 test('init keeps a shared file that was edited after the plan', async () => {

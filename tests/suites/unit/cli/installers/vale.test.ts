@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openFiles } from '#cli/system/files/open.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/vale.ts';
@@ -48,7 +48,7 @@ test('at level basic install installs no Vale packages', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['prose'], { level: 'basic' }) });
 
     const session = await openSession(sandbox.path);
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const context = buildToolInstall(session, writer);
     expect(await installValePackages(context, [])).toBe('');
     expect(context.steps).toStrictEqual([]);
@@ -71,7 +71,7 @@ test('a changed Vale archive is refused before sync and preserves installed pack
         String(tool.version),
     );
     using _request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('replaced archive'));
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const install = buildToolInstall(session, writer);
     const error = await captureRejection(installValePackages(install, [miseBin]));
     expect(error.message).toBe(
@@ -100,7 +100,7 @@ test.each([false, true])(
                 ]),
             ),
         });
-        using writer = openWriter(sandbox.path);
+        const writer = openFiles(sandbox.path);
         using request = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected download'));
         const install = buildToolInstall(await openSession(sandbox.path), writer);
         if (deleted) {

@@ -45,7 +45,7 @@ export async function checkDuplicationJscpd(session: CheckSession, planned: Plan
                 .map((file) => file.path),
         ),
     );
-    using files = openFiles(session.root);
+    const files = openFiles(session.root);
     const generatedPath = getConfigFilePath(session, planned, JSCPD_TOOL);
     const generated = files.read(generatedPath);
     if (generated === undefined)

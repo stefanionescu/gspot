@@ -61,7 +61,7 @@ export function readConflictingConfigFiles(
 ): ConflictingConfigFiles {
     const conflicts: ConflictingConfigFiles = { reviewed: new Map(), deleted: [], kept: [], changed: [] };
     const owned = repositorySetup.conflictingConfigFiles.filter(({ tool }) => tools.has(tool));
-    using files = openFiles(root);
+    const files = openFiles(root);
     const paths = new Set(owned.filter((file) => !file.shared).map((file) => file.path));
     for (const path of paths) {
         conflicts.reviewed.set(path, files.read(path));

@@ -1,5 +1,3 @@
-export const BUILD_LOCK = 'build.lock';
-
 export const SWIFT_BUILD_FOLDER = 'swift';
 
 export const ROOT_BUILD_FOLDER = 'root';

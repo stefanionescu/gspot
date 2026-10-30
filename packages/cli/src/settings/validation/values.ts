@@ -31,7 +31,7 @@ Refuse scope paths that name a file, and keep written scopes whose folder does n
 */
 export function validateScopePaths(root: string, settings: Settings): SettingsError[] {
     const paths = [...settings.scopes.values()].map((table) => table.written['path'] as string);
-    using files = openFiles(root);
+    const files = openFiles(root);
     return paths.flatMap((path, index) => {
         const location: KeyPath = ['scope', index, 'path'];
         const stats = readPathStats(files, stripTrailingSlashes(path));
@@ -54,7 +54,7 @@ Check the rule file paths of the root and every scope against the repository fil
 @returns an error at each key that names no file.
 */
 export function validateRuleFilePaths(root: string, settings: Settings): SettingsError[] {
-    using files = openFiles(root);
+    const files = openFiles(root);
     return listSettingsTables(settings).flatMap(({ table, path }) => {
         const plugins = table.tools?.['eslint']?.['plugins'];
         const ruleFiles = table.tools?.['semgrep']?.['rule_files'];

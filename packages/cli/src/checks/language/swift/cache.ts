@@ -19,7 +19,6 @@ import type { SwiftBuildPlan, SwiftBuildSetup, SwiftBuildPurpose } from '#cli/ty
 
 import {
     BUILD_LOG,
-    BUILD_LOCK,
     SWIFT_PROGRAM,
     CODE_SIGNING_OFF,
     SCRATCH_PATH_FLAG,
@@ -42,7 +41,7 @@ import {
 } from '#cli/config/checks/language/swift/cache.ts';
 
 function readBuildSources(root: string, paths: string[]): Map<string, FileContents> {
-    using source = openFiles(root);
+    const source = openFiles(root);
     const wantedFiles = new Map<string, FileContents>();
     for (const file of paths) {
         let mode: number;
@@ -74,8 +73,7 @@ function deleteStaleSources(folder: string, files: Files, wantedFiles: Map<strin
             return true;
         }
         if (!stats.isSymbolicLink() && wantedFiles.has(path)) return false;
-        const onDisk = stats.isSymbolicLink() ? files.readKeepingLinks(path) : files.read(path);
-        if (onDisk !== undefined) files.deleteFile(path, onDisk);
+        files.deleteFile(path);
         return false;
     });
     const deepestFirst = empty.toSorted((left, right) => right.length - left.length);
@@ -85,13 +83,8 @@ function deleteStaleSources(folder: string, files: Files, wantedFiles: Map<strin
 function openBuildCache(folder: string): Files {
     const home = readCacheFolder();
     mkdirSync(home, { recursive: true, mode: PRIVATE_FOLDER });
-    using parentFiles = openFiles(home);
-    parentFiles.createFolder(convertToPosixPath(relative(home, folder)), PRIVATE_FOLDER);
-    using resources = new DisposableStack();
-    const files = resources.use(openFiles(folder));
-    files.createLock(BUILD_LOCK);
-    resources.move();
-    return files;
+    openFiles(home).createFolder(convertToPosixPath(relative(home, folder)), PRIVATE_FOLDER);
+    return openFiles(folder);
 }
 
 /**
@@ -163,16 +156,15 @@ export function planSwiftBuild(
 }
 
 /**
-Locks a build folder and copies in the source files the tool needs.
+Copies the source files the tool needs into a build folder.
 
 @param root the repository folder.
 @param files the scope files.
 @param folder the cache path for the tool.
-@returns the source path and locked root, which the caller disposes.
+@returns the source path and the handle of the build folder.
 */
 export function prepareBuild(root: string, files: TrackedFile[], folder: string): SwiftBuildSetup {
-    using resources = new DisposableStack();
-    const cache = resources.use(openBuildCache(folder));
+    const cache = openBuildCache(folder);
     const wantedFiles = readBuildSources(
         root,
         files.map((file) => file.path),
@@ -181,9 +173,7 @@ export function prepareBuild(root: string, files: TrackedFile[], folder: string)
     cache.createFolder(BUILD_SOURCE_FOLDER, PRIVATE_FOLDER);
     for (const [path, next] of wantedFiles) {
         const cached = cache.read(path);
-        if (!isDeepStrictEqual(cached, next)) cache.write(path, next, cached);
+        if (!isDeepStrictEqual(cached, next)) cache.write(path, next);
     }
-    const source = join(folder, BUILD_SOURCE_FOLDER);
-    resources.move();
-    return { files: cache, source };
+    return { files: cache, source: join(folder, BUILD_SOURCE_FOLDER) };
 }

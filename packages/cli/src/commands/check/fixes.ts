@@ -3,7 +3,6 @@ import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { getTool } from '#cli/configurations/tools.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildDiff } from '#cli/generation/outdated.ts';
 import { type Tool } from '#cli/types/configurations.ts';
@@ -74,16 +73,13 @@ async function runFixInCopy(
         setup: buildCommandSetup(session, planned, { options: options, root: scratch.path }),
         toolPath: toolPath,
     });
-    using files = openFiles(root);
-    const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
-    const before = new Map(paths.map((path) => [path, files.read(path)]));
+    const files = openFiles(root);
     const result = await runFixCommands(session, planned, setup);
-    using corrected = openFiles(scratch.path);
+    const corrected = openFiles(scratch.path);
     for (const path of result.changed) {
-        const expected = before.get(path);
         const value = corrected.read(path);
-        if (value !== undefined) files.write(path, value, expected);
-        else if (expected !== undefined) files.deleteFile(path, expected);
+        if (value === undefined) files.deleteFile(path);
+        else files.write(path, value);
     }
     return result;
 }
@@ -230,14 +226,10 @@ async function listBrokenFiles(changed: string[], before: PathBytes, after: Path
 }
 
 function restoreBrokenFiles(root: string, broken: string[], rounds: FixRounds): void {
-    using files = openFiles(root);
+    const files = openFiles(root);
     for (const path of broken) {
         const now = files.read(path) as FileContents;
-        files.write(
-            path,
-            { ...now, bytes: rounds.before.get(path) as Buffer },
-            { ...now, bytes: rounds.after.get(path) as Buffer },
-        );
+        files.write(path, { ...now, bytes: rounds.before.get(path) as Buffer });
     }
 }
 
@@ -255,7 +247,6 @@ export async function runFixers(
     { dryRun }: { dryRun: boolean },
 ): Promise<FixReport> {
     const checks = planned.filter((check) => check.check.fix !== undefined);
-    using _writer = dryRun ? undefined : openWriter(session.root);
     const paths = [
         ...new Set(
             checks.flatMap((check) => [...new Set([...check.files.map((file) => file.path), ...check.triggerPaths])]),

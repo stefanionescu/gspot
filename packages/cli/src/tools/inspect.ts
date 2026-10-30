@@ -52,7 +52,7 @@ function inspectLibrary(inspected: InspectedTool): ToolInspection {
     if (tool.system === true) {
         installed = findInstalledDependency(root, join(relative(root, cwd), PACKAGE_JSON), name);
     } else {
-        using files = openFiles(root);
+        const files = openFiles(root);
         const path = join(root, GSPOT_PATHS.nodeModules, name, PACKAGE_JSON);
         installed = { path, version: readToolProjectPackage(files, root, path)?.version };
     }

@@ -175,7 +175,7 @@ export function buildPointerFieldEdits(
             .filter((file) => file.kind === 'source' && posix.basename(file.path) === PACKAGE_JSON)
             .map(({ path }) => path),
     ]);
-    using files = openFiles(root);
+    const files = openFiles(root);
     const edits: ManagedKeys[] = [];
     for (const path of packages) {
         const source = files.read(path);

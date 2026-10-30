@@ -170,29 +170,16 @@ Replace the file at a path with new file contents, through a staged file that mo
 @param bounds the root.
 @param path the root-relative file.
 @param contents the file contents to write.
-@param expected the file contents that the caller last saw, or undefined for a new file.
 */
-export function replaceBounded(
-    bounds: FileBounds,
-    path: string,
-    contents: FileContents,
-    expected: FileContents | undefined,
-): void {
+export function replaceBounded(bounds: FileBounds, path: string, contents: FileContents): void {
     const target = preparePath(bounds, path);
     const temporary = join(dirname(target), `${TEMPORARY_FILE_PREFIX}${randomUUID()}${TEMPORARY_FILE_SUFFIX}`);
     let isStaged = false;
     try {
         writeStagedFile(temporary, contents);
         isStaged = true;
-        if (!isSameContents(readBounded(bounds, path), expected))
-            throw new GspotError('filesystem', `${path} changed while gspot wrote it. Run the command again.`);
-        if (
-            process.platform === 'win32' &&
-            expected !== undefined &&
-            expected.isSymlink !== true &&
-            (expected.mode & OWNER_WRITE_BIT) === 0
-        )
-            unlinkSync(target);
+        const onDisk = process.platform === 'win32' ? lstatSync(target, { throwIfNoEntry: false }) : undefined;
+        if (onDisk?.isFile() === true && (onDisk.mode & OWNER_WRITE_BIT) === 0) unlinkSync(target);
         renameSync(temporary, target);
         isStaged = false;
     } catch (error) {

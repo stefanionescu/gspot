@@ -1,16 +1,17 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { GspotError } from '#cli/system/errors.ts';
-import { planBlock, openWriter, writePlans, planRemovals } from '#cli/repository/writer.ts';
+import { planBlock, writePlans, planRemovals } from '#cli/repository/writer.ts';
 
 test('block updates and removal refuse a non-UTF-8 file with a file error and keep its bytes', async () => {
     await using sandbox = await testdir();
     const bytes = Buffer.from([0xff, 0xfe, 0x41, 0x00]);
     await writeFile(join(sandbox.path, 'AGENTS.md'), bytes);
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const failure = matchFields<GspotError>({
         name: 'GspotError',
         code: 'filesystem',
@@ -27,7 +28,7 @@ test('managed block updates and removal keep your text around the block', async 
     await createFileTree(sandbox.path, { 'AGENTS.md': previous });
     const prefix = 'Additional instructions.\n';
     const suffix = '\nLater authored instructions.\n';
-    const firstWriter = openWriter(sandbox.path);
+    const firstWriter = openFiles(sandbox.path);
     writePlans(firstWriter, [planBlock(firstWriter, 'AGENTS.md', 'first instructions')]);
     const installed = firstWriter.read('AGENTS.md')!.bytes.toString('utf8');
     expect(installed).toBe(
@@ -38,8 +39,7 @@ test('managed block updates and removal keep your text around the block', async 
     expect(firstWriter.read('AGENTS.md')!.bytes.toString('utf8')).toBe(
         `${prefix}${previous}\r\n<!-- >>> gspot managed >>> -->\n\nupdated instructions\n\n<!-- <<< gspot managed <<< -->\n${suffix}`,
     );
-    firstWriter[Symbol.dispose]();
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     writePlans(writer, planRemovals(writer, ['AGENTS.md']));
     expect(writer.read('AGENTS.md')!.bytes.toString('utf8')).toBe(prefix + previous + suffix);
 });
@@ -47,7 +47,7 @@ test('managed block updates and removal keep your text around the block', async 
 test('removing the only block deletes the file', async () => {
     await using sandbox = await testdir({ 'AGENTS.md': '' });
 
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
 
     writePlans(writer, [planBlock(writer, 'AGENTS.md', 'instructions')]);
     writePlans(writer, planRemovals(writer, ['AGENTS.md']));

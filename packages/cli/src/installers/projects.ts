@@ -83,7 +83,7 @@ export async function listStaleLockfiles(
 ): Promise<StaleLockfile[]> {
     const { root, packageManager, toolConfigurations } = session;
     const projects = new Set(generated.map((file) => file.path));
-    using files = openFiles(root);
+    const files = openFiles(root);
     const lockfiles: (StaleLockfile | undefined)[] = [];
     if (projects.has(GSPOT_PATHS.miseProject)) lockfiles.push(readMiseLockfileState(files, toolConfigurations));
     if (projects.has(GSPOT_PATHS.npmProject) && packageManager !== undefined) {

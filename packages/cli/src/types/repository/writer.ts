@@ -4,7 +4,6 @@ import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 
 export type WritePlan = {
     path: string;
-    before: FileContents | undefined;
     status: 'changed' | 'unchanged' | 'preserved';
     after?: FileContents;
 };

@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
 import { CI_NODE } from '#cli/config/generation/ci.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
@@ -36,7 +36,7 @@ async function prepareCredentialProject(root: string, packageJson: string, lockf
         'gspot.toml': buildSandboxSettings([]),
     };
     await createFileTree(root, files);
-    using owner = openWriter(root);
+    const owner = openFiles(root);
     const session = await openSession(root);
     const install = await buildNpmToolInstall(session, owner);
     const error = await captureRejection(
@@ -69,7 +69,7 @@ test.each([...FAILED_INSTALL_CASES])(
             'gspot.toml': buildSandboxSettings([]),
         });
         const session = await openSession(sandbox.path);
-        using owner = openWriter(sandbox.path);
+        const owner = openFiles(sandbox.path);
         const failure = {
             stdout: `Downloading ${registry}private-check-tool\n${password}\n${token}`,
             stderr: `${refusal} from ${registry}private-check-tool`,
@@ -108,7 +108,7 @@ test('an npm install that runs past the time limit names the limit', async () =>
         }),
     });
     const session = await openSession(sandbox.path);
-    using owner = openWriter(sandbox.path);
+    const owner = openFiles(sandbox.path);
     using _bun = fakeCommand('mise', (command) =>
         Promise.resolve(
             buildProcessResult(command.at(-1) === '--version' ? { stdout: '1.4.2\n' } : { code: 1, timedOut: true }),
@@ -170,7 +170,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
         PATH: join(sandbox.path, 'missing-bin'),
         MISE_DATA_DIR: join(sandbox.path, 'missing-mise'),
     });
-    using owner = openWriter(sandbox.path);
+    const owner = openFiles(sandbox.path);
     const install = await buildNpmToolInstall(session, owner);
     const projectFile = { path: GSPOT_PATHS.npmProject, content: packageJson };
     const lockfileError = await captureRejection(prepareNpmLockfile(install, projectFile));
@@ -205,7 +205,7 @@ test('a Yarn Classic repository resolves its tool lockfile with npm and the mini
         return buildProcessResult({ stdout: command[1] === '--version' ? '11.19.0\n' : '' });
     });
     const session = await openSession(sandbox.path);
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const install = await buildNpmToolInstall(session, writer);
     const lockfile = await prepareNpmLockfile(install, {
         path: GSPOT_PATHS.npmProject,

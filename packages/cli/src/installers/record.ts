@@ -27,7 +27,7 @@ Read the successful installs. Return an empty record for an absent or invalid fi
 @returns the keys of completed installs.
 */
 export function readInstallRecord(session: Session): InstallRecord {
-    using files = openFiles(session.root);
+    const files = openFiles(session.root);
     const saved = files.read(GSPOT_PATHS.installRecord);
     if (saved === undefined) return {};
     try {
@@ -48,12 +48,10 @@ Record a successful install through the locked writer.
 @param key the inputs of the successful install.
 */
 export function recordInstalledProject(install: ToolInstall, project: keyof InstallRecord, key: string): void {
-    const previous = install.writer.read(GSPOT_PATHS.installRecord);
     const record = { ...install.record, [project]: key };
-    install.writer.write(
-        GSPOT_PATHS.installRecord,
-        { bytes: Buffer.from(`${JSON.stringify(record, null, JSON_INDENT)}\n`), mode: OWNER_WRITABLE_FILE },
-        previous,
-    );
+    install.writer.write(GSPOT_PATHS.installRecord, {
+        bytes: Buffer.from(`${JSON.stringify(record, null, JSON_INDENT)}\n`),
+        mode: OWNER_WRITABLE_FILE,
+    });
     install.record[project] = key;
 }

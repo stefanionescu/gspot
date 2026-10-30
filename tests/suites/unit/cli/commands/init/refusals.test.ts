@@ -6,7 +6,6 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { WRITER_LOCK_FILE } from '#cli/config/repository/writer.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PRESERVE_SOURCE } from '#tests/config/commands/contents.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
@@ -90,11 +89,10 @@ test('a linked .gspot folder stops init, and nothing outside changes', async () 
     const refused = await runGspot(project, ['init', '--yes', '--configurations', 'bash']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stderr).toBe(
-        `A parent of ${WRITER_LOCK_FILE} is a link or is not a folder. Choose a folder without links.\n`,
+        `A parent of ${GSPOT_FOLDER}/.gitignore is a link or is not a folder. Choose a folder without links.\n`,
     );
     expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
     expect(await readdir(outside)).toStrictEqual(['sentinel']);
-    expect(await isOnDisk(join(project, 'gspot.toml'))).toBe(false);
 });
 
 test.each(UNCOMMITTED_FORMAT_CASES)('init refuses to replace $path absent from HEAD: $state', async (variant) => {

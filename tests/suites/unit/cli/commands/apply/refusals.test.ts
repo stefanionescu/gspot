@@ -6,13 +6,9 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { PIN_MESSAGE } from '#tests/config/version-pin.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { spawnCommand } from '#tests/setup/system/processes.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { readTree, isOnDisk } from '#tests/setup/system/files.ts';
-import { WRITER_LOCK_FILE } from '#cli/config/repository/writer.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { ROOT_EDITORCONFIG } from '#tests/config/commands/contents.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -38,39 +34,6 @@ Unclosed instructions.
     const exists = await isOnDisk(join(sandbox.path, getManifestTarget('bash', 'shellcheckrc')));
     expect(exists).toBe(false);
 });
-
-test('apply refuses an empty writer lock left after a crash and names the lock to delete', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        [WRITER_LOCK_FILE]: '',
-    });
-    const refused = await runGspot(sandbox.path, ['apply']);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stderr).toBe(
-        `${WRITER_LOCK_FILE} names no gspot process. Delete ${WRITER_LOCK_FILE} when no gspot command is running.\n`,
-    );
-    expect(await readFile(join(sandbox.path, WRITER_LOCK_FILE), 'utf8')).toBe('');
-});
-
-test.each([['a live process', undefined], ...(isWindows ? [] : [['process 1', '1:held'] as const])] as const)(
-    'apply refuses a writer lock held by %s and names the process and the lock',
-    async (_, holder) => {
-        await using sandbox = await createGitSandbox({});
-        const command = buildProgramCommand('fakes/tool', '--wait');
-        await using sleeper = holder === undefined ? spawnCommand(command, { cwd: sandbox.path }) : undefined;
-        const lock = holder ?? `${String(sleeper!.child.pid)}:held`;
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings([]),
-            [WRITER_LOCK_FILE]: lock,
-        });
-        const refused = await runGspot(sandbox.path, ['apply']);
-        expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect(refused.stderr).toBe(
-            `Another gspot command, process ${lock.split(':', 1)[0]!}, holds ${WRITER_LOCK_FILE}. Retry after it finishes, or delete ${WRITER_LOCK_FILE} when no gspot command is running.\n`,
-        );
-        expect(await readFile(join(sandbox.path, WRITER_LOCK_FILE), 'utf8')).toBe(lock);
-    },
-);
 
 test('apply --json prints one error object when an unowned file blocks generation', async () => {
     await using sandbox = await createGitSandbox({

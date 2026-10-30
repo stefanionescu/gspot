@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { getValueAt } from '#cli/system/tables.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
@@ -224,7 +224,7 @@ test('a second apply writes the same files when .prettierignore covers every sou
     for (const _pass of [1, 2]) {
         const session = await openSession(sandbox.path);
         const output = generateFiles(session);
-        using writer = openWriter(sandbox.path);
+        const writer = openFiles(sandbox.path);
         const report = await writeGeneratedFiles(session, output, writer);
         expect(await readFile(join(sandbox.path, '.prettierignore'), 'utf8')).toBe(
             output.files.find((file) => file.path === '.prettierignore')!.content,

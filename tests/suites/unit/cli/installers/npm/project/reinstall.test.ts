@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -18,7 +18,7 @@ test('npm skips a recorded install, but installs changed locks and missing modul
         'package.json': '{"private":true,"packageManager":"npm@0.0.0-test"}',
         [`${GSPOT_FOLDER}/package-lock.json`]: '{"lockfileVersion":3}',
     });
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     using _npm = fakeCommand('mise', async (command) => {
         if (command.at(-1) !== '--version')
             await createFileTree(sandbox.path, { [`${GSPOT_PATHS.nodeModules}/installed`]: 'ready' });
@@ -56,7 +56,7 @@ test('Bun keeps installed modules while it runs the frozen install', async () =>
         'package.json': '{"private":true,"packageManager":"bun@0.0.0-test"}',
         [`${GSPOT_PATHS.nodeModules}/installed`]: 'keep these bytes',
     });
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const installed = join(sandbox.path, GSPOT_PATHS.nodeModules, 'installed');
     using _bun = fakeCommand('mise', async (command) => {
         expect(await readFile(installed, 'utf8')).toBe('keep these bytes');
@@ -80,7 +80,7 @@ test.each(['{broken', '{"npm":"invalid"}', '{"other":"field"}'])(
             [`${GSPOT_FOLDER}/package-lock.json`]: '{"lockfileVersion":3}',
             [GSPOT_PATHS.installRecord]: record,
         });
-        using writer = openWriter(sandbox.path);
+        const writer = openFiles(sandbox.path);
         using _npm = fakeCommand('mise', (command) =>
             Promise.resolve(
                 buildProcessResult(

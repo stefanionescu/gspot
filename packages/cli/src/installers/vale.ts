@@ -70,7 +70,7 @@ Check that the Vale packages exist before prose checks run.
 @param level the configured level, which decides the packages.
 */
 export function hasValePackages(root: string, level: Settings['level']): boolean {
-    using files = openFiles(root);
+    const files = openFiles(root);
     if (files.read(GSPOT_PATHS.valeConfigFile) === undefined) return false;
     if (level === 'basic') return true;
     return VALE_PACKAGE_FOLDERS.every(
@@ -96,7 +96,7 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     const tool = getTool(session.toolConfigurations, VALE_TOOL);
     const available = buildToolAvailability(tool, inspectTool({ ...session, miseBinPaths }, tool));
     if ('status' in available) throw new GspotError('tool', available.note);
-    using files = openFiles(root);
+    const files = openFiles(root);
     const temporary = mkdtempSync(join(files.readCanonicalPath(GSPOT_FOLDER), VALE_INSTALL_PREFIX));
     try {
         const config = join(temporary, GSPOT_PATHS.valeConfigFile);

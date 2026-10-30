@@ -95,7 +95,7 @@ function hasUnmanagedScanner(session: Session, writer: Files): boolean {
 }
 
 /**
-Plan, write, and report generated file changes under the repository writer lock.
+Plan, write, and report generated file changes.
 
 @param session the repository to write to.
 @param generated the files to write, with resolved lockfiles.
@@ -130,12 +130,9 @@ export async function writeGeneratedFiles(
             expected: reviewed?.get(file.path),
         })),
     );
-    const reviewedPlans = [...replacements, ...managedKeyPlans].map((plan) =>
-        reviewed?.has(plan.path) === true ? { ...plan, before: reviewed.get(plan.path) } : plan,
-    );
     const blocks = generated.blocks.map((block) => planBlock(writer, block.path, block.body));
     const pruning = planRemovals(writer, listStrayPaths(session, paths, listOwnablePaths(session)));
-    writePlans(writer, [...reviewedPlans, ...blocks, ...pruning]);
+    writePlans(writer, [...replacements, ...managedKeyPlans, ...blocks, ...pruning]);
     deleteUnusedToolFolders(writer, paths, generated);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));

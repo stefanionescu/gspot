@@ -40,7 +40,7 @@ Writes files and Git blobs into a copy.
 @param plan what to write, and where.
 */
 export async function writeCopyFiles(plan: CopyPlan): Promise<void> {
-    using files = openFiles(plan.root);
+    const files = openFiles(plan.root);
     let written = 0;
     for await (const file of plan.files) {
         if (written % FILES_BETWEEN_PAUSES === 0) await setImmediate();

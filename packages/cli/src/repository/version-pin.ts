@@ -13,7 +13,7 @@ Read the pinned gspot version.
 @returns undefined when the repository has no pin.
 */
 export function readVersionPin(root: string): string | undefined {
-    using files = openFiles(root);
+    const files = openFiles(root);
     const onDisk = files.read(GSPOT_PATHS.versionPin);
     if (onDisk === undefined) return undefined;
     const line = onDisk.bytes.toString('utf8').trim();

@@ -1,16 +1,14 @@
 import { compareText } from '#cli/system/text.ts';
 import { readContainedPath } from '#cli/system/files/reads.ts';
-import { createLock, releaseLocks } from '#cli/system/files/lock.ts';
+import type { Files, FileBounds } from '#cli/types/system/files.ts';
 import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { GspotError, hasErrorCode, buildWriteError } from '#cli/system/errors.ts';
-import type { Files, FileBounds, FileContents } from '#cli/types/system/files.ts';
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
 
 import {
     readBounded,
     preparePath,
     replaceBounded,
-    isSameContents,
     buildContainedPath,
     readBoundedKeepingLinks,
 } from '#cli/system/files/bounded.ts';
@@ -31,10 +29,8 @@ function createBoundedFolder(bounds: FileBounds, path: string, mode: number): vo
     }
 }
 
-function deleteBoundedFile(bounds: FileBounds, path: string, expected: FileContents): void {
+function deleteBoundedFile(bounds: FileBounds, path: string): void {
     try {
-        if (!isSameContents(readBoundedKeepingLinks(bounds, path), expected))
-            throw new GspotError('filesystem', `${path} changed before removal. Run the command again.`);
         unlinkSync(buildContainedPath(bounds, path));
     } catch (error) {
         throw buildWriteError(path, error);
@@ -47,7 +43,7 @@ Open a reader and writer confined to one root, with paths checked for this syste
 @param root the folder containing every relative path.
 */
 export function openFiles(root: string): Files {
-    const bounds: FileBounds = { root: realpathSync(root), locks: new Map() };
+    const bounds: FileBounds = { root: realpathSync(root) };
     const files: Files = {
         deleteFolder(path) {
             try {
@@ -94,10 +90,6 @@ export function openFiles(root: string): Files {
         write: replaceBounded.bind(undefined, bounds),
         deleteFile: deleteBoundedFile.bind(undefined, bounds),
         createFolder: createBoundedFolder.bind(undefined, bounds),
-        createLock: createLock.bind(undefined, bounds),
-        [Symbol.dispose]() {
-            for (const path of releaseLocks(bounds)) deleteEmptyFolders(files, path);
-        },
     };
     return files;
 }

@@ -89,44 +89,6 @@ test.each([false, true])(
     },
 );
 
-test('a fix in a copy refuses to overwrite a file changed while it ran, and removes the copy', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildFixerSettings(['*.txt']),
-        'source.txt': 'original',
-        'z-last.txt': 'last original',
-    });
-
-    const session = await openSession(sandbox.path);
-    const trace = join(sandbox.path, 'workspace-path');
-    const planned = planFixer(
-        session,
-        buildProgramCommand(
-            'fakes/tool',
-            '--record-cwd',
-            trace,
-            '--write',
-            `${join(sandbox.path, 'z-last.txt')}=new working content`,
-            '--write',
-            'source.txt=isolated correction',
-            '--write',
-            'z-last.txt=last correction',
-        ),
-    );
-    planned.check.run_in_copy = true;
-    const rejection = await captureRejection(runFixers(buildCheckSession(session), [planned], { dryRun: false }));
-    expect(rejection.message).toBe('z-last.txt changed while gspot wrote it. Run the command again.');
-    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('isolated correction');
-    expect(await readFile(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
-    expect(await isOnDisk(await readFile(trace, 'utf8'))).toBe(false);
-    const corrected = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'));
-    corrected.check.run_in_copy = true;
-    const correctedRun = await runFixers(buildCheckSession(session), [corrected], { dryRun: false });
-    expect(correctedRun.results[0]).toMatchObject({
-        status: 'changed',
-        changed: ['source.txt'],
-    });
-});
-
 test('a failed dry-run fix removes its copy and keeps the source bytes', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 

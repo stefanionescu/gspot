@@ -3,8 +3,8 @@ import { readFileSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { testdir, createFileTree } from 'testdirs';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -53,7 +53,7 @@ test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hid
             }),
         );
     });
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const install = installPythonTools(buildToolInstall(await openSession(sandbox.path), writer), 'unavailable-uv');
     const installationError = await captureRejection(install);
     expect(installationError).toMatchObject({
@@ -74,7 +74,7 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
         await writeFile(join(options.cwd, 'uv.lock'), `${PYTHON_TOOL_LOCKFILE}\n# test+password\n`);
         return buildProcessResult();
     });
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const session = await openSession(sandbox.path);
     const read = writer.read.bind(writer);
     using _read = spyOn(writer, 'read').mockImplementation((path) =>
@@ -105,7 +105,7 @@ test('uv installs the tool project with its own Python, whatever UV_PYTHON and .
         runs.push({ command: [...command], env: options.env });
         return Promise.resolve(buildProcessResult());
     });
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     await installPythonTools(buildToolInstall(await openSession(sandbox.path), writer), 'pinned-uv');
     expect(runs.map(({ command }) => command[1])).toStrictEqual(['venv', 'sync']);
     for (const { command, env } of runs) {
@@ -164,7 +164,7 @@ async function readInstalledSettings(root: string, minimumReleaseAge: MinimumRel
         settings.push(parse(readFileSync(file, 'utf8')));
         return Promise.resolve(buildProcessResult());
     });
-    using writer = openWriter(root);
+    const writer = openFiles(root);
     await installPythonTools(
         { ...buildToolInstall(await openSession(root), writer), minimumReleaseAge },
         'settings-uv',

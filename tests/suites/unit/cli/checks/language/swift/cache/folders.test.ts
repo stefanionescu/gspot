@@ -3,14 +3,13 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import { SWIFT_PACKAGE } from '#tests/config/swift.ts';
-import { isOnDisk } from '#tests/setup/system/files.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
+import { symlink, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { prepareBuild, planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { planSandboxCheck, redirectCacheFolder } from '#tests/setup/cli/checks.ts';
 
-test('build cache rejects external output links and concurrent writers', async () => {
+test('build cache rejects external output links', async () => {
     await using sandbox = await testdir();
     await using outside = await testdir();
     await using _cache = await redirectCacheFolder();
@@ -21,14 +20,7 @@ test('build cache rejects external output links and concurrent writers', async (
     const session = await openSession(sandbox.path);
     const input = planSandboxCheck(session, 'swift/build');
     const folder = planSwiftBuild(session, input).folder;
-    const held = prepareBuild(session.root, input.files, folder).files;
-    expect(await isOnDisk(join(folder, 'build.lock'))).toBe(true);
-    expect(() => prepareBuild(session.root, input.files, folder)).toThrow(
-        new Error(
-            `Another gspot command, process ${String(process.pid)}, holds build.lock. Retry after it finishes, or delete build.lock when no gspot command is running.`,
-        ),
-    );
-    held[Symbol.dispose]();
+    prepareBuild(session.root, input.files, folder);
     const authored = join(outside.path, 'authored');
     await writeFile(authored, 'preserved');
     await symlink(outside.path, join(folder, 'package'));
@@ -37,17 +29,9 @@ test('build cache rejects external output links and concurrent writers', async (
         new Error('A parent of package/authored is a link or is not a folder. Choose a folder without links.'),
     );
     expect(() => {
-        linkedFiles.write('package/authored', { bytes: Buffer.from('changed'), mode: 0o600 }, undefined);
+        linkedFiles.write('package/authored', { bytes: Buffer.from('changed'), mode: 0o600 });
     }).toThrow(new Error('A parent of package/authored is a link or is not a folder. Choose a folder without links.'));
-    linkedFiles[Symbol.dispose]();
     expect(await readFile(authored, 'utf8')).toBe('preserved');
-    expect(await isOnDisk(join(folder, 'build.lock'))).toBe(false);
-    await rm(join(folder, 'package'));
-    await mkdir(join(folder, 'package'));
-    const repaired = prepareBuild(session.root, input.files, folder).files;
-    expect(await isOnDisk(join(folder, 'build.lock'))).toBe(true);
-    repaired[Symbol.dispose]();
-    expect(await isOnDisk(join(folder, 'build.lock'))).toBe(false);
 });
 
 test('the Swift build folder lives in the gspot cache and differs between repositories', async () => {

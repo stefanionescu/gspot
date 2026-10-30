@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { downloadArchive } from '#cli/installers/downloads.ts';
@@ -10,7 +10,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 test('an oversized archive cancels its response stream before reporting the size error', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
     const session = await openSession(sandbox.path);
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const install = buildToolInstall(session, writer);
     let canceled = false;
     const stream = new ReadableStream<Uint8Array>({

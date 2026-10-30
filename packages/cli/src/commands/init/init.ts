@@ -6,8 +6,10 @@ import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import type { Session } from '#cli/types/session.ts';
 import { writeSettings } from '#cli/settings/file.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { openSession } from '#cli/planning/session.ts';
+import { writePlans } from '#cli/repository/writer.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
@@ -22,7 +24,6 @@ import type { WritePlan } from '#cli/types/repository/writer.ts';
 import { formatDetection } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/repository/configurations.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
-import { openWriter, writePlans } from '#cli/repository/writer.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { RepositoryListing } from '#cli/types/repository/read.ts';
 import { planInitFiles, formatInitPlan } from '#cli/commands/init/plan.ts';
@@ -213,16 +214,15 @@ function deleteConflictingConfigFiles(
     const kept: string[] = [];
     const plans: WritePlan[] = [];
     for (const file of deleted) {
-        const expected = reviewed.get(file.path);
-        if (expected === undefined) kept.push(file.path);
-        else plans.push({ path: file.path, before: expected, status: 'changed' });
+        if (reviewed.get(file.path) === undefined) kept.push(file.path);
+        else plans.push({ path: file.path, status: 'changed' });
     }
     writePlans(writer, plans);
     return kept;
 }
 
 async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<string[]> {
-    using writer = openWriter(root);
+    const writer = openFiles(root);
     const { session, generated } = initPlan;
     writeSettings(writer, initPlan.settingsText, initPlan.reviewed.get(SETTINGS_FILE));
     const applied = await writeGeneratedFiles(session, generated, writer, { reviewed: initPlan.reviewed });

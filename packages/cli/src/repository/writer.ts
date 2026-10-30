@@ -22,14 +22,7 @@ import { openFiles, walkFiles, deleteEmptyFolders } from '#cli/system/files/open
 import { GSPOT_PATHS, GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import type { WritePlan, ManagedKeys, ReplacementRequest } from '#cli/types/repository/writer.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
-
-import {
-    TOML_BARE_KEY,
-    TOML_EXTENSION,
-    EMPTY_JSON_TEXT,
-    WRITER_LOCK_FILE,
-    TRAILING_BLANK_LINE,
-} from '#cli/config/repository/writer.ts';
+import { TOML_BARE_KEY, TOML_EXTENSION, EMPTY_JSON_TEXT, TRAILING_BLANK_LINE } from '#cli/config/repository/writer.ts';
 
 function openManagedKeysFile(path: string, onDisk: FileContents | undefined, keys: ManagedKeys['keys']): EditableFile {
     const text = onDisk === undefined ? undefined : decodeUtf8Text(path, onDisk.bytes);
@@ -55,7 +48,7 @@ function openManagedKeysFile(path: string, onDisk: FileContents | undefined, key
 /**
 Merge the requested keys and leave every other value in place.
 
-@param writer the locked repository handle.
+@param writer the repository handle.
 @param path the destination.
 @param keys the keys and requested values.
 */
@@ -68,7 +61,6 @@ export function planManagedKeys(writer: Files, path: string, keys: ManagedKeys['
     const text = path.endsWith(TOML_EXTENSION) && !updated.endsWith('\n') ? `${updated}\n` : updated;
     return {
         path,
-        before: onDisk,
         after: { bytes: Buffer.from(text), mode: onDisk?.mode ?? OWNER_WRITABLE_FILE },
         status: text === before ? 'unchanged' : 'changed',
     };
@@ -125,7 +117,7 @@ export function listStrayPaths(
     expected: ReadonlySet<string>,
     ownablePaths: ReadonlySet<string>,
 ): string[] {
-    using disk = openFiles(session.root);
+    const disk = openFiles(session.root);
     const blockPaths = new Set([AGENTS_FILE, GITIGNORE_FILE, GITATTRIBUTES_FILE]);
     const installations = [GSPOT_PATHS.state, ...Object.values(INSTALLED_TOOL_FOLDERS)];
     const ownFolder = disk.readStats(GSPOT_FOLDER);
@@ -157,7 +149,7 @@ export function listStrayPaths(
 /**
 Refuse authored bytes that nobody reviewed.
 
-@param writer the locked repository handle.
+@param writer the repository handle.
 @param requests the new bytes and any reviewed file contents of each file.
 */
 export function planReplacements(writer: Files, requests: ReplacementRequest[]): WritePlan[] {
@@ -171,10 +163,9 @@ export function planReplacements(writer: Files, requests: ReplacementRequest[]):
             !isOwned(path, writer, generatedPatterns, ownablePaths) &&
             expected === undefined
         )
-            return { path, before: onDisk, status: 'preserved' };
+            return { path, status: 'preserved' };
         return {
             path,
-            before: expected ?? onDisk,
             after: next,
             status: isSameContents(onDisk, next) ? 'unchanged' : 'changed',
         };
@@ -184,7 +175,7 @@ export function planReplacements(writer: Files, requests: ReplacementRequest[]):
 /**
 Keep the text outside the marked block.
 
-@param writer the locked repository handle.
+@param writer the repository handle.
 @param path the file.
 @param body the block text.
 */
@@ -196,27 +187,26 @@ export function planBlock(writer: Files, path: string, body: string): WritePlan 
         bytes: Buffer.from(nextText),
         mode: onDisk?.mode ?? OWNER_WRITABLE_FILE,
     };
-    return { path, before: onDisk, after: next, status: isSameContents(onDisk, next) ? 'unchanged' : 'changed' };
+    return { path, after: next, status: isSameContents(onDisk, next) ? 'unchanged' : 'changed' };
 }
 
 /**
 Plan the removal of owned files, or of their managed blocks.
 
-@param writer the locked repository handle.
+@param writer the repository handle.
 @param paths the stale generated files.
-@returns for each file, the old bytes, and any authored text left after the managed block goes.
+@returns for each file, any authored text left after the managed block goes.
 */
 export function planRemovals(writer: Files, paths: string[]): WritePlan[] {
     const generatedPatterns = readGeneratedPatterns(writer);
     const ownablePaths = new Set(paths);
     return paths.map((path): WritePlan => {
         const onDisk = writer.readKeepingLinks(path);
-        if (onDisk === undefined) return { path, before: onDisk, status: 'unchanged' };
-        if (isOwned(path, writer, generatedPatterns, ownablePaths)) return { path, before: onDisk, status: 'changed' };
+        if (onDisk === undefined) return { path, status: 'unchanged' };
+        if (isOwned(path, writer, generatedPatterns, ownablePaths)) return { path, status: 'changed' };
         const next = removeBlock(path, onDisk);
         return {
             path,
-            before: onDisk,
             ...(next === undefined ? {} : { after: next }),
             status: isSameContents(onDisk, next) ? 'unchanged' : 'changed',
         };
@@ -224,33 +214,18 @@ export function planRemovals(writer: Files, paths: string[]): WritePlan[] {
 }
 
 function writeBatch(writer: Files, plans: WritePlan[]): void {
-    for (const { path, before, after } of plans) {
+    for (const { path, after } of plans) {
         if (after === undefined) {
-            if (before !== undefined) {
-                writer.deleteFile(path, before);
-                deleteEmptyFolders(writer, path);
-            }
-        } else if (!isSameContents(before, after)) writer.write(path, after, before);
+            writer.deleteFile(path);
+            deleteEmptyFolders(writer, path);
+        } else writer.write(path, after);
     }
-}
-
-/**
-Take the repository writer lock until disposal.
-
-@param root the boundary for confined writes and the writer lock.
-*/
-export function openWriter(root: string): Files {
-    using resources = new DisposableStack();
-    const files = resources.use(openFiles(root));
-    files.createLock(WRITER_LOCK_FILE);
-    resources.move();
-    return files;
 }
 
 /**
 Refuse the plans when they overwrite a file that gspot did not write; otherwise write or delete each changed file.
 
-@param writer the locked repository handle.
+@param writer the repository handle.
 @param plans one write or removal for each file.
 */
 export function writePlans(writer: Files, plans: WritePlan[]): void {

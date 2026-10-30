@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { runRequiredInstallStep } from '#cli/installers/steps.ts';
@@ -10,7 +10,7 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('a required install failure records its command and redacts URL credentials', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    using writer = openWriter(sandbox.path);
+    const writer = openFiles(sandbox.path);
     const install = buildToolInstall(await openSession(sandbox.path), writer);
     const command = buildProgramCommand(
         'fakes/tool',

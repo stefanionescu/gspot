@@ -10,9 +10,9 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { CANCELED_CHECK_NOTE } from '#tests/config/messages.ts';
 import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import { prepareBuild, planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { UNEXPECTED_PLAN_MESSAGE } from '#tests/config/checks/language/swift/messages.ts';
 import { SWIFT_PACKAGE, SWIFT_VALUE_SOURCE, SWIFT_LANGUAGE_PACKAGE } from '#tests/config/swift.ts';
 
@@ -138,7 +138,7 @@ test('compiler: swift/build refuses a response file outside the compiler cache a
     expect(await readFile(plan.log, 'utf8')).toBe('swiftc Sources/Main.swift Sources/Owner.swift\n');
 });
 
-test('compiler: a Swift build whose source file is missing removes its build.lock, so a later build can take it', async () => {
+test('compiler: a Swift build whose source file is missing names the file and runs no compiler', async () => {
     using resources = new DisposableStack();
 
     await using sandbox = await testdir();
@@ -150,18 +150,11 @@ test('compiler: a Swift build whose source file is missing removes its build.loc
     });
     const session = await openSession(sandbox.path);
     const input = planSandboxCheck(session, 'swift/build');
-    const plan = planSwiftBuild(session, input);
     await rm(join(sandbox.path, 'Main.swift'));
     const run = resources.use(spyOn(processes, 'spawnProcess'));
     const missingSourceError = await captureRejection(getBuiltInCheck('swift/build')(session, input));
     expect(missingSourceError.message).toBe('Main.swift is tracked but missing. Restore it or commit its deletion.');
     expect(run).not.toHaveBeenCalled();
-    expect(await isOnDisk(join(plan.folder, 'build.lock'))).toBe(false);
-    await writeFile(join(sandbox.path, 'Main.swift'), SWIFT_VALUE_SOURCE);
-    const { files } = prepareBuild(session.root, input.files, plan.folder);
-    expect(await isOnDisk(join(plan.folder, 'build.lock'))).toBe(true);
-    files[Symbol.dispose]();
-    expect(await isOnDisk(join(plan.folder, 'build.lock'))).toBe(false);
 });
 
 test('compiler: Swift compiler messages drop the macOS /private prefix from source paths', async () => {

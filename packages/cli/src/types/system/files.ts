@@ -2,10 +2,7 @@ import type { Stats } from 'node:fs';
 
 export type FileContents = { bytes: Buffer; mode: number; isSymlink?: true };
 
-export type FileBounds = {
-    root: string;
-    locks: Map<string, string>;
-};
+export type FileBounds = { root: string };
 
 export type Files = {
     readCanonicalPath(path: string): string;
@@ -13,13 +10,11 @@ export type Files = {
     readStats(path: string): Stats | undefined;
     readKeepingLinks(path: string): FileContents | undefined;
     read(path: string): FileContents | undefined;
-    write(path: string, value: FileContents, expected: FileContents | undefined): void;
-    deleteFile(path: string, expected: FileContents): void;
+    write(path: string, value: FileContents): void;
+    deleteFile(path: string): void;
     createFolder(path: string, mode: number): void;
     deleteFolder(path: string): void;
     deleteTree(path: string): void;
-    createLock(path: string): void;
-    [Symbol.dispose](): void;
 };
 
 export type CacheKey<Value extends object> = Readonly<{ create: () => Value }>;
