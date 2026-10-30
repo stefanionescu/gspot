@@ -7,22 +7,23 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GITHUB_WORKFLOW } from '#cli/config/generation/ci.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
+import { CALLER_WORKFLOW } from '#tests/config/github-actions.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { CALLER_WORKFLOW, CI_SOURCE_WORKFLOW, CI_INJECTION_SETTINGS } from '#tests/config/github-actions.ts';
 
 import {
     COMPOSITE_ACTION,
     CHECKOUT_WORKFLOW,
     REQUIRED_INPUT_WORKFLOW,
+    TEMPLATE_INJECTION_WORKFLOW,
 } from '#tests/config/integration/checks/infrastructure/github-actions.ts';
 
-test('workflow security checks report an injectable setting in the generated workflow', async () => {
+test('workflow security checks report an untrusted expression in a run step', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['github-actions'], { tables: CI_INJECTION_SETTINGS }),
-        '.github/workflows/source.yml': CI_SOURCE_WORKFLOW,
+        'gspot.toml': buildSandboxSettings(['github-actions']),
+        '.github/workflows/source.yml': TEMPLATE_INJECTION_WORKFLOW,
     });
     await applyThenInstall(sandbox.path);
     const result = parseCheckReport(
@@ -41,7 +42,7 @@ test('workflow security checks report an injectable setting in the generated wor
         const checked = result.report.checks.find(({ check: id }) => id === check);
         expect(checked?.status).toBe('failed');
         expect(checked?.findings.map(({ file, rule }) => ({ file, rule }))).toContainEqual({
-            file: '.github/workflows/gspot.yml',
+            file: '.github/workflows/source.yml',
             rule: expectedRule,
         });
     }

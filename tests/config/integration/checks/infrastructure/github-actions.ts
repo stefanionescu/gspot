@@ -33,3 +33,12 @@ jobs:
     steps:
       - run: echo hello
 `;
+
+export const TEMPLATE_INJECTION_WORKFLOW = `on: pull_request
+permissions: {}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "\${{ github.event.pull_request.title }}"
+`;
