@@ -15,14 +15,8 @@ import { VERSION_FLAG } from '#cli/config/executables/versions.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
 import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository/npm.ts';
+import { NPM_TOOL, START_RUNNERS, PACKAGE_MANAGERS, PACKAGE_MANAGER_HASH_SUFFIX } from '#cli/config/repository/npm.ts';
 
-import {
-    NPM_TOOL,
-    START_RUNNERS,
-    PACKAGE_MANAGERS,
-    YARN_BERRY_MAJOR,
-    PACKAGE_MANAGER_HASH_SUFFIX,
-} from '#cli/config/repository/npm.ts';
 import type {
     StartRunner,
     PackageManager,
@@ -72,17 +66,6 @@ function readFirstPackageManager(
         if (name !== undefined) return { name };
     }
     return { name: NPM_TOOL, version: undefined };
-}
-
-/**
-Check whether the package manager runs Yarn Berry, which has its own settings and install arguments.
-
-@param packageManager the validated name and exact version.
-@returns whether the package manager uses Yarn Berry.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: CI generation and the tool package manager tell Yarn Berry apart by its major version through it.
-export function isYarnBerry(packageManager: PackageManager): boolean {
-    return packageManager.name === 'yarn' && semver.major(packageManager.version) >= YARN_BERRY_MAJOR;
 }
 
 /**

@@ -12,7 +12,7 @@ import type {
     SchemaAlterations,
 } from '#cli/types/checks/database/postgres.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlining raises five schema readers above the complexity limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Ten schema readers in this file qualify a name with its schema through it.
 function qualifyName(schema: string | undefined, name: string | undefined = ''): string {
     return `${schema === undefined || schema === '' ? PUBLIC_SCHEMA : schema}.${name}`;
 }

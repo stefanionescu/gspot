@@ -10,7 +10,7 @@ import { SETTINGS_FILE, SETTINGS_PREFACE } from '#cli/config/settings/file.ts';
 import { isTable, getValueAt, createTable, normalizeTables } from '#cli/system/tables.ts';
 import type { SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, its key split repeats at each call.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: setKey, removeKey, and removeFromList split a dotted key at its last dot through it.
 function splitKey(key: string): SettingKey {
     const boundary = key.lastIndexOf('.');
     return { path: boundary === -1 ? [] : key.slice(0, boundary).split('.'), name: key.slice(boundary + 1) };

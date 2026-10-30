@@ -1,22 +1,22 @@
+import semver from 'semver';
 import { getUvPin } from '#cli/manifests/tools.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { PACKAGE_MANAGERS } from '#cli/config/repository/npm.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { STRICT_MODE } from '#cli/config/checks/language/bash/script-layout.ts';
+import { PACKAGE_MANAGERS, YARN_BERRY_MAJOR } from '#cli/config/repository/npm.ts';
 import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation/ci.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
 import type { PackageManager, PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
 
 import {
-    isYarnBerry,
     getPackageManagerPin,
     readPackageManagerVersion,
     buildPackageManagerCommand,
@@ -207,7 +207,7 @@ function buildFrozenInstall(session: Session, scopePath: string, lockfile: Froze
     const name = PACKAGE_MANAGERS.find((tool) => tool === command[0]);
     const runner = name === undefined ? getUvPin() : readProjectPackageManager(session, scopePath, name);
     const args =
-        runner.name === 'yarn' && isYarnBerry({ name: 'yarn', version: runner.version })
+        runner.name === 'yarn' && semver.major(runner.version) >= YARN_BERRY_MAJOR
             ? YARN_BERRY_INSTALL.slice(1)
             : command.slice(1);
     return buildPackageManagerCommand(runner, args);

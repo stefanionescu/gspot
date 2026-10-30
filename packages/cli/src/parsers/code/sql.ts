@@ -204,7 +204,7 @@ function findVariableEnd(text: string, offset: number): number {
     return text[end] === quote ? end + 1 : -1;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, the E and e entries of TOKEN_MATCHERS repeat its body.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The E and e entries of TOKEN_MATCHERS share its body.
 function matchEscapedString(text: string, offset: number): MatchedToken | undefined {
     return text[offset + 1] !== "'" || WORD_CHARACTER.test(text[offset - 1] ?? '')
         ? undefined

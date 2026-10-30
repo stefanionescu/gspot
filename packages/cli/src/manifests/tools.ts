@@ -133,7 +133,7 @@ Get the tool that a check names, or the first word of its command.
 @param check the validated check.
 @returns undefined for a built-in check without a tool.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlining this step puts its callers over the complexity limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning, explain, the gspot check, and the docs read the program of a check through it.
 export function getToolName(check: Check): string | undefined {
     return typeof check.tool === 'string' ? check.tool : check.command?.[0];
 }
@@ -196,7 +196,7 @@ Read the plugin prefix of a qualified lint rule.
 @param rule the rule name, optionally prefixed by its plugin.
 @returns undefined for an unqualified rule.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, its slash rule repeats at each call.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three rule lookups of explain take the plugin prefix of a rule before its last slash through it.
 export function extractRulePrefix(rule: string): string | undefined {
     const slash = rule.lastIndexOf('/');
     return slash === -1 ? undefined : rule.slice(0, slash);

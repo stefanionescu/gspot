@@ -13,43 +13,28 @@ function setMatchedFields(finding: Finding, groups: Record<string, string | unde
     return finding;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, parseRegexFindings passes the complexity limit.
-function buildMatchedFinding(
-    output: ToolOutput,
-    fixable: RegExp | undefined,
-    line: string,
-    groups: Record<string, string | undefined>,
-): Finding {
-    const { check, output: format, help } = output;
-    return setMatchedFields(
-        {
-            check,
-            file: (groups['file'] ?? '').replace(LEADING_DOT_SLASH, ''),
-            message: (groups['message'] ?? format.message ?? line).trim(),
-            help,
-            fixable: fixable?.test(line) === true,
-        },
-        groups,
-    );
-}
-
 /**
 Read a finding from each matching output line.
 
 @param output the tool output to read.
 */
 export function parseRegexFindings(output: ToolOutput): Finding[] {
-    const { output: format, text } = output;
+    const { check, output: format, text, help } = output;
     const pattern = new RegExp(format.pattern as string, 'u');
     const fixable = format.fixable === undefined ? undefined : new RegExp(format.fixable, 'u');
-    const findings = new Map<string, Finding>();
-    for (const line of text.split(LINE_BREAK)) {
+    const findings = text.split(LINE_BREAK).flatMap((line) => {
         const groups = pattern.exec(line)?.groups;
-        if (!groups) continue;
-        const finding = buildMatchedFinding(output, fixable, line, groups);
-        findings.set(JSON.stringify(finding), finding);
-    }
-    return findings.values().toArray();
+        if (!groups) return [];
+        const finding = {
+            check,
+            file: (groups['file'] ?? '').replace(LEADING_DOT_SLASH, ''),
+            message: (groups['message'] ?? format.message ?? line).trim(),
+            help,
+            fixable: fixable?.test(line) === true,
+        };
+        return [setMatchedFields(finding, groups)];
+    });
+    return [...new Map(findings.map((finding) => [JSON.stringify(finding), finding])).values()];
 }
 
 /**

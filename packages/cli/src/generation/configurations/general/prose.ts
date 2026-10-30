@@ -34,7 +34,7 @@ Build the title or heading capitalization rule with the accepted vocabulary.
 @param planned the generated config file and scope.
 @param name whether to check heading or title case.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, its code moves from the prose generator into CONFIG_FILE_BUILDERS, once per case style.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: CONFIG_FILE_BUILDERS builds heading-case.yml and title-case.yml through it, one call per case style.
 export function buildCapitalizationStyle(planned: PlannedConfigFile, name: keyof typeof CAPITALIZATION_STYLES): string {
     return stringify({
         ...CAPITALIZATION_STYLES[name],

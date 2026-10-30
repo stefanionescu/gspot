@@ -9,9 +9,9 @@ import type { Level, Configuration } from '#cli/types/manifests.ts';
 import { LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { getSettingType, unwrapSettingSchema } from '#cli/settings/schema-lookup.ts';
+import type { Setting, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { TABLE_KEY_SEGMENTS, SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/inheritance.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
-import type { Setting, SettingDefault, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 
 import {
     BUILD_SCRIPT,
@@ -20,29 +20,25 @@ import {
     OPENNEXT_TYPE_DEFAULTS,
 } from '#cli/config/settings/available.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, addDefault passes the complexity limit.
-function isScalarConflict(previous: SettingDefault, configuration: Configuration, setting: Setting): boolean {
-    return (
-        previous.configuration !== configuration.name &&
-        !isDeepStrictEqual(previous.value, setting.default) &&
-        !OVERRIDING_GROUPS.has(configuration.group)
-    );
-}
-
 function addDefault(availableSettings: AvailableSettings, configuration: Configuration, setting: Setting): void {
-    if (setting.default === undefined) return;
     const previous = availableSettings.defaults.get(setting.name);
-    const isList = availableSettings.settings.get(setting.name)?.type === 'list';
-    if (!isList && previous !== undefined && isScalarConflict(previous, configuration, setting)) {
-        availableSettings.errors.push({
-            key: setting.name,
-            message: `The configurations ${previous.configuration} and ${configuration.name} set ${setting.name} to different values. Set it yourself in gspot.toml to decide.`,
-        });
+    if (availableSettings.settings.get(setting.name)?.type === 'list') {
+        const value = mergeValue(setting, previous?.value, setting.default);
+        availableSettings.defaults.set(setting.name, { value, configuration: configuration.name });
         return;
     }
-    availableSettings.defaults.set(setting.name, {
-        value: isList ? mergeValue(setting, previous?.value, setting.default) : setting.default,
-        configuration: configuration.name,
+    if (
+        previous === undefined ||
+        previous.configuration === configuration.name ||
+        isDeepStrictEqual(previous.value, setting.default) ||
+        OVERRIDING_GROUPS.has(configuration.group)
+    ) {
+        availableSettings.defaults.set(setting.name, { value: setting.default, configuration: configuration.name });
+        return;
+    }
+    availableSettings.errors.push({
+        key: setting.name,
+        message: `The configurations ${previous.configuration} and ${configuration.name} set ${setting.name} to different values. Set it yourself in gspot.toml to decide.`,
     });
 }
 
@@ -55,10 +51,10 @@ function addConfigurationSettings(
     const settings = (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []).map((listed) =>
         isAll && listed.default_all !== undefined ? { ...listed, default: listed.default_all } : listed,
     );
-    for (const setting of settings) {
+    for (const setting of settings)
         if (!availableSettings.settings.has(setting.name)) availableSettings.settings.set(setting.name, setting);
+    for (const setting of settings.filter((each) => each.default !== undefined))
         addDefault(availableSettings, configuration, setting);
-    }
     const languageSettings = settings.filter((setting) => setting.language_defaults !== undefined);
     for (const setting of languageSettings) {
         const [table, field] = setting.name.split('.', TABLE_KEY_SEGMENTS);
