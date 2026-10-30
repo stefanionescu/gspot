@@ -143,7 +143,7 @@ Report named functions at the statement limit and files that only forward code.
 @param session the repository and its tools.
 @param planned the scope files and statement limits.
 */
-export async function checkStructureTrivialFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkTrivialFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const parsed = await readParsedSources(session, planned);
     const functions = parsed.flatMap((source) => listTrivialFunctions(planned, source));
     const files = parsed

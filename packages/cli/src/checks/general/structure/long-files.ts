@@ -15,7 +15,7 @@ Reports source files over the code-line limit of their language.
 @param session the repository and its tools.
 @param planned the scope files and limits.
 */
-export async function checkStructureLongFiles(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkLongFiles(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const sources = listCheckedFiles(session.scopes, planned).flatMap((file) => {
         const tagged: GrammarName | 'sql' | undefined = file.tags.includes('sql')
             ? 'sql'

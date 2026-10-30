@@ -88,7 +88,7 @@ Require the project's Python environment before running checks that read its ins
 @param planned the check and its project scope.
 @returns the missing-environment result, or undefined when the check can run.
 */
-export function findMissingProjectEnvironment(
+export function findMissingEnvironment(
     session: Session,
     planned: Pick<ConfiguredCheck, 'check' | 'scope'>,
 ): ProcessFailure | undefined {

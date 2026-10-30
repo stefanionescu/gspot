@@ -121,7 +121,7 @@ Runs Vale on the scope files, by path where Vale has a grammar and through stdin
 @param session the repository and its tools.
 @param planned the scope to check.
 */
-export async function checkProseVale(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkVale(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     if (!hasValePackages(session.toolsRoot, session.settings.level))
         throw new GspotError('tool', VALE_PACKAGES_MESSAGE);
     const command = [VALE_TOOL, CONFIG_FLAG, join(session.root, GSPOT_PATHS.valeConfigFile), ...VALE_ARGUMENTS];

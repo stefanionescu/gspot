@@ -66,7 +66,7 @@ Scans each pushed commit with Gitleaks, so a secret removed before the last comm
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkSecretsGitleaksPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkGitleaksPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const command = getSiblingCommand(planned, GITLEAKS_STAGED_CHECK).filter(
         (argument) => argument !== GITLEAKS_STAGED_FLAG,
     );
@@ -86,7 +86,7 @@ the scope has no example environment file.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkSecretsEnvExamples(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkEnvExamples(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { env_examples: names, environment_functions: environmentFunctions } = getTable(
         planned.scope.settings,
         'secrets',

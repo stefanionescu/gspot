@@ -10,7 +10,7 @@ Reports each function called with more arguments than it reads.
 @param session the repository and its tools.
 @param planned the scope scripts to read.
 */
-export async function checkBashUnreadArguments(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkUnreadArguments(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) =>
         file.functions.flatMap((scriptFunction) => {

@@ -11,7 +11,7 @@ Report functions with no callers. Exclude main and the bats hooks.
 @param session the repository and its tools.
 @param planned the scope scripts to read.
 */
-export async function checkBashUnusedFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkUnusedFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
     const bats = new Set(planned.files.filter((file) => file.tags.includes('bats')).map((file) => file.path));
     return scripts.flatMap((file) => {

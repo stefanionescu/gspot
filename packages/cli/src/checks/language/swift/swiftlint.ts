@@ -28,10 +28,7 @@ Runs the SwiftLint analyzer rules over the compiler log of the build.
 @param session the repository and its tools.
 @param planned the scope to analyze.
 */
-export async function checkSwiftSwiftlintAnalyze(
-    session: CheckSession,
-    planned: PlannedCheck,
-): Promise<CheckFinding[]> {
+export async function checkSwiftlintAnalyze(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const plan = planSwiftBuild(session, planned, 'analyze');
     const build = await runSwiftBuild(session, planned, plan);
     if (build.code !== 0)

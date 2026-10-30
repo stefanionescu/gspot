@@ -98,7 +98,7 @@ scope.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkDependenciesLockfiles(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkLockfiles(session: Session, planned: PlannedCheck): CheckFinding[] {
     const hosts = new Set(getTable(planned.scope.settings, 'dependencies')['allowed_registries']);
     return [
         ...listForeignLockfiles(planned),
@@ -153,7 +153,7 @@ Reports a packageManager field that names another version than the mise pin of t
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkDependenciesPackageManagerPin(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkPackageManagerPin(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const writtenPin = splitPackageManager(readCachedPackageJson(session.cache, packageJsonPath)?.packageManager);
@@ -200,7 +200,7 @@ Reports a package.json whose dependencies differ from what its lockfile records,
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkDependenciesStaleLockfile(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkStaleLockfile(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const found = findNearestLockfile(session.cache, folder, IMPORTER_LOCKFILES);

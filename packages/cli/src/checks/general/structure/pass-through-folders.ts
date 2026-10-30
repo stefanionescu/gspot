@@ -13,7 +13,7 @@ Reports each folder inside the scope that holds only one folder, above the code 
 @param session the repository and its tools.
 @param planned the scope files.
 */
-export function checkStructurePassThroughFolders(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkPassThroughFolders(session: Session, planned: PlannedCheck): CheckFinding[] {
     const extensions = listSourceConfigurations(planned.scope.configurations).flatMap(
         (configuration) => configuration.files.extensions,
     );

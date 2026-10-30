@@ -33,9 +33,9 @@ import { readRepository, readRepositoryRoot, listRepositoryFiles } from '#cli/re
 import type { InitJson, InitScan, InitOptions, InitPlanning, DetectionSummary } from '#cli/types/commands/init.ts';
 
 import {
+    assertFilesCommitted,
     readConflictingConfigFiles,
     deleteConflictingConfigFiles,
-    assertConflictingFilesCommitted,
 } from '#cli/commands/init/conflicting-config-files.ts';
 import {
     YES_FLAG,
@@ -170,7 +170,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
     };
     const generated = buildGeneratedFiles(session);
     const conflicts = readConflictingConfigFiles(root, repositorySetup, tools, generated.managedKeys);
-    assertConflictingFilesCommitted(
+    assertFilesCommitted(
         root,
         conflicts.deleted.map(({ path }) => path),
     );

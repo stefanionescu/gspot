@@ -17,7 +17,7 @@ Reports each unsafe process kill or removal, and at level `all`, each discarded 
 @param session the repository and its tools.
 @param planned the scope scripts and level.
 */
-export async function checkBashSafety(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkSafety(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) => [
         ...file.commands.flatMap((command): CheckFinding[] => {

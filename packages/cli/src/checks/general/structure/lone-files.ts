@@ -14,7 +14,7 @@ Reports each leaf folder that holds only one code file.
 @param _session the repository and its tools.
 @param planned the scope files.
 */
-export function checkStructureLoneFiles(_session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkLoneFiles(_session: Session, planned: PlannedCheck): CheckFinding[] {
     const files = listCodeFiles(planned);
     const tree = buildFolderTree(planned.files);
     const extensions = listSourceConfigurations(planned.scope.configurations).flatMap(

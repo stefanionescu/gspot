@@ -224,7 +224,7 @@ Reports disallowed licenses of locked packages, and allowed_package records that
 @param session the repository and its tools.
 @param planned the scopes whose dependencies to scan.
 */
-export async function checkLicensesAllowed(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkAllowed(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { inventories, hasSkipped } = await scanLicenses(session, planned);
     const findings = inventories.flatMap(({ dependencyFile, packages, ecosystem, settings }) => {
         return packages.flatMap(({ name, license }) => {

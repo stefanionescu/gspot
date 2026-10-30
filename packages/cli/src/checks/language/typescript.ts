@@ -25,7 +25,7 @@ Reports each required compiler option that a scope tsconfig leaves off.
 @param session the repository and its tools.
 @param planned the scope to check.
 */
-export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkTsconfig(session: Session, planned: PlannedCheck): CheckFinding[] {
     const project = readTsconfigProject(
         session.root,
         planned.scope.path,

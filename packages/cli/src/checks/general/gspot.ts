@@ -42,7 +42,7 @@ Reports each settings file of a tool that gspot writes settings for, such as .co
 @param session the repository and the tools that the selected checks run.
 @param _planned the configured check and selected scope files.
 */
-export function checkGspotConflictingConfigFiles(session: Session, _planned: PlannedCheck): CheckFinding[] {
+export function checkConflictingConfigFiles(session: Session, _planned: PlannedCheck): CheckFinding[] {
     const tools = new Set(
         session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
     );
@@ -63,7 +63,7 @@ Reports each generated file on disk that does not match what the settings genera
 @param session the settings and repository.
 @param _planned the configured check and selected scope files.
 */
-export async function checkGspotGeneratedFiles(session: Session, _planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkGeneratedFiles(session: Session, _planned: PlannedCheck): Promise<CheckFinding[]> {
     const outdated = await listOutdatedFiles(session, buildGeneratedFiles(session));
     return outdated.map((outdatedFile) => ({
         file: outdatedFile.path,
@@ -174,7 +174,7 @@ reason.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkGspotSuppressions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkSuppressions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const filesByScope = Map.groupBy(
         planned.files.filter((file) => file.kind === 'source' && file.tags.includes('text')),
         (file) => selectScopePath(file.path, session.scopes),
@@ -206,7 +206,7 @@ Reports setting paths that match no tracked file or folder.
 @param session the repository and its tools.
 @param _planned the configured check and selected scope files.
 */
-export function checkGspotUnmatchedPaths(session: Session, _planned: PlannedCheck): CheckFinding[] {
+export function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): CheckFinding[] {
     const files = session.repository.files;
     const repositoryPaths = [...includeParentFolders(files.map((file) => file.path))];
     return listSettingsTables(session.settings).flatMap(({ table, scope = '', path }) => {

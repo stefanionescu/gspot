@@ -11,7 +11,7 @@ Reports each file whose name without its extension matches the name of a sibling
 @param _session the repository and its tools.
 @param planned the scope files.
 */
-export function checkStructureFileFolderClashes(_session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkFileFolderClashes(_session: Session, planned: PlannedCheck): CheckFinding[] {
     const files = listCodeFiles(planned);
     const tree = buildFolderTree(planned.files);
     return files.flatMap((file) => {

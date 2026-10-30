@@ -13,7 +13,7 @@ Reports each table in a client schema with row security off.
 @param session the repository and its tools.
 @param planned the scope whose migrations to read.
 */
-export async function checkPostgresRowLevelSecurity(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkRowLevelSecurity(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const migrations = await readParsedMigrations(session, planned);
     const schema = buildDatabaseSchema(migrations);
     const schemas = new Set(getTable(planned.scope.settings, 'postgres')['client_schemas']);

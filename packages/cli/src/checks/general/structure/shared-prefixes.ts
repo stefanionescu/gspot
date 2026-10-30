@@ -30,7 +30,7 @@ Reports each prefix that at least `limits.shared_prefix_files` siblings in a fol
 @param _session the repository and its tools.
 @param planned the scope files and limit.
 */
-export function checkStructureSharedPrefixes(_session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkSharedPrefixes(_session: Session, planned: PlannedCheck): CheckFinding[] {
     const limit = getTable(planned.scope.settings, 'limits').shared_prefix_files;
     const prefixes = new Set(
         planned.scope.configurations.flatMap((configuration) => configuration.shared_prefixes.prefixes),

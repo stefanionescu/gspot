@@ -14,7 +14,7 @@ Reports each grant of every privilege in a migration after the frozen ones.
 @param session the repository and its tools.
 @param planned the scope whose migrations to read.
 */
-export async function checkPostgresGrants(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkGrants(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const migrations = await readParsedMigrations(session, planned);
     const frozen = selectFrozenMigrations(
         migrations.map(({ path }) => path),

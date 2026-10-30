@@ -85,7 +85,7 @@ Checks file and folder names against the naming settings.
 @param planned the scope files to check.
 @returns the findings.
 */
-export function checkNamingPaths(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkPaths(session: Session, planned: PlannedCheck): CheckFinding[] {
     const settings = readNamingSettings(session.settings, planned.scope);
     const containers = readNamingDefaults().path_containers;
     const identifiers = new Map<string, Identifier>();

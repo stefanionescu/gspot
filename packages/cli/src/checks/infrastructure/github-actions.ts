@@ -78,7 +78,7 @@ Runs actionlint. If a workflow or action uses a $/ reference, checks a copy with
 @param session the repository and its tools.
 @param planned the actionlint check and its files.
 */
-export async function checkGithubActionsActionlint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkActionlint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const replacements = new Map<string, string>();
     const actionFiles = new Map(
         [

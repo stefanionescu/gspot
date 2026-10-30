@@ -26,7 +26,7 @@ Checks every pushed commit message, including empty commits that change no files
 @param session the repository and its tools.
 @param planned the commitlint check and commit range.
 */
-export async function checkCommitsCommitlintPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkCommitlintPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     using folder = createTemporaryFolder();
     const commits = await listPushedCommits(session, planned);
     if (!Array.isArray(commits)) return commits;
@@ -72,7 +72,7 @@ Report each line of a new commit message that links to an AI session.
 @param _session the repository and its tools.
 @param planned the check and the commit message file.
 */
-export function checkCommitsReferences(_session: CheckSession, planned: PlannedCheck): CheckFinding[] {
+export function checkReferences(_session: CheckSession, planned: PlannedCheck): CheckFinding[] {
     if (planned.messageFile === undefined) return [];
     const [message = ''] = readFileSync(planned.messageFile, 'utf8').split(SCISSORS_LINE, 1);
     return message.split('\n').flatMap((line, index) =>

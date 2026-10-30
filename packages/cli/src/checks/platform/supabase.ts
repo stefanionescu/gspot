@@ -208,7 +208,7 @@ Reports each storage bucket that no migration policy on storage.objects names.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkSupabaseStoragePolicies(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkStoragePolicies(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const parsed = readSupabaseProjectFile(session, planned);
     if (parsed === undefined) return [];
     if ('error' in parsed) return [parsed.error];
@@ -244,7 +244,7 @@ Runs deno lint on each edge function.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkSupabaseDenoLint(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkDenoLint(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const findings: CheckFinding[] = [];
     const parsed = readSupabaseProjectFile(session, planned);
     if (parsed !== undefined && 'error' in parsed) return [parsed.error];
@@ -283,7 +283,7 @@ Reports the first type error of each edge function, from deno check on its entry
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkSupabaseDenoCheck(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkDenoCheck(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const findings: CheckFinding[] = [];
     const parsed = readSupabaseProjectFile(session, planned);
     if (parsed !== undefined && 'error' in parsed) return [parsed.error];
@@ -304,7 +304,7 @@ Reports privileged Supabase keys outside edge functions and test files.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkSupabaseServiceRoleKey(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkServiceRoleKey(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = getTable(planned.scope.settings, 'supabase').functions_folder;
     const tests = planned.scope.settings.test_files;
     const isAllowed = buildPathMatcher([`${folder}/**`, ...tests]);

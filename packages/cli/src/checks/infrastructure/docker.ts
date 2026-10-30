@@ -113,7 +113,7 @@ Validates each Compose project with its overrides.
 @param session the repository and its tools.
 @param planned the Compose check and its files.
 */
-export async function checkDockerCompose(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkCompose(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const groups = listComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
     return runCommandBatches(
         session,
@@ -245,7 +245,7 @@ Scans each literal service image once and reports its findings in every Compose 
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export async function checkDockerTrivyImage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkTrivyImage(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scanned = new Map<string, ImageFinding[]>();
     const documents = readComposeDocuments(session, planned);
     const findings = [...documents.findings];

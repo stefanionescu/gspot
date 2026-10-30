@@ -45,7 +45,7 @@ Reports allowed names in root naming overrides that match no code or path name.
 @param session the repository and its tools.
 @param planned the settings and tracked files.
 */
-export async function checkNamingAllowedNames(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkAllowedNames(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = await readSourceNames(session, { ...planned, files: session.repository.files });
     const folders = files.flatMap((file) => file.folders).filter((identifier) => identifier.category === 'folders');
     return session.settings.naming.override.flatMap((override, index) => {

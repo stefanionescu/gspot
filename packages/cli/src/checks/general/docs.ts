@@ -233,7 +233,7 @@ Reports each path that names no tracked file, and each run command that names no
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkDocsMissingPaths(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkMissingPaths(session: Session, planned: PlannedCheck): CheckFinding[] {
     const files = planned.files.filter(
         (file) => file.kind === 'source' && MARKDOWN_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
     );
@@ -258,7 +258,7 @@ Reports a scope without a README.md, and a root without a license file.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkDocsRequiredFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkRequiredFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
     const findings: CheckFinding[] = [];
     const repositoryPaths = new Set(session.repository.files.map(({ path }) => path));
     const readme = joinScope(planned.scope.path, README_FILE);

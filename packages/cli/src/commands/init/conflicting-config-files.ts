@@ -81,7 +81,7 @@ Refuse to replace a config file unless Git holds it unchanged in the last commit
 @param root the repository folder.
 @param paths the config files init deletes.
 */
-export function assertConflictingFilesCommitted(root: string, paths: string[]): void {
+export function assertFilesCommitted(root: string, paths: string[]): void {
     const committed = listCommittedPaths(root, paths);
     const uncommitted = paths.filter((path) => !committed.has(path));
     if (uncommitted.length > 0)

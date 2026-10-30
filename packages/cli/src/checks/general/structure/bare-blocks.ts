@@ -11,7 +11,7 @@ of JavaScript and TypeScript.
 @param session the repository and its tools.
 @param planned the scope sources.
 */
-export async function checkStructureBareBlocks(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkBareBlocks(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const parsed = await readParsedSources(session, planned);
     return parsed.flatMap((source) =>
         (source.captures.get('block') ?? [])

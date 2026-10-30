@@ -69,7 +69,7 @@ Reports broken links between built pages, stylesheets, and fragments.
 @param session the repository and its tools.
 @param planned the scope whose site to check.
 */
-export async function checkSiteLychee(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkLychee(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
     const pages = new Set(listBuiltFiles(build.folder));
     const { urls, base } = readSitemapUrls(build.folder, pages, planned);
@@ -111,7 +111,7 @@ Runs html-validate on every built page with the config file for built output.
 @param session the repository and its tools.
 @param planned the scope whose site to check.
 */
-export async function checkSiteHtmlValidate(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkHtmlValidate(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
     const pages = listBuiltFiles(build.folder)
         .filter((path) => path.endsWith(HTML_EXTENSION))
@@ -173,7 +173,7 @@ Reports selectors in built stylesheets that no built page or script uses.
 @param session the repository and its tools.
 @param planned the scope whose site to check.
 */
-export async function checkSitePurgecss(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkPurgecss(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
     const sheets = listBuiltFiles(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
     if (sheets.length === 0) return [];
@@ -212,7 +212,7 @@ Compares the compressed size of built files with each size limit.
 @param planned the scope with the size limits.
 @returns one finding per exceeded limit.
 */
-export async function checkSiteSize(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkSize(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const limits = getTable(planned.scope.settings, 'site').size_limit.map((limit) => ({
         ...limit,
         isCounted: buildPathMatcher(limit.paths),
@@ -249,7 +249,7 @@ Reports sitemap URLs with no built page, and built pages the sitemap leaves out 
 @param session the repository and its tools.
 @param planned the scope whose site to check.
 */
-export async function checkSiteSitemap(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkSitemap(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
     const files = new Set(listBuiltFiles(build.folder));
     const sitemapFile = [...files].find((file) => SITEMAP_FILE.test(file));

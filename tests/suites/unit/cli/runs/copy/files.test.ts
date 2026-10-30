@@ -11,7 +11,7 @@ import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
-import { listWorkspaceDependencySources } from '#cli/repository/npm/workspaces.ts';
+import { listWorkspaceSources } from '#cli/repository/npm/workspaces.ts';
 import { createCopy, createCheckCopy, selectCopyPaths } from '#cli/runs/copy/files.ts';
 import { cp, mkdir, lstat, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 import { TEST_WORKSPACE_FILES, WORKSPACE_SOURCE_FILES } from '#tests/config/runs/copy/files.ts';
@@ -151,11 +151,7 @@ test.each([false, true])(
                 scope: 'apps/web',
                 paths: ['apps/web/main.js'],
             });
-            const dependencyPaths = listWorkspaceDependencySources(
-                session.cache,
-                input.scope.path,
-                session.repository.files,
-            );
+            const dependencyPaths = listWorkspaceSources(session.cache, input.scope.path, session.repository.files);
             expect(dependencyPaths).toStrictEqual([
                 'packages/aliased/package.json',
                 'packages/aliased/value.js',

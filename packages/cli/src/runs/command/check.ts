@@ -20,12 +20,8 @@ import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts'
 import { hasProjectCoverage, stripCoverageArguments } from '#cli/planning/checks.ts';
 import { runToolProcess, buildOtherToolEnvironment } from '#cli/runs/command/tool.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/runs/command/output.ts';
+import { findMissingEnvironment, listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/executables/uv.ts';
 
-import {
-    listCopyPythonArguments,
-    buildCopyPythonEnvironment,
-    findMissingProjectEnvironment,
-} from '#cli/executables/uv.ts';
 import type {
     FolderRun,
     CommandRun,
@@ -277,7 +273,7 @@ export async function runCommandCheck(
 ): Promise<CheckResult> {
     const tool = planned.tool as Tool;
     const base = buildBaseResult(planned, session);
-    const missingEnvironment = findMissingProjectEnvironment(session, planned);
+    const missingEnvironment = findMissingEnvironment(session, planned);
     if (missingEnvironment !== undefined) return { ...base, ...missingEnvironment };
     const setup = buildCommandSetup(session, planned, { options, root: session.root });
     const command = buildToolCommand(session, planned, options, setup.env);

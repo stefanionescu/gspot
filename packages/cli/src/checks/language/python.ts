@@ -64,7 +64,7 @@ Runs deptry on the scope. Passes the project's extend_exclude list again with .g
 @param session the repository and installed tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkPythonDeptry(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkDeptry(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const text = find(session.cache, pyproject);
     if (text === undefined) throw new GspotError('skip', NO_PYPROJECT_NOTE);
@@ -148,7 +148,7 @@ Reports hand-kept requirements files and unmanaged pip installs, so pyproject.to
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkPythonPipInstalls(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkPipInstalls(session: Session, planned: PlannedCheck): CheckFinding[] {
     if (
         !(planned.check.files?.filenames ?? []).some((file) =>
             planned.files.some(({ path }) => path === joinScope(planned.scope.path, file)),
@@ -191,10 +191,7 @@ Reports Python docstrings that only repeat a name or placeholder.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkPythonPlaceholderDocstrings(
-    session: Session,
-    planned: PlannedCheck,
-): Promise<CheckFinding[]> {
+export async function checkPlaceholderDocstrings(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { functions, modules } = await readPythonFiles({
         cache: session.cache,
         resources: session.resources,
@@ -273,7 +270,7 @@ Runs pydoclint with the declared docstring style, or with the style each file us
 @param planned the configured check and selected scope files.
 @returns the result, with earlier findings kept when a later batch fails.
 */
-export async function checkPythonPydoclint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkPydoclint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const configured = parsePydoclintOptions(
         pyproject,
@@ -319,7 +316,7 @@ files of this run.
 @param planned the configured check and selected scope files.
 @returns each unused definition and each line of unreachable code.
 */
-export async function checkPythonVulture(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkVulture(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scope = planned.scope.path;
     const children = listNestedScopes(
         session.scopes.map(({ path }) => path),

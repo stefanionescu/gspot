@@ -59,7 +59,7 @@ Reports each skipped test without a reason, and each unavailable declaration wit
 @param session the repository and its tools.
 @param planned the scope Swift test files.
 */
-export async function checkSwiftSkipReasons(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkSkipReasons(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
     const findings: CheckFinding[] = [];
     await visitParsedSources({ cache: session.cache, resources: session.resources, files }, (source) => {

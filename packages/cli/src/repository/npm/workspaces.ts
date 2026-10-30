@@ -65,7 +65,7 @@ publish.
 @param files the source inventory.
 @returns the repository-relative paths.
 */
-export function listWorkspaceDependencySources(cache: RunCache, scopePath: string, files: TrackedFile[]): string[] {
+export function listWorkspaceSources(cache: RunCache, scopePath: string, files: TrackedFile[]): string[] {
     const root = cache.root;
     const tracked = new Set(files.map((file) => file.path));
     const packageJsonPath = listEnclosingFolders(scopePath)

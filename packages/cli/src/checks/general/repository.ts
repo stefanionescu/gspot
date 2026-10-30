@@ -22,7 +22,7 @@ Reports each tracked file over `repository.max_file_kilobytes`, except generated
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export function checkRepositoryLargeFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkLargeFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
     return planned.files.flatMap((file) => {
         const scopePath = selectScopePath(file.path, session.scopes);
         const scope = session.scopes.find((scope) => scope.path === scopePath) as Scope;
@@ -90,7 +90,7 @@ Reports indexed files that the scope configurations mark as untracked.
 @param session the repository and its tools.
 @param _planned the configured check and selected scope files.
 */
-export function checkRepositoryLocalFiles(session: Session, _planned: PlannedCheck): CheckFinding[] {
+export function checkLocalFiles(session: Session, _planned: PlannedCheck): CheckFinding[] {
     const scopes = session.repository.scopeFolders;
     const matchers = new Map(
         session.scopes.map(({ path: scopePath, configurations, settings }): [string, (path: string) => boolean] => {
@@ -129,7 +129,7 @@ Report tracked text files that need UTF-8 encoding.
 @param session the repository file cache.
 @param planned the configured check and selected scope files.
 */
-export function checkRepositoryEncoding(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkEncoding(session: Session, planned: PlannedCheck): CheckFinding[] {
     const unreadable = session.repository.unreadablePaths.map((path) => ({
         file: path,
         line: 1,

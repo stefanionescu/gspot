@@ -12,7 +12,7 @@ Reports each foreign key whose columns do not lead an index, primary key, or uni
 @param session the repository and its tools.
 @param planned the scope whose migrations to read.
 */
-export async function checkPostgresForeignKeyIndexes(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkForeignKeyIndexes(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const migrations = await readParsedMigrations(session, planned);
     const schema = buildDatabaseSchema(migrations);
     return schema.foreignKeys

@@ -10,9 +10,9 @@ import { splitSystemPath } from '#cli/system/files/names.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { copyDependencies } from '#cli/runs/copy/dependencies.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { listWorkspaceSources } from '#cli/repository/npm/workspaces.ts';
 import type { CopyFile, CopyPlan, CopyPaths } from '#cli/types/runs/copy.ts';
 import { type Files, type TemporaryFolder } from '#cli/types/system/files.ts';
-import { listWorkspaceDependencySources } from '#cli/repository/npm/workspaces.ts';
 import { SYMLINK_MODE, GIT_FILE_MODES, PERMISSION_BITS } from '#cli/config/files/modes.ts';
 import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/runs/copy/files.ts';
 import { statSync, chmodSync, constants, mkdirSync, symlinkSync, copyFileSync, writeFileSync } from 'node:fs';
@@ -70,7 +70,7 @@ export async function createCheckCopy(
             session.root,
             [
                 ...planned.files.map((file) => file.path),
-                ...listWorkspaceDependencySources(session.cache, planned.scope.path, session.repository.files),
+                ...listWorkspaceSources(session.cache, planned.scope.path, session.repository.files),
                 ...includedPaths,
             ],
             session.repository.scopeFolders.map((scope) => scope.path),

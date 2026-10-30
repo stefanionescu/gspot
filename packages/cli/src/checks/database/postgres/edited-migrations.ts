@@ -23,7 +23,7 @@ Reports each migration at or before postgres.frozen_through whose text differs f
 @param session the repository and its tools.
 @param planned the scope whose migrations to compare with the last commit.
 */
-export async function checkPostgresEditedMigrations(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkEditedMigrations(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const through = getTable(planned.scope.settings, 'postgres')['frozen_through'];
     if (through === FROZEN_NONE) throw new GspotError('skip', FROZEN_THROUGH_NOTE);
     const migrations = await readParsedMigrations(session, planned);

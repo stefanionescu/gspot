@@ -94,7 +94,7 @@ Reports each SECURITY DEFINER function that sets no search_path.
 @param session the repository and its tools.
 @param planned the scope whose migrations to read.
 */
-export async function checkPostgresDefinerSearchPath(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkDefinerSearchPath(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const message = SECURITY_DEFINER_MESSAGE;
     const migrations = await readParsedMigrations(session, planned);
     return listLooseDefiners(migrations).map(({ migration, statement }) => ({

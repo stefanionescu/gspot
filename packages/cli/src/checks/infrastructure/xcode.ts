@@ -41,7 +41,7 @@ Reports Swift sources that no Xcode target holds.
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkXcodeFilesWithoutTarget(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkFilesWithoutTarget(session: Session, planned: PlannedCheck): CheckFinding[] {
     const projects = listSourcePaths(planned.files, [PBXPROJ_SUFFIX]).map((path) =>
         parseProjectSources(read(session.cache, path), path),
     );
@@ -77,7 +77,7 @@ Checks that each asset catalog Contents.json parses and each image set holds its
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkXcodeAssets(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkAssets(session: Session, planned: PlannedCheck): CheckFinding[] {
     const repositoryPaths = new Set(session.repository.files.map(({ path }) => path));
     return listSourcePaths(planned.files, [ASSET_CONTENTS])
         .filter((path) => path.includes(XCASSETS_FOLDER))
@@ -146,7 +146,7 @@ Checks that each string catalog parses and that every string has every locale th
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkXcodeXcstrings(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkXcstrings(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [XCSTRINGS_SUFFIX]).flatMap((path) => {
         const text = read(session.cache, path);
         const at = { file: path, line: 1 };
@@ -181,7 +181,7 @@ Reports each entitlement that xcode.allowed_entitlements does not list.
 @param session the repository and its tools.
 @param planned the scope files and allowed entitlements.
 */
-export function checkXcodeEntitlements(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkEntitlements(session: Session, planned: PlannedCheck): CheckFinding[] {
     const allowed = new Set(getTable(planned.scope.settings, 'xcode').allowed_entitlements);
     return listSourcePaths(planned.files, [ENTITLEMENTS_SUFFIX]).flatMap((path) => {
         const text = read(session.cache, path);
@@ -207,7 +207,7 @@ Reports each plist that turns App Transport Security off for every host.
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkXcodeAppTransportSecurity(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkAppTransportSecurity(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [PLIST_SUFFIX]).flatMap((path): CheckFinding[] => {
         const text = read(session.cache, path);
         const found = INSECURE_TRANSPORT_SETTING.exec(text);

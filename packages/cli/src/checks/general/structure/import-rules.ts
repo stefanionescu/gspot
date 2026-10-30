@@ -192,7 +192,7 @@ ESLint applies the rules to JavaScript and TypeScript imports.
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
 */
-export async function checkStructureImportRules(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkImportRules(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const rules = session.settings.import_rule;
     if (rules.length === 0) throw new GspotError('skip', IMPORT_RULES_SKIP);
     const lookup = buildRuleLookup(rules);

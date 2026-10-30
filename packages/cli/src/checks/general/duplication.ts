@@ -32,7 +32,7 @@ Runs jscpd over the scope and reports the clones.
 @param session the repository and its tools.
 @param planned the scope whose source files to compare.
 */
-export async function checkDuplicationJscpd(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkJscpd(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     using workFolder = createTemporaryFolder();
     const owned = new Set(
         listSourceConfigurations(planned.scope.configurations).flatMap((configuration) =>

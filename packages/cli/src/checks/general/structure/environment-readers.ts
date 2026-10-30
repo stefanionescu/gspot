@@ -24,10 +24,7 @@ Reports each line that reads an environment variable outside the files that stru
 @param session the repository and its tools.
 @param planned the scope sources and roles.
 */
-export async function checkStructureEnvironmentReaders(
-    session: Session,
-    planned: PlannedCheck,
-): Promise<CheckFinding[]> {
+export async function checkEnvironmentReaders(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const readerPaths = getTable(planned.scope.settings, 'structure').environment_readers;
     const isReader = buildPathMatcher(readerPaths);
     const environmentFunctions = planned.scope.settings.configurations.includes('secrets')

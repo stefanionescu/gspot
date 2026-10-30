@@ -20,7 +20,7 @@ Runs Periphery over the project and reports every declaration nothing uses.
 @param session the repository and its tools.
 @param planned the scope to scan.
 */
-export async function checkSwiftPeriphery(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkPeriphery(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const folder = join(
         readRepositoryCacheFolder(session.toolsRoot),
         SWIFT_BUILD_FOLDER,

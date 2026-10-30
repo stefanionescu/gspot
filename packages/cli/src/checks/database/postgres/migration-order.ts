@@ -11,7 +11,7 @@ Reports a version that two files share, a file with no version, and a new file t
 @param session the repository and its tools.
 @param planned the scope whose migrations to compare with the last commit.
 */
-export async function checkPostgresMigrationOrder(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkMigrationOrder(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { migrations, findings: syntax } = await readMigrations(session, planned);
     if (syntax.length > 0) return syntax;
     const findings: CheckFinding[] = [];

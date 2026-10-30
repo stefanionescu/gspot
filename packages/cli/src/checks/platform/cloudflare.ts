@@ -105,7 +105,7 @@ Reports syntax errors in each _redirects file.
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkCloudflareRedirects(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkRedirects(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [REDIRECTS_FILE]).flatMap((path) =>
         validateRedirects(read(session.cache, path)).map((invalidLine) => ({
             file: path,
@@ -122,7 +122,7 @@ Reports syntax errors in each _headers file, and each security header that the b
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export function checkCloudflareHeaders(session: Session, planned: PlannedCheck): CheckFinding[] {
+export function checkHeaders(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [HEADERS_FILE]).flatMap((path) => {
         const { blocks, errors } = parseHeadersFile(read(session.cache, path));
         return [

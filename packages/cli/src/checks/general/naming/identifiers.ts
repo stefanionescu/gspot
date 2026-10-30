@@ -13,7 +13,7 @@ Checks the names that source files declare.
 @param session the repository and its tools.
 @param planned the scope files to read.
 */
-export async function checkNamingIdentifiers(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkIdentifiers(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const settings = readNamingSettings(session.settings, planned.scope);
     const findings: CheckFinding[] = [];
     for (const { file, language } of listNamedFiles(planned)) {

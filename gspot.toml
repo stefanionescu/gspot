@@ -49,8 +49,8 @@ reason = "Check functions start with check and spell the svelte/svelte-check che
 [[naming.override]]
 paths = ["packages/cli/src/checks/platform/supabase.ts"]
 categories = ["functions"]
-allowed_names = ["checkSupabaseDenoCheck"]
-reason = "Check functions start with check and spell the supabase/deno-check check ID."
+allowed_names = ["checkDenoCheck"]
+reason = "Check functions start with check and spell the check name of supabase/deno-check."
 
 [[naming.override]]
 paths = ["tests/suites/unit/cli/generation/configurations/general/data-files.test.ts"]
@@ -121,12 +121,6 @@ reason = "knip names its start files entry, and tools.knip.entry passes them on.
 paths = ["packages/cli/src/types/commands/list.ts", "packages/cli/src/types/settings/definitions.ts", "packages/cli/src/types/settings/inheritance.ts"]
 allowed_names = ["reason_when"]
 reason = "gspot list settings --json and the shipped setting definitions name this field reason_when."
-
-[[naming.override]]
-paths = ["packages/cli/src/checks/database/postgres/definer-search-path.ts", "packages/cli/src/checks/database/postgres/row-level-security.ts", "packages/cli/src/checks/database/postgres/foreign-key-indexes.ts", "packages/cli/src/checks/framework/react-dom.ts", "packages/cli/src/checks/general/dependencies.ts", "packages/cli/src/checks/general/gspot.ts", "packages/cli/src/checks/general/structure/file-folder-clashes.ts", "packages/cli/src/checks/general/structure/pass-through-folders.ts", "packages/cli/src/checks/infrastructure/xcode.ts", "packages/cli/src/checks/platform/supabase.ts"]
-categories = ["functions"]
-allowed_names = ["checkPostgresDefinerSearchPath", "checkPostgresRowLevelSecurity", "checkPostgresForeignKeyIndexes", "checkReactDomReactVersions", "checkDependenciesPackageManagerPin", "checkGspotConflictingConfigFiles", "checkStructureFileFolderClashes", "checkStructurePassThroughFolders", "checkXcodeFilesWithoutTarget", "checkXcodeAppTransportSecurity", "checkSupabaseServiceRoleKey"]
-reason = "Each check function is named check, then its configuration, then its check name."
 
 [[naming.override]]
 paths = ["packages/cli/configurations/general/data-files/**", "packages/cli/src/config/generation/configurations/general/data-files.ts", "packages/cli/src/generation/configurations/general/data-files.ts", "tests/config/generation/configurations/general/data-files.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/suites/unit/cli/generation/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/checks/general/security/sensitive-data.test.ts"]

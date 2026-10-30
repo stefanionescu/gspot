@@ -115,7 +115,7 @@ Reports invalid code fences at their error lines.
 @param session the repository and its tools.
 @param planned the scope Markdown files.
 */
-export async function checkMarkdownFences(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+export async function checkFences(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const findings: CheckFinding[] = [];
     for (const file of planned.files) {
         const text = read(session.cache, file.path);
