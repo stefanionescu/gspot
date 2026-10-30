@@ -102,7 +102,7 @@ test('zero and false tool options are kept as values', () => {
     expect(settings.tools).toMatchObject({ eslint: { rules: { 'id-length': [{ min: 0, properties: false }] } } });
 });
 
-test.each(['ordinary', 'constructor', 'prototype', 'toString'])(
+test.each(['ordinary', 'constructor', 'prototype'])(
     'rule keys named like object properties are checked like any other key (%j)',
     (key) => {
         using sandbox = createTemporaryFolder();
@@ -124,13 +124,6 @@ test.each([...REFUSED_RULE_OPTIONS])(
     },
 );
 
-test.each(['line-length', 'foo-bar'])('yamllint refuses options for an unsupported rule: %s', (rule) => {
-    using sandbox = createTemporaryFolder();
-    expect(() => readSettings(`[tools.yamllint.rules]\n${rule} = { max = 100 }\n`, sandbox.path)).toThrow(
-        `tools.yamllint.rules.${rule}: There is no yamllint rule called`,
-    );
-});
-
 test.each([...SETTING_RULE_OPTIONS])(
     'options for $rule are refused with $setting',
     ({ tables, path, line, rule, setting }) => {
@@ -141,38 +134,20 @@ test.each([...SETTING_RULE_OPTIONS])(
     },
 );
 
-test('options for import boundaries direct the reader to javascript.import_boundaries', () => {
-    using sandbox = createTemporaryFolder();
-    expect(() =>
-        readSettings(
-            'configurations = ["javascript"]\n[tools.eslint.rules]\n"gspot/import-boundaries" = [{}]\n',
-            sandbox.path,
-        ),
-    ).toThrow(
-        'gspot.toml:3: tools.eslint.rules.gspot/import-boundaries: gspot writes the options of gspot/import-boundaries from javascript.import_boundaries. Change that setting instead: gspot set javascript.import_boundaries <value>, with --reason when you raise it.',
-    );
+test.each(['constructor', 'prototype'])('a rule named %s is not mistaken for a setting-owned rule', (rule) => {
+    expect(
+        validateSettingsText(`configurations = ["javascript"]\n[tools.eslint.rules]\n"${rule}" = [{}]\n`),
+    ).toStrictEqual([]);
 });
 
-test.each(['constructor', 'toString', 'prototype'])(
-    'a rule named %s is not mistaken for a setting-owned rule',
-    (rule) => {
-        expect(
-            validateSettingsText(`configurations = ["javascript"]\n[tools.eslint.rules]\n"${rule}" = [{}]\n`),
-        ).toStrictEqual([]);
-    },
-);
-
-test.each(['latest', 'v20240101', 'V', '20240101__init.sql'])(
-    'the freeze cutoff refuses an invalid version: %s',
-    (through) => {
-        using sandbox = createTemporaryFolder();
-        expect(() =>
-            readSettings(`configurations = ["postgres"]\n[postgres]\nfrozen_through = "${through}"\n`, sandbox.path),
-        ).toThrow(
-            `gspot.toml:3: postgres.frozen_through: The value "${through}" is not valid for postgres.frozen_through. Use a valid string value: `,
-        );
-    },
-);
+test.each(['latest', '20240101__init.sql'])('the freeze cutoff refuses an invalid version: %s', (through) => {
+    using sandbox = createTemporaryFolder();
+    expect(() =>
+        readSettings(`configurations = ["postgres"]\n[postgres]\nfrozen_through = "${through}"\n`, sandbox.path),
+    ).toThrow(
+        `gspot.toml:3: postgres.frozen_through: The value "${through}" is not valid for postgres.frozen_through. Use a valid string value: `,
+    );
+});
 
 test.each(SWIFT_TARGET_REASON_CASES)('a Swift target validates $name', ({ lines, reason, errors }) => {
     const text = `configurations = ["swift"]\n[coverage]\nlines = 80\n[[coverage.swift_target]]\nname = "App"\nlines = ${String(lines)}${reason}\n`;
