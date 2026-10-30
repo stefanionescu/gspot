@@ -106,12 +106,12 @@ export function listSourcePaths(files: TrackedFile[], endings: readonly string[]
         .map((file) => file.path);
 }
 /**
-List the files covered by another check in the selected configurations.
+List the files that a check of the selected configurations covers.
 
-@param planned the planned scope and its candidate files.
+@param planned the scope and its candidate files.
 @param checkId the declaration whose coverage to apply.
 */
-export function listCheckFiles(planned: PlannedCheck, checkId: string): TrackedFile[] {
+export function listCheckFiles(planned: Pick<PlannedCheck, 'scope' | 'files'>, checkId: string): TrackedFile[] {
     return planned.scope.configurations.flatMap((configuration) =>
         configuration.checks
             .filter((check) => check.id === checkId)

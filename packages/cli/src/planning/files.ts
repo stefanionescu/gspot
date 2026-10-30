@@ -10,9 +10,9 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
-import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/configurations.ts';
+import { listCheckFiles, listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { isInScope, joinScope, selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
 import { ENCODING_CHECK, LARGE_FILES_CHECK, IGNORED_PATHS_MESSAGE } from '#cli/config/planning/files.ts';
 
@@ -49,19 +49,13 @@ function listProjectCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, sc
         : scopeFiles.filter((file) => file.kind !== 'binary');
 }
 
-function listCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): TrackedFile[] {
+function listRunFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): TrackedFile[] {
     const { session, scope } = planned;
     const { check, configuration } = scopeCheck;
     if (check.runs !== 'files') return listProjectCheckFiles(planned, scopeCheck, scopePath);
-    if (!configuration) {
-        const isMatch = buildPathMatcher(check.files?.paths ?? []);
-        return session.repository.files.filter((file) => isMatch(file.path));
-    }
-    return listCoveredFiles(check.files ?? configuration.files, session.repository.files, {
-        configurations: scope.configurations,
-        scopePath,
-        settings: scope.settings,
-    });
+    if (configuration !== undefined) return listCheckFiles({ scope, files: session.repository.files }, check.id);
+    const isMatch = buildPathMatcher(check.files?.paths ?? []);
+    return session.repository.files.filter((file) => isMatch(file.path));
 }
 
 function stripIgnoredFiles(files: TrackedFile[], check: Check, scope: Scope): Pick<PlannedCheck, 'files' | 'skip'> {
@@ -202,7 +196,7 @@ export function selectCheckFiles(
     const keepsChildScopes = check.runs !== 'files' || isRootOnlyCheck(configuration, check);
     let files =
         triggerPaths.length === 0
-            ? listCheckFiles(planned, scopeCheck, scopePath)
+            ? listRunFiles(planned, scopeCheck, scopePath)
             : listScopeFiles(planned, scopePath, check.runs);
     files = filterReadableFiles(planned, check, files);
     if (!keepsChildScopes) files = files.filter((file) => children.every((child) => !isInScope(file.path, child)));
