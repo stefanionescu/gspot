@@ -38,8 +38,8 @@ example = "The trailer `Claude-Session: https://claude.ai/code/session_01Abc` re
 help = "Remove the line that the finding names. For a reviewed exception, run `gspot ignore commits/references --rule <rule> --reason \"<why>\"`."
 name = "references"
 stage = "message"
-summary = "Checks a new commit message for links to AI chat sessions, such as `claude.ai/code/session_` and `chatgpt.com/share/` links, and the `Claude-Session:` trailer."
-why = "A reader of the history cannot open a chat session, and a session link shares the chat with everyone who can read the repository."
+summary = "Checks a new commit message for links to AI chat sessions and the `Claude-Session:` trailer, finding IDs such as `C3-BUG-019`, plan steps such as `steps 7.01 to 7.36` or `stage 45`, and `Refs:` or `Closes:` footers without an issue number."
+why = "A reader of the history cannot open a chat session, a private finding, or a plan step, and a session link shares the chat with everyone who can read the repository."
 
 [[check]]
 example = "A commit with the message `changed stuff` in the push fails. Reword it as `fix(cli): report missing configuration`, and coordinate first when others share that history."

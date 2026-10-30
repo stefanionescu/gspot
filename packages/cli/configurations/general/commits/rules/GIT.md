@@ -13,6 +13,7 @@ overwrite them. Keep working beside them, and ask the user only when your change
 - One change per commit. Put a rename and a behavior change in two commits.
 - The body says what changed and why.
 - Leave out counts of tests, files, or bytes.
+- A commit message names only files, commands, and issues that exist in the repository.
 - Footers reference issues with `Refs: #123` or `Closes: #123`, and breaking changes with `BREAKING CHANGE:...`.
 - Never bypass hooks with `--no-verify`.
 - Never add `[skip ci]`, `[ci skip]`, `[no ci]`, or another marker that stops CI.

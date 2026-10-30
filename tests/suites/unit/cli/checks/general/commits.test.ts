@@ -50,3 +50,32 @@ test('references passes a message with a co-author trailer and links that name n
     );
     expect(findings).toStrictEqual([]);
 });
+
+test('references reports finding IDs, plan steps, and issue footers without a number', async () => {
+    const findings = await checkMessage(
+        [
+            'refactor(cli): apply findings C3-BUG-019 and C1-CLN-004',
+            '',
+            'Record stage 45 in the status.',
+            'Do steps 7.01 to 7.36.',
+            '',
+            'Refs: CI055',
+            'Closes: #12',
+            'Refs: #12, #13',
+            '',
+        ].join('\n'),
+    );
+    expect(findings.map(({ rule, message }) => ({ rule, line: message.split(' ', 2)[1] }))).toStrictEqual([
+        { rule: 'finding-id', line: '1' },
+        { rule: 'plan-step', line: '3' },
+        { rule: 'plan-step', line: '4' },
+        { rule: 'issue-footer', line: '6' },
+    ]);
+});
+
+test('references passes build stages, version numbers, and standard names', async () => {
+    const findings = await checkMessage(
+        'fix(docker): copy the binary in stage 2 of the build\n\nKeep UTF-8, ISO-8601, and CVE-2024-1234 as written, and require Node 24.15.\n',
+    );
+    expect(findings).toStrictEqual([]);
+});
