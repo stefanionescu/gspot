@@ -1,4 +1,3 @@
-import ts from 'typescript';
 import { CST, Lexer } from 'yaml';
 import { visit } from 'unist-util-visit';
 import type { Node } from 'web-tree-sitter';
@@ -12,8 +11,8 @@ import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/files/classify.ts';
 import type { GrammarName } from '#cli/types/parsers/code/grammars.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
-import type { CommentParser, SourceComment } from '#cli/types/parsers/code/comments.ts';
 import { getTomlRange, parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
+import type { CommentParser, SourceComment, ComponentScript } from '#cli/types/parsers/code/comments.ts';
 
 import {
     MDX_ESM,
@@ -37,35 +36,6 @@ function buildComment(text: string, start: number, end: number, line: number): S
         text: text.slice(start, end),
         standalone: text.slice(lineStart, start).trim() === '' && text.slice(end, lineEnd).trim() === '',
     };
-}
-
-function parseJavascriptComments(text: string, path: string): SourceComment[] {
-    const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest);
-    const comments = new Map<number, ts.CommentRange>();
-    const visitNode = (node: ts.Node): void => {
-        if ([ts.SyntaxKind.JsxText, ts.SyntaxKind.JsxTextAllWhiteSpaces, ts.SyntaxKind.JSDoc].includes(node.kind))
-            return;
-        const children = node.getChildren(source);
-        if (children.length > 0) {
-            for (const child of children) visitNode(child);
-            return;
-        }
-        const start = node.getFullStart();
-        const end = node.getStart(source);
-        for (const range of [
-            ...(ts.getLeadingCommentRanges(text, start) ?? []),
-            ...(ts.getTrailingCommentRanges(text, start) ?? []),
-        ])
-            if (range.end <= end) comments.set(range.pos, range);
-    };
-    visitNode(source);
-    return comments
-        .values()
-        .toArray()
-        .toSorted((left, right) => left.pos - right.pos)
-        .map((range) =>
-            buildComment(text, range.pos, range.end, source.getLineAndCharacterOfPosition(range.pos).line + 1),
-        );
 }
 
 function parseYamlComments(text: string): SourceComment[] {
@@ -125,19 +95,18 @@ async function parseComponentComments(text: string, path: string): Promise<Sourc
     const front = path.endsWith(ASTRO_EXTENSION) ? ASTRO_FRONT_MATTER.exec(text) : null;
     const markup = front === null ? text : masked.slice(0, front[0].length) + text.slice(front[0].length);
     using tree = await parseSource('html', markup);
-    const comments: SourceComment[] = [];
-    for (const element of tree.rootNode.descendantsOfType('script_element')) {
-        comments.push(...parseComponentScript(element, text, path, masked));
-    }
+    const scripts = tree.rootNode
+        .descendantsOfType('script_element')
+        .flatMap((element) => listComponentScripts(element, text, masked));
     if (front !== null) {
         const start = text.indexOf('\n') + 1;
-        comments.push(
-            ...parseJavascriptComments(
-                spliceRanges(masked, text, [{ start, end: start + (front[1] as string).length }]),
-                `${path}.ts`,
-            ),
-        );
+        scripts.push({
+            grammar: 'typescript',
+            source: spliceRanges(masked, text, [{ start, end: start + (front[1] as string).length }]),
+        });
     }
+    const comments: SourceComment[] = [];
+    for (const { grammar, source } of scripts) comments.push(...(await parseGrammarComments(grammar, source)));
     return [...comments, ...(await parseGrammarComments('html', markup))].toSorted(
         (left, right) => left.line - right.line,
     );
@@ -193,16 +162,12 @@ Read the text and line of each comment.
 export async function parseComments(path: string, text: string, tags: readonly string[]): Promise<SourceComment[]> {
     const lowerPath = path.toLowerCase();
     if (DECLARATION_EXTENSIONS.some((extension) => lowerPath.endsWith(extension)))
-        return parseJavascriptComments(text, path);
+        return parseGrammarComments('typescript', text);
     let scriptGrammar: GrammarName | undefined;
     if (tags.includes(SCRIPT_TAG)) scriptGrammar = 'bash';
     else if (tags.includes('python')) scriptGrammar = 'python';
     const grammar = findGrammarByExtension(lowerPath) ?? scriptGrammar;
-    if (grammar !== undefined) {
-        return ['javascript', 'typescript', 'tsx'].includes(grammar)
-            ? parseJavascriptComments(text, path)
-            : parseGrammarComments(grammar, text);
-    }
+    if (grammar !== undefined) return parseGrammarComments(grammar, text);
     const parser = COMMENT_PARSERS.get(extractExtension(path));
     return parser === undefined ? [] : parser(text, path);
 }
@@ -263,15 +228,15 @@ function maskCommentRanges(text: string, ranges: TextRange[]): string {
     return pieces.join('') + text.slice(position);
 }
 
-function parseComponentScript(element: Node, text: string, path: string, masked: string): SourceComment[] {
-    const comments: SourceComment[] = [];
+function listComponentScripts(element: Node, text: string, masked: string): ComponentScript[] {
     const language = element.namedChildren
         .find((node) => node.type === 'start_tag')
         ?.text.match(/\blang\s*=\s*["'](?<language>[^"']+)["']/u)?.groups?.['language'];
-    const extension = TSX_LANGUAGES.includes(language ?? '') ? 'tsx' : 'ts';
-    for (const node of element.namedChildren.filter((child) => child.type === 'raw_text')) {
-        const script = spliceRanges(masked, text, [{ start: node.startIndex, end: node.endIndex }]);
-        comments.push(...parseJavascriptComments(script, `${path}.${extension}`));
-    }
-    return comments;
+    const grammar = TSX_LANGUAGES.includes(language ?? '') ? 'tsx' : 'typescript';
+    return element.namedChildren
+        .filter((child) => child.type === 'raw_text')
+        .map((node) => ({
+            grammar,
+            source: spliceRanges(masked, text, [{ start: node.startIndex, end: node.endIndex }]),
+        }));
 }
