@@ -109,13 +109,9 @@ test.each([...PACKAGE_MANAGER_CASES])(
         const installed = await spawnGspot(root, ['install']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         const version = await runCommand([toolPackageManager, '--version'], { cwd: root });
-        expect(installed.stdout.split('\n').filter((line) => line.startsWith('installed 1 npm tool'))).toStrictEqual(
-            toolPackageManager === 'npm'
-                ? []
-                : [
-                      `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${toolPackageManager} ${version.stdout.trim()})`,
-                  ],
-        );
+        expect(installed.stdout.split('\n').filter((line) => line.startsWith('installed 1 npm tool'))).toStrictEqual([
+            `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${toolPackageManager} ${version.stdout.trim()})`,
+        ]);
         const workspace = join(root, 'pnpm-workspace.yaml');
         const yarnrc = join(root, '.yarnrc.yml');
         const attributes = await stat(lockfilePath);
@@ -175,13 +171,9 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
             const version = await runCommand([toolPackageManager, '--version'], { cwd: clone });
             expect(
                 cloneInstall.stdout.split('\n').filter((line) => line.startsWith('installed 1 npm tool')),
-            ).toStrictEqual(
-                round > 0 && toolPackageManager === 'npm'
-                    ? []
-                    : [
-                          `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${toolPackageManager} ${version.stdout.trim()})`,
-                      ],
-            );
+            ).toStrictEqual([
+                `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${toolPackageManager} ${version.stdout.trim()})`,
+            ]);
             const status = runCommandBlocking(['git', 'status', '--porcelain'], { cwd: clone, env: {} });
             expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
             const contents = await readFile(join(clone, GSPOT_FOLDER, basename(lockfilePath)));
