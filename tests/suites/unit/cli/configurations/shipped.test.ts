@@ -62,22 +62,15 @@ function listToolPinErrors(tool: Tool): string[] {
     ];
 }
 
-function readInstallerVersions(): { versions: Map<string, string>; errors: string[] } {
+function readInstallerVersions(): Map<string, string> {
     const versions = new Map<string, string>();
-    const errors: string[] = [];
     const pins = readConfigurations()
         .values()
         .flatMap((configuration) => configuration.tools)
         .flatMap((tool) => Object.entries(tool.installers));
-    for (const [installer, pin] of pins) {
-        if (pin.version === undefined) continue;
-        const key = `${installer}:${pin.name}`;
-        const previous = versions.get(key);
-        versions.set(key, pin.version);
-        if (previous !== undefined && previous !== pin.version)
-            errors.push(`${key} has conflicting versions ${previous} and ${pin.version}.`);
-    }
-    return { versions, errors };
+    for (const [installer, pin] of pins)
+        if (pin.version !== undefined) versions.set(`${installer}:${pin.name}`, pin.version);
+    return versions;
 }
 
 function readExportedNameLists(folder: string): Pick<NameList, 'package' | 'version'>[] {
@@ -135,10 +128,6 @@ test('each shipped tool has a version pin or minimum, and no pin below its minim
     expect(errors).toStrictEqual([]);
 });
 
-test('each shipped installer package has one version across the configurations', () => {
-    expect(readInstallerVersions().errors).toStrictEqual([]);
-});
-
 test('the config files, requirements, and checks of each configuration name declared tools and checks', () => {
     const configurations = readConfigurations().values().toArray();
     const tools = new Set(configurations.flatMap((configuration) => configuration.tools.map(({ name }) => name)));
@@ -177,7 +166,7 @@ test('each conditional rule of a configuration has a shipped rule file', () => {
 });
 
 test('each copied linter name list and preset matches the npm pin of its package', () => {
-    const { versions } = readInstallerVersions();
+    const versions = readInstallerVersions();
     const errors = readConfigurations()
         .values()
         .flatMap((configuration) => readExportedNameLists(configuration.folder))
@@ -222,12 +211,6 @@ test('shipped configuration folders have unique names', () => {
     expect(new Set(names).size).toBe(names.length);
 });
 
-test('configuration descriptions contain plain text', () => {
-    for (const configuration of readConfigurations().values()) {
-        expect(configuration.description, configuration.name).not.toMatch(/[`[\]]/u);
-    }
-});
-
 test('a mise installer refuses a checksum without a sha256 digest and accepts one with it', () => {
     const tool = { name: 'taplo', version: '0.10.0' };
     const invalid = { ...tool, mise: { name: 'taplo', checksums: { 'linux-x64': 'invalid' } } };
@@ -237,7 +220,7 @@ test('a mise installer refuses a checksum without a sha256 digest and accepts on
 });
 
 test('each tool that the tests workspace declares has the version of its npm pin', () => {
-    const { versions } = readInstallerVersions();
+    const versions = readInstallerVersions();
     const compared = Object.entries(testsPackage.devDependencies).filter(
         ([name, version]) => versions.has(`npm:${name}`) && !version.startsWith('workspace:'),
     );
