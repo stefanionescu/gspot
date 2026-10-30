@@ -16,11 +16,6 @@ export const SUPPRESSION_KIND_MESSAGES = {
     limit: 'Split the code by its steps, or ask the user to raise the limit in gspot.toml.',
 } as const;
 
-export const ISO_DATE_LENGTH = 10;
-
-export const EXPIRED_IGNORE_HELP =
-    'Fix the findings and delete the ignore with gspot unignore. To keep it, write a later until date in gspot.toml.';
-
 export const NEGATED_PATTERN = /^!/u;
 
 export const UNESCAPED_BRACKET = /(?<!\\)[()[\]]/u;
@@ -28,7 +23,6 @@ export const UNESCAPED_BRACKET = /(?<!\\)[()[\]]/u;
 export const BRACKET_HELP = String.raw` If a folder name holds ( ) [ ], escape each with a backslash in a TOML literal string, such as 'app/\(legal\)/**'.`;
 
 export const RULES = {
-    expiredIgnore: 'expired-ignore',
     unmatchedPath: 'unmatched-path',
     conflictingConfigFile: 'conflicting-config-file',
 } as const;

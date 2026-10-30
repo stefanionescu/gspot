@@ -1,10 +1,9 @@
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { TWO_WORDS } from '#tests/config/ignores.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { test, expect, setSystemTime } from 'bun:test';
-import { buildSettingsText } from '#cli/settings/text.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { setKey, getScopeTable } from '#cli/settings/edit.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
@@ -24,7 +23,6 @@ import {
     PROJECT_CHOICES,
     SCOPE_LIMIT_VALUES,
     PROJECT_SCOPE_CASES,
-    IGNORE_EXPIRY_CASES,
     NESTED_SCOPE_SETTINGS,
     OPENAPI_SCOPE_SETTINGS,
     POSTGRES_SCOPE_SETTINGS,
@@ -111,39 +109,6 @@ test('a per-scope limit overrides a root language limit in the scope view', asyn
     const session = await openSession(sandbox.path);
     const scope = session.scopes.find((scope) => scope.path === 'api')!;
     expect(getLimit(scope.settings, 'file_lines', 'python')).toBe(100);
-});
-
-test('an ignore past its until date stays in the scope view', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText('', '', { configurations: [], ignore: IGNORE_EXPIRY_CASES }),
-    });
-    setSystemTime(new Date('2030-05-20T23:59:59.000Z'));
-    try {
-        const { scopes } = await openSession(sandbox.path);
-        const scope = scopes[0]!;
-        expect(listIgnores(scope.settings, 'dependencies/osv-scanner')).toStrictEqual([
-            { ...IGNORE_EXPIRY_CASES[0], paths: [] },
-            { ...IGNORE_EXPIRY_CASES[1], paths: [] },
-            { ...IGNORE_EXPIRY_CASES[2], paths: [] },
-            { ...IGNORE_EXPIRY_CASES[3], paths: [] },
-        ]);
-        expect(listIgnoredRules(scope, 'dependencies/osv-scanner')).toStrictEqual([
-            'permanent',
-            'past',
-            'today',
-            'future',
-        ]);
-        setSystemTime(new Date('2030-05-21T00:00:00.000Z'));
-        const next = await openSession(sandbox.path);
-        expect(listIgnoredRules(next.scopes[0]!, 'dependencies/osv-scanner')).toStrictEqual([
-            'permanent',
-            'past',
-            'today',
-            'future',
-        ]);
-    } finally {
-        setSystemTime();
-    }
 });
 
 test('OpenAPI stays off without a document and in a scope that removes it', async () => {

@@ -1,4 +1,3 @@
-import { EVERY_CHECK } from '#cli/config/ignores.ts';
 import { type Session } from '#cli/types/session.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
 import { getToolName } from '#cli/configurations/tools.ts';
@@ -32,9 +31,7 @@ import {
     BRACKET_HELP,
     REASON_ABOVE,
     NEGATED_PATTERN,
-    ISO_DATE_LENGTH,
     UNESCAPED_BRACKET,
-    EXPIRED_IGNORE_HELP,
     GENERATED_FILE_FINDINGS,
     SUPPRESSION_KIND_MESSAGES,
 } from '#cli/config/checks/general/gspot.ts';
@@ -170,27 +167,9 @@ function validateSuppressionComment(
     return [{ ...at, rule: `${syntax.tool}-${kind}`, message: message }];
 }
 
-function listExpiredIgnores(session: Session): CheckFinding[] {
-    const today = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
-    return session.settings.ignore.flatMap((ignore, index) => {
-        const date = ignore.until?.toISOString();
-        if (date === undefined || today < date) return [];
-        return [
-            {
-                file: SETTINGS_FILE,
-                line: findSettingLine(session.settingsText, session.settings.written, ['ignore', index]),
-                rule: RULES.expiredIgnore,
-                message: `This ignore of ${ignore.check ?? EVERY_CHECK} ended on ${date}.`,
-
-                help: EXPIRED_IGNORE_HELP,
-            },
-        ];
-    });
-}
-
 /**
-Reports forbidden suppressions, suppressions that turn off every rule or a size limit, suppressions without a
-reason, and ignores past their until date.
+Reports forbidden suppressions, suppressions that turn off every rule or a size limit, and suppressions without a
+reason.
 
 @param session the repository and its tools.
 @param planned the configured check and selected scope files.
@@ -200,7 +179,7 @@ export async function checkGspotSuppressions(session: Session, planned: PlannedC
         planned.files.filter((file) => file.kind === 'source' && file.tags.includes('text')),
         (file) => selectScopePath(file.path, session.scopes),
     );
-    const found: CheckFinding[] = listExpiredIgnores(session);
+    const found: CheckFinding[] = [];
     for (const scope of session.scopes) {
         const files = filesByScope.get(scope.path) ?? [];
         const syntaxes = listSuppressionSyntaxes(scope, files);

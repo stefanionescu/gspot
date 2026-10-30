@@ -15,7 +15,7 @@ import {
 } from '#cli/config/generation/configurations/general/dependencies.ts';
 
 /**
-Build osv-scanner.toml: a note on why the file exists, and the package ignores, reasons, and expiration dates.
+Build osv-scanner.toml: a note on why the file exists, and the package ignores and their reasons.
 
 @param planned the config file to build.
 */
@@ -25,7 +25,6 @@ export function buildOsvScannerFile(planned: PlannedConfigFile): string {
     );
     const vulnerabilities = ignores.map((ignore) => ({
         id: ignore.rule,
-        ...(ignore.until && { ignoreUntil: ignore.until }),
         reason: ignore.reason,
     }));
     return [

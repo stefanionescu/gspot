@@ -2,11 +2,9 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { getValueAt } from '#cli/system/tables.ts';
 import { SCHEMA_DIRECTIVE } from '#cli/config/settings/text.ts';
-import { localDateSchema } from '#cli/schemas/settings/fields.ts';
+import { SEMGREP_IGNORE, INITIAL_SETTINGS, SCOPE_SETTING_WRITES } from '#tests/config/settings/edit.ts';
 import { setKey, removeKey, getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
-import { DATED_IGNORE, SEMGREP_IGNORE, INITIAL_SETTINGS, SCOPE_SETTING_WRITES } from '#tests/config/settings/edit.ts';
 
 test('an edit writes the new ignore as a table and keeps the authored comment', async () => {
     await using sandbox = await testdir();
@@ -56,17 +54,6 @@ test.each([...SCOPE_SETTING_WRITES])(
         ]);
     },
 );
-
-test('changing an until date in place rewrites it and keeps its comment', async () => {
-    await using sandbox = await testdir();
-    await writeFile(join(sandbox.path, 'gspot.toml'), DATED_IGNORE);
-    const input = readSettingsEdit(sandbox.path);
-    const until = localDateSchema.parse(getValueAt(input.table, ['ignore', 0, 'until']));
-    until.setUTCDate(21);
-    const result = buildEditedSettings(sandbox.path, input);
-    expect(result.changed).toBe(true);
-    expect(result.text).toBe(DATED_IGNORE.replace('2099-05-20', '2099-05-21'));
-});
 
 test('an invalid edit reports the setting without inventing a saved line', async () => {
     await using sandbox = await testdir();

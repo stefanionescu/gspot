@@ -8,9 +8,9 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { CONFIG_FILE_BUILDERS } from '#cli/generation/config-files/build.ts';
-import { LocalDate, stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { SEMGREP_RULE_PACK_FILE } from '#cli/config/generation/config-files/build.ts';
 import { SPECIAL_CHARACTER_FILES, SPECIAL_CHARACTER_SETTINGS } from '#tests/config/generation/config-files/build.ts';
 
@@ -60,7 +60,7 @@ test('TOML config files keep keys and values with quotes, backslashes, newlines,
             docs: { allowed_urls: { value: [text], reason } },
             ignore: [
                 { check: 'python/ruff', rule: 'F401', paths: [path], reason },
-                { check: 'dependencies/osv-scanner', rule: text, reason, until: new LocalDate('2099-09-20') },
+                { check: 'dependencies/osv-scanner', rule: text, reason },
                 { check: 'dependencies/osv-scanner', rule: 'GHSA-path-specific', paths: [path], reason },
             ],
         }),
@@ -76,7 +76,7 @@ test('TOML config files keep keys and values with quotes, backslashes, newlines,
         output.files.filter((file) => file.path.endsWith('.toml')).map((file) => [file.path, parseToml(file.content)]),
     );
     expect(parsed.get(getManifestTarget('dependencies', 'osv-scanner.toml'))).toMatchObject({
-        IgnoredVulns: [{ id: text, reason, ignoreUntil: new Date('2099-09-20T00:00:00.000Z') }],
+        IgnoredVulns: [{ id: text, reason }],
     });
     expect(parsed.get(getManifestTarget('data-files', 'taplo.toml'))).toMatchObject({
         formatting: { indent_string: '\t' },

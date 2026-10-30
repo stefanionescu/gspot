@@ -2,7 +2,6 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
-import { readSettings } from '#cli/settings/read.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { REFUSAL_FILES } from '#tests/config/commands/set.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -13,10 +12,7 @@ import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.
 import {
     IGNORE_REFUSALS,
     IGNORE_HOOK_TABLES,
-    MERGED_EXPIRY_IGNORES,
     PATH_IGNORE_ARGUMENTS,
-    DATED_IGNORE_ARGUMENTS,
-    REMAINING_EXPIRY_IGNORES,
     UNKNOWN_IGNORE_ARGUMENTS,
 } from '#tests/config/commands/ignore.ts';
 
@@ -59,49 +55,6 @@ test('ignore merges paths into one record and prints them, and unignore removes 
     expect(saved).toBe(
         '# Comment on configurations.\n#:schema ./.gspot/gspot.schema.json\nconfigurations = ["bash"]\n[[command_check]]\nid = "project/bash-syntax"\ncommand = ["bash", "-n", "{file}"]\npaths = ["**/*.sh"]\nstage = "commit"\noutput = { format = "regex", pattern = "^.*: line (?<line>\\\\d+): (?<message>.*)$" }\n[rules]\nenabled = false\n[hooks]\n# Keep the push selection.\nenabled = false\n\n[[ignore]]\ncheck = "bash/shellcheck"\npaths = ["a.sh"]\nreason = "The inputs demonstrate word splitting."\n',
     );
-});
-
-test('ignore merges records with the same --until date, keeps other dates apart, and unignore removes one path', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash'], {
-            rules: true,
-            tables: BASH_SYNTAX_CHECK,
-        }),
-        'a.sh': 'echo a\n',
-        'b.sh': 'echo b\n',
-        'c.sh': 'echo c\n',
-    });
-
-    for (const [until, path] of [
-        ['2099-05-20', 'a.sh'],
-        ['2099-05-20', 'b.sh'],
-        ['2099-05-21', 'c.sh'],
-    ]) {
-        const saved = await runGspot(sandbox.path, [...DATED_IGNORE_ARGUMENTS, '--until', until!, '--paths', path!]);
-        expect(saved.code, saved.stdout + saved.stderr).toBe(0);
-    }
-
-    expect(
-        readSettings(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'), sandbox.path).ignore.map((ignore) => ({
-            ...ignore,
-            until: ignore.until?.toISOString(),
-        })),
-    ).toStrictEqual(MERGED_EXPIRY_IGNORES);
-    const removed = await runGspot(sandbox.path, [
-        'unignore',
-        'bash/shellcheck',
-        '--rule',
-        'SC2086',
-        '--paths',
-        'b.sh',
-    ]);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(
-        readSettings(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'), sandbox.path).ignore.map((ignore) => ({
-            ...ignore,
-            until: ignore.until?.toISOString(),
-        })),
-    ).toStrictEqual(REMAINING_EXPIRY_IGNORES);
 });
 
 test('ignore merges matching paths, keeps different reasons apart, and a record without paths covers the scope', async () => {
@@ -166,21 +119,10 @@ test('a rule ignore summary names the rule and its paths', async () => {
     expect(result.stdout).toContain('Ignored rule SC2086 of bash/shellcheck for entry.sh.');
 });
 
-test.each([
-    ...IGNORE_REFUSALS,
-    {
-        name: 'today as the expiry date',
-        arguments: [
-            'ignore',
-            'bash/shellcheck',
-            '--reason',
-            'The generated script has a reviewed exception.',
-            '--until',
-            new Date().toISOString().slice(0, 10),
-        ],
-        message: '--until must be a date after today (UTC).',
+test.each([...IGNORE_REFUSALS])(
+    'ignore refuses $name in text and JSON without writing',
+    async ({ arguments: commandArguments, message }) => {
+        await using sandbox = await createGitSandbox(REFUSAL_FILES);
+        await assertRefusalWithoutWrites(sandbox.path, commandArguments, { error: 'arguments', message });
     },
-])('ignore refuses $name in text and JSON without writing', async ({ arguments: commandArguments, message }) => {
-    await using sandbox = await createGitSandbox(REFUSAL_FILES);
-    await assertRefusalWithoutWrites(sandbox.path, commandArguments, { error: 'arguments', message });
-});
+);

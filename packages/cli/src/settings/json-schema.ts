@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { localDateSchema } from '#cli/schemas/settings/fields.ts';
 import { RELATIVE_PATH_PATTERN } from '#cli/config/settings/fields.ts';
 
 import {
@@ -9,7 +8,6 @@ import {
     HIDDEN_FACT_KEYS,
     SCHEMA_DESCRIPTION,
     JSON_SCHEMA_DIALECT,
-    LOCAL_DATE_DESCRIPTION,
     PORTABLE_RELATIVE_PATH_PATTERN,
 } from '#cli/config/settings/json-schema.ts';
 
@@ -27,8 +25,6 @@ export function buildJsonSchema(): z.core.JSONSchema.JSONSchema {
     const converted = z.toJSONSchema(settingsSchema, {
         io: 'input',
         reused: 'ref',
-        unrepresentable: ({ zodSchema }) =>
-            zodSchema === localDateSchema ? { description: LOCAL_DATE_DESCRIPTION } : 'throw',
         override: ({ zodSchema, jsonSchema }) => {
             if (zodSchema instanceof z.ZodArray && jsonSchema.$ref !== undefined) jsonSchema.type = 'array';
             for (const key of HIDDEN_FACT_KEYS) Reflect.deleteProperty(jsonSchema, key);

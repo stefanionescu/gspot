@@ -56,9 +56,6 @@ export const RECORD_FIELD_DEFINITIONS = {
         default: [] as [],
     },
     'scope.test_files': { description: 'More test files for this folder, added to the root list.' },
-    'ignore.until': {
-        description: 'Report this ignore as expired from this date, in YYYY-MM-DD format (UTC).',
-    },
     'command_check.command': {
         description: 'The executable and arguments to run on selected files.',
     },

@@ -137,7 +137,7 @@ export type RunReport = {
     started: string;
     duration: number;
     checks: readonly CheckResult[];
-    ignores: readonly (Omit<IgnoreRecord, 'until'> & { until?: string })[];
+    ignores: readonly IgnoreRecord[];
     unstagedChanges: number;
     partial: boolean;
     failed: readonly string[];

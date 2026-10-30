@@ -136,12 +136,11 @@ on:
     await assertYamlFiles(root);
 });
 
-test('v8r checks gspot.toml against the schema in .gspot, which accepts an unquoted until date', async () => {
+test('v8r checks gspot.toml against the schema in .gspot', async () => {
     const { root } = installedSandbox();
     await using _change = await applySandboxChanges(installedSandbox(), {
         files: {},
-        settings:
-            '\n[[ignore]]\ncheck = "data-files/yamllint"\nreason = "The sample holds no YAML."\nuntil = 2099-01-01\n',
+        settings: '\n[[ignore]]\ncheck = "data-files/yamllint"\nreason = "The sample holds no YAML."\n',
     });
     const command = ['check', SETTINGS_FILE, '--only', 'data-files/v8r', '--json'];
     const accepted = parseCheckReport(await spawnGspot(root, command));

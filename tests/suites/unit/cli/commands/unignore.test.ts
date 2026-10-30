@@ -3,11 +3,11 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { parse, stringify } from '@decimalturn/toml-patch';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { STALE_LOCKFILE_NOTE } from '#tests/config/messages.ts';
 import { UPDATED_AGENTS } from '#tests/config/commands/contents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { parse, LocalDate, stringify } from '@decimalturn/toml-patch';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { TOOLS_CHANGED_LINE, UPDATED_GITATTRIBUTES, UNMATCHED_RULE_MESSAGE } from '#tests/config/commands/unignore.ts';
 
@@ -56,12 +56,7 @@ test('unignore counts the changed ignores and keeps other paths and other rules'
     await using sandbox = await createGitSandbox({});
     const selected = { check: 'bash/shellcheck', rule: 'SC2086' };
     const first = { ...selected, reason: 'Keep word splitting.', paths: ['a.sh', 'b.sh'] };
-    const second = {
-        ...selected,
-        reason: 'Keep the expansion.',
-        until: new LocalDate('2099-05-20'),
-        paths: ['b.sh', 'c.sh'],
-    };
+    const second = { ...selected, reason: 'Keep the expansion.', paths: ['b.sh', 'c.sh'] };
     const global = { ...selected, reason: 'Keep scope-wide expansion.' };
     const other = { check: 'bash/shellcheck', rule: 'SC2034', reason: 'Read by sourcing.', paths: ['b.sh'] };
     const globalOther = {

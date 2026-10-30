@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { LocalDate } from '@decimalturn/toml-patch';
 import { MAX_PERCENTAGE } from '#cli/config/units.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { CASE_NAMES } from '#cli/config/configurations/naming.ts';
@@ -113,13 +112,6 @@ export const namingCategorySchema = z.strictObject({
 } satisfies SchemaShape<ParsedNamingFields, NamingFields<SettingValue<number>, SettingValue<NamingCase[]>>>);
 
 namingCategorySchema.register(z.globalRegistry, { id: 'namingCategory' });
-
-export const calendarDateSchema = z.iso.date() satisfies z.ZodType<string>;
-
-export const localDateSchema = z.custom<LocalDate>(
-    (value) => value instanceof LocalDate && calendarDateSchema.safeParse(value.toISOString()).success,
-    { error: 'Use an unquoted TOML local date in YYYY-MM-DD form, without a time or offset.' },
-) satisfies z.ZodType<LocalDate>;
 
 const formatOverrideSchema = z
     .strictObject({

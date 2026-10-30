@@ -48,11 +48,6 @@ name = "app"
 paths = ["app/**"]
 
 [[ignore]]
-check = "docs/links"
-until = 2099-01-01
-reason = "The docs are being moved."
-
-[[ignore]]
 check = "licenses"
 reason = "The command runs separately."
 `;
@@ -62,7 +57,6 @@ export const TEAM_LEFT_OUT = [
     { key: 'ci.provider', note: 'CI stays off; run gspot set ci.enabled true' },
     { key: 'tools.nginx.image', note: 'runs code' },
     { key: '[[import_rule]] app', note: 'names paths of that repository' },
-    { key: '[[ignore]] docs/links', note: 'ends on a date' },
     { key: '[[ignore]] licenses', note: 'ignores a command check' },
     { key: 'test_files', note: 'names paths of that repository' },
     { key: 'tools.eslint.import_extension', note: 'describes that repository' },

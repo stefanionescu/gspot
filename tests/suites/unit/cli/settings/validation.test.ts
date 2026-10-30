@@ -4,16 +4,11 @@ import { stringify } from '@decimalturn/toml-patch';
 import { readSettings } from '#cli/settings/read.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { buildSettingsText } from '#cli/settings/text.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { SCHEMA_DIRECTIVE } from '#cli/config/settings/text.ts';
 import { listAllowedRules } from '#cli/settings/import-rules.ts';
-import { REVIEWED_REASON } from '#tests/config/settings/reasons.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 
 import {
-    UNTIL_DATE_CASES,
     UNSAFE_SCOPE_PATHS,
     ORDERED_IMPORT_RULES,
     REFUSED_RULE_OPTIONS,
@@ -73,24 +68,6 @@ test('an ignore without check needs paths and takes no rule', () => {
     expect(() =>
         readSettings(`[[ignore]]\nrule = "no-console"\npaths = ["a/**"]\nreason = "${reason}"\n`, sandbox.path),
     ).toThrow('An ignore without check cannot name a rule.');
-});
-
-test.each([...UNTIL_DATE_CASES])('$name: the until date of an ignore must be a TOML date', (row) => {
-    using sandbox = createTemporaryFolder();
-    const source = `configurations = ["bash"]\n[[ignore]]\ncheck="bash/shellcheck"\nreason="${REVIEWED_REASON}"\nuntil=${row.literal}\n`;
-    const written = parseTomlFile('dates.toml', source);
-    expect(validateSettingsText(source).some((error) => error.includes('ignore.0.until'))).toBe(!row.valid);
-    if (!row.valid) return;
-    const settings = readSettings(source, sandbox.path);
-    expect(settings.ignore[0]?.until?.toISOString()).toBe(row.date);
-    const output = buildSettingsText('', source, written);
-    expect(output).toContain(`until=${row.date}`);
-    const parsed = buildSettingsText(
-        '',
-        output.slice(SCHEMA_DIRECTIVE.length + 1),
-        parseTomlFile('dates.toml', output),
-    );
-    expect(parsed).toBe(output);
 });
 
 test.each([...UNSAFE_SCOPE_PATHS])('scope refuses the path %s', (path) => {

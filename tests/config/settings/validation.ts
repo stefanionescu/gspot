@@ -59,14 +59,6 @@ export const REFUSED_SCOPE_FOLDERS = [
     { path: 'apps/a<b', message: PORTABLE_PATH_REFUSAL },
 ] as const;
 
-export const UNTIL_DATE_CASES = [
-    { name: 'ordinary date', literal: '2026-12-31', valid: true, date: '2026-12-31' },
-    { name: 'quoted date', literal: '"2026-12-31"', valid: false },
-    { name: 'local datetime', literal: '2026-12-31T00:00:00', valid: false },
-    { name: 'offset datetime', literal: '2026-12-31T00:00:00Z', valid: false },
-    { name: 'local time', literal: '00:00:00', valid: false },
-] as const;
-
 export const SETTING_RULE_OPTIONS = [
     {
         tables: '[tools.eslint.rules]\ncomplexity = [40]\n',

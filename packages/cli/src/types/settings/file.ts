@@ -88,8 +88,6 @@ type CommandCheckFields = {
     summary?: string | undefined;
 };
 
-type TomlDate = { toISOString: () => string };
-
 type WrittenCoverage = Optional<
     Omit<ConfigurationTables['coverage'], 'lines' | 'branches' | 'functions' | 'statements'>
 > & {
@@ -245,7 +243,6 @@ export type ParsedSettings = ParsedRoot & {
               rule?: string | undefined;
               paths?: string[] | undefined;
               reason: string;
-              until?: TomlDate | undefined;
           }[]
         | undefined;
     command_check?: (CommandCheckFields & { output: CheckOutput })[] | undefined;

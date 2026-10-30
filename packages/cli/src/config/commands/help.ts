@@ -170,7 +170,6 @@ export const COMMAND_HELP = {
             '--rule <rule>': 'Turn off only this lint rule',
             '--paths <path...>':
                 'Turn it off only for these paths, relative to the current folder (default: every path)',
-            '--until <date>': 'Report the ignore as expired from this date, YYYY-MM-DD (UTC)',
             '--json': 'Print the result as JSON',
         },
         exitCodes: [

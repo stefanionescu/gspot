@@ -4,5 +4,4 @@ export type IgnoreOptions = {
     paths?: string[];
     rule?: string;
     reason: string;
-    until?: string;
 };

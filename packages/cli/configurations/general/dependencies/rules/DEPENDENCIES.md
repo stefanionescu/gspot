@@ -27,7 +27,7 @@ Read this rule before you add, upgrade, or remove a dependency.
 - Keep third-party license notices in a tracked file, not in a string in code.
 - When `licenses.allowed` lists licenses, ask the user before you add a dependency with a license outside that list.
 - For a known advisory that has no fix, follow SUPPRESSIONS.md: ask the user, then run `gspot ignore` with the advisory
-  ID, a reason, and an `--until` date. Never ignore advisories in bulk.
+  ID and a reason. Never ignore advisories in bulk.
 - Declare vendored code and record its upstream version and license. Change it only by updating it from upstream.
 - Remove a package when no runtime, build, tool, or public peer dependency needs it. Before you remove a package that a
   check calls unused, search configuration and scripts for it.

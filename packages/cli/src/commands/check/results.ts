@@ -1,6 +1,5 @@
 import type { Session } from '#cli/types/session.ts';
 import { buildBaseResult } from '#cli/runs/results.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { INCOMPLETE_STATUSES } from '#cli/config/runs/results.ts';
@@ -70,9 +69,7 @@ export function buildRunReport(run: FinishedRun): RunReport {
         started: started.toISOString(),
         duration: Date.now() - started.getTime(),
         checks,
-        ignores: session.settings.ignore.map(({ until, ...record }) =>
-            stripUndefined({ ...record, until: until?.toISOString() }),
-        ),
+        ignores: session.settings.ignore,
         unstagedChanges: options.unstagedChanges ?? 0,
         partial: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),
         failed,

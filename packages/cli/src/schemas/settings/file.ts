@@ -17,7 +17,6 @@ import { DEVICE_NAME, UNSAFE_PATH_END, UNSAFE_CHARACTERS, RESERVED_SEGMENTS } fr
 
 import {
     formatSchema,
-    localDateSchema,
     relativePathSchema,
     nonemptyPathsSchema,
     removedConfigurationsSchema,
@@ -39,7 +38,6 @@ export const ignoreSchema = z
         reason: z
             .string({ error: 'needs a reason. Add reason = "..." to this record.' })
             .meta(SETTING_DEFINITIONS['ignore.reason']),
-        until: localDateSchema.optional().meta(SETTING_DEFINITIONS['ignore.until']),
     } satisfies SchemaShape<
         NonNullable<ParsedSettings['ignore']>[number],
         NonNullable<WrittenSettings['ignore']>[number]

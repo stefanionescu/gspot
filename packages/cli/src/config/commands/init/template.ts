@@ -3,7 +3,6 @@ export const LEFT_OUT_NOTES = {
     paths: 'names paths of that repository',
     code: 'runs code',
     repository: 'describes that repository',
-    date: 'ends on a date',
     check: 'ignores a command check',
 } as const;
 

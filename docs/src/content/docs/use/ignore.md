@@ -14,9 +14,6 @@ root in `gspot.toml`; `gspot unignore --paths` uses the same conversion.
 
 To leave paths out of every check, see [Exclude files](/configure/files/).
 
-Add `--until YYYY-MM-DD` to set the date the ignore expires, at 00:00 UTC. The ignore stays in effect. From that
-date, `gspot/suppressions` fails on it until you fix the findings and run `gspot unignore`, or write a later date.
-
 To ignore a dependency advisory, give its ID as the rule:
 
 ```shell

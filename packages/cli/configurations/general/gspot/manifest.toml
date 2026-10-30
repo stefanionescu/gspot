@@ -45,5 +45,5 @@ help = "Fix the finding and remove the suppression, or add a reason in the synta
 name = "suppressions"
 runs = "once"
 stage = "commit"
-summary = "Reports suppressions with no reason, any that lift a size or complexity limit, Semgrep or Vale suppressions, and ignores past their until date."
+summary = "Reports suppressions with no reason, any that lift a size or complexity limit, and Semgrep or Vale suppressions."
 why = "A suppression with no reason hides a finding nobody reviewed."

@@ -53,8 +53,6 @@ export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
 
 export const JSON_SCHEMA_DIALECT = 'https://json-schema.org/draft/2020-12/schema';
 
-export const LOCAL_DATE_DESCRIPTION = 'An unquoted TOML date in YYYY-MM-DD form, such as 2026-11-08.';
-
 export const SCHEMA_DESCRIPTION = 'The settings of gspot for one repository.';
 
 export const PORTABLE_RELATIVE_PATH_PATTERN = String.raw`^(?:[^\\:\u0000-\u001f\u007f-\u009f]|\\[()\[\]{}*?!+@,])+$`;

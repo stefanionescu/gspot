@@ -1,5 +1,3 @@
-import { LocalDate } from '@decimalturn/toml-patch';
-
 export const POSTGRES_SCOPE_SETTINGS = {
     level: 'basic',
     rules: true,
@@ -75,26 +73,4 @@ export const PROJECT_SCOPE_CASES = [
 export const SITE_PACKAGE_MANAGER_CASES = [
     ['npm fallback', {}, 'npm'],
     ['declared Bun', { 'package.json': '{"packageManager":"bun@1.4.2"}' }, 'bun'],
-] as const;
-
-export const IGNORE_EXPIRY_CASES = [
-    { check: 'dependencies/osv-scanner', rule: 'permanent', reason: 'Reviewed upstream.' },
-    {
-        check: 'dependencies/osv-scanner',
-        rule: 'past',
-        reason: 'Reviewed upstream.',
-        until: new LocalDate('2030-05-19'),
-    },
-    {
-        check: 'dependencies/osv-scanner',
-        rule: 'today',
-        reason: 'Reviewed upstream.',
-        until: new LocalDate('2030-05-20'),
-    },
-    {
-        check: 'dependencies/osv-scanner',
-        rule: 'future',
-        reason: 'Reviewed upstream.',
-        until: new LocalDate('2030-05-21'),
-    },
 ] as const;
