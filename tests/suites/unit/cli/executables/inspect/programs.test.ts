@@ -4,7 +4,7 @@ import { runTool } from '#cli/executables/run.ts';
 import { getTool } from '#cli/manifests/tools.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { inspectTool } from '#cli/executables/inspect.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';

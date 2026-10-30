@@ -3,7 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
 import { openSession } from '#cli/planning/session.ts';
 import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';

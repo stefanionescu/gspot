@@ -1,6 +1,6 @@
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { RunCache } from '#cli/types/system/cache.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { type Repository } from '#cli/types/repository/files.ts';

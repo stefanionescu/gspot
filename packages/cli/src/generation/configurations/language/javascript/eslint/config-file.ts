@@ -2,7 +2,7 @@ import type ts from 'typescript';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';

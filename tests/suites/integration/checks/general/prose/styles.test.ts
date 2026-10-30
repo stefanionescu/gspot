@@ -5,7 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { TYPO } from '#tests/config/spelling.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { COMMENT_SOURCE } from '#tests/config/typescript.ts';
 import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

@@ -2,7 +2,7 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { FIRST_READ } from '#cli/config/generation/rules.ts';
 import type { Configuration } from '#cli/types/manifests.ts';

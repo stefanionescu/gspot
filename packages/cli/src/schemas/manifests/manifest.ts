@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import { FILE_KINDS } from '#cli/config/files/kinds.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { manifestToolSchema } from '#cli/schemas/manifests/tool.ts';
 import { writtenNamingOverrideSchema } from '#cli/schemas/manifests/naming.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';

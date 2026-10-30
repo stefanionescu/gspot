@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { getTool } from '#cli/manifests/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import type { ToolPackageJson } from '#tests/types/packages.ts';
 import { YARN_CLIENTS } from '#tests/config/installers/projects.ts';

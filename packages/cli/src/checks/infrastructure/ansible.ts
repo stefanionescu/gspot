@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import type { CheckSession } from '#cli/types/session.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { isInInstalledFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';

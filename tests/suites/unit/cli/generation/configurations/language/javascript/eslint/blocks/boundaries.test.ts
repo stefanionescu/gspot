@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/manifests/names.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { APP_SCOPE_SETTINGS } from '#tests/config/toml.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import type { ToolPackageJson } from '#tests/types/packages.ts';

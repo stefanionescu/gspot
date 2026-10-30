@@ -6,7 +6,7 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
 import { GENERATED_FILE_NOUN } from '#cli/config/generation/write.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { listMisePins, listToolProjectPins } from '#cli/manifests/tools.ts';
 import type { InitPlan, InitScan, InitFileRow } from '#cli/types/commands/init.ts';
 

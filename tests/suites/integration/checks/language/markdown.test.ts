@@ -6,7 +6,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { GUIDE, README, LICENSE } from '#tests/config/documents.ts';

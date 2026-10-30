@@ -17,7 +17,7 @@ import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { INVALID_CSS } from '#tests/config/commands/init/sources.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

@@ -1,4 +1,4 @@
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 
 export const AUTO_LF_ATTRIBUTES = ['text=auto', 'eol=lf'] as const;
 

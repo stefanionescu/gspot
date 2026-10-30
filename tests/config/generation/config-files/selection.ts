@@ -1,4 +1,4 @@
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/ignores.ts';
 
 export const NESTED_PYTHON_SETTINGS = {

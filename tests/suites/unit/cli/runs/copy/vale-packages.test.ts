@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { symlink, realpath } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { copyValePackages } from '#cli/runs/copy/vale-packages.ts';
 
 test('a revision copy links the installed Vale packages into its own .gspot folder', async () => {

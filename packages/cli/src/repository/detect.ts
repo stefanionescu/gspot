@@ -1,7 +1,7 @@
 import { find } from '#cli/system/files/reads.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import { EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/detect.ts';

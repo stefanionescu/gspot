@@ -4,7 +4,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/manifests/names.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { type RunReport } from '#cli/types/commands/check.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { type LinterJsonFinding } from '#tests/types/tools.ts';

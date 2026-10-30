@@ -8,7 +8,7 @@ import { listMisePins } from '#cli/manifests/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';

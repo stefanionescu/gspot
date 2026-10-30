@@ -15,7 +15,7 @@ import { listToolProjectPins } from '#cli/manifests/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 

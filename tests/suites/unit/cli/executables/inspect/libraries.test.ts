@@ -6,7 +6,7 @@ import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { inspectTool } from '#cli/executables/inspect.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildToolSearch } from '#tests/setup/cli/tools.ts';

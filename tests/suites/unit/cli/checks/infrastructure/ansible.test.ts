@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { COMMAND_PLAYBOOK } from '#tests/config/ansible.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

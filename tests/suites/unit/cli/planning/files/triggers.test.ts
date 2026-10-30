@@ -7,7 +7,7 @@ import { type Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { BASE_CHECK } from '#tests/config/runs/command/check.ts';

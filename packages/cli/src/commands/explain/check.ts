@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { CODE_MARK } from '#cli/config/main.ts';
 import type { Session } from '#cli/types/session.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { CommandCheck } from '#cli/types/settings/file.ts';

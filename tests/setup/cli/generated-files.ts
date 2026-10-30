@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 import type { Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { ROOT_LABEL } from '#tests/config/messages.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { extractConfigFileName } from '#cli/manifests/tools.ts';
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';

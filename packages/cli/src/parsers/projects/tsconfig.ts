@@ -1,8 +1,8 @@
 import type ts from 'typescript';
 import { remember } from '#cli/system/cache.ts';
 import { readFileSync, realpathSync } from 'node:fs';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { NODE_MODULES } from '#cli/config/files/names.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { RunCache } from '#cli/types/system/cache.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';

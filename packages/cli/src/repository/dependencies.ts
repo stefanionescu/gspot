@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { find, read } from '#cli/system/files/reads.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { listNpmToolNames } from '#cli/manifests/tools.ts';
 import { type RunCache } from '#cli/types/system/cache.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';

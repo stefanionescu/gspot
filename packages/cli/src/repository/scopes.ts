@@ -1,7 +1,7 @@
 import { resolve, relative } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { LINT_FOLDERS } from '#cli/config/repository/setup.ts';

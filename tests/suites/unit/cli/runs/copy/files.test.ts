@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';

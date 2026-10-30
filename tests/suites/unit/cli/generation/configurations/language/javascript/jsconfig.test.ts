@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { join, dirname, resolve } from 'node:path';
 import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

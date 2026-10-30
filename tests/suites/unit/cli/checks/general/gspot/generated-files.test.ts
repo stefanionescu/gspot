@@ -7,7 +7,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { GENERATED_BASH_FILES } from '#tests/config/checks/general/gspot/generated-files.ts';

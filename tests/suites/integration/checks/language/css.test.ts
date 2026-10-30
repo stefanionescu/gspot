@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/manifests/names.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';

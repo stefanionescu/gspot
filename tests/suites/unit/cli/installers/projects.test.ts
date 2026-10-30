@@ -2,7 +2,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { listStaleLockfiles } from '#cli/installers/projects.ts';

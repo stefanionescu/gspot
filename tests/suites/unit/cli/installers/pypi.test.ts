@@ -7,7 +7,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';

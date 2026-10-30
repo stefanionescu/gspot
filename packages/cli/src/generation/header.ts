@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { extractExtension } from '#cli/system/paths.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 
 import {
     JSON_EXTENSIONS,

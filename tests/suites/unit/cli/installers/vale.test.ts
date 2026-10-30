@@ -8,7 +8,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/vale.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';

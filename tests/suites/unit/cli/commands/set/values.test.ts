@@ -5,7 +5,7 @@ import { createFileTree } from 'testdirs';
 import { parse } from '@decimalturn/toml-patch';
 import { getValueAt } from '#cli/system/tables.ts';
 import { readSettings } from '#cli/settings/read.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';

@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

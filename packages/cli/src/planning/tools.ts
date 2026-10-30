@@ -1,8 +1,8 @@
 import { basename } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { selectCheckFiles } from '#cli/planning/files.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';

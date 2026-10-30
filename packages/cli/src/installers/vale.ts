@@ -12,7 +12,7 @@ import { downloadArchive } from '#cli/installers/downloads.ts';
 import { VALE_TOOL, PROSE_GRAMMARS } from '#cli/config/prose.ts';
 import { runRequiredInstallStep } from '#cli/installers/steps.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { VALE_STYLES_PATH } from '#cli/config/generation/configurations/general/prose.ts';

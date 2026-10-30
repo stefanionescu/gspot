@@ -10,7 +10,7 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { ROOT_LABEL } from '#tests/config/messages.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';

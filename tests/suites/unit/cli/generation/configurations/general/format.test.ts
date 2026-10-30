@@ -6,7 +6,7 @@ import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/planning/session.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { GREETING_SOURCE } from '#tests/config/typescript.ts';

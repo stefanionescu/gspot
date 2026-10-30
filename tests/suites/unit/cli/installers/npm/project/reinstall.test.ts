@@ -9,7 +9,7 @@ import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import { installNpmTools } from '#cli/installers/npm/project.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 
 test('npm runs its incremental install, which never saves the lockfile, on every run', async () => {
     await using sandbox = await testdir({

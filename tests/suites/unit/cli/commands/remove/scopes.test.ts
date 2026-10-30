@@ -6,7 +6,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';

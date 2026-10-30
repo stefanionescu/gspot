@@ -1,5 +1,5 @@
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { NODE_MODULES } from '#cli/config/files/names.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { GIT_FOLDER } from '#cli/config/repository/files/tracked.ts';
 
 export const HADOLINT_FAILURE_THRESHOLD = 'style';

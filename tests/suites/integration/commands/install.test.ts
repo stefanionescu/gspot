@@ -8,7 +8,7 @@ import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import type { InstallCommandJson } from '#cli/types/commands/install.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

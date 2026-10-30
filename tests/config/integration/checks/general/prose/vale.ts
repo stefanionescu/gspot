@@ -1,5 +1,5 @@
 import { dirname } from 'node:path';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 
 export const EXAMPLE_STYLE_FOLDER = `${dirname(GSPOT_PATHS.valeConfigFile)}/styles/Example`;
 

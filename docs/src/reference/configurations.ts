@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { listRuleFiles } from '#cli/manifests/read.ts';
 import { CLI_REFERENCE } from '#docs/reference/cli.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { GROUP_LABELS } from '#cli/config/manifests/names.ts';
 import { formatSettingLink } from '#docs/reference/settings.ts';

@@ -1,4 +1,4 @@
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 
 export const TAPLO_FORMATTING = {
     array_auto_expand: false,

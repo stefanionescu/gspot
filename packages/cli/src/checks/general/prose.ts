@@ -1,8 +1,8 @@
 import { read } from '#cli/system/files/reads.ts';
 import { CONFIG_FLAG } from '#cli/config/flags.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { hasValePackages } from '#cli/installers/vale.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';

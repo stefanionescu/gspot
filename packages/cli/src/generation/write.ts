@@ -11,7 +11,7 @@ import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { listOwnablePaths } from '#cli/generation/config-files/link-files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { type Generation, type ApplyReport } from '#cli/types/generation/files.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/files/gspot.ts';
 import { SCANNER_KEY, BUNFIG_FILE } from '#cli/config/generation/configurations/general/dependencies.ts';
 
 import {

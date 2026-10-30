@@ -10,7 +10,7 @@ import type { Level } from '#cli/types/manifests.ts';
 import { type Session } from '#cli/types/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';

@@ -6,7 +6,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/vale.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';

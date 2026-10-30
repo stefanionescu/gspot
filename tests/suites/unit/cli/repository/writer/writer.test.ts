@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 
 test('a batch writes binary bytes, and a removal plan deletes one file and keeps the other', async () => {

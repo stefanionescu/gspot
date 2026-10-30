@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { LEVELS } from '#cli/config/manifests/names.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import type { TypecheckResult } from '#tests/types/reports.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

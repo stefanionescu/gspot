@@ -7,7 +7,7 @@ import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
 import { STALE_LOCKFILE_NOTE } from '#tests/config/messages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

@@ -5,7 +5,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { runGitBlocking } from '#cli/system/git.ts';
 import { readHooks } from '#cli/repository/setup.ts';
 import type { Session } from '#cli/types/session.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { ConfiguredCheck } from '#cli/types/planning.ts';
 import type { HookName } from '#cli/types/generation/files.ts';
 import { type Repository } from '#cli/types/repository/files.ts';

@@ -1,4 +1,4 @@
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { HookName, GeneratedFile } from '#cli/types/generation/files.ts';
 import type { StartRunner } from '#cli/types/repository/npm/package-manager.ts';
 

@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';

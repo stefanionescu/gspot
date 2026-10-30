@@ -14,7 +14,7 @@ import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/generation/generate.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/installers/npm/project.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/installers/npm/project.ts';

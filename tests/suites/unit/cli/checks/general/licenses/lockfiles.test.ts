@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 import { getTool } from '#cli/manifests/tools.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executableLayout } from '#cli/system/paths.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

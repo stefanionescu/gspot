@@ -1,4 +1,4 @@
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { PYTHON_VERSION } from '#cli/config/installers/pypi.ts';
 
 export const UV_TOML = `index-url = "https://alex:test%2Bpassword@example.com/simple"

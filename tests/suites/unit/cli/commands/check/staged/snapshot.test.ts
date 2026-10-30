@@ -13,7 +13,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DEPENDENCY_FILES_MESSAGE } from '#tests/config/messages.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { rmSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';

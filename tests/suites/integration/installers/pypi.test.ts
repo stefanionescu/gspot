@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 import { createHash } from 'node:crypto';
 import { join, basename, delimiter } from 'node:path';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';

@@ -1,7 +1,7 @@
 import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { listMisePins } from '#cli/manifests/tools.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { type Configuration } from '#cli/types/manifests.ts';
 import { buildPythonProjectTable } from '#cli/installers/pypi.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';

@@ -1,5 +1,5 @@
 import { join } from 'node:path/posix';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 
 export const VALE_ALERT = {
     Line: 1,

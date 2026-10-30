@@ -4,7 +4,7 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/session.ts';
 import { buildValeIni } from '#cli/installers/vale.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { VALE_PACKAGES, VALE_PACKAGE_URLS } from '#cli/config/installers/vale.ts';
 

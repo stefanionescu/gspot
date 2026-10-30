@@ -6,7 +6,7 @@ import { type Tool } from '#cli/types/manifests.ts';
 import { join, dirname, basename } from 'node:path';
 import * as processes from '#cli/system/processes.ts';
 import { GIT_PROGRAM } from '#cli/config/system/git.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/manifests/read.ts';

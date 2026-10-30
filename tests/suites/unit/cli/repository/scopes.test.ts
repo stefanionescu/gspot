@@ -6,7 +6,7 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { symlink, writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';

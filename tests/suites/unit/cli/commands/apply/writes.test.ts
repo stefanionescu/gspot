@@ -9,7 +9,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { UPDATED_AGENTS } from '#tests/config/commands/contents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';

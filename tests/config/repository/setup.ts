@@ -1,4 +1,4 @@
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 
 export const LINKED_HOOK_FOLDERS = [
     { path: '.husky', kind: 'husky' },

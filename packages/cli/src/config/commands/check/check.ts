@@ -1,4 +1,4 @@
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 
 export const PROGRESS_CLEAR = '\r\u{1B}[2K';

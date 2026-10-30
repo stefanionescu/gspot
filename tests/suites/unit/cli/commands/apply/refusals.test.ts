@@ -5,7 +5,7 @@ import { symlink, readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { ROOT_EDITORCONFIG } from '#tests/config/commands/contents.ts';

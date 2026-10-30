@@ -1,7 +1,7 @@
 import { isUtf8 } from 'node:buffer';
 import { readBytes } from '#cli/system/files/reads.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { ROOT_RUNS } from '#cli/config/planning/checks.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';

@@ -5,7 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { NO_UPSTREAM_MESSAGE } from '#tests/config/git.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildReportingCheck } from '#tests/setup/cli/settings.ts';

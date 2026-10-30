@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';
 import { SOURCE_KIND } from '#cli/config/repository/files/classify.ts';

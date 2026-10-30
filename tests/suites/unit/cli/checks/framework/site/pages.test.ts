@@ -5,7 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { getTool } from '#cli/manifests/tools.ts';
 import * as processes from '#cli/system/processes.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';

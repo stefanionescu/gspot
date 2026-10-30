@@ -11,7 +11,7 @@ import { VERSION_FLAG } from '#cli/config/executables/versions.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import type { ReplacementRequest } from '#cli/types/repository/writer.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { runInstallStep, explainReleaseAgeHold } from '#cli/installers/steps.ts';

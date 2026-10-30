@@ -8,7 +8,7 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { NODE_SCRIPT } from '#tests/config/typescript.ts';
 import { UNCLOSED_PACKAGES } from '#tests/config/yaml.ts';
 import { type InitJson } from '#cli/types/commands/init.ts';

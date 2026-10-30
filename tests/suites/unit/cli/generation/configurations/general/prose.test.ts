@@ -5,7 +5,7 @@ import { dirname } from 'node:path/posix';
 import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { LEVELS } from '#cli/config/manifests/names.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { COMMENT_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

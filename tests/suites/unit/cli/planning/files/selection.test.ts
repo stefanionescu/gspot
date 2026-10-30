@@ -13,7 +13,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';

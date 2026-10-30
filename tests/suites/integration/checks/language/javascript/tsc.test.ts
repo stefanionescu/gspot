@@ -12,7 +12,7 @@ import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/git.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/executables/locate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { rm, stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';

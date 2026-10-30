@@ -9,7 +9,7 @@ import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

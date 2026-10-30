@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { unlink, writeFile } from 'node:fs/promises';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { buildConfiguration } from '#tests/setup/cli/manifests.ts';

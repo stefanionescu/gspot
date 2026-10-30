@@ -4,7 +4,7 @@ import { rm, writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';

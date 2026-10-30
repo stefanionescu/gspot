@@ -19,7 +19,7 @@ import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { redactInstallOutput } from '#cli/installers/credentials.ts';
 import { miseLockfileSchema } from '#cli/schemas/installers/mise.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import { MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/files/names.ts';
 import { runInstallStep, runRequiredInstallStep } from '#cli/installers/steps.ts';

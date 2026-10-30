@@ -9,7 +9,7 @@ import type { Files } from '#cli/types/system/files.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { TOOL_ENVIRONMENT } from '#cli/config/executables/run.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import type { ExecutableSearch } from '#cli/types/executables/inspection.ts';
 import { MISE_CONFIG_FILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';

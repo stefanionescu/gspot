@@ -5,7 +5,7 @@ import * as processes from '#cli/system/processes.ts';
 import { APP_PYPROJECT } from '#tests/config/toml.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { executableLayout } from '#cli/system/paths.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { type CommandJson } from '#cli/types/terminal.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { readConfigurations } from '#cli/manifests/read.ts';

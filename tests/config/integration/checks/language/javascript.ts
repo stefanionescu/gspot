@@ -1,4 +1,4 @@
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { BASE_INSTALLED_FILES } from '#tests/config/integration/checks/samples.ts';
 
 export const JAVASCRIPT_PROJECT_FILES = {

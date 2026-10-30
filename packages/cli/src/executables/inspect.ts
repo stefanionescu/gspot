@@ -6,7 +6,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { MISE_TOOL } from '#cli/config/executables/locate.ts';
 import { findToolProjectPackage } from '#cli/manifests/tools.ts';
 import type { ToolAvailability } from '#cli/types/executables/run.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/executables/versions.ts';
 import type { InstalledDependency } from '#cli/types/repository/npm/installed-packages.ts';
