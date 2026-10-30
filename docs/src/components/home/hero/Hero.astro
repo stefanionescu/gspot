@@ -1,5 +1,6 @@
 ---
-import hero from '#docs/assets/hero.webp';
+import { Image } from 'astro:assets';
+import hero from '#docs/assets/hero.avif';
 import { DOCS_PATH } from '#docs/config/site.ts';
 import { HOME_TITLE } from '#docs/config/home.ts';
 import Setup from '#docs/components/home/setup/Setup.astro';
@@ -16,6 +17,6 @@ import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
         </a>
     </div>
     <div class="hero-visual" aria-hidden="true">
-        <img src={hero.src} alt="" width="800" height="800" fetchpriority="high" />
+        <Image src={hero} alt="" width={400} height={400} loading="eager" decoding="async" fetchpriority="high" />
     </div>
 </section>

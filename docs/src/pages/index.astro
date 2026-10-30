@@ -6,6 +6,7 @@ import '#starlight-style/util.css';
 import '#docs/theme.css';
 import '#docs/components/home/page.css';
 import type { ImageMetadata } from 'astro';
+import type { SvgComponent } from 'astro/types';
 import Hero from '#docs/components/home/hero/Hero.astro';
 import InlineText from '#docs/components/InlineText.astro';
 import Header from '#docs/components/starlight/Header.astro';
@@ -28,11 +29,13 @@ import {
     SOCIAL_IMAGE_SIZE,
 } from '#docs/config/site.ts';
 
-const images = import.meta.glob<ImageMetadata>('../assets/tools/*', { eager: true, import: 'default' });
+const icons = import.meta.glob<SvgComponent>('../assets/tools/*.svg', { eager: true, import: 'default' });
+const images = import.meta.glob<ImageMetadata>('../assets/tools/*.png', { eager: true, import: 'default' });
 const tools = TOOLS.map(({ name, icon }) => {
+    const Icon = icons[`../assets/tools/${icon}`];
     const image = images[`../assets/tools/${icon}`];
-    if (image === undefined) throw new Error(`Missing tool image: ${icon}.`);
-    return { name, icon: image.src };
+    if (Icon === undefined && image === undefined) throw new Error(`Missing tool image: ${icon}.`);
+    return { name, Icon, image };
 });
 ---
 
@@ -71,9 +74,13 @@ const tools = TOOLS.map(({ name, icon }) => {
                     Works with these tools
                 </p>
                 <ul>
-                    {tools.map(({ name, icon }) => (
+                    {tools.map(({ name, Icon, image }) => (
                         <li>
-                            <span class="tool-icon" style={`--icon: url(${icon})`} aria-hidden="true"></span>
+                            {Icon === undefined ? (
+                                <img class="tool-image" src={image?.src} alt="" width="28" height="28" />
+                            ) : (
+                                <Icon class="tool-icon" aria-hidden="true" />
+                            )}
                             {name}
                         </li>
                     ))}

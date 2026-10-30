@@ -102,12 +102,24 @@
     white-space: nowrap;
 }
 
-.tool-icon {
+.tool-icon,
+.tool-image {
     display: block;
     width: 28px;
     height: 28px;
-    background: currentcolor;
-    mask: var(--icon) center / contain no-repeat;
+}
+
+.tool-icon,
+.tool-icon * {
+    fill: currentcolor;
+}
+
+.tool-image {
+    filter: invert(0.9);
+}
+
+:root[data-theme='light'] .tool-image {
+    filter: invert(0.15);
 }
 
 @media (width >= 50rem) {
