@@ -24,6 +24,7 @@ import {
 } from '#cli/repository/writer.ts';
 import {
     MANAGED_KEYS_NOTE,
+    CHANGE_LABEL_WIDTH,
     TOOL_PROJECT_FILES,
     HOOKS_CHANGED_NOTE,
     TOOLS_CHANGED_NOTE,
@@ -155,7 +156,7 @@ export async function writeGeneratedFiles(
 function formatGeneratedChanges(action: string, paths: string[]): string[] {
     const gspotCount = action === 'removed' ? 0 : paths.filter((path) => path.startsWith(`${GSPOT_FOLDER}/`)).length;
     const outside = action === 'removed' ? paths : paths.filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
-    const label = action.padEnd('updated  '.length);
+    const label = action.padEnd(CHANGE_LABEL_WIDTH);
     return [
         ...(gspotCount === 0 ? [] : [`${label}${formatCount(gspotCount, GENERATED_FILE_NOUN)} in ${GSPOT_FOLDER}/`]),
         ...outside.map((path) => `${label}${path}`),

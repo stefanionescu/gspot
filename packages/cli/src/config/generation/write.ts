@@ -13,6 +13,8 @@ export const HOOKS_CHANGED_NOTE = 'Git hooks changed. Run gspot install.';
 
 export const GENERATED_FILE_NOUN = 'generated file';
 
+export const CHANGE_LABEL_WIDTH = 9;
+
 export const TOOL_PROJECT_FILES: readonly string[] = [
     GSPOT_PATHS.npmProject,
     GSPOT_PATHS.pythonProject,
