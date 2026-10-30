@@ -10,11 +10,11 @@ Commit first, so you can go back. Pick a [release](https://github.com/stefanione
 and put it in place of `<version>` below.
 
 <Tabs syncKey="package-manager">
-    {SETUP_COMMANDS.map(({ label, start, lines }) => (
+    {SETUP_COMMANDS.map(({ label, start, add }) => (
         <TabItem label={label}>
             <Code
                 lang="shell"
-                code={[`${lines[0]}@<version>`, `${start} apply`, `${start} install`, `${start} check`].join('\n')}
+                code={[`${add}@<version>`, `${start} apply`, `${start} install`, `${start} check`].join('\n')}
             />
         </TabItem>
     ))}

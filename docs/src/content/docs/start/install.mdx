@@ -50,11 +50,11 @@ last column shows.
         </tr>
     </thead>
     <tbody>
-        {SETUP_COMMANDS.map(({ label, start, lines }) => (
+        {SETUP_COMMANDS.map(({ label, start, add }) => (
             <tr>
                 <td>{label}</td>
                 <td>
-                    <code>{lines[0]}</code>
+                    <code>{add}</code>
                 </td>
                 <td>
                     <code>{start}</code>

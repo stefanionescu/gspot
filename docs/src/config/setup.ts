@@ -15,19 +15,24 @@ import {
 
 const PACKAGE_MANAGERS = { bun: 'Bun', npm: 'npm', pnpm: 'pnpm', yarn: 'Yarn', mise: 'mise' } as const;
 
+export const RUNTIME_MINIMUMS = {
+    node: cliPackage.engines.node.replace(RANGE_OPERATOR, ''),
+    bun: cliPackage.engines.bun.replace(RANGE_OPERATOR, ''),
+} as const;
+
+const MISE_NODE_COMMAND = `mise use --pin node@${String(Number.parseInt(RUNTIME_MINIMUMS.node, 10))}`;
+
 export const SETUP_COMMANDS = Object.entries(PACKAGE_MANAGERS).map(([name, label]) => {
     const { command, installCommand } = START_RUNNERS[name as keyof typeof START_RUNNERS];
     const lockfile = LOCKFILES.find((file) => file.packageManager === name && 'copied' in file)?.file;
     const frozen =
         name === 'yarn' ? YARN_BERRY_INSTALL : lockfile && FROZEN_INSTALLS[lockfile as keyof typeof FROZEN_INSTALLS];
+    const add = installCommand.replace('<package>@<version>', () => cliPackage.name);
     return {
         label,
         start: command,
-        lines: [
-            installCommand.replace('<package>@<version>', () => cliPackage.name),
-            `${command} init`,
-            `${command} install`,
-        ] as const,
+        add,
+        lines: [...(name === 'mise' ? [MISE_NODE_COMMAND] : []), add, `${command} init`, `${command} install`],
         clone: [...(frozen === undefined ? [] : [frozen.join(' ')]), `${command} install`, `${command} check`],
     };
 });
@@ -42,11 +47,6 @@ export const LOCKFILE_INSTALLS = [
         command: command.join(' '),
     })),
 ];
-
-export const RUNTIME_MINIMUMS = {
-    node: cliPackage.engines.node.replace(RANGE_OPERATOR, ''),
-    bun: cliPackage.engines.bun.replace(RANGE_OPERATOR, ''),
-} as const;
 
 export const RELEASE_AGE_EXCLUSIONS = [
     { label: 'pnpm', key: 'minimumReleaseAgeExclude', file: 'pnpm-workspace.yaml' },
@@ -75,8 +75,9 @@ releases, such as pnpm 11, needs @gspothq/cli and @gspothq/eslint-plugin in its 
 
 1. Add gspot, pinned to one version, with the package manager of the repository, or with mise when the repository
    has no \`package.json\`:
-${SETUP_COMMANDS.map(({ label, lines }) => `   - ${label}: \`${lines[0]}\``).join('\n')}
+${SETUP_COMMANDS.map(({ label, add }) => `   - ${label}: \`${add}\``).join('\n')}
 
+   With mise, run \`${MISE_NODE_COMMAND}\` first, so that mise runs gspot with a supported Node.js.
    Start the next commands with ${DISJUNCTION_FORMAT.format(SETUP_COMMANDS.map(({ start }) => `\`${start}\``))}.
 2. Ask the user which level, and wait for the answer. ${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY} Level \`all\` also
    installs a few more tools. Suggest \`basic\`, the default, for an existing codebase, and \`all\` for a new

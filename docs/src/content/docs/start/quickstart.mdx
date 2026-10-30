@@ -4,13 +4,13 @@ description: Set up gspot yourself or with your coding agent.
 ---
 
 import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
-import { AGENT_PROMPT, SETUP_COMMANDS } from '#docs/config/setup.ts';
+import { AGENT_PROMPT, SETUP_COMMANDS, RUNTIME_MINIMUMS } from '#docs/config/setup.ts';
 
 Set up gspot yourself, or give one prompt to your coding agent.
 
 ## Set up gspot yourself
 
-Run these commands in the root of your repository.
+You need Git and {`Node.js ${RUNTIME_MINIMUMS.node} or newer`}. Run these commands in the root of your repository.
 
 <Tabs syncKey="package-manager">
     {SETUP_COMMANDS.map(({ label, lines }) => (
@@ -20,12 +20,15 @@ Run these commands in the root of your repository.
     ))}
 </Tabs>
 
-1. The first command adds gspot to the project, pinned to one version.
+1. The `add`, `install`, or `use` command adds gspot to the project, pinned to one version. With mise, the command
+   before it pins Node.js in `mise.toml`, so that mise does not run gspot with an older Node.js of your system.
 2. `gspot init` shows a plan. When you accept it, gspot writes `gspot.toml`, the config files, `AGENTS.md` and the
-   rules, and the Git hooks, and deletes the config files it replaces. CI stays off until you enable it;
-   `gspot doctor` suggests the commands for your provider.
-   [Read the plan](/start/migrate/#read-the-plan) first.
+   rules, and the Git hooks, and deletes the config files it replaces. [Read the plan](/start/migrate/#read-the-plan)
+   first.
 3. `gspot install` installs the pinned tools and turns on the hooks. From then on, every commit runs the checks.
+
+CI stays off until you enable it. When the repository has GitHub or GitLab CI files, or an `origin` remote on GitHub or
+GitLab, `gspot doctor` suggests the commands that enable it.
 
 gspot starts at level `basic`. For stricter checks from the start, run `gspot init --level all`.
 [Levels](/start/concepts/#levels) says what each level checks.
@@ -45,6 +48,9 @@ The agent then:
 4. Reads `AGENTS.md` and the agent rules before it writes more code.
 
 ## After you install
+
+Run `gspot check --fix` before your first commit. It formats the files that the checks now cover, such as a
+`package.json` or `tsconfig.json` with another indentation, so that the pre-commit hook does not stop the commit.
 
 Commit `gspot.toml` and the files that gspot wrote; [Generated files](/reference/generated-files/) lists them. Then
 commit as usual. The pre-commit hook checks the staged files and stops the commit when a check fails. Run
