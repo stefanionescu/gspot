@@ -4,14 +4,14 @@ import { buildSettings } from '#cli/settings/read.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { REASON_HELP } from '#cli/config/commands/explain.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
+import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/schema-lookup.ts';
 import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
-import { RECORD_FIELDS, isScopeSetting, findSettingSchema } from '#cli/settings/schema-lookup.ts';
 
 function formatSettingScope(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     const { scope, shipped, inherited } = scopeSetting;
@@ -79,7 +79,7 @@ Describe a setting's defaults, effective values, and edit commands.
 export function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
     if (session === undefined) return explainShippedSetting(key);
     const { settings } = session;
-    const isScopeKey = isScopeSetting(key);
+    const isScopeKey = findSettingSchema(key, scopeSchema) !== undefined;
     const scopes = session.scopes.flatMap((scope) => {
         const match = findSetting(scope.availableSettings, key);
         if (match === undefined || (!isScopeKey && scope.path !== '')) return [];

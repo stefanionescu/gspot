@@ -54,5 +54,3 @@ export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
 export const JSON_SCHEMA_DIALECT = 'https://json-schema.org/draft/2020-12/schema';
 
 export const SCHEMA_DESCRIPTION = 'The settings of gspot for one repository.';
-
-export const PORTABLE_RELATIVE_PATH_PATTERN = String.raw`^(?:[^\\:\u0000-\u001f\u007f-\u009f]|\\[()\[\]{}*?!+@,])+$`;

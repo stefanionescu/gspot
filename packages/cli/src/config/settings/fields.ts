@@ -25,4 +25,7 @@ export const QUOTE_STYLES = ['single', 'double'] as const;
 
 export const TRAILING_COMMAS = ['all', 'es5', 'none'] as const;
 
-export const RELATIVE_PATH_PATTERN = /^(?:[^\\:\p{Cc}]|\\[()[\]{}*?!+@,])+$/u;
+export const RELATIVE_PATH_PATTERN = new RegExp(
+    String.raw`^(?:[^\\:\u0000-\u001f\u007f-\u009f]|\\[()\[\]{}*?!+@,])+$`,
+    'u',
+);
