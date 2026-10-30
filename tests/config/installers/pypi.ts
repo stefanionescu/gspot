@@ -103,12 +103,6 @@ export const INVALID_UV_SETTINGS = [
     { file: 'pyproject.toml', field: 'tool.uv.index', text: '[tool.uv]\nindex = "x"\n' },
 ];
 
-export const PYTHON_RELEASE_AGE = {
-    days: 7,
-    npmExclusions: [],
-    pythonExclusions: ['ruff', 'semgrep'],
-};
-
 export const PYTHON_INSTALL_FILES = {
     'gspot.toml': 'configurations = []\n[rules]\nenabled = false\n',
     [GSPOT_PATHS.pythonProject]: PYTHON_TOOL_PROJECT,

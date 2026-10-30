@@ -54,3 +54,19 @@ export async function runRequiredInstallStep(
         );
     return result;
 }
+
+/**
+Name the pinned tools that a failed resolution names, and the setting that holds them back. A package manager finds no
+release of a pin that came out after the hold began.
+
+@param install the installation state with the hold.
+@param output the redacted output of the package manager.
+@param pins each pinned tool with its version, as the package manager names it.
+@returns the explanation and a line break, or an empty string when the output names no pin.
+*/
+export function explainReleaseAgeHold(install: ToolInstall, output: string, pins: readonly string[]): string {
+    const held = pins.filter((pin) => output.includes(pin));
+    if (held.length === 0 || install.releaseAgeDays === 0) return '';
+    const days = String(install.releaseAgeDays);
+    return `${held.join(', ')} came out less than ${days} days ago. The setting dependencies.min_release_age_days holds back each release for ${days} days. Wait for the release to age, or lower the setting with gspot set dependencies.min_release_age_days <days> --reason "<why>".\n`;
+}

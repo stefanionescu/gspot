@@ -4,5 +4,5 @@
         "types": ["node"],
         "lib": ["ESNext"]
     },
-    "include": ["src/**/*.ts", "configurations/**/*.ts", "linter-exports.ts", "pin-ages.ts"]
+    "include": ["src/**/*.ts", "configurations/**/*.ts", "linter-exports.ts"]
 }

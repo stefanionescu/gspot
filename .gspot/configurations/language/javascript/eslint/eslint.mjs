@@ -1088,7 +1088,6 @@ export default [
                             "packages/cli/src/main.ts",
                             "packages/cli/src/bin.ts",
                             "packages/cli/linter-exports.ts",
-                            "packages/cli/pin-ages.ts",
                             "packages/cli/src/schemas/linter-exports.ts"
                         ]
                     },

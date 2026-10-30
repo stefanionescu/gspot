@@ -11,12 +11,10 @@ export type ToolPackageManager = PackageManager & {
     command: PackageManagerCommand;
 };
 
-export type MinimumReleaseAge = { days: number; npmExclusions: string[]; pythonExclusions: string[] };
-
 export type ToolInstall = {
     session: Session;
     packageManager: ToolPackageManager | undefined;
-    minimumReleaseAge: MinimumReleaseAge;
+    releaseAgeDays: number;
     writer: Files;
     generated: Generation;
     tools: Tool[];

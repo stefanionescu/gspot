@@ -16,7 +16,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { type PythonToolProject } from '#cli/types/installers/pypi.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import type { MinimumReleaseAge } from '#cli/types/installers/install.ts';
 
 import {
     installPythonTools,
@@ -26,7 +25,6 @@ import {
 } from '#cli/installers/pypi.ts';
 import {
     UV_TOML,
-    PYTHON_RELEASE_AGE,
     PYPROJECT_UV_INDEX,
     UV_LOCKFILE_ORIGINS,
     PYTHON_TOOL_PROJECT,
@@ -156,7 +154,7 @@ test.each(INVALID_UV_SETTINGS)(
     },
 );
 
-async function readInstalledSettings(root: string, minimumReleaseAge: MinimumReleaseAge): Promise<unknown> {
+async function readInstalledSettings(root: string, releaseAgeDays: number): Promise<unknown> {
     const settings: unknown[] = [];
     using boundary = fakeCommand('settings-uv', (command) => {
         const file = command[command.indexOf('--config-file') + 1];
@@ -165,10 +163,7 @@ async function readInstalledSettings(root: string, minimumReleaseAge: MinimumRel
         return Promise.resolve(buildProcessResult());
     });
     const writer = openFiles(root);
-    await installPythonTools(
-        { ...buildToolInstall(await openSession(root), writer), minimumReleaseAge },
-        'settings-uv',
-    );
+    await installPythonTools({ ...buildToolInstall(await openSession(root), writer), releaseAgeDays }, 'settings-uv');
     expect(boundary).toHaveBeenCalledTimes(2);
     expect(settings[0]).toStrictEqual(settings[1]);
     return settings[0];
@@ -181,8 +176,7 @@ test('uv.toml wins and local index paths are read relative to the repository', a
         'pyproject.toml': PYPROJECT_UV_INDEX,
     });
     expect(readPythonSettings(sandbox.path).credentials).toStrictEqual(['test%2Bpassword', 'test+password']);
-    expect(await readInstalledSettings(sandbox.path, PYTHON_RELEASE_AGE)).toStrictEqual({
-        'exclude-newer-package': { ruff: false, semgrep: false },
+    expect(await readInstalledSettings(sandbox.path, 7)).toStrictEqual({
         'exclude-newer': '7 days',
         'index-url': 'https://alex:test%2Bpassword@example.com/simple',
         'find-links': [join(sandbox.path, 'wheels'), 'https://example.com/wheels'],
@@ -196,21 +190,18 @@ test('project index settings apply only without uv.toml, and missing or empty fi
         'gspot.toml': buildSandboxSettings([]),
         'pyproject.toml': PYPROJECT_UV_INDEX,
     });
-    expect(await readInstalledSettings(sandbox.path, PYTHON_RELEASE_AGE)).toStrictEqual({
-        'exclude-newer-package': { ruff: false, semgrep: false },
+    expect(await readInstalledSettings(sandbox.path, 7)).toStrictEqual({
         'exclude-newer': '7 days',
         'index-url': 'https://example.com/simple',
         'find-links': [join(sandbox.path, 'wheels')],
     });
     await createFileTree(sandbox.path, { 'uv.toml': '' });
-    expect(await readInstalledSettings(sandbox.path, PYTHON_RELEASE_AGE)).toStrictEqual({
-        'exclude-newer-package': { ruff: false, semgrep: false },
+    expect(await readInstalledSettings(sandbox.path, 7)).toStrictEqual({
         'exclude-newer': '7 days',
     });
     await rm(join(sandbox.path, 'uv.toml'));
     await rm(join(sandbox.path, 'pyproject.toml'));
-    expect(await readInstalledSettings(sandbox.path, PYTHON_RELEASE_AGE)).toStrictEqual({
-        'exclude-newer-package': { ruff: false, semgrep: false },
+    expect(await readInstalledSettings(sandbox.path, 7)).toStrictEqual({
         'exclude-newer': '7 days',
     });
     await writeFile(join(sandbox.path, 'uv.toml'), 'find-links = [7]');
@@ -225,8 +216,7 @@ test('project index settings apply only without uv.toml, and missing or empty fi
 
 test('Python resolution excludes releases newer than the minimum release age', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    expect(await readInstalledSettings(sandbox.path, { ...PYTHON_RELEASE_AGE, days: 14 })).toStrictEqual({
-        'exclude-newer-package': { ruff: false, semgrep: false },
+    expect(await readInstalledSettings(sandbox.path, 14)).toStrictEqual({
         'exclude-newer': '14 days',
     });
     const saved = `${PYTHON_TOOL_LOCKFILE}\n[options]\nexclude-newer-span = "P7D"\n`;

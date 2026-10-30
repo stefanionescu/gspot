@@ -5,7 +5,6 @@ import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { TRAILING_PERIOD } from '#cli/config/text.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { runInstallStep } from '#cli/installers/steps.ts';
 import { VERSION_FLAG } from '#cli/config/tools/versions.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
@@ -15,6 +14,7 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { ReplacementRequest } from '#cli/types/repository/writer.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
+import { runInstallStep, explainReleaseAgeHold } from '#cli/installers/steps.ts';
 import { buildPackageManagerCommand } from '#cli/repository/npm/package-manager.ts';
 import { writeNpmrc, extractRegistryCredentials } from '#cli/installers/npm/registry.ts';
 import { prepareReleaseAge, writeBunReleaseAge } from '#cli/installers/npm/release-age.ts';
@@ -50,7 +50,7 @@ async function createNpmLockfile(
     const run = await runPackageManager(install, {
         runFolder,
         packageManager,
-        commandArguments: prepareReleaseAge(runFolder, lockfileArguments, packageManager, install.minimumReleaseAge),
+        commandArguments: prepareReleaseAge(runFolder, lockfileArguments, packageManager, install.releaseAgeDays),
         failure: LOCKFILE_FAILURE,
         environment: install.registryEnvironment,
     });
@@ -69,14 +69,18 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerRe
     env[NPM_CONFIG_FOLDER_VARIABLE] = settings.path;
     const args =
         packageManager.name === 'bun'
-            ? [...commandArguments, `--config=${writeBunReleaseAge(settings.path, install.minimumReleaseAge)}`]
+            ? [...commandArguments, `--config=${writeBunReleaseAge(settings.path, install.releaseAgeDays)}`]
             : commandArguments;
     const command = buildPackageManagerCommand(packageManager.command, args);
     const result = await runInstallStep(install, command, { cwd: runFolder, env });
     if (result.code !== 0) {
+        const output = redactInstallOutput(result, credentials);
+        const pins = Object.entries(listToolProjectPins(install.session.toolConfigurations).npm).map(
+            ([name, version]) => `${name}@${version}`,
+        );
         throw new GspotError(
             'install',
-            `${packageManager.name} ${failure} (exit ${String(result.code)}).\n${redactInstallOutput(result, credentials)}`,
+            `${explainReleaseAgeHold(install, output, pins)}${packageManager.name} ${failure} (exit ${String(result.code)}).\n${output}`,
         );
     }
     return { environment: env, credentials };

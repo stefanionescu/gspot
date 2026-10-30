@@ -80,10 +80,16 @@ counts for that folder and the folders inside it.
 
 ## Release age of the gspot tools
 
-gspot installs its own tools in `.gspot/` at the exact versions it pins. Each package that those tools pull in waits
-`dependencies.min_release_age_days` days after its release, 7 by default. gspot leaves the install settings of your
-project alone: to hold back your own dependencies, set the release age option of your package manager. To make gspot wait
-14 days:
+gspot installs its own tools in `.gspot/`. Each package that it installs there waits `dependencies.min_release_age_days`
+days after its release, 7 by default. The hold covers the tools that gspot pins and the packages that they pull in. Only
+the gspot packages install at the version of the CLI.
+
+When a pinned tool came out less than that many days ago, `gspot install` stops and names the tool and the setting.
+Wait for the release to age, or lower the setting. Bun does not hold back a package that a project pins to one version,
+so with Bun the pinned tools install at once.
+
+gspot leaves the install settings of your project alone: to hold back your own dependencies, set the release age option
+of your package manager. To make gspot wait 14 days:
 
 ```shell
 gspot set dependencies.min_release_age_days 14
