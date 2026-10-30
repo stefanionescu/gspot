@@ -6,13 +6,13 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import type { EslintConfiguration } from '#tests/types/tools.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     COALESCING_SOURCE,
@@ -32,7 +32,7 @@ test.each([...LEVELS])('%s keeps the syntax selectors of a configuration inside 
         'app/client.jsx': '',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const source = 'export const query = sql`select 1`;';
     await createFileTree(sandbox.path, { 'app/client.jsx': source, 'root.jsx': source });
     expect(await listLintFindings(eslint, sandbox.path, ['app/client.jsx'], ['no-restricted-syntax'])).toStrictEqual(
@@ -49,7 +49,7 @@ test('level all keeps every rule that level basic turns on for a React file', as
             'package.json': '{"private":true,"type":"module"}',
             'client.jsx': '',
         });
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         const config = (await eslint.calculateConfigForFile('client.jsx')) as EslintConfiguration;
         rules[level] = config.rules;
     }
@@ -70,7 +70,7 @@ test('all applies your rule options except in script and test files', async () =
         'tests/example.test.js': '',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const source = (await eslint.calculateConfigForFile('source.js')) as EslintConfiguration;
     const script = (await eslint.calculateConfigForFile('scripts/run.js')) as EslintConfiguration;
     const testFile = (await eslint.calculateConfigForFile('tests/example.test.js')) as EslintConfiguration;
@@ -101,7 +101,7 @@ test('apply refuses options for a rule of level all at level basic, and ESLint r
             tables: '[tools.eslint.rules]\n"id-length" = []\n"acme/foo" = []\n',
         }),
     );
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(await captureRejection(eslint.calculateConfigForFile('source.js'))).toMatchObject({
         message: [
             'gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.',
@@ -120,7 +120,7 @@ test.each([...LEVELS])(
             'package.json': '{"private":true,"type":"module"}',
             'source.js': COALESCING_SOURCE,
         });
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         async function lintFiles() {
             const config = (await eslint.calculateConfigForFile('source.js')) as EslintConfiguration;
             const layout = ['padding-line-between-statements', 'lines-between-class-members'].filter(
@@ -156,7 +156,7 @@ test('switching the level and back writes the same files', async () => {
         const settings = buildSandboxSettings(['javascript'], { rules: true, level });
         await writeFile(join(sandbox.path, 'gspot.toml'), settings);
         const session = await openSession(sandbox.path);
-        const output = generateFiles(session);
+        const output = buildGeneratedFiles(session);
         const writer = openFiles(sandbox.path);
         await writeGeneratedFiles(session, output, writer);
         outputs.push(output.files.map(({ path, content }) => ({ path, content })));
@@ -174,7 +174,7 @@ test.each([...LEVELS])(
             'total.js': DOCUMENTED_PRICE_SOURCE,
         });
 
-        const eslint = await createEslint(sandbox.path, { fix: true });
+        const eslint = await buildEslint(sandbox.path, { fix: true });
         const [result] = await eslint.lintFiles(['total.js']);
         expect(result?.output?.split('\n').slice(0, 3)).toStrictEqual(
             level === 'all' ? ['/**', 'Add the two prices.', ''] : undefined,
@@ -190,7 +190,7 @@ test('your options for a rule that a configuration adds, such as @typescript-esl
         }),
         ...CONFIGURATION_RULE_OPTIONS.files,
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const configuration = (await eslint.calculateConfigForFile('source.ts')) as EslintConfiguration;
     expect(configuration.rules['@typescript-eslint/no-floating-promises']).toStrictEqual([2, { ignoreVoid: true }]);
     expect(
@@ -208,7 +208,7 @@ test.each([...LEVELS])('%s keeps core bug checks and TypeScript recommended chec
         'source.js': '',
         'source.ts': '',
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     for (const file of ['source.js', 'source.ts']) {
         const config = (await eslint.calculateConfigForFile(file)) as EslintConfiguration;
         const rules = [

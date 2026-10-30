@@ -4,7 +4,7 @@ import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { HOST_MODULE } from '#tests/config/generation/configurations/language/javascript/paths.ts';
 
 import {
@@ -24,7 +24,7 @@ test('a bundler scope uses extensionless imports while the Node.js parent keeps 
         'app/value.js': 'export const value = 1;\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const source = 'import { value } from "./value";\n';
     await createFileTree(sandbox.path, { 'source.js': source, 'app/source.js': source });
     const rules = ['n/file-extension-in-import'];
@@ -49,7 +49,7 @@ test.each([...LEVELS])(
             'app/src/source.ts': '',
         });
 
-        const eslint = await createEslint(sandbox.path, {
+        const eslint = await buildEslint(sandbox.path, {
             fix: ({ ruleId }) =>
                 (ruleId !== null && new Set<string>(SORT_RULES).has(ruleId)) ||
                 ruleId === 'gspot/no-comments-in-imports',
@@ -82,7 +82,7 @@ test('a bundler scope drops only code suffixes, and its Node scripts keep every 
         'app/tool.mjs': '',
     });
 
-    const eslint = await createEslint(sandbox.path, { fix: true });
+    const eslint = await buildEslint(sandbox.path, { fix: true });
     const rules = ['n/file-extension-in-import'];
     const bundled =
         'import "./styles.css";\nimport data from "./data.json" with { type: "json" };\nimport { value } from "./value";\nexport { data, value };\n';
@@ -109,7 +109,7 @@ test('a Node script imports through package.json imports, never through TypeScri
         'tools/run/tool.mjs': '',
     });
 
-    const eslint = await createEslint(sandbox.path, { fix: ({ ruleId }) => ruleId === 'gspot/import-boundaries' });
+    const eslint = await buildEslint(sandbox.path, { fix: ({ ruleId }) => ruleId === 'gspot/import-boundaries' });
     const [fixed] = await eslint.lintText('import { value } from "../../src/app/value.mjs";\nexport { value };\n', {
         filePath: 'tools/run/tool.mjs',
     });
@@ -125,7 +125,7 @@ test('an import of a javascript.externals path gets no gspot/import-boundaries f
         'web/src/a.js': `import '${HOST_MODULE}';\n`,
     });
     const rules = ['gspot/import-boundaries'];
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(await listLintFindings(eslint, sandbox.path, ['web/src/a.js'], rules)).toStrictEqual([
         { file: 'web/src/a.js', rule: 'gspot/import-boundaries', line: 1 },
     ]);
@@ -137,7 +137,7 @@ test('an import of a javascript.externals path gets no gspot/import-boundaries f
             tables: `[javascript]\nexternals = { value = ["${HOST_MODULE}"], reason = "The host supplies this module." }\n`,
         }),
     );
-    const external = await createEslint(sandbox.path);
+    const external = await buildEslint(sandbox.path);
     expect(await listLintFindings(external, sandbox.path, ['web/src/a.js'], rules)).toStrictEqual([]);
 });
 
@@ -155,7 +155,7 @@ test('javascript.import_boundaries keeps relative imports inside each folder, an
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         ...files,
     });
-    const open = await createEslint(sandbox.path, fix);
+    const open = await buildEslint(sandbox.path, fix);
     const [unbounded] = await open.lintText(source, target);
     expect(unbounded?.output).toBeUndefined();
     await writeFile(
@@ -165,7 +165,7 @@ test('javascript.import_boundaries keeps relative imports inside each folder, an
             tables: '[javascript]\nimport_boundaries = ["src/features/*"]\n',
         }),
     );
-    const bounded = await createEslint(sandbox.path, fix);
+    const bounded = await buildEslint(sandbox.path, fix);
     const [fixed] = await bounded.lintText(source, target);
     expect(fixed?.output).toBe('import { session } from "@/features/auth/session.ts";\nexport { session };\n');
 });

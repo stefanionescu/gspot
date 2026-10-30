@@ -7,7 +7,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { type LintFinding, type SourceRuleCase, type EslintConfiguration } from '#tests/types/tools.ts';
 import { INDEX_ONLY_REEXPORTS } from '#tests/config/generation/configurations/language/javascript/eslint/settings.ts';
 
@@ -26,7 +26,7 @@ import {
 
 async function listTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
     await writeFile(join(root, 'gspot.toml'), settings);
-    const eslint = await createEslint(root);
+    const eslint = await buildEslint(root);
     const findings = await listLintFindings(eslint, root, ['src', 'api/src'], TRIVIAL_RULES);
     return findings.map(({ file, rule }) => ({ file, rule }));
 }
@@ -97,7 +97,7 @@ test('level all skips build output and files marked linguist-generated in .gitat
         '.gitattributes': LINGUIST_GENERATED_PATTERN,
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     for (const filePath of ['tests/build/check.js', 'src/dist/check.js', 'coverage/check.js', 'emitted/check.js']) {
         expect(await eslint.isPathIgnored(filePath)).toBe(true);
     }
@@ -113,7 +113,7 @@ test.each([...LEVELS])('size limits apply to test files only at level all (%s)',
         'sample.test.js': '',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const rules = ['max-lines', 'max-lines-per-function', 'max-statements'];
     const declarations = Array.from(
         { length: 9 },
@@ -138,7 +138,7 @@ test.each([...LEVELS])(
             'app/main.js': '',
         });
 
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         for (const filePath of ['main.js', 'app/main.js']) {
             await createFileTree(sandbox.path, { [filePath]: "export { launch as start } from './launch.js';" });
             expect(await listLintFindings(eslint, sandbox.path, [filePath], TRIVIAL_RULES)).toStrictEqual(
@@ -166,7 +166,7 @@ test('a JSON import attribute is accepted where your import extensions need a su
         'app/main.js': '',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     for (const filePath of ['main.js', 'app/main.js']) {
         const config = (await eslint.calculateConfigForFile(filePath)) as EslintConfiguration;
         expect(config.rules['n/file-extension-in-import']![0]).toBe(2);
@@ -191,7 +191,7 @@ test.each([...LEVEL_REEXPORT_CASES])(
                 tables: `[structure]\nreexports = ${reexports === 'index-only' ? INDEX_ONLY_REEXPORTS : '"none"'}\n[limits]\nindex_exports = 2\n[[scope]]\npath = "app"\nconfigurations = ["typescript"]\n`,
             }),
         });
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         await assertSourceRules(
             eslint,
             sandbox.path,

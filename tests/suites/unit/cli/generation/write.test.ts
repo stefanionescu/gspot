@@ -7,9 +7,9 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { formatHeader } from '#cli/generation/header.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { listStaleLockfiles } from '#cli/installers/projects.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { PackageFieldScenario } from '#tests/types/write.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -19,7 +19,7 @@ import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/confi
 
 async function applyPackageFields(root: string, scenario: PackageFieldScenario): Promise<Map<string, string>> {
     const session = await openSession(root);
-    const generated = generateFiles(session);
+    const generated = buildGeneratedFiles(session);
     expect(generated.managedKeys).toStrictEqual(scenario.changes);
     const writer = openFiles(root);
     await writeGeneratedFiles(session, generated, writer);
@@ -60,7 +60,7 @@ test('removing css drops its managed stylelint field and keeps authored fields b
     installed.set('app/package.json', EDITED_STYLELINT_PACKAGE);
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { level: 'all', rules: true }));
     const session = await openSession(sandbox.path);
-    const generated = generateFiles(session);
+    const generated = buildGeneratedFiles(session);
     expect(generated.managedKeys).toStrictEqual([
         { path: 'package.json', keys: [{ key: ['stylelint'], value: undefined }] },
         { path: 'app/child/package.json', keys: [{ key: ['stylelint'], value: undefined }] },
@@ -77,7 +77,7 @@ test('removing css drops its managed stylelint field and keeps authored fields b
         } else expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
     }
     const settled = await openSession(sandbox.path);
-    const output = generateFiles(settled);
+    const output = buildGeneratedFiles(settled);
     expect(await listOutdatedFiles(settled, output)).toStrictEqual(await listStaleLockfiles(settled, output.files));
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).not.toContain('`stylelint`');
 });
@@ -121,7 +121,7 @@ test('at level basic, prose keeps its Vale configuration and removes installed s
     });
     const session = await openSession(sandbox.path);
     const writer = openFiles(sandbox.path);
-    await writeGeneratedFiles(session, generateFiles(session), writer);
+    await writeGeneratedFiles(session, buildGeneratedFiles(session), writer);
     expect(await isOnDisk(join(sandbox.path, '.gspot/vale'))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/general/prose/vale.ini'))).toBe(true);
 });
@@ -138,7 +138,7 @@ test('apply preserves a copied header example and removes an obsolete scoped lin
     const before = await readFile(join(sandbox.path, 'examples/.editorconfig'));
     const session = await openSession(sandbox.path);
     const writer = openFiles(sandbox.path);
-    const report = await writeGeneratedFiles(session, generateFiles(session), writer);
+    const report = await writeGeneratedFiles(session, buildGeneratedFiles(session), writer);
     expect(await readFile(join(sandbox.path, 'examples/.editorconfig'))).toStrictEqual(before);
     expect(report.removed).toContain('docs/.markdownlint.jsonc');
     expect(await isOnDisk(join(sandbox.path, 'docs/.markdownlint.jsonc'))).toBe(false);

@@ -5,7 +5,6 @@ import { mapSettingPaths } from '#cli/settings/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { TOOL_LOCKFILES } from '#cli/config/files/gspot.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { isTable, getValueAt } from '#cli/system/tables.ts';
@@ -13,6 +12,7 @@ import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { INSTALL_HELP } from '#cli/config/executables/inspect.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
@@ -64,7 +64,7 @@ Reports each generated file on disk that does not match what the settings genera
 @param _planned the configured check and selected scope files.
 */
 export async function checkGspotGeneratedFiles(session: Session, _planned: PlannedCheck): Promise<CheckFinding[]> {
-    const outdated = await listOutdatedFiles(session, generateFiles(session));
+    const outdated = await listOutdatedFiles(session, buildGeneratedFiles(session));
     return outdated.map((outdatedFile) => ({
         file: outdatedFile.path,
         rule: outdatedFile.kind,

@@ -5,7 +5,7 @@ import { compareText } from '#cli/system/text.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     TYPE_EXPORT_FILES,
@@ -18,7 +18,7 @@ test.each([...TYPED_RULE_PROJECTS])('$name gets typed lint rules', async ({ conf
         ...files,
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const rules = ['@typescript-eslint/no-unnecessary-type-assertion'];
     expect(await listLintFindings(eslint, sandbox.path, [file], rules)).toStrictEqual([
         { file, rule: '@typescript-eslint/no-unnecessary-type-assertion', line: 4 },
@@ -37,7 +37,7 @@ test.each([...LEVELS])('%s type import and export rules apply at their declared 
         }),
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const rules = ['@typescript-eslint/consistent-type-imports', '@typescript-eslint/consistent-type-exports'];
     const findings = await listLintFindings(eslint, sandbox.path, ['index.ts'], rules);
     expect(listFindingRules(findings)).toStrictEqual(level === 'all' ? rules.toSorted(compareText) : []);
@@ -51,7 +51,7 @@ test('a default import with an inline type merges with a type-only import into c
         'client.ts': '',
     });
 
-    const eslint = await createEslint(sandbox.path, { fix: ({ ruleId }) => ruleId === 'import-x/no-duplicates' });
+    const eslint = await buildEslint(sandbox.path, { fix: ({ ruleId }) => ruleId === 'import-x/no-duplicates' });
     const source =
         "import type { Level } from 'hls.js';\nimport Hls, { Events, type Config } from 'hls.js';\nexport { Hls, Events, type Config, type Level };\n";
     const [result] = await eslint.lintText(source, { filePath: 'client.ts' });
@@ -72,7 +72,7 @@ test('gspot/no-magic-numbers accepts the numbers of a module-level const and rep
             'export const SIZES = [16, 32, 64];\nexport const TIMEOUT_MS = 60 * 1000;\nexport function wait(): number {\n    return TIMEOUT_MS + 250;\n}\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(
         await listLintFindings(
             eslint,

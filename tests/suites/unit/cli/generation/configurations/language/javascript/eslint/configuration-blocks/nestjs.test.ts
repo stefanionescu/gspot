@@ -7,7 +7,7 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
 
 test('the Swagger lint rules apply only when package.json declares @nestjs/swagger', async () => {
@@ -19,7 +19,7 @@ test('the Swagger lint rules apply only when package.json declares @nestjs/swagg
     const path = join(repository.root, 'src/greeting.controller.ts');
     expect(
         await listLintFindings(
-            await createEslint(repository.root),
+            await buildEslint(repository.root),
             repository.root,
             ['src/greeting.controller.ts'],
             [
@@ -34,7 +34,7 @@ test('the Swagger lint rules apply only when package.json declares @nestjs/swagg
         packagePath,
         JSON.stringify({ ...packageJson, dependencies: { ...packageJson.dependencies, '@nestjs/swagger': '11.2.3' } }),
     );
-    await createEslint(repository.root);
+    await buildEslint(repository.root);
     const swagger = await runCommand([join(toolModules, '.bin/eslint'), '--format', 'json', path], {
         cwd: repository.root,
     });

@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { getValueAt } from '#cli/system/tables.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { generateFile, getManifestTarget, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget, getConfigFilePath, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 import {
     CHILD_MIGRATIONS,
@@ -17,7 +17,7 @@ import {
 test.each([...SQUAWK_VERSION_CASES])(
     'Squawk skips migrations through version %s without rounding',
     async (through, expected) => {
-        const text = await generateFile(
+        const text = await buildGeneratedFile(
             buildSandboxSettings(['postgres'], { tables: `[postgres]\nfrozen_through = "${through}"\n` }),
             getManifestTarget('postgres', 'squawk.toml'),
             SQUAWK_MIGRATION_FILES,
@@ -33,7 +33,7 @@ test('the Squawk config file of a Postgres child scope excludes the frozen migra
     });
     const session = await openSession(sandbox.path);
     const path = getConfigFilePath(session, 'squawk', 'app');
-    const text = generateFiles(session).files.find((file) => file.path === path)!.content;
+    const text = buildGeneratedFiles(session).files.find((file) => file.path === path)!.content;
     expect(getValueAt(parse(text), ['excluded_paths'])).toStrictEqual([
         'app/migrations/V2_first.sql',
         'migrations/V1_root.sql',

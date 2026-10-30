@@ -3,7 +3,7 @@ import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     TRPC_FILES,
@@ -24,7 +24,7 @@ test('Drizzle reports delete and update without where only for its client names'
         'app/source.js': 'connection.update(table).set({ value: 1 });\nother.update(table).set({ value: 1 });\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const rules = ['drizzle/enforce-delete-with-where', 'drizzle/enforce-update-with-where'];
     expect(await listLintFindings(eslint, sandbox.path, ['source.js', 'app/source.js'], rules)).toStrictEqual([
         { file: 'app/source.js', rule: 'drizzle/enforce-update-with-where', line: 1 },
@@ -55,7 +55,7 @@ test.each([...LEVELS])(
                 ]),
             ),
         });
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         for (const file of [...tested, ...ordinary, 'sibling/source.jsx']) {
             expect(
                 await listLintFindings(eslint, sandbox.path, [file], ['i18next/no-literal-string']),
@@ -82,7 +82,7 @@ store_files = { value = ["**/store.js"], reason = "This test sets the allowed lo
             }),
         });
 
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         const files = ['src/widget.js', 'src/store.js'];
         expect(await listLintFindings(eslint, sandbox.path, files, ['no-restricted-imports'])).toStrictEqual([
             { file: 'src/store.js', rule: 'no-restricted-imports', line: 2 },
@@ -120,7 +120,7 @@ path = "flat"
         ),
     };
     await createFileTree(sandbox.path, files);
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const paths = [
         'public.ts',
         'form-value.js',
@@ -174,7 +174,7 @@ test.each([...LEVELS])(
                 ]),
             ),
         });
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         for (const file of [...checked, ...unchecked]) {
             expect(await listLintFindings(eslint, sandbox.path, [file], ['no-restricted-syntax']), file).toStrictEqual(
                 checked.has(file) ? [{ file, rule: 'no-restricted-syntax', line: 1 }] : [],
@@ -193,7 +193,7 @@ test('TanStack Query rules report only in the scope that selects tanstack-query'
         'source.js': source,
         'app/source.js': source,
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(
         await listLintFindings(
             eslint,

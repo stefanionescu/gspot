@@ -7,8 +7,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { generateFile, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { getConfigFilePath, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 import {
     LOCAL_PLUGIN,
@@ -28,7 +28,7 @@ test('a scope plugin reaches its scope, and an inherited root plugin writes one 
     });
 
     commitAll(sandbox.path);
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(
         await listLintFindings(
             eslint,
@@ -45,7 +45,7 @@ test('a scope plugin reaches its scope, and an inherited root plugin writes one 
 
 test('one plugin name with two modules is a settings error that names both paths', async () => {
     const error = await captureRejection(
-        generateFile(
+        buildGeneratedFile(
             buildSandboxSettings(['javascript'], { tables: CONFLICTING_LOCAL_PLUGIN_TABLES }),
             'eslint.config.mjs',
             CONFLICTING_LOCAL_PLUGIN_FILES,
@@ -64,7 +64,7 @@ test('tools.eslint.plugins loads your plugin by its path and refuses the gspot r
     });
 
     commitAll(sandbox.path);
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['local/no-forbidden'])).toStrictEqual([
         { file: 'source.js', rule: 'local/no-forbidden', line: 1 },
     ]);

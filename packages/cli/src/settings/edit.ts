@@ -7,7 +7,7 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isReasonedValue, readSettingsFile } from '#cli/settings/file.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { SETTINGS_FILE, SETTINGS_PREFACE } from '#cli/config/settings/file.ts';
-import { isTable, getValueAt, createTable, normalizeTables } from '#cli/system/tables.ts';
+import { isTable, addTable, getValueAt, normalizeTables } from '#cli/system/tables.ts';
 import type { SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: setKey, removeKey, and removeFromList split a dotted key at its last dot through it.
@@ -48,7 +48,7 @@ Set a dotted key to a value, and create tables on the way.
 */
 export function setKey(table: TomlTable, key: string, value: unknown): void {
     const { path, name } = splitKey(key);
-    const parent = createTable(table, path);
+    const parent = addTable(table, path);
     if (parent === undefined) throw new GspotError('settings', `${key} runs through a value that is not a table.`);
     parent[name] = value;
 }

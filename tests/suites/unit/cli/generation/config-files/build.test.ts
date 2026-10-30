@@ -6,8 +6,8 @@ import { parse as parseJsonc } from 'jsonc-parser';
 import { openSession } from '#cli/planning/session.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { CONFIG_FILE_BUILDERS } from '#cli/generation/config-files/build.ts';
@@ -21,7 +21,7 @@ test('keys and values with quotes, backslashes, newlines, and accented letters s
     });
 
     const session = await openSession(sandbox.path);
-    const output = generateFiles(session);
+    const output = buildGeneratedFiles(session);
     const markdownRules = output.files.find(
         ({ path }) => path === getManifestTarget('markdown', 'markdownlint.jsonc'),
     )!;
@@ -71,7 +71,7 @@ test('TOML config files keep keys and values with quotes, backslashes, newlines,
     });
 
     const session = await openSession(sandbox.path);
-    const output = generateFiles(session);
+    const output = buildGeneratedFiles(session);
     const parsed = new Map(
         output.files.filter((file) => file.path.endsWith('.toml')).map((file) => [file.path, parseToml(file.content)]),
     );

@@ -2,8 +2,8 @@ import { testdir } from 'testdirs';
 import { type Level } from '#cli/types/manifests.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { test, expect, describe, beforeAll } from 'bun:test';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
@@ -19,7 +19,7 @@ async function generateRuleFiles(level: Level, files: Record<string, string>): P
     });
 
     const session = await openSession(sandbox.path);
-    const output = generateFiles(session);
+    const output = buildGeneratedFiles(session);
     return new Map(
         output.files
             .filter((file) => file.path.includes('/rules/') && file.path.endsWith('.md'))

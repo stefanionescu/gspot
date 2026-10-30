@@ -3,8 +3,8 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { CLEAN_SWIFT } from '#tests/config/swift.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import type { SwiftlintOutput } from '#tests/types/swift.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/checks/infrastructure/xcode.ts';
@@ -20,7 +20,7 @@ test("SwiftFormat reads each scope's Swift version from Package.swift", async ()
         'nested/Package.swift': '// swift-tools-version:6.3.2\nimport PackageDescription\n',
     });
     const session = await openSession(sandbox.path);
-    const outputs = generateFiles(session).files;
+    const outputs = buildGeneratedFiles(session).files;
     expect(outputs.find((file) => file.path === getConfigFilePath(session, 'swiftformat'))?.content).toContain(
         '--swiftversion 5.9\n',
     );
@@ -44,7 +44,7 @@ test('SwiftFormat uses the Xcode project you choose in each scope', async () => 
     };
     await using sandbox = await testdir(files);
     const session = await openSession(sandbox.path);
-    const outputs = generateFiles(session).files;
+    const outputs = buildGeneratedFiles(session).files;
     expect(outputs.find((file) => file.path === getConfigFilePath(session, 'swiftformat'))?.content).toContain(
         '--swiftversion 6.0\n',
     );
@@ -65,7 +65,7 @@ test.each(['lf', 'crlf'] as const)('SwiftFormat writes the %s line ending you se
     });
 
     const session = await openSession(sandbox.path);
-    const files = generateFiles(session).files;
+    const files = buildGeneratedFiles(session).files;
     expect(files.find((file) => file.path === getConfigFilePath(session, 'swiftformat'))!.content).toContain(
         `--linebreaks ${ending}\n`,
     );
@@ -85,7 +85,7 @@ test.each(['basic', 'all'] as const)(
             'Value.swift': CLEAN_SWIFT,
         });
         const session = await openSession(sandbox.path);
-        const text = generateFiles(session).files.find(
+        const text = buildGeneratedFiles(session).files.find(
             (file) => file.path === getConfigFilePath(session, 'swiftlint'),
         )!.content;
         const document = parse(text) as SwiftlintOutput;

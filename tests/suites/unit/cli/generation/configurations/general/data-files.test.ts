@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/planning/session.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { MAPPED_SCHEMAS, MAPPED_SCHEMA_RECORDS } from '#tests/config/generation/configurations/general/data-files.ts';
@@ -20,7 +20,9 @@ test.each([true, false])(
         });
 
         const session = await openSession(sandbox.path);
-        const v8rFile = generateFiles(session).files.find((file) => file.path === getConfigFilePath(session, 'v8r'))!;
+        const v8rFile = buildGeneratedFiles(session).files.find(
+            (file) => file.path === getConfigFilePath(session, 'v8r'),
+        )!;
         expect(parse(v8rFile.content)).toStrictEqual({
             ignoreErrors: true,
             customCatalog: {

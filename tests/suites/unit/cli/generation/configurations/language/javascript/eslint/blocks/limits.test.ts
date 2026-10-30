@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 test.each(['javascript', 'typescript'].flatMap((language) => [7, 8].map((maximum) => ({ language, maximum }))))(
     'ESLint for $language counts declared parameters against a maximum of $maximum: the default 7 or an authored 8',
@@ -27,7 +27,7 @@ test.each(['javascript', 'typescript'].flatMap((language) => [7, 8].map((maximum
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
             [`example.${extension}`]: source,
         });
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         const file = `example.${extension}`;
         expect(await listLintFindings(eslint, sandbox.path, [file], ['max-params'])).toStrictEqual(
             maximum === 7 ? [{ file, rule: 'max-params', line: 2 }] : [],
@@ -48,7 +48,7 @@ test('a JavaScript file takes the JavaScript limits, and a TypeScript file the T
         'example.js': `export function choose${body}\n`,
         'example.ts': `export function choose${body.replace('(value)', '(value: number)')}\n`,
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(await listLintFindings(eslint, sandbox.path, ['example.js', 'example.ts'], ['complexity'])).toStrictEqual([
         { file: 'example.js', rule: 'complexity', line: 1 },
     ]);
@@ -70,7 +70,7 @@ test('a scope that lowers a limit gets it in its own files, and the root keeps i
         'child/example.js': source,
         'child/example.ts': typedSource,
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const files = ['example.js', 'example.ts', 'child/example.js', 'child/example.ts'];
     expect(await listLintFindings(eslint, sandbox.path, files, ['max-params'])).toStrictEqual([
         { file: 'child/example.js', rule: 'max-params', line: 1 },

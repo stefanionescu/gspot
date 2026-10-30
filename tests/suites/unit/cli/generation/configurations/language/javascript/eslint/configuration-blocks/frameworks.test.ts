@@ -5,7 +5,7 @@ import { LEVELS } from '#cli/config/manifests/names.ts';
 import { type EslintConfiguration } from '#tests/types/tools.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { INDEX_ONLY_REEXPORTS } from '#tests/config/generation/configurations/language/javascript/eslint/settings.ts';
 
 import {
@@ -32,7 +32,7 @@ test('Vue, Svelte and Astro files parse in their scopes, and a scope without the
         'plain/source.js': COMPONENT_FILES['source.js'],
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     for (const prefix of ['', 'app/']) {
         expect(
             await listLintFindings(
@@ -68,7 +68,7 @@ test.each([...HTML_INJECTION_CASES])(
             'plain.js': 'export const markup = "<b>Hello</b>";\n',
         });
 
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         const path = `app/${component.path}`;
         expect(await listLintFindings(eslint, sandbox.path, [path], [component.rule])).toStrictEqual([
             { file: path, rule: component.rule, line: 1 },
@@ -96,7 +96,7 @@ test.each([...LEVELS])(
             'api/child/source.js': EXPRESS_SOURCE,
         });
 
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         const root = (await eslint.calculateConfigForFile('source.js')) as EslintConfiguration;
         const express = (await eslint.calculateConfigForFile('api/source.js')) as EslintConfiguration;
         expect(root.rules['security/detect-buffer-noassert']).toBeUndefined();
@@ -131,7 +131,7 @@ configurations = ["nextjs"]
             }),
             ...Object.fromEntries(files.map((file) => [file, 'export const value = 1;\n'])),
         });
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         const rules = await readEslintRules(eslint, files);
         expect(rules['app/page.tsx']!['gspot/no-trivial-files']![0]).toBe(0);
         for (const file of ['app/page.tsx', 'app/index.ts']) {
@@ -159,7 +159,7 @@ test('Next.js reports require-server-only in .server files and server folders', 
         'app/server/data.js': 'export const value = 1;\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(
         await listLintFindings(
             eslint,
@@ -186,7 +186,7 @@ test('Next.js route rules use each project root and stay off in a scope without 
         }),
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     using warnings = spyOn(console, 'warn');
 
     for (const [scope, path] of [
@@ -224,7 +224,7 @@ test('react-refresh knows the catchError wrapper of next/error in a Next.js scop
         'web/components/mixed.jsx': 'export const count = 2;\nexport function Mixed() { return null; }\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const config = (await eslint.calculateConfigForFile(
         join(sandbox.path, 'web/components/panel.jsx'),
     )) as EslintConfiguration;
@@ -251,7 +251,7 @@ test('in a React DOM file, a scrollable region may take tabIndex, and an article
         'story.jsx': 'export function Story() {\n    return <article tabIndex={0}>Text</article>;\n}\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(
         await listLintFindings(
             eslint,
@@ -265,7 +265,7 @@ test('in a React DOM file, a scrollable region may take tabIndex, and an article
 test('Expo rules apply in the Expo scope and not in its React Native sibling', async () => {
     await using sandbox = await testdir(MOBILE_FILES);
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(
         await listLintFindings(
             eslint,
@@ -286,7 +286,7 @@ test('React Native turns off DOM accessibility rules only inside its scope', asy
         }),
         ...Object.fromEntries(files.map((file) => [file, 'export const value = 1;\n'])),
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const rules = await readEslintRules(eslint, files);
     expect(rules['native/App.tsx']!['jsx-a11y-x/alt-text']).toBeUndefined();
     expect(rules['web/App.tsx']!['jsx-a11y-x/alt-text']![0]).toBe(2);

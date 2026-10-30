@@ -47,7 +47,7 @@ Create the missing tables along a dotted path.
 @param keys the table names from the root down.
 @returns undefined when the path runs through a value other than a table.
 */
-export function createTable(
+export function addTable(
     document: Record<string, unknown>,
     keys: readonly string[],
 ): Record<string, unknown> | undefined {

@@ -17,7 +17,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/installers/npm/project.ts';
-import { installNpmTools, prepareNpmLockfile } from '#cli/installers/npm/project.ts';
+import { installNpmTools, planNpmLockfile } from '#cli/installers/npm/project.ts';
 
 import {
     CREDENTIAL_TOKEN,
@@ -40,7 +40,7 @@ async function prepareCredentialProject(root: string, packageJson: string, lockf
     const session = await openSession(root);
     const install = await buildNpmToolInstall(session, owner);
     const error = await captureRejection(
-        prepareNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: CREDENTIAL_PACKAGE_JSON }),
+        planNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: CREDENTIAL_PACKAGE_JSON }),
     );
     return { files, error };
 }
@@ -83,7 +83,7 @@ test.each([...FAILED_INSTALL_CASES])(
         const installationError = await captureRejection(
             frozen
                 ? installNpmTools(install)
-                : prepareNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: packageJson }),
+                : planNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: packageJson }),
         );
         expect(installationError).toMatchObject({
             name: 'GspotError',
@@ -173,7 +173,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
     const owner = openFiles(sandbox.path);
     const install = await buildNpmToolInstall(session, owner);
     const projectFile = { path: GSPOT_PATHS.npmProject, content: packageJson };
-    const lockfileError = await captureRejection(prepareNpmLockfile(install, projectFile));
+    const lockfileError = await captureRejection(planNpmLockfile(install, projectFile));
     const message = lockfileError.message;
     expect(message).toBe('The npm tool project needs Node.js to create its lockfile. Install Node.js.');
     expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.npmProject))).toBe(false);
@@ -181,7 +181,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
         [GSPOT_PATHS.npmProject]: packageJson,
         [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
     });
-    const cached = await prepareNpmLockfile(install, projectFile);
+    const cached = await planNpmLockfile(install, projectFile);
     expect(cached.next.bytes.toString('utf8')).toBe(lockfile);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(packageJson);
     expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`), 'utf8')).toBe(lockfile);
@@ -207,7 +207,7 @@ test('a Yarn Classic repository resolves its tool lockfile with npm and the mini
     const session = await openSession(sandbox.path);
     const writer = openFiles(sandbox.path);
     const install = await buildNpmToolInstall(session, writer);
-    const lockfile = await prepareNpmLockfile(install, {
+    const lockfile = await planNpmLockfile(install, {
         path: GSPOT_PATHS.npmProject,
         content: JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: {} }),
     });

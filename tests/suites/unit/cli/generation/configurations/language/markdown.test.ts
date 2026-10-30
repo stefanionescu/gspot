@@ -2,10 +2,10 @@ import { parse } from 'jsonc-parser';
 import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { generateFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 test.each([...LEVELS])('%s turns on MD041 and MD025 only at level all and keeps your MD044 names', async (level) => {
-    const content = await generateFile(
+    const content = await buildGeneratedFile(
         buildSandboxSettings(['markdown'], {
             level,
             tables: `[tools.markdownlint.rules.MD044]

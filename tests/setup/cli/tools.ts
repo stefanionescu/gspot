@@ -5,8 +5,8 @@ import type { Session } from '#cli/types/session.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import * as installers from '#cli/installers/install.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildPythonProjectTable } from '#cli/installers/pypi.ts';
 import type { NpmToolInstall } from '#cli/types/installers/npm.ts';
 import type { Tool, Configuration } from '#cli/types/manifests.ts';
@@ -46,7 +46,7 @@ Build the tool install for a sandbox.
 */
 
 export function buildToolInstall(session: Session, writer: Files): ToolInstall {
-    const generated = generateFiles(session);
+    const generated = buildGeneratedFiles(session);
     const install = installers.buildToolInstall(session, writer, generated);
     install.misePath = null;
     return install;

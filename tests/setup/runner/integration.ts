@@ -6,7 +6,7 @@ import { rm, mkdtemp, readFile } from 'node:fs/promises';
 import { SIGNAL_EXIT_CODES } from '#cli/config/system/terminal.ts';
 import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { createNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
+import { startNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { toolModules, workspaceModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { MISE_LOCK_ENVIRONMENT, GIT_ISOLATION_ENVIRONMENT } from '#tests/config/setup/environment.ts';
@@ -56,7 +56,7 @@ const toolFolders = toolPaths.split(LINE_BREAK).filter((folder) => folder !== ''
 
 const work = resources.use(await testdir());
 
-const registry = resources.use(await createNpmRegistry(work.path));
+const registry = resources.use(await startNpmRegistry(work.path));
 
 resources.use(
     overrideEnvironment({

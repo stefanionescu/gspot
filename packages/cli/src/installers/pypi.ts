@@ -112,7 +112,7 @@ Resolve the Python tool lockfile outside the repository before writing it.
 
 @returns credential-free lockfile bytes.
 */
-export async function preparePythonLockfile(
+export async function planPythonLockfile(
     install: ToolInstall,
     toolProjectFile: GeneratedFile,
     executable: string,

@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     DUPLICATE_RULE_CASES,
@@ -17,7 +17,7 @@ test.each([...DUPLICATE_RULE_CASES])(
             ...Object.fromEntries(DUPLICATE_RULE_CASES.map(({ file, source }) => [file, source])),
         });
 
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
 
         const reports = await listLintFindings(eslint, sandbox.path, [file], rules);
         expect(

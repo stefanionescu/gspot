@@ -2,11 +2,11 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/planning/session.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { ESCAPED_SCOPE_CONFIGURATIONS } from '#tests/config/generation/configurations/language/javascript/eslint/escaping.ts';
 
 async function parseScopeShape(scopePath: string): Promise<string> {
@@ -26,7 +26,7 @@ async function parseScopeShape(scopePath: string): Promise<string> {
         [`${child}/source.js`]: 'export const value = 2;',
     });
     const session = await openSession(sandbox.path);
-    const output = generateFiles(session);
+    const output = buildGeneratedFiles(session);
     const file = output.files.find((each) => each.path === getManifestTarget('javascript', 'eslint/eslint.mjs'))!;
     using tree = await parseSource('javascript', file.content);
     expect(tree.rootNode.hasError).toBe(false);
@@ -38,7 +38,7 @@ async function parseScopeShape(scopePath: string): Promise<string> {
     expect(literals).toContain(`${scopePath}/**/*`);
     expect(literals).toContain(`${child}/**/*`);
     expect(literals).toContain(`${child}/**`);
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const filePath = `${child}/source.js`;
     await createFileTree(sandbox.path, { [filePath]: 'missing();' });
     expect(await listLintFindings(eslint, sandbox.path, [filePath], ['no-undef'])).toStrictEqual([

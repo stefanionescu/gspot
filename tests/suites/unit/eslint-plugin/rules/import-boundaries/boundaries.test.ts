@@ -1,11 +1,11 @@
 import { Linter } from 'eslint';
 import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
-import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import type { ImportBoundariesOptions } from '#eslint-plugin/types/rules.ts';
 import { IMPORT_ALIASES, PROJECT_FOLDERS } from '#tests/config/eslint-plugin/import-boundaries.ts';
 
-createRuleTester().run<
+buildRuleTester().run<
     keyof (typeof plugin.rules)['import-boundaries']['meta']['messages'],
     [Partial<ImportBoundariesOptions[0]>]
 >('import-boundaries', plugin.rules['import-boundaries'], {
@@ -236,7 +236,7 @@ createRuleTester().run<
     ],
 });
 
-createRuleTester({ root: String.raw`c:\repo` }).run<
+buildRuleTester({ root: String.raw`c:\repo` }).run<
     keyof (typeof plugin.rules)['import-boundaries']['meta']['messages'],
     [Partial<ImportBoundariesOptions[0]>]
 >('import-boundaries on Windows paths', plugin.rules['import-boundaries'], {

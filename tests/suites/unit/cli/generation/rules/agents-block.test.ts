@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/planning/session.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { buildAgentsBlock } from '#cli/generation/rules.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { COMMANDS_HEADING } from '#tests/config/generation/rules.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
@@ -37,7 +37,9 @@ test('the AGENTS.md block names the folders of a scoped rule without parentheses
 
 test('with no configurations the block still lists the general rules', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([], { rules: true }) });
-    const block = generateFiles(await openSession(sandbox.path)).blocks.find(({ path }) => path === 'AGENTS.md')!.body;
+    const block = buildGeneratedFiles(await openSession(sandbox.path)).blocks.find(
+        ({ path }) => path === 'AGENTS.md',
+    )!.body;
     const paths = listIndexPaths(block);
     expect(paths.slice(0, 3)).toStrictEqual([
         '.gspot/configurations/general/engineering/rules/WORKING.md',
@@ -56,7 +58,9 @@ test('a rule file that rules.exclude names leaves the index', async () => {
         }),
     });
 
-    const block = generateFiles(await openSession(sandbox.path)).blocks.find(({ path }) => path === 'AGENTS.md')!.body;
+    const block = buildGeneratedFiles(await openSession(sandbox.path)).blocks.find(
+        ({ path }) => path === 'AGENTS.md',
+    )!.body;
     const paths = listIndexPaths(block);
     expect(paths).not.toContain('.gspot/configurations/general/engineering/rules/CLI.md');
     expect(paths).toContain('.gspot/configurations/general/engineering/rules/TESTING.md');

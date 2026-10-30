@@ -5,8 +5,8 @@ import { parse } from '@decimalturn/toml-patch';
 import { getTool } from '#cli/manifests/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import type { ToolPackageJson } from '#tests/types/packages.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { YARN_CLIENTS } from '#tests/config/installers/projects.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -21,7 +21,7 @@ test.each([...STYLESHEET_CASES])('$name installs postcss-html when Stylelint is 
     });
 
     const session = await openSession(sandbox.path);
-    const packageJsonFile = generateFiles(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
+    const packageJsonFile = buildGeneratedFiles(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
     expect(
         Object.keys((JSON.parse(packageJsonFile.content) as ToolPackageJson).devDependencies).includes('postcss-html'),
     ).toBe(row.needsHtmlParser);
@@ -39,7 +39,7 @@ test('a React Native project without Expo installs no Expo or DOM lint plugins',
     });
 
     const session = await openSession(sandbox.path);
-    const generated = generateFiles(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
+    const generated = buildGeneratedFiles(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
     const project = JSON.parse(generated.content) as ToolPackageJson;
     expect(project.devDependencies).not.toHaveProperty('eslint-plugin-react-native');
     expect(project.devDependencies).toHaveProperty('@react-native/eslint-plugin');
@@ -59,7 +59,7 @@ test.each([...LICENSE_TOOL_CASES])(
             'docs/package.json': '{"name":"docs","private":true}',
         });
         const session = await openSession(sandbox.path);
-        const generated = generateFiles(session);
+        const generated = buildGeneratedFiles(session);
         const npmProject = generated.files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
         expect((JSON.parse(npmProject.content) as ToolPackageJson).devDependencies).toHaveProperty(
             'license-checker-rseidelsohn',
@@ -85,7 +85,7 @@ test('Next ESLint plugin keeps its shipped pin when two folders declare differen
     });
 
     const session = await openSession(join(sandbox.path, 'project'));
-    const generated = generateFiles(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
+    const generated = buildGeneratedFiles(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
     expect((JSON.parse(generated!.content) as ToolPackageJson).devDependencies['@next/eslint-plugin-next']).toBe(
         getTool(session.configurationsByName.values(), '@next/eslint-plugin-next').version,
     );
@@ -99,7 +99,7 @@ test.each([...YARN_CLIENTS])(
             'package.json': JSON.stringify({ private: true, packageManager: `yarn@${packageManager.version}` }),
         });
         const session = await openSession(sandbox.path);
-        const files = generateFiles(session).files;
+        const files = buildGeneratedFiles(session).files;
         expect(files.filter(({ path }) => path.endsWith('.yarnrc.yml')).map(({ path }) => path)).toStrictEqual([]);
         const project = JSON.parse(
             files.find(({ path }) => path === GSPOT_PATHS.npmProject)!.content,

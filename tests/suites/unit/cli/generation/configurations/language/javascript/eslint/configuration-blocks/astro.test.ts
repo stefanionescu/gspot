@@ -1,6 +1,6 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { createEslint } from '#tests/setup/eslint/lint.ts';
+import { buildEslint } from '#tests/setup/eslint/lint.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
@@ -10,7 +10,7 @@ test('Astro and TypeScript parse together and report component defects', async (
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*"]}',
         'src/pages/index.astro': '---\nconst unused = 1;\n---\n<img src="/logo.png" />\n',
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const results = await eslint.lintFiles(['src/pages/index.astro']);
     expect(results.flatMap(({ messages }) => messages.filter(({ fatal }) => fatal))).toStrictEqual([]);
     expect(results.flatMap(({ messages }) => messages.map(({ ruleId }) => ruleId))).toContain(
@@ -28,7 +28,7 @@ test('a failed Astro import restores the working folder', async () => {
         }),
     });
     const previousFolder = process.cwd();
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const error = await captureRejection(eslint.lintFiles(['Card.astro']));
     expect(error.message).toContain('lib/index.mjs');
     expect(process.cwd()).toBe(previousFolder);

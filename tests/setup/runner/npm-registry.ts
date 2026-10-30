@@ -74,7 +74,7 @@ function buildPackageDocument(packed: PackedPackage, tarball: string): Record<st
 /**
 Serve the packed npm packages and any extra packages that a credential test asks for.
 */
-export async function createNpmRegistry(
+export async function startNpmRegistry(
     workFolder: string,
     options: { packages?: readonly RegistryPackage[]; token?: string } = {},
 ): Promise<NpmRegistry> {

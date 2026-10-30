@@ -2,7 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
-import { generateFiles } from '#cli/generation/generate.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { BRITISH_SCOPE_SETTINGS } from '#tests/config/generation/configurations/general/spelling.ts';
@@ -24,7 +24,7 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
     await using sandbox = await testdir(files);
 
     const session = await openSession(sandbox.path);
-    const output = generateFiles(session);
+    const output = buildGeneratedFiles(session);
     const target = output.files.find((file) => file.path === getManifestTarget('spelling', 'typos.toml'))!;
     const parsed = parse(target.content) as Record<string, unknown>;
     expect((parsed['default'] as Record<string, unknown>)['extend-words']).toStrictEqual({
@@ -47,7 +47,7 @@ test('typos.toml selects the spelling locale of each scope', async () => {
     });
 
     const session = await openSession(sandbox.path);
-    const output = generateFiles(session);
+    const output = buildGeneratedFiles(session);
     for (const [scope, locale] of [
         ['', 'en'],
         ['british', 'en-gb'],

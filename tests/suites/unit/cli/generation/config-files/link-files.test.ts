@@ -5,10 +5,10 @@ import { pathToFileURL } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import { XCTEST_SOURCE } from '#tests/config/swift.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { SourcedConfigFile } from '#cli/types/manifests.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
@@ -41,7 +41,7 @@ test.each([...XCTEST_LINK_FILE_CASES])(
             'omitted/AppTests/Value.swift': XCTEST_SOURCE,
             [`${child}/Value.swift`]: XCTEST_SOURCE,
         });
-        const written = generateFiles(await openSession(sandbox.path)).files.filter(({ path }) =>
+        const written = buildGeneratedFiles(await openSession(sandbox.path)).files.filter(({ path }) =>
             path.endsWith('.swiftlint.yml'),
         );
         const parsed = written.map(({ path, content }) => {
@@ -96,7 +96,7 @@ test('a scope gets its own markdownlint link file only when its rules differ fro
         'other/README.md': '# Other\n',
     });
 
-    const paths = generateFiles(await openSession(sandbox.path)).files.map(({ path }) => path);
+    const paths = buildGeneratedFiles(await openSession(sandbox.path)).files.map(({ path }) => path);
 
     expect(paths.filter((path) => path.endsWith('.markdownlint.jsonc'))).toStrictEqual([
         '.markdownlint.jsonc',
@@ -109,7 +109,7 @@ test('every generated file outside .gspot starts with the gspot header, and the 
         'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'css', 'markdown', 'python'], { level: 'all' }),
         'package.json': '{"private":true}\n',
     });
-    const outside = generateFiles(await openSession(sandbox.path)).files.filter(
+    const outside = buildGeneratedFiles(await openSession(sandbox.path)).files.filter(
         ({ path }) => !path.startsWith('.gspot/'),
     );
     const paths = outside.map(({ path }) => path);
@@ -140,7 +140,7 @@ test('one root Stylelint link file extends the config of each scope for its file
         'web [old]/style.css': 'a { color: red; }\n',
     });
 
-    const outside = generateFiles(await openSession(sandbox.path)).files.filter(
+    const outside = buildGeneratedFiles(await openSession(sandbox.path)).files.filter(
         ({ path }) => !path.startsWith('.gspot/'),
     );
 

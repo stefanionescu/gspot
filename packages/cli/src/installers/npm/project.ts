@@ -123,7 +123,7 @@ Prepare the npm tool project lockfile, free of credentials.
 @param install what install needs for this step.
 @param toolProjectFile the generated package.json.
 */
-export async function prepareNpmLockfile(
+export async function planNpmLockfile(
     install: NpmToolInstall,
     toolProjectFile: GeneratedFile,
 ): Promise<ReplacementRequest> {

@@ -6,14 +6,14 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { type KnipConfigFile } from '#tests/types/tools.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { generateFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 import { HOST_MODULE } from '#tests/config/generation/configurations/language/javascript/paths.ts';
 
 import {
@@ -36,7 +36,7 @@ test('Knip finds unused framework component files and uses the entry points of e
         level: 'all',
         tables: `\ntest_files = ["native-tests/**"]\n[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "child"\n\nconfigurations = ["javascript"]\ntest_files = ["child/verification/**"]\n[scope.tools.knip]\nentry = ["child/main.js"]\n`,
     });
-    const configuration = await generateFile(
+    const configuration = await buildGeneratedFile(
         settings,
         getManifestTarget('javascript', 'knip.json'),
         KNIP_COMPONENT_FILES,
@@ -74,7 +74,7 @@ test("Knip ignores gspot's tool packages and reports your unused dependencies", 
             '{"name":"native-project","private":true,"type":"module","dependencies":{"vale":"0.0.0","sample-unused-package":"1.0.0","prettier":"0.0.0-test","eslint-config-prettier":"0.0.0-test","@gspothq/eslint-plugin":"0.0.0"}}',
         'main.js': 'export const value = 1;\n',
     };
-    const configuration = await generateFile(
+    const configuration = await buildGeneratedFile(
         buildSandboxSettings(['javascript'], { level: 'all' }),
         getManifestTarget('javascript', 'knip.json'),
         files,
@@ -123,7 +123,7 @@ test('Knip treats script configuration files as entries and ignores link files',
     });
 
     const session = await openSession(sandbox.path);
-    const generated = generateFiles(session).files;
+    const generated = buildGeneratedFiles(session).files;
     const linkFiles = generated.filter(({ path }) =>
         ['eslint.config.mjs', 'prettier.config.mjs', '.markdownlint.jsonc'].includes(basename(path)),
     );
@@ -162,7 +162,7 @@ test("Knip gets each scope's test_files as entry points without sibling leaks", 
     });
 
     const session = await openSession(sandbox.path);
-    const content = generateFiles(session).files.find(
+    const content = buildGeneratedFiles(session).files.find(
         ({ path }) => path === getManifestTarget('javascript', 'knip.json'),
     )!.content;
     const { workspaces } = JSON.parse(content) as KnipConfigFile;
@@ -185,10 +185,14 @@ test('Knip workspaces come from package workspaces, your entries and the configu
         tables: '[tools.knip]\nentry = ["cli.js"]\n[[scope]]\npath = "api"\n\nconfigurations = ["javascript"]\n[scope.tools.knip]\nentry = ["api/serve.js"]\n[[scope]]\npath = "lib"\n\nconfigurations = ["javascript"]\n',
     });
     const knip = JSON.parse(
-        await generateFile(settings, getManifestTarget('javascript', 'knip.json'), files),
+        await buildGeneratedFile(settings, getManifestTarget('javascript', 'knip.json'), files),
     ) as KnipConfigFile;
     const withoutEntrypoints = JSON.parse(
-        await generateFile(buildSandboxSettings(['javascript']), getManifestTarget('javascript', 'knip.json'), files),
+        await buildGeneratedFile(
+            buildSandboxSettings(['javascript']),
+            getManifestTarget('javascript', 'knip.json'),
+            files,
+        ),
     ) as KnipConfigFile;
     const namedFiles = new Set(['cli.js', 'serve.js', 'eslint.config.mjs']);
     const cases = [
@@ -208,7 +212,7 @@ test('Knip workspaces come from package workspaces, your entries and the configu
 
 test('Knip keeps a declared package that a mise file task runs through a package runner', async () => {
     const knip = JSON.parse(
-        await generateFile(buildSandboxSettings(['javascript']), getManifestTarget('javascript', 'knip.json'), {
+        await buildGeneratedFile(buildSandboxSettings(['javascript']), getManifestTarget('javascript', 'knip.json'), {
             'package.json': JSON.stringify({
                 private: true,
                 devDependencies: { wrangler: '4.0.0', 'left-pad': '1.3.0' },
@@ -230,7 +234,9 @@ test('javascript.externals reach the Knip unresolved imports', async () => {
         tables: `[javascript]\nexternals = { value = ["${HOST_MODULE}"], reason = "The host provides this module." }\n`,
     });
     const files = { 'package.json': '{"private":true,"type":"module"}\n', 'web/src/a.js': '' };
-    const knip = JSON.parse(await generateFile(settings, getManifestTarget('javascript', 'knip.json'), files)) as {
+    const knip = JSON.parse(
+        await buildGeneratedFile(settings, getManifestTarget('javascript', 'knip.json'), files),
+    ) as {
         ignoreUnresolved?: string[];
     };
     expect(knip.ignoreUnresolved).toStrictEqual([HOST_MODULE]);
@@ -244,7 +250,7 @@ test('Knip treats script patterns and the ESLint import chain as used entries', 
         'tools/lint/plugin.mjs': EMPTY_DEFAULT_SOURCE,
         'eslint.config.mjs': 'import plugin from "./tools/lint/plugin.mjs"; export default [plugin];\n',
     });
-    const content = generateFiles(await openSession(sandbox.path)).files.find(
+    const content = buildGeneratedFiles(await openSession(sandbox.path)).files.find(
         ({ path }) => path === getManifestTarget('javascript', 'knip.json'),
     )!;
     await createFileTree(sandbox.path, { [content.path]: content.content });

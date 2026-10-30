@@ -12,7 +12,7 @@ import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { prepareCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
+import { buildCommandSetup, buildCommandLaunch } from '#cli/runs/command/check.ts';
 
 import {
     expandCommand,
@@ -168,7 +168,7 @@ test('per-file commands keep the arguments after the file', async () => {
     const planned = planChecks(session, { stage: 'all', only: ['sandbox/arguments'] })[0]!;
     planned.tool = { name: 'echo', installers: {}, kind: 'program' };
     planned.check.env = { TOOL_RELEASE: 'v3.4.0' };
-    const setup = prepareCommand(planned, {
+    const setup = buildCommandLaunch(planned, {
         session,
         command: planned.check.command!,
         setup: buildCommandSetup(session, planned, { options: {}, root: session.root }),
@@ -199,7 +199,7 @@ test.each([...SHFMT_INDENT_CASES])(
 
         const session = await openSession(sandbox.path);
         const [planned] = planChecks(session, { stage: 'all', only: ['bash/shfmt'] });
-        const command = prepareCommand(planned!, {
+        const command = buildCommandLaunch(planned!, {
             session,
             command: planned!.check.command!,
             setup: buildCommandSetup(session, planned!, { options: {}, root: session.root }),

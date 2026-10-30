@@ -2,7 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     SELECTOR_FILES,
@@ -18,7 +18,7 @@ test('a template message to a logger method, including log, is reported, and con
             'export function report(logger, count) {\n    logger.log(`Saved ${count}`);\n    logger.info(`Read ${count}`);\n    console.log(`Printed ${count}`);\n}\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const [result] = await eslint.lintFiles(['source.js']);
     expect(
         result?.messages
@@ -34,7 +34,7 @@ test('a block that stands alone is reported at the top of a file and inside a fu
             'export const first = 1;\n{\n    console.info(first);\n}\nexport function pick(kind) {\n    {\n        console.info(kind);\n    }\n    switch (kind) {\n        case 1: {\n            return 1;\n        }\n        default: {\n            return 0;\n        }\n    }\n}\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const [result] = await eslint.lintFiles(['source.js']);
     expect(
         result?.messages
@@ -57,7 +57,7 @@ test.each([...LEVELS])('form validation and list security run at both levels (%s
         }),
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(
         await listLintFindings(eslint, sandbox.path, ['native/App.jsx', 'forms/Fields.jsx'], ['no-restricted-syntax']),
     ).toStrictEqual([
@@ -75,7 +75,7 @@ test('store, form and procedure selectors distinguish validated calls and unrela
         'source.js':
             'useStore(cartStore);\nuseForm(options);\nuseForm({ ...options });\nuseForm({ defaultValues: { nested: { resolver: 1 } } });\npublicProcedure.query(resolve);\nprotectedProcedure.use(logger).query(resolve);\nt.procedure.query(resolve);\npool.query(sql);\nbyId.query(resolve);\ngetClient().query(sql);\npublicProcedure.input(schema).use(logger).mutation(resolve);\n',
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['no-restricted-syntax'])).toStrictEqual(
         [1, 4, 5, 6, 7].map((line) => ({ file: 'source.js', rule: 'no-restricted-syntax', line })),
     );
@@ -88,7 +88,7 @@ test('library selectors at level basic report both whole-store reads and accept 
         }),
         ...SELECTOR_LIBRARY_FILES,
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(
         await listLintFindings(eslint, sandbox.path, Object.keys(SELECTOR_LIBRARY_FILES), ['no-restricted-syntax']),
     ).toStrictEqual([
@@ -107,7 +107,7 @@ test.each([...FRAMEWORK_SELECTOR_CASES])(
                 'tsconfig.json': '{"compilerOptions":{"experimentalDecorators":true},"include":["*.ts"]}\n',
                 [sample.file]: sample.source,
             });
-            const eslint = await createEslint(sandbox.path);
+            const eslint = await buildEslint(sandbox.path);
             expect(await listLintFindings(eslint, sandbox.path, [sample.file], ['no-restricted-syntax'])).toStrictEqual(
                 sample[level].map((line) => ({ file: sample.file, rule: 'no-restricted-syntax', line })),
             );

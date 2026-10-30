@@ -10,10 +10,10 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { NOTES_MARKDOWN } from '#tests/config/documents.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { NESTED_YAML } from '#tests/config/generation/documents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
@@ -40,7 +40,7 @@ test.each(['absent', 'authored', 'managed'])(
             }),
         });
 
-        const generated = generateFiles(await openSession(sandbox.path));
+        const generated = buildGeneratedFiles(await openSession(sandbox.path));
         const attributes = generated.blocks.find(({ path }) => path === '.gitattributes')!;
         expect(attributes.body.includes(' text eol=lf')).toBe(source !== 'authored');
         await writeFile(
@@ -119,7 +119,7 @@ test('every shipped configuration together generates each path once, ignoring ca
         'app/package.json': '{"private":true}',
         'app/style.css': 'a { color: red; }\n',
     });
-    const generated = generateFiles(await openSession(sandbox.path));
+    const generated = buildGeneratedFiles(await openSession(sandbox.path));
     const paths = [...generated.files, ...generated.blocks, ...generated.managedKeys].map(({ path }) =>
         path.normalize('NFC').toLowerCase(),
     );
@@ -138,13 +138,13 @@ test('generated scope settings stay identical across process collations', async 
         'yam/package.json': '{"private":true}',
         'jam/package.json': '{"private":true}',
     });
-    const expected = generateFiles(await openSession(sandbox.path));
+    const expected = buildGeneratedFiles(await openSession(sandbox.path));
     using _collation = spyOn(String.prototype, 'localeCompare').mockImplementation(() => {
         throw new Error('Generated text must not depend on process collation.');
     });
     const session = await openSession(sandbox.path);
     expect(session.scopes.map(({ path }) => path)).toStrictEqual(['', 'jam', 'yam']);
-    expect(generateFiles(session)).toStrictEqual(expected);
+    expect(buildGeneratedFiles(session)).toStrictEqual(expected);
 });
 
 test('adding the first Markdown and LFS files leaves generated output unchanged', async () => {
@@ -153,14 +153,14 @@ test('adding the first Markdown and LFS files leaves generated output unchanged'
         'package.json': '{"packageManager":"npm@11.0.0"}',
         'source.ts': 'export {};\n',
     });
-    const before = generateFiles(await openSession(sandbox.path));
+    const before = buildGeneratedFiles(await openSession(sandbox.path));
     await createFileTree(sandbox.path, {
         'README.md': NOTES_MARKDOWN,
         '.gitattributes': '*.bin filter=lfs diff=lfs merge=lfs -text\n',
         'blob.bin': Buffer.from([0]),
     });
     runGitStep(sandbox.path, ['add', '-A']);
-    expect(generateFiles(await openSession(sandbox.path))).toStrictEqual(before);
+    expect(buildGeneratedFiles(await openSession(sandbox.path))).toStrictEqual(before);
 });
 
 test('format.indent_width reaches EditorConfig, Prettier and each config file', async () => {
@@ -180,7 +180,7 @@ test('format.indent_width reaches EditorConfig, Prettier and each config file', 
     });
 
     const session = await openSession(sandbox.path);
-    const generated = new Map(generateFiles(session).files.map((file) => [file.path, file.content]));
+    const generated = new Map(buildGeneratedFiles(session).files.map((file) => [file.path, file.content]));
     await writeFile(join(sandbox.path, '.editorconfig'), generated.get('.editorconfig')!);
     const path = join(sandbox.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });

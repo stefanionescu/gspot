@@ -4,9 +4,9 @@ import { test, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { BUN_SCANNER_SETTINGS } from '#tests/config/toml.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writePlans, planManagedKeys } from '#cli/repository/writer.ts';
 import { BUN_SCANNER_KEYS } from '#tests/config/generation/configurations/general/dependencies.ts';
@@ -23,9 +23,9 @@ test('a scope that uses Bun gets the scanner that gspot.toml names in its bunfig
     });
 
     const session = await openSession(sandbox.path);
-    expect(generateFiles(session).managedKeys.filter((output) => output.path.endsWith('bunfig.toml'))).toStrictEqual([
-        ...BUN_SCANNER_KEYS,
-    ]);
+    expect(
+        buildGeneratedFiles(session).managedKeys.filter((output) => output.path.endsWith('bunfig.toml')),
+    ).toStrictEqual([...BUN_SCANNER_KEYS]);
 });
 
 test('a new Bun scanner file has one table and a final newline, and keeps its key with a note after the scanner setting goes', async () => {
@@ -35,7 +35,7 @@ test('a new Bun scanner file has one table and a final newline, and keeps its ke
         }),
         'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
     });
-    const generated = generateFiles(await openSession(sandbox.path)).managedKeys.find(
+    const generated = buildGeneratedFiles(await openSession(sandbox.path)).managedKeys.find(
         ({ path }) => path === 'bunfig.toml',
     )!;
     const writer = openFiles(sandbox.path);
@@ -45,7 +45,7 @@ test('a new Bun scanner file has one table and a final newline, and keeps its ke
     );
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['dependencies']));
     const session = await openSession(sandbox.path);
-    const report = await writeGeneratedFiles(session, generateFiles(session), writer);
+    const report = await writeGeneratedFiles(session, buildGeneratedFiles(session), writer);
     expect(report.notes).toContain(
         'Keys that gspot no longer manages stay in your files. Review shared config files after removing a configuration.',
     );

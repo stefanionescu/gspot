@@ -135,7 +135,7 @@ Generate every file in memory, and write nothing.
 
 @returns everything that apply writes.
 */
-export function generateFiles(session: Session): Generation {
+export function buildGeneratedFiles(session: Session): Generation {
     const { settings } = session;
     const { packageManager, toolConfigurations } = session;
     const generated: Generation = {

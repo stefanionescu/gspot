@@ -4,8 +4,8 @@ import type { Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { ROOT_LABEL } from '#tests/config/messages.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { extractConfigFileName } from '#cli/manifests/tools.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
@@ -48,11 +48,15 @@ export function getRuleFilePath(configuration: string, file: string): string {
 /**
 Create a repository with this gspot.toml text and these files, and return the content of one generated file.
 */
-export async function generateFile(settings: string, path: string, files: Record<string, string>): Promise<string> {
+export async function buildGeneratedFile(
+    settings: string,
+    path: string,
+    files: Record<string, string>,
+): Promise<string> {
     await using sandbox = await testdir({ ...files, 'gspot.toml': settings });
 
     const session = await openSession(sandbox.path);
-    const output = generateFiles(session);
+    const output = buildGeneratedFiles(session);
     const file = output.files.find((each) => each.path === path);
     if (file === undefined) throw new Error(`The sandbox generates no ${path}.`);
     return file.content;

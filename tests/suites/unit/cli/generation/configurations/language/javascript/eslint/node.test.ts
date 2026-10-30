@@ -6,7 +6,7 @@ import { type Level } from '#cli/types/manifests.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { type LintFinding, type ScriptFindingCase, type EslintConfiguration } from '#tests/types/tools.ts';
 
 import {
@@ -51,7 +51,7 @@ test.each([...ENGINE_PHASES])(
                     .replace('process.loadEnvFile()', 'process.cwd()'),
             );
         }
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         const findings = await listLintFindings(
             eslint,
             sandbox.path,
@@ -76,7 +76,7 @@ test.each([...LEVELS])(
             'gspot.toml': buildSandboxSettings(['typescript'], { level, tables: NODE_SCRIPT_TABLES }),
         });
 
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         const paths = NODE_SCRIPT_CASES.map(({ file }) => file);
         for (const isCorrected of [false, true]) {
             if (isCorrected)
@@ -110,7 +110,7 @@ test.each([...LEVELS])(
             'source.js': 'export const value = 1;\n',
         });
 
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         for (const isCorrected of [false, true]) {
             if (isCorrected)
                 for (const contract of EXTENSIONLESS_SCRIPT_CASES)
@@ -131,7 +131,7 @@ test('every package.json gets the package-json rules and no code rules, and only
             '{"name":"test-tests","version":"1.0.0","private":true,"dependencies":{"b":"1.0.0","a":"1.0.0"}}\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const files = ['package.json', 'tests/package.json'];
     const configuration = await Promise.all(
         files.map(async (file) => (await eslint.calculateConfigForFile(file)) as EslintConfiguration),
@@ -160,7 +160,7 @@ test('an ignore of a package-json rule for one file keeps the finding in other f
         'cli/package.json': JSON.stringify(packageJson),
         'library/package.json': JSON.stringify(packageJson),
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(
         await listLintFindings(
             eslint,
@@ -178,7 +178,7 @@ test.each([...PACKAGE_MANAGER_LEVELS])(
             'gspot.toml': buildSandboxSettings(['javascript'], { level }),
             'package.json': '{"private":true,"type":"module"}',
         });
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         const configuration = (await eslint.calculateConfigForFile('package.json')) as EslintConfiguration;
         expect(configuration.rules['package-json/require-packageManager']).toStrictEqual([severity]);
     },

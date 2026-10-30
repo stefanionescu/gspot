@@ -15,8 +15,8 @@ import { type CommandLaunch } from '#cli/types/runs/command.ts';
 import { listCopyFiles } from '#cli/runs/command/placeholders.ts';
 import { type SpawnResult } from '#cli/types/system/processes.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
-import { prepareCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
 import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts';
+import { buildCommandSetup, buildCommandLaunch } from '#cli/runs/command/check.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/commands/check/fixes.ts';
 import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
@@ -65,7 +65,7 @@ async function runFixInCopy(
         dependencies: [],
         cancelSignal: session.cancelSignal,
     });
-    const setup = prepareCommand(planned, {
+    const setup = buildCommandLaunch(planned, {
         session: session,
         command: command,
         setup: buildCommandSetup(session, planned, { options: options, root: scratch.path }),
@@ -113,8 +113,8 @@ async function runFixTool(
         return runFixInCopy(selected, { session, root, command, toolPath, options });
     const fixSetup =
         root === session.root
-            ? prepareCommand(selected, { session, command, setup, toolPath })
-            : prepareCommand(selected, {
+            ? buildCommandLaunch(selected, { session, command, setup, toolPath })
+            : buildCommandLaunch(selected, {
                   session: session,
                   command: command,
                   setup: buildCommandSetup(session, selected, { options: options, root: root }),

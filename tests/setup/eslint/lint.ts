@@ -41,7 +41,7 @@ export async function listLintFindings(
 /**
 Link the test packages, run apply in a folder with a gspot.toml, and load the generated ESLint config file.
 */
-export async function createEslint(root: string, options?: Pick<ESLint.Options, 'fix'>): Promise<ESLint> {
+export async function buildEslint(root: string, options?: Pick<ESLint.Options, 'fix'>): Promise<ESLint> {
     runGitStep(root, ['init', '--quiet']);
     await linkInstalledModules(join(root, 'node_modules'));
     await runGspotStep({ root: root, run: runGspot }, ['apply']);

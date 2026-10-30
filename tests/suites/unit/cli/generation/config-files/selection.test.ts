@@ -8,10 +8,10 @@ import { getValueAt } from '#cli/system/tables.ts';
 import { join, extname, basename } from 'node:path';
 import { openSession } from '#cli/planning/session.ts';
 import { LEVELS } from '#cli/config/manifests/names.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { listToolProjectPins } from '#cli/manifests/tools.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
@@ -32,12 +32,12 @@ test('a child project receives Python configuration only after its first Python 
         'docs/README.md': '# Guide\n',
     });
     const root = getManifestTarget('python', 'ruff.toml');
-    const before = generateFiles(await openSession(sandbox.path)).files.map(({ path }) => path);
+    const before = buildGeneratedFiles(await openSession(sandbox.path)).files.map(({ path }) => path);
     expect(before).toContain(root);
     expect(before).not.toContain('docs/ruff.toml');
     expect(before.some((path) => path.includes('/scopes/docs/'))).toBe(false);
     await writeFile(join(sandbox.path, 'docs/example.py'), 'VALUE = 1\n');
-    const after = generateFiles(await openSession(sandbox.path)).files.map(({ path }) => path);
+    const after = buildGeneratedFiles(await openSession(sandbox.path)).files.map(({ path }) => path);
     expect(after).toContain(root);
     expect(after).toContain('docs/ruff.toml');
     expect(after).toContain(
@@ -57,7 +57,7 @@ test('a scope that selects Express gets its Semgrep rules when only the root sel
         'app/source.js': 'res.send(req.body.message);\n',
         'app/child/source.js': 'res.send(req.body.message);\n',
     });
-    const paths = generateFiles(await openSession(sandbox.path)).files.map(({ path }) => path);
+    const paths = buildGeneratedFiles(await openSession(sandbox.path)).files.map(({ path }) => path);
     expect(paths).toContain(getManifestTarget('express', 'semgrep.yml'));
 });
 
@@ -68,7 +68,7 @@ test('a Ruff-only Python scope gets no type checker file or link file', async ()
         'typed/source.py': 'value: int = 1\n',
     });
 
-    const paths = generateFiles(await openSession(sandbox.path)).files.map((file) => file.path);
+    const paths = buildGeneratedFiles(await openSession(sandbox.path)).files.map((file) => file.path);
     expect(paths.filter((path) => /ruff\.toml|pyright/u.test(path))).toStrictEqual([
         '.gspot/configurations/language/python/basedpyright.json',
         '.gspot/configurations/language/python/ruff.toml',
@@ -85,7 +85,7 @@ test('a TypeScript-only scope gets the config files of its selected JavaScript c
     });
 
     const session = await openSession(sandbox.path);
-    const paths = generateFiles(session).files.map((file) => file.path);
+    const paths = buildGeneratedFiles(session).files.map((file) => file.path);
     const kept = [getManifestTarget('javascript', 'jsconfig.json'), getManifestTarget('javascript', 'knip.json')];
     expect(paths.filter((path) => kept.includes(path))).toStrictEqual(kept);
 });
@@ -95,7 +95,7 @@ test.each([...IGNORED_CHECK_FILES])(
     async ({ settings, files, kept, dropped }) => {
         await using sandbox = await testdir({ 'gspot.toml': settings, ...files });
 
-        const paths = generateFiles(await openSession(sandbox.path)).files.map((file) => file.path);
+        const paths = buildGeneratedFiles(await openSession(sandbox.path)).files.map((file) => file.path);
         const listed = new Set<string>([...kept, ...dropped]);
         expect(paths.filter((path) => listed.has(path))).toStrictEqual([...kept]);
     },
@@ -109,7 +109,7 @@ test('Go and Rust sources keep the files and tools of every selected configurati
     });
 
     const session = await openSession(sandbox.path);
-    const files = generateFiles(session).files;
+    const files = buildGeneratedFiles(session).files;
     const paths = files.map((file) => file.path);
     expect(
         paths.filter((path) =>
@@ -144,7 +144,7 @@ test.each([...LEVELS])("every configuration's generated config files parse at le
 
     await linkInstalledModules(join(sandbox.path, 'node_modules'));
     const session = await openSession(sandbox.path);
-    const output = generateFiles(session);
+    const output = buildGeneratedFiles(session);
     const generated = output.files.filter(
         (file) =>
             !file.path.startsWith(`${GSPOT_FOLDER}/`) ||
@@ -172,7 +172,7 @@ test('an ignore whose reason equals a built-in section title keeps its paths in 
         'source.js': 'export const value = 1;\n',
         'legacy/source.js': 'export const legacy = 1;\n',
     });
-    const files = generateFiles(await openSession(sandbox.path)).files;
+    const files = buildGeneratedFiles(await openSession(sandbox.path)).files;
     const content = files.find(({ path }) => path === getManifestTarget('javascript', 'jsconfig.json'))!.content;
     const jsconfig: unknown = JSON.parse(content);
     expect(getValueAt(jsconfig, ['exclude'])).toContain('../../../../legacy/**');

@@ -5,8 +5,8 @@ import { join, dirname, resolve } from 'node:path';
 import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -33,7 +33,7 @@ test('a jsconfig beside a tsconfig keeps authored exclusions and lists only trac
         'worker.js',
         'cloudflare-env.d.ts',
     ]);
-    const files = generateFiles(await openSession(sandbox.path)).files;
+    const files = buildGeneratedFiles(await openSession(sandbox.path)).files;
     const jsconfig = JSON.parse(
         files.find(({ path }) => path === getManifestTarget('javascript', 'jsconfig.json'))!.content,
     ) as { files: string[]; exclude: string[] };
@@ -69,7 +69,7 @@ test('a scoped jsconfig anchors recursive excludes in its scope and other exclud
         }),
         'tests/source.js': 'export const value = 1;\n',
     });
-    const output = generateFiles(await openSession(sandbox.path));
+    const output = buildGeneratedFiles(await openSession(sandbox.path));
     const file = output.files.find(({ path }) => path.endsWith('/scopes/tests/jsconfig.json'))!;
     const config = JSON.parse(file.content) as { exclude: string[] };
     const excluded = config.exclude.map((path) => resolve(dirname(file.path), path));

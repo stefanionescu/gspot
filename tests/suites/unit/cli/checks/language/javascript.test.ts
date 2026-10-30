@@ -5,8 +5,8 @@ import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
@@ -16,7 +16,6 @@ import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
-import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/checks/language/javascript.ts';
 
 test('javascript/tsc checks a stale jsconfig and skips an absent one with apply advice', async () => {
@@ -69,7 +68,7 @@ test('a scope whose jsconfig lists no JavaScript file passes with nothing to com
     });
 
     const session = await openSession(sandbox.path);
-    const projects = generateFiles(session).files.filter(({ path }) => path.endsWith('jsconfig.json'));
+    const projects = buildGeneratedFiles(session).files.filter(({ path }) => path.endsWith('jsconfig.json'));
     expect(projects.map(({ path }) => path)).toStrictEqual(['.gspot/configurations/language/javascript/jsconfig.json']);
     await applyGeneratedFiles(sandbox.path);
     const reopened = await openSession(sandbox.path);

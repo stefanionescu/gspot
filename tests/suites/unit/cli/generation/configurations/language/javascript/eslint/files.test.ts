@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { listCodeTestFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 
 import {
@@ -19,7 +19,7 @@ test("a child scope's test_files and script_files get the test and script rule b
             tables: '[[scope]]\npath = "app"\ntest_files = ["app/spec/**"]\n[scope.javascript]\nscript_files = ["app/scripts/**"]\n',
         }),
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(await listLintFindings(eslint, sandbox.path, NESTED_ESLINT_PATHS, NESTED_ESLINT_RULES)).toStrictEqual([
         { file: 'app/source.js', rule: 'no-console', line: 1 },
         { file: 'app/source.js', rule: 'n/no-process-exit', line: 2 },
@@ -36,7 +36,7 @@ test('a child scope wildcard exempts its tests and scripts without exempting sib
             tables: 'test_files = ["**/read.js"]\n[scope.javascript]\nscript_files = { value = ["**/build.js"], reason = "Nested build entrypoints are scripts in this scope." }\n',
         }),
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(await listLintFindings(eslint, sandbox.path, ['app', 'sibling'], ['no-console'])).toStrictEqual([
         { file: 'sibling/build.js', rule: 'no-console', line: 1 },
         { file: 'sibling/read.js', rule: 'no-console', line: 1 },

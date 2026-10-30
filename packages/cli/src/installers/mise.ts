@@ -133,7 +133,7 @@ function writeChecksums(lockfile: string, pins: MiseToolPin[]): string {
     return stringify(document);
 }
 
-async function prepareMiseLockfile(install: ToolInstall, project: GeneratedFile): Promise<void> {
+async function writeMiseLockfile(install: ToolInstall, project: GeneratedFile): Promise<void> {
     const saved = install.writer.read(GSPOT_PATHS.miseLockfile);
     if (isMiseLockfileFresh(listMisePins(install.session.toolConfigurations), saved?.bytes.toString('utf8'))) return;
     using scratch = createTemporaryFolder();
@@ -196,7 +196,7 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
         return { installed: '', note, binPaths: [] };
     }
     const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
-    if (listMisePins(session.toolConfigurations).length > 0) await prepareMiseLockfile(install, project);
+    if (listMisePins(session.toolConfigurations).length > 0) await writeMiseLockfile(install, project);
     if (pins.length === 0) return { installed: '', note: '', binPaths: readToolBinPaths(session, project.content) };
     const trust = buildMiseTrust(session.root, project.content);
     if (trust === undefined) throw new GspotError('install', MISE_PROJECT_MESSAGE);

@@ -2,8 +2,8 @@ import ts from 'typescript';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { CONFIG_FILE_PROJECT } from '#tests/config/generation/config-files/selection.ts';
 
@@ -13,7 +13,7 @@ test('generated ESLint modules hold static imports and calls without executable 
         ...CONFIG_FILE_PROJECT,
         'gspot.toml': buildSandboxSettings(configurations, { level: 'all' }),
     });
-    const files = generateFiles(await openSession(sandbox.path)).files.filter((file) =>
+    const files = buildGeneratedFiles(await openSession(sandbox.path)).files.filter((file) =>
         file.path.endsWith('/eslint.mjs'),
     );
     expect(files.length).toBeGreaterThan(1);

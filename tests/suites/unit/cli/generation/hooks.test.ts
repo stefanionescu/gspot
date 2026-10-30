@@ -5,9 +5,9 @@ import { openSession } from '#cli/planning/session.ts';
 import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
@@ -20,7 +20,7 @@ test('gspot writes check hooks without unused Git LFS hooks', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
     });
-    const written = generateFiles(await openSession(sandbox.path)).files.filter((file) =>
+    const written = buildGeneratedFiles(await openSession(sandbox.path)).files.filter((file) =>
         file.path.startsWith(`${GSPOT_PATHS.hooks}/`),
     );
     expect(written.map((file) => file.path)).toStrictEqual(
@@ -112,7 +112,7 @@ test('a hook says how to install mise when mise is missing', async () => {
 
 test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, and the other LFS hooks run git lfs', async () => {
     await using sandbox = await createLfsRepository();
-    const hooks = generateFiles(await openSession(sandbox.path)).files.filter((file) =>
+    const hooks = buildGeneratedFiles(await openSession(sandbox.path)).files.filter((file) =>
         file.path.startsWith(`${GSPOT_PATHS.hooks}/`),
     );
     expect(hooks.map((file) => file.path)).toStrictEqual(

@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
-import { createEslint } from '#tests/setup/eslint/lint.ts';
+import { buildEslint } from '#tests/setup/eslint/lint.ts';
 import type { EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
@@ -20,7 +20,7 @@ test("a nested scope whose configuration blocks match its parent's gets no copy,
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all', tables: MATCHING_SCOPE_SETTINGS }),
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const session = await openSession(sandbox.path);
     const generated: unknown = await import(
         pathToFileURL(join(sandbox.path, getConfigFilePath(session, 'eslint'))).href
@@ -55,7 +55,7 @@ test('nestjs rules apply in each scope that selects it', async () => {
         [paths[0]!]: source,
         [paths[1]!]: source,
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const lint = await eslint.lintFiles(paths);
     expect(lint.flatMap(({ messages }) => messages).filter(({ ruleId }) => ruleId === rule)).toHaveLength(2);
 });

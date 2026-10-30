@@ -4,12 +4,12 @@ import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import type { Sandbox } from '#tests/types/sandbox.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { runGspotStep } from '#tests/setup/cli/commands.ts';
 import type { SandboxWrite } from '#tests/types/changes.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { SandboxChanges } from '#tests/types/samples.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { runGitStep, markExecutable } from '#tests/setup/system/git.ts';
 import { rm, mkdir, lstat, rmdir, unlink, readFile, writeFile } from 'node:fs/promises';
@@ -114,7 +114,7 @@ Write the generated files for an existing test repository.
 export async function applyGeneratedFiles(root: string): Promise<void> {
     const writer = openFiles(root);
     const session = await openSession(root);
-    await writeGeneratedFiles(session, generateFiles(session), writer);
+    await writeGeneratedFiles(session, buildGeneratedFiles(session), writer);
 }
 
 /**

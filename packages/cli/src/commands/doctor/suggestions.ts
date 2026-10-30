@@ -2,11 +2,11 @@ import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { readCachedPrefix } from '#cli/system/files/reads.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { isEditedInPlace } from '#cli/repository/config-files.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { BANNER_BYTES } from '#cli/config/repository/files/classify.ts';
@@ -163,7 +163,7 @@ List setup suggestions for the repository.
 export async function listSuggestions(session: Session): Promise<Suggestions> {
     const configurations = session.toolConfigurations;
     const repositorySetup = await readRepositorySetup(session.cache, session.repository);
-    const generated = generateFiles(session);
+    const generated = buildGeneratedFiles(session);
     const tools = new Set(configurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {

@@ -5,8 +5,8 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/planning/session.ts';
 import { LEVELS } from '#cli/config/manifests/names.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import type { SemgrepRuleFile } from '#tests/types/tools.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
@@ -18,13 +18,13 @@ test('a language choice brings its security rules without selecting security', a
 
     const target = getManifestTarget('bash', 'semgrep.yml');
     const defaultSession = await openSession(sandbox.path);
-    const defaultOutput = generateFiles(defaultSession);
+    const defaultOutput = buildGeneratedFiles(defaultSession);
     expect(
         parseDocument(defaultOutput.files.find((file) => file.path === target)!.content).getIn(['rules', 0, 'id']),
     ).toBe('gspot.bash.curl-pipe-shell');
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['bash', 'security']));
     const securitySession = await openSession(sandbox.path);
-    const securityOutput = generateFiles(securitySession);
+    const securityOutput = buildGeneratedFiles(securitySession);
     const generated = securityOutput.files.find((file) => file.path === target);
     expect(generated?.content).toBe(defaultOutput.files.find((file) => file.path === target)?.content);
 });
@@ -43,7 +43,7 @@ test.each([...LEVELS])(
         });
 
         const session = await openSession(sandbox.path);
-        const output = generateFiles(session);
+        const output = buildGeneratedFiles(session);
         const worker = output.files.find(({ path }) => path.endsWith('/cloudflare/semgrep.yml'));
         if (level === 'basic') expect(worker).toBeUndefined();
         else {
@@ -85,7 +85,7 @@ test('JWT rules are written only where the nearest package.json has jsonwebtoken
     });
 
     const session = await openSession(sandbox.path);
-    const output = generateFiles(session);
+    const output = buildGeneratedFiles(session);
     for (const scope of ['', 'jwt', 'jwt/child', 'other']) {
         const target = getConfigFilePath(session, 'semgrep', scope);
         const text = output.files.find((file) => file.path === target)!.content;

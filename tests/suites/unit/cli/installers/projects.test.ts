@@ -3,9 +3,9 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { listStaleLockfiles } from '#cli/installers/projects.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { YARN_CLIENTS } from '#tests/config/installers/projects.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -24,7 +24,7 @@ test.each([...YARN_CLIENTS])(
                 : run(command, options),
         );
         const session = await openSession(sandbox.path);
-        const generated = generateFiles(session);
+        const generated = buildGeneratedFiles(session);
         expect(generated.files.some(({ path }) => path === '.gspot/.yarnrc.yml')).toBe(false);
         const lockfiles = await listStaleLockfiles(session, generated.files);
         expect(
@@ -40,7 +40,7 @@ test('tool lockfiles report missing and changed projects and omit current projec
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
     });
     const session = await openSession(sandbox.path);
-    const generated = generateFiles(session).files;
+    const generated = buildGeneratedFiles(session).files;
     const paths = [GSPOT_PATHS.miseLockfile, '.gspot/bun.lock', GSPOT_PATHS.uvLockfile];
     expect(await listStaleLockfiles(session, generated)).toStrictEqual(
         paths.map((path) => ({ path, kind: 'missing' })),

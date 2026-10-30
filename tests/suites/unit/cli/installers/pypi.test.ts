@@ -20,7 +20,7 @@ import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import {
     installPythonTools,
     readPythonSettings,
-    preparePythonLockfile,
+    planPythonLockfile,
     isPythonLockfileFresh,
 } from '#cli/installers/pypi.ts';
 import {
@@ -76,7 +76,7 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
         path === GSPOT_PATHS.uvLockfile ? undefined : read(path),
     );
     const lockfileError = await captureRejection(
-        preparePythonLockfile(
+        planPythonLockfile(
             buildToolInstall(session, writer),
             { path: GSPOT_PATHS.pythonProject, content: PYTHON_TOOL_PROJECT },
             'synthetic-uv',

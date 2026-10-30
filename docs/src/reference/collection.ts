@@ -30,7 +30,7 @@ function getGuideTitles(store: DataStore): Record<GuideSlug, string> {
 /**
 Load the hand-written and generated pages into the Starlight content collection.
 */
-export function createDocsSource(): Loader {
+export function buildDocsSource(): Loader {
     return {
         name: DOCS_SOURCE_NAME,
         async load(context) {

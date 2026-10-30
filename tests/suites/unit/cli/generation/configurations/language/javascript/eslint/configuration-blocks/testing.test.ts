@@ -3,7 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { type EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     TESTING_LIBRARY_CASES,
@@ -24,7 +24,7 @@ configurations = [ "jest" ]
         'app/sample.test.js': '',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const focused =
         "import { test, expect } from '@jest/globals';\ntest.only('counts', () => { expect(1).toBe(1); });\n";
     const root = `root.test.${extension}`;
@@ -53,7 +53,7 @@ test.each([...TESTING_LIBRARY_CASES])(
             'neighbor/source.test.js': '',
         });
 
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         const source = `import { screen } from '${library}';\nscreen.debug();\n`;
         const paths = ['source.test.js', 'source.js', 'child/source.test.js', 'neighbor/source.test.js'];
         await createFileTree(sandbox.path, Object.fromEntries(paths.map((path) => [path, source])));
@@ -78,7 +78,7 @@ test.each([...LEVELS])(
             'gspot.toml': buildSandboxSettings(['vitest'], { level }),
         });
 
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         const path = 'tests/unit/example.test.js';
         await createFileTree(sandbox.path, {
             [path]: `import { test, expect } from 'vitest';
@@ -107,7 +107,7 @@ test('Testing Library rules take the framework package of each scope', async () 
         'app/sample.test.js': 'export const value = 1;\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const configuration = (await eslint.calculateConfigForFile('sample.test.js')) as EslintConfiguration;
     expect(configuration.rules['testing-library/no-dom-import']).toStrictEqual([2, 'react']);
     const applicationConfiguration = (await eslint.calculateConfigForFile('app/sample.test.js')) as EslintConfiguration;
@@ -123,7 +123,7 @@ test.each(ASSERTION_RULE_OWNERS)('basic assertion ownership with $name', async (
         'source.test.js': '',
         'source.js': '',
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const tests = (await eslint.calculateConfigForFile('source.test.js')) as EslintConfiguration;
     const source = (await eslint.calculateConfigForFile('source.js')) as EslintConfiguration;
     expect(tests.rules['sonarjs/assertions-in-tests']?.[0]).toBe(assertions);

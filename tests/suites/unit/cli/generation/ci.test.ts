@@ -7,9 +7,9 @@ import { GspotError } from '#cli/system/errors.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import type { Pipeline } from '#cli/types/generation/ci.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -159,7 +159,7 @@ test('the GitHub workflow pins each action to a full commit and names its versio
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: '[ci]\nenabled = true\nprovider = "github"\n' }),
     });
-    const content = generateFiles(await openSession(sandbox.path)).files.find(
+    const content = buildGeneratedFiles(await openSession(sandbox.path)).files.find(
         ({ path }) => path === '.github/workflows/gspot.yml',
     )!.content;
     const workflow = parse(content) as GithubWorkflow;

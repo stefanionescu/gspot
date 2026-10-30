@@ -9,7 +9,7 @@ import { unlink, readFile, writeFile } from 'node:fs/promises';
 import type { ToolPackageJson } from '#tests/types/packages.ts';
 import { type EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     ENVIRONMENT_CASES,
@@ -37,7 +37,7 @@ test.each(COMPONENT_IMPORT_CASES)(
             'gspot.toml': buildSandboxSettings(['typescript', configuration], { tables: IMPORT_RULE_TABLES.root }),
             [path]: `${opening}\nimport { value } from '../storage/value.js';\nconst result = value;\n${closing}\n`,
         });
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         expect(await listLintFindings(eslint, sandbox.path, [path], ['boundaries/dependencies'])).toStrictEqual([
             { file: path, rule: 'boundaries/dependencies', line: 2 },
         ]);
@@ -52,7 +52,7 @@ test.each([...IMPORT_RULE_CASES])(
         await using sandbox = await testdir();
         const settings = buildSandboxSettings(['typescript'], { level, tables: IMPORT_RULE_TABLES[declarations] });
         await createFileTree(sandbox.path, { ...IMPORT_RULE_FILES, 'gspot.toml': settings });
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         const packages = JSON.parse(
             await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8'),
         ) as ToolPackageJson;
@@ -119,7 +119,7 @@ test('import rules skip your test files in each scope and check other files', as
         ),
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(
         await listLintFindings(
             eslint,
@@ -164,7 +164,7 @@ test.each([...LEVELS])(
             })),
         );
         for (const row of files) await writeFile(join(sandbox.path, row.path), row.source);
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         for (const row of files) {
             expect(await listLintFindings(eslint, sandbox.path, [row.path], ['boundaries/dependencies'])).toStrictEqual(
                 level === 'all' && row.rejected ? [{ file: row.path, rule: 'boundaries/dependencies', line: 1 }] : [],
@@ -190,7 +190,7 @@ test.each([...LEVELS])(
                 ]),
             ),
         });
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         for (const path of paths) {
             const isRejected =
                 level === 'all' && !['config/env.js', 'app/src/env/source.js', 'literal/config/env.js'].includes(path);
@@ -234,7 +234,7 @@ test('without environment_readers, environment reads are allowed at level all', 
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     for (const { source, rule } of ENVIRONMENT_CASES) {
         await createFileTree(sandbox.path, { 'src/source.js': source });
         expect(await listLintFindings(eslint, sandbox.path, ['src/source.js'], [rule])).toStrictEqual([]);
@@ -250,7 +250,7 @@ test('can_import names exactly the rules a rule may import, and a refused import
             "import { value } from '../storage/value.js';\nimport { value as core } from '../core/value.js';\nexport const result = value + core;\n",
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const [result] = await eslint.lintFiles(['app/source.ts']);
     expect(
         result?.messages

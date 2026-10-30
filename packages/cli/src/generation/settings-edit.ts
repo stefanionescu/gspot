@@ -6,7 +6,6 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
@@ -14,6 +13,7 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { RECORD_FIELDS } from '#cli/settings/schema-lookup.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
 import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
@@ -50,7 +50,7 @@ export async function applySettingsEdit(
         listing: options.listing,
         settingsFile: { settings: result.settings, text: result.text },
     });
-    const generated = generateFiles(session);
+    const generated = buildGeneratedFiles(session);
     writeSettings(writer, result.text, edit.previous);
     let report: ApplyReport;
     try {

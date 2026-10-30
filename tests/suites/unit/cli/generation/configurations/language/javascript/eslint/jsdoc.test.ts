@@ -7,7 +7,7 @@ import { LEVELS } from '#cli/config/manifests/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     JSDOC_FILES,
@@ -31,7 +31,7 @@ test.each([...LEVELS])(
             'client.ts': description + typescript,
             'client.js': description + 'export function measure(value) { return value.length; }\n',
         });
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         expect(await listLintFindings(eslint, sandbox.path, ['client.js'], ['jsdoc/no-types'])).toStrictEqual([]);
         expect(await listLintFindings(eslint, sandbox.path, ['client.ts'], ['jsdoc/no-types'])).toStrictEqual(
             level === 'all'
@@ -49,7 +49,7 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
         ...JSDOC_FILES,
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const files = ['missing.js', 'malformed.js', 'capitalized.js', 'undefined.js', 'typed.ts'];
     expect(await listLintFindings(eslint, sandbox.path, files, JSDOC_RULES)).toStrictEqual(
         JSDOC_FINDINGS.flatMap(({ file, findings }) =>
@@ -93,7 +93,7 @@ test('jsdoc/match-name reports the root0 placeholder and keeps a parameter named
         'source.js': ROOT_PARAMETERS,
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['jsdoc/match-name'])).toStrictEqual([
         { file: 'source.js', rule: 'jsdoc/match-name', line: 11 },
     ]);
@@ -106,7 +106,7 @@ test('a missing doc block is reported, and the fixer adds no empty block', async
         'client.js': '',
     });
 
-    const eslint = await createEslint(sandbox.path, { fix: true });
+    const eslint = await buildEslint(sandbox.path, { fix: true });
     const source = 'export function measure(value) {\n    return value.length;\n}\n';
     const [result] = await eslint.lintText(source, { filePath: 'client.js' });
     expect(result?.output ?? source).not.toContain('/**');

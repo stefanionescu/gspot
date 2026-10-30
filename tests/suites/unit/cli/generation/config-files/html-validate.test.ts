@@ -2,7 +2,7 @@ import { testdir } from 'testdirs';
 import { parse } from 'jsonc-parser';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type ConfigData, StaticConfigLoader } from 'html-validate';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -20,7 +20,7 @@ test.each([...HTML_VALIDATION_LEVELS])(
             'app/index.html': '<!doctype html><title>App</title>',
         });
 
-        const output = generateFiles(await openSession(sandbox.path));
+        const output = buildGeneratedFiles(await openSession(sandbox.path));
         const source = output.files.filter(({ path }) => path.endsWith('/html/html-validate.json'));
         expect(source.map(({ path }) => path)).toStrictEqual([getManifestTarget('html', 'html-validate.json')]);
         const sourceConfiguration = parse(source[0]!.content) as ConfigData;
@@ -47,7 +47,7 @@ test.each(['html/html-validate', 'site/html-validate'])(
             'index.html': '<!doctype html><title>Root</title>',
         });
 
-        const output = generateFiles(await openSession(sandbox.path));
+        const output = buildGeneratedFiles(await openSession(sandbox.path));
         for (const [name, selected] of [
             ['html', 'html/html-validate'],
             ['site', 'site/html-validate'],

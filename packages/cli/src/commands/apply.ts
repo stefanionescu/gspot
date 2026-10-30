@@ -5,9 +5,9 @@ import { openSession } from '#cli/planning/session.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { TOOL_LOCKFILES } from '#cli/config/files/gspot.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { OutdatedFile } from '#cli/types/generation/files.ts';
 import { GENERATED_FILE_NOUN } from '#cli/config/generation/write.ts';
 import type { DryRunJson, ApplyOptions } from '#cli/types/commands/apply.ts';
@@ -46,7 +46,7 @@ function formatOutdatedFiles(files: OutdatedFile[]): string {
 }
 
 async function buildDryRunResult(session: Session): Promise<CommandResult> {
-    const generated = generateFiles(session);
+    const generated = buildGeneratedFiles(session);
     const outdatedFiles = await listOutdatedFiles(session, generated);
     const summary =
         outdatedFiles.length === 0 ? `${formatUpToDate(generated.files.length)}\n` : formatOutdatedFiles(outdatedFiles);
@@ -59,7 +59,7 @@ async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
     const session = await openSession(root);
     if (options.dryRun) return buildDryRunResult(session);
     const writer = openFiles(root);
-    const report = await writeGeneratedFiles(session, generateFiles(session), writer);
+    const report = await writeGeneratedFiles(session, buildGeneratedFiles(session), writer);
     return { text: formatApplyReport(report), json: report, exitCode: 0 };
 }
 

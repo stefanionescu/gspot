@@ -1,8 +1,8 @@
 import plugin from '#eslint-plugin/plugin.ts';
-import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import type { TrivialFilesOptions } from '#eslint-plugin/types/rules.ts';
 
-createRuleTester().run<
+buildRuleTester().run<
     keyof (typeof plugin.rules)['no-trivial-files']['meta']['messages'],
     [Partial<TrivialFilesOptions[0]>]
 >('no-trivial-files', plugin.rules['no-trivial-files'], {
@@ -87,7 +87,7 @@ createRuleTester().run<
     })),
 });
 
-createRuleTester().run('no-trivial-files regressions', plugin.rules['no-trivial-files'], {
+buildRuleTester().run('no-trivial-files regressions', plugin.rules['no-trivial-files'], {
     valid: [
         {
             code: 'export type Tree = ReadonlyArray<Tree>;',

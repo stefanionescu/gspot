@@ -5,7 +5,7 @@ import { LEVELS } from '#cli/config/manifests/names.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     IGNORE_CASES,
@@ -31,7 +31,7 @@ test.each(IGNORE_CASES)('an ignore of an ESLint rule applies after your rule opt
         'source.js': 'console.log("example");\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['no-console'])).toStrictEqual(
         ignored ? [] : [{ file: 'source.js', rule: 'no-console', line: 1 }],
     );
@@ -56,7 +56,7 @@ test.each(IGNORE_CASES)(
             'apps/web/admin/page.js': source,
         });
 
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         await writeFile(join(sandbox.path, 'tests/future.js'), source);
         const files = ['source.js', 'tests', 'apps'];
         const output = await listLintFindings(eslint, sandbox.path, files, ['eqeqeq']);
@@ -106,7 +106,7 @@ test.each([...LEVELS])(
             ...SCOPE_IMPORT_FILES,
             'gspot.toml': buildSandboxSettings(['javascript'], { level, tables: SCOPE_IMPORT_TABLES }),
         });
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         expect(
             await listLintFindings(
                 eslint,
@@ -126,7 +126,7 @@ test('a JavaScript child applies its import restrictions under a Python root', a
             tables: '[scope.tools.eslint]\nrestricted_imports = [{ name = "node:fs", message = "Use the storage service." }]\n',
         }),
     });
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     expect(await listLintFindings(eslint, sandbox.path, ['app/source.js'], ['no-restricted-imports'])).toStrictEqual([
         { file: 'app/source.js', rule: 'no-restricted-imports', line: 1 },
     ]);

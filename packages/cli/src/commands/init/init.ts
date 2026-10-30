@@ -12,7 +12,6 @@ import { LEVELS } from '#cli/config/manifests/names.ts';
 import { createInterface } from 'node:readline/promises';
 import type { RunCache } from '#cli/types/system/cache.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { selectForInit } from '#cli/repository/proposals.ts';
@@ -21,6 +20,7 @@ import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { readRepositorySetup } from '#cli/repository/setup.ts';
 import type { SettingsFile } from '#cli/types/settings/file.ts';
 import { formatDetection } from '#cli/commands/init/detection.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
@@ -168,7 +168,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         configurationsByName,
         hasGit: repository.hasGit,
     };
-    const generated = generateFiles(session);
+    const generated = buildGeneratedFiles(session);
     const conflicts = readConflictingConfigFiles(root, repositorySetup, tools, generated.managedKeys);
     assertConflictingFilesCommitted(
         root,

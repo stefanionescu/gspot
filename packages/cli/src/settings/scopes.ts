@@ -4,10 +4,10 @@ import { selectConfigurations } from '#cli/manifests/select.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { findSettingSchema } from '#cli/settings/schema-lookup.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
+import { isTable, addTable, getValueAt } from '#cli/system/tables.ts';
 import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/scopes.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
-import { isTable, getValueAt, createTable } from '#cli/system/tables.ts';
 import { getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
 import type { Settings, TableValues, TableSettings } from '#cli/types/settings/file.ts';
 import { isInScope, isScopeCovered, compareScopeDepth } from '#cli/repository/scopes.ts';
@@ -223,12 +223,12 @@ function fillTableValues(tables: Record<string, unknown>, rows: InheritedSetting
         );
     const empty = valueRows.filter(({ row }) => row.value === undefined);
     for (const { row, name } of empty) {
-        if (createTable(tables, [name]) === undefined)
+        if (addTable(tables, [name]) === undefined)
             throw new Error(`The setting ${row.key} runs through a non-table value.`);
     }
     const written = valueRows.filter(({ row }) => row.value !== undefined);
     for (const { row, name, path, field } of written) {
-        const table = createTable(tables, [name, ...path]);
+        const table = addTable(tables, [name, ...path]);
         if (table === undefined) throw new Error(`The setting ${row.key} runs through a non-table value.`);
         table[field] = row.reason === undefined ? row.value : { value: row.value, reason: row.reason };
     }

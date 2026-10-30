@@ -5,12 +5,12 @@ import type { Files } from '#cli/types/system/files.ts';
 import { installTools } from '#cli/installers/install.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { InstallCommandJson } from '#cli/types/commands/install.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 
@@ -32,7 +32,7 @@ function hasOutdatedToolProjects(files: Files, generated: Generation): boolean {
 async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promise<CommandResult<InstallCommandJson>> {
     const root = await readRepositoryRoot(cwd);
     const session = await openSession(root, { cancelSignal });
-    const generated = generateFiles(session);
+    const generated = buildGeneratedFiles(session);
     const writer = openFiles(root);
     if (hasOutdatedToolProjects(writer, generated)) throw new GspotError('install', TOOL_PROJECTS_MESSAGE);
     const { installed, notes, steps } = await installTools(session, writer, generated);

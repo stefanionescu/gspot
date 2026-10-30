@@ -5,7 +5,7 @@ import type { Config } from 'stylelint';
 import type stylelintModule from 'stylelint';
 import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { getManifestTarget, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
@@ -22,7 +22,7 @@ test.each(['vue', 'astro'])('a CSS-only scope checks properties inside a %s comp
         [path]: code,
     });
     const session = await openSession(sandbox.path);
-    const generated = generateFiles(session).files.find(
+    const generated = buildGeneratedFiles(session).files.find(
         ({ path: file }) => file === getConfigFilePath(session, 'stylelint', ''),
     )!;
     const config = JSON.parse(generated.content) as Config;
@@ -51,7 +51,7 @@ test("your Stylelint rule options reach each scope's file", async () => {
     });
 
     const session = await openSession(sandbox.path);
-    const generated = generateFiles(session);
+    const generated = buildGeneratedFiles(session);
     expect(generated.files.filter(({ path }) => path.endsWith('/stylelint.json'))).toHaveLength(1);
     for (const scope of ['', 'child']) {
         const target = getConfigFilePath(session, 'stylelint', scope);
@@ -81,7 +81,7 @@ test('level basic refuses Stylelint options for a rule of level all', async () =
         'source.css': 'a { color: #fff; }',
     });
     const session = await openSession(sandbox.path);
-    expect(() => generateFiles(session)).toThrow(
+    expect(() => buildGeneratedFiles(session)).toThrow(
         'number-max-precision runs only at level all. gspot sets options only for the rules that run at level basic.',
     );
 });
@@ -92,7 +92,7 @@ test('a scope with CSS Modules files accepts composes, :global, and @value in th
         'button.module.css': '.base {\n    color: red;\n}\n',
     });
 
-    const output = generateFiles(await openSession(sandbox.path)).files.find(
+    const output = buildGeneratedFiles(await openSession(sandbox.path)).files.find(
         (file) => file.path === getManifestTarget('css', 'stylelint.json'),
     )!;
     const config = JSON.parse(output.content) as Config;

@@ -10,13 +10,13 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildIgnoreSections } from '#cli/generation/config-files/ignore-files.ts';
-import { generateFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 import {
     LANGUAGE_IGNORES,
@@ -36,7 +36,7 @@ test('negative ignores follow positives for ordered tools and stay out of tools 
         'src/keep.ts': 'export const kept = 1;\n',
         'src/omit.ts': 'export const omitted = 1;\n',
     });
-    const output = generateFiles(await openSession(sandbox.path));
+    const output = buildGeneratedFiles(await openSession(sandbox.path));
     const prettierIgnore = output.files.find(({ path }) => path === '.prettierignore')!.content;
     await writeFile(join(sandbox.path, '.prettierignore'), prettierIgnore);
     expect(prettierIgnore).toContain('src/**\n!src/keep.ts');
@@ -78,7 +78,7 @@ test.each([true, false])('generated file lists include the CI workflow only when
             tables: stringify({ ci: { enabled, provider: 'github' } }),
         }),
     });
-    const generated = generateFiles(await openSession(sandbox.path));
+    const generated = buildGeneratedFiles(await openSession(sandbox.path));
     const prettierIgnore = generated.files.find(({ path }) => path === '.prettierignore')!.content;
     const typos = generated.files.find(({ path }) => path.endsWith('/typos.toml'))!.content;
     const attributes = generated.blocks.find(({ path }) => path === '.gitattributes')!.body;
@@ -100,7 +100,7 @@ test('shared Markdown settings leave inherited link files out of generated path 
         'docs/README.md': '# Docs\n',
     });
     const session = await openSession(sandbox.path);
-    const generated = generateFiles(session);
+    const generated = buildGeneratedFiles(session);
     const linkFiles = generated.files
         .filter(({ path }) => path.endsWith('.markdownlint.jsonc'))
         .map(({ path }) => path);
@@ -123,7 +123,7 @@ test.each([...PRETTIER_IGNORE_CASES])(
             [file]: 'const value={enabled:true};\n',
         });
 
-        const generated = generateFiles(await openSession(sandbox.path)).files.find(
+        const generated = buildGeneratedFiles(await openSession(sandbox.path)).files.find(
             ({ path }) => path === '.prettierignore',
         )!;
         const ignorePath = join(sandbox.path, generated.path);
@@ -155,7 +155,7 @@ test.each([...PATH_IGNORE_CASES])(
                 },
             ],
         });
-        const content = await generateFile(settings, path, { 'source.js': 'export const port = 8080;\n' });
+        const content = await buildGeneratedFile(settings, path, { 'source.js': 'export const port = 8080;\n' });
         const parsed: unknown = path.endsWith('.toml') ? parse(content) : (JSON.parse(content) as unknown);
         const patterns = getValueAt(parsed, nativePath);
         expect(patterns).toContain('selected/**');
@@ -177,7 +177,7 @@ test.each([...LANGUAGE_IGNORES])(
             'web/readme.md': '# Example\n',
         });
         const session = await openSession(sandbox.path);
-        const files = new Map(generateFiles(session).files.map(({ path, content }) => [path, content]));
+        const files = new Map(buildGeneratedFiles(session).files.map(({ path, content }) => [path, content]));
         const prettierignore = files.get('.prettierignore')!;
         await writeFile(join(sandbox.path, '.prettierignore'), prettierignore);
         for (const { path, pattern } of ignored) {
@@ -200,7 +200,7 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
         'gspot.toml': buildSandboxSettings(['javascript', 'python', 'markdown'], IGNORE_LIST_SETTINGS),
     });
     const session = await openSession(sandbox.path);
-    const files = generateFiles(session).files;
+    const files = buildGeneratedFiles(session).files;
     const written = files
         .map(({ path }) => path)
         .filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`))
@@ -224,7 +224,7 @@ test('a second apply writes the same files when .prettierignore covers every sou
     const outputs: string[][] = [];
     for (const _pass of [1, 2]) {
         const session = await openSession(sandbox.path);
-        const output = generateFiles(session);
+        const output = buildGeneratedFiles(session);
         const writer = openFiles(sandbox.path);
         const report = await writeGeneratedFiles(session, output, writer);
         expect(await readFile(join(sandbox.path, '.prettierignore'), 'utf8')).toBe(
@@ -243,7 +243,7 @@ test('root paths in the generated-files section are anchored, so an authored too
         'source.js': 'export const value = 1;\n',
         'tools/eslint.config.mjs': 'export default [];\n',
     });
-    const output = generateFiles(await openSession(sandbox.path));
+    const output = buildGeneratedFiles(await openSession(sandbox.path));
     const ignoreFile = output.files.find(({ path }) => path === '.prettierignore')!;
     expect(ignoreFile.content.split('\n')).toContain('/eslint.config.mjs');
     expect(ignoreFile.content.split('\n')).not.toContain('eslint.config.mjs');
@@ -271,12 +271,12 @@ test('changing tracked gitignore patterns leaves generated tool configurations u
         'source.js': 'export const value = 1;\n',
     });
     runGitStep(sandbox.path, ['add', '--', 'gspot.toml', '.gitignore', 'source.js']);
-    const before = generateFiles(await openSession(sandbox.path)).files.filter(({ path }) =>
+    const before = buildGeneratedFiles(await openSession(sandbox.path)).files.filter(({ path }) =>
         ['.prettierignore', 'typos.toml', 'knip.json', 'eslint.mjs'].some((name) => path.endsWith(name)),
     );
     expect(before).toHaveLength(4);
     await writeFile(join(sandbox.path, '.gitignore'), 'coverage/\nlogs/\n');
-    const after = generateFiles(await openSession(sandbox.path)).files.filter(({ path }) =>
+    const after = buildGeneratedFiles(await openSession(sandbox.path)).files.filter(({ path }) =>
         ['.prettierignore', 'typos.toml', 'knip.json', 'eslint.mjs'].some((name) => path.endsWith(name)),
     );
     expect(after).toStrictEqual(before);

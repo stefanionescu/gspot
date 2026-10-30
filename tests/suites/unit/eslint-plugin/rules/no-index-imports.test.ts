@@ -1,7 +1,7 @@
 import plugin from '#eslint-plugin/plugin.ts';
-import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-createRuleTester().run('no-index-imports', plugin.rules['no-index-imports'], {
+buildRuleTester().run('no-index-imports', plugin.rules['no-index-imports'], {
     valid: [
         "vi.requireActual('@/turn/index.js');",
         "jest.importActual('@/turn/index.js');",
@@ -33,7 +33,7 @@ createRuleTester().run('no-index-imports', plugin.rules['no-index-imports'], {
     ],
 });
 
-createRuleTester().run('no-index-imports regressions', plugin.rules['no-index-imports'], {
+buildRuleTester().run('no-index-imports regressions', plugin.rules['no-index-imports'], {
     valid: [
         {
             code: "import text from './value.ts?raw&file=/index.ts';",
@@ -69,7 +69,7 @@ createRuleTester().run('no-index-imports regressions', plugin.rules['no-index-im
     ],
 });
 
-createRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run(
+buildRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run(
     'no-index-imports require calls',
     plugin.rules['no-index-imports'],
     {

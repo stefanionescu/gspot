@@ -2,8 +2,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { buildEslint } from '#tests/setup/eslint/lint.ts';
 import { TERMS_SOURCE } from '#tests/config/typescript.ts';
-import { createEslint } from '#tests/setup/eslint/lint.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { UNMATCHED_PATH_CASES } from '#tests/config/checks/general/gspot/unmatched-paths.ts';
@@ -61,7 +61,7 @@ test('a missing scope with rule options leaves apply usable and unmatched paths 
         }),
         'source.js': 'export const ready = true;\n',
     });
-    await createEslint(sandbox.path);
+    await buildEslint(sandbox.path);
     expect(await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths')).toMatchObject([
         { file: 'gspot.toml', message: 'missing under scope.0.path matches no tracked file or folder.' },
     ]);

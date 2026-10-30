@@ -3,7 +3,7 @@ import { relative } from 'node:path';
 import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { createEslint } from '#tests/setup/eslint/lint.ts';
+import { buildEslint } from '#tests/setup/eslint/lint.ts';
 import type { EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
@@ -30,7 +30,7 @@ test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($ru
         'server.js': 'process.exit(0);\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const config = (await eslint.calculateConfigForFile('application/source.js')) as EslintConfiguration;
     const globals = Object.keys(config.languageOptions.globals);
     expect(row.globals.filter((name) => !globals.includes(name))).toStrictEqual([]);
@@ -57,7 +57,7 @@ test('ES modules reject CommonJS globals and .cjs files keep CommonJS', async ()
         'source.cjs': 'module.exports = __dirname;\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const [module] = await eslint.lintFiles(['source.mjs']);
     expect(module!.messages.map(({ ruleId, line, message }) => ({ ruleId, line, message }))).toStrictEqual([
         { ruleId: 'no-undef', line: 1, message: "'__dirname' is not defined." },
@@ -81,7 +81,7 @@ test('framework runtimes and your runtime settings stay inside their scopes', as
         'web/scripts/build.js': 'Buffer.from("");\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const node = (await eslint.calculateConfigForFile('server.js')) as EslintConfiguration;
     const native = (await eslint.calculateConfigForFile('native/src/source.js')) as EslintConfiguration;
     const browser = (await eslint.calculateConfigForFile('native/src/browser.js')) as EslintConfiguration;
@@ -123,7 +123,7 @@ test('a later [[tools.eslint.override]] runtime replaces an earlier one', async 
         'worker.js': 'postMessage("value");\nwindow.alert("value");\n',
     });
 
-    const eslint = await createEslint(sandbox.path);
+    const eslint = await buildEslint(sandbox.path);
     const [browser] = await eslint.lintFiles(['app.js']);
     expect(browser!.messages).toStrictEqual([]);
     const [worker] = await eslint.lintFiles(['worker.js']);
@@ -143,7 +143,7 @@ test.each([...FRAMEWORK_RUNTIME_CASES])(
             [row.path]: row.source,
         });
 
-        const eslint = await createEslint(sandbox.path);
+        const eslint = await buildEslint(sandbox.path);
         const [result] = await eslint.lintFiles([row.path]);
         expect(
             result!.messages.filter(({ ruleId }) => ruleId === 'no-undef').map(({ message }) => message),

@@ -126,8 +126,8 @@ async function runInFolder(run: FolderRun): Promise<CheckResult> {
     const folder = options.copyRoot ?? copy?.path;
     const commandSetup =
         folder === undefined
-            ? prepareCommand(planned, { session, command, setup, toolPath })
-            : prepareCommand(planned, {
+            ? buildCommandLaunch(planned, { session, command, setup, toolPath })
+            : buildCommandLaunch(planned, {
                   session: session,
                   command: command,
                   setup: buildCommandSetup(session, planned, { options: options, root: folder }),
@@ -243,7 +243,7 @@ Expands a check or fix command into file batches that fit the command line.
 @param expansion.setup the working paths and tool variables.
 @param expansion.toolPath the resolved executable path.
 */
-export function prepareCommand(
+export function buildCommandLaunch(
     planned: PlannedCheck,
     expansion: { session: Session; command: string[]; setup: CommandSetup; toolPath: string },
 ): CommandLaunch {

@@ -3,9 +3,9 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/planning/session.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { GENERATOR_LIMITS, BUILT_IN_LIMIT_CASES } from '#tests/config/planning/readers.ts';
 
@@ -47,7 +47,7 @@ test.each(
             }),
         });
         const session = await openSession(sandbox.path);
-        const generated = generateFiles(session).files.find(({ path }) => path.endsWith(file));
+        const generated = buildGeneratedFiles(session).files.find(({ path }) => path.endsWith(file));
         expect(generated, `${check} generates ${file}`).toBeDefined();
         expect(generated!.content).toMatch(/\b1001\b/u);
     },

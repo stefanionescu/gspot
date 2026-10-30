@@ -16,14 +16,14 @@ import type { PythonIndexSettings } from '#cli/types/installers/pypi.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 import type { ReplacementRequest } from '#cli/types/repository/writer.ts';
 import { listMisePins, listToolProjectPins } from '#cli/manifests/tools.ts';
+import { installNpmTools, planNpmLockfile } from '#cli/installers/npm/project.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
-import { installNpmTools, prepareNpmLockfile } from '#cli/installers/npm/project.ts';
 import { isLockfileFresh, selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
 
 import {
     readPythonSettings,
     installPythonTools,
-    preparePythonLockfile,
+    planPythonLockfile,
     isPythonLockfileFresh,
     buildPythonProjectTable,
 } from '#cli/installers/pypi.ts';
@@ -102,7 +102,7 @@ export async function listStaleLockfiles(
     return lockfiles.filter((lockfile): lockfile is StaleLockfile => lockfile !== undefined);
 }
 
-async function prepareLockfiles(
+async function planLockfiles(
     install: ToolInstall,
     { npm, uvPath }: { npm: NpmToolInstall | undefined; uvPath: string | undefined },
 ): Promise<ReplacementRequest[]> {
@@ -110,8 +110,8 @@ async function prepareLockfiles(
     const packages = files.find((file) => file.path === GSPOT_PATHS.npmProject);
     const python = files.find((file) => file.path === GSPOT_PATHS.pythonProject);
     return [
-        ...(packages === undefined || npm === undefined ? [] : [await prepareNpmLockfile(npm, packages)]),
-        ...(python === undefined || uvPath === undefined ? [] : [await preparePythonLockfile(install, python, uvPath)]),
+        ...(packages === undefined || npm === undefined ? [] : [await planNpmLockfile(npm, packages)]),
+        ...(python === undefined || uvPath === undefined ? [] : [await planPythonLockfile(install, python, uvPath)]),
     ];
 }
 
@@ -136,7 +136,7 @@ export async function installToolProjects(install: ToolInstall, miseBinPaths: st
         packageManager === undefined
             ? undefined
             : { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };
-    const lockfiles = await prepareLockfiles(install, { npm, uvPath });
+    const lockfiles = await planLockfiles(install, { npm, uvPath });
     writePlans(writer, planReplacements(writer, lockfiles));
     if (npm !== undefined) notes.push(await installNpmTools(npm));
     if (uvPath !== undefined && listToolProjectPins(session.toolConfigurations).python.length > 0)
