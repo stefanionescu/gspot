@@ -104,9 +104,9 @@ const scopeBody = {
         NonNullable<ParsedSettings['scope']>[number]['dependencies'],
         WrittenScope['dependencies']
     >,
-    docs: configurationTableSchemas.docs.unwrap().omit({ banned_headings: true }).optional() satisfies z.ZodType<
-        NonNullable<ParsedSettings['scope']>[number]['docs'],
-        WrittenScope['docs']
+    prose: configurationTableSchemas.prose.unwrap().omit({ banned_headings: true }).optional() satisfies z.ZodType<
+        NonNullable<ParsedSettings['scope']>[number]['prose'],
+        WrittenScope['prose']
     >,
     coverage: z
         .strictObject({

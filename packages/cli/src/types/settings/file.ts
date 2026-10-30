@@ -105,9 +105,7 @@ type WrittenDependencies = Optional<
     allowed_registries?: SettingValue<string[]> | undefined;
 };
 
-type WrittenDocs = Optional<Omit<ConfigurationTables['docs'], 'allowed_urls'>> & {
-    allowed_urls?: SettingValue<string[]> | undefined;
-};
+type WrittenDocs = { allowed_urls?: SettingValue<string[]> | undefined };
 
 type WrittenSite = Optional<Omit<ConfigurationTables['site'], 'allowed_unlisted_pages'>> & {
     allowed_unlisted_pages?: SettingValue<string[]> | undefined;
@@ -133,6 +131,7 @@ type WrittenReasonedTables = {
     site: WrittenSite;
     duplication: { min_lines?: SettingValue<number> | undefined; min_tokens?: SettingValue<number> | undefined };
     prose: {
+        banned_headings?: string[] | undefined;
         max_sentence_words?: SettingValue<number> | undefined;
         max_list_item_words?: SettingValue<number> | undefined;
         max_paragraph_sentences?: SettingValue<number> | undefined;
@@ -161,7 +160,7 @@ type ParsedScopeTables = {
     limits: ParsedLimits;
     dependencies: Omit<ConfigurationTables['dependencies'], 'min_release_age_days'>;
     coverage: Omit<ConfigurationTables['coverage'], 'swift_target'>;
-    docs: Omit<ConfigurationTables['docs'], 'banned_headings'>;
+    prose: Omit<ConfigurationTables['prose'], 'banned_headings'>;
     licenses: Omit<ConfigurationTables['licenses'], 'allowed_package'>;
     site: Omit<ConfigurationTables['site'], 'size_limit'>;
     naming: Omit<ParsedNaming, 'override'>;
@@ -265,7 +264,7 @@ export type WrittenScope = Omit<WrittenSettings, RootOnlyFields | keyof ParsedSc
     limits?: WrittenLimits | undefined;
     dependencies?: Omit<WrittenDependencies, 'min_release_age_days'> | undefined;
     coverage?: Omit<WrittenCoverage, 'swift_target'> | undefined;
-    docs?: Omit<WrittenDocs, 'banned_headings'> | undefined;
+    prose?: Omit<WrittenReasonedTables['prose'], 'banned_headings'> | undefined;
     licenses?: Omit<WrittenLicenses, 'allowed_package'> | undefined;
     site?: Omit<WrittenSite, 'size_limit'> | undefined;
     naming?: Omit<WrittenNaming, 'override'> | undefined;

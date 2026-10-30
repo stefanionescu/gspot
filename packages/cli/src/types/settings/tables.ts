@@ -16,7 +16,7 @@ export type ConfigurationTables = {
         allowed_registries: string[];
         bun_scanner?: string | undefined;
     };
-    docs: { banned_headings: string[]; allowed_urls: string[] };
+    docs: { allowed_urls: string[] };
     drizzle: { client_names: string[] };
     duplication: { min_lines: number; min_tokens: number };
     javascript: { script_files: string[]; import_boundaries: string[]; externals: string[] };
@@ -28,7 +28,12 @@ export type ConfigurationTables = {
         migrations_folder?: string | undefined;
     };
     python: { externals: string[]; import_folders: string[] };
-    prose: { max_sentence_words: number; max_list_item_words: number; max_paragraph_sentences: number };
+    prose: {
+        banned_headings: string[];
+        max_sentence_words: number;
+        max_list_item_words: number;
+        max_paragraph_sentences: number;
+    };
     repository: { max_file_kilobytes: number };
     secrets: { env_examples: string[]; environment_functions: string[] };
     site: {

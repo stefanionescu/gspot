@@ -23,6 +23,11 @@ export const SETTING_DEFINITIONS = {
         reason_when: 'raising',
         default: 1024,
     },
+    'prose.banned_headings': {
+        configurations: ['prose'],
+        description: 'Headings this repository bans beyond the shipped list.',
+        default: [] as [],
+    },
     'prose.max_sentence_words': {
         configurations: ['prose'],
         description: 'The most words one sentence of documentation may have.',
@@ -142,11 +147,6 @@ export const SETTING_DEFINITIONS = {
         template: 'code',
         configurations: ['dependencies'],
         description: 'The npm package that Bun runs as its install security scanner. Without it, Bun runs no scanner.',
-    },
-    'docs.banned_headings': {
-        configurations: ['docs'],
-        description: 'Headings this repository bans beyond the shipped list.',
-        default: [] as [],
     },
     'docs.allowed_urls': {
         configurations: ['docs'],

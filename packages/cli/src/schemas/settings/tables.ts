@@ -82,11 +82,6 @@ export const configurationTableSchemas = {
         .optional(),
     docs: z
         .strictObject({
-            banned_headings: z
-                .string()
-                .array()
-                .default(SETTING_DEFINITIONS['docs.banned_headings'].default)
-                .meta(SETTING_DEFINITIONS['docs.banned_headings']),
             allowed_urls: allowReasonedValue(z.string().array(), SETTING_DEFINITIONS['docs.allowed_urls']),
         } satisfies SchemaShape<TableSettings<'docs'>, NonNullable<WrittenSettings['docs']>>)
         .optional(),
@@ -222,6 +217,11 @@ export const configurationTableSchemas = {
         .optional(),
     prose: z
         .strictObject({
+            banned_headings: z
+                .string()
+                .array()
+                .default(SETTING_DEFINITIONS['prose.banned_headings'].default)
+                .meta(SETTING_DEFINITIONS['prose.banned_headings']),
             max_sentence_words: allowReasonedValue(
                 nonnegativeIntegerSchema,
                 SETTING_DEFINITIONS['prose.max_sentence_words'],

@@ -58,7 +58,7 @@ test('your banned headings and the shipped ones reach the heading style once', a
         'sample.md': '# Table of contents\n',
         'gspot.toml': buildSandboxSettings(['prose', 'docs'], {
             level: 'all',
-            tables: '[docs]\nbanned_headings = ["Owner: [module]", "project layout"]\n',
+            tables: '[prose]\nbanned_headings = ["Owner: [module]", "project layout"]\n',
         }),
     });
 

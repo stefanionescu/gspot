@@ -104,7 +104,7 @@ Build the `banned-headings` style of Vale: the Vale rule for the banned headings
 @param planned the config file to build.
 */
 export function buildBannedHeadingsStyle(planned: PlannedConfigFile): string {
-    const headings = [...new Set([...BANNED_HEADINGS, ...getTable(planned.scope.settings, 'docs').banned_headings])];
+    const headings = [...new Set([...BANNED_HEADINGS, ...getTable(planned.scope.settings, 'prose').banned_headings])];
     return stringify({
         extends: 'existence',
         message: BANNED_HEADING_MESSAGE,
