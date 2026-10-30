@@ -4,9 +4,10 @@ import InlineText from '../components/InlineText.astro';
 import Example from '../components/home/example/Example.astro';
 import { TOOLS, USE_CASES, HOME_TITLE } from '../config/home.ts';
 import '../components/home/page.css';
+import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 import { REFERENCE_PATH, REFERENCE_FOLDERS } from '../config/reference.ts';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
-import { LICENSE, NPM_URL, DOCS_PATH, DESCRIPTION, REPOSITORY_URL } from '../config/site.ts';
+import { NPM_URL, DOCS_PATH, DESCRIPTION, REPOSITORY_URL } from '../config/site.ts';
 
 const images = import.meta.glob<ImageMetadata>('../assets/tools/*', { eager: true, import: 'default' });
 const tools = TOOLS.map(({ name, icon }) => {
@@ -91,7 +92,7 @@ const tools = TOOLS.map(({ name, icon }) => {
         </section>
         <footer class="home-footer">
             <div class="home-footer-content">
-                <span>gspot · {LICENSE}</span>
+                <span>gspot · {cliPackage.license}</span>
                 <nav aria-label="Footer">
                     <a href={DOCS_PATH}>Docs</a>
                     <a href={NPM_URL}>npm</a>

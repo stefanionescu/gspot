@@ -9,11 +9,11 @@ import { SCHEMA_FILE } from '#cli/config/files/names.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
 import { LLMS_PAGES, AGENT_STEPS } from './src/config/setup.ts';
 import { defineConfig, passthroughImageService } from 'astro/config';
+import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 
 import {
     FAVICON,
     EDIT_URL,
-    SITE_URL,
     DESCRIPTION,
     SOCIAL_IMAGE,
     FONT_PACKAGES,
@@ -25,7 +25,7 @@ import {
 } from './src/config/site.ts';
 
 export default defineConfig({
-    site: SITE_URL,
+    site: cliPackage.homepage,
     image: { service: passthroughImageService() },
     prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
     vite: {
@@ -75,7 +75,7 @@ export default defineConfig({
                     tag: 'meta',
                     attrs: {
                         property: 'og:image',
-                        content: `${SITE_URL}${SOCIAL_IMAGE}`,
+                        content: `${cliPackage.homepage}${SOCIAL_IMAGE}`,
                     },
                 },
                 { tag: 'meta', attrs: { property: 'og:image:width', content: String(SOCIAL_IMAGE_SIZE.width) } },

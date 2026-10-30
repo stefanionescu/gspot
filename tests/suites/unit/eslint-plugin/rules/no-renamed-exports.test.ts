@@ -11,6 +11,9 @@ createRuleTester().run('no-renamed-exports', plugin.rules['no-renamed-exports'],
         'export const a = { ...b };',
         'const a = b;',
         'export let a = b;',
+        'import settings from "./settings"; export const { homepage, license } = settings;',
+        'import settings from "./settings"; const { homepage: SITE_URL } = settings; console.log(SITE_URL);',
+        'import settings from "./settings"; export const { owner: { name } } = settings;',
     ],
     invalid: [
         {
@@ -22,6 +25,21 @@ createRuleTester().run('no-renamed-exports', plugin.rules['no-renamed-exports'],
         {
             code: 'import { b, d } from "./owner"; export const a = b!, c = d;',
             errors: [{ messageId: 'renamed' }, { messageId: 'renamed' }],
+        },
+        {
+            code: 'import settings from "./settings"; export const { homepage: SITE_URL } = settings;',
+            errors: [{ messageId: 'renamed', data: { name: 'SITE_URL', source: 'homepage' } }],
+        },
+        {
+            code: 'import settings from "./settings"; export const { owner: { name: OWNER } = {}, "home-page": homePage } = settings;',
+            errors: [
+                { messageId: 'renamed', data: { name: 'OWNER', source: 'name' } },
+                { messageId: 'renamed', data: { name: 'homePage', source: 'home-page' } },
+            ],
+        },
+        {
+            code: 'export const { license: LICENSE = "MIT" } = build();',
+            errors: [{ messageId: 'renamed', data: { name: 'LICENSE', source: 'license' } }],
         },
     ],
 });

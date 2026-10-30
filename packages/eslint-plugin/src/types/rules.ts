@@ -18,6 +18,8 @@ export type ImportBoundariesOptions = [
 
 export type RelativeImport = { target: string; query: string };
 
+export type RenamedValue = { node: TSESTree.Node; name: string; source: string };
+
 export type TrivialFunctionsOptions = [{ trivialFunctionStatements: number }];
 
 export type TrivialFilesOptions = [{ allowIndex: boolean }];

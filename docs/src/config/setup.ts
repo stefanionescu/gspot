@@ -1,5 +1,5 @@
+import { DOCS_PATH } from './site.ts';
 import { SIDEBAR } from './navigation.ts';
-import { SITE_URL, DOCS_PATH } from './site.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { START_RUNNERS } from '#cli/config/repository/npm.ts';
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
@@ -59,9 +59,9 @@ export const RELEASE_AGE_EXCLUSIONS = [
     { label: 'Yarn', key: 'npmPreapprovedPackages', file: '.yarnrc.yml' },
 ] as const;
 
-const REFERENCE_URL = `${SITE_URL}${REFERENCE_PATH}`;
+const REFERENCE_URL = `${cliPackage.homepage}${REFERENCE_PATH}`;
 
-export const LLMS_URL = `${SITE_URL}/llms.txt`;
+export const LLMS_URL = `${cliPackage.homepage}/llms.txt`;
 
 export const CURL_COMMAND = 'curl -fsSL';
 
@@ -152,12 +152,12 @@ export const LLMS_PAGES = {
         },
         {
             label: 'Markdown pages',
-            url: `${SITE_URL}${DOCS_PATH}${MARKDOWN_COPY_FILE}`,
+            url: `${cliPackage.homepage}${DOCS_PATH}${MARKDOWN_COPY_FILE}`,
             description: 'add index.md to the address of any page for its Markdown copy',
         },
         {
             label: 'Agent Skill',
-            url: `${SITE_URL}/${SKILLS_FOLDER}${SKILLS_INDEX_FILE}`,
+            url: `${cliPackage.homepage}/${SKILLS_FOLDER}${SKILLS_INDEX_FILE}`,
             description: 'the steps above as an Agent Skill',
         },
     ],
