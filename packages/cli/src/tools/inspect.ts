@@ -2,7 +2,6 @@ import which from 'which';
 import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import { MISE_TOOL } from '#cli/config/tools/locate.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { ToolAvailability } from '#cli/types/tools/run.ts';
@@ -30,7 +29,7 @@ function buildLibraryInspection(inspected: InspectedTool, path: string, found: s
     const { tool, help, want } = inspected;
     const minimum = tool.min_version ?? tool.version ?? found;
     const state = tool.system !== true && tool.version === undefined ? 'ok' : classifyToolVersion(found, want, minimum);
-    return { name: tool.name, state, path, found, help, minimumVersion: minimum, ...stripUndefined({ want }) };
+    return { name: tool.name, state, path, found, help, minimumVersion: minimum, want };
 }
 
 function inspectLibraryCommand(inspected: InspectedTool, command: string[]): ToolInspection {
@@ -66,8 +65,7 @@ function inspectExecutablePath(inspected: InspectedTool, path: string): ToolInsp
     if (want === undefined && tool.version_command === undefined && tool.min_version === undefined)
         return { name: tool.name, state: 'system', path, help };
     const read = readToolVersion(inspected, path);
-    const expected = stripUndefined({ want });
-    if ('state' in read) return { name: tool.name, path, help, ...expected, ...read };
+    if ('state' in read) return { name: tool.name, path, help, want, ...read };
     const minimum = tool.min_version ?? want;
     const state = classifyToolVersion(read.version, want, minimum);
     return {
@@ -76,8 +74,8 @@ function inspectExecutablePath(inspected: InspectedTool, path: string): ToolInsp
         path,
         help,
         found: read.version,
-        ...expected,
-        ...stripUndefined({ minimumVersion: minimum }),
+        want,
+        minimumVersion: minimum,
     };
 }
 
@@ -151,7 +149,7 @@ export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
         cwd: isInside(relative(root, cwd)) ? join(toolsRoot, relative(root, cwd)) : cwd,
         tool,
         help,
-        missing: { name: tool.name, state: 'missing', help, ...stripUndefined({ want }) },
+        missing: { name: tool.name, state: 'missing', help, want },
         timeoutSeconds: search.timeoutSeconds,
         want,
         miseBinPaths: search.miseBinPaths,

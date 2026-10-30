@@ -1,7 +1,7 @@
 export type IgnoreOptions = {
     cwd: string;
-    check?: string;
-    paths?: string[];
-    rule?: string;
+    check?: string | undefined;
+    paths?: string[] | undefined;
+    rule?: string | undefined;
     reason: string;
 };

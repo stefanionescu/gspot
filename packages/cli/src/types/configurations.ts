@@ -159,8 +159,8 @@ export type ToolProjectPackage = {
 export type MiseToolPin = {
     name: string;
     version: string;
-    options?: Record<string, string | number | boolean>;
-    checksums?: Record<string, string>;
+    options?: Record<string, string | number | boolean> | undefined;
+    checksums?: Record<string, string> | undefined;
 };
 
 export type ToolFolderKind = (typeof TOOL_FOLDER_KINDS)[number];
@@ -181,42 +181,48 @@ export type VersionedInstaller = InstallerPin & { version: string };
 export type Tool = {
     installers: Record<string, InstallerPin> & { pypi?: VersionedInstaller; mise?: VersionedInstaller };
     name: string;
-    install_help?: string;
+    install_help?: string | undefined;
     kind: (typeof TOOL_KINDS)[number];
-    version?: string;
-    min_version?: string;
-    system?: boolean;
-    builds?: (typeof TOOL_BUILDS)[number][];
-    version_command?: string[];
-    version_exit_code?: number;
-    version_pattern?: string;
-    crash_pattern?: string;
-    finding_header_pattern?: string;
-    rule_url?: string;
-    rule_prefix?: string;
-    suppression?: {
-        marker: string;
-        separator?: string | undefined;
-        all_rules?: string | undefined;
-        limit_rules?: string | undefined;
-        reason: string;
-        inline_marker?: string | undefined;
-        forbidden?: boolean | undefined;
-        example?: string | undefined;
-    };
-    prettier?: {
-        module: string;
-        extensions: string[];
-        overrides: { files: string; options: Record<string, unknown> }[];
-    };
-    eslint?: { extensions: string[] };
-    requires?: string[];
-    when?: Optional<Pick<ConditionFields, 'setting' | 'level'>>[];
-    replace?: string[];
-    replace_key?: (
-        | { file: string; table?: string | undefined; key?: string | undefined; pointer?: false | undefined }
-        | { file: 'package.json'; key: string; pointer: true; table?: string | undefined }
-    )[];
+    version?: string | undefined;
+    min_version?: string | undefined;
+    system?: boolean | undefined;
+    builds?: (typeof TOOL_BUILDS)[number][] | undefined;
+    version_command?: string[] | undefined;
+    version_exit_code?: number | undefined;
+    version_pattern?: string | undefined;
+    crash_pattern?: string | undefined;
+    finding_header_pattern?: string | undefined;
+    rule_url?: string | undefined;
+    rule_prefix?: string | undefined;
+    suppression?:
+        | {
+              marker: string;
+              separator?: string | undefined;
+              all_rules?: string | undefined;
+              limit_rules?: string | undefined;
+              reason: string;
+              inline_marker?: string | undefined;
+              forbidden?: boolean | undefined;
+              example?: string | undefined;
+          }
+        | undefined;
+    prettier?:
+        | {
+              module: string;
+              extensions: string[];
+              overrides: { files: string; options: Record<string, unknown> }[];
+          }
+        | undefined;
+    eslint?: { extensions: string[] } | undefined;
+    requires?: string[] | undefined;
+    when?: Optional<Pick<ConditionFields, 'setting' | 'level'>>[] | undefined;
+    replace?: string[] | undefined;
+    replace_key?:
+        | (
+              | { file: string; table?: string | undefined; key?: string | undefined; pointer?: false | undefined }
+              | { file: 'package.json'; key: string; pointer: true; table?: string | undefined }
+          )[]
+        | undefined;
 };
 
 export type Group = (typeof GROUPS)[number];

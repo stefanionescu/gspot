@@ -10,7 +10,7 @@ import { type Generation, type ApplyReport } from '#cli/types/generation/files.t
 import { type Repository, type ScopeFolder, type TrackedFile } from '#cli/types/repository/files.ts';
 
 export type InitScan = {
-    template?: Template;
+    template?: Template | undefined;
     repository: Repository;
     repositorySetup: RepositorySetup;
     configurations: InitConfigurations;
@@ -37,9 +37,9 @@ export type ConflictingConfigFiles = {
 };
 
 export type SettingsDraft = {
-    template?: Template;
+    template?: Template | undefined;
     base: string;
-    level?: Level;
+    level?: Level | undefined;
     configurations: string[];
     scopes: ScopeFolder[];
 };
@@ -69,11 +69,11 @@ export type DetectionSummary = {
 export type InitFileRow = { path: string; note: string };
 
 export type InitOptions = {
-    template?: Template;
+    template?: Template | undefined;
     cwd: string;
     yes: boolean;
-    level?: Level;
-    configurations?: string[];
+    level?: Level | undefined;
+    configurations?: string[] | undefined;
 };
 
 export type ConfigurationOrigin = 'named' | 'template' | 'detected' | 'suggested' | 'required' | 'always';

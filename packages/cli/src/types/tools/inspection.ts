@@ -14,12 +14,12 @@ export type InspectedTool = {
 export type ToolInspection = {
     name: string;
     state: ToolState;
-    want?: string;
-    found?: string;
-    path?: string;
-    help?: string;
-    note?: string;
-    minimumVersion?: string;
+    want?: string | undefined;
+    found?: string | undefined;
+    path?: string | undefined;
+    help?: string | undefined;
+    note?: string | undefined;
+    minimumVersion?: string | undefined;
 };
 export type ToolSearch = {
     timeoutSeconds: number;

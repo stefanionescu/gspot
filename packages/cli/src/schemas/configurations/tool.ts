@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import semver from 'semver';
-import { stripUndefined } from '#cli/system/tables.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
@@ -162,14 +161,12 @@ const toolSchema = z
         const installers: Tool['installers'] = {};
         for (const [name, definition] of Object.entries(definitions)) {
             if (definition === undefined) continue;
-            const pin = stripUndefined(
+            installers[name] =
                 typeof definition === 'string'
                     ? { name: definition, version: tool.version }
-                    : { ...definition, version: definition.version ?? tool.version },
-            );
-            installers[name] = pin;
+                    : { ...definition, version: definition.version ?? tool.version };
         }
-        return { ...stripUndefined(tool), installers };
+        return { ...tool, installers };
     }) satisfies z.ZodType<Tool>;
 
 export const manifestToolSchema = z.union([

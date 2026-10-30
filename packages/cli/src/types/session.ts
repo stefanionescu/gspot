@@ -32,8 +32,8 @@ export type CheckSession = Session & { readMiseBinPaths: () => string[]; limitPr
 
 export type SessionOptions = {
     toolsRoot?: string;
-    reads?: ReadCache;
-    listing?: RepositoryListing;
+    reads?: ReadCache | undefined;
+    listing?: RepositoryListing | undefined;
     settingsFile?: SettingsFile;
     resources?: DisposableStack;
     cancelSignal?: AbortSignal | undefined;

@@ -1,9 +1,9 @@
+import { isTable } from '#cli/system/tables.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { SCOPE_OPTION } from '#cli/config/commands/flags.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { ConfigurationsOptions } from '#cli/types/generation/settings-edit.ts';
 
@@ -75,7 +75,7 @@ export function registerAdd(program: Command, onResult: CommandCompletion): void
                 await runAddCommand({
                     cwd: process.cwd(),
                     configurations: [...new Set(configurations)],
-                    ...stripUndefined({ scope: flags.scope }),
+                    scope: flags.scope,
                 }),
             );
         });

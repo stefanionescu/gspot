@@ -1,6 +1,5 @@
 import { splitByCase } from 'scule';
 import { getTable } from '#cli/settings/scopes.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { type Settings } from '#cli/types/settings/file.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
@@ -39,8 +38,8 @@ function getNamingLimits(scopeSettings: ScopeSettings, language: string, categor
     const categoryTable = categoryKey === undefined ? undefined : languageTable?.[categoryKey];
     return {
         ...root,
-        ...(languageTable !== undefined && stripUndefined(languageTable)),
-        ...(categoryTable !== undefined && stripUndefined(categoryTable)),
+        ...languageTable,
+        ...categoryTable,
     };
 }
 
@@ -92,7 +91,7 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
         compileOverride({ allowed_names: shipped.allowed_names }),
         ...shipped.override.map((override) => compileOverride(override)),
         ...configurations.flatMap((configuration) =>
-            (configuration.naming?.override ?? []).map((override) => compileOverride(stripUndefined(override))),
+            (configuration.naming?.override ?? []).map((override) => compileOverride(override)),
         ),
         ...settings.naming.override.map((override) => compileOverride(override)),
     ];

@@ -7,9 +7,9 @@ import { RECORD_FIELDS } from '#cli/settings/schema-lookup.ts';
 import type { TaploLayout } from '#cli/types/settings/text.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
 import { TOML_FORMAT, SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { isTable, getValueAt, normalizeTables } from '#cli/system/tables.ts';
 import { ROOT_KEYS, LAST_TABLES, FIRST_TABLES } from '#cli/config/settings/text.ts';
 import type { TomlBlock, TomlValue, TomlSyntax } from '#cli/types/parsers/formats/toml.ts';
-import { isTable, getValueAt, stripUndefined, normalizeTables } from '#cli/system/tables.ts';
 
 import {
     isTomlKind,
@@ -76,7 +76,11 @@ function findLineStart(text: string, blocks: TomlBlock[], block: TomlBlock): num
     return text.lastIndexOf('\n', start - 1) + 1;
 }
 
-function insertSection(text: string, written: string, place: { blocks: TomlBlock[]; next?: TomlBlock }): string {
+function insertSection(
+    text: string,
+    written: string,
+    place: { blocks: TomlBlock[]; next: TomlBlock | undefined },
+): string {
     if (place.next === undefined) return text.trim() === '' ? `${written}\n` : `${text.trimEnd()}\n\n${written}\n`;
     const position = findLineStart(text, place.blocks, place.next);
     const before = text.slice(0, position);
@@ -94,7 +98,7 @@ function insertAfterLine(text: string, written: string, block: TomlBlock): strin
 function insertRootKey(
     text: string,
     written: string,
-    place: { blocks: TomlBlock[]; next?: TomlBlock; last?: TomlBlock },
+    place: { blocks: TomlBlock[]; next: TomlBlock | undefined; last: TomlBlock | undefined },
 ): string {
     const { blocks, next, last } = place;
     if (last !== undefined && (next === undefined || !isTomlKind(next, 'KeyValue')))
@@ -121,13 +125,13 @@ function insertTopLevelSetting(
     if (!isTomlKind(parseDocument(written).cst[0] as TomlBlock, 'KeyValue'))
         return insertSection(text, written, {
             blocks,
-            ...stripUndefined({ next: ranked.find((each) => !each.isKey && each.rank > rank)?.block }),
+            next: ranked.find((each) => !each.isKey && each.rank > rank)?.block,
         });
     const next = ranked.find((each) => !each.isKey || each.rank > rank);
     const last = ranked.findLast(
         (each) => each.isKey && (next === undefined || each.block.loc.start.line < next.block.loc.start.line),
     );
-    return insertRootKey(text, written, { blocks, ...stripUndefined({ next: next?.block, last: last?.block }) });
+    return insertRootKey(text, written, { blocks, next: next?.block, last: last?.block });
 }
 
 function formatTaploValue(node: TomlValue, text: string): string {

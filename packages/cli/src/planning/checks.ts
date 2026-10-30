@@ -1,10 +1,10 @@
+import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
-import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
@@ -50,14 +50,12 @@ function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck 
         scope: isRootCheck ? rootScope : scope,
         check,
         ...selectCheckFiles(planned, scopeCheck),
-        ...stripUndefined({
-            configuration,
-            tool,
-            base: options.base,
-            commits: options.commits,
-            range: options.range,
-            messageFile: options.messageFile,
-        }),
+        configuration,
+        tool,
+        base: options.base,
+        commits: options.commits,
+        range: options.range,
+        messageFile: options.messageFile,
     };
     const skip = findFirstSkip(plannedCheck, planned);
     return skip === undefined ? plannedCheck : { ...plannedCheck, skip };
@@ -234,7 +232,7 @@ export function listEnabledChecks(scopes: Scope[], settings: Settings): Configur
                           scopes.flatMap((each) => each.configurations),
                           name,
                       );
-            return [{ scope: rootOnly ? root : scope, check, ...stripUndefined({ configuration, tool }) }];
+            return [{ scope: rootOnly ? root : scope, check, configuration, tool }];
         }),
     );
 }

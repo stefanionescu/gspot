@@ -1,5 +1,4 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -49,7 +48,7 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
     return Object.fromEntries(
         (checks ?? []).map((commandCheck) => {
             const id = commandCheck.id;
-            const { paths, outputs, ...definition } = stripUndefined(commandCheck);
+            const { paths, outputs, ...definition } = commandCheck;
             return [
                 id,
                 {
@@ -81,16 +80,16 @@ export function buildSettings(parsed: ParsedSettings, written: TomlTable): Setti
     const { command_check: commandChecks, scope: scopes = [], ...document } = parsed;
     const writtenScopes = (written['scope'] ?? []) as TomlTable[];
     return {
-        ...stripUndefined(document),
+        ...document,
         written,
-        format: stripUndefined({ ...parsed.format }),
-        tools: stripUndefined({ ...parsed.tools }),
-        ignore: (parsed.ignore ?? []).map((ignore) => stripUndefined(ignore)),
+        format: { ...parsed.format },
+        tools: { ...parsed.tools },
+        ignore: parsed.ignore ?? [],
         commandChecks: normalizeCommandChecks(commandChecks),
         scopes: new Map(
             scopes.map((scope, index) => [
                 stripTrailingSlashes(scope.path),
-                stripUndefined({ ...scope, written: writtenScopes[index] as TomlTable }),
+                { ...scope, written: writtenScopes[index] as TomlTable },
             ]),
         ),
     };

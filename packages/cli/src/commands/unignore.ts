@@ -1,9 +1,9 @@
+import { isTable } from '#cli/system/tables.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
-import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { assertCheckExists } from '#cli/configurations/manifests.ts';
 import { RULE_OPTION, PATHS_OPTION } from '#cli/config/commands/flags.ts';
@@ -77,7 +77,7 @@ async function runUnignoreCommand(
     if (options.check !== undefined) assertCheckExists(options.check, settings);
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, {
         ...options,
-        ...stripUndefined({ paths: buildArgumentPaths(root, options.cwd, options.paths) }),
+        paths: buildArgumentPaths(root, options.cwd, options.paths),
     });
     const notes = formatEverywhereNote(everywhere, options.check);
     const target = formatIgnoreTarget(options);
@@ -133,7 +133,9 @@ export function registerUnignore(program: Command, onResult: CommandCompletion):
             onResult(
                 await runUnignoreCommand({
                     cwd: process.cwd(),
-                    ...stripUndefined({ check, rule: flags.rule, paths: flags.paths }),
+                    check,
+                    rule: flags.rule,
+                    paths: flags.paths,
                 }),
             );
         });

@@ -1,6 +1,5 @@
 import type { Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import { isRootOnlyCheck } from '#cli/planning/files.ts';
 import { ROOT_RUNS } from '#cli/config/planning/checks.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
@@ -113,7 +112,7 @@ function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson
                 value: row.value,
                 source: row.source,
                 origin: row.origin,
-                ...stripUndefined({ originScope: row.originScope }),
+                originScope: row.originScope,
                 reason_when: row.setting.reason_when,
                 scope: scopePath,
             }));

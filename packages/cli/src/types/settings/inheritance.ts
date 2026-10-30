@@ -47,11 +47,11 @@ export type InheritedSetting = {
     key: string;
     setting: Setting;
     value: unknown;
-    reason?: string;
+    reason?: string | undefined;
     source: string;
     origin: 'root' | 'scope' | 'configuration' | 'unset';
-    originScope?: string;
-    scope?: string;
+    originScope?: string | undefined;
+    scope?: string | undefined;
 };
 
 export type InheritedValue = Pick<InheritedSetting, 'value' | 'source' | 'origin' | 'originScope'> & {

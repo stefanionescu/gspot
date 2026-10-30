@@ -5,13 +5,13 @@ import { isReasonedValue } from '#cli/settings/file.ts';
 import { COMMAND_SUGGESTION } from '#cli/config/main.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { isTable, getValueAt } from '#cli/system/tables.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { findSettingSchema } from '#cli/settings/schema-lookup.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
 import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/flags.ts';
-import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
@@ -189,7 +189,8 @@ export function registerSet(program: Command, onResult: CommandCompletion): void
                     cwd: process.cwd(),
                     key: setting,
                     values: values,
-                    ...stripUndefined({ reason: flags.reason, scope: flags.scope }),
+                    reason: flags.reason,
+                    scope: flags.scope,
                 }),
             );
         });

@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
@@ -7,7 +8,6 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { LINE_BREAK, DIGITS_ONLY } from '#cli/config/text.ts';
-import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
@@ -56,43 +56,44 @@ function readPythonQuotes(root: string): string | undefined {
 function convertPrettierFormat(options: PrettierOptions): TomlTable {
     const indent = options.useTabs === true ? 'tab' : 'space';
     const indentStyle = options.useTabs === undefined ? undefined : indent;
-    return stripUndefined({
+    return {
         indent_style: indentStyle,
         indent_width: options.tabWidth,
         print_width: options.printWidth,
         quotes: convertQuotes(options.singleQuote),
         semicolons: options.semi,
         trailing_commas: options.trailingComma,
-    });
+    };
 }
 
 function buildFormatOverrides(
     options: PrettierOptions | null,
     scope: { root: string; quotes: string | undefined; hasPython: boolean },
 ): TomlTable[] {
-    const prettier = (options?.overrides ?? []).map((override) =>
-        stripUndefined({
-            paths: (Array.isArray(override.files) ? override.files : [override.files]).map((glob) =>
-                glob.includes('/') ? glob : `**/${glob}`,
-            ),
-            ...convertPrettierFormat(override.options),
-        }),
-    );
+    const prettier = (options?.overrides ?? []).map((override) => ({
+        paths: (Array.isArray(override.files) ? override.files : [override.files]).map((glob) =>
+            glob.includes('/') ? glob : `**/${glob}`,
+        ),
+        ...convertPrettierFormat(override.options),
+    }));
     const python = scope.hasPython ? (readPythonQuotes(scope.root) ?? DEFAULT_QUOTES.ruff) : undefined;
     const pythonOverride =
         python === undefined || python === (scope.quotes ?? DEFAULT_QUOTES.ruff)
             ? []
             : [{ paths: [...PYTHON_FILES], quotes: python }];
-    return [...prettier, ...pythonOverride].filter((override) => Object.keys(override).length > 1);
+    return [...prettier, ...pythonOverride].filter(
+        (override: TomlTable) => Object.values(override).filter((value) => value !== undefined).length > 1,
+    );
 }
 
 function parseEditorWidths(fields: Record<string, string>): PrettierOptions {
     const width = fields['indent_size'] === 'tab' ? fields['tab_width'] : fields['indent_size'];
-    const tabWidth = width === undefined || !DIGITS_ONLY.test(width) ? undefined : Number(width);
     const lineWidth = fields['max_line_length'];
-    const printWidth = lineWidth === undefined || !DIGITS_ONLY.test(lineWidth) ? undefined : Number(lineWidth);
-    const useTabs = fields['indent_style'] === undefined ? undefined : fields['indent_style'] === 'tab';
-    return stripUndefined({ tabWidth, printWidth, useTabs });
+    const options: PrettierOptions = {};
+    if (width !== undefined && DIGITS_ONLY.test(width)) options.tabWidth = Number(width);
+    if (lineWidth !== undefined && DIGITS_ONLY.test(lineWidth)) options.printWidth = Number(lineWidth);
+    if (fields['indent_style'] !== undefined) options.useTabs = fields['indent_style'] === 'tab';
+    return options;
 }
 
 function parseEditorconfigSections(text: string): EditorconfigSection[] {
@@ -146,7 +147,7 @@ export function parsePrettierFile(path: string, text: string): PrettierOptions |
         if (path.endsWith('.json5') && error instanceof GspotError) return undefined;
         throw error;
     }
-    return stripUndefined(parseFileFields(path, options, prettierSettingsSchema));
+    return parseFileFields(path, options, prettierSettingsSchema);
 }
 
 function readFormatOptions(
@@ -170,7 +171,7 @@ function readFormatOptions(
     const packageFields = isTable(packageOptions) ? packageOptions : {};
     const options =
         prettierFile === undefined
-            ? stripUndefined(parseFileFields(packagePath, packageFields, prettierSettingsSchema))
+            ? parseFileFields(packagePath, packageFields, prettierSettingsSchema)
             : parsePrettierFile(posix.join(scopePath, prettierFile.path), prettierFile.text);
     return { ...PRETTIER_DEFAULTS, ...editorconfig, ...options };
 }
@@ -208,9 +209,9 @@ export function readScopeFormat(
     );
     const overrides = buildFormatOverrides(options, { root: posix.join(repository.root, scope), quotes, hasPython });
     if (options === null) return overrides.length === 0 ? {} : { format: { override: overrides } };
-    const fields = stripUndefined({
+    const fields: TomlTable = {
         ...convertPrettierFormat(options),
-        override: overrides.length === 0 ? undefined : overrides,
-    });
-    return Object.keys(fields).length === 0 ? {} : { format: fields };
+        ...(overrides.length > 0 && { override: overrides }),
+    };
+    return Object.values(fields).every((value) => value === undefined) ? {} : { format: fields };
 }

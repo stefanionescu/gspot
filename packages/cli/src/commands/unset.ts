@@ -3,11 +3,11 @@ import { isReasonedValue } from '#cli/settings/file.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { SCOPE_OPTION } from '#cli/config/commands/flags.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { UnsetOptions } from '#cli/types/commands/unset.ts';
 import { removeKey, removeFromList } from '#cli/settings/edit.ts';
-import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/generation/settings-edit.ts';
 
@@ -63,7 +63,7 @@ export function registerUnset(program: Command, onResult: CommandCompletion): vo
                     cwd: process.cwd(),
                     key: setting,
                     keys: keys,
-                    ...stripUndefined({ scope: flags.scope }),
+                    scope: flags.scope,
                 }),
             );
         });

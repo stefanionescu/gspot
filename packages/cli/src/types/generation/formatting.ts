@@ -1,5 +1,5 @@
-import { type Defined } from '#cli/types/shapes.ts';
 import type { ParsedSettings } from '#cli/types/settings/file.ts';
+import { type Defined, type Optional } from '#cli/types/shapes.ts';
 
 export type FormatOverride = {
     files: string[];
@@ -13,7 +13,7 @@ export type PrettierPlugin = {
     overrides: { files: string; options: Record<string, unknown> }[];
 };
 
-export type ScopeFormat = { scope: string; paths: string[]; format: Partial<FormatSettings> };
+export type ScopeFormat = { scope: string; paths: string[]; format: Optional<FormatSettings> };
 
 export type FormatSettings = Required<Defined<Omit<NonNullable<ParsedSettings['format']>, 'override' | 'quotes'>>> &
     Pick<NonNullable<ParsedSettings['format']>, 'quotes'>;

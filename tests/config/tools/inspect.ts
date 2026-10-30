@@ -9,7 +9,7 @@ export const SYSTEM_PLUGIN_REPORTS = [
         stdout: 'registered third-party plugins:\n  pytest-cov-7.1.0 at /project/.venv/pytest_cov/plugin.py',
         code: 0,
         missing: false,
-        inspection: { state: 'system', found: '7.1.0' },
+        inspection: { state: 'system', found: '7.1.0', minimumVersion: undefined },
     },
     {
         name: 'absent',

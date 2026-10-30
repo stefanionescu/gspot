@@ -9,7 +9,7 @@ export type Explanation = {
     facts: Record<string, unknown>;
 };
 
-export type CheckIgnore = { rule?: string; paths?: string[]; reason: string; command: string };
+export type CheckIgnore = { rule?: string | undefined; paths?: string[] | undefined; reason: string; command: string };
 
 export type PathExplanation = {
     path: string;

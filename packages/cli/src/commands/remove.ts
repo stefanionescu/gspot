@@ -1,3 +1,4 @@
+import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
@@ -8,7 +9,6 @@ import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import { removeKey, getScopeTable } from '#cli/settings/edit.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation/write.ts';
@@ -170,7 +170,7 @@ export function registerRemove(program: Command, onResult: CommandCompletion): v
                     cwd: process.cwd(),
                     configurations: [...new Set(configurations)],
                     reason: flags.reason,
-                    ...stripUndefined({ scope: flags.scope }),
+                    scope: flags.scope,
                 }),
             );
         });

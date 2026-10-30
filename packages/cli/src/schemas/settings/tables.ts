@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { ciFields } from '#cli/schemas/settings/ci.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { hooksSchema } from '#cli/schemas/settings/hooks.ts';
 import { rulesSchema } from '#cli/schemas/settings/rules.ts';
@@ -257,13 +256,11 @@ const toolTableSchemas = Object.fromEntries<z.ZodType>(
     Object.entries(toolsSchema.shape).map(([tool, schema]) => [`tools.${tool}`, schema]),
 ) as ToolTableSchemas;
 
-export const tableValuesSchema = z
-    .strictObject({
-        ...configurationTableSchemas,
-        format: formatSchema.prefault({}),
-        ...toolTableSchemas,
-    })
-    .transform(stripUndefined) satisfies z.ZodType<TableValues>;
+export const tableValuesSchema = z.strictObject({
+    ...configurationTableSchemas,
+    format: formatSchema.prefault({}),
+    ...toolTableSchemas,
+}) satisfies z.ZodType<TableValues>;
 
 for (const [name, schema] of Object.entries(configurationTableSchemas)) {
     const description = TABLE_DESCRIPTIONS[name];

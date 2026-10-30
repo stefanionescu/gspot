@@ -2,7 +2,6 @@ import { posix } from 'node:path';
 import { UV_TOOL } from '#cli/config/tools/uv.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Host } from '#cli/types/planning.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import { NODE_TOOL } from '#cli/config/installers/npm/project.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -70,7 +69,8 @@ export function findMisePin(tool: Tool): MiseToolPin | undefined {
         : {
               name: pin.name,
               version: pin.version,
-              ...stripUndefined({ options: pin.options, checksums: pin.checksums }),
+              options: pin.options,
+              checksums: pin.checksums,
           };
 }
 

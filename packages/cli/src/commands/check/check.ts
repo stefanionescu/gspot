@@ -1,7 +1,6 @@
 import { join, resolve } from 'node:path';
 import { addAbortSignal } from 'node:stream';
 import { GspotError } from '#cli/system/errors.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { runPushCheck } from '#cli/commands/check/push.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
@@ -92,20 +91,18 @@ function buildCheckOptions(paths: string[], flags: CheckFlags, cwd: string): Che
         fix: flags.fix === true,
         verbose: flags.verbose === true,
         paths: hook === 'commit-msg' ? [] : paths,
-        ...stripUndefined({
-            hook,
-            allFiles: getAllFilesCause(flags.changed),
-            only: flags.only,
-            base: getChangedBase(flags.changed),
-            messageFile: hook === 'commit-msg' && paths[0] !== undefined ? resolve(cwd, paths[0]) : undefined,
-            stage,
-            onProgress:
-                flags.json === true
-                    ? undefined
-                    : (progress: CheckProgress) => {
-                          printProgress(progress);
-                      },
-        }),
+        hook,
+        allFiles: getAllFilesCause(flags.changed),
+        only: flags.only,
+        base: getChangedBase(flags.changed),
+        messageFile: hook === 'commit-msg' && paths[0] !== undefined ? resolve(cwd, paths[0]) : undefined,
+        stage,
+        onProgress:
+            flags.json === true
+                ? undefined
+                : (progress: CheckProgress) => {
+                      printProgress(progress);
+                  },
     };
 }
 

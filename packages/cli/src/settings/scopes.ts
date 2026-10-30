@@ -219,8 +219,7 @@ function fillTableValues(tables: Record<string, unknown>, rows: InheritedSetting
             return { row, name, path: path.slice(0, -1), field: path.at(-1) ?? '' };
         })
         .filter(
-            ({ row, name }) =>
-                Object.hasOwn(tableValuesSchema.in.shape, name) && findSettingSchema(row.key) !== undefined,
+            ({ row, name }) => Object.hasOwn(tableValuesSchema.shape, name) && findSettingSchema(row.key) !== undefined,
         );
     const empty = valueRows.filter(({ row }) => row.value === undefined);
     for (const { row, name } of empty) {

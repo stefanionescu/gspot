@@ -23,18 +23,18 @@ export type RunFilters = {
 };
 
 export type CheckOptions = {
-    allFiles?: 'empty-base' | 'new-branch';
-    hook?: HookName;
-    onProgress?: (progress: CheckProgress) => void;
+    allFiles?: 'empty-base' | 'new-branch' | undefined;
+    hook?: HookName | undefined;
+    onProgress?: ((progress: CheckProgress) => void) | undefined;
     cwd: string;
-    only?: string[];
+    only?: string[] | undefined;
     paths: string[];
     staged: boolean;
-    push?: PushInput;
-    base?: string;
+    push?: PushInput | undefined;
+    base?: string | undefined;
     fix: boolean;
-    stage?: StageFilter;
-    messageFile?: string;
+    stage?: StageFilter | undefined;
+    messageFile?: string | undefined;
     verbose: boolean;
 };
 
@@ -113,16 +113,16 @@ export type Run = {
 };
 
 export type RunOptions = PlanOptions & {
-    started?: Date;
+    started?: Date | undefined;
     stage: StageFilter;
-    onProgress?: (progress: CheckProgress) => void;
-    comparison?: NonNullable<RunReport['comparison']>;
-    unstagedChanges?: number;
+    onProgress?: ((progress: CheckProgress) => void) | undefined;
+    comparison?: NonNullable<RunReport['comparison']> | undefined;
+    unstagedChanges?: number | undefined;
     cwd: string;
     pathArguments: string[];
     push?: PushInput | undefined;
     fix: boolean;
-    verbose?: boolean;
+    verbose?: boolean | undefined;
 };
 
 export type RunReport = {

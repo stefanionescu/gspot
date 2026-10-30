@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
 import { setKey } from '#cli/settings/edit.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
@@ -10,7 +11,6 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import { stripDefaults } from '#cli/commands/init/defaults.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildFilenameMatcher } from '#cli/system/matchers.ts';
-import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
@@ -56,7 +56,7 @@ function buildSwiftTables(
             const destination = XCODE_DESTINATIONS.get(sdkRoot);
             const swiftSettings = {
                 xcode_project: posix.dirname(file),
-                ...stripUndefined({ xcode_destination: destination }),
+                ...(destination !== undefined && { xcode_destination: destination }),
             };
             return [[scope, { swift: swiftSettings }] as const];
         }),
@@ -106,7 +106,7 @@ function buildSettingsTable(
         ...(draft.level !== undefined && { level: draft.level }),
         configurations: draft.configurations,
         ...tables.get(''),
-        ...stripUndefined({ scope: scope.length === 0 ? undefined : scope }),
+        ...(scope.length > 0 && { scope }),
     });
 }
 
@@ -158,6 +158,7 @@ export function buildSettingsDraft(
             ...scope,
             configurations: configurations.scopeConfigurations.get(scope.path) ?? [],
         })),
-        ...stripUndefined({ level: options.level, template: options.template }),
+        level: options.level,
+        template: options.template,
     };
 }

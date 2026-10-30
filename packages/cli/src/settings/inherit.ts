@@ -2,11 +2,11 @@ import { z } from 'zod';
 import { compareText } from '#cli/system/text.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
+import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { commandSchema } from '#cli/schemas/configurations/fields.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, SettingsTable } from '#cli/types/settings/file.ts';
-import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/inheritance.ts';
 import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/schema-lookup.ts';
 import { CATEGORY_PARENTS, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
@@ -175,10 +175,10 @@ export function getWrittenSetting(settings: Pick<Settings, 'written'>, key: stri
     const value: unknown = getValueAt(settings.written, key.split('.'));
     if (value === undefined) return undefined;
     return isReasonedValue(value)
-        ? stripUndefined({
+        ? {
               value: value.value,
               reason: value.reason,
-          })
+          }
         : { value };
 }
 
@@ -267,7 +267,9 @@ export function getSettingValue(
         value,
         source,
         origin,
-        ...stripUndefined({ reason, scope: scopePath, originScope }),
+        reason,
+        scope: scopePath,
+        originScope,
     };
 }
 

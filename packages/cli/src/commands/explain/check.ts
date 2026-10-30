@@ -3,7 +3,6 @@ import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { CODE_MARK } from '#cli/config/main.ts';
 import type { Session } from '#cli/types/session.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
@@ -62,7 +61,8 @@ function listCheckIgnores(session: Session | undefined, checkId: string): CheckI
     return (session?.settings.ignore ?? [])
         .filter((ignore) => ignore.check === checkId)
         .map(({ rule, paths, reason }) => ({
-            ...stripUndefined({ rule, paths }),
+            rule,
+            paths,
             reason,
             command: [
                 `gspot unignore ${quoteArgument(checkId)}`,
@@ -193,10 +193,8 @@ export function explainCheck(session: Session | undefined, checkId: string): Exp
             why: check.why,
             help: check.help,
             when: check.when,
-            ...stripUndefined({
-                crash_pattern: facts.crashPattern,
-                run_in_copy: check.run_in_copy,
-            }),
+            crash_pattern: facts.crashPattern,
+            run_in_copy: check.run_in_copy,
             settings: facts.settings,
             rules: facts.rules,
             ignores: facts.ignores,

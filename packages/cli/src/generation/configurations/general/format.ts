@@ -1,3 +1,4 @@
+import { isTable } from '#cli/system/tables.ts';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -6,7 +7,6 @@ import { listPrettierPlugins } from '#cli/planning/tools.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { includeFolderContents } from '#cli/system/matchers.ts';
-import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import { type PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { type Settings, type WrittenFormat } from '#cli/types/settings/file.ts';
 import { type ScopeFormat, type FormatOverride, type PrettierPlugin } from '#cli/types/generation/formatting.ts';
@@ -100,12 +100,10 @@ function listScopeFormats(settings: Settings): ScopeFormat[] {
         tables.push({ scope, format });
     }
     const base = tables.flatMap(({ scope, format: { override: _overrides, ...format } }) =>
-        scope === '' || Object.keys(format).length === 0
-            ? []
-            : { scope, paths: ['**/*'], format: stripUndefined(format) },
+        scope === '' || Object.keys(format).length === 0 ? [] : { scope, paths: ['**/*'], format },
     );
     const overrides = tables.flatMap(({ scope, format }) =>
-        (format.override ?? []).map(({ paths, ...format }) => ({ scope, paths, format: stripUndefined(format) })),
+        (format.override ?? []).map(({ paths, ...format }) => ({ scope, paths, format })),
     );
     return [...base, ...overrides];
 }
@@ -119,7 +117,7 @@ function listFormatOverrides(settings: Settings): FormatOverride[] {
         return {
             files,
             excludeFiles,
-            options: stripUndefined({
+            options: {
                 tabWidth: format.indent_width,
                 useTabs: format.indent_style === undefined ? undefined : format.indent_style === 'tab',
                 printWidth: format.print_width,
@@ -127,7 +125,7 @@ function listFormatOverrides(settings: Settings): FormatOverride[] {
                 trailingComma: format.trailing_commas,
                 semi: format.semicolons,
                 endOfLine: format.line_ending,
-            }),
+            },
         };
     });
 }

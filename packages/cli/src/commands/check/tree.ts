@@ -3,7 +3,6 @@ import { getColors } from '#cli/system/terminal.ts';
 import { type Session } from '#cli/types/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import { readHookStatus } from '#cli/installers/hooks.ts';
 import { findSettingsSkip } from '#cli/planning/skips.ts';
 import { type StageFilter } from '#cli/types/planning.ts';
@@ -16,6 +15,7 @@ import { listChecksById, assertCheckExists } from '#cli/configurations/manifests
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
 
 import {
+    type FixReport,
     type RunReport,
     type RunOptions,
     type RunFilters,
@@ -28,13 +28,13 @@ function buildHistorySelection(
     changed: RunFilters['changed'],
 ): Pick<RunOptions, 'commits' | 'base' | 'shallow' | 'range'> {
     if (revision?.content === 'commit')
-        return stripUndefined({
+        return {
             commits: revision.commits,
             range: revision.range,
             base: revision.base ?? changed?.reference,
             shallow: revision.shallow,
-        });
-    return stripUndefined({ commits: changed?.commits, base: changed?.reference });
+        };
+    return { commits: changed?.commits, base: changed?.reference };
 }
 
 function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: RevisionSource | undefined): RunOptions {
@@ -43,21 +43,19 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
     return {
         cwd: revision?.content === 'index' ? revision.cwd : options.cwd,
         pathArguments: revision?.content === 'index' ? revision.paths : options.paths,
-        ...stripUndefined({
-            started: revision?.content === 'index' ? revision.started : undefined,
-            stage,
-            fix: options.fix,
-            verbose: options.verbose,
-            onProgress: options.onProgress,
-            staged: staging.staged,
-            changed: changed?.paths,
-            comparison,
-            only: options.only,
-            paths,
-            messageFile: options.messageFile,
-            push: options.push,
-            ...buildHistorySelection(revision, changed),
-        }),
+        started: revision?.content === 'index' ? revision.started : undefined,
+        stage,
+        fix: options.fix,
+        verbose: options.verbose,
+        onProgress: options.onProgress,
+        staged: staging.staged,
+        changed: changed?.paths,
+        comparison,
+        only: options.only,
+        paths,
+        messageFile: options.messageFile,
+        push: options.push,
+        ...buildHistorySelection(revision, changed),
         unstagedChanges: staging.unstaged,
     };
 }
@@ -163,7 +161,7 @@ export async function runTreeCheck(
     options: CheckOptions,
     cancelSignal: AbortSignal,
     revision?: RevisionSource,
-): Promise<CommandResult<RunReport>> {
+): Promise<CommandResult<RunReport & { fixes?: FixReport | undefined }>> {
     using resources = new DisposableStack();
     const session = await openSession(treeFolder, {
         toolsRoot: revision?.toolsRoot ?? treeFolder,
@@ -183,7 +181,7 @@ export async function runTreeCheck(
     const text = result.fixes ? `${formatFixes(result.fixes).join('\n')}\n${reportText}` : reportText;
     return {
         text,
-        json: { ...result.report, ...stripUndefined({ fixes: result.fixes }) },
+        json: { ...result.report, fixes: result.fixes },
         exitCode: result.report.exitCode,
     };
 }

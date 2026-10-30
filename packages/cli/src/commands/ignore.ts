@@ -4,7 +4,6 @@ import { escapeGlob } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
 import { EVERY_CHECK } from '#cli/config/ignores.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
@@ -39,12 +38,12 @@ function formatIgnoreSummary(options: IgnoreOptions, paths: string[] | undefined
 }
 
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
-    const record = stripUndefined({
+    const record = {
         check: options.check,
         rule: options.rule,
         paths: options.paths,
         reason: options.reason,
-    });
+    };
     const valid = ignoreSchema.safeParse(record);
     if (!valid.success)
         throw new GspotError(
@@ -56,15 +55,12 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
     if (options.check !== undefined) assertCheckExists(options.check, settings);
     const paths = escapeLiteralPaths(root, buildArgumentPaths(root, options.cwd, options.paths));
     const list = (input.table['ignore'] as TomlTable[] | undefined) ?? [];
-    mergeIgnore(
-        list,
-        stripUndefined({
-            check: options.check,
-            rule: options.rule,
-            paths,
-            reason: options.reason,
-        }),
-    );
+    mergeIgnore(list, {
+        ...(options.check !== undefined && { check: options.check }),
+        ...(options.rule !== undefined && { rule: options.rule }),
+        paths,
+        reason: options.reason,
+    });
     input.table['ignore'] = list;
     return await applySettingsEdit(root, {
         reads: context.reads,
@@ -95,12 +91,10 @@ export function registerIgnore(program: Command, onResult: CommandCompletion): v
             onResult(
                 await runIgnoreCommand({
                     cwd: process.cwd(),
-                    ...stripUndefined({
-                        check,
-                        paths: flags.paths,
-                        rule: flags.rule,
-                        reason: flags.reason,
-                    }),
+                    check,
+                    paths: flags.paths,
+                    rule: flags.rule,
+                    reason: flags.reason,
                 }),
             );
         });

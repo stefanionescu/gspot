@@ -6,7 +6,7 @@ type SettingRow = {
     value: unknown;
     source: string;
     origin: InheritedSetting['origin'];
-    originScope?: string;
+    originScope?: string | undefined;
     reason_when: Setting['reason_when'];
     scope: string;
 };

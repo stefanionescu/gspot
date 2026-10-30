@@ -5,7 +5,6 @@ import { writeSettings } from '#cli/settings/file.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
@@ -47,7 +46,8 @@ export async function applySettingsEdit(
     const result = buildEditedSettings(root, edit);
     options.reads?.sources.set(SETTINGS_FILE, Buffer.from(result.text));
     const session = await openSession(root, {
-        ...stripUndefined({ reads: options.reads, listing: options.listing }),
+        reads: options.reads,
+        listing: options.listing,
         settingsFile: { settings: result.settings, text: result.text },
     });
     const generated = generateFiles(session);

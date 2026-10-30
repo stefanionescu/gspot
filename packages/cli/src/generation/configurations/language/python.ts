@@ -3,7 +3,6 @@ import { relative } from 'node:path/posix';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import { type PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { type FormatSettings } from '#cli/types/generation/formatting.ts';
@@ -67,13 +66,21 @@ export function buildBasedpyrightFile(planned: PlannedConfigFile): string {
     );
 }
 
-function selectPythonFormat(scopeSettings: PlannedConfigFile['scope']['settings']): FormatSettings {
-    const override = scopeSettings.tables.format.override.find(({ paths }) =>
+function selectPythonFormat(
+    scopeSettings: PlannedConfigFile['scope']['settings'],
+): Pick<FormatSettings, 'indent_style' | 'indent_width' | 'print_width' | 'line_ending' | 'quotes'> {
+    const format = scopeSettings.tables.format;
+    const override = format.override.find(({ paths }) =>
         paths.every((path) => (PYTHON_FILES as readonly string[]).includes(path)),
     );
-    if (override === undefined) return scopeSettings.tables.format;
-    const { paths: _paths, ...fields } = override;
-    return { ...scopeSettings.tables.format, ...stripUndefined(fields) };
+    if (override === undefined) return format;
+    return {
+        indent_style: override.indent_style ?? format.indent_style,
+        indent_width: override.indent_width ?? format.indent_width,
+        print_width: override.print_width ?? format.print_width,
+        line_ending: override.line_ending ?? format.line_ending,
+        quotes: override.quotes ?? format.quotes,
+    };
 }
 
 /**

@@ -8,11 +8,11 @@ export type SettingsEditOptions = {
     edit: SettingsEdit;
     summary: string;
     notes?: string[];
-    reads?: ReadCache;
-    listing?: RepositoryListing;
+    reads?: ReadCache | undefined;
+    listing?: RepositoryListing | undefined;
 };
 
-export type ConfigurationsOptions = { cwd: string; configurations: string[]; scope?: string };
+export type ConfigurationsOptions = { cwd: string; configurations: string[]; scope?: string | undefined };
 
 export type ConfigurationChange = {
     action: string;

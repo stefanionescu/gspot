@@ -7,7 +7,6 @@ import type { Session } from '#cli/types/session.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { stripUndefined } from '#cli/system/tables.ts';
 import { createInterface } from 'node:readline/promises';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
@@ -114,11 +113,9 @@ export function registerInit(program: Command, onResult: CommandCompletion): voi
                 await runInitCommand({
                     cwd: process.cwd(),
                     yes: flags.yes === true,
-                    ...stripUndefined({
-                        level: flags.level,
-                        template,
-                        configurations: flags.configurations === false ? [] : flags.configurations,
-                    }),
+                    level: flags.level,
+                    template,
+                    configurations: flags.configurations === false ? [] : flags.configurations,
                 }),
             );
         });
@@ -183,7 +180,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         configurations: initConfigurations,
         everySelected,
         conflicts,
-        ...stripUndefined({ template: options.template }),
+        template: options.template,
     };
     const plan = planInitFiles(planning, { settings, settingsText, requirements: applicable, generated });
     return { detection, session, generated, plan, settingsText, reviewed: conflicts.reviewed };

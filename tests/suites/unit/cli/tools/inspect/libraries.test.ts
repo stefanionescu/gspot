@@ -106,6 +106,7 @@ test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $nam
         name: 'pytest-cov',
         path: '/native/pytest',
         help: tool.install_help!,
+        want: undefined,
         ...report.inspection,
     });
     expect(versionRun).toHaveBeenCalledWith(

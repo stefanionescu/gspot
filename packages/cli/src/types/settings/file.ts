@@ -60,12 +60,12 @@ export type Settings = Omit<
     configurations: string[];
     removed_configurations: string[];
     structure: StructureSettings;
-    tools: Defined<ParsedTools>;
+    tools: ParsedTools;
     test_files: string[];
     ignore: IgnoreRecord[];
     commandChecks: Record<string, CommandCheck>;
-    hooks?: Defined<Required<NonNullable<ParsedSettings['hooks']>>>;
-    ci?: ParsedCi;
+    hooks?: Defined<Required<NonNullable<ParsedSettings['hooks']>>> | undefined;
+    ci?: ParsedCi | undefined;
     scopes: Map<string, NonNullable<ParsedSettings['scope']>[number] & Pick<Settings, 'written'>>;
 };
 

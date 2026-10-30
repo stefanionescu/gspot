@@ -4,8 +4,8 @@ export type SetOptions = {
     cwd: string;
     key: string;
     values: string[];
-    reason?: string;
-    scope?: string;
+    reason?: string | undefined;
+    scope?: string | undefined;
 };
 
 export type ParsedSettingValue = { type: 'list'; value: unknown[] } | { type: 'scalar'; value: unknown };
