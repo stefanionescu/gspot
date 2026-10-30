@@ -111,7 +111,10 @@ test.each(['{file}', '{files}'])(
         expect(finding.findings).toStrictEqual([
             matchFields({ file: source, line: 1, message: 'Located defect before exit' }),
         ]);
-        planned.check.command = buildProgramCommand('fakes/tool', '--line', located, '--exit', '7', placeholder);
+        planned.check = {
+            ...planned.check,
+            command: buildProgramCommand('fakes/tool', '--line', located, '--exit', '7', placeholder),
+        };
         const fatal = await runCommandCheck(buildCheckSession(session), planned);
         expect(fatal.status).toBe('error');
         expect(fatal.findings).toStrictEqual([]);
@@ -196,16 +199,19 @@ test('a finding in a folder outside the scope keeps its repository path when the
         (check) => check.scope.path === 'app',
     )!;
     planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
-    planned.check.command = buildProgramCommand(
-        'fakes/tool',
-        '--line',
-        '../lib/x.ts:1: outside',
-        '--line',
-        'src/a.swift:2: inside',
-    );
-    planned.check.output = {
-        ...LOCATED_CHECK.output,
-        pattern: String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$`,
+    planned.check = {
+        ...planned.check,
+        command: buildProgramCommand(
+            'fakes/tool',
+            '--line',
+            '../lib/x.ts:1: outside',
+            '--line',
+            'src/a.swift:2: inside',
+        ),
+        output: {
+            ...LOCATED_CHECK.output,
+            pattern: String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$`,
+        },
     };
 
     const checked = await runCommandCheck(buildCheckSession(session), planned);

@@ -26,7 +26,7 @@ test.each([0, 3])('the fixer tool owns crash detection when exit is %p', async (
         session,
         buildProgramCommand('fakes/tool', '--stderr', 'Fatal: cannot write\n', '--exit', String(code)),
     );
-    planned.check.exit_codes = [3];
+    planned.check = { ...planned.check, exit_codes: [3] };
     const configuration = session.configurationsByName.values().next().value!;
     session.configurationsByName.set(configuration.name, {
         ...configuration,
@@ -57,7 +57,7 @@ test.each([...FIXER_RESULTS])(
 
         const session = await openSession(sandbox.path);
         const planned = planFixer(session, buildProgramCommand('fakes/tool', ...toolArguments));
-        if (exitCodes !== undefined) planned.check.exit_codes = [...exitCodes];
+        if (exitCodes !== undefined) planned.check = { ...planned.check, exit_codes: [...exitCodes] };
         const resultRun = await runFixers(buildCheckSession(session), [planned]);
         const result = resultRun.results[0];
         expect({ status: result!.status, note: 'note' in result! ? result.note : undefined }).toStrictEqual({
