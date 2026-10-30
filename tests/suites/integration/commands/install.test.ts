@@ -76,7 +76,7 @@ test('a repeated npm install keeps the lockfile and the modules with the registr
     const first = await spawnGspot(root, ['install']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
     const lockfile = await readFile(join(root, GSPOT_FOLDER, 'package-lock.json'), 'utf8');
-    const marker = join(root, GSPOT_PATHS.nodeModules, 'keep.txt');
+    const marker = join(root, GSPOT_PATHS.nodeModules, 'prettier/keep.txt');
     await writeFile(marker, 'installed modules');
     const requests = registry.requests;
     for (const online of [true, false]) {
