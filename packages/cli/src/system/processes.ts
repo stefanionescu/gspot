@@ -237,7 +237,6 @@ function launchProcess(command: readonly string[], options: AsyncSpawnOptions, o
     const child = execa(executable, commandArguments, {
         ...buildExecaOptions(options, executable),
         ...output,
-        ...(options.cancelSignal !== undefined && { cancelSignal: options.cancelSignal }),
         detached: process.platform !== 'win32',
     });
     const supervision = watchProcess(child, options);
