@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildTsconfig } from '#cli/checks/tsc/scope-tsconfig.ts';
@@ -42,7 +42,7 @@ test('projects without tsconfig.json get required options and framework options 
     });
     const session = await openSession(sandbox.path);
     const options = session.scopes.map((scope) => {
-        const path = join(sandbox.path, GSPOT_PATHS.state, scope.path, 'tsconfig.json');
+        const path = join(sandbox.path, GSPOT_FOLDER, scope.path, 'tsconfig.json');
         const { strict, experimentalDecorators, emitDecoratorMetadata } = buildTsconfig(session, scope, path)[
             'compilerOptions'
         ] as Record<string, unknown>;

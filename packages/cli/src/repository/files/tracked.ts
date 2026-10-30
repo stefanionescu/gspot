@@ -7,7 +7,6 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { GitIndexFile } from '#cli/types/parsers/git.ts';
 import { isIgnored } from '#cli/repository/files/gitignore.ts';
-import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
 import { buildGitError, runGitForBytes } from '#cli/system/git.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { isInside, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
@@ -76,7 +75,7 @@ function walkPaths(root: string): string[] {
             if (child.name === GIT_FOLDER) return false;
             const path = `${folder}${child.name}`;
             const listedPath = child.isDirectory() ? `${path}/` : path;
-            return !isIgnored(listedPath, ignores) && !STATE_FOLDER_PATTERN.test(path.normalize('NFC'));
+            return !isIgnored(listedPath, ignores);
         });
         for (const child of kept) {
             const path = `${folder}${child.name}`;
@@ -155,11 +154,7 @@ export async function listTrackedFiles(
               )
             : undefined;
     return [...new Set(paths)]
-        .filter(
-            (path) =>
-                !STATE_FOLDER_PATTERN.test(path.normalize('NFC')) &&
-                submodules.every((module) => !isInScope(path, module)),
-        )
+        .filter((path) => submodules.every((module) => !isInScope(path, module)))
         .toSorted((a, b) => compareText(a, b))
         .map((path) => readListedFile(root, path, executables))
         .filter((file) => file !== undefined);

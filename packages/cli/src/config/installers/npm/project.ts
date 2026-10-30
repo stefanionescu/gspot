@@ -10,7 +10,8 @@ export const PACKAGE_MANAGER_ARGUMENTS = {
             '--omit-lockfile-registry-resolved',
         ],
         install: [
-            'ci',
+            'install',
+            '--no-save',
             '--legacy-peer-deps',
             '--ignore-scripts',
             '--no-audit',

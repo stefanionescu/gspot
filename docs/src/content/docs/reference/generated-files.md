@@ -23,10 +23,7 @@ Change `gspot.toml`, then run `gspot apply`; gspot writes every generated file f
 | `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`                                                              | The CI job.                                                                                                                                                                                                                                                 | Yes    |
 | The managed blocks in `AGENTS.md` and `.gitattributes`                                                               | The part between the gspot markers. The rest of each file stays yours.                                                                                                                                                                                      | Yes    |
 | Keys in your own files, such as `install.security.scanner` in `bunfig.toml` and tool keys in `package.json`          | Install options. The other keys stay yours.                                                                                                                                                                                                                 | Yes    |
-| `.gspot/node_modules/`, `.gspot/.venv/`, `.gspot/vale/`, `.gspot/state/`                                             | Installed tools and run state. The `.gitignore` in `.gspot/` keeps them out of Git.                                                                                                                                                                         | No     |
-
-`gspot install` records successful npm and Vale installs in `.gspot/state/install.json`. It uses this local record to
-skip unchanged installs. Git ignores the record.
+| `.gspot/node_modules/`, `.gspot/.venv/`, `.gspot/vale/`                                                              | Installed tools. The `.gitignore` in `.gspot/` keeps them out of Git.                                                                                                                                                                                       | No     |
 
 The managed block of `AGENTS.md` lists your repository's generated files and the keys gspot sets. Run `gspot install` in each new clone.
 

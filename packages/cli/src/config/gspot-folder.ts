@@ -15,8 +15,6 @@ export const GSPOT_PATHS = {
     configurations: `${GSPOT_FOLDER}/configurations`,
     hooks: `${GSPOT_FOLDER}/hooks`,
     gitignore: `${GSPOT_FOLDER}/.gitignore`,
-    state: `${GSPOT_FOLDER}/state`,
-    installRecord: `${GSPOT_FOLDER}/state/install.json`,
     versionPin: `${GSPOT_FOLDER}/version`,
     settingsSchema: `${GSPOT_FOLDER}/${SCHEMA_FILE}`,
     miseProject: `${GSPOT_FOLDER}/${MISE_CONFIG_FILE}`,
@@ -27,6 +25,7 @@ export const GSPOT_PATHS = {
     pythonEnvironment: `${GSPOT_FOLDER}/${PYTHON_ENVIRONMENT_FOLDER}`,
     uvLockfile: `${GSPOT_FOLDER}/${UV_LOCKFILE}`,
     valePackages: `${GSPOT_FOLDER}/vale`,
+    valeReleases: `${GSPOT_FOLDER}/vale/releases.json`,
     valeConfigFile: `${GSPOT_FOLDER}/configurations/general/prose/vale.ini`,
 } as const;
 
@@ -35,8 +34,6 @@ export const INSTALLED_TOOL_FOLDERS = {
     python: GSPOT_PATHS.pythonEnvironment,
     vale: GSPOT_PATHS.valePackages,
 } as const;
-
-export const STATE_FOLDER_PATTERN = new RegExp(`(?:^|/)\\${GSPOT_PATHS.state}(?:/|$)`, 'iu');
 
 export const TOOL_LOCKFILES = new Set([
     ...LOCKFILES.map(({ file }) => `${GSPOT_FOLDER}/${file}`),

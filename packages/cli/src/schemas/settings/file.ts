@@ -6,7 +6,6 @@ import { hooksSchema } from '#cli/schemas/settings/hooks.ts';
 import { rulesSchema } from '#cli/schemas/settings/rules.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
-import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
 import { TABLE_DESCRIPTIONS } from '#cli/config/settings/json-schema.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
@@ -186,10 +185,7 @@ export const scopeSchema = z.strictObject({
                     ),
             SCOPE_PATH_MESSAGES.portable,
         )
-        .refine((path) => {
-            const folder = path.normalize('NFC');
-            return !GSPOT_FOLDER_PATH.test(folder) && !STATE_FOLDER_PATTERN.test(folder);
-        }, SCOPE_PATH_MESSAGES.gspot)
+        .refine((path) => !GSPOT_FOLDER_PATH.test(path.normalize('NFC')), SCOPE_PATH_MESSAGES.gspot)
         .meta(SETTING_DEFINITIONS['scope.path']),
     configurations: z
         .string()

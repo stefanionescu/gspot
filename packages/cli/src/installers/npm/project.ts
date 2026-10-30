@@ -7,7 +7,6 @@ import { TRAILING_PERIOD } from '#cli/config/text.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { runInstallStep } from '#cli/installers/steps.ts';
 import { VERSION_FLAG } from '#cli/config/tools/versions.ts';
-import type { FileContents } from '#cli/types/system/files.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
@@ -16,7 +15,6 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { ReplacementRequest } from '#cli/types/repository/writer.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { buildInstallKey, recordInstalledProject } from '#cli/installers/record.ts';
 import { buildPackageManagerCommand } from '#cli/repository/npm/package-manager.ts';
 import { writeNpmrc, extractRegistryCredentials } from '#cli/installers/npm/registry.ts';
 import { prepareReleaseAge, writeBunReleaseAge } from '#cli/installers/npm/release-age.ts';
@@ -152,19 +150,6 @@ Install the npm tool project in .gspot.
 export async function installNpmTools(install: NpmToolInstall): Promise<string> {
     const { root, toolConfigurations } = install.session;
     const packageManager = install.packageManager;
-    const key =
-        packageManager.name === 'npm'
-            ? buildInstallKey([
-                  `${packageManager.name}@${packageManager.version}`,
-                  (install.writer.read(`${GSPOT_FOLDER}/package-lock.json`) as FileContents).bytes,
-              ])
-            : undefined;
-    if (
-        key !== undefined &&
-        install.record.npm === key &&
-        install.writer.readStats(GSPOT_PATHS.nodeModules)?.isDirectory() === true
-    )
-        return '';
     await runPackageManager(install, {
         runFolder: join(root, GSPOT_FOLDER),
         packageManager,
@@ -172,7 +157,6 @@ export async function installNpmTools(install: NpmToolInstall): Promise<string> 
         failure: INSTALL_FAILURE,
         environment: install.registryEnvironment,
     });
-    if (key !== undefined) recordInstalledProject(install, 'npm', key);
     const count = Object.keys(listToolProjectPins(toolConfigurations).npm).length;
     return `installed ${formatCount(count, NPM_TOOL_NOUN)} in ${GSPOT_PATHS.nodeModules} (${packageManager.name} ${packageManager.version})`;
 }

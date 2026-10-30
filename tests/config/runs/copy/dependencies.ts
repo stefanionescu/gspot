@@ -17,7 +17,7 @@ export const TOOL_PROJECT_FILES = {
     'project/.gspot/package.json': '{}',
     'project/.gspot/bun.lock': '{}',
     'project/.gspot/node_modules/example/index.js': 'export const value = 1;',
-    '.gitignore': 'node_modules/\n.gspot/state/\n',
+    '.gitignore': 'node_modules/\n',
 } as const;
 
 export const EXTERNAL_DEPENDENCY_FILES = {

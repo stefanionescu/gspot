@@ -50,7 +50,6 @@ const PORTABLE_PATH_REFUSAL = String.raw`Use folder names that work on every sys
 export const REFUSED_SCOPE_FOLDERS = [
     { path: '.gspot/tools', message: GSPOT_FOLDER_REFUSAL },
     { path: '.GSPOT', message: GSPOT_FOLDER_REFUSAL },
-    { path: 'apps/.gspot/state', message: GSPOT_FOLDER_REFUSAL },
     { path: 'nul.txt', message: PORTABLE_PATH_REFUSAL },
     { path: 'a ', message: PORTABLE_PATH_REFUSAL },
     { path: 'apps/COM1', message: PORTABLE_PATH_REFUSAL },

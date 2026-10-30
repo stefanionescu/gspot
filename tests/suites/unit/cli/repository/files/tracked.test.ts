@@ -3,7 +3,6 @@ import { test, expect } from 'bun:test';
 import { unlink, symlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
@@ -67,7 +66,6 @@ test.each(
             [`${folder}/deeper/keep.log`]: 'retained by inherited override',
             'sibling/keep.log': 'ignored by root',
             'sibling/local.ts': 'retained',
-            [`${GSPOT_PATHS.state}/private.txt`]: 'ownership metadata',
         });
         await createFileTree(sandbox.path, { 'outside/private.ts': 'external bytes' });
         await symlink('source.ts', join(root, 'linked.ts'));

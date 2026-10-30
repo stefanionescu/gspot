@@ -96,7 +96,7 @@ test.each([true, false])(
         await applyGeneratedFiles(sandbox.path);
         const ignorePath = join(sandbox.path, GSPOT_PATHS.gitignore);
         const installed = await readFile(ignorePath, 'utf8');
-        expect(installed).toBe('node_modules/\n.venv/\nvale/\nstate/\n');
+        expect(installed).toBe('node_modules/\n.venv/\nvale/\n');
         expect((await isOnDisk(path)) ? await readFile(path, 'utf8') : undefined).toBe(authored ? previous : undefined);
         await applyGeneratedFiles(sandbox.path);
         expect(await readFile(ignorePath, 'utf8')).toBe(installed);

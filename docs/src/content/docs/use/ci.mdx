@@ -141,7 +141,7 @@ bun run --no-install gspot check --only security/semgrep-registry
 Let the pipeline fail on the gspot exit code: `1` means findings, and `2` means the run did not finish. A missing
 program gives exit 2, and the report names it. `gspot check --json` prints the report as JSON.
 
-Do not cache or upload `.gspot/state/` or credentials. To cache downloads and installed tools, key the cache on the gspot
+Do not cache or upload credentials. To cache downloads and installed tools, key the cache on the gspot
 version, the files in `.gspot/` that pin the tools, and your lockfiles, as the GitHub job does.
 
 ## Turn CI off

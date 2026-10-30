@@ -3,13 +3,13 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { INIT_FILES } from '#tests/config/init.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
 import { TOOL_PROJECTS_MESSAGE } from '#tests/config/messages.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { InstallCommandJson } from '#cli/types/commands/install.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -73,12 +73,12 @@ test.each([true, false])(
     },
 );
 
-test('a repeated npm install skips npm ci and keeps modules with the registry offline', async () => {
+test('a repeated npm install keeps the lockfile and the modules with the registry offline', async () => {
     await using sandbox = await createNpmProject('npm', 'package.json');
     const { root, registry } = sandbox;
     const first = await spawnGspot(root, ['install']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
-    const record = await readFile(join(root, GSPOT_PATHS.installRecord), 'utf8');
+    const lockfile = await readFile(join(root, GSPOT_FOLDER, 'package-lock.json'), 'utf8');
     const marker = join(root, GSPOT_PATHS.nodeModules, 'keep.txt');
     await writeFile(marker, 'installed modules');
     const requests = registry.requests;
@@ -87,9 +87,9 @@ test('a repeated npm install skips npm ci and keeps modules with the registry of
         const next = await spawnGspot(root, ['install', '--json']);
         expect(next.code, next.stdout + next.stderr).toBe(0);
         const result = JSON.parse(next.stdout) as InstallCommandJson;
-        expect(result.steps.filter((step) => step.includes('ci'))).toStrictEqual([]);
+        expect(result.steps.filter((step) => step.includes('--no-save'))).toHaveLength(1);
         expect(registry.requests).toBe(requests);
-        expect(await readFile(join(root, GSPOT_PATHS.installRecord), 'utf8')).toBe(record);
+        expect(await readFile(join(root, GSPOT_FOLDER, 'package-lock.json'), 'utf8')).toBe(lockfile);
         expect(await readFile(marker, 'utf8')).toBe('installed modules');
     }
 });

@@ -5,7 +5,6 @@ import { MISE_TOOL } from '#cli/config/tools/locate.ts';
 import { installHooks } from '#cli/installers/hooks.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { installMiseTools } from '#cli/installers/mise.ts';
-import { readInstallRecord } from '#cli/installers/record.ts';
 import { installValePackages } from '#cli/installers/vale.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
@@ -67,7 +66,6 @@ export function buildToolInstall(session: Session, writer: Files, generated: Gen
     const misePath = which.sync(MISE_TOOL, { nothrow: true });
     return {
         session,
-        record: readInstallRecord(session),
         packageManager: readInstallPackageManager(session),
         minimumReleaseAge: {
             days: getTable(getRootScope(session.scopes).settings, 'dependencies').min_release_age_days,

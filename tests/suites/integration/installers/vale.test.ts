@@ -51,16 +51,10 @@ test('gspot install restores deleted Vale dictionaries, and prose/vale passes ag
     expect(corrected.report.checks).toMatchObject([{ check: 'prose/vale', status: 'passed', findings: [] }]);
 });
 
-async function recordEarlierValeRelease(root: string): Promise<void> {
-    const path = join(root, GSPOT_PATHS.installRecord);
-    const record = JSON.parse(await readFile(path, 'utf8')) as Record<string, string>;
-    await writeFile(path, JSON.stringify({ ...record, vale: 'an earlier package release' }));
-}
-
 test('a Vale reinstall for new package releases deletes a package gspot no longer ships', async () => {
     const sandbox = installedSandbox();
     await using _change = await changeSandbox(sandbox, AUTHORED_VALE_FILES);
-    await recordEarlierValeRelease(sandbox.root);
+    await writeFile(join(sandbox.root, GSPOT_PATHS.valeReleases), '{}\n');
     await createFileTree(sandbox.root, { [`${GSPOT_PATHS.valePackages}/Retired/terms.yml`]: 'old rule\n' });
     const installed = await spawnGspot(sandbox.root, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
@@ -72,7 +66,7 @@ test('a Vale reinstall for new package releases deletes a package gspot no longe
 test('a Vale reinstall for new package releases replaces an edited package and keeps the authored files', async () => {
     const sandbox = installedSandbox();
     await using _change = await changeSandbox(sandbox, AUTHORED_VALE_FILES);
-    await recordEarlierValeRelease(sandbox.root);
+    await writeFile(join(sandbox.root, GSPOT_PATHS.valeReleases), '{}\n');
     const previous = await readFile(join(sandbox.root, GOOGLE_RULE_PATH));
     await chmod(join(sandbox.root, GOOGLE_RULE_PATH), 0o644);
     await writeFile(join(sandbox.root, GOOGLE_RULE_PATH), 'edited\n');

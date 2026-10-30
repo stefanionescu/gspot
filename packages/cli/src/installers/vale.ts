@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { JSON_INDENT } from '#cli/config/text.ts';
 import { CONFIG_FLAG } from '#cli/config/flags.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -13,7 +14,6 @@ import { runRequiredInstallStep } from '#cli/installers/steps.ts';
 import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
-import { buildInstallKey, recordInstalledProject } from '#cli/installers/record.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { VALE_STYLES_PATH } from '#cli/config/generation/configurations/general/prose.ts';
 
@@ -80,7 +80,7 @@ export function hasValePackages(root: string, level: Settings['level']): boolean
 
 /**
 Download the Vale packages for the level, and replace the installed ones, when a selected configuration uses Vale.
-Needs the network.
+Skip the download when every package folder exists and the release file names the pinned releases. Needs the network.
 
 @param install what install needs for this step.
 @param miseBinPaths the program folders that mise installed, where Vale may sit.
@@ -91,12 +91,13 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     const level = session.settings.level;
     const usesVale = session.toolConfigurations.some(({ tools }) => tools.some((tool) => tool.name === VALE_TOOL));
     if (level === 'basic' || !usesVale) return '';
-    const key = buildInstallKey([level, JSON.stringify(VALE_PACKAGE_RELEASES)]);
-    if (install.record.vale === key && hasValePackages(root, level)) return '';
+    const files = openFiles(root);
+    const releases = `${JSON.stringify(VALE_PACKAGE_RELEASES, null, JSON_INDENT)}\n`;
+    if (files.read(GSPOT_PATHS.valeReleases)?.bytes.toString('utf8') === releases && hasValePackages(root, level))
+        return '';
     const tool = getTool(session.toolConfigurations, VALE_TOOL);
     const available = buildToolAvailability(tool, inspectTool({ ...session, miseBinPaths }, tool));
     if ('status' in available) throw new GspotError('tool', available.note);
-    const files = openFiles(root);
     const temporary = mkdtempSync(join(files.readCanonicalPath(GSPOT_FOLDER), VALE_INSTALL_PREFIX));
     try {
         const config = join(temporary, GSPOT_PATHS.valeConfigFile);
@@ -112,9 +113,9 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
         writeFileSync(config, content);
         const command = [available.path, CONFIG_FLAG, config, ...VALE_INSTALL_ARGUMENTS];
         await runRequiredInstallStep(install, command, { cwd: dirname(config), name: VALE_INSTALL_STEP });
+        writeFileSync(join(temporary, GSPOT_PATHS.valeReleases), releases);
         files.deleteTree(GSPOT_PATHS.valePackages);
         renameSync(join(temporary, GSPOT_PATHS.valePackages), join(root, GSPOT_PATHS.valePackages));
-        recordInstalledProject(install, 'vale', key);
         return `installed Vale packages in ${GSPOT_PATHS.valePackages}`;
     } finally {
         rmSync(temporary, { recursive: true, force: true });

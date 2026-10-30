@@ -4,7 +4,6 @@ import * as filesystem from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { UNSAFE_PATH_MESSAGE } from '#tests/config/messages.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
@@ -145,8 +144,8 @@ test.skipIf(isWindows)('writing and removing a linked file replace the link and 
 test.skipIf(isWindows)('createFolder sets the folder mode', async () => {
     await using sandbox = await testdir();
     const files = openFiles(sandbox.path);
-    files.createFolder(`${GSPOT_PATHS.state}/private`, 0o700);
-    const attributes = await stat(join(sandbox.path, `${GSPOT_PATHS.state}/private`));
+    files.createFolder('cache/private', 0o700);
+    const attributes = await stat(join(sandbox.path, 'cache/private'));
     expect(attributes.mode & 0o777).toBe(0o700);
 });
 

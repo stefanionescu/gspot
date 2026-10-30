@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
+import { JSON_INDENT } from '#cli/config/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
 import { getTool } from '#cli/configurations/tools.ts';
@@ -8,7 +9,6 @@ import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/vale.ts';
-import { buildInstallKey } from '#cli/installers/record.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
@@ -83,18 +83,17 @@ test('a changed Vale archive is refused before sync and preserves installed pack
     );
 });
 
-test.each([false, true])(
-    'a matching Vale record skips downloads only while every package folder exists (one folder deleted: %p)',
-    async (deleted) => {
+test.each(['the pinned releases', 'a deleted folder', 'other releases'] as const)(
+    'the Vale release file skips downloads only while it names the pinned releases and every package folder exists (%s)',
+    async (state) => {
         const [first, ...kept] = VALE_PACKAGE_FOLDERS;
+        const releases = state === 'other releases' ? {} : VALE_PACKAGE_RELEASES;
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
-            [GSPOT_PATHS.installRecord]: JSON.stringify({
-                vale: buildInstallKey(['all', JSON.stringify(VALE_PACKAGE_RELEASES)]),
-            }),
+            [GSPOT_PATHS.valeReleases]: `${JSON.stringify(releases, null, JSON_INDENT)}\n`,
             [GSPOT_PATHS.valeConfigFile]: VALE_PACKAGES_INI,
             ...Object.fromEntries(
-                (deleted ? kept : [first, ...kept]).map((folder) => [
+                (state === 'a deleted folder' ? kept : [first, ...kept]).map((folder) => [
                     `${GSPOT_PATHS.valePackages}/${folder}/terms.yml`,
                     'installed bytes',
                 ]),
@@ -103,7 +102,7 @@ test.each([false, true])(
         const writer = openFiles(sandbox.path);
         using request = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected download'));
         const install = buildToolInstall(await openSession(sandbox.path), writer);
-        if (deleted) {
+        if (state !== 'the pinned releases') {
             const failure = await captureRejection(installValePackages(install, []));
             expect(failure.message).toContain('vale');
             return;

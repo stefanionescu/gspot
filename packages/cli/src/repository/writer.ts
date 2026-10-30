@@ -18,8 +18,8 @@ import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { LEADING_NEWLINE } from '#cli/config/parsers/formats/managed-blocks.ts';
+import { GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { openFiles, walkFiles, deleteEmptyFolders } from '#cli/system/files/open.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import type { WritePlan, ManagedKeys, ReplacementRequest } from '#cli/types/repository/writer.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 import { TOML_BARE_KEY, TOML_EXTENSION, EMPTY_JSON_TEXT, TRAILING_BLANK_LINE } from '#cli/config/repository/writer.ts';
@@ -119,7 +119,7 @@ export function listStrayPaths(
 ): string[] {
     const disk = openFiles(session.root);
     const blockPaths = new Set([AGENTS_FILE, GITIGNORE_FILE, GITATTRIBUTES_FILE]);
-    const installations = [GSPOT_PATHS.state, ...Object.values(INSTALLED_TOOL_FOLDERS)];
+    const installations = Object.values(INSTALLED_TOOL_FOLDERS);
     const ownFolder = disk.readStats(GSPOT_FOLDER);
     const ownPaths: string[] = [];
     if (ownFolder !== undefined) {
