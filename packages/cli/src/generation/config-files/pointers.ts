@@ -1,4 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
+import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { posix, dirname, relative } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -15,9 +16,14 @@ import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
 import type { GeneratedFile, ConfigFileOwner, PlannedPointerField } from '#cli/types/generation/files.ts';
-import { TARGET_PLACEHOLDER, TARGET_MODULE_PLACEHOLDER } from '#cli/config/generation/config-files/pointers.ts';
+import { escapeGlob, convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
+
+import {
+    TARGET_PLACEHOLDER,
+    OVERRIDES_PLACEHOLDER,
+    TARGET_MODULE_PLACEHOLDER,
+} from '#cli/config/generation/config-files/pointers.ts';
 
 function fillTarget(body: string, pointerPath: string, targetPath: string): string {
     const relativePath = convertToPosixPath(relative(dirname(pointerPath), targetPath));
@@ -36,8 +42,8 @@ function fillTarget(body: string, pointerPath: string, targetPath: string): stri
 }
 
 /**
-List the paths where a config file puts its pointer: one path, or one in each folder that holds files of the
-configuration and matches pointer.folders.
+List the paths where a config file puts its pointer. Every scope shares one pointer with overrides, at the root.
+Another pointer sits at one path, or in each folder that holds files of the configuration and matches pointer.folders.
 
 @param owner the repository and the scope.
 @param configFile the config file from the manifest.
@@ -50,7 +56,7 @@ export function listPointerPaths(owner: ConfigFileOwner, configFile: ConfigFile)
     if (pointer === undefined) return [];
     const scopePath = scope.path;
     if (pointer.folders === undefined)
-        return [configFile.per_scope ? joinScope(scopePath, pointer.path) : pointer.path];
+        return [configFile.per_scope && pointer.overrides !== true ? joinScope(scopePath, pointer.path) : pointer.path];
     const children = listNestedScopes(
         scopes.map((each) => each.path),
         scopePath,
@@ -121,7 +127,10 @@ function listPointerFieldTargets({
                 .map(({ file, target }) => {
                     const scopePath = file.per_scope ? scope.path : '';
                     const children = file.per_scope ? listNestedScopes(scopePaths, scopePath) : [];
-                    const pointerPath = file.pointer === undefined ? target : joinScope(scopePath, file.pointer.path);
+                    const pointerPath =
+                        file.pointer === undefined || (file.pointer.overrides === true && scopePath !== '')
+                            ? target
+                            : joinScope(scopePath, file.pointer.path);
                     return {
                         key: replacement.key,
                         scope: scopePath,
@@ -211,18 +220,33 @@ export function buildPointerFieldEdits(
 }
 
 /**
-Build the pointers of one generated config file.
+Build the pointers of one generated config file. A pointer with overrides sits at the root. For the files of each scope,
+it extends the config file of that scope. Parents come first, so the config of a nested scope wins.
 
 @param owner the repository and the scope.
 @param configFile the shipped config file.
-@param target the config file path.
+@param targets the config file path of each scope that writes it; other pointers read the path of the owner's scope.
 */
-export function buildPointerFiles(owner: ConfigFileOwner, configFile: ConfigFile, target: string): GeneratedFile[] {
+export function buildPointerFiles(
+    owner: ConfigFileOwner,
+    configFile: ConfigFile,
+    targets: ReadonlyMap<string, string>,
+): GeneratedFile[] {
     const { pointer } = configFile;
-    return pointer === undefined
-        ? []
-        : listPointerPaths(owner, configFile).map((path) => ({
-              path,
-              content: `${formatHeader(path, pointer.note === undefined ? [] : [pointer.note])}${fillTarget(pointer.body, path, target)}`,
-          }));
+    if (pointer === undefined) return [];
+    return listPointerPaths(owner, configFile).map((path) => {
+        const body = fillTarget(pointer.body, path, targets.get(owner.scope.path) as string).replace(
+            OVERRIDES_PLACEHOLDER,
+            () =>
+                JSON.stringify(
+                    [...targets]
+                        .toSorted(([left], [right]) => compareText(left, right))
+                        .map(([scope, target]) => ({
+                            files: [scope === '' ? '**' : `${escapeGlob(scope)}/**`],
+                            extends: `./${posix.relative(posix.dirname(path), target)}`,
+                        })),
+                ),
+        );
+        return { path, content: `${formatHeader(path, pointer.note === undefined ? [] : [pointer.note])}${body}` };
+    });
 }

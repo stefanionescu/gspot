@@ -48,7 +48,7 @@ test.each(['absent', 'authored', 'managed'])(
             `${source === 'authored' ? '* text=auto eol=lf\n' : ''}${attributes.body}\n`,
         );
         const outside = generated.files.map(({ path }) => path).filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
-        expect(outside).toContain('web app/.stylelintrc.yml');
+        expect(outside).toContain('.stylelintrc.yml');
         const read = runGitStep(sandbox.path, ['check-attr', 'eol', '--', ...outside, 'nested/.editorconfig']);
         expect(read.split('\n')).toStrictEqual([
             ...outside.map((path) => `${path}: eol: lf`),
@@ -123,7 +123,7 @@ test('every shipped configuration together generates each path once, ignoring ca
     const paths = [...generated.files, ...generated.blocks, ...generated.managedKeys].map(({ path }) =>
         path.normalize('NFC').toLowerCase(),
     );
-    expect(paths).toContain('app/.stylelintrc.yml');
+    expect(paths).toContain('.stylelintrc.yml');
     expect(paths.filter((path, index) => paths.indexOf(path) !== index)).toStrictEqual([]);
 });
 

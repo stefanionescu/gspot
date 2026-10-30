@@ -60,6 +60,7 @@ const pointerSchema = z.strictObject({
     body: z.string(),
     note: z.string().min(1).optional(),
     inherit: z.boolean().optional(),
+    overrides: z.boolean().optional(),
 } satisfies SchemaShape<NonNullable<ConfigFile['pointer']>>);
 
 const consumerNamesSchema = z

@@ -82,9 +82,14 @@ test('doctor recognizes managed Stylelint fields in every selected scope', async
     const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
     const { suggestions } = JSON.parse(doctor.stdout) as DoctorReport;
     expect(suggestions.unowned).toStrictEqual([]);
-    for (const path of ['package.json', 'app/package.json', 'app/child/package.json', 'other/package.json']) {
+    for (const [path, target] of [
+        ['package.json', './.stylelintrc.yml'],
+        ['app/package.json', '../.gspot/configurations/language/css/stylelint.json'],
+        ['app/child/package.json', '../../.gspot/configurations/language/css/stylelint.json'],
+        ['other/package.json', '../.gspot/configurations/language/css/stylelint.json'],
+    ] as const) {
         const document = JSON.parse(await readFile(join(sandbox.path, path), 'utf8')) as { stylelint: unknown };
-        expect(document.stylelint).toStrictEqual({ extends: './.stylelintrc.yml' });
+        expect(document.stylelint).toStrictEqual({ extends: target });
     }
 });
 

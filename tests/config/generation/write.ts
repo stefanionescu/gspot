@@ -55,12 +55,23 @@ export const STYLELINT_PACKAGE_FIELDS = {
     unchanged: ['plain/package.json'],
     changes: [
         { path: 'package.json', keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }] },
-        { path: 'app/child/package.json', keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }] },
+        {
+            path: 'app/child/package.json',
+            keys: [
+                {
+                    key: ['stylelint'],
+                    value: { extends: '../../.gspot/configurations/language/css/stylelint.json' },
+                },
+            ],
+        },
         {
             path: 'app/package.json',
-            keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }],
+            keys: [{ key: ['stylelint'], value: { extends: '../.gspot/configurations/language/css/stylelint.json' } }],
         },
-        { path: 'other/package.json', keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }] },
+        {
+            path: 'other/package.json',
+            keys: [{ key: ['stylelint'], value: { extends: '../.gspot/configurations/language/css/stylelint.json' } }],
+        },
     ],
 };
 

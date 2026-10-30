@@ -24,6 +24,7 @@ type ConfigFilePointer = {
     body: string;
     note?: string | undefined;
     inherit?: boolean | undefined;
+    overrides?: boolean | undefined;
 };
 
 export type RequirementWalk = {

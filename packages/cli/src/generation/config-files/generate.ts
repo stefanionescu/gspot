@@ -97,6 +97,28 @@ function listPointerOnlyPaths(configFiles: OwnedConfigFile[], selected: OwnedCon
     );
 }
 
+function listPointerTargets(
+    selected: OwnedConfigFile,
+    configFiles: OwnedConfigFile[],
+    generated: ConfigFileBuildState,
+): Map<string, string> {
+    const { configFile } = selected;
+    const owners =
+        configFile.pointer?.overrides === true
+            ? configFiles.filter(
+                  (each) =>
+                      each.configFile.target === configFile.target &&
+                      generated.failures.get(each.owner.scope.path)?.has(configFile.target) !== true,
+              )
+            : [selected];
+    return new Map(
+        owners.map((each) => [
+            each.owner.scope.path,
+            getConfigFileTarget(each.owner.scope.path, each.configFile, generated),
+        ]),
+    );
+}
+
 function addPointerFiles(
     selected: OwnedConfigFile,
     configFiles: OwnedConfigFile[],
@@ -104,9 +126,8 @@ function addPointerFiles(
 ): void {
     const { configFile, owner } = selected;
     if (isMarkdownlintShared(selected, configFiles)) return;
-    const target = getConfigFileTarget(owner.scope.path, configFile, generated);
     const pointerOnlyPaths = listPointerOnlyPaths(configFiles, selected);
-    for (const pointer of buildPointerFiles(owner, configFile, target)) {
+    for (const pointer of buildPointerFiles(owner, configFile, listPointerTargets(selected, configFiles, generated))) {
         if (
             configFile.source === undefined ||
             configFile.pointer?.folders !== undefined ||

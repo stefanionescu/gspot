@@ -76,7 +76,7 @@ test('JavaScript pointers import modules from folders with URI characters and Un
                 scope: session.scopes[0]!,
             },
             { ...configFile, pointer: { ...configFile.pointer!, path: `entry-${String(index)}.mjs` } },
-            target,
+            new Map([['', target]]),
         );
         await createFileTree(sandbox.path, {
             [target]: `export default ${JSON.stringify(DEFAULT_EXPORT)};\n`,
@@ -124,6 +124,38 @@ test('every generated file outside .gspot starts with the gspot header, and the 
         );
     const stylelint = outside.find(({ path }) => path === '.stylelintrc.yml');
     expect(parse(stylelint?.content ?? '')).toStrictEqual({
-        extends: `./${getManifestTarget('css', 'stylelint.json')}`,
+        rules: {},
+        overrides: [{ files: ['**'], extends: `./${getManifestTarget('css', 'stylelint.json')}` }],
+    });
+});
+
+test('one root Stylelint pointer extends the config of each scope for its files, parents first', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], {
+            scopes: [
+                { path: 'web [old]', configurations: ['css'] },
+                { path: 'app', configurations: ['css'] },
+                { path: 'app/child', configurations: ['css'] },
+            ],
+        }),
+        'app/style.css': 'a { color: red; }\n',
+        'app/child/style.css': 'a { color: red; }\n',
+        'web [old]/style.css': 'a { color: red; }\n',
+    });
+
+    const outside = generateFiles(await openSession(sandbox.path)).files.filter(
+        ({ path }) => !path.startsWith('.gspot/'),
+    );
+
+    const pointers = outside.filter(({ path }) => path.endsWith('.stylelintrc.yml'));
+    expect(pointers.map(({ path }) => path)).toStrictEqual(['.stylelintrc.yml']);
+    const target = `./${getManifestTarget('css', 'stylelint.json')}`;
+    expect(parse(pointers[0]?.content ?? '')).toStrictEqual({
+        rules: {},
+        overrides: [
+            { files: ['app/**'], extends: target },
+            { files: ['app/child/**'], extends: target },
+            { files: [String.raw`web \[old\]/**`], extends: target },
+        ],
     });
 });

@@ -17,11 +17,14 @@ Run `gspot install` in each clone first. The config files load their plugins fro
 | ------------ | -------------------------------------------- |
 | ESLint       | `eslint.config.mjs`                          |
 | Prettier     | `prettier.config.mjs`                        |
-| Stylelint    | `.stylelintrc.yml`                           |
+| Stylelint    | `.stylelintrc.yml`, at the root only         |
 | markdownlint | `.markdownlint.jsonc`                        |
 | Ruff         | `ruff.toml`                                  |
 | basedpyright | `pyrightconfig.json`                         |
 | SwiftLint    | `.swiftlint.yml`, also in Swift test folders |
+
+The Stylelint pointer sits at the repository root and holds one override for each scope that selects `css`. A
+`package.json` that keeps a `stylelint` field outside the root points at the config file of its scope instead.
 
 `.editorconfig` carries the `[format]` settings to every editor that reads it. Some tools have no pointer; gspot passes
 their config file when it runs them, so give your editor the same path. [Generated files](/reference/generated-files/)
