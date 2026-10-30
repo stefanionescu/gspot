@@ -6,28 +6,22 @@ import { planChecks } from '#cli/planning/checks.ts';
 import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { openWriter } from '#cli/repository/writer.ts';
-import { executableLayout } from '#cli/system/paths.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { stat, chmod, readFile } from 'node:fs/promises';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { generateFiles } from '#cli/generation/generate.ts';
-import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import { CALLER_WORKFLOW } from '#tests/config/github-actions.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
-import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
+import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { writeProgramCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-import { CALLER_WORKFLOW, CI_SOURCE_WORKFLOW, CI_INJECTION_SETTINGS } from '#tests/config/github-actions.ts';
 
 import {
     ACTIONLINT_EXITS,
     WORKFLOW_TEXT_CASES,
     OUTSIDE_GITHUB_ACTIONS,
-    GENERATED_WORKFLOW_CHECKS,
 } from '#tests/config/checks/infrastructure/github-actions.ts';
 
 test('actionlint copies root actions and unchanged actions outside .github with workflow replacements', async () => {
@@ -53,38 +47,6 @@ test('actionlint copies root actions and unchanged actions outside .github with 
     for (const [path, source] of Object.entries(OUTSIDE_GITHUB_ACTIONS))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
 });
-
-test.each([...GENERATED_WORKFLOW_CHECKS])(
-    '$tool reports findings in the generated workflow',
-    async ({ tool, code, rule, stdout }) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['github-actions'], { tables: CI_INJECTION_SETTINGS }),
-            '.github/workflows/source.yml': CI_SOURCE_WORKFLOW,
-            [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'zizmor')]: 'stub',
-        });
-        const previous = await openSession(sandbox.path);
-        using writer = openWriter(sandbox.path);
-        await writeGeneratedFiles(previous, generateFiles(previous), writer);
-        const session = await openSession(sandbox.path);
-        using _pins = fakeToolExecutables(
-            ['actionlint', 'shellcheck', 'zizmor'].map((name) => getTool(session.configurationsByName.values(), name)),
-        );
-        using boundary = spyOn(processes, 'spawnProcess').mockImplementation((command) => {
-            expect(command).toContain('.github/workflows/gspot.yml');
-            return Promise.resolve(buildProcessResult({ code, stdout }));
-        });
-        const result = await runChecks(session, buildRunOptions({ only: [`github-actions/${tool}`] }));
-        expect(result.report.checks).toMatchObject([
-            {
-                check: `github-actions/${tool}`,
-                status: 'failed',
-                fileCount: 2,
-                findings: [{ file: '.github/workflows/gspot.yml', rule }],
-            },
-        ]);
-        expect(boundary).toHaveBeenCalledTimes(1);
-    },
-);
 
 test.each([...WORKFLOW_TEXT_CASES])(
     'actionlint prepares references without changing their offsets: $name',

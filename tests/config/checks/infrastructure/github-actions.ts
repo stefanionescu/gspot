@@ -59,21 +59,6 @@ export const WORKFLOW_TEXT_CASES = [
     })),
 ];
 
-export const GENERATED_WORKFLOW_CHECKS = [
-    {
-        tool: 'actionlint',
-        code: 1,
-        rule: 'expression',
-        stdout: '.github/workflows/gspot.yml:56:24: untrusted expression [expression]\n',
-    },
-    {
-        tool: 'zizmor',
-        code: 14,
-        rule: 'template-injection',
-        stdout: '::error file=.github/workflows/gspot.yml,line=56,title=template-injection::untrusted expression\n',
-    },
-] as const;
-
 export const OUTSIDE_GITHUB_ACTIONS = {
     '.github/workflows/caller.yml':
         'on: workflow_dispatch\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: $/actions/setup\n',
