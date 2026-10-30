@@ -36,7 +36,7 @@ function isImportLike(node: TSESTree.Statement, sourceType: RuleContext['languag
     );
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, isImportLike passes the complexity limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: isImportLike tests a bare require call and the require call of a declaration through it.
 function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
     return (
         node?.type === AST_NODE_TYPES.CallExpression &&

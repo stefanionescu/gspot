@@ -28,7 +28,7 @@ Format a section under a heading, or nothing for empty text.
 @param body the Markdown text
 @param level the heading level
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, formatCheckSection passes the complexity limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The reference pages format each of their sections through it.
 export function formatSection(title: string, body: string, level = TABLE_HEADING_LEVEL): string {
     return body === '' ? '' : `\n${'#'.repeat(level)} ${title}\n\n${body}\n`;
 }

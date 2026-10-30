@@ -38,7 +38,7 @@ function getSchemaNode(schema: SettingsSchema, subschema: SettingsSchema | boole
     return node;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, formatAcceptedValue passes the complexity limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: formatAcceptedValue and isSettingValue tell a reasoned value apart through it.
 function isReasonedSchema(node: SettingsSchema): boolean {
     return (
         node.type === 'object' &&
@@ -137,7 +137,7 @@ function formatSetting(key: string, { node, required }: { node: SettingsSchema; 
     );
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, its test repeats at each call.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The builders of the settings page tell a setting from a table of settings through it.
 function isSettingValue(schema: SettingsSchema, node: SettingsSchema): boolean {
     return isReasonedSchema(node) || listSchemaProperties(schema, node).length === 0;
 }
