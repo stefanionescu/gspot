@@ -7,6 +7,5 @@ export type ApplyOptions = {
 
 export type DryRunJson = {
     dryRun: true;
-    pin: { from: string | undefined; to: string };
     outdated: OutdatedFile[];
 };

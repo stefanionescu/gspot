@@ -15,7 +15,6 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { VERSION_FLAG } from '#cli/config/tools/versions.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
-import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { findMissingProjectEnvironment } from '#cli/tools/uv.ts';
 import type { HookStatus } from '#cli/types/installers/hooks.ts';
@@ -81,27 +80,6 @@ function formatSuggestions(suggestions: Suggestions): string[] {
     return sections.flat();
 }
 
-function formatGspotVersion(report: DoctorReport): string {
-    const { running, pin } = report.version;
-    const runningText = pin === running ? 'running' : `running ${running}`;
-    const version = pin === undefined ? `${running} running, no pin` : `${pin} pinned and ${runningText}`;
-    const install =
-        report.version.installCommand === undefined
-            ? ''
-            : `\nInstall the pinned version: ${report.version.installCommand}`;
-    return `gspot      ${version}${install}`;
-}
-
-function buildDoctorVersion(session: Session, pin: string | undefined): DoctorReport['version'] {
-    const version: DoctorReport['version'] = {
-        running: cliPackage.version,
-        ...(pin !== undefined && { pin }),
-    };
-    if (pin !== undefined && pin !== cliPackage.version)
-        version.installCommand = session.startRunner.installCommand.replace('<version>', () => pin);
-    return version;
-}
-
 function inspectScopeTools(session: Session): ToolInspection[] {
     const platform = getOperatingSystem();
     const inspections = new Map<string, ToolInspection>();
@@ -145,14 +123,14 @@ function formatCiState(session: Session): string {
     return provider === undefined ? 'none' : CI_OFF_NOTES[provider];
 }
 
-async function readHookState(session: Session, pin: string | undefined): Promise<HookStatus> {
+async function readHookState(session: Session): Promise<HookStatus> {
     const hooks = readHookStatus(session, session.repository);
     if (!hooks.ready || session.settings.hooks?.enabled !== true) return hooks;
     const { command, installCommand } = session.startRunner;
     const versionCommand = [...command.split(' '), VERSION_FLAG];
     const result = await spawnProcess(versionCommand, { cwd: session.root, timeoutSeconds: session.timeoutSeconds });
     if (result.code === 0) return hooks;
-    const install = installCommand.replace('<version>', () => pin ?? cliPackage.version);
+    const install = installCommand.replace('<version>', () => cliPackage.version);
     return {
         ready: false,
         text: `${hooks.text}, but ${versionCommand.join(' ')} fails. Install gspot with: ${install}`,
@@ -166,16 +144,14 @@ function listMissingEnvironments(session: Session): string[] {
     return [...new Set(scopes)].toSorted((left, right) => compareText(left, right));
 }
 
-async function buildDoctorReport(session: Session, pin: string | undefined): Promise<DoctorReport> {
+async function buildDoctorReport(session: Session): Promise<DoctorReport> {
     const tools = inspectScopeTools(session);
     const environments = listMissingEnvironments(session);
-    const hooks = await readHookState(session, pin);
-    const version = buildDoctorVersion(session, pin);
+    const hooks = await readHookState(session);
     const isBroken =
         !hooks.ready ||
         environments.length > 0 ||
-        tools.some((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined) ||
-        version.installCommand !== undefined;
+        tools.some((tool) => !AVAILABLE_TOOL_STATES.has(tool.state) || tool.path === undefined);
     return {
         submodules: listSubmodulePaths(session.repository.index),
         tools,
@@ -187,7 +163,7 @@ async function buildDoctorReport(session: Session, pin: string | undefined): Pro
         hooks: hooks.text,
         ci: formatCiState(session),
         ruleFiles: selectRuleFiles(session).length,
-        version,
+        version: { running: cliPackage.version },
         exitCode: isBroken ? EXIT_FINDINGS : 0,
     };
 }
@@ -214,7 +190,7 @@ function formatDoctorReport(report: DoctorReport): string {
         ...report.submodules.map((path) => `submodule  ${path} (contents are not read)`),
         `ci: ${report.ci}`,
         `rules: ${formatCount(report.ruleFiles, 'file')}`,
-        formatGspotVersion(report),
+        `gspot      ${report.version.running}`,
     ];
     return `${lines.join('\n')}\n`;
 }
@@ -222,7 +198,7 @@ function formatDoctorReport(report: DoctorReport): string {
 async function runDoctorCommand(cwd: string): Promise<CommandResult> {
     const root = readRepositoryRoot(cwd);
     const session = await openSession(root);
-    const report = await buildDoctorReport(session, readVersionPin(root));
+    const report = await buildDoctorReport(session);
     return {
         text: formatDoctorReport(report),
         json: report,

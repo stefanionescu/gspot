@@ -96,7 +96,6 @@ Commands with `--json` report an error with `error` and `message`. `error` holds
 | `tool`          | Finding or running a tool.                                                        |
 | `output`        | Reading a tool's output.                                                          |
 | `runtime`       | The running Node.js or Bun version does not meet the package minimum.             |
-| `pin`           | The repository's version pin.                                                     |
 | `prompt`        | A question that asks you to accept a plan.                                        |
 | `unexpected`    | An unexpected error; the message names it.                                        |
 | `canceled`      | A signal stopped the command. The object also holds `exitCode`.                   |

@@ -8,31 +8,12 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { fakeTerminals } from '#tests/setup/system/fakes.ts';
-import { TEST_VERSION } from '#tests/config/commands/samples.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { SQLFLUFF_KEPT_NOTE } from '#tests/config/commands/init/messages.ts';
 import { STOPPED_ERROR_MESSAGE, GENERATED_WRITE_MESSAGE } from '#tests/config/commands/init/write.ts';
-
-test('a failed init keeps the version pin it already wrote', async () => {
-    await using sandbox = await testdir({ [GSPOT_PATHS.versionPin]: `${TEST_VERSION}\n` });
-
-    commitAll(sandbox.path);
-    const rename = fs.renameSync;
-    using _publication = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
-        if (String(target) === join(sandbox.path, '.gitattributes')) throw new Error(GENERATED_WRITE_MESSAGE);
-        rename(source, target);
-    });
-
-    const refused = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations']);
-    expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe(STOPPED_ERROR_MESSAGE);
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.versionPin), 'utf8')).toBe(`${cliPackage.version}\n`);
-});
 
 test('init keeps the old config file when the generated one cannot be written', async () => {
     await using sandbox = await testdir();

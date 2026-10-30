@@ -5,16 +5,13 @@ import { test, spyOn, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { readTree } from '#tests/setup/system/files.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
+import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
-import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { INDEX_LINE_FAILURE } from '#tests/config/parsers/git.ts';
-import { UPGRADE_PIN_MESSAGE } from '#tests/config/version-pin.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -194,7 +191,7 @@ test('check reports an unreadable message file as a filesystem error and writes 
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test('a linked .gspot folder stops check, and nothing outside changes', async () => {
+test('a linked .gspot folder fails check, and nothing outside changes', async () => {
     await using sandbox = await testdir({
         'project/source.txt': 'input\n',
         'project/gspot.toml': buildSandboxSettings([], {
@@ -218,46 +215,6 @@ test('a linked .gspot folder stops check, and nothing outside changes', async ()
     await symlink(outside, join(project, GSPOT_FOLDER));
     const refused = await runGspot(project, ['check', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(JSON.parse(refused.stdout)).toStrictEqual({
-        error: 'filesystem',
-        message: 'A parent of .gspot/version is a link or is not a folder. Choose a folder without links.',
-    });
     expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored outside\n');
     expect(await readdir(outside)).toStrictEqual(['sentinel']);
-});
-
-test('a different saved version blocks checks and fixes until apply updates the pin', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash']),
-        'script.sh': CLEAN_BASH_SCRIPT,
-    });
-    const firstApply = await runGspot(sandbox.path, ['apply', '--json']);
-    expect(firstApply.code, firstApply.stdout + firstApply.stderr).toBe(0);
-    await writeFile(join(sandbox.path, GSPOT_PATHS.versionPin), '0.0.0\n');
-    const check = await runGspot(sandbox.path, ['check', '--only', 'bash/safety', '--json']);
-    expect(check.code, check.stdout + check.stderr).toBe(2);
-    expect(check.stderr).toBe('');
-    const failure = JSON.parse(check.stdout) as CommandFailureJson;
-    expect(failure).toStrictEqual({ error: 'pin', message: UPGRADE_PIN_MESSAGE });
-    const fixed = await runGspot(sandbox.path, ['check', '--fix', '--only', 'bash/safety', '--json']);
-    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(2);
-    expect(JSON.parse(fixed.stdout) as CommandFailureJson).toStrictEqual(failure);
-    const applied = await runGspot(sandbox.path, ['apply', '--json']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(readVersionPin(sandbox.path)).toBe(cliPackage.version);
-});
-
-test('an empty version pin lets checks run', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['bash']),
-        'script.sh': CLEAN_BASH_SCRIPT,
-    });
-    const applied = await runGspot(sandbox.path, ['apply', '--json']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    await writeFile(join(sandbox.path, GSPOT_PATHS.versionPin), '');
-    const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'bash/safety', '--json']));
-    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect(checked.report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
-        { check: 'bash/safety', status: 'passed' },
-    ]);
 });

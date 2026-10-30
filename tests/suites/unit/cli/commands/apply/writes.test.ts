@@ -1,6 +1,5 @@
-import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
@@ -189,26 +188,6 @@ test('an ignore of every path skips the check and keeps its configured tool and 
     expect({ written: settled.written, removed: settled.removed }).toStrictEqual({ written: [], removed: [] });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
     expect(await readFile(join(sandbox.path, 'sample.json'), 'utf8')).toBe('{"value":1}\n');
-});
-
-test('a failed version pin write in apply leaves the old version', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        [GSPOT_PATHS.versionPin]: '0.0.1\n',
-    });
-
-    const rename = fs.renameSync;
-    using _failed = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
-        if (String(target) === join(sandbox.path, GSPOT_PATHS.versionPin)) throw new Error('Pin write denied');
-        rename(source, target);
-    });
-
-    const refused = await runGspot(sandbox.path, ['apply']);
-    expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe(
-        'gspot stopped because of an internal error: Pin write denied. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n',
-    );
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.versionPin), 'utf8')).toBe('0.0.1\n');
 });
 
 test('apply leaves a settings file without a schema directive unchanged', async () => {

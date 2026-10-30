@@ -14,9 +14,7 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { registerCheck } from '#cli/commands/check/check.ts';
 import { registerUnignore } from '#cli/commands/unignore.ts';
-import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { registerDoctor } from '#cli/commands/doctor/doctor.ts';
-import { assertVersionPin } from '#cli/repository/version-pin.ts';
 import { registerExplain } from '#cli/commands/explain/explain.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { WHITESPACE_RUN, TRAILING_PERIOD } from '#cli/config/text.ts';
@@ -38,7 +36,6 @@ import {
     COMMAND_SUGGESTION,
     PROGRAM_EXIT_CODES,
     PROGRAM_HELP_FOOTER,
-    VERSION_PIN_COMMANDS,
     UNKNOWN_COMMAND_NAME,
     COMMANDER_ERROR_PREFIX,
 } from '#cli/config/main.ts';
@@ -182,7 +179,6 @@ export async function runProgram(commandArguments: string[]): Promise<number> {
     program.hook('preAction', (_program, command) => {
         if (GIT_COMMANDS.has(command.name()) && !isGitRepository(process.cwd()))
             throw new GspotError('git', NEEDS_GIT_MESSAGE);
-        if (VERSION_PIN_COMMANDS.has(command.name())) assertVersionPin(readRepositoryRoot(process.cwd()));
     });
     try {
         await program.parseAsync(commandArguments, { from: 'user' });

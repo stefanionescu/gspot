@@ -26,11 +26,6 @@ then run `gspot install` again. See
 [mise: If something does not work](https://mise.jdx.dev/getting-started.html#if-something-doesn-t-work). To make new
 tool lockfiles, delete the lockfiles in `.gspot/`, run `gspot install`, and commit them.
 
-## `This repository pins gspot <version>`
-
-The gspot that runs differs from `.gspot/version`. The error prints the command that installs the pinned version; run
-it. To move the repository to the version that runs, follow [Upgrade gspot](/start/upgrade/).
-
 ## A generated file has local edits
 
 `gspot apply` replaces the edits; see [Do not edit generated files](/reference/generated-files/#do-not-edit-generated-files).

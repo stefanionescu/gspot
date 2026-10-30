@@ -71,8 +71,8 @@ exact gspot version to `mise.toml`. mise requires approval for a new npm package
 ## Set up a clone
 
 Install the dependencies from the committed lockfile first; it pins the gspot version of the repository. Without
-`package.json`, `mise.toml` pins it. When the versions differ, gspot stops with `This repository pins gspot <version>`
-and prints the install command. `gspot init` refuses to run where `gspot.toml` exists, so run `gspot install` instead.
+`package.json`, `mise.toml` pins it. `gspot init` refuses to run where `gspot.toml` exists, so run `gspot install`
+instead.
 
 <Tabs syncKey="package-manager">
     {SETUP_COMMANDS.map(({ label, clone }) => (

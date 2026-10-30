@@ -48,7 +48,6 @@ export const RULES_WRITTEN_FILES = [
     '.gspot/mise.toml',
     '.gspot/package.json',
     '.gspot/pyproject.toml',
-    '.gspot/version',
     '.prettierignore',
     'prettier.config.mjs',
 ] as const;

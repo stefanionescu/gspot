@@ -3,16 +3,14 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import { PIN_MESSAGE } from '#tests/config/version-pin.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
-import { readTree, isOnDisk } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { ROOT_EDITORCONFIG } from '#tests/config/commands/contents.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { LINKED_FILE_CASES } from '#tests/config/commands/apply/refusals.ts';
 
 test('a broken managed block stops apply before generated files change', async () => {
     await using sandbox = await createGitSandbox({});
@@ -71,33 +69,14 @@ test('a malformed reason reports a settings error and apply preserves the author
     expect(await isOnDisk(join(sandbox.path, GSPOT_FOLDER))).toBe(false);
 });
 
-test.each([...LINKED_FILE_CASES])(
-    'apply --dry-run refuses a $path that links outside the repository and writes nothing',
-    async ({ path, outside, files, message }) => {
-        await using sandbox = await testdir({
-            ...files,
-            'project/.gspot/configurations/.keep': '',
-            outside,
-        });
-        const project = join(sandbox.path, 'project');
-        runGitStep(project, ['init', '--quiet']);
-        await symlink(join(sandbox.path, 'outside'), join(project, path));
-        const refused = await runGspot(project, ['apply', '--dry-run']);
-        expect(refused.code).toBe(2);
-        expect(refused.stderr).toBe(`${message}\n`);
-        expect(await readFile(join(sandbox.path, 'outside'), 'utf8')).toBe(outside);
-    },
-);
-
-test('apply refuses a newer pin and writes nothing', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        '.gspot/version': '9.9.9\n',
-        '.gspot/preserve.txt': 'keep generated content',
-    });
-    const before = await readTree(sandbox.path);
-    const refused = await runGspot(sandbox.path, ['apply', '--json']);
+test('apply --dry-run refuses a gspot.toml that links outside the repository and writes nothing', async () => {
+    const outside = 'configurations = []\n';
+    await using sandbox = await testdir({ 'project/.gspot/configurations/.keep': '', outside });
+    const project = join(sandbox.path, 'project');
+    runGitStep(project, ['init', '--quiet']);
+    await symlink(join(sandbox.path, 'outside'), join(project, 'gspot.toml'));
+    const refused = await runGspot(project, ['apply', '--dry-run']);
     expect(refused.code).toBe(2);
-    expect(JSON.parse(refused.stdout) as CommandFailureJson).toStrictEqual({ error: 'pin', message: PIN_MESSAGE });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    expect(refused.stderr).toBe('gspot.toml is not a regular file. Use a regular file.\n');
+    expect(await readFile(join(sandbox.path, 'outside'), 'utf8')).toBe(outside);
 });

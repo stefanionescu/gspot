@@ -15,7 +15,6 @@ export const GSPOT_PATHS = {
     configurations: `${GSPOT_FOLDER}/configurations`,
     hooks: `${GSPOT_FOLDER}/hooks`,
     gitignore: `${GSPOT_FOLDER}/.gitignore`,
-    versionPin: `${GSPOT_FOLDER}/version`,
     settingsSchema: `${GSPOT_FOLDER}/${SCHEMA_FILE}`,
     miseProject: `${GSPOT_FOLDER}/${MISE_CONFIG_FILE}`,
     miseLockfile: `${GSPOT_FOLDER}/${MISE_LOCKFILE}`,

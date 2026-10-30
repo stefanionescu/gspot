@@ -22,17 +22,6 @@ export const PROGRAM_HELP_FOOTER =
 
 export const CODE_MARK = '`';
 
-export const VERSION_PIN_COMMANDS: ReadonlySet<string> = new Set([
-    'check',
-    'add',
-    'remove',
-    'set',
-    'unset',
-    'ignore',
-    'unignore',
-    'install',
-]);
-
 export const GIT_COMMANDS: ReadonlySet<string> = new Set([
     'init',
     'install',

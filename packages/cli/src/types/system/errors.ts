@@ -15,5 +15,4 @@ export type ErrorCode =
     | 'tool'
     | 'output'
     | 'skip'
-    | 'pin'
     | 'prompt';

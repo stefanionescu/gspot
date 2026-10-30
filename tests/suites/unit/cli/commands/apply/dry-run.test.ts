@@ -2,12 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/ignores.ts';
 import { createFileTree, type TestdirResult } from 'testdirs';
 import { type DryRunJson } from '#cli/types/commands/apply.ts';
-import { TEST_VERSION } from '#tests/config/commands/samples.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -154,7 +152,7 @@ test('apply --dry-run lists missing generated files and writes nothing', async (
     const before = await readTree(sandbox.path);
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const { pin, outdated } = JSON.parse(preview.stdout) as DryRunJson;
+    const { outdated } = JSON.parse(preview.stdout) as DryRunJson;
     expect(outdated.filter(({ kind }) => kind !== 'missing')).toStrictEqual([]);
     expect(outdated.map(({ path }) => path)).toStrictEqual([...MISSING_GENERATED_PATHS]);
     const human = await runGspot(sandbox.path, ['apply', '--dry-run']);
@@ -164,7 +162,6 @@ test('apply --dry-run lists missing generated files and writes nothing', async (
     const lockfiles = MISSING_GENERATED_PATHS.filter((path) => TOOL_LOCKFILES.has(path));
     expect(human.stdout).toBe(
         [
-            `version unpinned -> ${pin.to}`,
             `${String(MISSING_GENERATED_PATHS.length)} generated files need updating:`,
             '',
             ...ordinary.map((path) => `  ${path}  missing`),
@@ -195,34 +192,9 @@ test('apply --dry-run after apply leaves missing tool lockfiles for install', as
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const result = JSON.parse(structured.stdout) as DryRunJson;
-    expect(result.pin).toStrictEqual({ from: cliPackage.version, to: cliPackage.version });
     expect(result.outdated).toStrictEqual([
         { path: GSPOT_PATHS.miseLockfile, kind: 'missing' },
         { path: GSPOT_PATHS.uvLockfile, kind: 'missing' },
-    ]);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
-test('apply --dry-run shows a changed version pin as a diff and writes nothing', async () => {
-    await using sandbox = await createAppliedSandbox();
-    await writeFile(join(sandbox.path, GSPOT_PATHS.versionPin), `${TEST_VERSION}\n`);
-    const before = await readTree(sandbox.path);
-    const preview = await runGspot(sandbox.path, ['apply', '--dry-run']);
-    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    expect(preview.stderr).toBe('');
-    expect(preview.stdout).toStartWith(`version ${TEST_VERSION} -> ${cliPackage.version}\n`);
-    expect(preview.stdout).toContain(`  ${GSPOT_PATHS.versionPin}  changed`);
-    expect(preview.stdout).toContain(`    -${TEST_VERSION}\n    +${cliPackage.version}`);
-    expect(preview.stdout).toContain(APPLY_WRITE_MESSAGE);
-    expect(preview.stdout).toContain(INSTALL_WRITE_MESSAGE);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-    const structured = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
-    expect(structured.code, structured.stdout + structured.stderr).toBe(0);
-    expect(structured.stderr).toBe('');
-    const result = JSON.parse(structured.stdout) as DryRunJson;
-    expect(result.pin).toStrictEqual({ from: TEST_VERSION, to: cliPackage.version });
-    expect(result.outdated.filter(({ path }) => !TOOL_LOCKFILES.has(path))).toMatchObject([
-        { path: GSPOT_PATHS.versionPin, kind: 'changed' },
     ]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

@@ -17,7 +17,7 @@ export const CI_FILE_NOTES = {
     [GITLAB_WORKFLOW]: `add include: [{ local: ${GITLAB_WORKFLOW} }] to .gitlab-ci.yml`,
 } as const;
 
-export const GSPOT_FOLDER_NOTE = 'generated files and version pin';
+export const GSPOT_FOLDER_NOTE = 'generated files';
 
 export const UNREAD_SUBMODULE_MESSAGE = 'submodule; init does not read it';
 

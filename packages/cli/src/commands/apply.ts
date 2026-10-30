@@ -1,10 +1,8 @@
-import { gt } from 'semver';
 import { formatCount } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { type Command } from '@commander-js/extra-typings';
-import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
@@ -15,7 +13,6 @@ import { GENERATED_FILE_NOUN } from '#cli/config/generation/write.ts';
 import { DRY_RUN_FLAG, DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
 import type { DryRunJson, ApplyOptions } from '#cli/types/commands/apply.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { readVersionPin, assertVersionPin } from '#cli/repository/version-pin.ts';
 import { APPLY_WRITE_MESSAGE, INSTALL_WRITE_MESSAGE } from '#cli/config/commands/apply.ts';
 import { formatUpToDate, formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
 
@@ -54,22 +51,17 @@ async function buildDryRunResult(session: Session): Promise<CommandResult> {
     const outdatedFiles = await listOutdatedFiles(session, generated);
     const summary =
         outdatedFiles.length === 0 ? `${formatUpToDate(generated.files.length)}\n` : formatOutdatedFiles(outdatedFiles);
-    const pin = { from: readVersionPin(session.root), to: cliPackage.version };
-    const json: DryRunJson = { dryRun: true, pin, outdated: outdatedFiles };
-    const version = pin.from === pin.to ? '' : `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n`;
-    return { text: `${version}${summary}${DRY_RUN_NOTE}\n`, json, exitCode: 0 };
+    const json: DryRunJson = { dryRun: true, outdated: outdatedFiles };
+    return { text: `${summary}${DRY_RUN_NOTE}\n`, json, exitCode: 0 };
 }
 
 async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
     const root = readRepositoryRoot(options.cwd);
-    const pin = readVersionPin(root);
-    if (pin !== undefined && gt(pin, cliPackage.version)) assertVersionPin(root);
     const session = await openSession(root);
     if (options.dryRun) return buildDryRunResult(session);
     const writer = openFiles(root);
     const report = await writeGeneratedFiles(session, generateFiles(session), writer);
-    const version = pin === cliPackage.version ? '' : `version ${pin ?? 'unpinned'} -> ${cliPackage.version}\n`;
-    return { text: version + formatApplyReport(report), json: report, exitCode: 0 };
+    return { text: formatApplyReport(report), json: report, exitCode: 0 };
 }
 
 /**

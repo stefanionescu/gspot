@@ -24,7 +24,6 @@ export const MISSING_GENERATED_PATHS = [
     '.gspot/package.json',
     '.gspot/pyproject.toml',
     '.gspot/uv.lock',
-    '.gspot/version',
     '.prettierignore',
     'prettier.config.mjs',
 ] as const;

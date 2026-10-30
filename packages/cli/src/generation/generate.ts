@@ -139,7 +139,6 @@ export function generateFiles(session: Session): Generation {
     const { packageManager, toolConfigurations } = session;
     const generated: Generation = {
         files: [
-            { path: GSPOT_PATHS.versionPin, content: cliPackage.version + '\n' },
             { path: GSPOT_PATHS.gitignore, content: TOOL_FOLDER_IGNORES.join('\n') + '\n' },
             { path: GSPOT_PATHS.settingsSchema, content: `${JSON.stringify(buildJsonSchema(), null, JSON_INDENT)}\n` },
         ],

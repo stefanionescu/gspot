@@ -43,7 +43,7 @@ export const COMMAND_HELP = {
         summary: 'Write the generated files again from gspot.toml',
         group: 'Set up a repository:',
         description:
-            'Write the config files, the rules, the Git hooks, and the CI workflow again from gspot.toml. apply replaces the generated files that gspot owns, and sets the version pin in .gspot/version to the gspot version that runs.\n\napply does not change gspot.toml and installs no tools. Run gspot install when apply says the tools changed.',
+            'Write the config files, the rules, the Git hooks, and the CI workflow again from gspot.toml. apply replaces the generated files that gspot owns.\n\napply does not change gspot.toml and installs no tools. Run gspot install when apply says the tools changed.',
         arguments: {},
         options: {
             '--dry-run': 'Print the generated files that would change, with their differences, and write nothing',
