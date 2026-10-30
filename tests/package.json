@@ -4,7 +4,6 @@
     "description": "Test suites for gspot.",
     "type": "module",
     "devDependencies": {
-        "@clack/prompts": "1.8.0",
         "@decimalturn/toml-patch": "3.0.5",
         "@gspothq/cli": "workspace:*",
         "@gspothq/eslint-plugin": "workspace:*",
@@ -23,7 +22,6 @@
         "picomatch": "4.0.7",
         "prettier": "3.9.10",
         "semver": "7.8.5",
-        "std-env": "4.2.0",
         "stylelint": "17.16.0",
         "testdirs": "4.0.2",
         "typescript": "5.9.3",

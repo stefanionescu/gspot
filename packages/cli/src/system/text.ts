@@ -1,4 +1,3 @@
-import { distance } from 'fastest-levenshtein';
 import type { TextRange, TextPosition } from '#cli/types/text.ts';
 import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, UNQUOTED_ARGUMENT, SIMILAR_NAME_LIMIT } from '#cli/config/system/text.ts';
 
@@ -12,7 +11,7 @@ export function selectSimilarNames(name: string, names: string[]): string[] {
     const lower = name.toLowerCase();
     const limit = Math.max(TYPO_MIN, Math.floor(name.length / TYPO_FRACTION));
     return names
-        .map((other) => ({ name: other, score: distance(lower, other.toLowerCase()) }))
+        .map((other) => ({ name: other, score: measureEditDistance(lower, other.toLowerCase()) }))
         .filter(
             (similar) =>
                 similar.score <= limit ||
@@ -22,6 +21,30 @@ export function selectSimilarNames(name: string, names: string[]): string[] {
         .toSorted((a, b) => a.score - b.score)
         .slice(0, SIMILAR_NAME_LIMIT)
         .map((similar) => similar.name);
+}
+
+/**
+Count the fewest inserted, deleted, or replaced characters that turn one text into the other.
+
+@param from the first text.
+@param to the second text.
+*/
+function measureEditDistance(from: string, to: string): number {
+    const targets = [...to];
+    let above = Array.from({ length: targets.length + 1 }, (_, column) => column);
+    let distance = targets.length;
+    for (const [row, letter] of [...from].entries()) {
+        let diagonal = row;
+        distance = row + 1;
+        const costs = [distance];
+        for (const [column, up] of above.slice(1).entries()) {
+            distance = Math.min(up + 1, distance + 1, diagonal + (letter === targets[column] ? 0 : 1));
+            costs.push(distance);
+            diagonal = up;
+        }
+        above = costs;
+    }
+    return distance;
 }
 
 /**

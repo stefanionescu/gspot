@@ -6,6 +6,10 @@ export const NO_TERMINAL_MESSAGE = 'There is no terminal to ask in. Pass --yes t
 
 export const CANCELED_MESSAGE = 'Canceled. Nothing was written.';
 
+export const CONFIRM_PROMPT = 'Continue? [Y/n] ';
+
+export const ACCEPT_ANSWER = /^(?:y|yes)?$/iu;
+
 export const WROTE_PLAN_MESSAGE = 'Wrote the plan above.';
 
 export const SETTINGS_EXIST_MESSAGE =

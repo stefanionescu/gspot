@@ -1,5 +1,3 @@
-import { isCI } from 'std-env';
-import { confirm } from '@clack/prompts';
 import { print } from '#cli/system/terminal.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -11,6 +9,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { writePlans } from '#cli/repository/writer.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
+import { createInterface } from 'node:readline/promises';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
@@ -47,6 +46,8 @@ import type {
 import {
     YES_FLAG,
     LEVEL_OPTION,
+    ACCEPT_ANSWER,
+    CONFIRM_PROMPT,
     CANCELED_MESSAGE,
     INIT_INSTALL_NOTES,
     WROTE_PLAN_MESSAGE,
@@ -205,10 +206,11 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
 
 async function askConfirmation({ yes }: { yes: boolean }): Promise<boolean> {
     if (yes) return true;
-    if (isCI || !(process.stdin.isTTY && process.stderr.isTTY)) throw new GspotError('prompt', NO_TERMINAL_MESSAGE);
-    const answer = await confirm({ message: 'Continue?', initialValue: true, output: process.stderr });
-    if (typeof answer !== 'boolean') throw new GspotError('prompt', CANCELED_MESSAGE);
-    return answer;
+    if (!(process.stdin.isTTY && process.stderr.isTTY)) throw new GspotError('prompt', NO_TERMINAL_MESSAGE);
+    process.stderr.write(CONFIRM_PROMPT);
+    for await (const answer of createInterface({ input: process.stdin, terminal: false }))
+        return ACCEPT_ANSWER.test(answer.trim());
+    throw new GspotError('prompt', CANCELED_MESSAGE);
 }
 
 function deleteConflictingConfigFiles(

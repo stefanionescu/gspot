@@ -1,4 +1,4 @@
-import envPaths from 'env-paths';
+import { homedir } from 'node:os';
 import { join, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { CACHE_FOLDER_NAME, OPERATING_SYSTEMS, CACHE_FOLDER_MESSAGE } from '#cli/config/system/environment.ts';
@@ -31,14 +31,22 @@ export function readEnvironmentVariable(name: string): string | undefined {
 }
 
 /**
-Read the gspot cache folder of this system. Refuse a relative cache path from the environment.
+Read the gspot cache folder from XDG_CACHE_HOME, or else from the cache folder of this system. Refuse a missing or
+relative cache path.
 */
 export function readCacheFolder(): string {
-    const configured = readEnvironmentVariable('XDG_CACHE_HOME');
-    const cache = configured === undefined ? envPaths(CACHE_FOLDER_NAME, { suffix: '' }).cache : configured;
-    const folder = configured === undefined ? cache : join(cache, CACHE_FOLDER_NAME);
-    if (!isAbsolute(cache)) throw new GspotError('filesystem', CACHE_FOLDER_MESSAGE);
-    return folder;
+    const cache = readEnvironmentVariable('XDG_CACHE_HOME') ?? readSystemCacheFolder();
+    if (cache === undefined || !isAbsolute(cache)) throw new GspotError('filesystem', CACHE_FOLDER_MESSAGE);
+    return join(cache, CACHE_FOLDER_NAME);
+}
+
+/**
+Read the cache folder of this system: LOCALAPPDATA on Windows, ~/Library/Caches on macOS, and ~/.cache elsewhere.
+*/
+function readSystemCacheFolder(): string | undefined {
+    if (process.platform === 'win32') return readEnvironmentVariable('LOCALAPPDATA');
+    if (process.platform === 'darwin') return join(homedir(), 'Library', 'Caches');
+    return join(homedir(), '.cache');
 }
 
 /**

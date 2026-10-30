@@ -124,7 +124,6 @@ export const CONFIGURATION_GUIDES: Readonly<Partial<Record<string, GuideSlug>>> 
 
 export const ENVIRONMENT_VARIABLES: readonly [name: string, meaning: string][] = [
     ['`NO_COLOR`', 'Any nonempty value turns color off.'],
-    ['`CI`', 'Any CI variable that std-env reads makes init refuse to ask; pass `--yes`.'],
     ['`XDG_CACHE_HOME`, `LOCALAPPDATA`', 'The cache folder; it must be an absolute path.'],
 ];
 
