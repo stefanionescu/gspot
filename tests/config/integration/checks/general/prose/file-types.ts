@@ -5,9 +5,9 @@ export const PROSE_COMMENT_CASES = [
 ] as const;
 
 export const MARKDOWN_COMMENT_CASES = [
-    ['ts', '//', 'const text = "powerful";'],
-    ['mts', '//', 'const text = "powerful";'],
-    ['py', '#', 'text = "powerful"'],
+    ['ts', '//', 'const text = "whitelist";'],
+    ['mts', '//', 'const text = "whitelist";'],
+    ['py', '#', 'text = "whitelist"'],
 ] as const;
 
 export const CONCRETE_RULE = `extends: existence

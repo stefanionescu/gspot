@@ -45,20 +45,20 @@ test.each([...MARKDOWN_COMMENT_CASES])(
         await using _change = await changeSandbox(sandbox, {
             files: {
                 [path]: [
-                    `${marker} Pass \`powerful\` to the command.`,
-                    `${marker} This powerful cache returns records.`,
+                    `${marker} Pass \`whitelist\` to the command.`,
+                    `${marker} This whitelist holds the records.`,
                     code,
-                    `${marker} @param powerful the command name`,
-                    `${marker} @param value This powerful cache returns records.`,
+                    `${marker} @param whitelist the command name`,
+                    `${marker} @param value This whitelist holds the records.`,
                     '',
                 ].join('\n'),
             },
         });
         const result = await spawnRootCheck(sandbox.root, 'prose/vale');
         expect(result.status, result.note).toBe('failed');
-        expect(result.findings.filter(({ rule }) => rule === 'gspot.marketing')).toStrictEqual([
-            matchFields({ file: path, line: 2, rule: 'gspot.marketing' }),
-            matchFields({ file: path, line: 5, rule: 'gspot.marketing' }),
+        expect(result.findings.filter(({ rule }) => rule === 'gspot.conscious-language')).toStrictEqual([
+            matchFields({ file: path, line: 2, rule: 'gspot.conscious-language' }),
+            matchFields({ file: path, line: 5, rule: 'gspot.conscious-language' }),
         ]);
     },
 );
