@@ -7,12 +7,12 @@ import { symlink, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';
@@ -115,6 +115,7 @@ test('a project-wide TypeScript check counts its source file and tsconfig.json, 
             Array.from({ length: 20 }, (_, index) => [`notes-${String(index)}.txt`, 'Other input.\n']),
         ),
     });
+    commitAll(sandbox.path);
     const declaration = await fakeNpmTool(sandbox.path, 'tsc');
     await writeProgramCommand(
         sandbox.path,
@@ -123,12 +124,11 @@ test('a project-wide TypeScript check counts its source file and tsconfig.json, 
         '--version-line',
         String(declaration.version),
     );
-    commitAll(sandbox.path);
     const all = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
     expect(all.code, all.stdout + all.stderr).toBe(0);
     expect(all.report.checks).toMatchObject([{ check: 'typescript/tsc', fileCount: 2 }]);
     await writeFile(join(sandbox.path, 'source.ts'), 'export const value = 2;\n');
-    runGitStep(sandbox.path, ['add', 'source.ts']);
+    runGitStep(sandbox.path, ['add', 'source.ts', GSPOT_FOLDER]);
     const staged = parseCheckReport(
         await runGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--staged', '--json']),
     );
