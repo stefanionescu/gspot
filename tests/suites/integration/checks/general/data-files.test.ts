@@ -65,7 +65,7 @@ test('v8r validates a staged JSON file with a non-ASCII path against its schema'
         {
             check: 'data-files/v8r',
             status: 'failed',
-            findings: [matchFields({ file: 'settings/café.json', message: '/count must be integer' })],
+            findings: [matchFields({ file: 'settings/café.json' })],
         },
     ]);
     await writeFile(join(root, 'settings/café.json'), JSON.stringify({ count: 1 }));

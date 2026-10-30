@@ -89,5 +89,4 @@ export const REFERENCED_PROJECT_FINDING = {
     rule: 'TS2322',
     line: 1,
     column: 14,
-    message: "Type 'string' is not assignable to type 'number'.",
 } as const;

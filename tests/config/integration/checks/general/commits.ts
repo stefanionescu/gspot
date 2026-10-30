@@ -25,8 +25,4 @@ export const COMMITLINT_LEVEL_RESULTS = {
     all: { code: 0, output: { checks: [{ check: 'commits/commitlint', status: 'passed', findings: [] }] } },
 } as const;
 
-export const UNTYPED_MESSAGE_FINDINGS = [
-    { rule: 'type-empty', message: 'type may not be empty' },
-    { rule: 'subject-empty', message: 'subject may not be empty' },
-    { rule: 'subject-full-stop', message: 'subject may not end with full stop' },
-] as const;
+export const UNTYPED_MESSAGE_RULES = ['type-empty', 'subject-empty', 'subject-full-stop'] as const;

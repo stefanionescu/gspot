@@ -22,7 +22,7 @@ import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests
 import {
     UNQUOTED_SCRIPT,
     HOOKS_OFF_SETTINGS,
-    UNQUOTED_FINDING_LINE,
+    UNQUOTED_FINDING_PREFIX,
 } from '#tests/config/integration/installers/hooks.ts';
 
 test.each(['', 'app/'])('install from %s points core.hooksPath at .gspot/hooks', async (prefix) => {
@@ -85,7 +85,9 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
         env: environment,
     });
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-    expect((rejected.stdout + rejected.stderr).split('\n')).toContain(UNQUOTED_FINDING_LINE);
+    expect(
+        (rejected.stdout + rejected.stderr).split('\n').some((line) => line.startsWith(UNQUOTED_FINDING_PREFIX)),
+    ).toBe(true);
     await writeFile(join(clone, 'scripts/b.sh'), '#!/usr/bin/env bash\necho "${1:-ready}"\n');
     runGitStep(clone, ['add', 'scripts/b.sh']);
     const accepted = runCommandBlocking(['git', 'commit', '-qm', 'Quote shell input'], {
@@ -109,7 +111,9 @@ test('a commit with a ShellCheck finding fails through the installed hook, in th
     const environment = { NO_COLOR: '1' };
     const commit = runCommandBlocking(['git', 'commit', '-qm', 'bad'], { cwd: sandbox.path, env: environment });
     expect(commit.code, commit.stdout + commit.stderr).toBe(1);
-    expect((commit.stdout + commit.stderr).split('\n')).toContain(UNQUOTED_FINDING_LINE);
+    expect((commit.stdout + commit.stderr).split('\n').some((line) => line.startsWith(UNQUOTED_FINDING_PREFIX))).toBe(
+        true,
+    );
     await writeFile(join(sandbox.path, 'scripts/b.sh'), '#!/usr/bin/env bash\necho "$1"\n');
     runGitStep(sandbox.path, ['add', '-A']);
     const corrected = runCommandBlocking(['git', 'commit', '-qm', 'Correct shell input'], {

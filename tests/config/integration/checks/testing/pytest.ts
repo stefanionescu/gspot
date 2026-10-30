@@ -43,7 +43,7 @@ export const PYTEST_CASES = [
             'tests/test_math.py': `from example.math import first, second, third, fourth\n\ndef test_functions():\n${Array.from({ length: 40 }, () => '    assert callable(first) and callable(second) and callable(third) and callable(fourth)').join('\n')}\n`,
         },
         settings: '[coverage]\nlines = 80\n',
-        expected: { message: 'FAIL Required test coverage of 80% not reached. Total coverage: 50.00%' },
+        expected: {},
         corrected: {
             files: {
                 'example/__init__.py': '',

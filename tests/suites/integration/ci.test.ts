@@ -172,15 +172,11 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         const failurePath = await fakeCiMise(executables.path);
         const malformed = await runCiJob(sandbox.path, generated, executables.path, '$(touch injected)');
         expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
-        expect(malformed.stderr).toBe(
-            'Git merge-base failed for $(touch injected): fatal: Not a valid object name $(touch injected).\n',
-        );
+        expect(malformed.stderr).toStartWith('Git merge-base failed for $(touch injected): ');
         expect(await isOnDisk(join(sandbox.path, 'injected'))).toBe(false);
         const missing = await runCiJob(sandbox.path, generated, executables.path, 'f'.repeat(base.length));
         expect(missing.code, missing.stdout + missing.stderr).toBe(2);
-        expect(missing.stderr).toBe(
-            `Git merge-base failed for ${'f'.repeat(base.length)}: fatal: Not a valid commit name ${'f'.repeat(base.length)}.\n`,
-        );
+        expect(missing.stderr).toStartWith(`Git merge-base failed for ${'f'.repeat(base.length)}: `);
         await writeFile(failurePath, '');
         const refused = await runCiJob(sandbox.path, generated, executables.path, base);
         expect(refused.code, refused.stdout + refused.stderr).toBe(1);

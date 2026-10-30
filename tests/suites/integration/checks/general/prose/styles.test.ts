@@ -137,7 +137,7 @@ test.each([...STYLE_CASES])(
 );
 
 test.each([{ scope: '' }, { scope: 'app' }])(
-    'Vale accepts the words listed in gspot.toml and reports a misspelling in scope "$scope"',
+    'Vale accepts the words listed in gspot.toml, and typos reports the misspelling, in scope "$scope"',
     async ({ scope }) => {
         const { root } = installedSandbox();
         const settings = buildSandboxSettings(scope === '' ? ['prose', 'sql', 'spelling'] : ['prose', 'spelling'], {

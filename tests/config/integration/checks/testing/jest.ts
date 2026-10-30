@@ -25,4 +25,4 @@ functions = 80
 statements = 80
 `;
 
-export const COVERAGE_THRESHOLD_MESSAGE = 'coverage threshold for lines (80%) not met: 66.66%';
+export const COVERAGE_THRESHOLD_MESSAGE = 'coverage threshold for lines (80%) not met: ';

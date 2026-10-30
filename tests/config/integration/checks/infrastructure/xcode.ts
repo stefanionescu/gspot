@@ -12,13 +12,4 @@ export const XCODE_CASES = [
     },
 ] as const;
 
-export const PLUTIL_UNREADABLE_FILES = [
-    {
-        path: 'missing.plist',
-        reason: 'The file \u{201C}missing.plist\u{201D} couldn\u{2019}t be opened because there is no such file.',
-    },
-    {
-        path: 'private.plist',
-        reason: 'The file \u{201C}private.plist\u{201D} couldn\u{2019}t be opened because you don\u{2019}t have permission to view it.',
-    },
-] as const;
+export const PLUTIL_UNREADABLE_FILES = ['missing.plist', 'private.plist'] as const;

@@ -115,6 +115,7 @@ test('markdownlint honors a lint rule ignore in the root and scope config files'
     await using _change = await applySandboxChanges(installedSandbox(), {
         files: {
             ...MARKDOWN_FILES,
+            'app/guide.md': `${MARKDOWN_FILES['app/guide.md']}\n![](diagram.png)\n`,
             'title.md': TITLED_DOCUMENT,
             'gspot.toml': buildSandboxSettings(['markdown'], {
                 level: 'all',

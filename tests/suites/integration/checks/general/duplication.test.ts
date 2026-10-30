@@ -58,7 +58,7 @@ test('duplication/jscpd reports a copied Bash function on the second file and ig
     expect(corrected.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'passed', findings: [] }]);
 });
 
-test('duplication/jscpd skips an import list that two files share', async () => {
+test('duplication/jscpd skips an import list that two TypeScript files share and reports a copied function', async () => {
     await using sandbox = await testdir({
         'first.ts': `${SHARED_IMPORTS}\n\nexport const first = value0 + value1;\n`,
         'second.ts': `${SHARED_IMPORTS}\n\nexport const second = value2 * value3;\n`,
@@ -67,6 +67,19 @@ test('duplication/jscpd skips an import list that two files share', async () => 
     await initSandbox({ root: sandbox.path, run: spawnGspot }, { configurations: ['typescript'], level: 'all' });
     const report = await runJscpdCheck(sandbox.path, 0);
     expect(report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'passed', findings: [] }]);
+    const logic = Array.from(
+        { length: 20 },
+        (_, index) => `    total += values[${String(index)}] * ${String(index + 2)};`,
+    ).join('\n');
+    for (const name of ['first', 'second'])
+        await writeFile(
+            join(sandbox.path, `${name}.ts`),
+            `${SHARED_IMPORTS}\n\nexport function ${name}(values: number[]): number {\n    let total = 0;\n${logic}\n    return total;\n}\n`,
+        );
+    const copied = await runJscpdCheck(sandbox.path, 1);
+    expect(copied.checks).toMatchObject([
+        { check: 'duplication/jscpd', status: 'failed', findings: [{ rule: 'clone' }] },
+    ]);
 });
 
 test('duplication/jscpd skips shared Python imports and reports duplicated executable statements', async () => {

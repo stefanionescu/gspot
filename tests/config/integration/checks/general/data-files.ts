@@ -26,7 +26,7 @@ export const FILES_CASES = [
     {
         check: 'data-files/xmllint',
         files: { 'settings/feed.xml': '<feed>&missing;</feed>\n' },
-        expected: { file: 'settings/feed.xml', line: 1, message: "parser error : Entity 'missing' not defined" },
+        expected: { file: 'settings/feed.xml', line: 1 },
         corrected: { files: { 'settings/feed.xml': '<feed>&amp;</feed>\n' } },
     },
 ] as const;

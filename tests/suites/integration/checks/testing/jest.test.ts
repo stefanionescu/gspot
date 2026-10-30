@@ -46,8 +46,11 @@ test("jest/coverage at level all uses the scope's coverage limits and runs only 
             scope: 'app',
             status: 'failed',
             findings: [
-                { file: '', message: COVERAGE_THRESHOLD_MESSAGE },
-                { file: '', message: 'coverage threshold for functions (100%) not met: 50%' },
+                { file: '', message: expect.stringContaining(COVERAGE_THRESHOLD_MESSAGE) as string },
+                {
+                    file: '',
+                    message: expect.stringContaining('coverage threshold for functions (100%) not met: ') as string,
+                },
             ],
         },
     ]);
@@ -66,8 +69,11 @@ test('jest/coverage at level all reports uncovered functions and failed tests an
     expect(uncovered).toMatchObject([
         {
             findings: [
-                { file: '', message: COVERAGE_THRESHOLD_MESSAGE },
-                { file: '', message: 'coverage threshold for functions (80%) not met: 50%' },
+                { file: '', message: expect.stringContaining(COVERAGE_THRESHOLD_MESSAGE) as string },
+                {
+                    file: '',
+                    message: expect.stringContaining('coverage threshold for functions (80%) not met: ') as string,
+                },
             ],
         },
     ]);

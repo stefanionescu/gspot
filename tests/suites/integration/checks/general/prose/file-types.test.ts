@@ -14,7 +14,6 @@ import { VALE_INI, EXAMPLE_STYLE_FOLDER } from '#tests/config/integration/checks
 import {
     PROSE_CASES,
     CONCRETE_RULE,
-    FORMATS_VALE_INI,
     PROSE_COMMENT_CASES,
     MARKDOWN_COMMENT_CASES,
 } from '#tests/config/integration/checks/general/prose/file-types.ts';
@@ -45,24 +44,21 @@ test.each([...MARKDOWN_COMMENT_CASES])(
         const path = `source.${extension}`;
         await using _change = await changeSandbox(sandbox, {
             files: {
-                'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
-                [GSPOT_PATHS.valeConfigFile]: FORMATS_VALE_INI,
-                [`${EXAMPLE_STYLE_FOLDER}/Concrete.yml`]: CONCRETE_RULE,
                 [path]: [
-                    `${marker} Pass \`delve\` to the command.`,
-                    `${marker} We delve into records.`,
+                    `${marker} Pass \`powerful\` to the command.`,
+                    `${marker} This powerful cache returns records.`,
                     code,
-                    `${marker} @param delve the command name`,
-                    `${marker} @param value We delve into records.`,
+                    `${marker} @param powerful the command name`,
+                    `${marker} @param value This powerful cache returns records.`,
                     '',
                 ].join('\n'),
             },
         });
         const result = await spawnRootCheck(sandbox.root, 'prose/vale');
         expect(result.status, result.note).toBe('failed');
-        expect(result.findings).toStrictEqual([
-            matchFields({ file: path, line: 2, rule: 'Example.Concrete' }),
-            matchFields({ file: path, line: 5, rule: 'Example.Concrete' }),
+        expect(result.findings.filter(({ rule }) => rule === 'gspot.marketing')).toStrictEqual([
+            matchFields({ file: path, line: 2, rule: 'gspot.marketing' }),
+            matchFields({ file: path, line: 5, rule: 'gspot.marketing' }),
         ]);
     },
 );

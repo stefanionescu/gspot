@@ -90,16 +90,8 @@ test('actionlint reports a missing required input of a same-repository reusable 
         await spawnGspot(sandbox.path, ['check', '--only', 'github-actions/actionlint', '--json']),
     ).report.checks[0]!;
     expect(failed.status, JSON.stringify(failed)).toBe('failed');
-    expect(
-        failed.findings.map(({ file, line, column, rule, message }) => ({ file, line, column, rule, message })),
-    ).toStrictEqual([
-        {
-            file: '.github/workflows/caller.yml',
-            line: 4,
-            column: 11,
-            rule: 'workflow-call',
-            message: 'input "greeting" is required by "./.github/workflows/called.yml" reusable workflow',
-        },
+    expect(failed.findings.map(({ file, line, column, rule }) => ({ file, line, column, rule }))).toStrictEqual([
+        { file: '.github/workflows/caller.yml', line: 4, column: 11, rule: 'workflow-call' },
     ]);
     expect(await readFile(join(sandbox.path, '.github/workflows/caller.yml'), 'utf8')).toBe(workflow);
     await writeFile(

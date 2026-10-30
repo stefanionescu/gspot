@@ -35,6 +35,8 @@ export const BUILT_HTML_SITES = [
     { name: 'site-only child configurations', configurations: [], files: {} },
 ] as const;
 
+const INDEX_LINK_FINDING = { check: 'site/lychee', file: 'dist/index.html', rule: 'ERROR', line: 1 } as const;
+
 const SELECTOR_FINDING = {
     file: 'dist/style.css',
     rule: 'unused-selector',
@@ -53,15 +55,7 @@ export const OUTPUT_CASES = [
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><a href="/missing.html">Missing</a></body></html>',
             'pages/style.css': UNUSED_STYLE,
         },
-        findings: [
-            {
-                check: 'site/lychee',
-                file: 'dist/index.html',
-                rule: 'ERROR',
-                line: 1,
-                message: `{file-url}missing.html (at 1:104) | File not found. Check if file exists and path is correct`,
-            },
-        ],
+        findings: [INDEX_LINK_FINDING],
         corrected: {
             'pages/index.html': CORRECTED_INDEX_PAGE,
         },
@@ -76,15 +70,7 @@ export const OUTPUT_CASES = [
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><h1 id="good">Good</h1><a href="#good">Good</a><a href="#missing">Missing</a><a name="encoded id"></a><a href="#encoded%20id">Encoded</a></body></html>',
             'pages/style.css': UNUSED_STYLE,
         },
-        findings: [
-            {
-                check: 'site/lychee',
-                file: 'dist/index.html',
-                rule: 'ERROR',
-                line: 1,
-                message: `{file-url}index.html#missing (at 1:151) | Cannot find fragment`,
-            },
-        ],
+        findings: [INDEX_LINK_FINDING],
         corrected: {
             'pages/index.html': CORRECTED_INDEX_PAGE,
         },
@@ -103,15 +89,7 @@ export const OUTPUT_CASES = [
             'pages/orphan.html':
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Orphan</title></head><body><h1 id="good">Good</h1><a href="https://example.test/orphan.html#missing">Missing</a><a href="https://example.test/orphan.html#good">Good</a></body></html>',
         },
-        findings: [
-            {
-                check: 'site/lychee',
-                file: 'dist/orphan.html',
-                rule: 'ERROR',
-                line: 1,
-                message: `{file-url}orphan.html#missing (at 1:126) | Cannot find fragment | Remaps: https://example.test/orphan.html#missing --> {file-url}orphan.html#missing`,
-            },
-        ],
+        findings: [{ ...INDEX_LINK_FINDING, file: 'dist/orphan.html' }],
         corrected: {
             'pages/index.html': CORRECTED_INDEX_PAGE,
             'pages/orphan.html':

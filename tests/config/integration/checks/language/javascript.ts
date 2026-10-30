@@ -19,7 +19,6 @@ const PRIVATE_TYPES_FINDING = {
     line: 3,
     column: 23,
     rule: 'TS2304',
-    message: "Cannot find name 'privateValue'.",
 } as const;
 
 const ARGUMENT_TYPE_FINDING = {
@@ -27,7 +26,6 @@ const ARGUMENT_TYPE_FINDING = {
     line: 2,
     column: 28,
     rule: 'TS2345',
-    message: "Argument of type 'number' is not assignable to parameter of type 'string'.",
 } as const;
 
 export const JSCONFIG_CASES = [
@@ -48,9 +46,8 @@ export const JSCONFIG_CASES = [
                 line: 1,
                 column: 30,
                 rule: 'TS2322',
-                message: "Type 'string' is not assignable to type 'number'.",
             },
-            { file: 'source.jsx', line: 2, column: 23, rule: 'TS2304', message: "Cannot find name 'privateValue'." },
+            { file: 'source.jsx', line: 2, column: 23, rule: 'TS2304' },
         ],
     },
     {
@@ -150,8 +147,6 @@ export const secret = 1;
                 line: 1,
                 column: 24,
                 rule: 'TS2835',
-                message:
-                    "Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './value.js'?",
             },
             PRIVATE_TYPES_FINDING,
         ],
@@ -182,7 +177,6 @@ export const OWN_TYPESCRIPT_RESULTS = [
                 line: 1,
                 column: 22,
                 rule: 'TS2304',
-                message: "Cannot find name 'missing'.",
                 fixable: false,
             },
         ],

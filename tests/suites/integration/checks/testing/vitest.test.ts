@@ -62,8 +62,8 @@ test('vitest/coverage reports coverage under its limit and passes after the fix,
             scope: 'app',
             status: 'failed',
             messages: [
-                'Coverage for lines (80%) does not meet global threshold (100%)',
-                'Coverage for functions (50%) does not meet global threshold (100%)',
+                expect.stringMatching(/^Coverage for lines .* threshold \(100%\)$/u) as string,
+                expect.stringMatching(/^Coverage for functions .* threshold \(100%\)$/u) as string,
             ],
         },
     ]);

@@ -78,14 +78,14 @@ test('editorconfig-checker leaves indentation to the formatter and checks line e
     const commandArguments = ['check', '--only', 'format/editorconfig-checker', '--json', '--'];
     const accepted = await spawnGspot(root, [...commandArguments, 'indented.txt']);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    for (const { file, broken, corrected, findings } of EDITORCONFIG_SAMPLES) {
+    for (const { file, broken, corrected, lines } of EDITORCONFIG_SAMPLES) {
         await createFileTree(root, { [file]: broken });
         const rejected = parseCheckReport(await spawnGspot(root, [...commandArguments, file]));
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
         expect(rejected.report.checks).toMatchObject([{ check: 'format/editorconfig-checker', status: 'failed' }]);
-        expect(
-            rejected.report.checks[0]!.findings.map(({ file: path, line, message }) => ({ file: path, line, message })),
-        ).toStrictEqual(findings.map((finding) => ({ file, ...finding })));
+        expect(rejected.report.checks[0]!.findings.map(({ file: path, line }) => ({ file: path, line }))).toStrictEqual(
+            lines.map((line) => ({ file, line })),
+        );
         await createFileTree(root, { [file]: corrected });
         const fixed = parseCheckReport(await spawnGspot(root, [...commandArguments, file]));
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);

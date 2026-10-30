@@ -102,6 +102,23 @@ test("licenses/allowed reads installed Python packages, ignores the project's pi
 test('an allowed package of the root covers that package in a child scope', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['licenses'], {
+            tables: stringify({ licenses: MIT_ONLY }),
+            scopes: [{ path: 'docs' }],
+        }),
+
+        'docs/package.json': '{"name":"docs","private":true,"dependencies":{"@fontsource/inter":"5.2.8"}}',
+        'docs/node_modules/@fontsource/inter/package.json':
+            '{"name":"@fontsource/inter","version":"5.2.8","license":"OFL-1.1"}',
+    });
+    await applyThenInstall(sandbox.path);
+    const refused = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'licenses/allowed', '--json']));
+    expect(refused.code, refused.stdout + refused.stderr).toBe(1);
+    expect(refused.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
+        { file: 'docs/package.json', rule: 'disallowed-license' },
+    ]);
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['licenses'], {
             tables: stringify({
                 licenses: {
                     ...MIT_ONLY,
@@ -116,12 +133,9 @@ test('an allowed package of the root covers that package in a child scope', asyn
             }),
             scopes: [{ path: 'docs' }],
         }),
-
-        'docs/package.json': '{"name":"docs","private":true,"dependencies":{"@fontsource/inter":"5.2.8"}}',
-        'docs/node_modules/@fontsource/inter/package.json':
-            '{"name":"@fontsource/inter","version":"5.2.8","license":"OFL-1.1"}',
-    });
-    await applyThenInstall(sandbox.path);
+    );
+    const applied = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'licenses/allowed', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(checked.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);

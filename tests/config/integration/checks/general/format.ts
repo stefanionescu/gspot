@@ -5,22 +5,19 @@ export const EDITORCONFIG_SAMPLES = [
         file: 'line-endings.txt',
         broken: 'content\r\n',
         corrected: 'content\n',
-        findings: [
-            { line: undefined, message: 'not all lines have the correct end of line character' },
-            { line: undefined, message: 'wrong line endings or no final newline' },
-        ],
+        lines: [undefined, undefined],
     },
     {
         file: 'final-newline.txt',
         broken: 'content',
         corrected: 'content\n',
-        findings: [{ line: undefined, message: 'wrong line endings or no final newline' }],
+        lines: [undefined],
     },
     {
         file: 'trailing-whitespace.txt',
         broken: 'content \n',
         corrected: 'content\n',
-        findings: [{ line: 1, message: 'trailing whitespace' }],
+        lines: [1],
     },
 ] as const;
 

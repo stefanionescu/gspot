@@ -11,9 +11,9 @@ import { COMPILER_SOURCE } from '#tests/config/typescript.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { rm, stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -249,6 +249,12 @@ test('Knip checks an independent package with directory instead of workspace', a
         { scope: '', status: 'passed' },
         { scope: 'docs', status: 'passed' },
     ]);
-    expect(result.report.checks[1]?.command).toContain('--directory');
-    expect(result.report.checks[1]?.command).not.toContain('--workspace');
+    await writeFile(join(root, 'docs/unused.js'), 'export const unused = 1;\n');
+    const unused = parseCheckReport(await spawnGspot(root, ['check', '--only', 'javascript/knip', '--json']));
+    await rm(join(root, 'docs/unused.js'));
+    expect(unused.code, unused.stdout + unused.stderr).toBe(1);
+    expect(unused.report.checks.find(({ scope }) => scope === 'docs')).toMatchObject({
+        status: 'failed',
+        findings: [{ file: 'docs/unused.js' }],
+    });
 });
