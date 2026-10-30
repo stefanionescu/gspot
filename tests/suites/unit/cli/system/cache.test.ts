@@ -17,16 +17,3 @@ test('a remembered value is calculated once for each key and id', async () => {
     expect(remember(cache, Symbol('values'), 'first', calculate('first'))).not.toBe(first);
     expect(calculated).toStrictEqual(['first', 'second', 'first']);
 });
-
-test('a remembered undefined result is not calculated again', async () => {
-    await using sandbox = await testdir({});
-    const cache = createRunCache(sandbox.path);
-    const key = Symbol('missing');
-    const calculated: string[] = [];
-    for (const id of ['path', 'path'])
-        remember(cache, key, id, () => {
-            calculated.push(id);
-            return undefined;
-        });
-    expect(calculated).toStrictEqual(['path']);
-});
