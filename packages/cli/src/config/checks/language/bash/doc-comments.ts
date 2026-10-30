@@ -32,5 +32,3 @@ export const RULES = {
     sectionOrder: 'section-order',
     missingArguments: 'missing-arguments',
 } as const;
-
-export const CAMEL_CASE_SPLIT = /(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])/gu;

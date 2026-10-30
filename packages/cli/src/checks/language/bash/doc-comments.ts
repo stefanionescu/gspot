@@ -2,6 +2,7 @@ import type { Session } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
+import { splitWords } from '#cli/checks/general/naming/settings.ts';
 import type { ScriptFunction } from '#cli/types/parsers/code/bash.ts';
 import { MAIN_FUNCTION } from '#cli/config/checks/language/bash/scripts.ts';
 
@@ -10,7 +11,6 @@ import {
     RULES,
     VAGUE_WORDS,
     DOC_SECTIONS,
-    CAMEL_CASE_SPLIT,
     ARGUMENTS_SECTION,
     LEADING_UNDERSCORES,
     SHELLCHECK_TOOL_COMMENT,
@@ -29,9 +29,7 @@ function findCommentBlock(lines: string[], start: number): string[] {
 }
 
 function hasWordsBeyondName(name: string, summary: string): boolean {
-    const nameWords = new Set(
-        name.replace(LEADING_UNDERSCORES, '').replace(CAMEL_CASE_SPLIT, '_').toLowerCase().split('_'),
-    );
+    const nameWords = new Set(splitWords(name));
     const words = summary
         .matchAll(WORD)
         .map((match) => match[0].toLowerCase())
