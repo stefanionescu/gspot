@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { test, spyOn, expect } from 'bun:test';
-import * as processes from '#cli/system/processes.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -73,7 +73,7 @@ test.each([0, 7])("build: a run deletes the build's copy after exit %i", async (
     let cwd = '';
     using resources = new DisposableStack();
     resources.use(
-        spyOn(processes, 'spawnProcess').mockImplementation(async (_argv, options) => {
+        fakeCommands().mockImplementation(async (_argv, options) => {
             cwd = options.cwd!;
             await mkdir(join(cwd, 'dist'), { recursive: true });
             await writeFile(join(cwd, 'dist/index.html'), 'isolated output');

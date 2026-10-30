@@ -1,7 +1,6 @@
+import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { executableLayout } from '#cli/system/paths.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -9,7 +8,7 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeNpmTool, fakeCommands, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { SAMPLE_PYPROJECT, LOCKED_PACKAGE_CASES, LICENSE_PACKAGE_JSON } from '#tests/config/checks/general/licenses.ts';
 
 test.each([...LOCKED_PACKAGE_CASES])(
@@ -42,9 +41,7 @@ test.each([...LOCKED_PACKAGE_CASES])(
                   };
               })
             : Object.fromEntries(installed.map((identity) => [identity, { licenses: 'GPL-3.0-only' }]));
-        using _scan = spyOn(processes, 'spawnProcess').mockResolvedValue(
-            buildProcessResult({ stdout: JSON.stringify(stdout) }),
-        );
+        using _scan = fakeCommands().mockResolvedValue(buildProcessResult({ stdout: JSON.stringify(stdout) }));
         const findings = await runSandboxCheck(sandbox.path, 'licenses/allowed');
         expect(findings.map(({ file: path, rule, message }) => ({ file: path, rule, message }))).toStrictEqual(
             expected.map((identity) => ({
@@ -73,7 +70,7 @@ test.each(['root', 'nearest', 'none'])(
                 ...(location === 'nearest' ? { 'apps/bun.lock': '{"packages":{"nearest":["nearest@1.0.0"]}}' } : {}),
             });
         await fakeNpmTool(sandbox.path, 'license-checker-rseidelsohn');
-        using _scan = spyOn(processes, 'spawnProcess').mockResolvedValue(
+        using _scan = fakeCommands().mockResolvedValue(
             buildProcessResult({
                 stdout: JSON.stringify({
                     'root@1.0.0': { licenses: 'GPL-3.0-only' },

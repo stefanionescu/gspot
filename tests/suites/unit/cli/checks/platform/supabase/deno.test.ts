@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { writeFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
-import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
@@ -44,7 +44,7 @@ test.each([1, 2])(
         using resources = new DisposableStack();
         const session = await openFakeToolSession(sandbox.path, ['deno'], resources);
         resources.use(
-            spyOn(processes, 'spawnProcess').mockResolvedValue(
+            fakeCommands().mockResolvedValue(
                 buildProcessResult({ code, stderr: 'The project configuration is invalid.' }),
             ),
         );
@@ -94,9 +94,7 @@ async function prepareDenoSession(root: string) {
     using resources = new DisposableStack();
     const session = await openFakeToolSession(root, ['deno'], resources);
     const run = resources.use(
-        spyOn(processes, 'spawnProcess').mockResolvedValue(
-            buildProcessResult({ stdout: '{"diagnostics":[],"errors":[]}' }),
-        ),
+        fakeCommands().mockResolvedValue(buildProcessResult({ stdout: '{"diagnostics":[],"errors":[]}' })),
     );
     const owned = resources.move();
     return { session, run, [Symbol.dispose]: owned[Symbol.dispose].bind(owned) };
@@ -113,7 +111,7 @@ test('Deno type errors use their location or the entrypoint, and successful chec
     await openFakeToolSession(sandbox.path, ['deno'], resources);
     const location = pathToFileURL(join(sandbox.path, 'supabase/functions/greet/util.ts')).href;
     const run = resources.use(
-        spyOn(processes, 'spawnProcess').mockImplementation((command) =>
+        fakeCommands().mockImplementation((command) =>
             Promise.resolve(
                 buildProcessResult({
                     code: 1,

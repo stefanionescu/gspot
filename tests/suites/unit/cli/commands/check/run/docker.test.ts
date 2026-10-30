@@ -6,7 +6,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { fakeCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 
 test('Docker checks share one daemon request and report an unavailable daemon before running', async () => {
     await using sandbox = await testdir({
@@ -29,7 +29,7 @@ test('Docker checks share one daemon request and report an unavailable daemon be
         );
     }
     const commands: string[][] = [];
-    using _docker = fakeCommand('docker', (command) => {
+    using _docker = fakeCommands('docker', (command) => {
         commands.push([...command]);
         return Promise.resolve(buildProcessResult({ code: 1, stderr: 'Cannot connect to Docker.' }));
     });

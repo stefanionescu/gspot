@@ -5,6 +5,7 @@ import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { type SpawnResult } from '#cli/types/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -82,7 +83,7 @@ async function prepareExpoApps(
         ),
     );
     resources.use(
-        spyOn(processes, 'spawnProcess').mockImplementation((_command, options) => {
+        fakeCommands().mockImplementation((_command, options) => {
             folders.push(options.cwd);
             return Promise.resolve(buildProcessResult(result));
         }),

@@ -8,8 +8,8 @@ import { openSession } from '#cli/planning/session.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { PYTHON_VERSION } from '#cli/config/installers/pypi.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -41,7 +41,7 @@ test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hid
     await using sandbox = await testdir(PYTHON_INSTALL_FILES);
 
     const calls: string[][] = [];
-    using _boundary = fakeCommand('unavailable-uv', (command) => {
+    using _boundary = fakeCommands('unavailable-uv', (command) => {
         calls.push([...command]);
         return Promise.resolve(
             buildProcessResult({
@@ -68,7 +68,7 @@ test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hid
 test('a successful uv run refuses a password in its new lockfile and keeps the tool project files', async () => {
     await using sandbox = await testdir(PYTHON_INSTALL_FILES);
 
-    using boundary = fakeCommand('synthetic-uv', async (_command, options) => {
+    using boundary = fakeCommands('synthetic-uv', async (_command, options) => {
         await writeFile(join(options.cwd, 'uv.lock'), `${PYTHON_TOOL_LOCKFILE}\n# test+password\n`);
         return buildProcessResult();
     });
@@ -99,7 +99,7 @@ test('uv installs the tool project with its own Python, whatever UV_PYTHON and .
     });
 
     const runs: { command: string[]; env: Record<string, string | undefined> | undefined }[] = [];
-    using _boundary = fakeCommand('pinned-uv', (command, options) => {
+    using _boundary = fakeCommands('pinned-uv', (command, options) => {
         runs.push({ command: [...command], env: options.env });
         return Promise.resolve(buildProcessResult());
     });
@@ -156,7 +156,7 @@ test.each(INVALID_UV_SETTINGS)(
 
 async function readInstalledSettings(root: string, releaseAgeDays: number): Promise<unknown> {
     const settings: unknown[] = [];
-    using boundary = fakeCommand('settings-uv', (command) => {
+    using boundary = fakeCommands('settings-uv', (command) => {
         const file = command[command.indexOf('--config-file') + 1];
         if (file === undefined) throw new Error('The uv command received no settings file.');
         settings.push(parse(readFileSync(file, 'utf8')));

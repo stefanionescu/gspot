@@ -1,15 +1,14 @@
 import { testdir } from 'testdirs';
-import { test, spyOn, expect } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { planChecks } from '#cli/planning/checks.ts';
-import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 
@@ -26,9 +25,7 @@ import {
 
 async function scanImages(root: string, stdout: string, resources: DisposableStack) {
     const session = await openFakeToolSession(root, ['trivy'], resources);
-    const scan = resources.use(
-        spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ code: 10, stdout })),
-    );
+    const scan = resources.use(fakeCommands().mockResolvedValue(buildProcessResult({ code: 10, stdout })));
     return { scan, findings: await runSandboxCheck(session.root, 'docker/trivy-image') };
 }
 
@@ -46,7 +43,7 @@ test.each([...COMPOSE_PAIRING_CASES])(
             { ...getTool(session.configurationsByName.values(), 'docker'), version: '29.0.0' },
         ]);
         resources.use(fakes);
-        const toolRun = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult()));
+        const toolRun = resources.use(fakeCommands().mockResolvedValue(buildProcessResult()));
         const planned = planChecks(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
         const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['docker/compose']);
         expect(result.findings).toStrictEqual([]);
@@ -122,7 +119,7 @@ test(`docker/trivy-image fails with Trivy's error text when Trivy exits 1`, asyn
     });
     using resources = new DisposableStack();
     const session = await openFakeToolSession(sandbox.path, ['trivy'], resources);
-    resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ code, stdout, stderr })));
+    resources.use(fakeCommands().mockResolvedValue(buildProcessResult({ code, stdout, stderr })));
     const error = await captureRejection(runSandboxCheck(session.root, 'docker/trivy-image'));
     expect(error.message).toBe(message);
 });
@@ -135,7 +132,7 @@ test.each([...INVALID_COMPOSE_SOURCES])(
             'compose.yaml': source,
         });
 
-        using scan = spyOn(processes, 'spawnProcess');
+        using scan = fakeCommands();
         const findings = await runSandboxCheck(sandbox.path, 'docker/trivy-image');
         expect(findings).toMatchObject([{ file: 'compose.yaml', rule: 'syntax', message }]);
         expect(scan).not.toHaveBeenCalled();

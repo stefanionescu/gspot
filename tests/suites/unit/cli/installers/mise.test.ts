@@ -9,9 +9,9 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
-import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { listMisePins } from '#cli/configurations/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import type { MiseProject } from '#tests/types/packages.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -81,7 +81,7 @@ test.each(['commit', 'manual'] as const)(
         using _paths = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
             command[0] === 'mise' ? buildProcessResult() : runBlocking(command, options),
         );
-        using _commands = fakeCommand('mise', async (command, options) => {
+        using _commands = fakeCommands('mise', async (command, options) => {
             if (command[1] === 'lock') {
                 expect(options.env).toHaveProperty('MISE_TRUSTED_CONFIG_PATHS', options.cwd);
                 expect(options.env).toHaveProperty('MISE_CEILING_PATHS', dirname(options.cwd));
@@ -137,7 +137,7 @@ test('mise fills missing release checksums from the audited pins without fetchin
     );
     const respond = Object.assign(() => Promise.resolve(new Response('archive')), { preconnect: fetch.preconnect });
     using request = spyOn(globalThis, 'fetch').mockImplementation(respond);
-    using _commands = fakeCommand('mise', async (command, options) => {
+    using _commands = fakeCommands('mise', async (command, options) => {
         if (command[1] === 'lock') {
             const project = parse(await readFile(join(options.cwd, 'mise.toml'), 'utf8')) as MiseProject;
             const sections = Object.entries(project.tools).map(([name, version]) => {
@@ -166,7 +166,7 @@ test('mise lock that leaves a platform without a download URL is refused and wri
     const writer = openFiles(sandbox.path);
     const install = buildToolInstall(session, writer);
     install.misePath = 'mise';
-    using _commands = fakeCommand('mise', async (command, options) => {
+    using _commands = fakeCommands('mise', async (command, options) => {
         if (command[1] === 'lock') {
             const project = parse(await readFile(join(options.cwd, 'mise.toml'), 'utf8')) as MiseProject;
             const sections = Object.keys(project.tools).map((name) => {
@@ -211,7 +211,7 @@ test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps th
                       ],
                   },
               });
-    using _commands = fakeCommand('mise', async (command, options) => {
+    using _commands = fakeCommands('mise', async (command, options) => {
         if (command[1] === 'lock') await writeFile(join(options.cwd, 'mise.lock'), lockfile);
         return buildProcessResult({ stderr: 'WARN skipped tool after rate limit' });
     });

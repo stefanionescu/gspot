@@ -1,8 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
-import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -10,9 +9,9 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 
 import {
     NGINX_MOUNT_CASES,
@@ -36,7 +35,7 @@ test.each([...NGINX_MOUNT_CASES])(
             tail: string[];
             image: string | undefined;
         }[] = [];
-        using run = spyOn(processes, 'spawnProcess').mockImplementation(async (command) => {
+        using run = fakeCommands().mockImplementation(async (command) => {
             const volumes = command.filter((_, index) => command[index - 1] === '-v');
             const configuration = volumes.find((volume) => volume.endsWith(':/etc/nginx/nginx.conf:ro'));
             if (configuration === undefined) return buildProcessResult();
@@ -82,7 +81,7 @@ test.each(['stdout', 'stderr'])(
         resources.use(fakes);
         const folders: string[] = [];
         const message = 'The temporary key could not be written.';
-        using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((_command, options) => {
+        using _spawn = fakeCommands().mockImplementation((_command, options) => {
             folders.push(options.cwd);
             return Promise.resolve(
                 buildProcessResult({
@@ -114,7 +113,7 @@ test.each(NGINX_FAILURE_CASES)('nginx/syntax reports $name', async ({ stderr, st
     using _pins = fakeToolExecutables(
         ['openssl', 'docker'].map((name) => getTool(session.configurationsByName.values(), name)),
     );
-    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command) =>
+    using _spawn = fakeCommands().mockImplementation((command) =>
         Promise.resolve(buildProcessResult(command.includes('--rm') ? { code: 1, stderr } : {})),
     );
     const { report } = await runChecks(session, buildRunOptions({ only: ['nginx/syntax'] }));

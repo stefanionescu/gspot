@@ -1,9 +1,10 @@
 import executables from 'which';
-import { spyOn, type Mock } from 'bun:test';
+import { mock, spyOn, type Mock } from 'bun:test';
 import { quoteArgument } from '#cli/system/text.ts';
 import { join, dirname, basename } from 'node:path';
 import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
+import { GIT_PROGRAM } from '#cli/config/system/git.ts';
 import { type Tool } from '#cli/types/configurations.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
@@ -17,15 +18,22 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { UNPINNED_NPM_MESSAGE } from '#tests/config/setup/system/fakes.ts';
 
 /**
-Replace one child command, found by its path or program name, and run the others normally.
+Replace the child command found by this path or program name, or without a name every child command but Git. Run the
+others normally, and record only the replaced commands. Without a replacement, the replaced commands run normally too.
 */
-export function fakeCommand(name: string, spawn: typeof spawnProcess): Mock<typeof spawnProcess> {
+export function fakeCommands(name?: string, spawn?: typeof spawnProcess): Mock<typeof spawnProcess> {
     const runProcess = processes.spawnProcess;
-    return spyOn(processes, 'spawnProcess').mockImplementation((command, options) =>
-        [command[0], basename(command[0] ?? '')].includes(name)
-            ? spawn(command, options)
-            : runProcess(command, options),
-    );
+    const fake = mock(spawn ?? runProcess);
+    const spy = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
+        const replaced =
+            name === undefined ? command[0] !== GIT_PROGRAM : [command[0], basename(command[0] ?? '')].includes(name);
+        return replaced ? fake(command, options) : runProcess(command, options);
+    });
+    return Object.assign(fake, {
+        [Symbol.dispose]: () => {
+            spy.mockRestore();
+        },
+    });
 }
 
 /**

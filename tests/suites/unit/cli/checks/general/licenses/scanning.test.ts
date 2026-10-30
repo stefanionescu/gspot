@@ -1,6 +1,6 @@
+import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
 import { realpath } from 'node:fs/promises';
-import { test, spyOn, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
@@ -17,8 +17,8 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import { fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { executableLayout, buildVenvExecutablePath } from '#cli/system/paths.ts';
+import { fakeNpmTool, fakeCommands, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 
 import {
     LICENSE_TABLES,
@@ -42,7 +42,7 @@ test.each([...ALLOWED_PACKAGE_SCOPE_CASES])(
         await writeScopeLicenseSandbox(sandbox.path, scenario);
 
         const scanned: string[] = [];
-        using _output = spyOn(processes, 'spawnProcess').mockImplementation((command) => {
+        using _output = fakeCommands().mockImplementation((command) => {
             const interpreter = command.at(-1)!;
             const [scope, identity] = Object.entries(reports).find(
                 ([folder]) => interpreter === buildVenvExecutablePath(join(sandbox.path, folder, '.venv'), 'python'),
@@ -80,7 +80,7 @@ test.each([...ALLOWED_PACKAGE_CASES])(
             `${LICENSE_TABLES}[[licenses.allowed_package]]\nname = "${name.slice(0, name.lastIndexOf('@'))}"\nversion = "${name.slice(name.lastIndexOf('@') + 1)}"\nreason = "Reviewed the published GPL license."\n`,
         );
 
-        using _spawn = spyOn(processes, 'spawnProcess').mockResolvedValue(
+        using _spawn = fakeCommands().mockResolvedValue(
             buildProcessResult({
                 stdout: JSON.stringify([{ Name: installed, Version: '1.0.0', 'License-Expression': license }]),
             }),
@@ -103,7 +103,7 @@ test.each([...UNINSTALLED_DEPENDENCY_CASES])(
             [path]: text,
         });
 
-        using spawn = spyOn(processes, 'spawnProcess');
+        using spawn = fakeCommands();
         const error = await captureRejection(runSandboxCheck(sandbox.path, 'licenses/allowed'));
         expect(error.message).toBe(
             `Install the project dependencies first: ${installedFolder} is missing in ${scope === '' ? ROOT_LABEL : scope}.`,
@@ -124,7 +124,7 @@ test.each([...SCANNER_FAILURES])(
         });
 
         const folders: string[] = [];
-        using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((_argv, options) => {
+        using _spawn = fakeCommands().mockImplementation((_argv, options) => {
             folders.push(options.cwd);
             return Promise.resolve(
                 buildProcessResult(
@@ -156,7 +156,7 @@ test('scan: one scan reads package.json and pyproject.toml, accepts a license ch
 
     const folders: string[] = [];
     const nativeRun = processes.spawnProcess;
-    using _output = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
+    using _output = fakeCommands().mockImplementation((command, options) => {
         if (command[0] === 'git') return nativeRun(command, options);
         folders.push(options.cwd);
         const result = buildProcessResult({
@@ -209,7 +209,7 @@ test('scan: one scan reads package.json and pyproject.toml, accepts a license ch
 test('scan: a Python license comes from its SPDX expression, then its metadata, then its trove classifiers', async () => {
     await using sandbox = await testdir();
     await writeLicenseSandbox(sandbox.path, '[licenses]\nallowed = ["MIT", "BSD-3-Clause", "Apache-2.0"]\n');
-    using _scan = spyOn(processes, 'spawnProcess').mockResolvedValue(
+    using _scan = fakeCommands().mockResolvedValue(
         buildProcessResult({
             stdout: JSON.stringify([...PYTHON_LICENSE_SOURCES]),
         }),
@@ -229,7 +229,7 @@ test('scan: licenses/allowed checks only the packages that the lockfile holds, a
         'uv.lock':
             '[[package]]\nname = "app"\nversion = "1.0.0"\n[[package]]\nname = "nvidia-cudnn-cu12"\nversion = "9.1.0"\n',
     });
-    using _scan = spyOn(processes, 'spawnProcess').mockResolvedValue(
+    using _scan = fakeCommands().mockResolvedValue(
         buildProcessResult({
             stdout: JSON.stringify([
                 { Name: 'app', Version: '1.0.0', 'License-Expression': 'MIT' },

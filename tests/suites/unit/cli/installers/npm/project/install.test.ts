@@ -7,8 +7,8 @@ import { CI_NODE } from '#cli/config/generation/ci.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -74,7 +74,7 @@ test.each([...FAILED_INSTALL_CASES])(
             stdout: `Downloading ${registry}private-check-tool\n${password}\n${token}`,
             stderr: `${refusal} from ${registry}private-check-tool`,
         };
-        using _bun = fakeCommand('mise', (command) =>
+        using _bun = fakeCommands('mise', (command) =>
             Promise.resolve(
                 buildProcessResult(command.at(-1) === '--version' ? { stdout: '1.4.2\n' } : { code: 1, ...failure }),
             ),
@@ -109,7 +109,7 @@ test('an npm install that runs past the time limit names the limit', async () =>
     });
     const session = await openSession(sandbox.path);
     const owner = openFiles(sandbox.path);
-    using _bun = fakeCommand('mise', (command) =>
+    using _bun = fakeCommands('mise', (command) =>
         Promise.resolve(
             buildProcessResult(command.at(-1) === '--version' ? { stdout: '1.4.2\n' } : { code: 1, timedOut: true }),
         ),
@@ -136,7 +136,7 @@ test('a cached lockfile that holds registry credentials is refused and the files
 
 test('a lockfile that the package manager writes with registry credentials is refused and the files stay', async () => {
     await using sandbox = await testdir();
-    using _bun = fakeCommand('mise', async (command, options) => {
+    using _bun = fakeCommands('mise', async (command, options) => {
         if (command.at(-1) !== '--version') await writeFile(join(options.cwd, 'bun.lock'), CREDENTIAL_LOCKFILE);
         return buildProcessResult({ stdout: command.at(-1) === '--version' ? '1.4.2\n' : '' });
     });
@@ -196,7 +196,7 @@ test('a Yarn Classic repository resolves its tool lockfile with npm and the mini
     using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
         command[0] === 'npm' ? buildProcessResult({ stdout: '11.19.0\n' }) : run(command, options),
     );
-    using _npm = fakeCommand('npm', async (command, options) => {
+    using _npm = fakeCommands('npm', async (command, options) => {
         if (command[1] !== '--version')
             await writeFile(
                 join(options.cwd, 'package-lock.json'),

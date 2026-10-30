@@ -3,7 +3,7 @@ import { join, resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { planChecks } from '#cli/planning/checks.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { fakeCommand } from '#tests/setup/system/fakes.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -30,7 +30,7 @@ test.each(COVERAGE_PROJECT_FILES)(
         planned.tool = { name: process.execPath, kind: 'program', installers: {} };
         planned.check = { ...planned.check, tool: process.execPath, other_tools: [] };
         const commands: string[][] = [];
-        using _spawn = fakeCommand(process.execPath, (command) => {
+        using _spawn = fakeCommands(process.execPath, (command) => {
             commands.push([...command]);
             return Promise.resolve(buildProcessResult());
         });

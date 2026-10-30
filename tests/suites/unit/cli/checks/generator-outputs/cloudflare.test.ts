@@ -1,14 +1,12 @@
+import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
-import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
-import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -17,6 +15,7 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { runSandboxCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { runCommand, buildProcessResult } from '#tests/setup/system/processes.ts';
 import { CLOUDFLARE_ENV_SOURCE, UNTRACKED_CLOUDFLARE_FINDINGS } from '#tests/config/checks/generator-outputs.ts';
 
@@ -30,7 +29,7 @@ async function fakeWrangler(root: string): Promise<DisposableStack> {
 }
 
 function fakeWranglerTypes(source: string) {
-    return spyOn(processes, 'spawnProcess').mockImplementation(async (_commandArguments, options) => {
+    return fakeCommands().mockImplementation(async (_commandArguments, options) => {
         await writeFile(join(options.cwd, 'cloudflare-env.d.ts'), source);
         return buildProcessResult();
     });

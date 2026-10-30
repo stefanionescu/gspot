@@ -15,7 +15,7 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runCommandCheck, runCommandBatches } from '#cli/runs/command/check.ts';
-import { fakeCommand, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeCommands, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { BATCH_CHECK, BATCH_IGNORE, BATCH_FINDINGS, CAFE_SOURCE_PATH } from '#tests/config/runs/command/check.ts';
 
 test.skipIf(isWindows)('a command check whose program lost its execute bit errors with exit code 2', async () => {
@@ -149,7 +149,7 @@ test('a fatal command group stops before the next group runs', async () => {
     planned.tool = { name: process.execPath, kind: 'program', installers: {} };
     planned.check = { ...planned.check, output: { format: 'none' }, exit_codes: [1] };
     const commands: string[][] = [];
-    using _commands = fakeCommand(process.execPath, (command) => {
+    using _commands = fakeCommands(process.execPath, (command) => {
         commands.push([...command]);
         return Promise.resolve(buildProcessResult({ code: 2, stderr: 'Cannot read configuration.' }));
     });
@@ -173,7 +173,7 @@ test.each(['crash', 'parse'] as const)('a later %s preserves only selected, unig
         'outside.txt': 'outside',
     });
     const failed = failure === 'crash' ? { code: 2, stderr: 'Fatal failure.' } : { stdout: '{broken' };
-    using _commands = fakeCommand(process.execPath, (command) =>
+    using _commands = fakeCommands(process.execPath, (command) =>
         Promise.resolve(
             buildProcessResult(
                 command.at(-1) === 'one.txt' ? { code: 1, stdout: JSON.stringify(BATCH_FINDINGS) } : failed,

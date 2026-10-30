@@ -1,12 +1,12 @@
+import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { CANCELED_CHECK_NOTE } from '#tests/config/messages.ts';
 import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -43,7 +43,7 @@ test('compiler: a failed Swift build without source errors exits 2, and the next
     const options = buildRunOptions({ only: ['swift/build'] });
     const corrected = await openSession(sandbox.path);
     const run = resources.use(
-        spyOn(processes, 'spawnProcess').mockResolvedValue(
+        fakeCommands().mockResolvedValue(
             buildProcessResult({ code: 7, stdout: 'Compiler startup failed', stderr: 'Permission denied' }),
         ),
     );
@@ -74,7 +74,7 @@ test('compiler: a later Swift session reads a failed build after an earlier succ
     const first = prepared.planned;
 
     resources.use(
-        spyOn(processes, 'spawnProcess')
+        fakeCommands()
             .mockResolvedValueOnce(buildProcessResult())
             .mockResolvedValue(
                 buildProcessResult({ code: 1, stderr: `${sandbox.path}/Main.swift:4:2: error: Missing value` }),
@@ -95,7 +95,7 @@ test('compiler: canceled Swift compilation refuses to launch the compiler', asyn
 
     const input = prepared.planned;
     prepared.session.cancelSignal = AbortSignal.abort();
-    const run = resources.use(spyOn(processes, 'spawnProcess'));
+    const run = resources.use(fakeCommands());
     const compilation = await runChecks(prepared.session, buildRunOptions({ only: ['swift/build'] }));
     expect(compilation.report.checks).toMatchObject([{ status: 'error', note: CANCELED_CHECK_NOTE }]);
     const analyzer = planSwiftBuild(prepared.session, input, 'analyze');
@@ -121,7 +121,7 @@ test('compiler: swift/build refuses a response file outside the compiler cache a
     const input = prepared.planned;
     const plan = planSwiftBuild(prepared.session, input);
 
-    const spawn = spyOn(processes, 'spawnProcess').mockResolvedValue(
+    const spawn = fakeCommands().mockResolvedValue(
         buildProcessResult({ stdout: `swiftc @${join(sandbox.path, 'external-response')}` }),
     );
     const run = resources.use(spawn);
@@ -151,7 +151,7 @@ test('compiler: a Swift build whose source file is missing names the file and ru
     const session = await openSession(sandbox.path);
     const input = planSandboxCheck(session, 'swift/build');
     await rm(join(sandbox.path, 'Main.swift'));
-    const run = resources.use(spyOn(processes, 'spawnProcess'));
+    const run = resources.use(fakeCommands());
     const missingSourceError = await captureRejection(getBuiltInCheck('swift/build')(session, input));
     expect(missingSourceError.message).toBe('Main.swift is tracked but missing. Restore it or commit its deletion.');
     expect(run).not.toHaveBeenCalled();
@@ -164,7 +164,7 @@ test('compiler: Swift compiler messages drop the macOS /private prefix from sour
     const input = prepared.planned;
     using resources = new DisposableStack();
     resources.use(
-        spyOn(processes, 'spawnProcess').mockResolvedValue(
+        fakeCommands().mockResolvedValue(
             buildProcessResult({
                 code: 1,
                 stderr: '/private/var/folders/project/Main.swift:4:2: error: Missing value\n/var/folders/project/Other.swift:5:3: error: Unknown name',
@@ -185,7 +185,7 @@ test.each([...SWIFT_REPLACEMENT_CASES])(
         await using resources = new AsyncDisposableStack();
         resources.use(await prepareSwiftCheck(sandbox, checkId, { 'Main.swift': SWIFT_VALUE_SOURCE }));
         resources.use(
-            spyOn(processes, 'spawnProcess').mockImplementation((_command, options) =>
+            fakeCommands().mockImplementation((_command, options) =>
                 Promise.resolve(buildProcessResult({ stderr: `${options.cwd}/Main.swift:4:2: error: Missing value` })),
             ),
         );

@@ -1,12 +1,10 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { test, spyOn, expect } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { planChecks } from '#cli/planning/checks.ts';
-import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -15,6 +13,7 @@ import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
+import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
@@ -33,7 +32,7 @@ test('javascript/tsc checks a stale jsconfig and skips an absent one with apply 
     const text = await readFile(path, 'utf8');
     await chmod(path, 0o644);
     await writeFile(path, text.replace('{', '{ '));
-    using boundary = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());
+    using boundary = fakeCommands().mockResolvedValue(buildProcessResult());
     const result = await runChecks(
         await openSession(sandbox.path),
         buildRunOptions({ only: ['javascript/tsc', 'gspot/generated-files'] }),

@@ -1,7 +1,6 @@
 import { join } from 'node:path';
-import { test, spyOn, expect } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -9,10 +8,10 @@ import { readBytes } from '#cli/system/files/reads.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
-import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 
 import {
@@ -34,7 +33,7 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
     using resources = new DisposableStack();
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
     const valeResult = buildProcessResult({ stdout: JSON.stringify({ [join(sandbox.path, path)]: [VALE_ALERT] }) });
-    const spawn = spyOn(processes, 'spawnProcess').mockResolvedValue(valeResult);
+    const spawn = fakeCommands().mockResolvedValue(valeResult);
     const run = resources.use(spawn);
     const result = await runChecks(session, buildRunOptions({ only: ['prose/vale'] }));
     expect(run.mock.calls.map(([, options]) => options.timeoutSeconds)).toStrictEqual([1]);
@@ -65,7 +64,7 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
     const scanned: string[] = [];
     const nativePaths: string[] = [];
     const run = resources.use(
-        spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
+        fakeCommands().mockImplementation((command, options) => {
             nativePaths.push(...command.filter((argument) => argument.startsWith('--path=')));
             scanned.push(options.stdin!);
             return Promise.resolve(buildProcessResult({ stdout: JSON.stringify({ 'source.mts.ts': [VALE_ALERT] }) }));
@@ -94,7 +93,7 @@ test('Vale reads known file types by path, and .mts files and scripts without an
     });
     using resources = new DisposableStack();
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
-    using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: '{}' }));
+    using run = fakeCommands().mockResolvedValue(buildProcessResult({ stdout: '{}' }));
     expect(await runSandboxCheck(session.root, 'prose/vale')).toStrictEqual([]);
     expect(
         run.mock.calls.map(([command, options]) => ({
@@ -125,9 +124,7 @@ test.each([...VALE_OUTPUT_CASES])(
             ]),
         );
         const absoluteOutput = JSON.stringify(parsed);
-        resources.use(
-            spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: absoluteOutput })),
-        );
+        resources.use(fakeCommands().mockResolvedValue(buildProcessResult({ stdout: absoluteOutput })));
         const found = await runSandboxCheck(session.root, 'prose/vale');
         expect(found.map(({ help: _help, ...finding }) => finding)).toStrictEqual([...findings]);
     },
@@ -140,7 +137,7 @@ test.each(['diagnostic text', '{"file.md":[{}]}'])('the Vale check refuses malfo
     );
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
 
-    resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout })));
+    resources.use(fakeCommands().mockResolvedValue(buildProcessResult({ stdout })));
     const error = await captureRejection(runSandboxCheck(session.root, 'prose/vale'));
     expect(error.message).toBe('Vale printed output that gspot cannot read.');
 });
@@ -152,7 +149,7 @@ test('the Vale check fails with the error line Vale prints when Vale exits non-z
     );
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
     resources.use(
-        spyOn(processes, 'spawnProcess').mockResolvedValue(
+        fakeCommands().mockResolvedValue(
             buildProcessResult({ code: 2, stderr: 'Loading styles\nE100 [loadStyles] Runtime error\n' }),
         ),
     );
@@ -167,7 +164,7 @@ test('the Vale check fails before running Vale when the Vale packages are not in
     );
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
     await rm(join(sandbox.path, GSPOT_PATHS.valeConfigFile));
-    using run = spyOn(processes, 'spawnProcess');
+    using run = fakeCommands();
     const uninstalledError = await captureRejection(runSandboxCheck(session.root, 'prose/vale'));
     expect(uninstalledError.message).toBe('The Vale packages are not installed. Run gspot install.');
     expect(run).not.toHaveBeenCalled();

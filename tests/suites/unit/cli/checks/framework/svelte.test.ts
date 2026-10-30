@@ -1,17 +1,16 @@
 import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
-import { test, spyOn, expect } from 'bun:test';
-import * as processes from '#cli/system/processes.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { dirname, resolve, relative } from 'node:path';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { tsconfigSchema } from '#tests/schemas/tsconfig.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { SVELTE_PROJECTS, SVELTE_CHECK_OUTPUT, SVELTE_CHECK_FINDINGS } from '#tests/config/checks/framework/svelte.ts';
 
@@ -22,7 +21,7 @@ async function runSvelteCheck(stdout: string, options: { scope?: string } = {}):
         [scope === '' ? 'src/Count.svelte' : `${scope}/src/Count.svelte`]: '<p>Count</p>',
     });
     await fakeNpmTool(sandbox.path, 'svelte-check');
-    using _run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ code: 1, stdout }));
+    using _run = fakeCommands().mockResolvedValue(buildProcessResult({ code: 1, stdout }));
     const session = await openSession(sandbox.path);
     return await getBuiltInCheck('svelte/svelte-check')(
         session,
@@ -42,7 +41,7 @@ test.each([...SVELTE_PROJECTS])(
         await fakeNpmTool(sandbox.path, 'svelte-check');
         let runtimePath = '';
         const seen: unknown[] = [];
-        using run = spyOn(processes, 'spawnProcess').mockImplementation((commandArguments, options) => {
+        using run = fakeCommands().mockImplementation((commandArguments, options) => {
             runtimePath = commandArguments[commandArguments.indexOf('--tsconfig') + 1] ?? '';
             const config = tsconfigSchema.parse(JSON.parse(readFileSync(runtimePath, 'utf8')));
 

@@ -4,8 +4,8 @@ import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
 import { CI_NODE } from '#cli/config/generation/ci.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -21,7 +21,7 @@ test('npm in place of Yarn 1 refuses to run without the minimum release age', as
     using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
         command[0] === 'npm' ? buildProcessResult({ stdout: '11.18.0\n' }) : run(command, options),
     );
-    using _npm = fakeCommand('npm', () => Promise.resolve(buildProcessResult({ stdout: '11.18.0\n' })));
+    using _npm = fakeCommands('npm', () => Promise.resolve(buildProcessResult({ stdout: '11.18.0\n' })));
     const session = await openSession(sandbox.path);
     const owner = openFiles(sandbox.path);
     const versionError = await captureRejection(assertPackageManagerVersion(buildToolInstall(session, owner)));
@@ -37,7 +37,7 @@ test.each(PACKAGE_MANAGER_AGE_CASES)(
             'gspot.toml': buildSandboxSettings([]),
             'package.json': JSON.stringify({ private: true, packageManager: `${name}@${version}` }),
         });
-        using _manager = fakeCommand('mise', () => Promise.resolve(buildProcessResult({ stdout: `${version}\n` })));
+        using _manager = fakeCommands('mise', () => Promise.resolve(buildProcessResult({ stdout: `${version}\n` })));
         const session = await openSession(sandbox.path);
         const owner = openFiles(sandbox.path);
         const context = buildToolInstall(session, owner);
@@ -61,7 +61,7 @@ test('a package manager version timeout names the install command and configured
     const session = await openSession(sandbox.path);
     const owner = openFiles(sandbox.path);
     const context = buildToolInstall(session, owner);
-    using _bun = fakeCommand('mise', () => Promise.resolve(buildProcessResult(PACKAGE_MANAGER_TIMEOUT)));
+    using _bun = fakeCommands('mise', () => Promise.resolve(buildProcessResult(PACKAGE_MANAGER_TIMEOUT)));
     const timeoutError = await captureRejection(assertPackageManagerVersion(context));
     expect(timeoutError.message).toBe(
         `The command mise exec ${CI_NODE} bun@1.4.2 -- bun --version ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>.`,

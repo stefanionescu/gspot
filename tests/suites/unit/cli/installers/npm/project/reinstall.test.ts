@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { fakeCommand } from '#tests/setup/system/fakes.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import { installNpmTools } from '#cli/installers/npm/project.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -18,7 +18,7 @@ test('npm runs its incremental install, which never saves the lockfile, on every
         [`${GSPOT_FOLDER}/package-lock.json`]: '{"lockfileVersion":3}',
     });
     const writer = openFiles(sandbox.path);
-    using _npm = fakeCommand('mise', (command) =>
+    using _npm = fakeCommands('mise', (command) =>
         Promise.resolve(buildProcessResult({ stdout: command.at(-1) === '--version' ? '0.0.0-test\n' : '' })),
     );
     const session = await openSession(sandbox.path);
@@ -39,7 +39,7 @@ test('Bun keeps installed modules while it runs the frozen install', async () =>
     });
     const writer = openFiles(sandbox.path);
     const installed = join(sandbox.path, GSPOT_PATHS.nodeModules, 'installed');
-    using _bun = fakeCommand('mise', async (command) => {
+    using _bun = fakeCommands('mise', async (command) => {
         expect(await readFile(installed, 'utf8')).toBe('keep these bytes');
         return buildProcessResult({ stdout: command.at(-1) === '--version' ? '0.0.0-test\n' : '' });
     });
