@@ -143,8 +143,9 @@ export async function writeGeneratedFiles(
     const pruned = pruning.filter((plan) => plan.status === 'changed');
     report.removed.push(...pruned.filter((plan) => plan.after === undefined).map(({ path }) => path));
     report.updated.push(...pruned.filter((plan) => plan.after !== undefined).map(({ path }) => path));
+    const { hooksPath } = await readHooks(session.repository);
     if (
-        readHooks(session.repository).hooksPath !== GSPOT_PATHS.hooks &&
+        hooksPath !== GSPOT_PATHS.hooks &&
         [...report.removed, ...report.written].some((path) => path.startsWith(`${GSPOT_PATHS.hooks}/`))
     )
         report.notes.push(HOOKS_CHANGED_NOTE);

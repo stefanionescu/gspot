@@ -126,7 +126,7 @@ function formatCheckState(planned: PlannedCheck | undefined): string {
 }
 
 async function runListCommand(cwd: string, kind: ListKind): Promise<CommandResult> {
-    const root = readRepositoryRoot(cwd);
+    const root = await readRepositoryRoot(cwd);
 
     const session = await openSession(root);
     return kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session);

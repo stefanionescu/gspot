@@ -39,7 +39,7 @@ export async function installTools(session: Session, writer: Files, generated: G
             ...(await installToolProjects(context, mise.binPaths)),
             await installValePackages(context, mise.binPaths),
         ];
-        const hooks = installHooks(session, steps);
+        const hooks = await installHooks(session, steps);
         if (hooks.command !== undefined) installed.push(hooks.note);
         const notes = [hooks.command === undefined ? hooks.note : '', mise.note];
         return { installed: installed.filter(Boolean), notes: notes.filter(Boolean), steps };

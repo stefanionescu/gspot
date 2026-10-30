@@ -54,7 +54,7 @@ async function explainNamed(
 }
 
 async function runExplainCommand(cwd: string, subject: string): Promise<CommandResult> {
-    const root = readRepositoryRoot(cwd);
+    const root = await readRepositoryRoot(cwd);
 
     const session = find(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
 

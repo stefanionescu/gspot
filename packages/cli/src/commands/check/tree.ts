@@ -106,9 +106,9 @@ function assertOnlyChecks(session: Session, only: string[] | undefined): void {
     }
 }
 
-function warnMissingHooks(session: Session, revision: RevisionSource | undefined): void {
+async function warnMissingHooks(session: Session, revision: RevisionSource | undefined): Promise<void> {
     if (revision?.content === 'commit') return;
-    const hooks = readHookStatus(session, {
+    const hooks = await readHookStatus(session, {
         root: revision?.reportRoot ?? session.root,
         hasGit: revision?.reportRoot !== undefined || session.repository.hasGit,
     });
@@ -171,7 +171,7 @@ export async function runTreeCheck(
     appendRevisionPaths(session, revision);
     assertOnlyChecks(session, options.only);
     const filters = await readRunFilters(session, options, cancelSignal, revision);
-    warnMissingHooks(session, revision);
+    await warnMissingHooks(session, revision);
     const result = await runChecks(session, buildRunOptions(options, filters, revision));
     if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
     appendRevisionNotes(result.report, revision);

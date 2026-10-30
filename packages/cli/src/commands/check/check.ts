@@ -156,10 +156,14 @@ function assertReadableMessageFile(options: CheckOptions): void {
     }
 }
 
-function parseCheckFlags(paths: string[], flags: CheckFlags, cwd: string): { root: string; options: CheckOptions } {
+async function parseCheckFlags(
+    paths: string[],
+    flags: CheckFlags,
+    cwd: string,
+): Promise<{ root: string; options: CheckOptions }> {
     const options = buildCheckOptions(paths, flags, cwd);
     assertCheckSelection(options, flags);
-    const root = readRepositoryRoot(options.cwd);
+    const root = await readRepositoryRoot(options.cwd);
     assertMessageSelection(options, paths);
     assertReadableMessageFile(options);
     return { root, options };
@@ -234,7 +238,7 @@ async function runCheckCommand(
 ): Promise<CommandResult<CheckCommandJson>> {
     try {
         return await runCancelableCommand(async (cancelSignal) => {
-            const { root, options } = parseCheckFlags(paths, flags, cwd);
+            const { root, options } = await parseCheckFlags(paths, flags, cwd);
             return await runCheckSelection(root, options, cancelSignal);
         }, CHECK_STOPPED_MESSAGE);
     } finally {

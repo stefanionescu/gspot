@@ -30,10 +30,10 @@ function formatForeignHooks(hooks: RepositorySetup['hooks'], session: Session): 
     return `hooks already run from ${hooks.map((hook) => hook.path).join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`;
 }
 
-function planHooks(session: Session): HookPlan {
+async function planHooks(session: Session): Promise<HookPlan> {
     const { repository } = session;
     const { settings } = session;
-    const { hooksPath, hooks } = readHooks(repository);
+    const { hooksPath, hooks } = await readHooks(repository);
     if (settings.hooks?.enabled !== true)
         return hooksPath === GSPOT_PATHS.hooks ? { command: UNSET_HOOKS_PATH, note: UNSET_HOOKS_NOTE } : { note: '' };
     if (hooksPath === GSPOT_PATHS.hooks) return { note: '' };
@@ -51,8 +51,8 @@ Set the planned Git setting, or report the instructions for existing hooks.
 @param steps collects each command that install runs.
 @returns the command that install ran, with the line that reports it, or only the instructions for existing hooks.
 */
-export function installHooks(session: Session, steps: (readonly string[])[]): HookPlan {
-    const plan = planHooks(session);
+export async function installHooks(session: Session, steps: (readonly string[])[]): Promise<HookPlan> {
+    const plan = await planHooks(session);
     if (plan.command !== undefined) {
         steps.push(plan.command);
         const result = runGitBlocking(session.repository.root, plan.command.slice(1));
@@ -75,11 +75,14 @@ Check whether the hooks in the settings run in this repository.
 @param session the settings, runner, and configured checks.
 @param repository the Git repository whose hooks to inspect.
 */
-export function readHookStatus(session: Session, repository: Pick<Repository, 'root' | 'hasGit'>): HookStatus {
+export async function readHookStatus(
+    session: Session,
+    repository: Pick<Repository, 'root' | 'hasGit'>,
+): Promise<HookStatus> {
     const { settings } = session;
     if (settings.hooks?.enabled !== true) return { ready: true, text: 'none' };
     if (!repository.hasGit) return { ready: false, text: NO_GIT_STATUS };
-    const { hooksPath, hooks: foreign } = readHooks(repository);
+    const { hooksPath, hooks: foreign } = await readHooks(repository);
     if (hooksPath === GSPOT_PATHS.hooks) return { ready: true, text: 'installed' };
     if (foreign.length > 0) {
         const ready = listHookNames(session.configuredChecks).every((name) =>

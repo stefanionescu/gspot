@@ -55,7 +55,7 @@ async function buildDryRunResult(session: Session): Promise<CommandResult> {
 }
 
 async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
-    const root = readRepositoryRoot(options.cwd);
+    const root = await readRepositoryRoot(options.cwd);
     const session = await openSession(root);
     if (options.dryRun) return buildDryRunResult(session);
     const writer = openFiles(root);

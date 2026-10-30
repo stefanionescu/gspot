@@ -22,7 +22,7 @@ test.each([...ROOT_DISCOVERY_CASES])(
     async ({ files, start }) => {
         await using sandbox = await testdir({ ...files, 'nested/source.ts': 'export {});\n' });
 
-        expect(readRepositoryRoot(join(sandbox.path, start))).toBe(sandbox.path);
+        expect(await readRepositoryRoot(join(sandbox.path, start))).toBe(sandbox.path);
     },
 );
 
@@ -36,7 +36,7 @@ test('a Git ownership refusal while finding the root stays a Git error', async (
     });
     expect(refused.code).toBe(128);
     expect(refused.stderr).toStartWith('fatal: detected dubious ownership');
-    const error = await captureRejection(Promise.try(() => readRepositoryRoot(sandbox.path)));
+    const error = await captureRejection(readRepositoryRoot(sandbox.path));
     expect(error).toMatchObject({
         name: 'GspotError',
         code: 'git',
@@ -47,11 +47,11 @@ test('a Git ownership refusal while finding the root stays a Git error', async (
 test('a Git refusal while reading attributes stays a Git error', async () => {
     await using sandbox = await testdir({ 'source.txt': 'source\n' });
     commitAll(sandbox.path);
-    const run = git.runGitBlocking;
-    using _boundary = spyOn(git, 'runGitBlocking').mockImplementation((root, commandArguments, options) =>
+    const run = git.runGit;
+    using _boundary = spyOn(git, 'runGit').mockImplementation(async (root, commandArguments, options) =>
         commandArguments[0] === 'check-attr'
             ? buildProcessResult({ code: 128, stderr: 'fatal: cannot read attributes\n' })
-            : run(root, commandArguments, options),
+            : await run(root, commandArguments, options),
     );
     const error = await captureRejection(readTestRepository(sandbox.path));
     expect(error).toMatchObject({
@@ -78,7 +78,7 @@ test('a broken Git index is reported instead of a folder walk', async () => {
 
     const cwd = sandbox.path;
     runGitStep(cwd, ['init']);
-    expect(isGitRepository(cwd)).toBe(true);
+    expect(await isGitRepository(cwd)).toBe(true);
     runGitStep(cwd, ['add', 'source.ts']);
     const files = await listTrackedFiles(cwd, await readTestRepository(cwd).then(({ index }) => index), {
         hasGit: true,
@@ -97,8 +97,12 @@ test('a .git file that points at a missing folder is reported, not read as a fol
 
     const listError = await captureRejection(readTestRepository(sandbox.path));
     expect(listError.message).toStartWith(`Git could not tell whether ${sandbox.path} is a work tree (exit 128):`);
-    expect(() => readRepositoryRoot(sandbox.path)).toThrow(`Git could not open ${sandbox.path}:`);
-    expect(() => isGitRepository(sandbox.path)).toThrow('is a work tree (exit 128)');
+    expect(await captureRejection(readRepositoryRoot(sandbox.path)).then(({ message }) => message)).toContain(
+        `Git could not open ${sandbox.path}:`,
+    );
+    expect(await captureRejection(isGitRepository(sandbox.path)).then(({ message }) => message)).toContain(
+        'is a work tree (exit 128)',
+    );
 });
 
 test('a missing git program is reported instead of a successful walk', async () => {
@@ -111,8 +115,10 @@ test('a missing git program is reported instead of a successful walk', async () 
     expect(missingGitError.message).toMatch(
         /Git could not tell whether .* is a work tree.*(?:not found|not recognized)/su,
     );
-    expect(() => readRepositoryRoot(sandbox.path)).toThrow(/Git could not open [^:]*:.*(?:not found|not recognized)/su);
-    expect(() => isGitRepository(sandbox.path)).toThrow(
+    expect(await captureRejection(readRepositoryRoot(sandbox.path)).then(({ message }) => message)).toMatch(
+        /Git could not open [^:]*:.*(?:not found|not recognized)/su,
+    );
+    expect(await captureRejection(isGitRepository(sandbox.path)).then(({ message }) => message)).toMatch(
         /Git could not tell whether .* is a work tree.*(?:not found|not recognized)/su,
     );
 });

@@ -207,8 +207,8 @@ Read a Git setting, and tell an unset key from a failed command.
 @param key the Git setting name.
 @returns undefined for an unset key.
 */
-export function readGitSetting(cwd: string, key: string): string | undefined {
-    const result = runGitBlocking(cwd, [...GIT_SETTING_ARGUMENTS, key]);
+export async function readGitSetting(cwd: string, key: string): Promise<string | undefined> {
+    const result = await runGit(cwd, [...GIT_SETTING_ARGUMENTS, key], {});
     if (result.code === 0) return result.stdout.slice(0, -1);
     if (result.code === 1 && result.stdout === '' && result.stderr === '') return undefined;
     throw buildGitError(cwd, GIT_SETTING_ARGUMENTS, result);
@@ -220,8 +220,8 @@ Find the folder that Git runs hooks from: core.hooksPath when set, else the hook
 @param cwd the repository root.
 @returns the absolute path.
 */
-export function readHooksFolder(cwd: string): string {
-    const result = runGitBlocking(cwd, GIT_HOOKS_ARGUMENTS);
+export async function readHooksFolder(cwd: string): Promise<string> {
+    const result = await runGit(cwd, GIT_HOOKS_ARGUMENTS, {});
     if (result.code !== 0) throw buildGitError(cwd, GIT_HOOKS_ARGUMENTS, result);
     return resolve(cwd, result.stdout.replace(TRAILING_NEWLINE, ''));
 }
@@ -287,8 +287,8 @@ Check whether a Git work tree contains the folder.
 @param cwd the folder to test.
 @throws when the folder holds a bare repository or Git metadata, or Git cannot identify a work tree.
 */
-export function isGitRepository(cwd: string): boolean {
-    const inspection = runGitBlocking(cwd, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
+export async function isGitRepository(cwd: string): Promise<boolean> {
+    const inspection = await runGit(cwd, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
     if (inspection.code === 0 && inspection.stdout.trim() === 'true') return true;
     if (inspection.code === 0 && inspection.stdout.trim() === 'false')
         throw new GspotError(

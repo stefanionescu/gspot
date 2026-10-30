@@ -13,10 +13,10 @@ import { gitIndexFileSchema } from '#cli/schemas/parsers/git.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { read, find, readCachedPrefix } from '#cli/system/files/reads.ts';
+import { runGit, isGitRepository, isNotRepository } from '#cli/system/git.ts';
 import { SWIFT_EXTENSION, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { listGitFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files/tracked.ts';
-import { runGitBlocking, isGitRepository, isNotRepository } from '#cli/system/git.ts';
 import { GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 import { type RepositoryListing, type RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { type Repository, type ScopeFolder, type TrackedFile } from '#cli/types/repository/files.ts';
@@ -24,9 +24,9 @@ import { SET_VALUES, VENDORED_ATTRIBUTE, GENERATED_ATTRIBUTE } from '#cli/config
 import { ROOT_SCOPE, FILE_PREFIX_BYTES, GIT_CHECK_ATTRIBUTES_ARGUMENTS } from '#cli/config/repository/read.ts';
 import { mergeAttributes, parseListingLine, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
 
-function readAttributes(root: string, paths: string[]): Map<string, Record<string, string>> {
+async function readAttributes(root: string, paths: string[]): Promise<Map<string, Record<string, string>>> {
     if (paths.length === 0) return new Map();
-    const result = runGitBlocking(root, GIT_CHECK_ATTRIBUTES_ARGUMENTS, {
+    const result = await runGit(root, GIT_CHECK_ATTRIBUTES_ARGUMENTS, {
         stdin: paths.join('\0') + '\0',
     });
     if (result.code !== 0) throw new GspotError('git', `Git could not read the attributes: ${result.stderr.trim()}`);
@@ -41,7 +41,7 @@ attributes.
 */
 export async function listRepositoryFiles(reads: ReadCache): Promise<RepositoryListing> {
     const root = reads.root;
-    const hasGit = isGitRepository(root);
+    const hasGit = await isGitRepository(root);
     const unreadablePaths: string[] = [];
     const index = hasGit
         ? await listGitFiles(root, GIT_INDEX_FILES_ARGUMENTS, undefined, unreadablePaths).then((listed) =>
@@ -53,7 +53,7 @@ export async function listRepositoryFiles(reads: ReadCache): Promise<RepositoryL
         : [];
     const listedFiles = await listTrackedFiles(root, index, { hasGit, unreadablePaths });
     const attributes = hasGit
-        ? readAttributes(
+        ? await readAttributes(
               root,
               listedFiles.map((listedFile) => listedFile.path),
           )
@@ -154,9 +154,9 @@ Without settings outside Git, return the starting folder.
 @param start where the search begins.
 @returns the settings folder, Git top level, or starting folder outside Git.
 */
-export function readRepositoryRoot(start: string): string {
+export async function readRepositoryRoot(start: string): Promise<string> {
     const folder = realpathSync(start);
-    const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS, { env: GIT_LOCALE });
+    const top = await runGit(folder, GIT_TOP_LEVEL_ARGUMENTS, { env: GIT_LOCALE });
     if (top.code === 0) return resolve(top.stdout.replace(TRAILING_NEWLINE, ''));
     if (!isNotRepository(top)) throw new GspotError('git', `Git could not open ${folder}: ${top.stderr.trim()}`);
     let walked = folder;

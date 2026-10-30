@@ -55,7 +55,7 @@ import {
 } from '#cli/config/commands/init/init.ts';
 
 async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJson>> {
-    const root = readRepositoryRoot(options.cwd);
+    const root = await readRepositoryRoot(options.cwd);
     if (find(root, SETTINGS_FILE) !== undefined) throw new GspotError('arguments', SETTINGS_EXIST_MESSAGE);
     const initPlan = await planInit(root, options);
     const { plan, settingsText } = initPlan;
@@ -147,7 +147,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
     const listing = await listRepositoryFiles(reads);
     const repository = await readRepository(reads, listing, { generatedPaths: [], scopes: [], configurationsByName });
     const initConfigurations = selectForInit({ repository, configurationsByName, options });
-    const repositorySetup = readRepositorySetup(reads, repository);
+    const repositorySetup = await readRepositorySetup(reads, repository);
     const draft = buildSettingsDraft(initConfigurations, options);
     const settingsText = buildInitSettings(draft, repository, configurationsByName);
     const settings = readSettings(settingsText, root);

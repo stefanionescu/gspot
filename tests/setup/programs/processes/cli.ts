@@ -4,8 +4,8 @@ import { SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
 const [option, marker, ...markedCall] = process.argv.slice(2);
 const call = option === SIGNAL_MARKER_OPTION ? markedCall : process.argv.slice(2);
 if (option === SIGNAL_MARKER_OPTION && marker !== undefined)
-    process.on('newListener', (name) => {
-        if (name === 'SIGTERM')
+    process.stdin.on('newListener', (name) => {
+        if (name === 'readable' || name === 'data')
             setImmediate(() => {
                 writeFileSync(marker, 'ready');
             });

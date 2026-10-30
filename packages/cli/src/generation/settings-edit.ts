@@ -86,7 +86,7 @@ writes into.
 @param scopePath the --scope path as typed, relative to cwd, or absent for the top level.
 */
 export async function prepareSettingsEdit(cwd: string, scopePath?: string): Promise<SettingsEditContext> {
-    const root = readRepositoryRoot(cwd);
+    const root = await readRepositoryRoot(cwd);
     const input = readSettingsEdit(root);
     const reads = createReadCache(root);
     reads.sources.set(SETTINGS_FILE, Buffer.from(input.text));

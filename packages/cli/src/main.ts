@@ -181,8 +181,8 @@ export async function runProgram(commandArguments: string[]): Promise<number> {
         printResult({ text: cliPackage.version, json: { version: cliPackage.version }, exitCode: 0 });
         return 0;
     }
-    program.hook('preAction', (_program, command) => {
-        if (GIT_COMMANDS.has(command.name()) && !isGitRepository(process.cwd()))
+    program.hook('preAction', async (_program, command) => {
+        if (GIT_COMMANDS.has(command.name()) && !(await isGitRepository(process.cwd())))
             throw new GspotError('git', NEEDS_GIT_MESSAGE);
     });
     try {

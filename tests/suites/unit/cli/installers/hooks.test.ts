@@ -34,7 +34,7 @@ test.each([...HOOK_REPOSITORIES])(
             await writeFile(join(sandbox.path, '.git/hooks/pre-commit'), '#!/bin/sh\nexit 0\n');
             await chmod(join(sandbox.path, '.git/hooks/pre-commit'), 0o755);
         }
-        const before = readGitSetting(sandbox.path, 'core.hooksPath');
+        const before = await readGitSetting(sandbox.path, 'core.hooksPath');
         const authoredPaths = gitHook ? ['.git/hooks/pre-commit'] : Object.keys(files);
         const authored = await Promise.all(
             authoredPaths.map(async (path) => ({ path, content: await readFile(join(sandbox.path, path), 'utf8') })),
@@ -43,23 +43,23 @@ test.each([...HOOK_REPOSITORIES])(
 
         const steps: (readonly string[])[] = [];
         const session = await openSession(sandbox.path);
-        const text = installHooks(session, steps).note;
+        const { note: text } = await installHooks(session, steps);
         const command = startProgram === 'mise' ? 'mise exec -- gspot' : 'npm exec --no -- gspot';
         expect({ steps, text }).toStrictEqual({
             steps: [],
             text: `hooks already run from ${provider.location}; add these gspot lines to them:\n  pre-commit: ${command} check --hook pre-commit\n  pre-push: ${command} check --hook pre-push -- "$@"\n  commit-msg: ${command} check --hook commit-msg -- "$1"`,
         });
-        expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(before);
+        expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(before);
         for (const { path, content } of authored)
             expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
 
-        expect(readHookStatus(session, session.repository)).toStrictEqual({
+        expect(await readHookStatus(session, session.repository)).toStrictEqual({
             ready: false,
             text: `not installed; ${text}`,
         });
         const first = authored.find(({ path }) => path !== 'package.json');
         await writeFile(join(sandbox.path, first!.path), `${first!.content}\n${command} check --hook pre-commit\n`);
-        expect(readHookStatus(session, session.repository)).toMatchObject({
+        expect(await readHookStatus(session, session.repository)).toMatchObject({
             ready: false,
         });
         await writeFile(
@@ -72,7 +72,7 @@ test.each([...HOOK_REPOSITORIES])(
                 await writeFile(path, `${command} check --hook ${hook}\n`);
                 await chmod(path, 0o755);
             }
-        expect(readHookStatus(session, session.repository)).toMatchObject({ ready: true });
+        expect(await readHookStatus(session, session.repository)).toMatchObject({ ready: true });
     },
 );
 
@@ -84,9 +84,9 @@ test.each([...HOOK_CONFIGURATION_CASES])(
             [path]: oneHook,
         });
         const session = await openSession(sandbox.path);
-        expect(readHookStatus(session, session.repository).ready).toBe(false);
+        expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(false);
         await writeFile(join(sandbox.path, path), bothHooks);
-        expect(readHookStatus(session, session.repository)).toStrictEqual({
+        expect(await readHookStatus(session, session.repository)).toStrictEqual({
             ready: true,
             text: `run from ${path}`,
         });
@@ -98,10 +98,10 @@ test('a gspot.toml without hooks installs none', async () => {
 
     const steps: (readonly string[])[] = [];
     const session = await openSession(sandbox.path);
-    expect(installHooks(session, steps).note).toBe('');
+    expect(await installHooks(session, steps)).toHaveProperty('note', '');
     expect(steps).toStrictEqual([]);
-    expect(readHookStatus(session, session.repository)).toStrictEqual({ ready: true, text: 'none' });
-    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
+    expect(await readHookStatus(session, session.repository)).toStrictEqual({ ready: true, text: 'none' });
+    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
 });
 
 test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath to install', async () => {
@@ -113,7 +113,7 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
     expect(await runGspot(root, ['apply'])).toHaveProperty('code', 0);
     const ownPath = GSPOT_PATHS.hooks;
     runGitStep(root, ['config', 'core.hooksPath', ownPath]);
-    expect(readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
+    expect(await readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
     const hook = join(root, `${GSPOT_PATHS.hooks}/pre-commit`);
     const installed = await readFile(hook, 'utf8');
     await writeFile(join(root, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
@@ -141,17 +141,17 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
         ].join('\n'),
     });
     expect(await isOnDisk(hook)).toBe(false);
-    expect(readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
+    expect(await readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
     const removedSteps: (readonly string[])[] = [];
     const session = await openSession(root);
-    installHooks(session, removedSteps);
+    await installHooks(session, removedSteps);
     expect(removedSteps).toStrictEqual([['git', 'config', '--unset', 'core.hooksPath']]);
-    expect(readGitSetting(root, 'core.hooksPath')).toBeUndefined();
+    expect(await readGitSetting(root, 'core.hooksPath')).toBeUndefined();
     runGitStep(root, ['config', 'core.hooksPath', '.githooks']);
     const steps: (readonly string[])[] = [];
-    expect(installHooks(session, steps).note).toBe('');
+    expect(await installHooks(session, steps)).toHaveProperty('note', '');
     expect(steps).toStrictEqual([]);
-    expect(readGitSetting(root, 'core.hooksPath')).toBe('.githooks');
+    expect(await readGitSetting(root, 'core.hooksPath')).toBe('.githooks');
 });
 
 test('the hooks that git lfs install wrote are not other hooks, so install points Git at the gspot hooks', async () => {
@@ -164,15 +164,16 @@ test('the hooks that git lfs install wrote are not other hooks, so install point
     await applyGeneratedFiles(sandbox.path);
     const steps: (readonly string[])[] = [];
     const session = await openSession(sandbox.path);
-    expect(installHooks(session, steps).note).toBe('set core.hooksPath to .gspot/hooks');
-    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
+    expect(await installHooks(session, steps)).toHaveProperty('note', 'set core.hooksPath to .gspot/hooks');
+    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
     expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.hooks}/post-merge`), 'utf8')).toContain(
         'git lfs post-merge "$@"',
     );
     await writeFile(join(sandbox.path, '.git/hooks/post-merge'), '#!/bin/sh\ngit lfs post-merge "$@"\necho custom\n');
     await chmod(join(sandbox.path, '.git/hooks/post-merge'), 0o755);
     runGitStep(sandbox.path, ['config', '--unset', 'core.hooksPath']);
-    expect(installHooks(session, []).note).toBe(
+    expect(await installHooks(session, [])).toHaveProperty(
+        'note',
         'hooks already run from .git/hooks; add these gspot lines to them:\n  pre-commit: mise exec -- gspot check --hook pre-commit\n  pre-push: mise exec -- gspot check --hook pre-push -- "$@"\n  commit-msg: mise exec -- gspot check --hook commit-msg -- "$1"',
     );
 });
@@ -185,7 +186,7 @@ test('a core.hooksPath that names the gspot hooks as an absolute, ./, or slash-e
     const root = session.repository.root;
     for (const hooksPath of [join(root, GSPOT_PATHS.hooks), `./${GSPOT_PATHS.hooks}`, `${GSPOT_PATHS.hooks}/`]) {
         runGitStep(root, ['config', 'core.hooksPath', hooksPath]);
-        expect(readHookStatus(session, session.repository), hooksPath).toStrictEqual({
+        expect(await readHookStatus(session, session.repository), hooksPath).toStrictEqual({
             ready: true,
             text: 'installed',
         });
@@ -197,9 +198,9 @@ test('with hooks off, install unsets an absolute core.hooksPath that names the g
     const session = await openSession(sandbox.path);
     runGitStep(sandbox.path, ['config', 'core.hooksPath', join(session.repository.root, GSPOT_PATHS.hooks)]);
     const steps: (readonly string[])[] = [];
-    expect(installHooks(session, steps).note).toBe('disabled hooks: unset core.hooksPath');
+    expect(await installHooks(session, steps)).toHaveProperty('note', 'disabled hooks: unset core.hooksPath');
     expect(steps).toStrictEqual([['git', 'config', '--unset', 'core.hooksPath']]);
-    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
+    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
 });
 
 test('hooks already set to .gspot/hooks need no command or note', async () => {
@@ -208,9 +209,9 @@ test('hooks already set to .gspot/hooks need no command or note', async () => {
     });
     runGitStep(sandbox.path, ['config', 'core.hooksPath', GSPOT_PATHS.hooks]);
     const steps: (readonly string[])[] = [];
-    expect(installHooks(await openSession(sandbox.path), steps).note).toBe('');
+    expect(await installHooks(await openSession(sandbox.path), steps)).toHaveProperty('note', '');
     expect(steps).toStrictEqual([]);
-    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
+    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
 });
 
 test('hook status ignores commented commands and commands in the wrong hook file', async () => {
@@ -219,16 +220,16 @@ test('hook status ignores commented commands and commands in the wrong hook file
         '.githooks/pre-commit': '# gspot check --hook pre-commit\ngspot check --hook pre-push\n',
     });
     const session = await openSession(sandbox.path);
-    expect(readHookStatus(session, session.repository).ready).toBe(false);
+    expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(false);
     await writeFile(
         join(sandbox.path, '.githooks/pre-commit'),
         'gspot check --hook pre-commit\ngspot check --hook pre-push\n',
     );
-    expect(readHookStatus(session, session.repository).ready).toBe(false);
+    expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(false);
     await writeFile(join(sandbox.path, '.githooks/pre-push'), 'gspot check --hook pre-push\n');
-    expect(readHookStatus(session, session.repository).ready).toBe(false);
+    expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(false);
     await writeFile(join(sandbox.path, '.githooks/commit-msg'), 'gspot check --hook commit-msg\n');
-    expect(readHookStatus(session, session.repository).ready).toBe(true);
+    expect(await readHookStatus(session, session.repository).then(({ ready }) => ready)).toBe(true);
 });
 
 test('a linked executable Git hook is retained by install', async () => {
@@ -240,7 +241,10 @@ test('a linked executable Git hook is retained by install', async () => {
     await symlink('../../authored-hook', join(sandbox.path, '.git/hooks/pre-commit'));
     const session = await openSession(sandbox.path);
     const steps: (readonly string[])[] = [];
-    expect(installHooks(session, steps).note).toContain('hooks already run from .git/hooks');
+    expect(await installHooks(session, steps)).toHaveProperty(
+        'note',
+        expect.stringContaining('hooks already run from .git/hooks'),
+    );
     expect(steps).toStrictEqual([]);
-    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
+    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
 });

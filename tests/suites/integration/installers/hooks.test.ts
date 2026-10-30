@@ -37,7 +37,7 @@ test.each(['', 'app/'])('install from %s points core.hooksPath at .gspot/hooks',
     const installed = await spawnGspot(root, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(installed.stdout.split('\n')).toContain(`set core.hooksPath to ${GSPOT_PATHS.hooks}`);
-    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
+    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
 });
 
 test('doctor reports hooks this clone has not installed and accepts them after install', async () => {
@@ -209,7 +209,7 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const installed = await spawnGspot(project, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
+    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
     const formatted = await spawnGspot(project, ['check', '--only', 'data-files/taplo-format', '--fix']);
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     runGitStep(sandbox.path, ['add', '-A']);

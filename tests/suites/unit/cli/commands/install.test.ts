@@ -60,11 +60,12 @@ test('an unexpected error during install prints the internal error once and chan
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const before = await readTree(sandbox.path);
-    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command) =>
-        command[0] === 'npm'
-            ? Promise.reject(new Error('Unexpected process failure.'))
-            : Promise.resolve(buildProcessResult()),
-    );
+    const run = processes.spawnProcess;
+    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation(async (command, options) => {
+        if (command[0] === 'git') return await run(command, options);
+        if (command[0] === 'npm') throw new Error('Unexpected process failure.');
+        return buildProcessResult();
+    });
     const human = await runGspot(sandbox.path, ['install']);
     expect(human.code, human.stdout + human.stderr).toBe(2);
     expect(human.stdout).toBe('');
@@ -106,7 +107,7 @@ test.each([...OUTDATED_TOOL_PROJECTS])(
             error: 'install',
             message: TOOL_PROJECTS_MESSAGE,
         });
-        expect(spawned).not.toHaveBeenCalled();
+        expect(spawned.mock.calls.filter(([command]) => command[0] !== 'git')).toStrictEqual([]);
         expect(await readTree(sandbox.path)).toStrictEqual(before);
     },
 );
@@ -120,10 +121,12 @@ test('install stopped by SIGINT reports cancellation once and exits 130', async 
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const before = await readTree(sandbox.path);
     const listeners = process.listenerCount('SIGINT');
-    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((_command, options) => {
+    const run = processes.spawnProcess;
+    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation(async (command, options) => {
+        if (command[0] === 'git') return await run(command, options);
         process.emit('SIGINT');
         expect(options.cancelSignal?.aborted).toBe(true);
-        return Promise.reject(new Error('Installation canceled.'));
+        throw new Error('Installation canceled.');
     });
     const result = await runGspot(sandbox.path, ['install', '--json']);
     expect(result.code).toBe(130);

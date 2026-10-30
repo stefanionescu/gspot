@@ -103,20 +103,20 @@ function inspectScopeTools(session: Session): ToolInspection[] {
         .toSorted((left, right) => compareText(left.name, right.name));
 }
 
-function detectCiProvider(root: string, paths: string[]): keyof typeof CI_OFF_NOTES | undefined {
+async function detectCiProvider(root: string, paths: string[]): Promise<keyof typeof CI_OFF_NOTES | undefined> {
     if (paths.includes(GITLAB_CI_FILE)) return 'gitlab';
     if (paths.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) return 'github';
-    const remote = readGitSetting(root, ORIGIN_URL_SETTING) ?? '';
+    const remote = (await readGitSetting(root, ORIGIN_URL_SETTING)) ?? '';
     const host = remote.replace(REMOTE_URL_SCHEME, '').replace(REMOTE_URL_USER, '');
     return (Object.keys(CI_OFF_NOTES) as (keyof typeof CI_OFF_NOTES)[]).find(
         (provider) => host.startsWith(`${provider}.com:`) || host.startsWith(`${provider}.com/`),
     );
 }
 
-function formatCiState(session: Session): string {
+async function formatCiState(session: Session): Promise<string> {
     const ci = session.settings.ci;
     if (ci?.enabled === true) return CI_FILE_LABELS[ci.provider];
-    const provider = detectCiProvider(
+    const provider = await detectCiProvider(
         session.root,
         session.repository.files.map((file) => file.path),
     );
@@ -124,7 +124,7 @@ function formatCiState(session: Session): string {
 }
 
 async function readHookState(session: Session): Promise<HookStatus> {
-    const hooks = readHookStatus(session, session.repository);
+    const hooks = await readHookStatus(session, session.repository);
     if (!hooks.ready || session.settings.hooks?.enabled !== true) return hooks;
     const { command, installCommand } = session.startRunner;
     const versionCommand = [...command.split(' '), VERSION_FLAG];
@@ -156,12 +156,12 @@ async function buildDoctorReport(session: Session): Promise<DoctorReport> {
         submodules: listSubmodulePaths(session.repository.index),
         tools,
         environments,
-        suggestions: listSuggestions(session),
+        suggestions: await listSuggestions(session),
         addCommands: listDetectedAdditions(session).map(({ scope, configurations }) =>
             ['gspot add', ...configurations, ...(scope === '' ? [] : ['--scope', quoteArgument(scope)])].join(' '),
         ),
         hooks: hooks.text,
-        ci: formatCiState(session),
+        ci: await formatCiState(session),
         ruleFiles: selectRuleFiles(session).length,
         exitCode: isBroken ? EXIT_FINDINGS : 0,
     };
@@ -195,7 +195,7 @@ function formatDoctorReport(report: DoctorReport): string {
 }
 
 async function runDoctorCommand(cwd: string): Promise<CommandResult> {
-    const root = readRepositoryRoot(cwd);
+    const root = await readRepositoryRoot(cwd);
     const session = await openSession(root);
     const report = await buildDoctorReport(session);
     return {

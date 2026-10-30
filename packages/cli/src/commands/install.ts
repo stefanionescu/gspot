@@ -30,7 +30,7 @@ function hasOutdatedToolProjects(files: Files, generated: Generation): boolean {
 }
 
 async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promise<CommandResult<InstallCommandJson>> {
-    const root = readRepositoryRoot(cwd);
+    const root = await readRepositoryRoot(cwd);
     const session = await openSession(root, { cancelSignal });
     const generated = generateFiles(session);
     const writer = openFiles(root);

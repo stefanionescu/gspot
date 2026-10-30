@@ -26,7 +26,7 @@ test('check warns once for missing hooks, skips the warning for pre-push, and st
     );
     expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
     expect(pushed.stderr).toBe('');
-    installHooks(await openSession(sandbox.path), []);
+    await installHooks(await openSession(sandbox.path), []);
     const installed = await runGspot(sandbox.path, ['check', '--only', 'repository/encoding']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     expect(installed.stderr).toBe('');

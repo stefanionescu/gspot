@@ -111,6 +111,7 @@ You can edit the other keys of that file.
   behavior belong to `tests/suites/unit/cli/commands/`.
 - End no file with an export list.
 - Throw `GspotError` for what the user can fix. Throw a plain `Error` only for a broken invariant.
+- Read and write files synchronously; run processes asynchronously.
 - Write every type as a TypeScript `type` alias.
 - Use the types that a package publishes when the code already depends on that package. Do not add a dependency for its
   types alone.

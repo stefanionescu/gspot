@@ -160,9 +160,9 @@ List setup suggestions for the repository.
 
 @param session the repository to compare with the generated files.
 */
-export function listSuggestions(session: Session): Suggestions {
+export async function listSuggestions(session: Session): Promise<Suggestions> {
     const configurations = session.toolConfigurations;
-    const repositorySetup = readRepositorySetup(session.reads, session.repository);
+    const repositorySetup = await readRepositorySetup(session.reads, session.repository);
     const generated = generateFiles(session);
     const tools = new Set(configurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));

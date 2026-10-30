@@ -116,9 +116,9 @@ function listLintJobs(path: string, document: unknown): string[] {
         .toArray();
 }
 
-function readHooksPathSetup(root: string, hooksPath: string): RepositorySetup['hooks'] {
+async function readHooksPathSetup(root: string, hooksPath: string): Promise<RepositorySetup['hooks']> {
     if (hooksPath === '') return [];
-    const location = readHooksFolder(root);
+    const location = await readHooksFolder(root);
     return [
         {
             kind: 'hooksPath',
@@ -132,7 +132,7 @@ function readHooksPathSetup(root: string, hooksPath: string): RepositorySetup['h
     ];
 }
 
-function listHookSetups(root: string, hooksPath: string): RepositorySetup['hooks'] {
+async function listHookSetups(root: string, hooksPath: string): Promise<RepositorySetup['hooks']> {
     const packageJson = readPackageJson(root, PACKAGE_JSON);
     const isPackageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
     const hookNames = [
@@ -146,7 +146,7 @@ function listHookSetups(root: string, hooksPath: string): RepositorySetup['hooks
     const present = hookNames.filter((name) => lstatSync(join(root, name), { throwIfNoEntry: false }) !== undefined);
     const lefthook = present.find((name) => name !== PRE_COMMIT_FILE);
     return [
-        ...readHooksPathSetup(root, hooksPath),
+        ...(await readHooksPathSetup(root, hooksPath)),
         ...FOREIGN_HOOK_FOLDERS.map((folder) => detectHookFolder(root, folder, hooksPath)).filter(
             (hook) => hook !== undefined,
         ),
@@ -166,8 +166,8 @@ function isLfsHookScript(folder: string, name: string): boolean {
     return lines[0] === HOOK_SHEBANG && isCall && lines.slice(1, -1).every((line) => line.startsWith(LFS_GUARD_PREFIX));
 }
 
-function listGitFolderHooks(root: string): RepositorySetup['hooks'] {
-    const folder = readHooksFolder(root);
+async function listGitFolderHooks(root: string): Promise<RepositorySetup['hooks']> {
+    const folder = await readHooksFolder(root);
     if (statSync(folder, { throwIfNoEntry: false })?.isDirectory() !== true) return [];
     const files = readdirSync(folder).filter((name) => {
         if (name.endsWith(SAMPLE_HOOK_SUFFIX)) return false;
@@ -186,13 +186,13 @@ Read the hooks that a clone already runs: another hooks folder, a tool hooks fol
 
 @param repository the repository to read and whether Git tracks it
 */
-export function readHooks(repository: Pick<Repository, 'root' | 'hasGit'>): RepositoryHooks {
+export async function readHooks(repository: Pick<Repository, 'root' | 'hasGit'>): Promise<RepositoryHooks> {
     const { root, hasGit } = repository;
-    const written = hasGit ? readGitSetting(root, HOOKS_PATH_SETTING) : undefined;
+    const written = hasGit ? await readGitSetting(root, HOOKS_PATH_SETTING) : undefined;
     const hooksPath = convertToPosixPath(relative(root, resolve(root, written ?? '')));
     const own = hooksPath === GSPOT_PATHS.hooks || hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
-    const hooks = listHookSetups(root, own ? '' : hooksPath);
-    if (written === undefined && hasGit) hooks.push(...listGitFolderHooks(root));
+    const hooks = await listHookSetups(root, own ? '' : hooksPath);
+    if (written === undefined && hasGit) hooks.push(...(await listGitFolderHooks(root)));
     return { hooksPath, hooks };
 }
 
@@ -219,10 +219,10 @@ Find config files to replace, hooks, CI, agent files, and lint folders.
 @param repository the inventory and parsed package declarations.
 @returns what to replace, keep, or report.
 */
-export function readRepositorySetup(
+export async function readRepositorySetup(
     reads: ReadCache,
     repository: Pick<Repository, 'files' | 'dependencyFiles' | 'hasGit'>,
-): RepositorySetup {
+): Promise<RepositorySetup> {
     const root = reads.root;
     const { files, dependencyFiles } = repository;
     const paths = new Set(files.map((file) => file.path));
@@ -232,6 +232,7 @@ export function readRepositorySetup(
     );
 
     const conflictingConfigFiles = listConflictingConfigFiles(root, files, configurationsByName.values());
+    const { hooks } = await readHooks({ root, hasGit: repository.hasGit });
     return {
         conflictingConfigFiles: new Map(
             conflictingConfigFiles.map((conflictingConfigFile) => [
@@ -246,7 +247,7 @@ export function readRepositorySetup(
         )
             .values()
             .toArray(),
-        hooks: readHooks({ root, hasGit: repository.hasGit }).hooks,
+        hooks,
         ci: [...paths]
             .filter(
                 (path) =>
