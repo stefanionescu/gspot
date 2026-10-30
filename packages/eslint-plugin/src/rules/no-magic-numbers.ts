@@ -1,8 +1,8 @@
 import { createRequire } from 'node:module';
 import { createRule } from '../create-rule.ts';
-import { FUNCTION_NODES } from '../config/syntax.ts';
+import { FUNCTION_NODES } from '../config/plugin.ts';
 import type { MagicNumbersOptions } from '../types/rules.ts';
-import { UPSTREAM_RULE, OPTIONS_SCHEMA } from '../config/rules/no-magic-numbers.ts';
+import { UPSTREAM_RULE, MAGIC_NUMBER_OPTIONS_SCHEMA } from '../config/rules.ts';
 import { ESLintUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const require = createRequire(import.meta.url);
@@ -38,7 +38,7 @@ export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic' | 'useCo
             why: 'A bare number hides what it measures, and a module-level constant gives it a name that callers share.',
             fix: 'Move the number into a module-level constant whose name says what it measures.',
         },
-        schema: [OPTIONS_SCHEMA],
+        schema: [MAGIC_NUMBER_OPTIONS_SCHEMA],
         messages: {
             noMagic: 'No magic number: {{raw}}. Name it in a module-level constant.',
             useConst: 'Declare this number with const at module level, and name it.',

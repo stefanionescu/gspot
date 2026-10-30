@@ -1,9 +1,8 @@
 import { posix } from 'node:path';
 import { createRule } from '../create-rule.ts';
 import { buildSourceVisitors } from '../syntax.ts';
-import { RESOURCE_QUERY, INDEX_BASENAMES } from '../config/rules/imports.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { LOCAL_PREFIXES, MODULE_MOCK_METHODS } from '../config/rules/no-index-imports.ts';
+import { RESOURCE_QUERY, LOCAL_PREFIXES, INDEX_BASENAMES, MODULE_MOCK_METHODS } from '../config/rules.ts';
 
 export const noIndexImports = createRule<[], 'index'>({
     name: 'no-index-imports',

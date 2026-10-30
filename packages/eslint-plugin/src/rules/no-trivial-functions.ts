@@ -1,11 +1,10 @@
 import { createRule } from '../create-rule.ts';
-import { FUNCTION_NODES } from '../config/syntax.ts';
+import { FUNCTION_NODES } from '../config/plugin.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { type FunctionNode, type TrivialFunctionsOptions } from '../types/rules.ts';
 
 import {
     ONE_STATEMENT,
-    OPTIONS_SCHEMA,
     TYPE_DECLARATIONS,
     FUNCTION_SELECTOR,
     INLINE_VALUE_PARENTS,
@@ -13,7 +12,8 @@ import {
     TRANSPARENT_EXPRESSIONS,
     NON_EXECUTABLE_STATEMENTS,
     TRIVIAL_FUNCTION_STATEMENTS,
-} from '../config/rules/no-trivial-functions.ts';
+    TRIVIAL_FUNCTION_OPTIONS_SCHEMA,
+} from '../config/rules.ts';
 
 const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
 
@@ -90,7 +90,7 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
             why: 'An unnecessary function adds another name and another place to read.',
             fix: 'Inline the function at its call sites and delete it. Keep a function whose identity matters, such as a listener that code adds and removes by name, and give its suppression that reason.',
         },
-        schema: [OPTIONS_SCHEMA],
+        schema: [TRIVIAL_FUNCTION_OPTIONS_SCHEMA],
         messages: {
             trivial: 'This function has {{statements}}. Inline it into its callers and delete it.',
         },

@@ -1,4 +1,4 @@
-import { DRIVE_LETTER, TRAILING_SLASH } from './config/paths.ts';
+import { DRIVE_LETTER, TRAILING_SLASH } from './config/plugin.ts';
 
 /**
 Find where a path sits inside a folder. Both take either separator and any drive letter case.

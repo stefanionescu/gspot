@@ -3,14 +3,14 @@ import type { ClientEnvOptions } from '../types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    OPTIONS_SCHEMA,
     PUBLIC_PREFIXES,
     CLIENT_DIRECTIVE,
     ENVIRONMENT_HOSTS,
     ENVIRONMENT_PROPERTY,
     VITE_ENVIRONMENT_NAMES,
     ALLOWED_ENVIRONMENT_NAMES,
-} from '../config/rules/no-client-env.ts';
+    CLIENT_ENVIRONMENT_OPTIONS_SCHEMA,
+} from '../config/rules.ts';
 
 function listHostEnvironmentReads(host: TSESTree.Identifier, source: TSESLint.SourceCode): TSESTree.Node[] {
     const { parent } = host;
@@ -68,7 +68,7 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
             why: 'Client code needs public configuration. Private environment values are unavailable in the browser by default, and exposing a secret to satisfy the read is unsafe.',
             fix: 'Keep private configuration and the work that needs it in a server-only module. Pass only public results to client code, or use NEXT_PUBLIC_ variables for values intended for the browser.',
         },
-        schema: [OPTIONS_SCHEMA],
+        schema: [CLIENT_ENVIRONMENT_OPTIONS_SCHEMA],
         messages: {
             private:
                 'A client module may read only public environment variables ({{public}}). Keep private configuration in a server-only module.',

@@ -404,5 +404,5 @@ reason = "The react and react-dom configurations name these generators, after th
 
 [[ignore]]
 check = "structure/shared-prefixes"
-paths = ["packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/src/config/rules/**", "tests/suites/unit/eslint-plugin/rules/**"]
+paths = ["packages/eslint-plugin/src/rules/**", "tests/suites/unit/eslint-plugin/rules/**"]
 reason = "ESLint rule IDs are the file names, and they share their first word by convention."

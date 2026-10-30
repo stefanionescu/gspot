@@ -4,10 +4,15 @@ import { createRule } from '../create-rule.ts';
 import { findPathInFolder } from '../paths.ts';
 import { buildSourceVisitors } from '../syntax.ts';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
-import { RESOURCE_QUERY } from '../config/rules/imports.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { RelativeImport, ImportBoundariesOptions } from '../types/rules.ts';
-import { OPTIONS_SCHEMA, RELATIVE_SPECIFIER, DEFAULT_BOUNDARY_FOLDERS } from '../config/rules/import-boundaries.ts';
+
+import {
+    RESOURCE_QUERY,
+    RELATIVE_SPECIFIER,
+    DEFAULT_BOUNDARY_FOLDERS,
+    IMPORT_BOUNDARY_OPTIONS_SCHEMA,
+} from '../config/rules.ts';
 
 function matchAlias(importedPath: string, pattern: string, target: string): string | undefined {
     const keyStar = pattern.indexOf('*');
@@ -61,7 +66,7 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
             why: 'Relative paths between folders couple separate parts of a project to the tree shape.',
             fix: 'Keep relative imports within the selected folder. eslint --fix uses a configured alias when one exists, and keeps a query such as `?raw`. Otherwise, move shared code into this folder or into a package both projects depend on, and import its package name.',
         },
-        schema: [OPTIONS_SCHEMA],
+        schema: [IMPORT_BOUNDARY_OPTIONS_SCHEMA],
         messages: {
             alias: 'Import "{{alias}}" instead of climbing folders with "{{source}}".',
             escape: 'Relative import "{{source}}" leaves the "{{folder}}" folder for "{{target}}". Import through an alias, or move the shared code into this folder.',
