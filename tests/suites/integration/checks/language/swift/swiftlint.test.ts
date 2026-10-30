@@ -67,13 +67,13 @@ async function prepareSwiftScope(scopePath: string) {
 }
 
 test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
-    'SwiftLint $name fixes source formatting with --fix',
+    'SwiftLint $name fixes an explicit init call with --fix',
     async ({ scope }) => {
         await using sandbox = await prepareSwiftScope(scope);
         const { root, prefix } = sandbox;
         await writeFile(
             join(root, `${prefix}Sources/Value.swift`),
-            CORRECTED_PARSER_SOURCE.replace('value: String', 'value:String'),
+            CORRECTED_PARSER_SOURCE.replace('Int(value)', 'Int.init(value)'),
         );
         const fixed = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json', '--fix']);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
