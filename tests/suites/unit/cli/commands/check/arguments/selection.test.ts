@@ -7,8 +7,8 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { NAMING_SCOPE_SETTINGS } from '#tests/config/commands/check/arguments.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { ALL_FILES_BASES, NAMING_SCOPE_SETTINGS } from '#tests/config/commands/check/arguments.ts';
 
 test('file and folder arguments narrow the files each check gets', async () => {
     await using sandbox = await createGitSandbox({});
@@ -247,24 +247,3 @@ test('a staged change to gspot.toml alone rechecks every file a configuration ch
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(checked.report.checks[0]?.findings).toMatchObject([{ file: 'db/report.sql', rule: 'file-lines' }]);
 });
-
-test.each([...ALL_FILES_BASES])(
-    'a --changed base that checks every file reports its cause: $message',
-    async ({ reference, message }) => {
-        const files = {
-            'gspot.toml': buildSandboxSettings([], {
-                tables: stringify({
-                    command_check: [buildReportingCheck({ id: 'sandbox/all', paths: ['*.txt'], stage: 'commit' })],
-                }),
-            }),
-            'one.txt': 'one',
-            'two.txt': 'two',
-        };
-        await using sandbox = await createGitSandbox(files);
-        const result = await runGspot(sandbox.path, ['check', '--changed', reference, '--only', 'sandbox/all']);
-        expect(result.code, result.stdout + result.stderr).toBe(1);
-        expect(result.stdout).toStartWith(message + '\n');
-        expect(result.stdout).toContain('one.txt');
-        expect(result.stdout).toContain('two.txt');
-    },
-);

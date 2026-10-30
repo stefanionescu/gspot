@@ -10,12 +10,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { STYLELINT_FILES, COMMITLINT_PACKAGE } from '#tests/config/authored-config-files.ts';
-
-import {
-    REMOVE_SUGGESTIONS,
-    CI_PREFERENCE_CASES,
-    REMOVED_CONFIGURATION_CASES,
-} from '#tests/config/commands/doctor/suggestions.ts';
+import { REMOVE_SUGGESTIONS, CI_PREFERENCE_CASES, REMOVED_CONFIGURATION_CASES } from '#tests/config/commands/doctor.ts';
 
 test('doctor names Git setup for commitlint outside Git', async () => {
     await using sandbox = await testdir({

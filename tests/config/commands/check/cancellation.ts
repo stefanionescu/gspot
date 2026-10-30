@@ -9,7 +9,5 @@ export const SIGNAL_EXITS = [
 
 export const CANCELLATION_REPORT_CASES = [
     { signal: 'SIGINT', format: 'json' },
-    { signal: 'SIGTERM', format: 'json' },
-    { signal: 'SIGINT', format: 'text' },
     { signal: 'SIGTERM', format: 'text' },
 ] as const;

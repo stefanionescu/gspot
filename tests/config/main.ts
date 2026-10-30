@@ -12,9 +12,8 @@ export const JSON_ARGUMENT_ERRORS = [
     { name: 'an unknown option', arguments: ['check', '--unknown', '--json'], message: "Unknown option '--unknown'" },
     {
         name: 'a missing option argument',
-        arguments: ['check', '--hook', '--json'],
-        message:
-            "Option '--hook <hook>' argument '--json' is invalid. Allowed choices are pre-commit, pre-push, commit-msg.",
+        arguments: ['check', '--json', '--hook'],
+        message: "Option '--hook <hook>' argument missing",
     },
 ] as const;
 

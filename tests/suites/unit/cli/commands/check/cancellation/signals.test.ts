@@ -46,18 +46,23 @@ test.skipIf(isWindows).each(CANCELLATION_REPORT_CASES)(
         expect(await waitForFile(started)).toBe(true);
         const toolPid = Number(await readFile(started, 'utf8'));
         child.kill(signal);
-        expect(await child.exited, await capture.stderr).toBe(signal === 'SIGINT' ? 130 : 143);
+        const exitCode = signal === 'SIGINT' ? 130 : 143;
+        expect(await child.exited, await capture.stderr).toBe(exitCode);
         if (format === 'json') {
             const report = parseCheckReport({
                 code: await child.exited,
                 stdout: await capture.stdout,
                 stderr: await capture.stderr,
             }).report;
-            expect(report.exitCode).toBe(signal === 'SIGINT' ? 130 : 143);
+            expect(report.exitCode).toBe(exitCode);
             expect(report.checks).toMatchObject([
                 { check: 'project/slow', status: 'error', note: `${process.execPath} was canceled.` },
             ]);
-        } else expect(await capture.stdout).toContain(`Exit code ${String(signal === 'SIGINT' ? 130 : 143)}.`);
+        } else {
+            const stdout = await capture.stdout;
+            expect(stdout).toContain(`${process.execPath} was canceled.`);
+            expect(stdout).toContain(`Exit code ${String(exitCode)}.`);
+        }
         await waitForExit(toolPid);
     },
 );

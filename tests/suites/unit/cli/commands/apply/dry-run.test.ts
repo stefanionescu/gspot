@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/ignores.ts';
 import { createFileTree, type TestdirResult } from 'testdirs';
@@ -11,16 +12,10 @@ import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PRESERVE_SOURCE } from '#tests/config/commands/contents.ts';
 import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
-import { GSPOT_PATHS, TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
-
-import {
-    APPLY_WRITE_MESSAGE,
-    INSTALL_WRITE_MESSAGE,
-    MISSING_GENERATED_PATHS,
-} from '#tests/config/commands/apply/dry-run.ts';
+import { APPLY_WRITE_MESSAGE, INSTALL_WRITE_MESSAGE } from '#tests/config/commands/apply/dry-run.ts';
 
 async function createAppliedSandbox(): Promise<TestdirResult> {
     const sandbox = await createGitSandbox({
@@ -154,28 +149,17 @@ test('apply --dry-run lists missing generated files and writes nothing', async (
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const { outdated } = JSON.parse(preview.stdout) as DryRunJson;
     expect(outdated.filter(({ kind }) => kind !== 'missing')).toStrictEqual([]);
-    expect(outdated.map(({ path }) => path)).toStrictEqual([...MISSING_GENERATED_PATHS]);
+    expect(outdated).toContainEqual({ path: '.gspot/configurations/language/bash/shellcheckrc', kind: 'missing' });
+    expect(outdated).toContainEqual({ path: GSPOT_PATHS.miseLockfile, kind: 'missing' });
     const human = await runGspot(sandbox.path, ['apply', '--dry-run']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
-    const ordinary = MISSING_GENERATED_PATHS.filter((path) => !TOOL_LOCKFILES.has(path));
-    const lockfiles = MISSING_GENERATED_PATHS.filter((path) => TOOL_LOCKFILES.has(path));
-    expect(human.stdout).toBe(
-        [
-            `${String(MISSING_GENERATED_PATHS.length)} generated files need updating:`,
-            '',
-            ...ordinary.map((path) => `  ${path}  missing`),
-            '',
-            APPLY_WRITE_MESSAGE,
-            '',
-            ...lockfiles.map((path) => `  ${path}  missing`),
-            '',
-            INSTALL_WRITE_MESSAGE,
-            '',
-            'Dry run: nothing was written.',
-            '',
-        ].join('\n'),
-    );
+    expect(human.stdout).toStartWith(`${String(outdated.length)} generated files need updating:\n`);
+    const [ordinary = '', lockfiles = ''] = human.stdout.split(APPLY_WRITE_MESSAGE);
+    expect(ordinary).toContain('  .gspot/configurations/language/bash/shellcheckrc  missing\n');
+    expect(ordinary).not.toContain(GSPOT_PATHS.miseLockfile);
+    expect(lockfiles).toContain(`  ${GSPOT_PATHS.miseLockfile}  missing\n`);
+    expect(lockfiles).toEndWith(`${INSTALL_WRITE_MESSAGE}\n\nDry run: nothing was written.\n`);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

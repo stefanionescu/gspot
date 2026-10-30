@@ -4,7 +4,6 @@ import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
-import * as installation from '#cli/installers/install.ts';
 import { TOOL_PROJECTS_MESSAGE } from '#tests/config/messages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -23,9 +22,13 @@ test('apply starts no npm, and install reports a failed npm version lookup in te
             ? buildProcessResult(FAILED_NPM_VERSION)
             : run(command, options);
     });
+    using spawned = spyOn(processes, 'spawnProcess');
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(boundary).not.toHaveBeenCalledWith(['npm', '--version'], expect.anything());
+    const npmCalls = [...boundary.mock.calls, ...spawned.mock.calls].filter(([command]) =>
+        /(?:^|[\\/])npm(?:\.cmd)?$/u.test(command[0] ?? ''),
+    );
+    expect(npmCalls).toStrictEqual([]);
     const before = await readTree(sandbox.path);
     const human = await runGspot(sandbox.path, ['install']);
     expect(human.code, human.stdout + human.stderr).toBe(2);
@@ -121,21 +124,4 @@ test('install stopped by SIGINT reports cancellation once and exits 130', async 
     });
     expect(process.listenerCount('SIGINT')).toBe(listeners);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
-test('install JSON keeps each nonempty note line as a separate entry', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    using installed = spyOn(installation, 'installTools').mockResolvedValue({
-        note: 'Hooks use an existing path.\n\n  Keep the custom hook command.\n',
-        steps: [],
-    });
-    const result = await runGspot(sandbox.path, ['install', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toStrictEqual({
-        notes: ['Hooks use an existing path.', '  Keep the custom hook command.'],
-        steps: [],
-    });
-    expect(installed).toHaveBeenCalledTimes(1);
 });

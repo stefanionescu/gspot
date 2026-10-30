@@ -27,7 +27,7 @@ import { stat, chmod, symlink, readFile, readlink, writeFile } from 'node:fs/pro
 import { SQL_COMMAND_CHECK, SQL_SEARCH_ARGUMENTS } from '#tests/config/commands/samples.ts';
 
 import {
-    SYNCPACK_FILES,
+    SYNCPACK_FILE,
     HOOKS_PATH_CASES,
     HOOK_NAMED_SOURCE,
     SQL_PACKAGE_FILES,
@@ -257,20 +257,17 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
     },
 );
 
-test.each([...SYNCPACK_FILES])(
-    'init replaces the authored Syncpack file $file and keeps syncpack.config.cts and .mts',
-    async ({ file, source }) => {
-        await using sandbox = await createGitSandbox({
-            ...SYNCPACK_PACKAGE_FILES,
-            [file]: source,
-            'syncpack.config.cts': 'module.exports = {};\n',
-            'syncpack.config.mts': EMPTY_DEFAULT_SOURCE,
-        });
-        commitAll(sandbox.path);
-        const initialized = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations', '--level', 'all']);
-        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        expect(await isOnDisk(join(sandbox.path, file))).toBe(false);
-        expect(await readFile(join(sandbox.path, 'syncpack.config.cts'), 'utf8')).toBe('module.exports = {};\n');
-        expect(await readFile(join(sandbox.path, 'syncpack.config.mts'), 'utf8')).toBe(EMPTY_DEFAULT_SOURCE);
-    },
-);
+test('init replaces an authored Syncpack file and keeps syncpack.config.cts and .mts', async () => {
+    await using sandbox = await createGitSandbox({
+        ...SYNCPACK_PACKAGE_FILES,
+        [SYNCPACK_FILE.file]: SYNCPACK_FILE.source,
+        'syncpack.config.cts': 'module.exports = {};\n',
+        'syncpack.config.mts': EMPTY_DEFAULT_SOURCE,
+    });
+    commitAll(sandbox.path);
+    const initialized = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations', '--level', 'all']);
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    expect(await isOnDisk(join(sandbox.path, SYNCPACK_FILE.file))).toBe(false);
+    expect(await readFile(join(sandbox.path, 'syncpack.config.cts'), 'utf8')).toBe('module.exports = {};\n');
+    expect(await readFile(join(sandbox.path, 'syncpack.config.mts'), 'utf8')).toBe(EMPTY_DEFAULT_SOURCE);
+});

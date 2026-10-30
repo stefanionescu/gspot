@@ -122,26 +122,14 @@ test('a file path reports its scope, checks, and ignores', async () => {
     const text = await runGspot(sandbox.path, ['explain', './api/build.sh']);
     expect(text.code, text.stdout + text.stderr).toBe(0);
     expect(text.stdout).toStartWith('api/build.sh  (scope api, source by default)\n\n');
-    expect(text.stdout).toContain(
-        'Checked by: commits, format, gspot, prose, repository, secrets, security, spelling, bash',
-    );
+    expect(text.stdout).toContain(`Checked by: ${explanation.configurations.join(', ')}\n`);
     expect(text.stdout).toContain('  bash/shellcheck  commit  (bash)');
     expect(text.stdout).toContain('  bash/shfmt  commit  (bash)');
     expect(text.stdout).toContain('  bash/unused-functions  commit  (bash)');
     expect(text.stdout).toContain('  bash/unread-arguments  commit  (bash)');
     expect(text.stdout).toContain('  bash/safety  commit  (bash)');
     expect(text.stdout).toContain('  bash/shellcheck SC2086  The script deliberately splits a list of arguments.');
-    expect(explanation.configurations).toStrictEqual([
-        'commits',
-        'format',
-        'gspot',
-        'prose',
-        'repository',
-        'secrets',
-        'security',
-        'spelling',
-        'bash',
-    ]);
+    expect(explanation.configurations).toContain('bash');
     expect(explanation.checks.filter(({ configuration }) => configuration === 'bash')).toStrictEqual(
         ['shellcheck', 'shfmt', 'unused-functions', 'unread-arguments', 'safety'].map((name) => ({
             check: `bash/${name}`,

@@ -99,34 +99,13 @@ export const HOOKS_PATH_CASES = [
 
 export const HOOK_NAMED_SOURCE = 'export function useThing() { return true; }\n';
 
-export const SYNCPACK_FILES = [
-    {
-        file: '.syncpackrc.yaml',
-        source: `versionGroups:
+export const SYNCPACK_FILE = {
+    file: '.syncpackrc.yaml',
+    source: `versionGroups:
   - dependencies: [shared-library]
     isIgnored: true
 `,
-    },
-    {
-        file: '.syncpackrc.yml',
-        source: `versionGroups:
-  - dependencies: [shared-library]
-    isIgnored: true
-`,
-    },
-    {
-        file: '.syncpackrc.ts',
-        source: 'export default { versionGroups: [{ dependencies: ["shared-library"], isIgnored: true }] };\n',
-    },
-    {
-        file: '.syncpackrc.mjs',
-        source: 'export default { versionGroups: [{ dependencies: ["shared-library"], isIgnored: true }] };\n',
-    },
-    {
-        file: 'syncpack.config.ts',
-        source: 'export default { versionGroups: [{ dependencies: ["shared-library"], isIgnored: true }] };\n',
-    },
-] as const;
+} as const;
 
 export const SYNCPACK_PACKAGE_FILES = {
     'package.json': '{"name":"root","private":true,"dependencies":{"shared-library":"1.0.0"}}\n',

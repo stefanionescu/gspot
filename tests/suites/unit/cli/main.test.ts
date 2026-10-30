@@ -35,33 +35,22 @@ test('gspot without a command prints the help to stderr and exits 2', async () =
     expect(await runGspot(sandbox.path, [])).toStrictEqual({ code: 2, stdout: '', stderr: help.stdout });
 });
 
-test('gspot --help prints each help group and the summary of every command', async () => {
+test('gspot --help prints each help group, and each command with its arguments and a summary', async () => {
     await using sandbox = await testdir();
     const help = await runGspot(sandbox.path, ['--help']);
     expect(help.code).toBe(0);
     expect(help.stderr).toBe('');
     expect(help.stdout).toStartWith('Usage: gspot <command> [options]\n');
-    expect(
-        help.stdout
-            .split('\nOptions:', 1)[0]!
-            .matchAll(/^ {2}([a-z]+) /gmu)
-            .map(([, name]) => name)
-            .toArray(),
-    ).toStrictEqual([
-        'init',
-        'install',
-        'apply',
-        'check',
-        'add',
-        'remove',
-        'set',
-        'unset',
-        'ignore',
-        'unignore',
-        'list',
-        'explain',
-        'doctor',
+    const lines = help.stdout.split('\nOptions:', 1)[0]!.split('\n');
+    expect(lines.filter((line) => line.endsWith(':'))).toStrictEqual([
+        'Set up a repository:',
+        'Run the checks:',
+        'Change gspot.toml:',
+        'Look up:',
     ]);
+    const rows = lines.filter((line) => /^ {2}[a-z]/u.test(line)).map((line) => line.trim().split(/ {2,}/u));
+    expect(rows.map(([term]) => term)).toStrictEqual([...COMMAND_TERMS]);
+    expect(rows.filter(([, summary]) => summary === undefined)).toStrictEqual([]);
 });
 
 test.each([...JSON_ARGUMENT_ERRORS])(
@@ -142,16 +131,4 @@ test('check treats --version after the separator as a file path', async () => {
     expect(JSON.parse(checked.stdout)).toMatchObject({
         checks: [{ check: 'repository/encoding', status: 'passed' }],
     });
-});
-
-test("the help list shows each command's arguments with choices, required and repeated marks", async () => {
-    await using sandbox = await testdir();
-    const help = await runGspot(sandbox.path, ['--help']);
-    expect(help.code).toBe(0);
-    const terms = help.stdout
-        .split('\nOptions:', 1)[0]!
-        .split('\n')
-        .filter((line) => /^ {2}[a-z]/u.test(line))
-        .map((line) => line.trim().split(/ {2,}/u, 1)[0]);
-    expect(terms).toStrictEqual([...COMMAND_TERMS]);
 });

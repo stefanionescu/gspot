@@ -112,7 +112,7 @@ test.each([...BANNED_WORD_SCOPES])(
     },
 );
 
-test('set writes a TOML list of tables as tables and refuses a value that is not a TOML inline value', async () => {
+test('set writes a TOML list of tables as tables and refuses a list of strings', async () => {
     await using sandbox = await createGitSandbox({
         'README.md': '# test\n',
         'gspot.toml': buildSandboxSettings(['docs', 'javascript']),
@@ -129,18 +129,18 @@ test('set writes a TOML list of tables as tables and refuses a value that is not
     expect(getValueAt(parse(settings) as TomlTable, ['tools', 'eslint', 'restricted_imports'])).toStrictEqual([
         { name: 'unreviewed-module', message: 'Import the reviewed entrypoint for this dependency.' },
     ]);
-    await writeFile(
-        join(sandbox.path, 'gspot.toml'),
-        buildSandboxSettings(['docs', 'javascript'], {
-            tables: `[tools.eslint]\nrestricted_imports = ['{name = "a", message = "Use its public entrypoint."}']\n`,
-        }),
-    );
-    const read = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
-    expect(read.code, read.stdout + read.stderr).toBe(2);
-    expect(JSON.parse(read.stdout) as CommandFailureJson).toStrictEqual({
-        error: 'settings',
-        message: String.raw`gspot.toml:3: tools.eslint.restricted_imports.0: The value "{name = \"a\", message = \"Use its public entrypoint.\"}" is not valid for tools.eslint.restricted_imports.0. Use a valid table value.`,
+    const refused = await runGspot(sandbox.path, [
+        'set',
+        'tools.eslint.restricted_imports',
+        String.raw`["{name = \"a\", message = \"Use its public entrypoint.\"}"]`,
+        '--json',
+    ]);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(JSON.parse(refused.stdout) as CommandFailureJson).toStrictEqual({
+        error: 'arguments',
+        message: String.raw`The value ["{name = \"a\", message = \"Use its public entrypoint.\"}"] is not valid for tools.eslint.restricted_imports. Use a valid list value: Imports that this repository refuses, each with a name and a message.`,
     });
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
 test('set level all writes the level in a fresh clone', async () => {

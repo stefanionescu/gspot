@@ -10,6 +10,7 @@ import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildReportingCheck } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { ALL_FILES_BASES } from '#tests/config/commands/check/arguments.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it makes duplication/jscpd clones.
 async function prepareChangedRepository(root: string, files: Record<string, string>): Promise<void> {
@@ -72,26 +73,31 @@ test('--changed without an upstream names the fix, and uses the remote default b
     expect(defaultRange.stdout.split('\n', 1)[0]).toBe('Checked the files changed since refs/remotes/origin/main.');
 });
 
-test.each(['', '0'.repeat(40)])('--changed %p, as CI gives for a new branch, checks every file', async (base) => {
-    await using sandbox = await testdir();
-    await prepareChangedRepository(sandbox.path, {
-        '.gitignore': `${GSPOT_FOLDER}/\n`,
-        'api/source.txt': 'before',
-        'web/source.txt': 'before',
-    });
-    runGitStep(sandbox.path, ['init', '-b', 'topic']);
-    commitAll(sandbox.path);
-    const result = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', base, '--json']),
-    );
-    expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect(result.report.comparison).toBeUndefined();
-    expect(
-        result.report.checks
-            .flatMap((check) => check.findings.map((finding) => finding.message))
-            .toSorted((a, b) => a.localeCompare(b)),
-    ).toStrictEqual(['api/source.txt', 'web/source.txt']);
-});
+test.each([...ALL_FILES_BASES])(
+    '--changed $reference, as CI gives for a new branch, checks every file and says why',
+    async ({ reference, message }) => {
+        await using sandbox = await testdir();
+        await prepareChangedRepository(sandbox.path, {
+            '.gitignore': `${GSPOT_FOLDER}/\n`,
+            'api/source.txt': 'before',
+            'web/source.txt': 'before',
+        });
+        runGitStep(sandbox.path, ['init', '-b', 'topic']);
+        commitAll(sandbox.path);
+        const result = parseCheckReport(
+            await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', reference, '--json']),
+        );
+        expect(result.code, result.stdout + result.stderr).toBe(1);
+        expect(result.report.comparison).toBeUndefined();
+        expect(
+            result.report.checks
+                .flatMap((check) => check.findings.map((finding) => finding.message))
+                .toSorted((a, b) => a.localeCompare(b)),
+        ).toStrictEqual(['api/source.txt', 'web/source.txt']);
+        const text = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', reference]);
+        expect(text.stdout).toStartWith(`${message}\n`);
+    },
+);
 
 test('a shallow clone explains how to fetch the missing history', async () => {
     await using sandbox = await testdir();

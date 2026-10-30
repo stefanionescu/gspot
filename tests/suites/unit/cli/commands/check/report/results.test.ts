@@ -10,8 +10,6 @@ import { type RunReport } from '#cli/types/commands/check.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { COMMAND_CHECK_HELP_LINE } from '#tests/config/messages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { PROGRESS_CLEAR } from '#cli/config/commands/check/check.ts';
-import { FINDINGS_SHOWN } from '#cli/config/commands/check/report.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -64,7 +62,7 @@ async function assertJsonFindings(root: string, commandArguments: readonly strin
     expect(
         json.report.checks.map(({ check, status, findings }) => ({ check, status, count: findings.length })),
     ).toStrictEqual([
-        { check: 'example/findings', status: 'failed', count: FINDINGS_SHOWN + 1 },
+        { check: 'example/findings', status: 'failed', count: 201 },
         { check: 'example/passing', status: 'passed', count: 0 },
     ]);
     expect(json.stderr).toBe('');
@@ -92,7 +90,7 @@ test('check --verbose prints every finding and the command', async () => {
     expect(result.stdout.replaceAll(DURATION, '0.0s')).toBe(
         [
             'Checked the files changed since HEAD.',
-            `example/findings  failed  ${String(FINDINGS_SHOWN + 1)} findings`,
+            'example/findings  failed  201 findings',
             `  $ ${findingsCommand.join(' ')}`,
             ...FINDING_LINES.map((line) => `  ${line}`),
             COMMAND_CHECK_HELP_LINE,
@@ -101,7 +99,7 @@ test('check --verbose prints every finding and the command', async () => {
             'example/passing  passed  1 file  0.0s',
             `  $ ${passingCommand.join(' ')}`,
             '',
-            `Failed: 1 check with ${String(FINDINGS_SHOWN + 1)} findings. Passed: 1 check. Skipped: 0 checks.`,
+            'Failed: 1 check with 201 findings. Passed: 1 check. Skipped: 0 checks.',
             'Time: 0.0s. Exit code 1.',
             '',
         ].join('\n'),
@@ -225,8 +223,8 @@ test('NO_COLOR prints findings without color on terminal streams', async () => {
     expect(result.stdout).toContain('absent/** under [[ignore]] matches no tracked file or folder.');
     expect(result.stdout).toContain('gspot/unmatched-paths');
     expect(result.stdout).not.toContain('\u{1B}[');
-    expect(result.stderr).toEndWith(PROGRESS_CLEAR);
-    const stderr = result.stderr.replaceAll(PROGRESS_CLEAR, '');
+    expect(result.stderr).toEndWith('\r\u{1B}[2K');
+    const stderr = result.stderr.replaceAll('\r\u{1B}[2K', '');
     expect(stderr).toBe(stripVTControlCharacters(stderr));
 });
 

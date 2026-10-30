@@ -17,7 +17,6 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { join, dirname, extname, basename, delimiter } from 'node:path';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { MISSING_REPORT_TOOLS } from '#tests/config/commands/doctor/tools.ts';
 import { fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { getTool, listDistinctTools, findToolProjectPackage } from '#cli/configurations/tools.ts';
 
@@ -197,17 +196,26 @@ test('doctor --json reports every field when the required tools are missing', as
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(result.code).toBe(1);
     expect(result.stderr).toBe('');
-    const tools = MISSING_REPORT_TOOLS.map(([name, installer]) => {
-        const version = getTool(readConfigurations().values(), name).version;
-        let help: string = installer;
-        if (installer === 'project') help = 'Run gspot install.';
-        if (installer === 'mise')
-            help = `Install mise (https://mise.jdx.dev/getting-started.html), or install ${name} ${String(version)} yourself.`;
-        return { name, state: 'missing', help, ...(version === undefined ? {} : { want: version }) };
+    const report = JSON.parse(result.stdout) as DoctorReport;
+    expect(report.tools.filter(({ state }) => state !== 'missing')).toStrictEqual([]);
+    const prettier = String(getTool(readConfigurations().values(), 'prettier').version);
+    const taplo = String(getTool(readConfigurations().values(), 'taplo').version);
+    expect(report.tools).toContainEqual({
+        name: 'prettier',
+        state: 'missing',
+        help: 'Run gspot install.',
+        want: prettier,
     });
-    expect(JSON.parse(result.stdout)).toStrictEqual({
+    expect(report.tools).toContainEqual({
+        name: 'taplo',
+        state: 'missing',
+        help: `Install mise (https://mise.jdx.dev/getting-started.html), or install taplo ${taplo} yourself.`,
+        want: taplo,
+    });
+    expect(report.tools).toContainEqual({ name: 'xmllint', state: 'missing', help: 'Install xmllint.' });
+    expect({ ...report, tools: [] }).toStrictEqual({
         submodules: [],
-        tools,
+        tools: [],
         environments: [],
         suggestions: { detected: [], suggested: [], undetected: [], unowned: [], lintJobs: [] },
         addCommands: [],

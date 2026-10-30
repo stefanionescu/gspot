@@ -86,10 +86,10 @@ export const TEMPLATE_REFUSALS = [
     },
     {
         name: 'an unknown key',
-        files: { 'key.toml': '[limits]\nfile_line = 200\n' },
+        files: { 'key.toml': '[hooks]\nenable = true\n' },
         from: 'key.toml',
         message:
-            'key.toml:2: limits.file_line: file_line is not a field of [limits]. The allowed fields are file_lines, function_lines, function_parameters, function_statements, block_nesting, callback_nesting, cognitive_complexity, cyclomatic_complexity, function_branches, function_returns, function_assignments, closure_lines, type_lines, index_exports, trivial_function_statements, shared_prefix_files, typescript, javascript, python, bash, swift, and sql. Did you mean file_lines?',
+            'key.toml:2: hooks.enable: enable is not a field of [hooks]. The allowed fields are enabled. Did you mean enabled?',
     },
     {
         name: 'an unknown configuration',
