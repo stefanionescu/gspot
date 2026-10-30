@@ -1,16 +1,7 @@
 import envPaths from 'env-paths';
 import { join, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-
-import {
-    CACHE_FOLDER_NAME,
-    OPERATING_SYSTEMS,
-    CREDENTIAL_VARIABLE,
-    TOOL_VARIABLE_NAMES,
-    CACHE_FOLDER_MESSAGE,
-    TOOL_OPT_OUT_VARIABLE,
-    TOOL_VARIABLE_PREFIXES,
-} from '#cli/config/system/environment.ts';
+import { CACHE_FOLDER_NAME, OPERATING_SYSTEMS, CACHE_FOLDER_MESSAGE } from '#cli/config/system/environment.ts';
 
 /**
 Build the environment for tool processes. Merge Windows names that differ only in case, and keep their spelling.
@@ -27,25 +18,6 @@ export function buildSpawnEnvironment(overrides?: Record<string, string | undefi
         else variables.set(name, [key, value]);
     }
     return Object.fromEntries(variables.values());
-}
-
-/**
-List the inherited variables that a tool which runs repository code does not get, such as credentials. Each one maps
-to undefined, so that the spawn environment removes it.
-*/
-export function readWithheldVariables(): Record<string, undefined> {
-    return Object.fromEntries(
-        Object.keys(process.env)
-            .filter((key) => {
-                const name = key.toUpperCase();
-                const isToolVariable =
-                    TOOL_VARIABLE_NAMES.has(name) ||
-                    TOOL_VARIABLE_PREFIXES.some((prefix) => name.startsWith(prefix)) ||
-                    TOOL_OPT_OUT_VARIABLE.test(name);
-                return !isToolVariable || CREDENTIAL_VARIABLE.test(name);
-            })
-            .map((key) => [key, undefined]),
-    );
 }
 
 /**
