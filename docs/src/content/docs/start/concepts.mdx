@@ -63,9 +63,22 @@ Run `gspot unset level` to return to the default level, `basic`.
 gspot runs the code of the repository as you, with no sandbox:
 
 - `gspot check` and `gspot check --fix` run the commands and fix commands of `[[command_check]]` records.
-- `gspot install` runs mise and the package managers, which install the pinned tools.
+- The tools that `gspot check` runs load the JavaScript config modules in the repository, such as `eslint.config.mjs`,
+  `prettier.config.mjs`, and the `.mjs` files under `.gspot/configurations/`.
+- `gspot install` runs mise and the package managers, which install the pinned tools. mise reads `.gspot/mise.toml`,
+  and the `mise.local.toml` and `mise.lock` in `.gspot/` when they exist. The npm, pnpm, and Bun installs read the `.npmrc` of the
+  repository, and the uv install reads its `uv.toml` or the `[tool.uv]` table of its `pyproject.toml`.
+- After `gspot install` trusts `.gspot/mise.toml`, each `gspot check`, hook run, and `gspot doctor` asks mise for the
+  tool folders, so mise reads the mise files in `.gspot/` again.
+- `gspot check` and `gspot doctor` can run a tool program from `node_modules/.bin` or `.venv/bin` in the repository.
 - After `gspot install`, the tracked hooks in `.gspot/hooks/` run on each Git event, checkout included, like any
   committed hook under `core.hooksPath`.
 
-Before you run gspot on a branch you do not trust, or check that branch out, review its changes to `.gspot/hooks/` and
-to the `[[command_check]]` records of `gspot.toml`.
+Before you run gspot on a branch you do not trust, or check that branch out, review its changes to these files:
+
+- `.gspot/hooks/`
+- the `[[command_check]]` records of `gspot.toml`
+- `.gspot/mise.toml`, and the `mise.local.toml` and `mise.lock` in `.gspot/`
+- `.npmrc`, `uv.toml`, and the `[tool.uv]` table of `pyproject.toml`
+- programs under `node_modules/.bin` and `.venv/bin`
+- `eslint.config.mjs`, `prettier.config.mjs`, and the `.mjs` files under `.gspot/configurations/`
