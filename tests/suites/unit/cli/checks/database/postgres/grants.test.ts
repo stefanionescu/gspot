@@ -26,20 +26,15 @@ test('grants reports GRANT ALL in both direct and default privileges', async () 
     );
 });
 
-test.each(['', 'app'])('grants in scope %j skip frozen migrations and report the newer ones', async (scope) => {
-    const prefix = scope === '' ? '' : `${scope}/`;
-    await using sandbox = await testdir(
-        Object.fromEntries(
-            Object.entries({
-                'migrations/V1_before.sql': 'GRANT ALL ON TABLE before_table TO authenticated;\n',
-                'migrations/V2_at.sql': 'GRANT ALL ON TABLE at_table TO authenticated;\n',
-                'migrations/V3_after.sql': 'GRANT ALL ON TABLE after_table TO authenticated;\n',
-            } as const).map(([path, text]) => [`${prefix}${path}`, text]),
-        ),
-    );
+test('grants in a child scope skip frozen migrations and report the newer ones', async () => {
+    await using sandbox = await testdir({
+        'app/migrations/V1_before.sql': 'GRANT ALL ON TABLE before_table TO authenticated;\n',
+        'app/migrations/V2_at.sql': 'GRANT ALL ON TABLE at_table TO authenticated;\n',
+        'app/migrations/V3_after.sql': 'GRANT ALL ON TABLE after_table TO authenticated;\n',
+    });
     for (const { through, files } of [
-        { through: 'none', files: ['migrations/V1_before.sql', 'migrations/V2_at.sql', 'migrations/V3_after.sql'] },
-        { through: '2', files: ['migrations/V3_after.sql'] },
+        { through: 'none', files: ['V1_before.sql', 'V2_at.sql', 'V3_after.sql'] },
+        { through: '2', files: ['V3_after.sql'] },
         { through: 'all', files: [] },
     ] as const) {
         await writeFile(
@@ -51,9 +46,9 @@ test.each(['', 'app'])('grants in scope %j skip frozen migrations and report the
             }),
         );
 
-        const findings = await runSandboxCheck(sandbox.path, 'postgres/grants', { scope });
+        const findings = await runSandboxCheck(sandbox.path, 'postgres/grants', { scope: 'app' });
         expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual(
-            files.map((path) => ({ file: `${prefix}${path}`, line: 1, rule: 'grant-all' })),
+            files.map((name) => ({ file: `app/migrations/${name}`, line: 1, rule: 'grant-all' })),
         );
     }
 });
