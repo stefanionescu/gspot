@@ -244,21 +244,11 @@ test('the jest, vitest, and pytest coverage checks drop exactly their coverage a
         stage: 'push',
         only: ['jest/coverage', 'vitest/coverage', 'pytest/coverage'],
     });
-    expect(
-        Object.fromEntries(
-            planned.map((plannedCheck) => [plannedCheck.check.id, stripCoverageArguments(plannedCheck, {})]),
-        ),
-    ).toStrictEqual({
-        'jest/coverage': ['jest', '--ci', '--rootDir={root}/{scope}'],
-        'vitest/coverage': ['vitest', 'run'],
-        'pytest/coverage': [
-            'pytest',
-            '-q',
-            '--strict-markers',
-            '--strict-config',
-            '--no-header',
-            '-p',
-            'no:cacheprovider',
-        ],
-    });
+    expect(planned.map(({ check }) => check.id)).toStrictEqual(['jest/coverage', 'vitest/coverage', 'pytest/coverage']);
+    for (const plannedCheck of planned) {
+        const command = plannedCheck.check.command!;
+        const stripped = stripCoverageArguments(plannedCheck, {})!;
+        expect(stripped.length).toBeLessThan(command.length);
+        expect(stripped).toStrictEqual(command.filter((argument) => !argument.startsWith('--cov')));
+    }
 });

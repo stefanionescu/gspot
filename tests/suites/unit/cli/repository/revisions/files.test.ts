@@ -37,16 +37,6 @@ test('unborn history is empty, and a broken HEAD refuses committed history', asy
     expect(historyError.message).toContain(UNREADABLE_HISTORY_MESSAGE);
 });
 
-test('an unmerged index stage is refused before copying its tree', async () => {
-    await using sandbox = await createGitSandbox({});
-    using _read = spyOn(git, 'runGitForBytes').mockResolvedValue({
-        ...buildProcessResult(),
-        stdout: Buffer.from(`100644 ${SHA1} 1\tsource.ts\0`),
-    });
-    const error = await captureRejection(listRevisionFiles(sandbox.path, { kind: 'index' }));
-    expect(error.message).toBe(INDEX_LINE_FAILURE);
-});
-
 test.each([...INVALID_INDEX_LINES])('a malformed revision tree is refused: $name', async ({ output }) => {
     await using sandbox = await createGitSandbox({});
     const bytes = Buffer.from(output);

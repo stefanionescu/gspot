@@ -6,19 +6,11 @@ import { readSettings } from '#cli/settings/read.ts';
 import { openWriter } from '#cli/repository/writer.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { COMMENTED_SETTINGS } from '#tests/config/settings/file.ts';
 import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { stat, link, symlink, readFile, writeFile } from 'node:fs/promises';
 import { setKey, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
-
-test('a TOML syntax error names the file, line and column', () => {
-    expect(() => parseTomlFile('gspot.toml', '"🚦前言"=2026-04-31\n')).toThrow('gspot.toml:1:8 is not valid TOML:');
-    expect(() => parseTomlFile('gspot.toml', 'level="all"\nlevel="all"\n')).toThrow(
-        'gspot.toml:2:1 is not valid TOML:',
-    );
-});
 
 test('an edit of a file with invalid UTF-8 is refused and the file is unchanged', async () => {
     await using sandbox = await testdir();

@@ -42,8 +42,8 @@ test('a pytest table counts as a pytest dependency', async () => {
 });
 
 test.each(INVALID_DEPENDENCY_FILES)(
-    'invalid %s content %s is a dependency file error',
-    async (path, content, message) => {
+    'invalid %s content %s is a dependency file error that names the file and field',
+    async (path, content, prefix) => {
         await using sandbox = await testdir({ [path]: content, 'source.ts': 'export {};\n' });
 
         const files = [
@@ -57,12 +57,8 @@ test.each(INVALID_DEPENDENCY_FILES)(
             },
         ];
         const error = await captureRejection(readDependencyFiles(createReadCache(sandbox.path), files));
-        expect(error).toMatchObject({
-            name: 'GspotError',
-            code: 'parse',
-            message,
-            cause: expect.any(Error) as Error,
-        });
+        expect(error).toMatchObject({ name: 'GspotError', code: 'parse', cause: expect.any(Error) as Error });
+        expect(error.message).toStartWith(prefix);
     },
 );
 

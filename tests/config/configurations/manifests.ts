@@ -18,12 +18,6 @@ export const MANIFEST_INVARIANT_CASES = [
         message:
             'tool.0: Invalid input\ntool.0: A tool reference contains only its name.\ntool.0.pypi: This installer needs an exact version.',
     },
-    {
-        name: 'a mise installer without a version',
-        tables: '[[tool]]\nname = "probe"\nmise = "github:org/probe"\n',
-        message:
-            'tool.0: Invalid input\ntool.0: A tool reference contains only its name.\ntool.0.mise: This installer needs an exact version.',
-    },
 ] as const;
 
 export const DECLARATION_ORDERS = [

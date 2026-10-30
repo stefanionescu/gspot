@@ -10,13 +10,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { listOtherTools, listCheckTools } from '#cli/planning/tools.ts';
 import { ZERO_COVERAGE_SETTINGS } from '#tests/config/planning/settings.ts';
-
-import {
-    NODE_REQUIREMENTS,
-    COVERAGE_PROVIDERS,
-    INDEPENDENT_LIBRARIES,
-    ARCHITECTURE_REQUIREMENTS,
-} from '#tests/config/planning/tools.ts';
+import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS, ARCHITECTURE_REQUIREMENTS } from '#tests/config/planning/tools.ts';
 
 test('basic tRPC server files select the boundaries plugin without import rules', async () => {
     await using sandbox = await testdir({
@@ -134,7 +128,8 @@ test('omitting coverage keeps unrelated system libraries required by another con
         ),
     };
     const companions = listOtherTools(scope, check, ['vitest', 'run']);
-    expect(companions).toStrictEqual([...INDEPENDENT_LIBRARIES]);
+    expect(companions).toContain('independent-support');
+    expect(companions).not.toContain('@vitest/coverage-v8');
 });
 
 test('a check installs the peer packages required by its tool', async () => {

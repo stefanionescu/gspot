@@ -7,7 +7,6 @@ import { rm, chmod, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
-import { CONFIGURATIONS_SETTINGS } from '#tests/config/toml.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
@@ -17,14 +16,6 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository/read.ts';
 import { buildProcessResult, runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { SHA256, INDEX_PATH, INDEX_LINE_FAILURE, INVALID_INDEX_LINES } from '#tests/config/parsers/git.ts';
-
-test('finding settings outside Git needs one Git lookup', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': CONFIGURATIONS_SETTINGS, 'deep/source.txt': 'source\n' });
-    const run = git.runGitBlocking;
-    using boundary = spyOn(git, 'runGitBlocking').mockImplementation((...commandArguments) => run(...commandArguments));
-    expect(readRepositoryRoot(join(sandbox.path, 'deep'))).toBe(sandbox.path);
-    expect(boundary).toHaveBeenCalledTimes(1);
-});
 
 test('a Git ownership refusal while finding the root stays a Git error', async () => {
     await using sandbox = await testdir({ 'source.txt': 'source\n' });

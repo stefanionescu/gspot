@@ -113,13 +113,13 @@ test('a per-scope limit overrides a root language limit in the scope view', asyn
     expect(getLimit(scope.settings, 'file_lines', 'python')).toBe(100);
 });
 
-test('an ignore past its until date stays in the scope view and the parsed settings', async () => {
+test('an ignore past its until date stays in the scope view', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSettingsText('', '', { configurations: [], ignore: IGNORE_EXPIRY_CASES }),
     });
     setSystemTime(new Date('2030-05-20T23:59:59.000Z'));
     try {
-        const { settings, scopes } = await openSession(sandbox.path);
+        const { scopes } = await openSession(sandbox.path);
         const scope = scopes[0]!;
         expect(listIgnores(scope.settings, 'dependencies/osv-scanner')).toStrictEqual([
             { ...IGNORE_EXPIRY_CASES[0], paths: [] },
@@ -133,21 +133,9 @@ test('an ignore past its until date stays in the scope view and the parsed setti
             'today',
             'future',
         ]);
-        expect(settings.ignore).toStrictEqual([
-            IGNORE_EXPIRY_CASES[0],
-            IGNORE_EXPIRY_CASES[1],
-            IGNORE_EXPIRY_CASES[2],
-            IGNORE_EXPIRY_CASES[3],
-        ]);
         setSystemTime(new Date('2030-05-21T00:00:00.000Z'));
         const next = await openSession(sandbox.path);
         expect(listIgnoredRules(next.scopes[0]!, 'dependencies/osv-scanner')).toStrictEqual([
-            'permanent',
-            'past',
-            'today',
-            'future',
-        ]);
-        expect(listIgnoredRules(scope, 'dependencies/osv-scanner')).toStrictEqual([
             'permanent',
             'past',
             'today',

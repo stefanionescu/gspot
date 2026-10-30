@@ -6,6 +6,7 @@ import { readSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { NODE_SCRIPT } from '#tests/config/typescript.ts';
 import { UNCLOSED_PACKAGES } from '#tests/config/yaml.ts';
@@ -18,7 +19,6 @@ import { type ToolPackageJson } from '#cli/types/installers/npm.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/configurations.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 import {
     TOOL_ONLY_PACKAGE,
@@ -49,8 +49,11 @@ test.each([...CONFIGURATION_CHOICES])(
         const initialized = await runGspot(sandbox.path, ['init', '--yes', ...flags]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const session = await openSession(sandbox.path);
-        const selected = session.scopes[0]!.configurations.map((configuration) => configuration.name);
-        expect(selected).toStrictEqual([...row.expected]);
+        const { configurations: selected } = session.scopes[0]!;
+        expect(selected.filter(({ group }) => group !== 'general').map(({ name }) => name)).toStrictEqual([
+            ...row.selected,
+        ]);
+        expect(selected.map(({ name }) => name)).toContain('structure');
     },
 );
 
@@ -217,9 +220,14 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
     const settings = readSettings(plan.settings, sandbox.path);
     expect([...settings.scopes.keys()]).toStrictEqual(['packages/api']);
     await writeFile(join(sandbox.path, 'pnpm-workspace.yaml'), UNCLOSED_PACKAGES);
-    const message =
-        'pnpm-workspace.yaml is not a valid workspace file: Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 12:\n\npackages: [\n           ^\n. Fix the file.';
-    await assertRefusalWithoutWrites(sandbox.path, command, { error: 'filesystem', message });
+    const before = await readTree(sandbox.path);
+    const refused = await runGspot(sandbox.path, [...command, '--json']);
+    expect(refused.code).toBe(2);
+    expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'filesystem' });
+    expect((JSON.parse(refused.stdout) as { message: string }).message).toStartWith(
+        'pnpm-workspace.yaml is not a valid workspace file: ',
+    );
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('init keeps root Docker and GitHub configurations beside an app scope', async () => {

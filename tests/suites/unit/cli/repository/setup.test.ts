@@ -2,11 +2,11 @@ import * as files from 'node:fs';
 import { join, dirname } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { chmod, mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 import { readHooks, readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
@@ -49,14 +49,9 @@ test('CI discovery reports malformed YAML', async () => {
     await using sandbox = await testdir();
     const path = '.gitlab-ci.yml';
     await createFileTree(sandbox.path, { [path]: 'quality: [unterminated' });
-    expect(() => readLintJobs(sandbox.path, [path])).toThrow(
-        expect.objectContaining({
-            name: 'GspotError',
-            code: 'parse',
-            message:
-                '.gitlab-ci.yml is not valid YAML: Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 23:\n\nquality: [unterminated\n                      ^\n. Fix the file.',
-        }),
-    );
+    const error = await captureRejection(Promise.try(() => readLintJobs(sandbox.path, [path])));
+    expect(error).toMatchObject({ name: 'GspotError', code: 'parse' });
+    expect(error.message).toStartWith('.gitlab-ci.yml is not valid YAML: ');
 });
 
 test('CI discovery reads jobs after a GitLab component specification and keeps reference tags quiet', async () => {

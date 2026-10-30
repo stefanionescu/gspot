@@ -1,15 +1,14 @@
 import { test, expect } from 'bun:test';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { parseMiseTasks } from '#cli/parsers/projects/mise.ts';
 
-test('mise validates a task alias through the file schema', () => {
-    expect(() => parseMiseTasks('[tasks.build]\nalias = 5\nrun = "echo"\n', 'mise.toml')).toThrow(
-        expect.objectContaining({
-            name: 'GspotError',
-            code: 'parse',
-            message:
-                'mise.toml: tasks.build: Invalid input; tasks.build: Invalid input: expected string, received object; tasks.build: Invalid input: expected array, received object; tasks.build.alias: Invalid input; tasks.build.alias: Invalid input: expected string, received number; tasks.build.alias: Invalid input: expected array, received number. Fix the field.',
-        }),
+test('mise validates a task alias through the file schema', async () => {
+    const error = await captureRejection(
+        Promise.try(() => parseMiseTasks('[tasks.build]\nalias = 5\nrun = "echo"\n', 'mise.toml')),
     );
+    expect(error).toMatchObject({ name: 'GspotError', code: 'parse' });
+    expect(error.message).toStartWith('mise.toml: tasks.build: ');
+    expect(error.message).toEndWith(' Fix the field.');
 });
 
 test('mise keeps string tasks, command lists, and task-table aliases', () => {

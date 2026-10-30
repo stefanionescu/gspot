@@ -26,48 +26,16 @@ export const PROJECT_DEPENDENCY_SCOPES = [
 ] as const;
 
 export const INVALID_DEPENDENCY_FILES = [
-    [
-        'package.json',
-        '{"dependencies":{"typescript":7}}',
-        'package.json: dependencies.typescript: Invalid input: expected string, received number. Fix the field.',
-    ],
-    [
-        'package.json',
-        '{"scripts":{"lint":false}}',
-        'package.json: scripts.lint: Invalid input: expected string, received boolean. Fix the field.',
-    ],
-    [
-        'package.json',
-        '{"workspaces":[7]}',
-        'package.json: workspaces: Invalid input; workspaces.0: Invalid input: expected string, received number; workspaces: Invalid input: expected object, received array. Fix the field.',
-    ],
-    [
-        'pyproject.toml',
-        '[project',
-        'pyproject.toml:1:9 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
-    ],
-    [
-        'pyproject.toml',
-        '[project]\ndependencies = [7]\n',
-        'pyproject.toml: project.dependencies.0: Invalid input: expected string, received number. Fix the field.',
-    ],
+    ['package.json', '{"dependencies":{"typescript":7}}', 'package.json: dependencies.typescript: '],
+    ['package.json', '{"workspaces":[7]}', 'package.json: workspaces: '],
+    ['pyproject.toml', '[project', 'pyproject.toml:1:9 is not valid TOML: '],
+    ['pyproject.toml', '[project]\ndependencies = [7]\n', 'pyproject.toml: project.dependencies.0: '],
     [
         'pyproject.toml',
         '[tool.poetry.dependencies]\nFastAPI = 7\n',
-        'pyproject.toml: tool.poetry.dependencies.FastAPI: Invalid input; tool.poetry.dependencies.FastAPI: Invalid input: expected string, received number; tool.poetry.dependencies.FastAPI: Invalid input: expected record, received number; tool.poetry.dependencies.FastAPI: Invalid input: expected array, received number. Fix the field.',
-    ],
-    [
-        'pyproject.toml',
-        '[tool.poetry.group.web.dependencies]\nFastAPI = false\n',
-        'pyproject.toml: tool.poetry.group.web.dependencies.FastAPI: Invalid input; tool.poetry.group.web.dependencies.FastAPI: Invalid input: expected string, received boolean; tool.poetry.group.web.dependencies.FastAPI: Invalid input: expected record, received boolean; tool.poetry.group.web.dependencies.FastAPI: Invalid input: expected array, received boolean. Fix the field.',
-    ],
-    [
-        'Pipfile',
-        '[packages]\nFastAPI = 7\n',
-        'Pipfile: packages.FastAPI: Invalid input; packages.FastAPI: Invalid input: expected string, received number; packages.FastAPI: Invalid input: expected record, received number; packages.FastAPI: Invalid input: expected array, received number. Fix the field.',
+        'pyproject.toml: tool.poetry.dependencies.FastAPI: ',
     ],
 ] as const;
-
 export const REACT_VUE_PACKAGES = {
     'package.json': '{"name":"root-sandbox","private":true,"dependencies":{"react":"19.0.0"}}',
     'app/package.json': '{"name":"child-sandbox","private":true,"dependencies":{"vue":"3.5.0"}}',

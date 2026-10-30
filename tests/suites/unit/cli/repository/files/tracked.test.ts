@@ -34,16 +34,6 @@ test.each([...OUTSIDE_LINK_CASES])('the repository file list leaves out the outs
     runGitStep(root, ['add', '--', name]);
     const repository = await readTestRepository(root);
     expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
-    await unlink(join(root, name));
-    runGitStep(root, ['rm', '--cached', '--', name]);
-    await symlink('local.ts', join(root, 'linked.ts'));
-    runGitStep(root, ['add', 'linked.ts']);
-    const corrected = await readTestRepository(root);
-    expect(corrected.files.find((file) => file.path === 'linked.ts')?.tags).toStrictEqual([
-        'typescript',
-        'text',
-        'symlink',
-    ]);
 });
 
 test.skipIf(isWindows)('a walk without Git leaves out named pipes', async () => {

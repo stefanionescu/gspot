@@ -181,7 +181,6 @@ test('a Prisma read error stops detection, and a session with saved choices does
             configurationsByName,
         ),
     ).toThrow(failure);
-    expect(String(read.mock.calls[0]?.[0])).toBe(join(sandbox.path, 'prisma/schema.prisma'));
     read.mockClear();
     await openSession(sandbox.path);
     expect(

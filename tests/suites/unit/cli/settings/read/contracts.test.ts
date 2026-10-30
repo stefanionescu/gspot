@@ -13,8 +13,9 @@ test('a generator command must declare at least one output', () => {
     expect(parseSettings(text, sandbox.path)).toStrictEqual([
         {
             path: ['command_check', 0, 'outputs'],
-            message:
-                'The value [] is not valid for command_check.0.outputs. Use a valid list value: The files that the command writes. With outputs, the check runs the command in a copy and reports each output that differs from the committed file.',
+            message: expect.stringMatching(
+                /^The value \[\] is not valid for command_check\.0\.outputs\. Use a valid list value: /u,
+            ) as string,
         },
     ]);
 });

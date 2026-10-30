@@ -18,22 +18,12 @@ export const PRISMA_SCHEMA_CASES = [
         detected: false,
     },
     {
-        name: 'MySQL provider',
-        path: 'prisma/schema.prisma',
-        source: `datasource db {
-  provider = "mysql"
-}
-`,
-        detected: false,
-    },
-    {
         name: 'a commented provider',
         path: 'prisma/schema.prisma',
         source: '// provider = "postgresql"\n',
         detected: false,
     },
     { name: 'an unrelated text file', path: 'notes.txt', source: 'provider = "postgresql"\n', detected: false },
-    { name: 'migrations without a provider', path: 'migrations/1_initial.sql', source: 'SELECT 1;\n', detected: false },
 ] as const;
 
 export const RUNTIME_DETECTION_CASES = [

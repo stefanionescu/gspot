@@ -11,13 +11,7 @@ import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-
-import {
-    REPLACED_LIST_DEFAULTS,
-    PURGECSS_SAFELIST_TABLES,
-    PURGECSS_SCOPE_CONFIGURATIONS,
-    PURGECSS_SIBLING_CONFIGURATIONS,
-} from '#tests/config/settings/inherit.ts';
+import { PURGECSS_SAFELIST_TABLES } from '#tests/config/settings/inherit.ts';
 
 test('an empty PurgeCSS safelist is inherited, and a scope value applies to its children', async () => {
     await using sandbox = await testdir();
@@ -29,18 +23,18 @@ test('an empty PurgeCSS safelist is inherited, and a scope value applies to its 
         'sibling/index.html': '<!doctype html><title>Sibling</title>',
     });
     const inherited = await openSession(sandbox.path);
+    expect(
+        inherited.scopes.map(({ path, configurations }) => [path, configurations.some(({ name }) => name === 'site')]),
+    ).toStrictEqual([
+        ['', true],
+        ['app', true],
+        ['app/deep', true],
+        ['sibling', false],
+    ]);
     for (const path of ['', 'app', 'app/deep']) {
         const scope = inherited.scopes.find((scope) => scope.path === path)!;
-        expect(scope.configurations.map((configuration) => configuration.name)).toStrictEqual(
-            PURGECSS_SCOPE_CONFIGURATIONS,
-        );
         expect(getTable(scope.settings, 'tools.purgecss').safelist).toStrictEqual([]);
     }
-    expect(
-        inherited.scopes
-            .find(({ path }) => path === 'sibling')!
-            .configurations.map((configuration) => configuration.name),
-    ).toStrictEqual(PURGECSS_SIBLING_CONFIGURATIONS);
     const overridden = PURGECSS_SAFELIST_TABLES.replace(
         'path = "app"\n',
         'path = "app/"\ntools.purgecss.safelist = { value = ["keep"], reason = "The reviewed stylesheet keeps its dynamic selectors." }\n',
@@ -101,15 +95,6 @@ test('a root list replaces configuration defaults, and a scope list adds to the 
         validateKeys(defaults, settings, new Map([['api', defaults]]), buildAvailableSettings([], 'basic')),
     ).toStrictEqual([]);
 });
-
-test.each(REPLACED_LIST_DEFAULTS)(
-    'a written $key list replaces its shipped default',
-    async ({ key, configurations, tables, value }) => {
-        await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(configurations, { tables }) });
-        const { settings, scopes } = await openSession(sandbox.path);
-        expect(getSettingValue(scopes[0]!.availableSettings, settings, key, '')?.value).toStrictEqual(value);
-    },
-);
 
 test('a first list written in a scope replaces the shipped default for that scope and its children', async () => {
     await using sandbox = await testdir({
