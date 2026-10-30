@@ -46,7 +46,7 @@ cases = ["camel", "upper-snake", "snake"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
 
 [[naming.override]]
-paths = ["packages/eslint-plugin/src/rules/no-magic-numbers.ts", "packages/eslint-plugin/src/types/create-rule.ts"]
+paths = ["packages/eslint-plugin/src/rules/no-magic-numbers.ts"]
 allowed_names = ["meta"]
 reason = "ESLint names the description of a rule meta."
 

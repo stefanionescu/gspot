@@ -63,12 +63,16 @@ List the plugin rules for the plugin page: the rule, the configs that turn it on
 export function listPluginRules(): PluginRule[] {
     return Object.entries(plugin.rules)
         .toSorted(([left], [right]) => left.localeCompare(right))
-        .map(([name, rule]) => ({
-            name: `${PLUGIN_PREFIX}/${name}`,
-            link: `${REFERENCE_PATH}${REFERENCE_FOLDERS['eslintPlugin']}/${name === '' ? '' : name + '/'}`,
-            configs: listRuleConfigs(name),
-            summary: (FIRST_SENTENCE.exec(rule.meta.docs.description)?.[0] ?? rule.meta.docs.description).trim(),
-        }));
+        .map(([name, rule]) => {
+            const { docs } = rule.meta;
+            if (docs === undefined) throw new Error(`The plugin rule ${name} has no docs.`);
+            return {
+                name: `${PLUGIN_PREFIX}/${name}`,
+                link: `${REFERENCE_PATH}${REFERENCE_FOLDERS['eslintPlugin']}/${name === '' ? '' : name + '/'}`,
+                configs: listRuleConfigs(name),
+                summary: (FIRST_SENTENCE.exec(docs.description)?.[0] ?? docs.description).trim(),
+            };
+        });
 }
 
 /**
@@ -79,7 +83,8 @@ Build the page of each plugin rule: which configs turn it on, why, what to do, a
 export function buildPluginPages(): Map<string, ReferencePage> {
     return new Map(
         Object.entries(plugin.rules).map(([name, rule]) => {
-            const docs = rule.meta.docs;
+            const { docs } = rule.meta;
+            if (docs === undefined) throw new Error(`The plugin rule ${name} has no docs.`);
             const facts =
                 formatRuleConfigs(listRuleConfigs(name)) + (rule.meta.fixable === undefined ? '' : ESLINT_FIX_MESSAGE);
             const optionsBody = formatRuleOptions(rule.meta);

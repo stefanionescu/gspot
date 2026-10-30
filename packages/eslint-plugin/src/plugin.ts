@@ -26,7 +26,7 @@ const rules = {
 const selectLevelRules = (levels: readonly RuleDocs['level'][]) =>
     Object.fromEntries(
         Object.entries(rules)
-            .filter(([, rule]) => levels.includes(rule.meta.docs.level))
+            .filter(([, rule]) => rule.meta.docs !== undefined && levels.includes(rule.meta.docs.level))
             .map(([name]) => [`${PLUGIN_PREFIX}/${name}`, 'error' as const]),
     );
 
