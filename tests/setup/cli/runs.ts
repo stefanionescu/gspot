@@ -26,7 +26,7 @@ export function planFixer(session: Session, fix: readonly string[]): PlannedChec
 Build the gspot.toml text of a fixer whose check passes and whose fix fails, both through the fake tool program.
 */
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, its gspot.toml text makes duplication/jscpd clones in the fixes tests.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The fixes tests write the gspot.toml text of a fixer through it, and jscpd reports the inlined copies as clones.
 export function buildFixerSettings(paths: string[] = ['source.txt']): string {
     return `configurations = []
 [[command_check]]

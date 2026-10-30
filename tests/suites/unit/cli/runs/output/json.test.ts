@@ -14,7 +14,7 @@ import {
     INVALID_FINDING_REPORTS,
 } from '#tests/config/runs/output/json.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it makes duplication/jscpd clones.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The tests of this file parse a JSON report through it, and jscpd reports the inlined copies as clones.
 function parseJsonReport(checkId: string, output: unknown, stdout: string): Finding[] {
     return parseJsonFindings({
         check: checkId,

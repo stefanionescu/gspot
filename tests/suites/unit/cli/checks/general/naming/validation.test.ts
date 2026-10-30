@@ -266,7 +266,7 @@ function listRuleMessages(identifier: Identifier, naming: FileNaming): { rule: s
 function buildFileNaming(settings: NamingSettings): FileNaming {
     return { settings, isTestFile: false };
 }
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it makes duplication/jscpd clones.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The tests of this file build an identifier with these defaults through it, and jscpd reports the inlined copies as clones.
 function buildIdentifier(fields: Pick<Identifier, 'name'> & Partial<Identifier>): Identifier {
     const { file = 'src/a.ts', language = 'typescript', category = 'functions', line = 1, column = 1 } = fields;
     return { file, language, category, line, column, label: `${language} ${category}`, ...fields };

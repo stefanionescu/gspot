@@ -76,7 +76,7 @@ test('Bun file commands validate tracked paths without treating them as package 
     ]);
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it makes duplication/jscpd clones.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The tests of this file run the check in a docs sandbox through it, and jscpd reports the inlined copies as clones.
 async function runMissingPathsCheck(
     files: Record<string, string>,
     options: { paths?: string[] } = {},

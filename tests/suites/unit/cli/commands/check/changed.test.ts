@@ -13,7 +13,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { ALL_FILES_BASES } from '#tests/config/commands/check/arguments.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it makes duplication/jscpd clones.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The tests of this file commit the changed repository through it, and jscpd reports the inlined copies as clones.
 async function prepareChangedRepository(root: string, files: Record<string, string>): Promise<void> {
     const gspotToml = stringify({
         configurations: [],

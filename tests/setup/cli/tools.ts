@@ -93,7 +93,7 @@ export async function listNpmInstallFiles(root: string): Promise<string[]> {
 What tool search reads, for tests that inspect installed tools.
 */
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, the tool search record makes duplication/jscpd clones in the tools tests.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The tool tests build the tool search record through it, and jscpd reports the inlined copies as clones.
 export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
     return {
         root,
