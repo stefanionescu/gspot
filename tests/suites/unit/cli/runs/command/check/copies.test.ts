@@ -70,7 +70,13 @@ test('a command run in a copy finds the other tools beside its program before a 
     };
     await createFileTree(sandbox.path, files);
     await writeProgramCommand(sandbox.path, 'native/checker', 'processes/command', 'shellcheck', '--version');
-    await writeProgramCommand(sandbox.path, 'native/shellcheck', 'fakes/tool', '--line', 'ShellCheck version: 0.11.0');
+    await writeProgramCommand(
+        sandbox.path,
+        'native/shellcheck',
+        'fakes/tool',
+        '--line',
+        'ShellCheck version: 0.0.0-test',
+    );
     await writeProgramCommand(sandbox.path, 'inactive/shellcheck', 'fakes/tool', '--exit', '7');
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'commit', only: ['project/companion'] })[0]!;

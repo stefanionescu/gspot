@@ -56,8 +56,8 @@ test('an absent library is missing, and one above its pin is newer', async () =>
     const laterVersion = inspectTool(buildToolSearch(sandbox.path), {
         name: 'typescript',
         kind: 'library' as const,
-        version: '5.9.3',
-        installers: { npm: { name: 'typescript', version: '5.9.3' } },
+        version: '0.0.0-test',
+        installers: { npm: { name: 'typescript', version: '0.0.0-test' } },
     });
     expect(laterVersion.state).toBe('newer');
     expect(laterVersion.found).toBe('6.0.0');

@@ -226,12 +226,12 @@ test('changed compiler settings omit declaration copies and leave a dependency n
     await writeFile(join(sandbox.path, 'tsconfig.json'), '{broken');
     using broken = await copyRevision(sandbox.path, { kind: 'index' });
     expect(await isOnDisk(join(broken.root, 'types/generated.d.ts'))).toBe(false);
-    expect(broken.dependencyNote).toBeDefined();
+    expect(broken.dependencyNote).toBe(DEPENDENCY_FILES_MESSAGE);
     runGitStep(sandbox.path, ['checkout', '--', 'tsconfig.json']);
     await writeFile(join(sandbox.path, 'compiler.json'), '{"compilerOptions":{"strict":false}}');
     using changed = await copyRevision(sandbox.path, { kind: 'index' });
     expect(await isOnDisk(join(changed.root, 'types/generated.d.ts'))).toBe(false);
-    expect(changed.dependencyNote).toBeDefined();
+    expect(changed.dependencyNote).toBe(DEPENDENCY_FILES_MESSAGE);
 });
 
 test('an index copy clones an ignored declaration file that a tsconfig includes, and nothing outside the repository', async () => {

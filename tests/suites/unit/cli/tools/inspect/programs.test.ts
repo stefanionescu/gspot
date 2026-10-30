@@ -92,7 +92,7 @@ test('a mise-pinned program in the repository node_modules or .venv is missing a
 
 test('a program on PATH wins over an unrelated mise shim', async () => {
     await using sandbox = await testdir();
-    await writeProgramCommand(sandbox.path, 'active/tsc', 'fakes/tool', '--line', '5.9.3');
+    await writeProgramCommand(sandbox.path, 'active/tsc', 'fakes/tool', '--line', '0.0.0-test');
     await writeProgramCommand(sandbox.path, 'mise/shims/tsc', 'fakes/tool', '--line', '1.0.0');
     const active = join(sandbox.path, 'active', isWindows ? 'tsc.cmd' : 'tsc');
     using _environment = overrideEnvironment({ MISE_DATA_DIR: join(sandbox.path, 'mise') });
@@ -103,7 +103,7 @@ test('a program on PATH wins over an unrelated mise shim', async () => {
 });
 
 async function fakeMiseTsc(root: string, status: number) {
-    const executable = join(root, 'mise/installs/tsc/5.9.3', isWindows ? 'tsc.cmd' : 'tsc');
+    const executable = join(root, 'mise/installs/tsc/0.0.0-test', isWindows ? 'tsc.cmd' : 'tsc');
     await writeProgramCommand(
         root,
         'mise/shims/tsc',
@@ -113,7 +113,7 @@ async function fakeMiseTsc(root: string, status: number) {
         '--exit',
         '1',
     );
-    await writeProgramCommand(root, 'mise/installs/tsc/5.9.3/tsc', 'fakes/tool', '--line', '5.9.3');
+    await writeProgramCommand(root, 'mise/installs/tsc/0.0.0-test/tsc', 'fakes/tool', '--line', '0.0.0-test');
     await writeProgramCommand(
         root,
         'bin/mise',
@@ -147,7 +147,7 @@ test('mise finds the program of the repository, and it runs from a copy', async 
         timeoutSeconds: SETTING_DEFINITIONS['tool_timeout_seconds'].default,
         cwd: join(sandbox.path, 'copy'),
     });
-    expect({ code: result.code, stdout: result.stdout }).toStrictEqual({ code: 0, stdout: '5.9.3\n' });
+    expect({ code: result.code, stdout: result.stdout }).toStrictEqual({ code: 0, stdout: '0.0.0-test\n' });
 });
 
 test('mise finds no program when its lookup exits 1', async () => {
@@ -166,8 +166,13 @@ test('a pinned program whose only executable is a mise shim that mise cannot res
     using _which = fakeExecutableLookup((name) =>
         join(root, name === 'mise' ? 'bin' : 'mise/shims', `${name}${isWindows ? '.cmd' : ''}`),
     );
-    const inspection = inspectTool(buildToolSearch(join(root, 'work')), buildProgramPin('vale', '3.24.0'));
-    expect(inspection).toStrictEqual({ name: 'vale', state: 'missing', want: '3.24.0', help: 'Run gspot install.' });
+    const inspection = inspectTool(buildToolSearch(join(root, 'work')), buildProgramPin('vale', '0.0.0-test'));
+    expect(inspection).toStrictEqual({
+        name: 'vale',
+        state: 'missing',
+        want: '0.0.0-test',
+        help: 'Run gspot install.',
+    });
 });
 
 test('a tool project program linked outside the repository is refused before it runs', async () => {

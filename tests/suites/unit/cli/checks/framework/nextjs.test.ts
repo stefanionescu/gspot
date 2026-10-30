@@ -63,7 +63,7 @@ function fakeNextjsCommands(spawn: (command: readonly string[], options: AsyncSp
     resources.use(
         spyOn(processes, 'spawnProcessBlocking').mockImplementation((command) => {
             return buildProcessResult({
-                stdout: basename(command[0] ?? '') === 'next' ? 'Next.js v16.3.5' : 'Version 5.9.3',
+                stdout: basename(command[0] ?? '') === 'next' ? 'Next.js v16.3.5' : 'Version 0.0.0-test',
             });
         }),
     );
