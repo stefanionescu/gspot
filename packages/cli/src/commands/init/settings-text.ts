@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { setKey } from '#cli/settings/edit.ts';
+import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { PBXPROJ_SUFFIX } from '#cli/config/files/names.ts';
@@ -51,7 +51,7 @@ function buildSwiftTables(
                 (projectFile) => selectScopePath(projectFile.path, draft.scopes) === scope,
             )?.path;
             if (file === undefined) return [];
-            const text = findText(repository.root, file);
+            const text = find(repository.root, file);
             const sdkRoot = text === undefined ? undefined : parseBuildSettings(text, file).sdkRoot;
             const destination = XCODE_DESTINATIONS.get(sdkRoot);
             const swiftSettings = {

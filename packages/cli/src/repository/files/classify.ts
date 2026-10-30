@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
+import { read } from '#cli/system/files/reads.ts';
 import { WHITESPACE_RUN } from '#cli/config/text.ts';
-import { readText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -97,7 +97,7 @@ function findGeneratedKind(path: string, prefix: Buffer): FileClassification | u
 function classifyManagedDocument(root: string, file: ListedFile, prefix: Buffer): FileClassification {
     if (file.isSymlink || !file.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
         return SOURCE_KIND;
-    const text = readText(root, file.path);
+    const text = read(root, file.path);
     const authored = stripBlock(text, { path: file.path });
     return authored === text || authored.trim() !== ''
         ? SOURCE_KIND

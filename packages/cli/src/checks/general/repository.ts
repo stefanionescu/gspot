@@ -2,12 +2,12 @@ import { isUtf8 } from 'node:buffer';
 import { getTable } from '#cli/settings/scopes.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
 import { SYMLINK_MODE } from '#cli/config/files/modes.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { lstatSync, realpathSync, readlinkSync } from 'node:fs';
@@ -143,7 +143,7 @@ export function checkRepositoryEncoding(session: Session, planned: PlannedCheck)
                 (file) =>
                     file.tags.includes('text') &&
                     !file.tags.includes('symlink') &&
-                    !isUtf8(readCachedBytes(session.reads, file.path)),
+                    !isUtf8(readBytes(session.reads, file.path)),
             )
             .map((file) => ({
                 file: file.path,

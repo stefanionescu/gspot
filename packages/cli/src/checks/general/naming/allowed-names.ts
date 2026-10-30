@@ -1,8 +1,8 @@
+import { read } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
@@ -24,7 +24,7 @@ async function readSourceNames(session: Session, planned: PlannedCheck): Promise
             const folders = buildFolderIdentifiers(file.path, language, containers);
             const { identifiers, error } = await parseIdentifiers(
                 file.path,
-                readCachedText(session.reads, file.path),
+                read(session.reads, file.path),
                 language,
                 session,
             );

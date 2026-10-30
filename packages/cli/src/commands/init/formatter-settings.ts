@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import { findText } from '#cli/system/files/reads.ts';
+import { find } from '#cli/system/files/reads.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -46,7 +46,7 @@ function parseQuoteStyle(file: string, text: string): string | undefined {
 
 function readPythonQuotes(root: string): string | undefined {
     for (const file of RUFF_SETTINGS_FILES) {
-        const text = findText(root, file);
+        const text = find(root, file);
         const quotes = text === undefined ? undefined : parseQuoteStyle(file, text);
         if (quotes !== undefined) return quotes;
     }
@@ -114,7 +114,7 @@ function parseEditorconfigSections(text: string): EditorconfigSection[] {
 }
 
 function readEditorconfig(folder: string): PrettierOptions | null {
-    const text = findText(folder, EDITORCONFIG_FILE);
+    const text = find(folder, EDITORCONFIG_FILE);
     if (text === undefined) return null;
     const sections = parseEditorconfigSections(text);
     const project = Object.fromEntries(
@@ -158,11 +158,11 @@ function readFormatOptions(
     const folder = posix.join(root, scopePath);
     const editorconfig = readEditorconfig(folder);
     const packagePath = posix.join(scopePath, PACKAGE_JSON);
-    const packageJson = findText(folder, PACKAGE_JSON);
+    const packageJson = find(folder, PACKAGE_JSON);
     const packageOptions = packageJson === undefined ? undefined : parseJsonFile(packagePath, packageJson)['prettier'];
     const prettierFile = prettierFiles
         .filter((path) => path !== '.prettierignore')
-        .map((path) => ({ path, text: findText(folder, path) }))
+        .map((path) => ({ path, text: find(folder, path) }))
         .find((read): read is { path: string; text: string } => read.text !== undefined);
     const usesPrettier =
         prettierFile !== undefined || packageOptions !== undefined || dependencies['prettier'] !== undefined;

@@ -3,6 +3,7 @@ import { isTable } from '#cli/system/tables.ts';
 import { statSync, readdirSync } from 'node:fs';
 import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import type { Session } from '#cli/types/session.ts';
+import { find, read } from '#cli/system/files/reads.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
@@ -20,7 +21,6 @@ import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { MISE_FILES, MISE_TASK_FOLDERS } from '#cli/config/files/names.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
 import { replaceSettingPlaceholders } from '#cli/runs/command/placeholders.ts';
 import type { PathIndex, TaskNames, ProseLine } from '#cli/types/checks/general/docs.ts';
 import { listExecutableNames, includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
@@ -156,7 +156,7 @@ function readTaskNames(session: Session, scopePath: string): TaskNames {
     return {
         mise: new Set([
             ...files.flatMap((file) => {
-                const text = findCachedText(session.reads, file);
+                const text = find(session.reads, file);
                 return text === undefined ? [] : parseMiseTasks(text, file);
             }),
             ...ancestors.flatMap(({ path }) =>
@@ -246,7 +246,7 @@ export function checkDocsMissingPaths(session: Session, planned: PlannedCheck): 
     return [...projects].flatMap(([scope, sources]) => {
         const index: PathIndex = { paths: repositoryPaths, isIgnored, tasks: readTaskNames(session, scope) };
         return sources.flatMap((file) => {
-            const text = readCachedText(session.reads, file.path);
+            const text = read(session.reads, file.path);
             return extractProseLines(text).flatMap((prose) => validateProseLine(file.path, prose, index));
         });
     });

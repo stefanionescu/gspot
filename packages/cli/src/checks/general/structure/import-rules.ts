@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
+import { read } from '#cli/system/files/reads.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -8,7 +9,6 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { getImportedModule } from '#cli/parsers/code/swift.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
@@ -103,7 +103,7 @@ async function validateFileImports(
 ): Promise<CheckFinding[]> {
     const from = lookup.findOwner(source.path);
     if (from === undefined) return [];
-    const tree = await parseSource(source.grammar, readCachedText(session.reads, source.path));
+    const tree = await parseSource(source.grammar, read(session.reads, source.path));
     try {
         return listImports(tree.rootNode).flatMap(({ node, module, owners }) => {
             const owner = findRefusedOwner(lookup, from, owners);

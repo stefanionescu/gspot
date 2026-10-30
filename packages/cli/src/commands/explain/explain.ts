@@ -1,6 +1,6 @@
+import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
 import type { Command } from '@commander-js/extra-typings';
@@ -56,7 +56,7 @@ async function explainNamed(
 async function runExplainCommand(cwd: string, subject: string): Promise<CommandResult> {
     const root = readRepositoryRoot(cwd);
 
-    const session = findText(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
+    const session = find(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
 
     const result = await explainSubject(root, session, { subject, cwd });
     return {

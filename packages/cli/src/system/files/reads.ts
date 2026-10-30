@@ -23,19 +23,6 @@ function readFilePrefix(path: string, limit: number): Buffer {
     }
 }
 
-function readUtf8(path: string, read: () => Buffer): string | undefined {
-    try {
-        return decodeUtf8Text(path, read());
-    } catch (error) {
-        if (hasErrorCode(error, 'ENOENT')) return undefined;
-        if (hasErrorCode(error, 'EACCES') || hasErrorCode(error, 'EPERM') || hasErrorCode(error, 'EISDIR'))
-            throw new GspotError('filesystem', `${path} could not be read. Check the file and its permissions.`, {
-                cause: error,
-            });
-        throw error;
-    }
-}
-
 /**
 Read the first bytes of a file, with the resolved root of the run and any cached bytes.
 
@@ -51,79 +38,49 @@ export function readCachedPrefix(reads: ReadCache, path: string, limit: number):
 }
 
 /**
-Read file bytes from disk inside the folder.
+Read file bytes inside a folder, and refuse a link outside it. A run cache keeps the bytes of the first read.
 
-@param root the boundary for resolving the relative file path.
+@param source the folder of the relative path, or the run cache of that folder.
 @param path the root-relative file.
 @returns the file bytes.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers read a file without the run cache through it, and it refuses a link outside the root.
-export function readBytes(root: string, path: string): Buffer {
-    return readFileSync(readContainedPath(realpathSync(root), path));
-}
-
-/**
-Read file bytes once per run.
-
-@param reads the run cache.
-@param path the root-relative file.
-*/
-export function readCachedBytes(reads: ReadCache, path: string): Buffer {
-    const held = reads.sources.get(path);
+export function readBytes(source: string | ReadCache, path: string): Buffer {
+    if (typeof source === 'string') return readFileSync(readContainedPath(realpathSync(source), path));
+    const held = source.sources.get(path);
     if (held !== undefined) return held;
-    const bytes = readFileSync(readContainedPath(reads.root, path));
-    reads.sources.set(path, bytes);
+    const bytes = readFileSync(readContainedPath(source.root, path));
+    source.sources.set(path, bytes);
     return bytes;
 }
 
 /**
-Read UTF-8 text from disk, or return undefined for a missing file.
+Read UTF-8 text, or return undefined for a missing file.
 
-@param root the boundary for resolving the relative file path.
+@param source the folder of the relative path, or the run cache of that folder.
 @param path the root-relative file.
 @returns the file text.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: findText and findCachedText share the error mapping of readUtf8.
-export function findText(root: string, path: string): string | undefined {
-    return readUtf8(path, () => readBytes(root, path));
-}
-
-/**
-Read UTF-8 text through the run cache, or return undefined for a missing file.
-
-@param reads the run cache.
-@param path the root-relative file.
-@returns the cached file text.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: findText and findCachedText share the error mapping of readUtf8.
-export function findCachedText(reads: ReadCache, path: string): string | undefined {
-    return readUtf8(path, () => readCachedBytes(reads, path));
+export function find(source: string | ReadCache, path: string): string | undefined {
+    try {
+        return decodeUtf8Text(path, readBytes(source, path));
+    } catch (error) {
+        if (hasErrorCode(error, 'ENOENT')) return undefined;
+        if (hasErrorCode(error, 'EACCES') || hasErrorCode(error, 'EPERM') || hasErrorCode(error, 'EISDIR'))
+            throw new GspotError('filesystem', `${path} could not be read. Check the file and its permissions.`, {
+                cause: error,
+            });
+        throw error;
+    }
 }
 
 /**
 Read tracked UTF-8 text and refuse a missing file.
 
-@param root the repository folder.
+@param source the folder of the relative path, or the run cache of that folder.
 @param path the tracked file path.
 */
-export function readText(root: string, path: string): string {
-    const text = findText(root, path);
-    if (text === undefined)
-        throw new GspotError(
-            'filesystem',
-            MISSING_TRACKED_FILE_MESSAGE.replace('{path}', () => path),
-        );
-    return text;
-}
-
-/**
-Read tracked UTF-8 text through the run cache and refuse a missing file.
-
-@param reads the run cache.
-@param path the tracked file path.
-*/
-export function readCachedText(reads: ReadCache, path: string): string {
-    const text = findCachedText(reads, path);
+export function read(source: string | ReadCache, path: string): string {
+    const text = find(source, path);
     if (text === undefined)
         throw new GspotError(
             'filesystem',

@@ -1,9 +1,9 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
+import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
@@ -103,7 +103,7 @@ function listFileTaskPackages(planned: PlannedConfigFile): string[] {
     const dependencyNames = new Set(dependencyFiles.flatMap((file) => Object.keys(file.dependencies)));
     const names = files
         .filter((file) => file.kind === 'source' && isFileTask(file.path))
-        .flatMap((file) => listRunPackages(readCachedText(planned.session.reads, file.path)));
+        .flatMap((file) => listRunPackages(read(planned.session.reads, file.path)));
     return [...new Set(names)]
         .filter((name) => dependencyNames.has(name))
         .toSorted((left, right) => compareText(left, right));

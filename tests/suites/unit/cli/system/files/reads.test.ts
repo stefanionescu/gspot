@@ -5,28 +5,19 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { rm, link, mkdir, symlink, writeFile } from 'node:fs/promises';
-
-import {
-    findText,
-    readText,
-    readBytes,
-    findCachedText,
-    readCachedText,
-    readCachedBytes,
-    readCachedPrefix,
-} from '#cli/system/files/reads.ts';
+import { find, read, readBytes, readCachedPrefix } from '#cli/system/files/reads.ts';
 
 test('reads tell a missing optional file, required bytes, and invalid UTF-8 apart', async () => {
     await using sandbox = await testdir();
-    expect(findText(sandbox.path, 'source.txt')).toBeUndefined();
-    expect(findCachedText(createReadCache(sandbox.path), 'source.txt')).toBeUndefined();
+    expect(find(sandbox.path, 'source.txt')).toBeUndefined();
+    expect(find(createReadCache(sandbox.path), 'source.txt')).toBeUndefined();
     const missing = matchFields<GspotError>({
         name: 'GspotError',
         code: 'filesystem',
         message: 'source.txt is tracked but missing. Restore it or commit its deletion.',
     });
-    expect(() => readText(sandbox.path, 'source.txt')).toThrow(missing);
-    expect(() => readCachedText(createReadCache(sandbox.path), 'source.txt')).toThrow(missing);
+    expect(() => read(sandbox.path, 'source.txt')).toThrow(missing);
+    expect(() => read(createReadCache(sandbox.path), 'source.txt')).toThrow(missing);
     expect(() => readBytes(sandbox.path, 'source.txt')).toThrow('ENOENT');
     const target = join(sandbox.path, 'source.txt');
     const invalid = Buffer.from([0xc3, 0x28]);
@@ -37,10 +28,10 @@ test('reads tell a missing optional file, required bytes, and invalid UTF-8 apar
         code: 'filesystem',
         message: 'source.txt is not UTF-8 text. Save it as UTF-8, then run the command again.',
     });
-    expect(() => readText(sandbox.path, 'source.txt')).toThrow(failure);
-    expect(() => readCachedText(createReadCache(sandbox.path), 'source.txt')).toThrow(failure);
+    expect(() => read(sandbox.path, 'source.txt')).toThrow(failure);
+    expect(() => read(createReadCache(sandbox.path), 'source.txt')).toThrow(failure);
     await writeFile(target, 'valid café\n');
-    expect(readText(sandbox.path, 'source.txt')).toBe('valid café\n');
+    expect(read(sandbox.path, 'source.txt')).toBe('valid café\n');
     expect(readCachedPrefix(createReadCache(sandbox.path), 'source.txt', 5)).toStrictEqual(Buffer.from('valid'));
     await rm(target);
     await mkdir(target);
@@ -49,10 +40,10 @@ test('reads tell a missing optional file, required bytes, and invalid UTF-8 apar
         code: 'filesystem',
         message: 'source.txt could not be read. Check the file and its permissions.',
     });
-    expect(() => findText(sandbox.path, 'source.txt')).toThrow(unreadable);
-    expect(() => findCachedText(createReadCache(sandbox.path), 'source.txt')).toThrow(unreadable);
-    expect(() => readText(sandbox.path, 'source.txt')).toThrow(unreadable);
-    expect(() => readCachedText(createReadCache(sandbox.path), 'source.txt')).toThrow(unreadable);
+    expect(() => find(sandbox.path, 'source.txt')).toThrow(unreadable);
+    expect(() => find(createReadCache(sandbox.path), 'source.txt')).toThrow(unreadable);
+    expect(() => read(sandbox.path, 'source.txt')).toThrow(unreadable);
+    expect(() => read(createReadCache(sandbox.path), 'source.txt')).toThrow(unreadable);
     expect(() => readBytes(sandbox.path, 'source.txt')).toThrow('EISDIR');
 });
 
@@ -62,9 +53,9 @@ test('text reads follow file and folder links inside the folder and read hard li
     await symlink('settings/source.txt', join(sandbox.path, 'linked.txt'));
     await symlink('settings', join(sandbox.path, 'linked-folder'), 'dir');
     await link(join(sandbox.path, 'settings/source.txt'), join(sandbox.path, 'hardlinked.txt'));
-    expect(readText(sandbox.path, 'linked.txt')).toBe('authored café\n');
-    expect(readText(sandbox.path, 'linked-folder/source.txt')).toBe('authored café\n');
-    expect(readText(sandbox.path, 'hardlinked.txt')).toBe('authored café\n');
+    expect(read(sandbox.path, 'linked.txt')).toBe('authored café\n');
+    expect(read(sandbox.path, 'linked-folder/source.txt')).toBe('authored café\n');
+    expect(read(sandbox.path, 'hardlinked.txt')).toBe('authored café\n');
 });
 
 test('reads refuse a link chain that leaves the folder and work after the link is fixed', async () => {
@@ -75,7 +66,7 @@ test('reads refuse a link chain that leaves the folder and work after the link i
 
     const root = join(sandbox.path, 'project');
     await symlink('../outside/source.txt', join(root, 'linked.txt'));
-    expect(() => readText(root, 'linked.txt')).toThrow(
+    expect(() => read(root, 'linked.txt')).toThrow(
         matchFields({ message: 'linked.txt links to a file outside the repository. Replace the link with the file.' }),
     );
     expect(() => readCachedPrefix(createReadCache(root), 'linked.txt', 4)).toThrow(
@@ -83,25 +74,25 @@ test('reads refuse a link chain that leaves the folder and work after the link i
     );
     await rm(join(root, 'linked.txt'));
     await symlink('inside.txt', join(root, 'linked.txt'));
-    expect(readText(root, 'linked.txt')).toBe('inside');
+    expect(read(root, 'linked.txt')).toBe('inside');
 });
 
 test('the read cache keeps one copy per run and uncached reads see later edits', async () => {
     await using first = await testdir();
     await createFileTree(first.path, { 'source.txt': 'first' });
     const reads = createReadCache(first.path);
-    expect(readCachedText(reads, 'source.txt')).toBe('first');
+    expect(read(reads, 'source.txt')).toBe('first');
     await writeFile(join(first.path, 'source.txt'), 'edited');
-    expect(readCachedText(reads, 'source.txt')).toBe('first');
-    expect(readText(reads.root, 'source.txt')).toBe('edited');
+    expect(read(reads, 'source.txt')).toBe('first');
+    expect(read(reads.root, 'source.txt')).toBe('edited');
 });
 
 test('the read cache does not keep a failed read', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.txt': 'original' });
     const reads = createReadCache(sandbox.path);
-    expect(readCachedBytes(reads, 'source.txt').toString()).toBe('original');
-    expect(() => readCachedBytes(reads, 'missing.txt')).toThrow('missing.txt');
+    expect(readBytes(reads, 'source.txt').toString()).toBe('original');
+    expect(() => readBytes(reads, 'missing.txt')).toThrow('missing.txt');
     await writeFile(join(sandbox.path, 'missing.txt'), 'recovered');
-    expect(readCachedBytes(reads, 'missing.txt').toString()).toBe('recovered');
+    expect(readBytes(reads, 'missing.txt').toString()).toBe('recovered');
 });

@@ -1,10 +1,10 @@
 import ignore from 'ignore';
+import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { join, posix, relative } from 'node:path';
 import { decodeGitPaths } from '#cli/parsers/git.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { readText } from '#cli/system/files/reads.ts';
 import type { GitIndexFile } from '#cli/types/parsers/git.ts';
 import { isIgnored } from '#cli/repository/files/gitignore.ts';
 import { buildGitError, runGitForBytes } from '#cli/system/git.ts';
@@ -59,7 +59,7 @@ function readFolderListing(root: string, folder: string, inherited: PathIgnore[]
     if (children.some((child) => child.name === GITIGNORE_FILE && child.isFile())) {
         ignores.push({
             base: folder,
-            matcher: ignore().add(readText(root, `${folder}${GITIGNORE_FILE}`)),
+            matcher: ignore().add(read(root, `${folder}${GITIGNORE_FILE}`)),
         });
     }
     return { children: children, ignores };

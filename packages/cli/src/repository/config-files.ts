@@ -1,7 +1,7 @@
 import picomatch from 'picomatch';
 import { posix, extname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
-import { findText } from '#cli/system/files/reads.ts';
+import { find } from '#cli/system/files/reads.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -22,7 +22,7 @@ function listReplacementConflicts(
 ): ConflictingConfigFile[] {
     return paths
         .filter((path) => {
-            const source = findText(root, path);
+            const source = find(root, path);
             if (source === undefined) return false;
             return (
                 (replacement.table === undefined && replacement.key === undefined) ||
@@ -74,7 +74,7 @@ function listConfigurationConflicts(
         if (
             !picomatch.scan(replacement.path).isGlob &&
             !files.inventory.has(replacement.path) &&
-            findText(root, replacement.path) !== undefined
+            find(root, replacement.path) !== undefined
         )
             paths.push(replacement.path);
         return listReplacementConflicts(root, paths, replacement);

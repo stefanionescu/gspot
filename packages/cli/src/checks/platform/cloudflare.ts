@@ -1,9 +1,9 @@
+import { read } from '#cli/system/files/reads.ts';
 import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { SYNTAX_RULE } from '#cli/config/checks/syntax.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/checks/platform/cloudflare.ts';
@@ -107,7 +107,7 @@ Reports syntax errors in each _redirects file.
 */
 export function checkCloudflareRedirects(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [REDIRECTS_FILE]).flatMap((path) =>
-        validateRedirects(readCachedText(session.reads, path)).map((invalidLine) => ({
+        validateRedirects(read(session.reads, path)).map((invalidLine) => ({
             file: path,
             line: invalidLine.number,
             rule: SYNTAX_RULE,
@@ -124,7 +124,7 @@ Reports syntax errors in each _headers file, and each security header that the b
 */
 export function checkCloudflareHeaders(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [HEADERS_FILE]).flatMap((path) => {
-        const { blocks, errors } = parseHeadersFile(readCachedText(session.reads, path));
+        const { blocks, errors } = parseHeadersFile(read(session.reads, path));
         return [
             ...errors.map((error) => ({
                 file: path,

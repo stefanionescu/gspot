@@ -1,5 +1,5 @@
+import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { type Repository } from '#cli/types/repository/files.ts';
@@ -212,7 +212,7 @@ export function readLintJobs(root: string, paths: string[]): string[] {
     return paths
         .filter((path) => !FOREIGN_CI_FILES.has(path))
         .flatMap((path) => {
-            const source = findText(root, path);
+            const source = find(root, path);
             if (source === undefined) return [];
             return parseYamlDocuments(path, source).flatMap((document) => listLintJobs(path, document));
         });

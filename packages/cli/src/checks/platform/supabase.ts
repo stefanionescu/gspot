@@ -7,6 +7,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { Parsed } from '#cli/types/shapes.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { find, read } from '#cli/system/files/reads.ts';
 import { parseCheckedFile } from '#cli/checks/syntax.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { SYNTAX_RULE } from '#cli/config/checks/syntax.ts';
@@ -19,7 +20,6 @@ import type { Session, CheckSession } from '#cli/types/session.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { getNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
 import type { SqlStatement, SqlNodeFields } from '#cli/types/parsers/code/sql.ts';
 import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { formatOutputTail, assertToolFindings } from '#cli/runs/command/output.ts';
@@ -146,7 +146,7 @@ function readSupabaseProjectFile(
     planned: PlannedCheck,
 ): Parsed<SupabaseProjectFile, CheckFinding> | undefined {
     const local = joinScope(planned.scope.path, SUPABASE_PROJECT_FILE);
-    const text = findCachedText(session.reads, local);
+    const text = find(session.reads, local);
     return text === undefined
         ? undefined
         : parseCheckedFile(local, () => parseTomlFile(local, text, supabaseProjectFileSchema));
@@ -314,7 +314,7 @@ export function checkSupabaseServiceRoleKey(session: Session, planned: PlannedCh
             extensions.some((extension) => file.path.endsWith(extension)),
     );
     return files.flatMap((file) =>
-        readCachedText(session.reads, file.path)
+        read(session.reads, file.path)
             .split('\n')
             .flatMap((text, index): CheckFinding[] => {
                 if (!SERVICE_ROLE_KEY_NAMES.some((name) => text.includes(name))) return [];

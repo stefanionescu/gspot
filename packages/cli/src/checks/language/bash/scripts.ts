@@ -1,8 +1,8 @@
+import { read } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/session.ts';
 import { remember } from '#cli/system/files/cache.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseBashScript } from '#cli/parsers/code/bash.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import { type ScriptFile } from '#cli/types/checks/language/bash.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/files/classify.ts';
@@ -11,7 +11,7 @@ import { BASH_SOURCE_COMMANDS } from '#cli/config/checks/language/bash/scripts.t
 const PARSED_SCRIPTS = Symbol('parsed scripts');
 
 async function readScript(session: Session, file: TrackedFile): Promise<ScriptFile> {
-    const text = readCachedText(session.reads, file.path);
+    const text = read(session.reads, file.path);
     const syntax = await parseBashScript(text, session);
     return {
         ...syntax,

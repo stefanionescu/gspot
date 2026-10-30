@@ -1,8 +1,8 @@
 import { join, relative } from 'node:path';
 import { createRequire } from 'node:module';
+import { find } from '#cli/system/files/reads.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { hasErrorCode } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -45,7 +45,7 @@ export function readToolProjectPackage(files: Files, root: string, path: string)
         throw error;
     }
     const local = convertToPosixPath(relative(root, target));
-    const text = findText(root, local);
+    const text = find(root, local);
     return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
 }
 

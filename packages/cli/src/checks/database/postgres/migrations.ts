@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
@@ -6,7 +7,6 @@ import { remember } from '#cli/system/files/cache.ts';
 import { SYNTAX_RULE } from '#cli/config/checks/syntax.ts';
 import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
 import { type Migration, type MigrationRead } from '#cli/types/checks/postgres.ts';
@@ -30,7 +30,7 @@ const MIGRATIONS = Symbol('migrations');
 async function parseMigrations(session: Session, paths: Pick<Migration, 'path' | 'version'>[]): Promise<Migration[]> {
     const migrations: Migration[] = [];
     for (const { path, version } of paths) {
-        const text = extractForwardText(readCachedText(session.reads, path));
+        const text = extractForwardText(read(session.reads, path));
         const name = posix.basename(path);
         const parsed = await parseSqlFile(text, session.reads);
         migrations.push({

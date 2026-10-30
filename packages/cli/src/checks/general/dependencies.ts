@@ -4,6 +4,7 @@ import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
 import { MISE_FILES } from '#cli/config/files/names.ts';
+import { read, find } from '#cli/system/files/reads.ts';
 import { parseCheckedFile } from '#cli/checks/syntax.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
@@ -12,7 +13,6 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { readCachedText, findCachedText } from '#cli/system/files/reads.ts';
 import { miseToolsSchema } from '#cli/schemas/checks/general/dependencies.ts';
 import { readCachedPackageJson, readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 
@@ -44,7 +44,7 @@ function validateUrl(url: URL, hosts: Set<string>): string | undefined {
 }
 
 function validateLockfileHosts(session: Session, path: string, hosts: Set<string>): CheckFinding[] {
-    const text = readCachedText(session.reads, path);
+    const text = read(session.reads, path);
     let nextOffset = 0;
     return listLockfileUrls(path, text).flatMap((url) => {
         let offset = text.indexOf(url, nextOffset);
@@ -127,7 +127,7 @@ function findMiseFilePin(
     let pin: { path: string; version: string } | undefined;
     const paths = listEnclosingFolders(folder).flatMap((base) => MISE_FILES.map((file) => posix.join(base, file)));
     for (const path of paths) {
-        const text = findCachedText(session.reads, path);
+        const text = find(session.reads, path);
         if (text === undefined) continue;
         const parsed = parseCheckedFile(path, () => parseTomlFile(path, text, miseToolsSchema));
         if ('error' in parsed) {

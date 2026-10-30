@@ -1,5 +1,5 @@
+import { find } from '#cli/system/files/reads.ts';
 import { formatCount } from '#cli/system/text.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
@@ -75,7 +75,7 @@ function findContentEvidence(
         const target = joinScope(contents.scope, path);
         const file = contents.files.find((each) => each.path === target);
         if (file === undefined) continue;
-        const text = findText(root, file.path);
+        const text = find(root, file.path);
         if (text !== undefined && new RegExp(pattern, 'u').test(text)) return { evidence: file.path };
     }
     return undefined;

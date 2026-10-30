@@ -1,13 +1,13 @@
 import { isCI } from 'std-env';
 import { confirm } from '@clack/prompts';
 import { print } from '#cli/system/terminal.ts';
+import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import type { Session } from '#cli/types/session.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { writePlans } from '#cli/repository/writer.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
@@ -61,7 +61,7 @@ import {
 
 async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJson>> {
     const root = readRepositoryRoot(options.cwd);
-    if (findText(root, SETTINGS_FILE) !== undefined) throw new GspotError('arguments', SETTINGS_EXIST_MESSAGE);
+    if (find(root, SETTINGS_FILE) !== undefined) throw new GspotError('arguments', SETTINGS_EXIST_MESSAGE);
     const initPlan = await planInit(root, options);
     const { plan, settingsText } = initPlan;
     print(formatDetection(initPlan.detection));

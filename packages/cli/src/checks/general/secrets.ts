@@ -1,11 +1,11 @@
 import { posix } from 'node:path';
+import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildBaseResult } from '#cli/runs/results.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { readPushedRange } from '#cli/repository/revisions/push.ts';
@@ -31,7 +31,7 @@ async function readEnvironmentReferences(
     path: string,
     environmentFunctions: string[],
 ): Promise<EnvironmentRead[]> {
-    const text = readCachedText(session.reads, path);
+    const text = read(session.reads, path);
     if (!path.endsWith(PYTHON_EXTENSION)) return listJavascriptEnvironmentReads(path, text, environmentFunctions);
     const tree = await parseSource('python', text, session);
     try {
@@ -103,7 +103,7 @@ export async function checkSecretsEnvExamples(session: Session, planned: Planned
         );
     const exampleKeys = new Set(
         examples.flatMap((file) => {
-            const lines = readCachedText(session.reads, file.path).split('\n');
+            const lines = read(session.reads, file.path).split('\n');
             return lines.flatMap((line) => {
                 const key = ENV_KEY_LINE.exec(line.trim())?.groups?.['key'];
                 return key === undefined ? [] : [key];

@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { find, read } from '#cli/system/files/reads.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -11,7 +12,6 @@ import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { DEPENDENCY_SECTIONS } from '#cli/config/parsers/projects/lockfiles.ts';
 import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies.ts';
-import { findText, findCachedText, readCachedText } from '#cli/system/files/reads.ts';
 import { parseRequirements, DEPENDENCY_FILE_PARSERS } from '#cli/parsers/projects/dependencies.ts';
 import { type PackageJson, type DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 
@@ -20,7 +20,7 @@ async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<
         ? parseRequirements
         : DEPENDENCY_FILE_PARSERS.get(posix.basename(file.path));
     if (parse === undefined) return undefined;
-    const text = readCachedText(reads, file.path);
+    const text = read(reads, file.path);
     return await parse(file.path, text);
 }
 
@@ -51,7 +51,7 @@ Read and validate the package.json fields that gspot uses.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands, generation, and repository reads validate package.json with one schema through it.
 export function readPackageJson(root: string, path: string): PackageJson | undefined {
-    const text = findText(root, path);
+    const text = find(root, path);
     return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
 }
 
@@ -64,7 +64,7 @@ Read the package.json fields used by repository checks through the run cache.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks and repository reads validate package.json from the run cache with one schema through it.
 export function readCachedPackageJson(reads: ReadCache, path: string): PackageJson | undefined {
-    const text = findCachedText(reads, path);
+    const text = find(reads, path);
     return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
 }
 

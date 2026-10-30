@@ -1,6 +1,7 @@
 import { join, posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildUvRunCommand } from '#cli/tools/uv.ts';
+import { find, read } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { countCodeLines } from '#cli/checks/code-lines.ts';
@@ -14,7 +15,6 @@ import type { Session, CheckSession } from '#cli/types/session.ts';
 import { splitWords } from '#cli/checks/general/naming/settings.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { PATH_SEPARATOR_PATTERN } from '#cli/config/files/path-patterns.ts';
-import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
 import { type CheckResult, type CheckFinding } from '#cli/types/runs/check.ts';
 import { runCommandCheck, runCommandBatches } from '#cli/runs/command/check.ts';
@@ -66,7 +66,7 @@ Runs deptry on the scope. Passes the project's extend_exclude list again with .g
 */
 export async function checkPythonDeptry(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
-    const text = findCachedText(session.reads, pyproject);
+    const text = find(session.reads, pyproject);
     if (text === undefined) throw new GspotError('skip', NO_PYPROJECT_NOTE);
     const { extend_exclude: exclusions, known_first_party: firstParty } = parseTomlFile(pyproject, text, deptrySchema)
         .tool.deptry;
@@ -167,7 +167,7 @@ export function checkPythonPipInstalls(session: Session, planned: PlannedCheck):
     const installs = files
         .filter((file) => INSTALL_FILE_SUFFIXES.some((ending) => file.path.endsWith(ending)))
         .flatMap((file) =>
-            readCachedText(session.reads, file.path)
+            read(session.reads, file.path)
                 .split('\n')
                 .flatMap((text, index): CheckFinding[] =>
                     PIP_INSTALL.test(text) && !text.trimStart().startsWith('#')
@@ -227,7 +227,7 @@ export async function checkPythonPlaceholderDocstrings(
 }
 
 async function detectDocstringStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
-    const module = await parsePythonModule(path, readCachedText(session.reads, path), session);
+    const module = await parsePythonModule(path, read(session.reads, path), session);
     try {
         for (const node of module.tree.rootNode.descendantsOfType(['function_definition', 'class_definition'])) {
             const docstring = findDocstring(node);
@@ -280,7 +280,7 @@ export async function checkPythonPydoclint(session: CheckSession, planned: Plann
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const configured = parsePydoclintOptions(
         pyproject,
-        findCachedText(session.reads, pyproject) ?? '',
+        find(session.reads, pyproject) ?? '',
         planned.scope.settings.tables[RUFF_TABLE]?.docstring_convention,
         session.settings.level,
     );

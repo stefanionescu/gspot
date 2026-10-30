@@ -1,9 +1,9 @@
 import { join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
+import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { findText } from '#cli/system/files/reads.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
@@ -267,8 +267,8 @@ Read repository index settings and resolve their local paths for a temporary uv 
 @param root the base for local index paths.
 */
 export function readPythonSettings(root: string): PythonIndexSettings {
-    const uv = findText(root, UV_SETTINGS_FILE);
-    const project = findText(root, PYPROJECT_TOML);
+    const uv = find(root, UV_SETTINGS_FILE);
+    const project = find(root, PYPROJECT_TOML);
     const table =
         uv === undefined
             ? parseTomlFile(PYPROJECT_TOML, project ?? '', uvProjectSettingsSchema).tool.uv

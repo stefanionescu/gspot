@@ -5,9 +5,9 @@ import { NODE_MODULES } from '#cli/config/files/names.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { find, readContainedPath } from '#cli/system/files/reads.ts';
 import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
 import { tsconfigSchema } from '#cli/schemas/parsers/projects/tsconfig.ts';
-import { findCachedText, readContainedPath } from '#cli/system/files/reads.ts';
 import { isInside, convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
 import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers/projects/tsconfig.ts';
 
@@ -129,7 +129,7 @@ function readCompilerFile(root: string, path: string, reads: ReadCache): string 
                 readContainedPath(realpathSync(root), segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');
         }
-        return findCachedText(reads, local);
+        return find(reads, local);
     } catch (error) {
         if (hasErrorCode(error, 'ENOENT')) return undefined;
         throw error;

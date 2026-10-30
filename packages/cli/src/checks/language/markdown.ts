@@ -1,10 +1,10 @@
 import { parseAllDocuments } from 'yaml';
+import { read } from '#cli/system/files/reads.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { SYNTAX_RULE } from '#cli/config/checks/syntax.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
@@ -122,7 +122,7 @@ Reports invalid code fences at their error lines.
 export async function checkMarkdownFences(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const findings: CheckFinding[] = [];
     for (const file of planned.files) {
-        const text = readCachedText(session.reads, file.path);
+        const text = read(session.reads, file.path);
         const errors = await validateCodeFences(text, session);
         findings.push(
             ...errors.map((error) => ({

@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
+import { read } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/session.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import type { SwiftModule } from '#cli/types/checks/general/structure.ts';
 import { PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/files/names.ts';
@@ -26,7 +26,7 @@ function selectDefaultFolder(folders: readonly string[], packageFolder: string, 
 }
 
 async function listPackageModules(session: Session, path: string, swiftFiles: string[]): Promise<SwiftModule[]> {
-    const tree = await parseSource('swift', readCachedText(session.reads, path));
+    const tree = await parseSource('swift', read(session.reads, path));
     try {
         const packageFolder = extractParentFolder(path);
         return tree.rootNode.descendantsOfType('call_expression').flatMap((call) => {
@@ -49,7 +49,7 @@ async function listPackageModules(session: Session, path: string, swiftFiles: st
 }
 
 function listXcodeModules(session: Session, path: string, swiftFiles: string[]): SwiftModule[] {
-    const project = parseProjectSources(readCachedText(session.reads, path), path);
+    const project = parseProjectSources(read(session.reads, path), path);
     return project.targets.map((target) => ({
         name: target.name.replaceAll(NON_WORD_CHARACTERS, '_'),
         files: swiftFiles.filter(

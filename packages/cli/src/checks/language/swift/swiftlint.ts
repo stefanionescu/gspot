@@ -1,8 +1,8 @@
 import { join, posix } from 'node:path';
+import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { findCachedText } from '#cli/system/files/reads.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
@@ -71,7 +71,7 @@ export function listSwiftlintConfigFiles(session: Session, planned: PlannedCheck
         const parents = folders.slice(0, folders.indexOf(planned.scope.path));
         for (const folder of parents) {
             const path = posix.join(folder, SWIFTLINT_CONFIG_FILE);
-            if (findCachedText(session.reads, path) !== undefined) paths.push(path);
+            if (find(session.reads, path) !== undefined) paths.push(path);
         }
     }
     return [...new Set(paths)].toSorted((a, b) => compareText(a, b));

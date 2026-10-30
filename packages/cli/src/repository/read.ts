@@ -12,11 +12,11 @@ import { classifyFile } from '#cli/repository/files/classify.ts';
 import { gitIndexFileSchema } from '#cli/schemas/parsers/git.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
+import { read, find, readCachedPrefix } from '#cli/system/files/reads.ts';
 import { SWIFT_EXTENSION, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { listGitFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files/tracked.ts';
 import { runGitBlocking, isGitRepository, isNotRepository } from '#cli/system/git.ts';
-import { findCachedText, readCachedText, readCachedPrefix } from '#cli/system/files/reads.ts';
 import { GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
 import { type RepositoryListing, type RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { type Repository, type ScopeFolder, type TrackedFile } from '#cli/types/repository/files.ts';
@@ -86,7 +86,7 @@ export async function readRepository(
     for (const listedFile of listing.files) {
         const file = classifyFile(root, listedFile, listedFile.prefix, { generatedPaths, attributes });
         if (!listedFile.isSymlink && file.kind === 'source' && file.path.endsWith(SWIFT_EXTENSION)) {
-            const tags = await detectSwiftTags(file.path, readCachedText(reads, file.path));
+            const tags = await detectSwiftTags(file.path, read(reads, file.path));
             file.tags.push(...tags);
         }
         tracked.push(file);
@@ -132,7 +132,7 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
             paths
                 .filter((path) => posix.basename(path) === GITATTRIBUTES_FILE)
                 .flatMap((path) => {
-                    const authored = stripBlock(findCachedText(reads, path) ?? '', { path });
+                    const authored = stripBlock(find(reads, path) ?? '', { path });
                     return parseAttributePatterns(authored, posix.dirname(path))
                         .filter((rule) =>
                             Object.entries(mergeAttributes(rule.attributes)).some(

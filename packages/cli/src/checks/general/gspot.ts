@@ -1,3 +1,4 @@
+import { read } from '#cli/system/files/reads.ts';
 import { type Session } from '#cli/types/session.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
 import { getToolName } from '#cli/configurations/tools.ts';
@@ -6,7 +7,6 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import { INSTALL_HELP } from '#cli/config/tools/inspect.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
@@ -185,7 +185,7 @@ export async function checkGspotSuppressions(session: Session, planned: PlannedC
         const syntaxes = listSuppressionSyntaxes(scope, files);
         for (const file of files) {
             const forms = syntaxes.filter((form) => form.covered.has(file.path));
-            const source = readCachedText(session.reads, file.path);
+            const source = read(session.reads, file.path);
             const comments = await parseComments(file.path, source, file.tags);
             found.push(
                 ...comments.flatMap((comment, index) => {

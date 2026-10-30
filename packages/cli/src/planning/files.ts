@@ -1,10 +1,10 @@
 import { isUtf8 } from 'node:buffer';
+import { readBytes } from '#cli/system/files/reads.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { ROOT_RUNS } from '#cli/config/planning/checks.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
@@ -179,7 +179,7 @@ function filterReadableFiles(planned: PlannedScope, check: Check, files: Tracked
             check.id === ENCODING_CHECK ||
             !file.tags.includes('text') ||
             file.tags.includes('symlink') ||
-            isUtf8(readCachedBytes(planned.session.reads, file.path))
+            isUtf8(readBytes(planned.session.reads, file.path))
         );
     });
 }

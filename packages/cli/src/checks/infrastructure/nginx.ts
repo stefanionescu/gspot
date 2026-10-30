@@ -3,11 +3,11 @@ import { join, posix } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
+import { readBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { SYNTAX_RULE } from '#cli/config/checks/syntax.ts';
 import { DOCKER_TOOL } from '#cli/config/tools/inspect.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { parseNginxDirectives } from '#cli/parsers/formats/nginx.ts';
@@ -68,7 +68,7 @@ function copyNginxFiles(session: Session, planned: PlannedCheck, path: string, w
     for (let pendingFile = pending.shift(); pendingFile !== undefined; pendingFile = pending.shift()) {
         if (copies.has(pendingFile.target)) continue;
         const source = join(folder, `${String(copies.size)}.conf`);
-        const bytes = readCachedBytes(session.reads, pendingFile.path);
+        const bytes = readBytes(session.reads, pendingFile.path);
         writeFileSync(source, bytes);
         const text = bytes.toString('utf8');
         copies.set(pendingFile.target, { ...pendingFile, source, text });

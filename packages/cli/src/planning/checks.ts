@@ -1,6 +1,6 @@
+import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
-import { findCachedText } from '#cli/system/files/reads.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
@@ -247,11 +247,11 @@ Check whether the project supplies coverage.py settings.
 @returns whether pytest must use the project's coverage configuration.
 */
 export function hasProjectCoverage(session: Session, scope: string): boolean {
-    if (findCachedText(session.reads, joinScope(scope, '.coveragerc')) !== undefined) return true;
-    const pyproject = findCachedText(session.reads, joinScope(scope, PYPROJECT_TOML));
+    if (find(session.reads, joinScope(scope, '.coveragerc')) !== undefined) return true;
+    const pyproject = find(session.reads, joinScope(scope, PYPROJECT_TOML));
     const project = pyproject === undefined ? undefined : parseTomlFile(joinScope(scope, PYPROJECT_TOML), pyproject);
     if (isTable(project?.['tool']) && Object.hasOwn(project['tool'], 'coverage')) return true;
     return ['setup.cfg', 'tox.ini'].some((name) =>
-        COVERAGE_INI_SECTION.test(findCachedText(session.reads, joinScope(scope, name)) ?? ''),
+        COVERAGE_INI_SECTION.test(find(session.reads, joinScope(scope, name)) ?? ''),
     );
 }

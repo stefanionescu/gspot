@@ -1,7 +1,7 @@
 import ignore from 'ignore';
 import { posix } from 'node:path';
+import { read } from '#cli/system/files/reads.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { PathIgnore } from '#cli/types/repository/files.ts';
 import { isInside, extractParentFolder } from '#cli/system/paths.ts';
@@ -38,7 +38,7 @@ export function buildGitignoreMatcher(reads: ReadCache, trackedPaths: string[]):
             const folder = extractParentFolder(file);
             return {
                 base: joinScope(folder, ''),
-                matcher: ignore().add(readCachedText(reads, file)),
+                matcher: ignore().add(read(reads, file)),
             };
         });
     return (path) => {

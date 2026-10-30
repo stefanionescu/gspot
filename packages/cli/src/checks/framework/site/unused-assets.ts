@@ -1,10 +1,10 @@
 import ts from 'typescript';
 import { posix } from 'node:path';
+import { find } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { findCachedText } from '#cli/system/files/reads.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
 import { FILENAME_TAGS } from '#cli/config/repository/files/classify.ts';
 import { SYMLINK_MODE, GIT_FILE_MODES } from '#cli/config/files/modes.ts';
@@ -105,7 +105,7 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
         .values()
         .filter((path) => TEXT_EXTENSIONS.has(posix.extname(path)))
         .map((path) => {
-            const text = findCachedText(session.reads, path);
+            const text = find(session.reads, path);
             return text === undefined ? undefined : readAssetSource(path, text, planned.scope.path);
         })
         .filter((source) => source !== undefined)

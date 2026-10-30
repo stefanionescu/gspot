@@ -1,9 +1,9 @@
 import { join, posix } from 'node:path';
+import { read } from '#cli/system/files/reads.ts';
 import { createCopy } from '#cli/runs/copy/files.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -87,7 +87,7 @@ export async function checkGithubActionsActionlint(session: CheckSession, planne
         ].map((file) => [file.path, file]),
     );
     for (const file of actionFiles.values()) {
-        const source = readCachedText(session.reads, file.path);
+        const source = read(session.reads, file.path);
         const replaced = replaceSelfReferences(source);
         if (replaced !== source) replacements.set(file.path, replaced);
     }

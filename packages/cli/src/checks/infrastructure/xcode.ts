@@ -1,12 +1,12 @@
 import { posix } from 'node:path';
 import { camelCase } from 'scule';
+import { read } from '#cli/system/files/reads.ts';
 import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
 import { parseCheckedFile } from '#cli/checks/syntax.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
@@ -43,7 +43,7 @@ Reports Swift sources that no Xcode target holds.
 */
 export function checkXcodeFilesWithoutTarget(session: Session, planned: PlannedCheck): CheckFinding[] {
     const projects = listSourcePaths(planned.files, [PBXPROJ_SUFFIX]).map((path) =>
-        parseProjectSources(readCachedText(session.reads, path), path),
+        parseProjectSources(read(session.reads, path), path),
     );
     if (projects.length === 0) return [];
     const referenced = new Set(projects.flatMap((project) => [...project.sources]));
@@ -82,7 +82,7 @@ export function checkXcodeAssets(session: Session, planned: PlannedCheck): Check
     return listSourcePaths(planned.files, [ASSET_CONTENTS])
         .filter((path) => path.includes(XCASSETS_FOLDER))
         .flatMap((path) => {
-            const text = readCachedText(session.reads, path);
+            const text = read(session.reads, path);
             const at = { file: path, line: 1 };
             const parsed = parseCheckedFile(path, () => parseJsonFile(path, text, assetContentsSchema));
             if ('error' in parsed) return [parsed.error];
@@ -117,7 +117,7 @@ Reports asset sets that no source or Xcode build setting names.
 */
 export function checkXcodeUnusedAssets(session: Session, planned: PlannedCheck): CheckFinding[] {
     const sourceTexts = listSourcePaths(planned.files, ASSET_REFERENCE_ENDINGS).map((path) =>
-        readCachedText(session.reads, path),
+        read(session.reads, path),
     );
     return listSourcePaths(planned.files, [ASSET_CONTENTS])
         .filter((path) => NAMED_SETS.some((ending) => path.endsWith(ending)))
@@ -148,7 +148,7 @@ Checks that each string catalog parses and that every string has every locale th
 */
 export function checkXcodeXcstrings(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [XCSTRINGS_SUFFIX]).flatMap((path) => {
-        const text = readCachedText(session.reads, path);
+        const text = read(session.reads, path);
         const at = { file: path, line: 1 };
         const parsed = parseCheckedFile(path, () => parseJsonFile(path, text, stringsFileSchema));
         if ('error' in parsed) return [parsed.error];
@@ -184,7 +184,7 @@ Reports each entitlement that xcode.allowed_entitlements does not list.
 export function checkXcodeEntitlements(session: Session, planned: PlannedCheck): CheckFinding[] {
     const allowed = new Set(getTable(planned.scope.settings, 'xcode').allowed_entitlements);
     return listSourcePaths(planned.files, [ENTITLEMENTS_SUFFIX]).flatMap((path) => {
-        const text = readCachedText(session.reads, path);
+        const text = read(session.reads, path);
         return text
             .matchAll(PLIST_KEY)
             .filter((match) => !allowed.has(match.groups?.['name'] ?? ''))
@@ -209,7 +209,7 @@ Reports each plist that turns App Transport Security off for every host.
 */
 export function checkXcodeAppTransportSecurity(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [PLIST_SUFFIX]).flatMap((path): CheckFinding[] => {
-        const text = readCachedText(session.reads, path);
+        const text = read(session.reads, path);
         const found = INSECURE_TRANSPORT_SETTING.exec(text);
         if (found === null) return [];
         const line = getPosition(text, found.index).line;

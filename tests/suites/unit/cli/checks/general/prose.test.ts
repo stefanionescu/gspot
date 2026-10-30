@@ -5,10 +5,10 @@ import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -56,7 +56,7 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
 
     const session = await openSession(sandbox.path);
     const paths = ['first.mts', 'second.cts'];
-    const previous = paths.map((path) => readCachedBytes(session.reads, path).toString('utf8'));
+    const previous = paths.map((path) => readBytes(session.reads, path).toString('utf8'));
     for (const path of paths) await writeFile(join(session.root, path), '// Changed after the run read it.\n');
 
     using resources = new DisposableStack();

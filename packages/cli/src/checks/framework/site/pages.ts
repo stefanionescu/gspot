@@ -11,6 +11,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { read, readBytes } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
@@ -18,7 +19,6 @@ import { splitFileArguments } from '#cli/runs/command/batches.ts';
 import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
-import { readBytes, readCachedText } from '#cli/system/files/reads.ts';
 import { readSitemapUrls } from '#cli/checks/framework/site/sitemap.ts';
 import { join, extname, relative, normalize, isAbsolute } from 'node:path';
 import { purgecssOutputSchema } from '#cli/schemas/checks/framework/site.ts';
@@ -149,7 +149,7 @@ async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Pr
     );
     const styles: string[] = [];
     for (const file of files) {
-        const text = readCachedText(session.reads, file.path);
+        const text = read(session.reads, file.path);
         if (STYLE_EXTENSIONS.has(extname(file.path))) {
             styles.push(text);
             continue;

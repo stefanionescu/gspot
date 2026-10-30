@@ -1,3 +1,4 @@
+import { read } from '#cli/system/files/reads.ts';
 import { CONFIG_FLAG } from '#cli/config/flags.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
@@ -5,7 +6,6 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { hasValePackages } from '#cli/installers/vale.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { join, dirname, relative, isAbsolute } from 'node:path';
@@ -81,7 +81,7 @@ async function runValeOnStdin(
     command: string[],
     folder: string,
 ): Promise<ValeAlert[]> {
-    const text = readCachedText(session.reads, route.path);
+    const text = read(session.reads, route.path);
     const result = await runCheckTool(
         session,
         planned,

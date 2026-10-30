@@ -2,6 +2,7 @@ import { join, posix } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
@@ -14,7 +15,6 @@ import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { type GeneratorOutput } from '#cli/types/configurations.ts';
 import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
-import { readBytes, readCachedBytes } from '#cli/system/files/reads.ts';
 import type { GeneratorRun } from '#cli/types/checks/generator-outputs.ts';
 import { RULES, GENERATOR_IGNORED_FOLDERS } from '#cli/config/checks/generator-outputs.ts';
 import { expandCommand, replacePlaceholders, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
@@ -28,7 +28,7 @@ function listMissingOutputs(
     return outputs
         .filter((target) => {
             try {
-                readCachedBytes(session.reads, target.path);
+                readBytes(session.reads, target.path);
                 return false;
             } catch (error) {
                 if (hasErrorCode(error, 'ENOENT')) return true;

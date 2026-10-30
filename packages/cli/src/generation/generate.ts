@@ -1,11 +1,11 @@
 import { basename } from 'node:path/posix';
+import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { listHookNames } from '#cli/installers/hooks.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { findCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import { FROZEN_INSTALLS } from '#cli/config/generation/ci.ts';
 import type { RuleFile } from '#cli/types/generation/rules.ts';
@@ -105,11 +105,11 @@ function buildAttributesBlock(outsidePaths: string[], authored: string): string 
 function addManagedBlocks(session: Session, rules: RuleFile[], generated: Generation): void {
     const { settings, reads } = session;
     const outsidePaths = listWrittenPaths(session).map((path) => path.slice(1));
-    const text = findCachedText(reads, GITATTRIBUTES_FILE) ?? '';
+    const text = find(reads, GITATTRIBUTES_FILE) ?? '';
     const authored = stripBlock(text, { path: GITATTRIBUTES_FILE });
     generated.blocks.push({ path: GITATTRIBUTES_FILE, body: buildAttributesBlock(outsidePaths, authored) });
     if (!settings.rules.enabled) return;
-    const agents = findCachedText(reads, AGENTS_FILE) ?? '';
+    const agents = find(reads, AGENTS_FILE) ?? '';
     const agentsText = stripBlock(agents, { path: AGENTS_FILE });
     const block = buildAgentsBlock({
         hasOwnTitle: hasTopHeading(agentsText),
