@@ -86,8 +86,10 @@ test("Stylelint run by an editor finds the scope's config file and checks the bu
     ]);
     await createFileTree(root, CORRECTED_STYLESHEETS);
     for (const folder of ['', 'app']) {
+        // Bun sets NODE_ENV=test, and Stylelint then stops its config search at the working folder. An editor does not.
         const native = await runCommand([tool, folder === '' ? 'build/site.css' : 'site.css'], {
             cwd: join(root, folder),
+            env: { NODE_ENV: undefined },
         });
         expect(native.code, native.stdout + native.stderr).toBe(0);
     }
