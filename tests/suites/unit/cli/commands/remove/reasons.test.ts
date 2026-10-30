@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/planning/session.ts';
+import type { TomlTable } from '#cli/types/settings/file.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
@@ -18,6 +19,8 @@ test('remove without --reason exits 2 and writes nothing', async () => {
 test('remove keeps the reason of each removed configuration, and add takes a name out and keeps the others', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash', 'python']),
+        'source.sh': 'echo example\n',
+        'main.py': 'PORT = 8080\n',
     });
     const reason = 'The project uses another language.';
     const first = await runGspot(sandbox.path, ['remove', 'bash', '--reason', 'Bash runs in another project.']);
@@ -77,12 +80,30 @@ removed_configurations = { value = ["swift"], reason = "${scopeReason}" }
 enabled = false
 `,
         'api/notes.txt': 'API notes\n',
+        'notes.md': '# Notes\n',
     });
-    const reason = 'The project keeps no Markdown files.';
+    const reason = 'Another repository checks the Markdown files.';
     const result = await runGspot(sandbox.path, ['remove', 'markdown', '--reason', reason]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'))).toMatchObject({
         removed_configurations: { bash: shared, python: shared, markdown: reason },
         scope: [{ path: 'api', removed_configurations: { swift: scopeReason } }],
     });
+});
+
+test.each([
+    {
+        name: 'records the removal of a detected configuration',
+        files: { 'source.sh': 'echo example\n' },
+        recorded: true,
+    },
+    { name: 'records no removal of a configuration that detection does not select', files: {}, recorded: false },
+])('remove $name', async ({ files, recorded }) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']), ...files });
+    const reason = 'The scripts moved to another repository.';
+    const result = await runGspot(sandbox.path, ['remove', 'bash', '--reason', reason]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(written['configurations']).toStrictEqual([]);
+    expect(written['removed_configurations']).toStrictEqual(recorded ? { bash: reason } : undefined);
 });

@@ -38,7 +38,10 @@ test('remove deletes settings that only the removed configuration exposes and na
 });
 
 test('remove names only removed configurations in a mixed request', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'source.sh': 'echo example\n',
+    });
     const result = await runGspot(sandbox.path, [
         'remove',
         'bash',

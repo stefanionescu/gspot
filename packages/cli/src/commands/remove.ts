@@ -1,4 +1,5 @@
 import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { buildSettings } from '#cli/settings/read.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
@@ -13,10 +14,10 @@ import type { Configuration } from '#cli/types/configurations.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation/write.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
-import { listDetectedAdditions } from '#cli/repository/configurations.ts';
 import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/flags.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { ConfigurationsOptions } from '#cli/types/generation/settings-edit.ts';
+import { selectForInit, listDetectedAdditions } from '#cli/repository/configurations.ts';
 import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/remove.ts';
 import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
 import { applySettingsEdit, prepareConfigurationEdit } from '#cli/generation/settings-edit.ts';
@@ -65,6 +66,16 @@ function removeUnusedSettings(
     return removed.length === 0 ? '' : ` Removed settings ${removed.join(', ')}.`;
 }
 
+function listReturningConfigurations(
+    session: Session,
+    removal: { scope: string; removed: string[]; written: string[]; configurationsByName: Map<string, Configuration> },
+): string[] {
+    const { scope, removed, written, configurationsByName } = removal;
+    const proposed = selectForInit({ repository: session.repository, configurationsByName, options: {} });
+    const detected = scope === '' ? proposed.rootNames : (proposed.scopeConfigurations.get(scope) ?? []);
+    return removed.filter((name) => detected.includes(name) || !written.includes(name));
+}
+
 async function runRemoveCommand(options: ConfigurationsOptions & { reason: string }): Promise<CommandResult> {
     const {
         root,
@@ -92,11 +103,14 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     }
     const previous = scopeTable['removed_configurations'];
     const removed = options.configurations.filter((name) => selected.includes(name));
-    scopeTable['configurations'] = scopeSettings.configurations.filter((name) => !removed.includes(name));
-    scopeTable['removed_configurations'] = {
+    const written = scopeSettings.configurations;
+    const returning = listReturningConfigurations(context.session, { scope, removed, written, configurationsByName });
+    scopeTable['configurations'] = written.filter((name) => !removed.includes(name));
+    const reasons = {
         ...(isTable(previous) ? previous : {}),
-        ...Object.fromEntries(removed.map((name) => [name, options.reason])),
+        ...Object.fromEntries(returning.map((name) => [name, options.reason])),
     };
+    if (Object.keys(reasons).length > 0) scopeTable['removed_configurations'] = reasons;
     const where = scope === '' ? '' : ` from scope ${scope}`;
     const unchanged = options.configurations.filter((name) => !selected.includes(name));
     const summary =
