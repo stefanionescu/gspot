@@ -27,7 +27,7 @@ import {
 
 async function prepareCredentialProject(root: string, packageJson: string, lockfile: string) {
     const files = {
-        '.npmrc': `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${CREDENTIAL_TOKEN}\n`,
+        'user.npmrc': `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${CREDENTIAL_TOKEN}\n`,
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
         [GSPOT_PATHS.npmProject]: packageJson,
         [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
@@ -35,6 +35,7 @@ async function prepareCredentialProject(root: string, packageJson: string, lockf
         'gspot.toml': buildSandboxSettings([]),
     };
     await createFileTree(root, files);
+    using _settings = overrideEnvironment({ npm_config_userconfig: join(root, 'user.npmrc') });
     using owner = openWriter(root);
     const session = await openSession(root);
     const install = await buildNpmToolInstall(session, owner);
@@ -61,12 +62,13 @@ test.each([...FAILED_INSTALL_CASES])(
             workspaces: { '': { devDependencies: { prettier: frozen ? '3.8.1' : '3.8.0' } } },
         });
         await createFileTree(sandbox.path, {
-            '.npmrc': source,
+            'user.npmrc': source,
             'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
             [GSPOT_PATHS.npmProject]: previous,
             [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
             'gspot.toml': buildSandboxSettings([]),
         });
+        using _settings = overrideEnvironment({ npm_config_userconfig: join(sandbox.path, 'user.npmrc') });
         const session = await openSession(sandbox.path);
         using owner = openWriter(sandbox.path);
         const failure = {
@@ -89,7 +91,7 @@ test.each([...FAILED_INSTALL_CASES])(
             code: 'install',
             message: `bun ${operation} failed (exit 1).\nDownloading https://[redacted]@registry.example.com/private-check-tool\n[redacted]\n[redacted]\n${refusal} from https://[redacted]@registry.example.com/private-check-tool`,
         });
-        expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);
+        expect(await readFile(join(sandbox.path, 'user.npmrc'), 'utf8')).toBe(source);
         expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(previous);
         expect(await readFile(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`), 'utf8')).toBe(lockfile);
     },
