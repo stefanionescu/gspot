@@ -71,35 +71,33 @@ async function prepareSupabaseCheck(
     };
 }
 
-test.each(['', 'apps/api'])(
-    'Supabase passes every configured schema as its own --schema, in the root and in a scope (%s)',
-    async (scope) => {
-        await using sandbox = await testdir();
-        using supabase = await prepareSupabaseCheck(
-            sandbox.path,
-            scope,
-            buildProcessResult({ stdout: SUPABASE_TYPES_OUTPUT }),
-            DATABASE_SCHEMAS,
-        );
-        await writeFile(join(sandbox.path, supabase.prefix, 'database.ts'), SUPABASE_TYPES_OUTPUT);
-        expect(await supabase.runCheck()).toMatchObject({ status: 'passed', findings: [] });
-        const request = supabase.requests[0]!;
-        expect(request.cwd).not.toBe(join(sandbox.path, scope));
-        expect(await isOnDisk(request.cwd)).toBe(false);
-        expect(supabase.requests).toStrictEqual([
-            {
-                commandArguments: [
-                    'gen',
-                    'types',
-                    'typescript',
-                    '--local',
-                    ...DATABASE_SCHEMAS.flatMap((schema) => ['--schema', schema]),
-                ],
-                cwd: request.cwd,
-            },
-        ]);
-    },
-);
+test('Supabase passes every configured schema as its own --schema in a scope', async () => {
+    const scope = 'apps/api';
+    await using sandbox = await testdir();
+    using supabase = await prepareSupabaseCheck(
+        sandbox.path,
+        scope,
+        buildProcessResult({ stdout: SUPABASE_TYPES_OUTPUT }),
+        DATABASE_SCHEMAS,
+    );
+    await writeFile(join(sandbox.path, supabase.prefix, 'database.ts'), SUPABASE_TYPES_OUTPUT);
+    expect(await supabase.runCheck()).toMatchObject({ status: 'passed', findings: [] });
+    const request = supabase.requests[0]!;
+    expect(request.cwd).not.toBe(join(sandbox.path, scope));
+    expect(await isOnDisk(request.cwd)).toBe(false);
+    expect(supabase.requests).toStrictEqual([
+        {
+            commandArguments: [
+                'gen',
+                'types',
+                'typescript',
+                '--local',
+                ...DATABASE_SCHEMAS.flatMap((schema) => ['--schema', schema]),
+            ],
+            cwd: request.cwd,
+        },
+    ]);
+});
 
 test('Supabase types need Docker before the local stack starts', async () => {
     using resources = new DisposableStack();

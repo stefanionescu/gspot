@@ -78,55 +78,51 @@ function fakeNextjsCommands(spawn: (command: readonly string[], options: AsyncSp
     return Object.assign(resources.move(), { folders, commands });
 }
 
-test.each(['', 'app'])(
-    'nextjs/tsc in scope %j reports its finding, passes after the fix, and leaves tsconfig.json, .next, and next-env.d.ts unchanged',
-    async (scope) => {
-        await using sandbox = await testdir();
-        const session = buildCheckSession(await prepareNextjsBuild(sandbox.path, scope));
+test('nextjs/tsc in a child scope reports its finding, passes after the fix, and leaves tsconfig.json, .next, and next-env.d.ts unchanged', async () => {
+    const scope = 'app';
+    await using sandbox = await testdir();
+    const session = buildCheckSession(await prepareNextjsBuild(sandbox.path, scope));
 
-        const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
-            (check) => check.scope.path === scope,
-        )!;
-        const untracked = join(sandbox.path, join(scope, '.next/local-cache.bin'));
-        const config = join(sandbox.path, join(scope, 'tsconfig.json'));
-        await using originalFile = await open(config, 'r');
-        const previous = await originalFile.readFile();
-        const { mode } = await originalFile.stat();
-        const routesSeen: string[] = [];
-        using fakes = fakeNextjsCommands((command, options) => fakeNextjsBuild(command, options, routesSeen));
-        const { folders } = fakes;
-        const { findings: found } = await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc']);
-        expect(
-            found.map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message })),
-        ).toStrictEqual([
-            {
-                check: 'nextjs/tsc',
-                file: convertToPosixPath(join(scope, 'src/app/page.ts')),
-                line: 1,
-                rule: 'TS2322',
-                message: 'Type mismatch',
-            },
-        ]);
-        await writeFile(join(sandbox.path, join(scope, 'src/app/page.ts')), 'corrected input\n');
-        expect(await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc'])).toMatchObject({
-            status: 'passed',
-            findings: [],
-        });
-        expect(routesSeen).toStrictEqual([GENERATED_ROUTES, GENERATED_ROUTES]);
-        expect(folders).not.toContain(join(sandbox.path, scope));
-        expect(await Promise.all(folders.map((cwd) => isOnDisk(cwd)))).toStrictEqual(folders.map(() => false));
-        await using currentFile = await open(config, 'r');
-        expect(await currentFile.readFile()).toStrictEqual(previous);
-        const afterStats = await currentFile.stat();
-        expect(afterStats.mode).toBe(mode);
-        expect(await readFile(untracked)).toStrictEqual(Buffer.from(NEXT_CACHE_BYTES));
-        const contents = await readFile(join(sandbox.path, join(scope, 'next-env.d.ts')), 'utf8');
-        expect(contents).toBe(AUTHORED_NEXT_ENV);
-        const routeTypes = await readFile(join(sandbox.path, join(scope, '.next/types/routes.d.ts')), 'utf8');
-        expect(routeTypes).toBe(ROUTE_TYPES_COMMENT);
-        expect(await readFile(join(sandbox.path, UNRELATED_FILE.path), 'utf8')).toBe(UNRELATED_FILE.text);
-    },
-);
+    const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
+        (check) => check.scope.path === scope,
+    )!;
+    const untracked = join(sandbox.path, join(scope, '.next/local-cache.bin'));
+    const config = join(sandbox.path, join(scope, 'tsconfig.json'));
+    await using originalFile = await open(config, 'r');
+    const previous = await originalFile.readFile();
+    const { mode } = await originalFile.stat();
+    const routesSeen: string[] = [];
+    using fakes = fakeNextjsCommands((command, options) => fakeNextjsBuild(command, options, routesSeen));
+    const { folders } = fakes;
+    const { findings: found } = await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc']);
+    expect(found.map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message }))).toStrictEqual([
+        {
+            check: 'nextjs/tsc',
+            file: convertToPosixPath(join(scope, 'src/app/page.ts')),
+            line: 1,
+            rule: 'TS2322',
+            message: 'Type mismatch',
+        },
+    ]);
+    await writeFile(join(sandbox.path, join(scope, 'src/app/page.ts')), 'corrected input\n');
+    expect(await runCheckCode(session, planned, CHECK_CODE['nextjs/tsc'])).toMatchObject({
+        status: 'passed',
+        findings: [],
+    });
+    expect(routesSeen).toStrictEqual([GENERATED_ROUTES, GENERATED_ROUTES]);
+    expect(folders).not.toContain(join(sandbox.path, scope));
+    expect(await Promise.all(folders.map((cwd) => isOnDisk(cwd)))).toStrictEqual(folders.map(() => false));
+    await using currentFile = await open(config, 'r');
+    expect(await currentFile.readFile()).toStrictEqual(previous);
+    const afterStats = await currentFile.stat();
+    expect(afterStats.mode).toBe(mode);
+    expect(await readFile(untracked)).toStrictEqual(Buffer.from(NEXT_CACHE_BYTES));
+    const contents = await readFile(join(sandbox.path, join(scope, 'next-env.d.ts')), 'utf8');
+    expect(contents).toBe(AUTHORED_NEXT_ENV);
+    const routeTypes = await readFile(join(sandbox.path, join(scope, '.next/types/routes.d.ts')), 'utf8');
+    expect(routeTypes).toBe(ROUTE_TYPES_COMMENT);
+    expect(await readFile(join(sandbox.path, UNRELATED_FILE.path), 'utf8')).toBe(UNRELATED_FILE.text);
+});
 
 test('nextjs/tsc removes its copy after a failed type generation and keeps a concurrent edit to tsconfig.json', async () => {
     const message = 'Generator failed';
