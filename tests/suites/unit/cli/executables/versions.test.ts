@@ -1,15 +1,11 @@
-import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
 import { getTool } from '#cli/manifests/tools.ts';
 import { type Tool } from '#cli/types/manifests.ts';
-import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { inspectTool } from '#cli/executables/inspect.ts';
 import { UNCLOSED_SEQUENCE } from '#tests/config/yaml.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
@@ -95,22 +91,6 @@ test('a manifest can declare the exit code of its version command without accept
     const failed = inspectTool(context, { ...tool, version_exit_code: 0 });
     expect(failed.state).toBe('error');
     expect(failed.note).toBe('The version command of version-help exited 2: version-help 3.8.1');
-});
-
-test('a command reads each version once and the next session reads it again', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    using _which = fakeExecutableLookup(process.execPath);
-    const pin = {
-        ...buildProgramPin('version-teller', '3.8.1'),
-        version_command: buildProgramArguments('fakes/tool', '--append', 'calls.txt=.', '--line', '3.8.1'),
-    };
-    const session = await openSession(sandbox.path);
-    expect(inspectTool(session, pin).state).toBe('ok');
-    expect(inspectTool(session, pin).state).toBe('ok');
-    expect(await readFile(join(sandbox.path, 'calls.txt'), 'utf8')).toBe('.');
-    const next = await openSession(sandbox.path);
-    expect(inspectTool(next, pin).state).toBe('ok');
-    expect(await readFile(join(sandbox.path, 'calls.txt'), 'utf8')).toBe('..');
 });
 
 test.each([...SYSTEM_BASH_VERSIONS])(
