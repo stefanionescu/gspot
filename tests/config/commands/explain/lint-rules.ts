@@ -1,7 +1,7 @@
 export const RULE_PAGES = [
     ['no-var', 'https://eslint.org/docs/latest/rules/no-var'],
     ['eslint/no-var', 'https://eslint.org/docs/latest/rules/no-var'],
-    ['gspot/no-trivial-functions', 'https://generativespotting.com/reference/eslint-plugin/no-trivial-functions/'],
+    ['gspot/no-trivial-functions', 'https://generativespotting.com/reference/eslint-plugin/#no-trivial-functions'],
     ['@typescript-eslint/no-explicit-any', 'https://typescript-eslint.io/rules/no-explicit-any'],
     [
         'unicorn/prefer-set-has',
