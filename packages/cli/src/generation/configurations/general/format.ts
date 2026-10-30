@@ -1,6 +1,7 @@
 import { isTable } from '#cli/system/tables.ts';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listPrettierPlugins } from '#cli/planning/tools.ts';
@@ -12,6 +13,12 @@ import { type Settings, type WrittenFormat } from '#cli/types/settings/file.ts';
 import { type ScopeFormat, type FormatOverride, type PrettierPlugin } from '#cli/types/generation/formatting.ts';
 
 import {
+    keepFirstPatterns,
+    buildIgnoreSections,
+    listCheckIgnoreSections,
+} from '#cli/generation/config-files/ignore-files.ts';
+import {
+    PRETTIER_CHECK,
     DEFAULT_QUOTES,
     EDITORCONFIG_ROOT_LINE,
     PRETTIER_FIXED_OPTIONS,
@@ -161,4 +168,36 @@ export function buildPrettierFile(planned: PlannedConfigFile): string {
         ...(overrides.length > 0 && { overrides }),
     };
     return JSON.stringify(value, null, JSON_INDENT);
+}
+
+/**
+Build .prettierignore: the ignored paths in the shared section order, with the written reasons.
+
+@param planned the config file to build.
+*/
+export function buildPrettierignoreFile(planned: PlannedConfigFile): string {
+    const ordered = [
+        ...buildIgnoreSections(planned.session),
+        ...listCheckIgnoreSections(planned.scope.settings, PRETTIER_CHECK),
+    ].map((section) => ({
+        ...section,
+        patterns: [
+            ...section.patterns.filter((pattern) => !pattern.startsWith('!')).toSorted(compareText),
+            ...section.patterns.filter((pattern) => pattern.startsWith('!')).toSorted(compareText),
+        ],
+    }));
+    const lines = keepFirstPatterns(ordered).flatMap(({ title, patterns }) =>
+        patterns.length === 0
+            ? []
+            : [
+                  '',
+                  ...title
+                      .replaceAll('\r\n', '\n')
+                      .replaceAll('\r', '\n')
+                      .split('\n')
+                      .map((line) => `# ${line}`),
+                  ...patterns,
+              ],
+    );
+    return [...lines, ''].join('\n').trimStart();
 }

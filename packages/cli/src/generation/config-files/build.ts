@@ -17,7 +17,6 @@ import { buildCoverageFile } from '#cli/generation/configurations/testing/pytest
 import { buildHtmlValidateFile } from '#cli/generation/config-files/html-validate.ts';
 import { buildSquawkFile } from '#cli/generation/configurations/database/postgres.ts';
 import { buildShellcheckFile } from '#cli/generation/configurations/language/bash.ts';
-import { buildPrettierignoreFile } from '#cli/generation/config-files/ignore-files.ts';
 import { buildJscpdFile } from '#cli/generation/configurations/general/duplication.ts';
 import { buildCommitlintFile } from '#cli/generation/configurations/general/commits.ts';
 import { buildKnipFile } from '#cli/generation/configurations/language/javascript/knip.ts';
@@ -34,9 +33,13 @@ import { buildV8rFile, buildYamllintFile } from '#cli/generation/configurations/
 import { buildRuffFile, buildBasedpyrightFile } from '#cli/generation/configurations/language/python.ts';
 import { ALT_TEXT_TOKENS, ALT_TEXT_MESSAGE } from '#cli/config/generation/configurations/general/prose.ts';
 import { buildEslintFile } from '#cli/generation/configurations/language/javascript/eslint/config-file.ts';
-import { buildPrettierFile, buildEditorconfigFile } from '#cli/generation/configurations/general/format.ts';
 import { TRIVY_TABLE, TRIVY_SKIPPED_FOLDERS } from '#cli/config/generation/configurations/infrastructure/docker.ts';
 
+import {
+    buildPrettierFile,
+    buildEditorconfigFile,
+    buildPrettierignoreFile,
+} from '#cli/generation/configurations/general/format.ts';
 import {
     type BuiltConfigFile,
     type OwnedSourceFile,

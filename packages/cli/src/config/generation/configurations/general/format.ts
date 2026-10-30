@@ -12,3 +12,5 @@ export const PRETTIER_FIXED_OPTIONS = { embeddedLanguageFormatting: 'off' } as c
 export const DEFAULT_QUOTES = { prettier: 'single', ruff: 'double' } as const;
 
 export const EDITORCONFIG_ROOT_LINE = 'root = true\n\n';
+
+export const PRETTIER_CHECK = 'format/prettier';

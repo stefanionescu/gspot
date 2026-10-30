@@ -7,15 +7,14 @@ import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
+import type { IgnoreSection } from '#cli/types/generation/files.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { listLinkFilePaths } from '#cli/generation/config-files/link-files.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 import { listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
-import type { IgnoreSection, PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';
 
 import {
-    PRETTIER_CHECK,
     BUILD_OUTPUT_FOLDERS,
     IGNORE_SECTION_TITLES,
     BUILD_OUTPUT_PATTERNS,
@@ -156,36 +155,4 @@ export function convertToGlobs(sections: IgnoreSection[]): string[] {
         ...section.patterns.filter((pattern) => pattern.startsWith('!')),
     ]);
     return [...new Set(patterns.map((pattern) => convertToGlob(pattern)))];
-}
-
-/**
-Build .prettierignore: the ignored paths in the shared section order, with the written reasons.
-
-@param planned the config file to build.
-*/
-export function buildPrettierignoreFile(planned: PlannedConfigFile): string {
-    const ordered = [
-        ...buildIgnoreSections(planned.session),
-        ...listCheckIgnoreSections(planned.scope.settings, PRETTIER_CHECK),
-    ].map((section) => ({
-        ...section,
-        patterns: [
-            ...section.patterns.filter((pattern) => !pattern.startsWith('!')).toSorted(compareText),
-            ...section.patterns.filter((pattern) => pattern.startsWith('!')).toSorted(compareText),
-        ],
-    }));
-    const lines = keepFirstPatterns(ordered).flatMap(({ title, patterns }) =>
-        patterns.length === 0
-            ? []
-            : [
-                  '',
-                  ...title
-                      .replaceAll('\r\n', '\n')
-                      .replaceAll('\r', '\n')
-                      .split('\n')
-                      .map((line) => `# ${line}`),
-                  ...patterns,
-              ],
-    );
-    return [...lines, ''].join('\n').trimStart();
 }

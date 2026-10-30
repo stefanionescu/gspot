@@ -13,5 +13,3 @@ export const IGNORE_SECTION_TITLES = {
     configurations: 'Paths that configurations leave out',
     lockfiles: 'Lockfiles',
 } as const;
-
-export const PRETTIER_CHECK = 'format/prettier';
