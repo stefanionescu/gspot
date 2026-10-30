@@ -23,6 +23,7 @@ import type { SettingsFile } from '#cli/types/settings/file.ts';
 import type { WritePlan } from '#cli/types/repository/writer.ts';
 import { formatDetection } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/repository/configurations.ts';
+import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { RepositoryListing } from '#cli/types/repository/read.ts';
@@ -65,12 +66,25 @@ async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJ
     const { plan, settingsText } = initPlan;
     print(formatDetection(initPlan.detection));
     print(formatInitPlan(plan));
-    const json: InitJson = { root, plan, settings: settingsText, written: false };
+    const json: InitJson = {
+        root,
+        plan,
+        settings: settingsText,
+        written: [],
+        unchanged: [],
+        removed: [],
+        updated: [],
+        notes: [],
+    };
     const accepted = await askConfirmation({ yes: options.yes });
     if (!accepted) return { text: NOTHING_WRITTEN_MESSAGE, json, exitCode: 0 };
-    const written = await writeInitFiles(root, initPlan);
-    written.push(NEXT_INSTALL_MESSAGE);
-    return { text: written.join('\n'), json: { ...json, written: true }, exitCode: 0 };
+    const applied = await writeInitFiles(root, initPlan);
+    const notes = applied.notes.filter((note) => !INIT_INSTALL_NOTES.has(note));
+    return {
+        text: [WROTE_PLAN_MESSAGE, ...notes, '', NEXT_INSTALL_MESSAGE].join('\n'),
+        json: { ...json, ...applied, notes: [...notes, NEXT_INSTALL_MESSAGE] },
+        exitCode: 0,
+    };
 }
 
 function assertTemplateFlags(from: string | undefined, configurations: string[] | false | undefined): void {
@@ -212,12 +226,12 @@ function deleteConflictingConfigFiles(
     return kept;
 }
 
-async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<string[]> {
+async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<ApplyReport> {
     const writer = openFiles(root);
     const { session, generated } = initPlan;
     writeSettings(writer, initPlan.settingsText, initPlan.reviewed.get(SETTINGS_FILE));
     const applied = await writeGeneratedFiles(session, generated, writer, { reviewed: initPlan.reviewed });
     const kept = deleteConflictingConfigFiles(writer, initPlan.plan.delete, initPlan.reviewed);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
-    return [WROTE_PLAN_MESSAGE, ...applied.notes.filter((note) => !INIT_INSTALL_NOTES.has(note)), ''];
+    return applied;
 }

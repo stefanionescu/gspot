@@ -5,10 +5,10 @@ import { stringify } from '@decimalturn/toml-patch';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { NOTES_MARKDOWN } from '#tests/config/documents.ts';
 import { createFileTree, type TestdirResult } from 'testdirs';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DEPENDENCY_FILES_MESSAGE } from '#tests/config/messages.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
@@ -203,7 +203,10 @@ test.skipIf(!isCaseFolding())(
             await runGspot(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']),
         );
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(JSON.parse(result.stdout) as CommandFailureJson).toStrictEqual({
+        expect(JSON.parse(result.stdout)).toStrictEqual({
+            version: cliPackage.version,
+            exitCode: 2,
+            notes: [],
             error: 'copy',
             message:
                 'Git holds docs/NOTES.md and docs/Notes.md, which differ only by letter case, and this file system keeps one of them. Rename or remove one with git mv or git rm --cached, then check again.',

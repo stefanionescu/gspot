@@ -35,10 +35,11 @@ async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promis
     const generated = generateFiles(session);
     const writer = openFiles(root);
     if (hasOutdatedToolProjects(writer, generated)) throw new GspotError('install', TOOL_PROJECTS_MESSAGE);
-    const { note, steps } = await installTools(session, writer, generated);
+    const { installed, notes, steps } = await installTools(session, writer, generated);
+    const summary = installed.length === 0 ? TOOLS_INSTALLED_MESSAGE : installed.join('\n');
     return {
-        text: `${note === '' ? TOOLS_INSTALLED_MESSAGE : note}\n`,
-        json: { notes: note.split('\n').filter((line) => line !== ''), steps },
+        text: `${[summary, ...notes].join('\n')}\n`,
+        json: { summary, steps, notes },
         exitCode: 0,
     };
 }

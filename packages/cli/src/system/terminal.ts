@@ -1,7 +1,15 @@
 import pc from 'picocolors';
+import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { CommandResult, OutputOptions, CommandFailureJson, CanceledCommandJson } from '#cli/types/terminal.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 
+import type {
+    CommandJson,
+    CommandResult,
+    OutputOptions,
+    CommandFailureJson,
+    CanceledCommandJson,
+} from '#cli/types/terminal.ts';
 import {
     SIGNAL_EXIT_CODES,
     RESULT_JSON_INDENT,
@@ -36,7 +44,8 @@ Print an error message to stderr without terminal control bytes, or a structured
 */
 export function printError(failure: string | CommandFailureJson): void {
     if (typeof failure !== 'string' && options.isJson) {
-        process.stdout.write(`${JSON.stringify(failure, null, RESULT_JSON_INDENT)}\n`);
+        const fields: CommandJson = { version: cliPackage.version, exitCode: EXIT_ERROR, notes: [] };
+        process.stdout.write(`${JSON.stringify({ ...fields, ...failure }, null, RESULT_JSON_INDENT)}\n`);
         return;
     }
     const text = stripControlCharacters(typeof failure === 'string' ? failure : failure.message);
@@ -49,7 +58,9 @@ Print the command result in the chosen format.
 @param result the command output.
 */
 export function printResult(result: CommandResult): void {
-    if (options.isJson) process.stdout.write(`${JSON.stringify(result.json, null, RESULT_JSON_INDENT)}\n`);
+    const fields: CommandJson = { version: cliPackage.version, exitCode: result.exitCode, notes: [] };
+    if (options.isJson)
+        process.stdout.write(`${JSON.stringify({ ...fields, ...result.json }, null, RESULT_JSON_INDENT)}\n`);
     else if (result.text !== '') print(result.text);
 }
 
@@ -90,7 +101,7 @@ export async function runCancelableCommand<Json extends object>(
         if (!controller.signal.aborted) throw error;
         result = {
             text: `${canceledMessage}\n`,
-            json: { error: 'canceled', message: canceledMessage, exitCode: Number(controller.signal.reason) },
+            json: { error: 'canceled', message: canceledMessage },
             exitCode: Number(controller.signal.reason),
         };
     } finally {

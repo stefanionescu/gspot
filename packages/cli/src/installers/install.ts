@@ -34,13 +34,14 @@ export async function installTools(session: Session, writer: Files, generated: G
         const { steps } = context;
         await assertPackageManagerVersion(context);
         const mise = await installMiseTools(context);
-        const notes = [
+        const installed = [
             ...(await installToolProjects(context, mise.binPaths)),
             await installValePackages(context, mise.binPaths),
-            installHooks(session, steps),
-            mise.note,
         ];
-        return { note: notes.filter(Boolean).join('\n'), steps };
+        const hooks = installHooks(session, steps);
+        if (hooks.command !== undefined) installed.push(hooks.note);
+        const notes = [hooks.command === undefined ? hooks.note : '', mise.note];
+        return { installed: installed.filter(Boolean), notes: notes.filter(Boolean), steps };
     } catch (error) {
         session.cancelSignal?.throwIfAborted();
         if (!(error instanceof GspotError) || error.code !== 'tool') throw error;

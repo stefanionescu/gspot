@@ -163,7 +163,6 @@ async function buildDoctorReport(session: Session): Promise<DoctorReport> {
         hooks: hooks.text,
         ci: formatCiState(session),
         ruleFiles: selectRuleFiles(session).length,
-        version: { running: cliPackage.version },
         exitCode: isBroken ? EXIT_FINDINGS : 0,
     };
 }
@@ -190,7 +189,7 @@ function formatDoctorReport(report: DoctorReport): string {
         ...report.submodules.map((path) => `submodule  ${path} (contents are not read)`),
         `ci: ${report.ci}`,
         `rules: ${formatCount(report.ruleFiles, 'file')}`,
-        `gspot      ${report.version.running}`,
+        `gspot      ${cliPackage.version}`,
     ];
     return `${lines.join('\n')}\n`;
 }

@@ -197,5 +197,5 @@ function appendRevisionPaths(session: Session, revision: RevisionSource | undefi
 function appendRevisionNotes(report: RunReport, revision: RevisionSource | undefined): void {
     const note = revision?.dependencyNote;
     if (note === undefined) return;
-    report.notes = [...(report.notes ?? []), note];
+    report.notes.push(note);
 }

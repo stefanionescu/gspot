@@ -129,7 +129,7 @@ function formatSettingChange(
 function readSettingChange(
     edit: SettingsEditContext,
     options: SetOptions,
-): { setting: Setting; change: ParsedSettingValue; summary: string } {
+): { setting: Setting; change: ParsedSettingValue; summary: string; notes: string[] } {
     const { settings } = edit;
     const { availableSettings, match, scope } = readSetting(edit, options.key);
     const setting = match.setting;
@@ -139,21 +139,21 @@ function readSettingChange(
     const shippedDefault = findSettingDefault(availableSettings, settings, match, edit.scope)?.value;
     assertReason({ options, setting, change, previous, shippedDefault });
     const readers = listSettingReaders(settings, scope, options.key);
-    const note =
+    const notes =
         options.key.startsWith('limits.') && readers.every((reader) => !reader.enabled)
-            ? `\nnote     No selected check reads ${options.key} at level ${settings.level}.`
-            : '';
-    const summary = formatSettingChange(change, { setting, options, scope: edit.scope, previous }) + note;
-    return { setting, change, summary };
+            ? [`No selected check reads ${options.key} at level ${settings.level}.`]
+            : [];
+    const summary = formatSettingChange(change, { setting, options, scope: edit.scope, previous });
+    return { setting, change, summary, notes };
 }
 
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {
     const edit = await prepareSettingsEdit(options.cwd, options.scope);
     const { root, edit: input, scopeTable } = edit;
-    const { setting, change, summary } = readSettingChange(edit, options);
+    const { setting, change, summary, notes } = readSettingChange(edit, options);
     try {
         editSetting(scopeTable, change, setting, options);
-        return await applySettingsEdit(root, { edit: input, summary, reads: edit.reads, listing: edit.listing });
+        return await applySettingsEdit(root, { edit: input, summary, notes, reads: edit.reads, listing: edit.listing });
     } catch (error) {
         if (error instanceof GspotError && error.code === 'settings')
             throw new GspotError('arguments', error.message, { cause: error });

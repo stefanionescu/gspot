@@ -6,6 +6,7 @@ import { getTool } from '#cli/configurations/tools.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { type PathExplanation } from '#cli/types/commands/explain.ts';
@@ -57,7 +58,12 @@ test('a path explanation lists the command checks and the ignores that apply', a
     const command = await runGspot(sandbox.path, ['explain', 'project/syntax', '--json']);
     expect(command.code, command.stdout + command.stderr).toBe(0);
     expect(command.stderr).toBe('');
-    expect(JSON.parse(command.stdout)).toStrictEqual(SYNTAX_CHECK_EXPLANATION);
+    expect(JSON.parse(command.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 0,
+        notes: [],
+        ...SYNTAX_CHECK_EXPLANATION,
+    });
     expect((JSON.parse(ignored.stdout) as PathExplanation).checks).toStrictEqual(explanation.checks);
 });
 
@@ -147,7 +153,13 @@ test.each([...UNKNOWN_SUBJECT_CASES])(
         commitAll(sandbox.path);
         const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(JSON.parse(result.stdout)).toStrictEqual({ error: 'arguments', message });
+        expect(JSON.parse(result.stdout)).toStrictEqual({
+            version: cliPackage.version,
+            exitCode: 2,
+            notes: [],
+            error: 'arguments',
+            message,
+        });
     },
 );
 
@@ -201,6 +213,9 @@ test('explain --json reports every field of a configuration', async () => {
     expect(result.code).toBe(0);
     expect(result.stderr).toBe('');
     expect(JSON.parse(result.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 0,
+        notes: [],
         name: 'engineering',
         group: 'general',
         title: 'Engineering',

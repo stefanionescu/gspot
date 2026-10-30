@@ -2,6 +2,7 @@ import { TEST_VERSION } from '#tests/config/commands/samples.ts';
 
 export const FAILED_CHECK_REPORT = {
     version: TEST_VERSION,
+    notes: [] as string[],
     stage: 'all' as const,
     started: '2026-09-18T00:00:00.000Z',
     duration: 10,

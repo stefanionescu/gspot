@@ -4,6 +4,8 @@ import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
+import * as installation from '#cli/installers/install.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { TOOL_PROJECTS_MESSAGE } from '#tests/config/messages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -39,6 +41,9 @@ test('apply starts no npm, and install reports a failed npm version lookup in te
     expect(structured.code, structured.stdout + structured.stderr).toBe(2);
     expect(structured.stderr).toBe('');
     expect(JSON.parse(structured.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 2,
+        notes: [],
         error: 'install',
         message: 'Cannot determine the npm version for the tool project.',
     });
@@ -71,6 +76,9 @@ test('an unexpected error during install prints the internal error once and chan
     expect(failed.code).toBe(2);
     expect(failed.stderr).toBe('');
     expect(JSON.parse(failed.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 2,
+        notes: [],
         error: 'unexpected',
         message,
     });
@@ -92,6 +100,9 @@ test.each([...OUTDATED_TOOL_PROJECTS])(
         const refused = await runGspot(sandbox.path, ['install', '--json']);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect(JSON.parse(refused.stdout)).toStrictEqual({
+            version: cliPackage.version,
+            exitCode: 2,
+            notes: [],
             error: 'install',
             message: TOOL_PROJECTS_MESSAGE,
         });
@@ -118,10 +129,39 @@ test('install stopped by SIGINT reports cancellation once and exits 130', async 
     expect(result.code).toBe(130);
     expect(result.stderr).toBe('');
     expect(JSON.parse(result.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 130,
+        notes: [],
         error: 'canceled',
         message: 'Installation stopped before every tool was installed.',
-        exitCode: 130,
     });
     expect(process.listenerCount('SIGINT')).toBe(listeners);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test('install puts what it installed in the summary and the instructions in the notes', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    using installed = spyOn(installation, 'installTools').mockResolvedValue({
+        installed: ['installed 2 npm tools in .gspot/node_modules', 'set core.hooksPath to .gspot/hooks'],
+        notes: ['Install mise, or install these tools yourself: shfmt 3.0.0'],
+        steps: [],
+    });
+    const text = await runGspot(sandbox.path, ['install']);
+    expect(text).toStrictEqual({
+        code: 0,
+        stdout: 'installed 2 npm tools in .gspot/node_modules\nset core.hooksPath to .gspot/hooks\nInstall mise, or install these tools yourself: shfmt 3.0.0\n',
+        stderr: '',
+    });
+    const result = await runGspot(sandbox.path, ['install', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 0,
+        notes: ['Install mise, or install these tools yourself: shfmt 3.0.0'],
+        summary: 'installed 2 npm tools in .gspot/node_modules\nset core.hooksPath to .gspot/hooks',
+        steps: [],
+    });
+    expect(installed).toHaveBeenCalledTimes(2);
 });

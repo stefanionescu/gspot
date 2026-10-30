@@ -65,6 +65,7 @@ export function buildRunReport(run: FinishedRun): RunReport {
         ...(options.comparison !== undefined && { comparison: options.comparison }),
         ...buildNotCheckedReport(session),
         version: cliPackage.version,
+        notes: [],
         stage: options.stage,
         started: started.toISOString(),
         duration: Date.now() - started.getTime(),

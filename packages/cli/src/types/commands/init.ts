@@ -1,12 +1,12 @@
 import { type Session } from '#cli/types/session.ts';
 import { type TomlTable } from '#cli/types/settings/file.ts';
 import { type FileContents } from '#cli/types/system/files.ts';
-import { type Generation } from '#cli/types/generation/files.ts';
 import { type TRAILING_COMMAS } from '#cli/config/settings/fields.ts';
 import { type RepositorySetup } from '#cli/types/repository/setup.ts';
 import { type AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { type ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { type Level, type Configuration } from '#cli/types/configurations.ts';
+import { type Generation, type ApplyReport } from '#cli/types/generation/files.ts';
 import { type Repository, type ScopeFolder, type TrackedFile } from '#cli/types/repository/files.ts';
 
 export type InitScan = {
@@ -53,7 +53,7 @@ export type InitPlanning = {
     reviewed: Map<string, FileContents | undefined>;
 };
 
-export type InitJson = { root: string; plan: InitPlan; settings: string; written: boolean };
+export type InitJson = { root: string; plan: InitPlan; settings: string } & ApplyReport;
 
 export type DetectionSummary = {
     files: TrackedFile[];

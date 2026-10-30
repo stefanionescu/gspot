@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { readTree } from '#tests/setup/system/files.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
@@ -44,6 +45,9 @@ test('set classifies malformed settings as a parse error', async () => {
     expect(failure.code).toBe(2);
     expect(failure.stderr).toBe('');
     expect(JSON.parse(failure.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 2,
+        notes: [],
         error: 'parse',
         message: 'gspot.toml:1:18 is not valid TOML: Expected "]". Fix the file.',
     });

@@ -5,7 +5,6 @@ import { readTree } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { NEEDS_GIT_MESSAGE } from '#tests/config/git.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -61,7 +60,13 @@ test.each([...JSON_ARGUMENT_ERRORS])(
         const failed = await runGspot(sandbox.path, commandArguments);
         expect(failed.code, failed.stdout + failed.stderr).toBe(2);
         expect(failed.stderr).toBe('');
-        expect(JSON.parse(failed.stdout) as CommandFailureJson).toStrictEqual({ error: 'arguments', message });
+        expect(JSON.parse(failed.stdout)).toStrictEqual({
+            version: cliPackage.version,
+            exitCode: 2,
+            notes: [],
+            error: 'arguments',
+            message,
+        });
     },
 );
 
@@ -92,6 +97,9 @@ test.each([
     const result = await runGspot(sandbox.path, [command, ...options, '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 2,
+        notes: [],
         error: 'git',
         message: NEEDS_GIT_MESSAGE,
     });
@@ -106,7 +114,7 @@ test.each(VERSION_ARGUMENTS.map((commandArguments) => ({ commandArguments })))(
         expect(version).toStrictEqual({
             code: 0,
             stdout: commandArguments.includes('--json')
-                ? JSON.stringify({ version: cliPackage.version }, null, 2) + '\n'
+                ? JSON.stringify({ version: cliPackage.version, exitCode: 0, notes: [] }, null, 2) + '\n'
                 : cliPackage.version + '\n',
             stderr: '',
         });

@@ -19,6 +19,7 @@ import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { getTool, listDistinctTools, findToolProjectPackage } from '#cli/configurations/tools.ts';
+import { type CommandJson } from '#cli/types/terminal.ts';
 
 test('doctor reports no unowned gspot files in a fresh clone', async () => {
     await using sandbox = await testdir();
@@ -196,7 +197,7 @@ test('doctor --json reports every field when the required tools are missing', as
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(result.code).toBe(1);
     expect(result.stderr).toBe('');
-    const report = JSON.parse(result.stdout) as DoctorReport;
+    const report = JSON.parse(result.stdout) as DoctorReport & CommandJson;
     expect(report.tools.filter(({ state }) => state !== 'missing')).toStrictEqual([]);
     const prettier = String(getTool(readConfigurations().values(), 'prettier').version);
     const taplo = String(getTool(readConfigurations().values(), 'taplo').version);
@@ -214,6 +215,9 @@ test('doctor --json reports every field when the required tools are missing', as
     });
     expect(report.tools).toContainEqual({ name: 'xmllint', state: 'missing', help: 'Install xmllint.' });
     expect({ ...report, tools: [] }).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 1,
+        notes: [],
         submodules: [],
         tools: [],
         environments: [],
@@ -222,8 +226,6 @@ test('doctor --json reports every field when the required tools are missing', as
         hooks: 'none',
         ci: 'none',
         ruleFiles: 0,
-        version: { running: cliPackage.version },
-        exitCode: 1,
     });
 });
 

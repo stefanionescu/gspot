@@ -13,5 +13,11 @@ test('an unsupported runtime honors JSON before loading commands', async () => {
     const result = await runCommand(command, { cwd: sandbox.path });
     expect(result.code).toBe(2);
     expect(result.stderr).toBe('');
-    expect(JSON.parse(result.stdout)).toStrictEqual({ error: 'runtime', message });
+    expect(JSON.parse(result.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 2,
+        notes: [],
+        error: 'runtime',
+        message,
+    });
 });

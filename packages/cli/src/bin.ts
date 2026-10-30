@@ -13,7 +13,9 @@ if (runtimeError === undefined) {
     const separator = commandArguments.indexOf('--');
     const options = separator === -1 ? commandArguments : commandArguments.slice(0, separator);
     if (options.includes(JSON_FLAG))
-        process.stdout.write(`${JSON.stringify({ error: 'runtime', message: runtimeError })}\n`);
+        process.stdout.write(
+            `${JSON.stringify({ version: cliPackage.version, exitCode: EXIT_ERROR, notes: [], error: 'runtime', message: runtimeError })}\n`,
+        );
     else process.stderr.write(`${runtimeError}\n`);
     process.exitCode = EXIT_ERROR;
 }

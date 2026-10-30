@@ -4,6 +4,7 @@ import { spyOn, expect } from 'bun:test';
 import { runProgram } from '#cli/main.ts';
 import { type Sandbox } from '#tests/types/sandbox.ts';
 import { readTree } from '#tests/setup/system/files.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
@@ -143,7 +144,12 @@ export async function assertRefusalWithoutWrites(
     const structured = await runGspot(root, [...commandArguments, '--json']);
     expect(structured.code).toBe(2);
     expect(structured.stderr).toBe('');
-    expect(JSON.parse(structured.stdout)).toStrictEqual(refusal);
+    expect(JSON.parse(structured.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 2,
+        notes: [],
+        ...refusal,
+    });
     expect(await readTree(root)).toStrictEqual(before);
 }
 

@@ -6,6 +6,7 @@ import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { CONFIGURATIONS_SETTINGS } from '#tests/config/toml.ts';
 import { listNpmInstallFiles } from '#tests/setup/cli/tools.ts';
@@ -80,7 +81,7 @@ test.each([false, true])(
         expect(result).toStrictEqual({
             code: 0,
             stdout: json
-                ? '{\n  "changed": false,\n  "summary": "No change: bash is already selected."\n}\n'
+                ? `${JSON.stringify({ version: cliPackage.version, exitCode: 0, notes: [], changed: false, summary: 'No change: bash is already selected.' }, undefined, 2)}\n`
                 : 'No change: bash is already selected.\n',
             stderr: '',
         });

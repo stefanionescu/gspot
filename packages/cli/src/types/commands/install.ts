@@ -1,1 +1,1 @@
-export type InstallCommandJson = { notes: string[]; steps: readonly (readonly string[])[] };
+export type InstallCommandJson = { summary: string; steps: readonly (readonly string[])[]; notes: string[] };

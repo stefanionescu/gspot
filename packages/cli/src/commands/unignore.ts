@@ -60,11 +60,13 @@ function formatIgnoreTarget(options: Pick<IgnoreOptions, 'check' | 'rule' | 'pat
     return { unmatched: `${subject} has no matching ignore`, removed: `for ${subject}${paths}` };
 }
 
-function formatEverywhereWarning(everywhere: number, check: string | undefined): string {
-    if (everywhere === 0) return '';
+function formatEverywhereNote(everywhere: number, check: string | undefined): string[] {
+    if (everywhere === 0) return [];
     const subject = check ?? 'every check';
     const command = check === undefined ? 'gspot unignore' : 'gspot unignore ' + check;
-    return `No change: the ignore of ${subject} covers every path, so --paths removes nothing. Run ${command} to delete it.\n`;
+    return [
+        `The ignore of ${subject} covers every path, so --paths removes nothing from it. Run ${command} to remove it.`,
+    ];
 }
 
 async function runUnignoreCommand(
@@ -77,14 +79,13 @@ async function runUnignoreCommand(
         ...options,
         ...stripUndefined({ paths: buildArgumentPaths(root, options.cwd, options.paths) }),
     });
-    const warning = formatEverywhereWarning(everywhere, options.check);
-    const warningFields = stripUndefined({ warning: everywhere === 0 ? undefined : warning.trim() });
+    const notes = formatEverywhereNote(everywhere, options.check);
     const target = formatIgnoreTarget(options);
     if (deleted + changedIgnores === 0) {
-        const summary = warning.trimEnd() || `No change: ${target.unmatched}.`;
+        const summary = notes.length === 0 ? `No change: ${target.unmatched}.` : `No change: ${notes.join(' ')}`;
         return {
             text: summary + '\n',
-            json: { changed: false, summary, ...warningFields },
+            json: { changed: false, summary },
             exitCode: 0,
         };
     }
@@ -103,13 +104,13 @@ async function runUnignoreCommand(
         .join(' ');
     if (kept.length === 0) Reflect.deleteProperty(input.table, 'ignore');
     else input.table['ignore'] = kept;
-    const result = await applySettingsEdit(root, {
+    return await applySettingsEdit(root, {
         reads: context.reads,
         listing: context.listing,
         edit: input,
-        summary: summary + (warning === '' ? '' : '\n' + warning.trimEnd()),
+        summary,
+        notes,
     });
-    return { ...result, json: { ...result.json, ...warningFields } };
 }
 
 /**

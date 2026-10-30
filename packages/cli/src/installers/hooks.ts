@@ -49,15 +49,16 @@ Set the planned Git setting, or report the instructions for existing hooks.
 
 @param session what the hook plan reads.
 @param steps collects each command that install runs.
+@returns the command that install ran, with the line that reports it, or only the instructions for existing hooks.
 */
-export function installHooks(session: Session, steps: (readonly string[])[]): string {
+export function installHooks(session: Session, steps: (readonly string[])[]): HookPlan {
     const plan = planHooks(session);
     if (plan.command !== undefined) {
         steps.push(plan.command);
         const result = runGitBlocking(session.repository.root, plan.command.slice(1));
         if (result.code !== 0) throw new GspotError('install', `Cannot set core.hooksPath: ${result.stderr.trim()}`);
     }
-    return plan.note;
+    return plan;
 }
 
 function hasHookCommand(root: string, hook: RepositorySetup['hooks'][number], name: HookName): boolean {

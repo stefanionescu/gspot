@@ -191,7 +191,7 @@ export function formatRunReport(report: RunReport, options: { verbose: boolean; 
     lines.push(
         ...formatMissingChecks(checks, { selectedOnly }),
         ...formatNotChecked(report.notChecked),
-        ...(report.notes ?? []).map((note) => `note     ${note}`),
+        ...report.notes.map((note) => `note     ${note}`),
         ...formatIgnores(report, { verbose }),
         ...formatUnstagedChanges(report),
         formatSummary(report, { selectedOnly }),

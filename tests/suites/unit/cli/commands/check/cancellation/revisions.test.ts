@@ -3,6 +3,7 @@ import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { type PausedGit } from '#tests/types/processes.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
@@ -56,9 +57,11 @@ async function stopStagedCancellation(
     paused.child.kill(signal);
     expect(await paused.child.exited, await paused.stderr).toBe(exitCode);
     expect(JSON.parse(await paused.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode,
+        notes: [],
         error: 'canceled',
         message: CHECK_STOPPED_MESSAGE,
-        exitCode,
     });
     await waitForExit(paused.started.pid);
 }
@@ -184,9 +187,11 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
             child.kill(signal);
             expect(await child.exited, await errors).toBe(signal === 'SIGINT' ? 130 : 143);
             expect(JSON.parse(await output)).toStrictEqual({
+                version: cliPackage.version,
+                exitCode: signal === 'SIGINT' ? 130 : 143,
+                notes: [],
                 error: 'canceled',
                 message: CHECK_STOPPED_MESSAGE,
-                exitCode: signal === 'SIGINT' ? 130 : 143,
             });
             expect(runGitStep(root, ['ls-files', '--stage', '-z'])).toBe(indexed);
             const protocol = `${ref} ${revision} ${ref} ${'0'.repeat(revision.length)}\n`;

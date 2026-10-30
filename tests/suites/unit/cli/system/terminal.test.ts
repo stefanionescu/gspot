@@ -1,4 +1,5 @@
 import { test, spyOn, expect } from 'bun:test';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { getColors, printError, printResult, setOutputOptions, runCancelableCommand } from '#cli/system/terminal.ts';
 
 test('an aborted command returns its cancellation status and removes its signal listeners', async () => {
@@ -11,7 +12,7 @@ test('an aborted command returns its cancellation status and removes its signal 
     expect(result).toStrictEqual({
         exitCode: 130,
         text: 'The command was canceled.\n',
-        json: { error: 'canceled', message: 'The command was canceled.', exitCode: 130 },
+        json: { error: 'canceled', message: 'The command was canceled.' },
     });
     expect(process.listenerCount('SIGINT')).toBe(listeners);
 });
@@ -51,7 +52,13 @@ test('a human error removes terminal controls while JSON preserves the message a
         setOutputOptions({ isJson: true, colored: false });
         printError({ error: 'filesystem', message });
         expect(stdout.join('')).not.toContain('\u001B');
-        expect(JSON.parse(stdout.join(''))).toStrictEqual({ error: 'filesystem', message });
+        expect(JSON.parse(stdout.join(''))).toStrictEqual({
+            version: cliPackage.version,
+            exitCode: 2,
+            notes: [],
+            error: 'filesystem',
+            message,
+        });
     } finally {
         setOutputOptions({ isJson: false, colored: false });
     }

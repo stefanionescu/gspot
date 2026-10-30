@@ -39,10 +39,7 @@ test('install refuses an npm tool project edited to run scripts, before it conta
     const requests = registry.requests;
     const refused = await spawnGspot(root, ['install', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(JSON.parse(refused.stdout)).toStrictEqual({
-        error: 'install',
-        message: TOOL_PROJECTS_MESSAGE,
-    });
+    expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'install', message: TOOL_PROJECTS_MESSAGE });
     expect(registry.requests).toBe(requests);
     expect(await readFile(packageJsonPath, 'utf8')).toBe(scriptedPackage);
 });

@@ -21,6 +21,5 @@ export type DoctorReport = {
     hooks: string;
     ci: string;
     ruleFiles: number;
-    version: { running: string };
     exitCode: number;
 };

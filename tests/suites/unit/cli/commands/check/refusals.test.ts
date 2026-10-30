@@ -17,6 +17,7 @@ import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { limitCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { FIX_REFUSALS, ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/commands/check/refusals.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 
 async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const fix = buildProgramCommand('fakes/tool', '--text', 'fixed\n', 'source.txt');
@@ -51,6 +52,9 @@ test('--only refuses a check disabled by the selected level', async () => {
     const result = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 2,
+        notes: [],
         error: 'arguments',
         message: 'docs/required-files is off at level basic. Run gspot set level all to turn it on.',
     });
@@ -61,6 +65,9 @@ test('--only names the configuration that an unselected check needs', async () =
     const result = await runGspot(sandbox.path, ['check', '--only', 'python/ruff', '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 2,
+        notes: [],
         error: 'arguments',
         message: 'python/ruff belongs to python, which no scope selects. Run gspot add python.',
     });
@@ -106,7 +113,13 @@ test.each([
     runGitStep(sandbox.path, ['add', '--', ...staged]);
     const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(JSON.parse(refused.stdout)).toStrictEqual({ error: 'git', message });
+    expect(JSON.parse(refused.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 2,
+        notes: [],
+        error: 'git',
+        message,
+    });
 });
 
 test('a staged check during a merge conflict exits 2, names the conflict, and leaves no copy behind', async () => {
@@ -187,7 +200,13 @@ test('check reports an unreadable message file as a filesystem error and writes 
     ]);
     expect(structured.code).toBe(2);
     expect(structured.stderr).toBe('');
-    expect(JSON.parse(structured.stdout)).toStrictEqual({ error: 'filesystem', message });
+    expect(JSON.parse(structured.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 2,
+        notes: [],
+        error: 'filesystem',
+        message,
+    });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

@@ -12,6 +12,7 @@ import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { UNCOMMITTED_FORMAT_CASES } from '#tests/config/commands/init/refusals.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {
     await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
@@ -56,6 +57,9 @@ test('init --json without --yes names --yes before reading the repository', asyn
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
+        version: cliPackage.version,
+        exitCode: 2,
+        notes: [],
         error: 'arguments',
         message: '--json needs --yes, because gspot cannot ask while it prints JSON.',
     });
