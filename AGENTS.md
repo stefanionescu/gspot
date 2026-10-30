@@ -97,7 +97,7 @@ You can edit the other keys of that file.
 - A check that runs a linter takes the linter's name. A check that runs a project command takes the name of what it
   checks.
 - A unit test runs the source in process. It may run Git, `mkfifo`, and the npm tools that `mise run setup` installs
-  from the manifests into `tests/tools/`, but makes no network call.
+  from the manifests into `node_modules/.test-tools/`, but makes no network call.
 - A test that installs tools, runs the packed packages, or contacts a registry belongs in `tests/suites/integration/`.
   `tests/suites/e2e/` installs the packed packages into a fresh project.
 - In unit check tests, choose the entrypoint for the assertion:

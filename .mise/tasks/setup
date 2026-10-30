@@ -3,7 +3,7 @@
 set -euo pipefail
 
 bun install --frozen-lockfile
-mkdir -p tests/tools
-bun tests/setup/sandboxes/tool-project.ts >tests/tools/package.json
-bun install --cwd tests/tools --linker isolated
+mkdir -p node_modules/.test-tools
+bun tests/setup/sandboxes/tool-project.ts >node_modules/.test-tools/package.json
+bun install --cwd node_modules/.test-tools --linker isolated
 bun --cwd docs --bun astro sync

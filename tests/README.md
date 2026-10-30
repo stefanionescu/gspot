@@ -12,11 +12,11 @@ mise run setup
 
 Choose a suite:
 
-| Command                     | Coverage                                                                                      |
-| --------------------------- | --------------------------------------------------------------------------------------------- |
-| `mise run test unit`        | Source code in process, without network calls. Tests may use Git and tools in `tests/tools/`. |
-| `mise run test integration` | Tool installation, registry access, and checks against installed tools.                       |
-| `mise run test e2e`         | Packed packages installed into fresh projects, including the documented quickstarts.          |
+| Command                     | Coverage                                                                                                   |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `mise run test unit`        | Source code in process, without network calls. Tests may use Git and tools in `node_modules/.test-tools/`. |
+| `mise run test integration` | Tool installation, registry access, and checks against installed tools.                                    |
+| `mise run test e2e`         | Packed packages installed into fresh projects, including the documented quickstarts.                       |
 
 `mise run test` runs the unit suite. Each command builds the packages, creates a temporary test folder, and removes it
 when the run ends. Integration and end-to-end runs also pack the packages and install pinned tools. These suites need

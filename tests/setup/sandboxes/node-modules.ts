@@ -12,7 +12,7 @@ export const workspaceModules = join(REPOSITORY_ROOT, 'node_modules');
 
 const testModules = join(import.meta.dir, '../../node_modules');
 
-export const toolModules = join(import.meta.dir, '../../tools/node_modules');
+export const toolModules = join(workspaceModules, '.test-tools/node_modules');
 
 async function listPackageNames(modulesFolder: string): Promise<string[]> {
     const listed = await readdir(modulesFolder);
