@@ -135,9 +135,9 @@ repository.
 - A value that code in other folders also reads stays with the behavior it belongs to, and the others import it.
 - Values that no one file owns go in a topic file of their folder, or at the top of `config/` when several top-level
   folders read them. Topic files that share a word sit in a folder of that word, such as `config/files/`.
-- Write each exported type in plain TypeScript. Do not export a `z.infer` type.
-- Check the shape of each Zod object schema with `satisfies SchemaShape<T>`, and any other schema with
-  `satisfies z.ZodType<T>`. Give each schema one check.
+- Infer each type that a schema describes from that schema: `z.infer<typeof schema>`, or `z.input` for the value
+  before its defaults and transforms. The type stays in `types/` and imports the schema with `import type`. Write a
+  type in plain TypeScript only when no schema describes it.
 - When runtime code reads a list of allowed names, declare it as an `as const` array in `config/`, its type as
   `(typeof LIST)[number]` in `types/`, and its schema as `z.enum(LIST)`. A list whose values each carry a description
   keeps its schema literals as the one list.
@@ -173,7 +173,7 @@ repository.
   `settings/`, `planning/`, `tools/`, `installers/`, `generation/`, `runs/`, `checks/`, `commands/`, then `main.ts`
   and `bin.ts`.
 - A layer imports only the layers before it. Every layer may import `config/` and `types/`, and the `schemas/` files
-  of a layer belong to that layer.
+  of a layer belong to that layer. `types/` imports the schemas of any layer, to infer types from them.
 - The `[[import_rule]]` records in `gspot.toml` list the layers in this order, and `gspot check` reports an import
   that breaks it.
 - A unit test file mirrors the source file it tests, with the same name. `tests/suites/unit/<package>/<path>.test.ts` tests
