@@ -84,7 +84,7 @@ test('a changed Vale archive is refused before sync and preserves installed pack
 });
 
 test.each([false, true])(
-    'a matching Vale record skips downloads only while every package folder exists (one folder deleted: %s)',
+    'a matching Vale record skips downloads only while every package folder exists (one folder deleted: %p)',
     async (deleted) => {
         const [first, ...kept] = VALE_PACKAGE_FOLDERS;
         await using sandbox = await testdir({

@@ -114,24 +114,20 @@ test('Testing Library rules take the framework package of each scope', async () 
     expect(applicationConfiguration.rules['testing-library/no-dom-import']).toStrictEqual([2, 'vue']);
 });
 
-test.each(ASSERTION_RULE_OWNERS)(
-    'basic assertion ownership with $configuration',
-    async ({ configuration, assertions }) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(
-                ['javascript', ...(configuration === undefined ? [] : [configuration])],
-                { level: 'basic' },
-            ),
-            'package.json': '{"private":true,"type":"module"}',
-            'source.test.js': '',
-            'source.js': '',
-        });
-        const eslint = await createEslint(sandbox.path);
-        const tests = (await eslint.calculateConfigForFile('source.test.js')) as EslintConfiguration;
-        const source = (await eslint.calculateConfigForFile('source.js')) as EslintConfiguration;
-        expect(tests.rules['sonarjs/assertions-in-tests']?.[0]).toBe(assertions);
-        expect(tests.rules['sonarjs/no-empty-test-file']?.[0]).toBe(2);
-        expect(source.rules['sonarjs/assertions-in-tests']?.[0]).toBe(0);
-        expect(source.rules['sonarjs/no-empty-test-file']?.[0]).toBe(0);
-    },
-);
+test.each(ASSERTION_RULE_OWNERS)('basic assertion ownership with $name', async ({ configuration, assertions }) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', ...(configuration === undefined ? [] : [configuration])], {
+            level: 'basic',
+        }),
+        'package.json': '{"private":true,"type":"module"}',
+        'source.test.js': '',
+        'source.js': '',
+    });
+    const eslint = await createEslint(sandbox.path);
+    const tests = (await eslint.calculateConfigForFile('source.test.js')) as EslintConfiguration;
+    const source = (await eslint.calculateConfigForFile('source.js')) as EslintConfiguration;
+    expect(tests.rules['sonarjs/assertions-in-tests']?.[0]).toBe(assertions);
+    expect(tests.rules['sonarjs/no-empty-test-file']?.[0]).toBe(2);
+    expect(source.rules['sonarjs/assertions-in-tests']?.[0]).toBe(0);
+    expect(source.rules['sonarjs/no-empty-test-file']?.[0]).toBe(0);
+});

@@ -170,7 +170,7 @@ test('a failed version check blocks a check and its fix without changing source 
 });
 
 test.each([false, true])(
-    'a fixer that breaks a file with an unstaged edit puts the file back and exits 2',
+    'a fixer that breaks a file with an unstaged edit puts the file back and exits 2 (dry run: %p)',
     async (isDryRun) => {
         await using sandbox = await createGitSandbox({});
         await createFileTree(sandbox.path, {

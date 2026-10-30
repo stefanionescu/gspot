@@ -126,7 +126,7 @@ test.each([...LINKED_FILE_CASES])(
     },
 );
 
-test.each([false, true])('apply refuses a newer pin and writes nothing (dry run: %s)', async (dryRun) => {
+test.each([false, true])('apply refuses a newer pin and writes nothing (dry run: %p)', async (dryRun) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         '.gspot/version': '9.9.9\n',

@@ -66,7 +66,7 @@ test('--only repeats and leaves the paths after it as paths', async () => {
         expect(check.findings.map((finding) => finding.message)).toStrictEqual(['src/selected.ts']);
 });
 
-test.each([false, true])('path arguments narrow project-wide findings (staged: %s)', async (staged) => {
+test.each([false, true])('path arguments narrow project-wide findings (staged: %p)', async (staged) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
@@ -115,7 +115,7 @@ test.each([false, true])('path arguments narrow project-wide findings (staged: %
     ]);
 });
 
-test.each([false, true])('run again resolves a scope from the calling folder (staged: %s)', async (staged) => {
+test.each([false, true])('run again resolves a scope from the calling folder (staged: %p)', async (staged) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['bash'] }] }),
         'app/run.sh': 'cleanup() { printf "unused\\n"; }\n',

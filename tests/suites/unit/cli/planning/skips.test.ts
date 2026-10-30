@@ -95,7 +95,7 @@ test('a check whose tool has no Windows build is skipped on Windows', async () =
     ]);
 });
 
-test.each([false, true])('Semgrep tools follow local rules at plan time (custom rules: %s)', async (hasRuleFiles) => {
+test.each([false, true])('Semgrep tools follow local rules at plan time (custom rules: %p)', async (hasRuleFiles) => {
     using _platform = fakePlatform('linux');
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['python'], {

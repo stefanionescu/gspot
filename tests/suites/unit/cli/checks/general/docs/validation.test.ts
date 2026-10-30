@@ -221,7 +221,7 @@ test('missing-paths: a document in a child scope does not read unrelated or shad
 });
 
 test.each([...DOC_FENCE_PATH_CASES])(
-    'missing-paths: a $language fence with "$attributes" reports example paths=$reported',
+    'missing-paths: a $language fence with the info "$info" reports example paths: $reported',
     async ({ info, language, reported }) => {
         const pathFindings = await runMissingPathsCheck(
             {

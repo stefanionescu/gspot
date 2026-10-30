@@ -138,26 +138,31 @@ export const ALLOWED_GITHUB_REGISTRIES = `allowed_registries = { value = ["githu
 
 export const LOCKFILE_DOWNLOAD_CASES = [
     {
+        name: 'a registry tarball beside a deprecation link',
         path: 'pnpm-lock.yaml',
         text: 'packages:\n  pkg@1.0.0:\n    resolution: {tarball: https://registry.npmjs.org/pkg/-/pkg-1.0.0.tgz}\n    deprecated: See https://eslint.org/version-support\n',
         lines: [],
     },
     {
+        name: 'a repository resolution',
         path: 'pnpm-lock.yaml',
         text: 'packages:\n  pkg@1.0.0:\n    resolution: {repo: https://github.com/org/pkg.git, commit: abc}\n',
         lines: [3],
     },
     {
+        name: 'a resolved archive beside a homepage',
         path: 'yarn.lock',
         text: 'pkg@1:\n  resolved "https://github.com/org/pkg/archive/v1.tar.gz"\n  homepage "https://example.com"\n',
         lines: [2],
     },
     {
+        name: 'an archive resolution beside a description',
         path: 'yarn.lock',
         text: '"pkg@https://github.com/org/pkg/archive/v1.tar.gz":\n  resolution: "pkg@https://github.com/org/pkg/archive/v1.tar.gz"\n  description: "See https://example.com"\n',
         lines: [2],
     },
     {
+        name: 'a package archive beside a description',
         path: 'bun.lock',
         text: '{"packages": {"pkg": ["pkg@1.0.0", "https://github.com/org/pkg/archive/v1.tar.gz", {}, "sha512-hash"]}, "description": "See https://example.com"}',
         lines: [1],

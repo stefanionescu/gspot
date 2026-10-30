@@ -37,20 +37,23 @@ test.each(
     GENERATOR_LIMITS.flatMap(({ check, file, languages, limits }) =>
         languages.flatMap((language) => limits.map((limit) => ({ check, file, language, limit }))),
     ),
-)('$check writes the configured $language.$limit into its generated file', async ({ check, file, language, limit }) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([language], {
-            level: 'all',
-            tables: `[structure]\nreexports = { value = "index-only", reason = "The index export limit needs an enabled index module." }\n[limits.${language}]\n${limit} = ${limit === 'trivial_function_statements' ? '1001' : '{ value = 1001, reason = "The generated limit must retain this distinctive value." }'}\n`,
-        }),
-    });
-    const session = await openSession(sandbox.path);
-    const generated = generateFiles(session).files.find(({ path }) => path.endsWith(file));
-    expect(generated, `${check} generates ${file}`).toBeDefined();
-    expect(generated!.content).toMatch(/\b1001\b/u);
-});
+)(
+    '$check writes the configured $limit limit of $language into its generated file',
+    async ({ check, file, language, limit }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([language], {
+                level: 'all',
+                tables: `[structure]\nreexports = { value = "index-only", reason = "The index export limit needs an enabled index module." }\n[limits.${language}]\n${limit} = ${limit === 'trivial_function_statements' ? '1001' : '{ value = 1001, reason = "The generated limit must retain this distinctive value." }'}\n`,
+            }),
+        });
+        const session = await openSession(sandbox.path);
+        const generated = generateFiles(session).files.find(({ path }) => path.endsWith(file));
+        expect(generated, `${check} generates ${file}`).toBeDefined();
+        expect(generated!.content).toMatch(/\b1001\b/u);
+    },
+);
 
-test.each([...BUILT_IN_LIMIT_CASES])('$check reads $language.$limit', async (sample) => {
+test.each([...BUILT_IN_LIMIT_CASES])('$check reads the $limit limit of $language', async (sample) => {
     const configuration = sample.language === 'sql' ? 'postgres' : sample.language;
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([configuration], {

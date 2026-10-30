@@ -11,7 +11,7 @@ import { writeNpmrc, readRegistryEnvironment } from '#cli/installers/npm/registr
 import { NPMRC_REFUSALS, LINKED_NODE_FILES, NPM_PREFIX_ENVIRONMENT } from '#tests/config/installers/npm/registry.ts';
 
 test.each([...NPMRC_REFUSALS])(
-    'an invalid .npmrc setting stops the registry read with $message',
+    'an invalid .npmrc setting stops the registry read: $name',
     async ({ source, message }) => {
         await using sandbox = await testdir({ '.npmrc': source, 'package.json': '{"private":true}\n' });
 

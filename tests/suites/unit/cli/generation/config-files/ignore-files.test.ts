@@ -70,7 +70,7 @@ test('negative ignores follow positives for ordered tools and stay out of tools 
     expect(jscpd.ignore.some((path) => path.startsWith('!'))).toBe(false);
 });
 
-test.each([true, false])('generated file lists include the CI workflow only when enabled: %s', async (enabled) => {
+test.each([true, false])('generated file lists include the CI workflow only when enabled: %p', async (enabled) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             rules: true,

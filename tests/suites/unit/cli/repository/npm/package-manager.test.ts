@@ -100,7 +100,7 @@ test('a refused pinned package manager keeps project files and gives no install 
 });
 
 test.each([...UNSUPPORTED_PACKAGE_MANAGERS])(
-    'unsupported $field values identify the package.json field',
+    'unsupported $field value $written names the package.json field',
     async ({ field, written, packageJson }) => {
         await using sandbox = await createGitSandbox({ 'package.json': JSON.stringify(packageJson) });
         expect(await captureRejection(Promise.try(() => detectPackageManager(sandbox.path, [])))).toMatchObject({

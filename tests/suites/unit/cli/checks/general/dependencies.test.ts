@@ -147,7 +147,7 @@ test('dependencies/lockfiles reports the lockfile of a second package manager in
 });
 
 test.each([...LOCKFILE_DOWNLOAD_CASES])(
-    '$path checks download fields without treating metadata URLs as registries',
+    '$path checks download fields without treating metadata URLs as registries: $name',
     async ({ path, text, lines }) => {
         await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]), [path]: text });
         const findings = await runSandboxCheck(sandbox.path, 'dependencies/lockfiles');
