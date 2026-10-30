@@ -1,3 +1,4 @@
+import { README, LICENSE } from '#tests/config/documents.ts';
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
 
 const TYPESCRIPT_PACKAGE = `{
@@ -71,6 +72,8 @@ export const TYPESCRIPT_SANDBOX = {
     files: {
         'package.json': TYPESCRIPT_PACKAGE,
         '.gitignore': 'node_modules/\n',
+        'README.md': README,
+        LICENSE,
         'types/orders.ts': `// Type aliases of the orders module.
 
 /**
