@@ -39,8 +39,8 @@ and every generated config file:
 gspot ignore --paths "vendor/**" --reason "Vendored releases of upstream packages."
 ```
 
-gspot resolves paths and globs passed to `--paths` from your current folder. It saves them relative to the repository
-root in `gspot.toml`. To leave a file out of one check, see [Ignore findings](/use/ignore/).
+To leave a file out of one check, see [Ignore findings](/use/ignore/), which also says how gspot reads the paths you
+pass to `--paths`.
 
 ## Patterns in generated files
 

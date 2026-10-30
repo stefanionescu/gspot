@@ -33,7 +33,7 @@ it. To move the repository to the version that runs, follow [Upgrade gspot](/sta
 
 ## A generated file has local edits
 
-Move any change you need into `gspot.toml` before you run `gspot apply`. Apply replaces owned generated files, including local edits. See [Generated files](/reference/generated-files/).
+`gspot apply` replaces the edits; see [Do not edit generated files](/reference/generated-files/#do-not-edit-generated-files).
 
 ## A check runs slowly
 

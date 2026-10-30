@@ -41,6 +41,9 @@ The job checks the files changed after the pull or merge request base, or after 
 branch checks every file. Manual checks run only when you name them with `--only`; the generated workflow does not
 run them automatically.
 
+The job fails when `gspot install` changes a file in `.gspot/`. This includes missing and stale lockfiles.
+Run `gspot install` on your machine and commit the changed files.
+
 ## Systems
 
 On GitHub, the job runs on Linux. When the repository selects the `swift` configuration, the workflow also runs on
@@ -139,11 +142,8 @@ Let the pipeline fail on the gspot exit code: `1` means findings, and `2` means 
 program gives exit 2, and the report names it. `gspot check --json` prints the report as JSON.
 
 Do not cache or upload `.gspot/state/` or credentials. To cache downloads and installed tools, key the cache on the gspot
-version, the tool files in `.gspot/`, and your lockfiles, as the GitHub job does.
+version, the files in `.gspot/` that pin the tools, and your lockfiles, as the GitHub job does.
 
 ## Turn CI off
 
 Run `gspot set ci.enabled false`. gspot deletes the workflow file.
-
-The job fails when `gspot install` changes a file in `.gspot/`. This includes missing and stale lockfiles.
-Run `gspot install` on your machine and commit the changed files.
