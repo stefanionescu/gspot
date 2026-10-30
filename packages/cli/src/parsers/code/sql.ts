@@ -3,7 +3,7 @@ import type { Parsed } from '#cli/types/shapes.ts';
 import type { TextRange } from '#cli/types/text.ts';
 import { dirname, basename } from 'node:path/posix';
 import type { Node, ParseResult } from '@pgsql/types';
-import { getCachedValue } from '#cli/system/files/cache.ts';
+import { remember } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 
 import type {
@@ -74,43 +74,7 @@ export function compareMigrationVersions(left: string, right: string): number {
     return 0;
 }
 
-const PARSED_SQL_FILES = { create: () => new Map<string, Promise<SqlFile>>() };
-
-async function parseSqlText(text: string): Promise<SqlFile> {
-    const { text: source, variables } = replacePsqlSyntax(text);
-    if (source.trim() === '') return { source, variables, statements: [], error: undefined };
-    const parsed = await parsePostgres(source);
-    const bytes = Buffer.from(source, 'utf8');
-    if ('error' in parsed) {
-        const offset = [...source].slice(0, parsed.error.offset).join('').length;
-        return {
-            source,
-            variables,
-            statements: [],
-            error: { text: parsed.error.text, ...getPosition(text, offset) },
-        };
-    }
-    const statements = parsed.value.stmts ?? [];
-    let byteOffset = 0;
-    let offset = 0;
-    const built: SqlStatement[] = [];
-    for (const statement of statements.toSorted(
-        (left, right) => (left.stmt_location ?? 0) - (right.stmt_location ?? 0),
-    )) {
-        const location = statement.stmt_location ?? 0;
-        offset += bytes.subarray(byteOffset, location).toString('utf8').length;
-        byteOffset = location;
-        if (statement.stmt === undefined) continue;
-        for (const [kind, fields] of Object.entries(statement.stmt))
-            built.push({ kind, fields, start: offset } as SqlStatement);
-    }
-    return {
-        source,
-        variables,
-        statements: built,
-        error: undefined,
-    };
-}
+const PARSED_SQL_FILES = Symbol('parsed sql files');
 
 async function parsePostgres(text: string): Promise<Parsed<ParseResult, { text: string; offset: number }>> {
     const { SqlError, parse: parseSql } = await import('libpg-query');
@@ -163,13 +127,41 @@ Parse a PostgreSQL file once per run.
 @param reads the run cache.
 */
 export function parseSqlFile(text: string, reads: ReadCache): Promise<SqlFile> {
-    const files = getCachedValue(reads, PARSED_SQL_FILES);
-    let parsed = files.get(text);
-    if (parsed === undefined) {
-        parsed = parseSqlText(text);
-        files.set(text, parsed);
-    }
-    return parsed;
+    return remember(reads, PARSED_SQL_FILES, text, async (): Promise<SqlFile> => {
+        const { text: source, variables } = replacePsqlSyntax(text);
+        if (source.trim() === '') return { source, variables, statements: [], error: undefined };
+        const parsed = await parsePostgres(source);
+        const bytes = Buffer.from(source, 'utf8');
+        if ('error' in parsed) {
+            const offset = [...source].slice(0, parsed.error.offset).join('').length;
+            return {
+                source,
+                variables,
+                statements: [],
+                error: { text: parsed.error.text, ...getPosition(text, offset) },
+            };
+        }
+        const statements = parsed.value.stmts ?? [];
+        let byteOffset = 0;
+        let offset = 0;
+        const built: SqlStatement[] = [];
+        for (const statement of statements.toSorted(
+            (left, right) => (left.stmt_location ?? 0) - (right.stmt_location ?? 0),
+        )) {
+            const location = statement.stmt_location ?? 0;
+            offset += bytes.subarray(byteOffset, location).toString('utf8').length;
+            byteOffset = location;
+            if (statement.stmt === undefined) continue;
+            for (const [kind, fields] of Object.entries(statement.stmt))
+                built.push({ kind, fields, start: offset } as SqlStatement);
+        }
+        return {
+            source,
+            variables,
+            statements: built,
+            error: undefined,
+        };
+    });
 }
 
 function findLineEnd(text: string, offset: number, stops: string): number {

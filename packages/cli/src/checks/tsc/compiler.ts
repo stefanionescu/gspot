@@ -1,11 +1,11 @@
 import ts from 'typescript';
 import { compareText } from '#cli/system/text.ts';
+import { remember } from '#cli/system/files/cache.ts';
 import { buildBaseResult } from '#cli/runs/results.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
@@ -34,7 +34,7 @@ import {
     TSC_REFERENCE_OUTPUT_FOLDER,
 } from '#cli/config/checks/tsc/compiler.ts';
 
-const CHECKED_PROJECTS = { create: () => new Map<string, string>() };
+const CHECKED_PROJECTS = Symbol('checked projects');
 
 function convertToCopyPath(value: unknown, copy: TypeScriptReferenceCopy): unknown {
     if (Array.isArray(value)) return value.map((path: unknown) => convertToCopyPath(path, copy));
@@ -127,16 +127,12 @@ export function claimProjectCheck(
     projectCheck: { check: string; path: string; scope: string; required: Record<string, boolean> },
 ): boolean {
     const { check, path, scope, required } = projectCheck;
-    const checked = getCachedValue(reads, CHECKED_PROJECTS);
     const key = JSON.stringify([
         check,
         path,
         Object.entries(required).toSorted(([left], [right]) => compareText(left, right)),
     ]);
-    const earlier = checked.get(key);
-    if (earlier !== undefined && earlier !== scope) return true;
-    checked.set(key, scope);
-    return false;
+    return remember(reads, CHECKED_PROJECTS, key, () => scope) !== scope;
 }
 
 /**

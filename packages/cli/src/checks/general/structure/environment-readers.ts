@@ -1,13 +1,12 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
-import { parseCached } from '#cli/system/files/cache.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findFunctionNode } from '#cli/parsers/code/bash.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { VARIABLE_NAME } from '#cli/config/parsers/code/environment.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/code/environment.ts';
-import { PARSED_SOURCES } from '#cli/checks/general/structure/parsed-sources.ts';
+import { readParsedSources } from '#cli/checks/general/structure/parsed-sources.ts';
 
 import {
     UNNAMED_VARIABLE_LABEL,
@@ -34,7 +33,7 @@ export async function checkStructureEnvironmentReaders(
     const environmentFunctions = planned.scope.settings.configurations.includes('secrets')
         ? getTable(planned.scope.settings, 'secrets').environment_functions
         : [];
-    const parsed = await parseCached({ ...session, files: planned.files, scope: planned.scope }, PARSED_SOURCES);
+    const parsed = await readParsedSources(session, planned);
     const readerVariables = new Set(
         parsed
             .filter((source) => source.language === 'bash' && isReader(source.path))

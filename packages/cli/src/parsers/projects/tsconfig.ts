@@ -1,8 +1,8 @@
 import ts from 'typescript';
 import { readFileSync, realpathSync } from 'node:fs';
+import { remember } from '#cli/system/files/cache.ts';
 import { NODE_MODULES } from '#cli/config/files/names.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
-import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
@@ -18,7 +18,7 @@ import {
     MISSING_EXTENDED_CONFIG,
 } from '#cli/config/parsers/projects/tsconfig.ts';
 
-const PARSED_TSCONFIGS = { create: () => new Map<string, ParsedTsconfig | undefined>() };
+const PARSED_TSCONFIGS = Symbol('parsed tsconfigs');
 
 function readReferencedProjects(root: string, path: string, reads: ReadCache): Map<string, ParsedTsconfig> {
     const projects = new Map<string, ParsedTsconfig>();
@@ -155,20 +155,21 @@ Resolve compiler options and inherited paths with the TypeScript compiler.
 @returns undefined when the file does not exist.
 */
 export function readTsconfig(root: string, path: string, reads: ReadCache): ParsedTsconfig | undefined {
-    const configurations = getCachedValue(reads, PARSED_TSCONFIGS);
-    const key = JSON.stringify([root, resolve(path)]);
-    if (configurations.has(key)) return configurations.get(key);
     try {
-        const text = readCompilerFile(root, path, reads);
-        const parsed =
-            text === undefined
-                ? undefined
-                : parseTsconfig(path, text, {
-                      ...ts.sys,
-                      readFile: (file) => readCompilerFile(root, file, reads),
-                  });
-        configurations.set(key, parsed);
-        return parsed;
+        return remember(
+            reads,
+            PARSED_TSCONFIGS,
+            JSON.stringify([root, resolve(path)]),
+            (): ParsedTsconfig | undefined => {
+                const text = readCompilerFile(root, path, reads);
+                return text === undefined
+                    ? undefined
+                    : parseTsconfig(path, text, {
+                          ...ts.sys,
+                          readFile: (file) => readCompilerFile(root, file, reads),
+                      });
+            },
+        );
     } catch (error) {
         throw buildTsconfigError(convertToPosixPath(relative(root, path)), error);
     }

@@ -4,6 +4,7 @@ import { availableParallelism } from 'node:os';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
+import { remember } from '#cli/system/files/cache.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
@@ -13,12 +14,10 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { DOCKER_TOOL } from '#cli/config/tools/inspect.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
-import { getCachedValue } from '#cli/system/files/cache.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { buildRunReport } from '#cli/commands/check/results.ts';
 import { type IgnoreRecord } from '#cli/types/settings/file.ts';
-import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { buildMiseProject } from '#cli/generation/tool-projects.ts';
 import { SHORT_HASH_LENGTH } from '#cli/config/commands/check/check.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
@@ -49,7 +48,7 @@ function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     return record.paths === undefined || record.paths.length === 0 || buildPathMatcher(record.paths)(finding.file);
 }
 
-const DOCKER_AVAILABILITY = { create: () => new Map<string, Promise<SpawnResult>>() };
+const DOCKER_AVAILABILITY = Symbol('docker availability');
 
 async function findUnrunnableResult(
     session: CheckSession,
@@ -66,17 +65,13 @@ async function findUnrunnableResult(
         ),
     );
     if ('status' in docker) return { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE };
-    const available = getCachedValue(session.reads, DOCKER_AVAILABILITY);
-    let pending = available.get(session.root);
-    if (pending === undefined) {
-        pending = spawnProcess([docker.path, 'info'], {
+    const result = await remember(session.reads, DOCKER_AVAILABILITY, session.root, () =>
+        spawnProcess([docker.path, 'info'], {
             cwd: session.root,
             timeoutSeconds: session.timeoutSeconds,
             cancelSignal: session.cancelSignal,
-        });
-        available.set(session.root, pending);
-    }
-    const result = await pending;
+        }),
+    );
     return result.code === 0
         ? undefined
         : { ...base, status: 'missing', note: 'Start Docker, then run the check again.' };

@@ -1,4 +1,5 @@
 import { type Node } from 'web-tree-sitter';
+import { remember } from '#cli/system/files/cache.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { type ParseCache } from '#cli/types/parsers/code/grammars.ts';
@@ -42,19 +43,27 @@ export function isDocstring(node: Node, siblings: Node[]): boolean {
     );
 }
 
-async function readPythonFiles(sources: SourceFiles): Promise<PythonFiles> {
-    const modules: PythonModule[] = [];
-    try {
+const PYTHON_FILES = Symbol('python files');
+
+/**
+Parse the Python sources once for each list of paths, and free their trees with the run.
+
+@param sources the files, the run cache, and the run resources.
+@returns the modules and their functions.
+*/
+export function readPythonFiles(sources: SourceFiles): Promise<PythonFiles> {
+    return remember(sources.reads, PYTHON_FILES, JSON.stringify(sources.files.map((file) => file.path)), async () => {
+        const modules: PythonModule[] = [];
         for (const file of sources.files) {
             if (file.kind !== 'source' || !file.path.endsWith(PYTHON_EXTENSION)) continue;
-            const text = readCachedText(sources.reads, file.path);
-            modules.push(await parsePythonModule(file.path, text, sources));
+            const module = await parsePythonModule(file.path, readCachedText(sources.reads, file.path), sources);
+            sources.resources.defer(() => {
+                module.tree.delete();
+            });
+            modules.push(module);
         }
         return { modules, functions: modules.flatMap((module) => listFunctions(module)) };
-    } catch (error) {
-        for (const module of modules) module.tree.delete();
-        throw error;
-    }
+    });
 }
 
 /**
@@ -90,9 +99,3 @@ export function findDocstring(definition: Node): string | undefined {
     const content = first.namedChildren[0]?.namedChildren.find((child) => child.type === 'string_content');
     return content?.text.trim() ?? '';
 }
-
-function deletePythonTrees(parsed: PythonFiles): void {
-    for (const source of parsed.modules) source.tree.delete();
-}
-
-export const PYTHON_SOURCES = { read: readPythonFiles, dispose: deletePythonTrees };

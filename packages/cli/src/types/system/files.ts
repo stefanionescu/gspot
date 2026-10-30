@@ -17,19 +17,10 @@ export type Files = {
     deleteTree(path: string): void;
 };
 
-export type CacheKey<Value extends object> = Readonly<{ create: () => Value }>;
-
 export type ReadCache = {
     root: string;
     sources: Map<string, Buffer>;
-    values: Map<object, object>;
+    values: Map<symbol, Map<unknown, unknown>>;
 };
 
 export type TemporaryFolder = Disposable & { path: string };
-
-export type CachedSourceFiles = { reads: ReadCache; resources: DisposableStack; files: { path: string }[] };
-
-export type ParseKey<Sources, Value extends object> = Readonly<{
-    read: (sources: Sources) => Promise<Value>;
-    dispose: (value: Value) => void;
-}>;

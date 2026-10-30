@@ -1,11 +1,10 @@
 import type { Node } from 'web-tree-sitter';
 import { getLimit } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
-import { parseCached } from '#cli/system/files/cache.ts';
 import { isDocstring } from '#cli/parsers/code/python.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
-import { PARSED_SOURCES } from '#cli/checks/general/structure/parsed-sources.ts';
+import { readParsedSources } from '#cli/checks/general/structure/parsed-sources.ts';
 import type { ParsedSource, ParsedLanguage } from '#cli/types/checks/general/structure.ts';
 
 import {
@@ -145,7 +144,7 @@ Report named functions at the statement limit and files that only forward code.
 @param planned the scope files and statement limits.
 */
 export async function checkStructureTrivialFunctions(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const parsed = await parseCached({ ...session, files: planned.files, scope: planned.scope }, PARSED_SOURCES);
+    const parsed = await readParsedSources(session, planned);
     const functions = parsed.flatMap((source) => listTrivialFunctions(planned, source));
     const files = parsed
         .filter((source) => isTrivialFile(source.tree.rootNode, source.language))

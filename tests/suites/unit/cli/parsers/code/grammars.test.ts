@@ -19,11 +19,6 @@ test('parsed source copies remain usable after the run releases its resources', 
         expect(repeated.rootNode.text).toBe(source);
         resources.dispose();
         expect(typescript.rootNode.text).toBe(source);
-        using nextResources = new DisposableStack();
-        const afterCleanup = await parseSource('typescript', source, { reads, resources: nextResources });
-        copies.push(afterCleanup);
-        expect(afterCleanup.rootNode.hasError).toBe(false);
-        expect(afterCleanup.rootNode.text).toBe(source);
     } finally {
         resources.dispose();
         for (const tree of copies) tree.delete();

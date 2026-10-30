@@ -3,15 +3,15 @@ import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { remember } from '#cli/system/files/cache.ts';
 import { CI_NODE } from '#cli/config/generation/ci.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { VERSION_FLAG } from '#cli/config/tools/versions.ts';
-import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import type { CacheKey, ReadCache } from '#cli/types/system/files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
 import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository/npm.ts';
@@ -31,7 +31,7 @@ import type {
     PackageManagerCommand,
 } from '#cli/types/repository/npm/package-manager.ts';
 
-const PACKAGE_MANAGER_VERSIONS: CacheKey<Map<string, PackageManager>> = { create: () => new Map() };
+const PACKAGE_MANAGER_VERSIONS = Symbol('package manager versions');
 
 function buildPackageManagerField(
     pin: { name: string | undefined; version: string | undefined },
@@ -145,7 +145,7 @@ export function readPackageManagerVersion(
     reads: ReadCache,
 ): PackageManager {
     const key = JSON.stringify([root, packageManager.name, packageManager.version]);
-    return getCachedMapValue(reads, PACKAGE_MANAGER_VERSIONS, key, () => {
+    return remember(reads, PACKAGE_MANAGER_VERSIONS, key, (): PackageManager => {
         const { name, version } = packageManager;
         if (version !== undefined) return { name, version };
         const result = spawnProcessBlocking([name, VERSION_FLAG], {

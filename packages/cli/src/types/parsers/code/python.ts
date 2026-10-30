@@ -12,4 +12,4 @@ export type PythonFunction = { path: string; name: string; node: Node; body: Nod
 
 export type PythonFiles = { modules: PythonModule[]; functions: PythonFunction[] };
 
-export type SourceFiles = ParseCache & { files: { path: string; kind: string }[] };
+export type SourceFiles = Required<ParseCache> & { files: { path: string; kind: string }[] };

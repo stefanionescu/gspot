@@ -2,11 +2,11 @@ import { posix } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
+import { remember } from '#cli/system/files/cache.ts';
 import { SYNTAX_RULE } from '#cli/config/checks/syntax.ts';
 import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
 import { type Migration, type MigrationRead } from '#cli/types/checks/postgres.ts';
@@ -25,7 +25,7 @@ import {
     DOWN_MIGRATION_SUFFIX,
 } from '#cli/config/checks/database/postgres/migrations.ts';
 
-const MIGRATIONS = { create: () => new Map<string, Promise<Migration[]>>() };
+const MIGRATIONS = Symbol('migrations');
 
 async function parseMigrations(session: Session, paths: Pick<Migration, 'path' | 'version'>[]): Promise<Migration[]> {
     const migrations: Migration[] = [];
@@ -56,7 +56,7 @@ export async function readMigrations(session: Session, planned: PlannedCheck): P
     const paths = listMigrationPaths(planned);
     if (paths.length === 0) return { migrations: [], findings: [] };
     const key = JSON.stringify(paths);
-    const migrations = await getCachedMapValue(session.reads, MIGRATIONS, key, () =>
+    const migrations = await remember(session.reads, MIGRATIONS, key, () =>
         parseMigrations(
             session,
             paths
@@ -121,7 +121,7 @@ export function extractForwardText(text: string): string {
     return text;
 }
 
-const COMMITTED_MIGRATIONS = { create: () => new Map<string, Promise<Map<string, string>>>() };
+const COMMITTED_MIGRATIONS = Symbol('committed migrations');
 
 /**
 Read the committed text of each migration file at a revision. A repository without Git has none.
@@ -139,7 +139,7 @@ export async function readCommittedMigrations(
     if (!session.repository.hasGit) return new Map<string, string>();
     const commit = revision === 'HEAD' ? await readHead(session.root, session.cancelSignal) : revision;
     if (commit === undefined) return new Map<string, string>();
-    return getCachedMapValue(session.reads, COMMITTED_MIGRATIONS, `${commit}\0${JSON.stringify(paths)}`, async () => {
+    return remember(session.reads, COMMITTED_MIGRATIONS, `${commit}\0${JSON.stringify(paths)}`, async () => {
         const committed = await listRevisionFiles(session.root, { kind: 'commit', hash: commit }, session.cancelSignal);
         const selected = new Set(paths);
         const files = committed.filter(

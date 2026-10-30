@@ -1,8 +1,7 @@
 import type { Session } from '#cli/types/session.ts';
-import { parseCached } from '#cli/system/files/cache.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
-import { PARSED_SOURCES } from '#cli/checks/general/structure/parsed-sources.ts';
+import { readParsedSources } from '#cli/checks/general/structure/parsed-sources.ts';
 import { BARE_BLOCK_RULE, BARE_BLOCK_MESSAGE } from '#cli/config/checks/general/structure/bare-blocks.ts';
 
 /**
@@ -13,7 +12,7 @@ of JavaScript and TypeScript.
 @param planned the scope sources.
 */
 export async function checkStructureBareBlocks(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const parsed = await parseCached({ ...session, files: planned.files, scope: planned.scope }, PARSED_SOURCES);
+    const parsed = await readParsedSources(session, planned);
     return parsed.flatMap((source) =>
         (source.captures.get('block') ?? [])
             .filter((node) => node.namedChildren.every((child) => child.type !== 'catch_block'))

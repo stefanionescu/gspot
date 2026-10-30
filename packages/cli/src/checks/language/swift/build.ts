@@ -1,11 +1,11 @@
 import { join, relative } from 'node:path';
+import { remember } from '#cli/system/files/cache.ts';
 import { type Files } from '#cli/types/system/files.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
-import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { prepareBuild, planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
@@ -23,7 +23,7 @@ import {
     MACOS_PRIVATE_PATH,
 } from '#cli/config/checks/language/swift/build.ts';
 
-const SWIFT_BUILD_OUTPUTS = { create: () => new Map<string, Promise<SwiftBuildOutput>>() };
+const SWIFT_BUILD_OUTPUTS = Symbol('swift build outputs');
 
 /**
 Turn the compiler lines of the reported levels into findings, with paths from the repository root.
@@ -94,7 +94,7 @@ export async function runSwiftBuild(
     planned: PlannedCheck,
     plan: SwiftBuildPlan,
 ): Promise<SwiftBuildOutput> {
-    return getCachedMapValue(session.reads, SWIFT_BUILD_OUTPUTS, plan.folder, async () => {
+    return remember(session.reads, SWIFT_BUILD_OUTPUTS, plan.folder, async (): Promise<SwiftBuildOutput> => {
         const { files, source } = prepareBuild(session.root, planned.files, plan.folder);
         if (plan.kind === 'package' && plan.purpose === 'analyze')
             files.deleteTree(convertToPosixPath(relative(plan.folder, plan.scratch)));

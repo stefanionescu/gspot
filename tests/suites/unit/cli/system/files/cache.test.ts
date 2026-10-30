@@ -1,58 +1,32 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { parseCached, getCachedValue, createReadCache, getCachedMapValue } from '#cli/system/files/cache.ts';
+import { remember, createReadCache } from '#cli/system/files/cache.ts';
 
-test('cache keys retain their objects and maps calculate each cached once', async () => {
+test('a remembered value is calculated once for each key and id', async () => {
     await using sandbox = await testdir({});
-    const reads = createReadCache(sandbox.path);
-    let creations = 0;
-    const key = {
-        create: () => {
-            creations += 1;
-            return {};
-        },
+    const cache = createReadCache(sandbox.path);
+    const key = Symbol('values');
+    const calculated: string[] = [];
+    const calculate = (id: string) => () => {
+        calculated.push(id);
+        return { id };
     };
-    const first = getCachedValue(reads, key);
-    expect(getCachedValue(reads, key)).toBe(first);
-    expect(creations).toBe(1);
-    let calculations = 0;
-    const map = { create: () => new Map<string, object>() };
-    const cached = getCachedMapValue(reads, map, 'same', () => {
-        calculations += 1;
-        return {};
-    });
-    expect(
-        getCachedMapValue(reads, map, 'same', () => {
-            calculations += 1;
-            return {};
-        }),
-    ).toBe(cached);
-    expect(calculations).toBe(1);
+    const first = remember(cache, key, 'first', calculate('first'));
+    expect(remember(cache, key, 'first', calculate('first'))).toBe(first);
+    expect(remember(cache, key, 'second', calculate('second'))).toStrictEqual({ id: 'second' });
+    expect(remember(cache, Symbol('values'), 'first', calculate('first'))).not.toBe(first);
+    expect(calculated).toStrictEqual(['first', 'second', 'first']);
 });
 
-test('a rejected parse is retried and a successful parse is shared until disposal', async () => {
+test('a remembered undefined result is not calculated again', async () => {
     await using sandbox = await testdir({});
-    using resources = new DisposableStack();
-    const sources = { reads: createReadCache(sandbox.path), resources, files: [{ path: 'source.ts' }] };
-    const failure = new Error('Parsing failed.');
-    const value = {};
-    let readsCount = 0;
-    const disposed: object[] = [];
-    const key = {
-        read: (): Promise<object> => {
-            readsCount += 1;
-            return readsCount === 1 ? Promise.reject(failure) : Promise.resolve(value);
-        },
-        dispose: (parsed: object): void => {
-            disposed.push(parsed);
-        },
-    };
-    expect(await captureRejection(parseCached(sources, key))).toBe(failure);
-    expect(await parseCached(sources, key)).toBe(value);
-    expect(await parseCached(sources, key)).toBe(value);
-    expect(readsCount).toBe(2);
-    expect(disposed).toStrictEqual([]);
-    resources.dispose();
-    expect(disposed).toStrictEqual([value]);
+    const cache = createReadCache(sandbox.path);
+    const key = Symbol('missing');
+    const calculated: string[] = [];
+    for (const id of ['path', 'path'])
+        remember(cache, key, id, () => {
+            calculated.push(id);
+            return undefined;
+        });
+    expect(calculated).toStrictEqual(['path']);
 });

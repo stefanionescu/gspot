@@ -1,5 +1,6 @@
 import { Query, type Node } from 'web-tree-sitter';
 import type { Session } from '#cli/types/session.ts';
+import { remember } from '#cli/system/files/cache.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
@@ -27,29 +28,33 @@ function captureSource(source: ParsedSource): void {
     }
 }
 
-async function readParsedSources(
-    input: Pick<Session, 'root' | 'reads' | 'resources'> & Pick<PlannedCheck, 'files' | 'scope'>,
+const PARSED_SOURCES = Symbol('parsed sources');
+
+/**
+Parse the scope sources once for each list of paths, and free their trees with the run.
+
+@param session the run cache and resources.
+@param planned the scope files and the configurations that select their languages.
+@returns the trees and their query captures.
+*/
+export function readParsedSources(
+    session: Pick<Session, 'reads' | 'resources'>,
+    planned: Pick<PlannedCheck, 'files' | 'scope'>,
 ): Promise<ParsedSource[]> {
-    const sources: ParsedSource[] = [];
-    try {
-        for (const file of input.files) {
+    return remember(session.reads, PARSED_SOURCES, JSON.stringify(planned.files.map((file) => file.path)), async () => {
+        const sources: ParsedSource[] = [];
+        for (const file of planned.files) {
             if (file.kind !== 'source') continue;
             const language = detectLanguage(file);
-            if (language === undefined || !input.scope.settings.configurations.includes(language)) continue;
-            const tree = await parseSource(language, readCachedText(input.reads, file.path), input);
+            if (language === undefined || !planned.scope.settings.configurations.includes(language)) continue;
+            const tree = await parseSource(language, readCachedText(session.reads, file.path), session);
+            session.resources.defer(() => {
+                tree.delete();
+            });
             const source = { path: file.path, language, tree, captures: new Map<string, Node[]>() };
             sources.push(source);
             captureSource(source);
         }
         return sources;
-    } catch (error) {
-        releaseParsedSources(sources);
-        throw error;
-    }
+    });
 }
-
-function releaseParsedSources(sources: ParsedSource[]): void {
-    for (const source of sources) source.tree.delete();
-}
-
-export const PARSED_SOURCES = { read: readParsedSources, dispose: releaseParsedSources };

@@ -1,40 +1,23 @@
 import { realpathSync } from 'node:fs';
-import { type CacheKey, type ParseKey, type ReadCache, type CachedSourceFiles } from '#cli/types/system/files.ts';
+import { type ReadCache } from '#cli/types/system/files.ts';
 
 /**
-Return the value of a key for this run, and create it on the first call.
+Calculate a value once for each key and id in a run cache. A rejected promise stays, so later calls share its failure.
 
-@param reads the run cache.
-@param key the key, whose function creates the value.
+@param cache the run cache.
+@param key the symbol of the calculation.
+@param id what the value depends on, compared as a Map key.
+@param compute the calculation, called on the first request.
+@returns the value of the first call.
 */
-export function getCachedValue<Value extends object>(reads: ReadCache, key: CacheKey<Value>): Value {
-    const held = reads.values.get(key);
-    if (held !== undefined) return held as Value;
-    const value = key.create();
-    reads.values.set(key, value);
-    return value;
-}
-
-/**
-Reuse one calculated value in a map that the run owns.
-
-@param reads the run cache.
-@param key the map producer.
-@param id the key of the calculation.
-@param create the calculation.
-@returns the cached value, or its first calculated value.
-*/
-export function getCachedMapValue<Key, Value>(
-    reads: ReadCache,
-    key: CacheKey<Map<Key, Value>>,
-    id: Key,
-    create: () => Value,
-): Value {
-    const values = getCachedValue(reads, key);
-    if (values.has(id)) return values.get(id) as Value;
-    const value = create();
-    values.set(id, value);
-    return value;
+export function remember<Value>(cache: ReadCache, key: symbol, id: unknown, compute: () => Value): Value {
+    let values = cache.values.get(key);
+    if (values === undefined) {
+        values = new Map();
+        cache.values.set(key, values);
+    }
+    if (!values.has(id)) values.set(id, compute());
+    return values.get(id) as Value;
 }
 
 /**
@@ -46,37 +29,4 @@ Create the cache of source bytes and derived values for one repository root.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers in many layers and the tests open the run cache through it, with the real root that contained reads compare against.
 export function createReadCache(root: string): ReadCache {
     return { root: realpathSync(root), sources: new Map(), values: new Map() };
-}
-
-/**
-Parse the files once per reader key and ordered path list.
-
-@param sources the paths to parse and the run resources.
-@param key the reader and its disposer.
-@returns the parsed value for the lifetime of those resources.
-*/
-export async function parseCached<Sources extends CachedSourceFiles, Value extends object>(
-    sources: Sources,
-    key: ParseKey<Sources, Value>,
-): Promise<Value> {
-    const promises =
-        (sources.reads.values.get(key) as Map<string, Promise<Value>> | undefined) ?? new Map<string, Promise<Value>>();
-    sources.reads.values.set(key, promises);
-    const paths = JSON.stringify(sources.files.map((file) => file.path));
-    let pending = promises.get(paths);
-    if (pending === undefined) {
-        pending = key.read(sources);
-        promises.set(paths, pending);
-        try {
-            const value = await pending;
-            sources.resources.defer(() => {
-                promises.delete(paths);
-                key.dispose(value);
-            });
-        } catch (error) {
-            promises.delete(paths);
-            throw error;
-        }
-    }
-    return pending;
 }

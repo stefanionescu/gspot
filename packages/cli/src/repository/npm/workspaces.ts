@@ -1,7 +1,7 @@
 import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
+import { remember } from '#cli/system/files/cache.ts';
 import { join, posix, dirname, relative } from 'node:path';
-import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
@@ -38,7 +38,7 @@ function listWorkspacePackages(root: string): Package[] {
     }
 }
 
-const WORKSPACE_SOURCES = { create: () => new Map<string, string[]>() };
+const WORKSPACE_SOURCES = Symbol('workspace sources');
 
 function listWorkspaceImportFolders(reads: ReadCache, folder: string, ordered: string[]): string[] {
     const root = reads.root;
@@ -67,52 +67,49 @@ publish.
 */
 export function listWorkspaceDependencySources(reads: ReadCache, scopePath: string, files: TrackedFile[]): string[] {
     const root = reads.root;
-    const cache = getCachedValue(reads, WORKSPACE_SOURCES);
     const tracked = new Set(files.map((file) => file.path));
     const packageJsonPath = listEnclosingFolders(scopePath)
         .map((folder) => joinScope(folder, PACKAGE_JSON))
         .find((path) => tracked.has(path));
     if (packageJsonPath === undefined) return [];
-    const key = JSON.stringify([root, packageJsonPath]);
-    const held = cache.get(key);
-    if (held !== undefined) return held;
-    const projectRoot = extractParentFolder(packageJsonPath);
-    const ordered = [...new Set([projectRoot, ...listWorkspaceFolders(root)])].toSorted(
-        (left, right) => right.length - left.length,
-    );
-    const packages = new Map(ordered.map((path) => [path, readPackageJson(root, posix.join(path, PACKAGE_JSON))]));
-    const pending = [projectRoot];
-    let index = 0;
-    while (index < pending.length) {
-        const folder = pending[index] as string;
-        index += 1;
-        const packageJson = packages.get(folder);
-        if (packageJson === undefined)
-            throw new Error(`The workspace package.json is missing: ${posix.join(folder, PACKAGE_JSON)}`);
-        const names = Object.keys({
-            ...packageJson.dependencies,
-            ...packageJson.devDependencies,
-            ...packageJson.peerDependencies,
-            ...packageJson.optionalDependencies,
-        });
-        const sources = listWorkspaceImportFolders(reads, folder, ordered);
-        const dependencies = [...packages]
-            .filter(([, dependency]) => dependency?.name !== undefined && names.includes(dependency.name))
-            .map(([path]) => path);
-        pending.push(...[...new Set([...sources, ...dependencies])].filter((path) => !pending.includes(path)));
-    }
-    const visited = new Set(pending);
-    visited.delete(projectRoot);
-    const selected = files
-        .filter((file) => {
-            const owner = ordered.find((workspace) => isInScope(file.path, workspace));
-            return owner !== undefined && visited.has(owner);
-        })
-        .map((file) => file.path);
-    const packageJsonPaths = [...visited].map((path) => posix.join(path, PACKAGE_JSON));
-    selected.push(...listPackageFiles(root, packageJsonPaths));
-    cache.set(key, selected);
-    return selected;
+    return remember(reads, WORKSPACE_SOURCES, JSON.stringify([root, packageJsonPath]), () => {
+        const projectRoot = extractParentFolder(packageJsonPath);
+        const ordered = [...new Set([projectRoot, ...listWorkspaceFolders(root)])].toSorted(
+            (left, right) => right.length - left.length,
+        );
+        const packages = new Map(ordered.map((path) => [path, readPackageJson(root, posix.join(path, PACKAGE_JSON))]));
+        const pending = [projectRoot];
+        let index = 0;
+        while (index < pending.length) {
+            const folder = pending[index] as string;
+            index += 1;
+            const packageJson = packages.get(folder);
+            if (packageJson === undefined)
+                throw new Error(`The workspace package.json is missing: ${posix.join(folder, PACKAGE_JSON)}`);
+            const names = Object.keys({
+                ...packageJson.dependencies,
+                ...packageJson.devDependencies,
+                ...packageJson.peerDependencies,
+                ...packageJson.optionalDependencies,
+            });
+            const sources = listWorkspaceImportFolders(reads, folder, ordered);
+            const dependencies = [...packages]
+                .filter(([, dependency]) => dependency?.name !== undefined && names.includes(dependency.name))
+                .map(([path]) => path);
+            pending.push(...[...new Set([...sources, ...dependencies])].filter((path) => !pending.includes(path)));
+        }
+        const visited = new Set(pending);
+        visited.delete(projectRoot);
+        const selected = files
+            .filter((file) => {
+                const owner = ordered.find((workspace) => isInScope(file.path, workspace));
+                return owner !== undefined && visited.has(owner);
+            })
+            .map((file) => file.path);
+        const packageJsonPaths = [...visited].map((path) => posix.join(path, PACKAGE_JSON));
+        selected.push(...listPackageFiles(root, packageJsonPaths));
+        return selected;
+    });
 }
 
 /**

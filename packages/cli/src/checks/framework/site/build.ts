@@ -1,11 +1,11 @@
 import { join, relative } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { remember } from '#cli/system/files/cache.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { getCachedValue } from '#cli/system/files/cache.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
@@ -15,7 +15,7 @@ import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { type SiteBuild } from '#cli/types/checks/framework/site.ts';
 import { BUILD_RULE, UNBUILT_SITE_NOTE } from '#cli/config/checks/framework/site/build.ts';
 
-const SITE_BUILDS = { create: () => new Map<string, Promise<SiteBuild>>() };
+const SITE_BUILDS = Symbol('site builds');
 
 async function runSiteBuild(session: CheckSession, planned: PlannedCheck, copyRoot: string): Promise<SiteBuild> {
     const site = getTable(planned.scope.settings, 'site');
@@ -33,17 +33,10 @@ async function runSiteBuild(session: CheckSession, planned: PlannedCheck, copyRo
 }
 
 function readSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<SiteBuild> {
-    const key = join(session.root, planned.scope.path);
-    const scopeBuilds = getCachedValue(session.reads, SITE_BUILDS);
-    const held = scopeBuilds.get(key);
-    if (held !== undefined) return held;
-    const running = (async () => {
-        session.resources.defer(() => scopeBuilds.delete(key));
+    return remember(session.reads, SITE_BUILDS, join(session.root, planned.scope.path), async () => {
         const folder = await createCheckCopy(session, planned);
         return runSiteBuild(session, planned, session.resources.use(folder).path);
-    })();
-    scopeBuilds.set(key, running);
-    return running;
+    });
 }
 
 /**

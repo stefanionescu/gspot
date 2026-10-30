@@ -2,7 +2,6 @@ import { join, posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildUvRunCommand } from '#cli/tools/uv.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
-import { parseCached } from '#cli/system/files/cache.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { countCodeLines } from '#cli/checks/code-lines.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
@@ -22,7 +21,7 @@ import { runCommandCheck, runCommandBatches } from '#cli/runs/command/check.ts';
 import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { RUFF_TABLE } from '#cli/config/generation/configurations/language/python.ts';
 import { deptrySchema, docstringStyleSchema } from '#cli/schemas/checks/language/python.ts';
-import { findDocstring, PYTHON_SOURCES, parsePythonModule } from '#cli/parsers/code/python.ts';
+import { findDocstring, readPythonFiles, parsePythonModule } from '#cli/parsers/code/python.ts';
 import { type PydoclintOptions, type PythonDocstringStyle } from '#cli/types/checks/language/python.ts';
 
 import {
@@ -100,10 +99,7 @@ async function listLongFunctions(
     path: string,
     limit: number,
 ): Promise<CheckFinding[]> {
-    const { functions } = await parseCached(
-        { root: session.root, reads: session.reads, resources: session.resources, files },
-        PYTHON_SOURCES,
-    );
+    const { functions } = await readPythonFiles({ reads: session.reads, resources: session.resources, files });
     const findings = await Promise.all(
         functions
             .filter((definition) => definition.path === path)
@@ -199,10 +195,11 @@ export async function checkPythonPlaceholderDocstrings(
     session: Session,
     planned: PlannedCheck,
 ): Promise<CheckFinding[]> {
-    const { functions, modules } = await parseCached(
-        { root: session.root, reads: session.reads, resources: session.resources, files: planned.files },
-        PYTHON_SOURCES,
-    );
+    const { functions, modules } = await readPythonFiles({
+        reads: session.reads,
+        resources: session.resources,
+        files: planned.files,
+    });
     const definitions = [
         ...functions,
         ...modules.flatMap(({ path, tree }) =>

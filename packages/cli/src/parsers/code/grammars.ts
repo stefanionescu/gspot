@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
+import { remember } from '#cli/system/files/cache.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
-import { getCachedValue } from '#cli/system/files/cache.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
@@ -20,7 +20,7 @@ import {
     type GrammarSourceFiles,
 } from '#cli/types/parsers/code/grammars.ts';
 
-const PARSED_TREES = { create: () => new Map<GrammarName, Map<string, Tree>>() };
+const PARSED_TREES = Symbol('parsed trees');
 
 const grammars: ParserGrammars = {
     runtime: undefined,
@@ -71,20 +71,14 @@ Share one parse per run, and give each reader its own tree handle to dispose.
 */
 export async function parseSource(grammar: GrammarName, text: string, cache?: ParseCache): Promise<Tree> {
     const parser = await getParser(grammar);
-    if (cache?.resources === undefined) return parser.parse(text) as Tree;
-    const trees = getCachedValue(cache.reads, PARSED_TREES);
-    let sources = trees.get(grammar);
-    if (sources === undefined) {
-        sources = new Map<string, Tree>();
-        trees.set(grammar, sources);
-    }
-    const held = sources.get(text);
-    if (held !== undefined) return held.copy();
-    const tree = parser.parse(text) as Tree;
-    sources.set(text, tree);
-    cache.resources.defer(() => {
-        sources.delete(text);
-        tree.delete();
+    const resources = cache?.resources;
+    if (cache === undefined || resources === undefined) return parser.parse(text) as Tree;
+    const tree = remember(cache.reads, PARSED_TREES, `${grammar}\0${text}`, () => {
+        const parsed = parser.parse(text) as Tree;
+        resources.defer(() => {
+            parsed.delete();
+        });
+        return parsed;
     });
     return tree.copy();
 }

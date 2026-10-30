@@ -1,10 +1,8 @@
 import { join } from 'node:path/posix';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
-import { type CacheKey } from '#cli/types/system/files.ts';
-import { getCachedMapValue } from '#cli/system/files/cache.ts';
+import { remember } from '#cli/system/files/cache.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
-import type { Repository } from '#cli/types/repository/files.ts';
 import { buildConfigFile } from '#cli/generation/config-files/build.ts';
 import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';
 import { CONFIG_FILE_SCOPES_FOLDER } from '#cli/config/generation/config-files/generate.ts';
@@ -19,7 +17,7 @@ import type {
     ConfigFileBuildState,
 } from '#cli/types/generation/files.ts';
 
-const configFilesKey: CacheKey<Map<Repository, ConfigFileGeneration>> = { create: () => new Map() };
+const CONFIG_FILES = Symbol('config files');
 
 /**
 Reuse generated settings only while the session keeps the same repository read cache.
@@ -29,9 +27,7 @@ Reuse generated settings only while the session keeps the same repository read c
 export function buildConfigFiles(session: Session): ConfigFileGeneration {
     const repositorySession =
         session.root === session.repository.root ? session : { ...session, root: session.repository.root };
-    return getCachedMapValue(session.reads, configFilesKey, session.repository, () =>
-        buildScopeConfigFiles(repositorySession),
-    );
+    return remember(session.reads, CONFIG_FILES, session.repository, () => buildScopeConfigFiles(repositorySession));
 }
 
 function buildOwnedOutput(
