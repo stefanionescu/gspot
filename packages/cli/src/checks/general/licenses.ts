@@ -177,15 +177,13 @@ async function scanProject(
 async function scanLicenses(session: CheckSession, planned: PlannedCheck) {
     const projects = listLicenseProjects(planned.files, session.scopes, session.settings, planned.check);
     if (projects.length === 0) throw new GspotError('skip', NO_ALLOWED_LICENSES_NOTE);
-    const inventories: ProjectLicenses[] = [];
-    for (const project of projects) {
-        if (
+    const scanned = projects.filter(
+        (project) =>
             project.skip === undefined &&
             (basename(project.dependencyFile) !== PACKAGE_JSON ||
-                (readDependencySpecifiers(session.reads, project.dependencyFile)?.size ?? 0) > 0)
-        )
-            inventories.push(await scanProject(session, planned, project));
-    }
+                (readDependencySpecifiers(session.reads, project.dependencyFile)?.size ?? 0) > 0),
+    );
+    const inventories = await Promise.all(scanned.map((project) => scanProject(session, planned, project)));
     return { inventories, hasSkipped: projects.some(({ skip }) => skip !== undefined) };
 }
 
