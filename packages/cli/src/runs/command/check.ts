@@ -34,6 +34,7 @@ import {
     expandCommand,
     listCopyFiles,
     replacePlaceholders,
+    runsInPackageFolder,
     buildFileCommandLines,
     listCommandConfigFiles,
 } from '#cli/runs/command/placeholders.ts';
@@ -162,6 +163,13 @@ function findMissingOtherTool(
     return undefined;
 }
 
+function selectCommandFolder(root: string, planned: PlannedCheck): string {
+    const { check, scope } = planned;
+    const usesScopeFolder =
+        check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root') || runsInPackageFolder(root, planned);
+    return usesScopeFolder ? join(root, scope.path) : root;
+}
+
 /**
 Resolves the working folder and expands the tool environment values.
 
@@ -176,9 +184,8 @@ export function buildCommandSetup(
     planned: PlannedCheck,
     { options, root }: { options: CheckRunOptions; root: string },
 ): CommandSetup {
-    const { check, scope } = planned;
-    const usesScopeFolder = check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root');
-    const cwd = usesScopeFolder ? join(root, scope.path) : root;
+    const { scope } = planned;
+    const cwd = selectCommandFolder(root, planned);
     const substitutions = buildCommandSubstitutions(root, planned, cwd);
     const files = substitutions.files;
     if (options.listFileArguments !== undefined) substitutions.files = options.listFileArguments(session, planned);

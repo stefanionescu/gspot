@@ -87,7 +87,7 @@ test('an empty list setting is refused as a settings error', async () => {
 });
 
 test.each([...WORKSPACE_SCOPE_CASES])(
-    'workspace expansion keeps arguments only for a package scope: $scope',
+    'workspace expansion keeps arguments only for a workspace package scope: $scope',
     async ({ scope, expected }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['swift']),

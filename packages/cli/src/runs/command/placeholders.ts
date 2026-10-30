@@ -71,19 +71,29 @@ function expandArgument(
     if (argument === FILES_PLACEHOLDER) return substitutions.files;
     if (argument === FILE_PLACEHOLDER) return [{ file: true }];
     const workspace = WORKSPACE_PLACEHOLDER.exec(argument)?.[1];
-    if (workspace !== undefined) {
-        if (
-            substitutions.scope === '' ||
-            statSync(join(substitutions.root, substitutions.scope, PACKAGE_JSON), { throwIfNoEntry: false }) ===
-                undefined
-        )
-            return [];
-        return [
-            listWorkspaceFolders(substitutions.root).includes(substitutions.scope) ? workspace : '--directory',
-            substitutions.scope,
-        ];
-    }
+    if (workspace !== undefined)
+        return substitutions.scope !== '' && listWorkspaceFolders(substitutions.root).includes(substitutions.scope)
+            ? [workspace, substitutions.scope]
+            : [];
     return [replacePlaceholders(session, planned, argument, substitutions)];
+}
+
+/**
+Check whether a check that names {workspace:<flag>} runs in its scope folder. That happens when the scope holds its own
+package.json and no workspace declares it. The tool then runs in that package as in a repository of its own, and
+reports its paths from there.
+
+@param root the repository, or the copy of it that the tool runs in.
+@param planned the check and its scope.
+*/
+export function runsInPackageFolder(root: string, planned: PlannedCheck): boolean {
+    const scopePath = planned.scope.path;
+    if (scopePath === '' || !(planned.check.command ?? []).some((argument) => WORKSPACE_PLACEHOLDER.test(argument)))
+        return false;
+    return (
+        statSync(join(root, scopePath, PACKAGE_JSON), { throwIfNoEntry: false }) !== undefined &&
+        !listWorkspaceFolders(root).includes(scopePath)
+    );
 }
 
 /**
