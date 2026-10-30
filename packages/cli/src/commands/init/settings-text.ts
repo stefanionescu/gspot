@@ -126,7 +126,7 @@ export function buildInitSettings(
     const document = buildSettingsTable(draft, repository, configurationsByName);
     setKey(document, 'hooks.enabled', true);
     setKey(document, 'rules.enabled', true);
-    Reflect.deleteProperty(document, 'ci');
+    delete document['ci'];
     const checked = settingsSchema.safeParse(document);
     if (draft.template !== undefined && !checked.success) {
         const errors = checked.error.issues

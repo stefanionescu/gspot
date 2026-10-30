@@ -29,7 +29,7 @@ export function buildJsonSchema(): z.core.JSONSchema.JSONSchema {
             if (zodSchema instanceof z.ZodArray && jsonSchema.$ref !== undefined) jsonSchema.type = 'array';
             for (const key of HIDDEN_FACT_KEYS) Reflect.deleteProperty(jsonSchema, key);
             if (zodSchema instanceof z.ZodDefault && zodSchema.def.innerType instanceof z.ZodUnion) {
-                Reflect.deleteProperty(jsonSchema, 'minimum');
+                delete jsonSchema['minimum'];
                 jsonSchema.default = zodSchema.def.defaultValue;
             }
             const definition = z.globalRegistry.get(zodSchema);

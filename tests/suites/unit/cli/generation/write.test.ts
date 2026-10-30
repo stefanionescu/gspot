@@ -81,7 +81,7 @@ test('leaving level all removes the managed commitlint field from every package.
     await writeGeneratedFiles(session, generated, writer);
     for (const [path, source] of installed) {
         const expected = JSON.parse(source) as Record<string, unknown>;
-        Reflect.deleteProperty(expected, 'commitlint');
+        delete expected['commitlint'];
         const contents: unknown = JSON.parse(await readFile(join(sandbox.path, path), 'utf8'));
         expect(contents).toStrictEqual(expected);
     }
@@ -112,7 +112,7 @@ test('removing css drops its managed stylelint field and keeps authored fields b
     for (const [path, source] of installed) {
         if (['package.json', 'app/child/package.json', 'other/package.json'].includes(path)) {
             const expected = JSON.parse(source) as Record<string, unknown>;
-            Reflect.deleteProperty(expected, 'stylelint');
+            delete expected['stylelint'];
             const contents: unknown = JSON.parse(await readFile(join(sandbox.path, path), 'utf8'));
             expect(contents).toStrictEqual(expected);
         } else expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);

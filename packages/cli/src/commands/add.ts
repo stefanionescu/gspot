@@ -12,7 +12,7 @@ function restoreConfigurations(table: TomlTable, added: string[]): void {
     const previous = table['removed_configurations'];
     if (!isTable(previous)) return;
     const remaining = Object.entries(previous).filter(([name]) => !added.includes(name));
-    if (remaining.length === 0) Reflect.deleteProperty(table, 'removed_configurations');
+    if (remaining.length === 0) delete table['removed_configurations'];
     else table['removed_configurations'] = Object.fromEntries(remaining);
 }
 

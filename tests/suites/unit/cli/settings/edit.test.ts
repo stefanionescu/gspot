@@ -70,7 +70,7 @@ test('reordering keys does not change the file', async () => {
     await writeFile(join(sandbox.path, 'gspot.toml'), source);
     const edit = readSettingsEdit(sandbox.path);
     const configurations = edit.table['configurations'];
-    Reflect.deleteProperty(edit.table, 'configurations');
+    delete edit.table['configurations'];
     edit.table['configurations'] = configurations;
     const result = buildEditedSettings(sandbox.path, edit);
     expect(result.changed).toBe(false);

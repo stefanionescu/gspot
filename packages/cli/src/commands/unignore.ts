@@ -102,7 +102,7 @@ async function runUnignoreCommand(
         .filter(({ count }) => count !== 0)
         .map(({ message }) => message)
         .join(' ');
-    if (kept.length === 0) Reflect.deleteProperty(input.table, 'ignore');
+    if (kept.length === 0) delete input.table['ignore'];
     else input.table['ignore'] = kept;
     return await applySettingsEdit(root, {
         reads: context.reads,

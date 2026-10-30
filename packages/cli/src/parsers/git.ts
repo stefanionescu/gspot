@@ -138,14 +138,14 @@ Read attribute tokens from one selector, clearing entries with the ! prefix.
 @param tokens the attribute tokens from one matching pattern.
 */
 export function mergeAttributes(tokens: string[]): Record<string, string> {
-    const attributes: Record<string, string> = {};
+    const attributes = new Map<string, string>();
     for (const match of tokens) {
         const [name = '', value = 'set'] = match.split('=', ATTRIBUTE_ASSIGNMENT_SIDES);
-        if (name.startsWith('!')) Reflect.deleteProperty(attributes, name.slice(1));
-        else if (name.startsWith('-')) attributes[name.slice(1)] = 'unset';
-        else attributes[name] = value;
+        if (name.startsWith('!')) attributes.delete(name.slice(1));
+        else if (name.startsWith('-')) attributes.set(name.slice(1), 'unset');
+        else attributes.set(name, value);
     }
-    return attributes;
+    return Object.fromEntries(attributes);
 }
 
 /**

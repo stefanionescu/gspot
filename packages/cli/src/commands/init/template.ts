@@ -79,18 +79,19 @@ function splitSettings(settings: TomlTable): { table: TomlTable; leftOut: LeftOu
 }
 
 function splitTemplate(written: TomlTable): { table: TomlTable; leftOut: LeftOutSetting[] } {
-    const settings = { ...written };
     const leftOut: LeftOutSetting[] = [];
     const commandChecks = new Set(((written['command_check'] ?? []) as TomlTable[]).map((record) => record['id']));
     for (const [name, label] of Object.entries(LOCAL_RECORDS)) {
         const note = name === 'command_check' ? LEFT_OUT_NOTES.code : LEFT_OUT_NOTES.paths;
-        for (const record of (settings[name] ?? []) as TomlTable[])
+        for (const record of (written[name] ?? []) as TomlTable[])
             leftOut.push({ key: `[[${name}]] ${String(record[label])}`, note });
-        Reflect.deleteProperty(settings, name);
     }
-    const ignores = splitIgnores((settings['ignore'] ?? []) as TomlTable[], commandChecks);
-    Reflect.deleteProperty(settings, 'ignore');
-    const copied = splitSettings(settings);
+    const ignores = splitIgnores((written['ignore'] ?? []) as TomlTable[], commandChecks);
+    const copied = splitSettings(
+        Object.fromEntries(
+            Object.entries(written).filter(([name]) => name !== 'ignore' && !Object.hasOwn(LOCAL_RECORDS, name)),
+        ),
+    );
     if (ignores.kept.length > 0) copied.table['ignore'] = ignores.kept;
     return { table: copied.table, leftOut: [...leftOut, ...ignores.leftOut, ...copied.leftOut] };
 }

@@ -225,7 +225,7 @@ export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable 
         const paths: readonly unknown[] = writtenPaths;
         const previousPaths: readonly unknown[] = previous;
         matching['paths'] = [...new Set([...previousPaths, ...paths])];
-    } else Reflect.deleteProperty(matching, 'paths');
+    } else delete matching['paths'];
     return matching;
 }
 
