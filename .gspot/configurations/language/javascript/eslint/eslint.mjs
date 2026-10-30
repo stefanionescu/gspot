@@ -123,6 +123,7 @@ export default [
             "docs/dist/**",
             "docs/.astro/**",
             "docs/.wrangler/**",
+            "packages/*/LICENSE.md",
             "findings/**",
             ".gspot/**",
             "eslint.config.mjs",
