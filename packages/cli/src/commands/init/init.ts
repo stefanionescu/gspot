@@ -5,17 +5,17 @@ import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import type { Session } from '#cli/types/session.ts';
 import { writeSettings } from '#cli/settings/file.ts';
+import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { createInterface } from 'node:readline/promises';
+import type { RunCache } from '#cli/types/system/cache.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { selectForInit } from '#cli/repository/proposals.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTemplate } from '#cli/commands/init/template.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { readRepositorySetup } from '#cli/repository/setup.ts';
@@ -123,10 +123,10 @@ export function registerInit(program: Command, onResult: CommandCompletion): voi
 
 async function openPlannedSession(
     root: string,
-    { reads, listing, settingsFile }: { reads: ReadCache; listing: RepositoryListing; settingsFile: SettingsFile },
+    { cache, listing, settingsFile }: { cache: RunCache; listing: RepositoryListing; settingsFile: SettingsFile },
 ): Promise<Session> {
     const bytes = Buffer.from(settingsFile.text);
-    reads.sources.set(SETTINGS_FILE, bytes);
+    cache.sources.set(SETTINGS_FILE, bytes);
     const trackedSettings = {
         path: SETTINGS_FILE,
         executable: false,
@@ -136,22 +136,22 @@ async function openPlannedSession(
     };
     return openSession(root, {
         settingsFile,
-        reads,
+        cache,
         listing: { ...listing, files: [...listing.files, trackedSettings] },
     });
 }
 
 async function planInit(root: string, options: InitOptions): Promise<InitPlanning> {
-    const reads = createReadCache(root);
+    const cache = createRunCache(root);
     const configurationsByName = readConfigurations();
-    const listing = await listRepositoryFiles(reads);
-    const repository = await readRepository(reads, listing, { generatedPaths: [], scopes: [], configurationsByName });
+    const listing = await listRepositoryFiles(cache);
+    const repository = await readRepository(cache, listing, { generatedPaths: [], scopes: [], configurationsByName });
     const initConfigurations = selectForInit({ repository, configurationsByName, options });
-    const repositorySetup = await readRepositorySetup(reads, repository);
+    const repositorySetup = await readRepositorySetup(cache, repository);
     const draft = buildSettingsDraft(initConfigurations, options);
     const settingsText = buildInitSettings(draft, repository, configurationsByName);
     const settings = readSettings(settingsText, root);
-    const session = await openPlannedSession(root, { reads, listing, settingsFile: { settings, text: settingsText } });
+    const session = await openPlannedSession(root, { cache, listing, settingsFile: { settings, text: settingsText } });
     const everySelected = listSelectedConfigurations(session.scopes);
     const applicable = session.toolConfigurations;
     const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));

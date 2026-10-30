@@ -31,7 +31,7 @@ async function readEnvironmentReferences(
     path: string,
     environmentFunctions: string[],
 ): Promise<EnvironmentRead[]> {
-    const text = read(session.reads, path);
+    const text = read(session.cache, path);
     if (!path.endsWith(PYTHON_EXTENSION)) return listJavascriptEnvironmentReads(path, text, environmentFunctions);
     using tree = await parseSource('python', text, session);
     return listPythonEnvironmentReads(tree.rootNode, environmentFunctions);
@@ -99,7 +99,7 @@ export async function checkSecretsEnvExamples(session: Session, planned: Planned
         );
     const exampleKeys = new Set(
         examples.flatMap((file) => {
-            const lines = read(session.reads, file.path).split('\n');
+            const lines = read(session.cache, file.path).split('\n');
             return lines.flatMap((line) => {
                 const key = ENV_KEY_LINE.exec(line.trim())?.groups?.['key'];
                 return key === undefined ? [] : [key];

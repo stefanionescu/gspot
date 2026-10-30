@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
+import { remember } from '#cli/system/cache.ts';
 import { read } from '#cli/system/files/reads.ts';
-import { remember } from '#cli/system/files/cache.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
@@ -75,7 +75,7 @@ export async function parseSource(grammar: GrammarName, text: string, cache?: Pa
     const tree =
         cache === undefined || resources === undefined
             ? (parser.parse(text) as Tree)
-            : remember(cache.reads, PARSED_TREES, `${grammar}\0${text}`, () => {
+            : remember(cache.cache, PARSED_TREES, `${grammar}\0${text}`, () => {
                   const parsed = parser.parse(text) as Tree;
                   resources.defer(() => {
                       parsed.delete();
@@ -100,7 +100,7 @@ export async function visitParsedSources(
     visit: (source: SourceTree) => void,
 ): Promise<void> {
     for (const file of sources.files) {
-        const text = read(sources.reads, file.path);
+        const text = read(sources.cache, file.path);
         using tree = await parseSource(file.grammar, text, sources);
         visit({ path: file.path, text, rootNode: tree.rootNode });
     }

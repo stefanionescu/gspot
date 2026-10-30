@@ -1,6 +1,6 @@
+import { remember } from '#cli/system/cache.ts';
 import { read } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/session.ts';
-import { remember } from '#cli/system/files/cache.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseBashScript } from '#cli/parsers/code/bash.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
@@ -11,7 +11,7 @@ import { BASH_SOURCE_COMMANDS } from '#cli/config/checks/language/bash/scripts.t
 const PARSED_SCRIPTS = Symbol('parsed scripts');
 
 async function readScript(session: Session, file: TrackedFile): Promise<ScriptFile> {
-    const text = read(session.reads, file.path);
+    const text = read(session.cache, file.path);
     const syntax = await parseBashScript(text, session);
     return {
         ...syntax,
@@ -30,7 +30,7 @@ Parses the scope scripts once and shares them across checks.
 export function readScripts(session: Session, planned: PlannedCheck): Promise<ScriptFile[]> {
     const files = planned.files.filter((file) => file.kind === 'source' && file.tags.includes(SCRIPT_TAG));
     const key = JSON.stringify([planned.scope.path, files.map((file) => file.path)]);
-    return remember(session.reads, PARSED_SCRIPTS, key, async () => {
+    return remember(session.cache, PARSED_SCRIPTS, key, async () => {
         const scripts: ScriptFile[] = [];
         for (const file of files) scripts.push(await readScript(session, file));
         return scripts;

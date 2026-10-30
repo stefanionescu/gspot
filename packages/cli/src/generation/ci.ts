@@ -199,7 +199,7 @@ function readProjectPackageManager(
     const packageJson = readPackageJson(session.root, joinScope(scopePath, PACKAGE_JSON));
     const written = packageJson === undefined ? undefined : getPackageManagerPin(packageJson);
     const pin = [written, session.packageManager].find((each) => each?.name === name) ?? { name };
-    return readPackageManagerVersion(session.toolsRoot, pin, session.timeoutSeconds, session.reads);
+    return readPackageManagerVersion(session.toolsRoot, pin, session.timeoutSeconds, session.cache);
 }
 
 function buildFrozenInstall(session: Session, scopePath: string, lockfile: FrozenLockfile): readonly string[] {

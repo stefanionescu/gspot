@@ -1,10 +1,10 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { remember, createReadCache } from '#cli/system/files/cache.ts';
+import { remember, createRunCache } from '#cli/system/cache.ts';
 
 test('a remembered value is calculated once for each key and id', async () => {
     await using sandbox = await testdir({});
-    const cache = createReadCache(sandbox.path);
+    const cache = createRunCache(sandbox.path);
     const key = Symbol('values');
     const calculated: string[] = [];
     const calculate = (id: string) => () => {
@@ -20,7 +20,7 @@ test('a remembered value is calculated once for each key and id', async () => {
 
 test('a remembered undefined result is not calculated again', async () => {
     await using sandbox = await testdir({});
-    const cache = createReadCache(sandbox.path);
+    const cache = createRunCache(sandbox.path);
     const key = Symbol('missing');
     const calculated: string[] = [];
     for (const id of ['path', 'path'])

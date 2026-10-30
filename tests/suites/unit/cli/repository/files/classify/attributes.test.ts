@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { createRunCache } from '#cli/system/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { mkdir, unlink, writeFile } from 'node:fs/promises';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -44,8 +44,8 @@ test('.gitattributes wins, then the files configurations declare, then banners, 
     const declarations = [
         { paths: ['src/a.ts', 'generated/declared.ts'], configuration: 'example', kind: 'generated' as const },
     ];
-    const reads = createReadCache(sandbox.path);
-    const configuredRepository = await readRepository(reads, await listRepositoryFiles(reads), {
+    const cache = createRunCache(sandbox.path);
+    const configuredRepository = await readRepository(cache, await listRepositoryFiles(cache), {
         generatedPaths: declarations,
         scopes: [],
         configurationsByName: readConfigurations(),

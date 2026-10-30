@@ -55,7 +55,7 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
 
     const session = await openSession(sandbox.path);
     const paths = ['first.mts', 'second.cts'];
-    const previous = paths.map((path) => readBytes(session.reads, path).toString('utf8'));
+    const previous = paths.map((path) => readBytes(session.cache, path).toString('utf8'));
     for (const path of paths) await writeFile(join(session.root, path), '// Changed after the run read it.\n');
 
     using resources = new DisposableStack();

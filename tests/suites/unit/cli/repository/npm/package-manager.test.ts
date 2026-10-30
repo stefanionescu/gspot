@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
+import { createRunCache } from '#cli/system/cache.ts';
 import * as processes from '#cli/system/processes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -38,7 +38,7 @@ test('without a packageManager field or Bun on PATH, the tool project uses npm a
             sandbox.path,
             installer,
             SETTING_DEFINITIONS['tool_timeout_seconds'].default,
-            createReadCache(sandbox.path),
+            createRunCache(sandbox.path),
         ),
     ).toStrictEqual({
         name: 'npm',
@@ -125,12 +125,7 @@ test('Yarn uses npm without querying Yarn', async () => {
     await using sandbox = await testdir();
     using run = spyOn(processes, 'spawnProcessBlocking').mockReturnValue(buildProcessResult({ stdout: '11.19.0\n' }));
     expect(
-        readToolPackageManager(
-            sandbox.path,
-            { name: 'yarn', version: '0.0.0-test' },
-            30,
-            createReadCache(sandbox.path),
-        ),
+        readToolPackageManager(sandbox.path, { name: 'yarn', version: '0.0.0-test' }, 30, createRunCache(sandbox.path)),
     ).toStrictEqual({ name: 'npm', version: '11.19.0' });
     expect(run.mock.calls.map(([command]) => command)).toStrictEqual([['npm', '--version']]);
 });

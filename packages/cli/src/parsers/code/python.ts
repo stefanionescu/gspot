@@ -1,6 +1,6 @@
 import { type Node } from 'web-tree-sitter';
+import { remember } from '#cli/system/cache.ts';
 import { read } from '#cli/system/files/reads.ts';
-import { remember } from '#cli/system/files/cache.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { type ParseCache } from '#cli/types/parsers/code/grammars.ts';
 import { PYTHON_EXTENSION, DOCSTRING_PREFIXES, PYTHON_FUNCTION_NODES } from '#cli/config/parsers/code/python.ts';
@@ -52,11 +52,11 @@ Parse the Python sources once for each list of paths, and free their trees with 
 @returns the modules and their functions.
 */
 export function readPythonFiles(sources: SourceFiles): Promise<PythonFiles> {
-    return remember(sources.reads, PYTHON_FILES, JSON.stringify(sources.files.map((file) => file.path)), async () => {
+    return remember(sources.cache, PYTHON_FILES, JSON.stringify(sources.files.map((file) => file.path)), async () => {
         const modules: PythonModule[] = [];
         for (const file of sources.files) {
             if (file.kind !== 'source' || !file.path.endsWith(PYTHON_EXTENSION)) continue;
-            const module = await parsePythonModule(file.path, read(sources.reads, file.path), sources);
+            const module = await parsePythonModule(file.path, read(sources.cache, file.path), sources);
             sources.resources.use(module.tree);
             modules.push(module);
         }

@@ -17,10 +17,4 @@ export type Files = {
     deleteTree(path: string): void;
 };
 
-export type ReadCache = {
-    root: string;
-    sources: Map<string, Buffer>;
-    values: Map<symbol, Map<unknown, unknown>>;
-};
-
 export type TemporaryFolder = Disposable & { path: string };

@@ -27,13 +27,13 @@ function buildExtendedExclude(
     paths: { prefix: string; owner: string; ignoredGlobs: string[] },
     authored: ParsedTsconfig,
 ): string[] {
-    const { root, reads } = planned.session;
+    const { root, cache } = planned.session;
     const generatedFolder = join(root, dirname(planned.targetPath));
     const chain = [paths.owner, ...authored.extendedTsconfigFiles];
     const declaring = chain
         .map((file) => ({
             file,
-            exclude: getValueAt(file === paths.owner ? authored.raw : readTsconfig(root, file, reads)?.raw, [
+            exclude: getValueAt(file === paths.owner ? authored.raw : readTsconfig(root, file, cache)?.raw, [
                 'exclude',
             ]),
         }))
@@ -80,7 +80,7 @@ Build jsconfig.json: the JavaScript type-checking project and its scoped source 
 @param planned the config file to build.
 */
 export function buildJsconfigFile(planned: PlannedConfigFile): string {
-    const { root, reads } = planned.session;
+    const { root, cache } = planned.session;
     const { targetPath: target } = planned;
     const scope = planned.scope.path;
     const importStyle = getTable(planned.scope.settings, ESLINT_SETTINGS_TABLE).import_extension;
@@ -95,9 +95,9 @@ export function buildJsconfigFile(planned: PlannedConfigFile): string {
             if (path.startsWith('**/')) return [`${scopePrefix}${path}`];
             return scope === '' || path.startsWith(`${scope}/`) ? [`${rootPrefix}${path}`] : [];
         });
-    const jsconfigOwner = readTsconfig(root, join(root, scope, JSCONFIG_FILE), reads);
+    const jsconfigOwner = readTsconfig(root, join(root, scope, JSCONFIG_FILE), cache);
     const owner = jsconfigOwner === undefined ? TSCONFIG_FILE : JSCONFIG_FILE;
-    const authored = jsconfigOwner ?? readTsconfig(root, join(root, scope, owner), reads);
+    const authored = jsconfigOwner ?? readTsconfig(root, join(root, scope, owner), cache);
     const prefix = convertToPosixPath(relative(dirname(target), scope)) + '/';
     const compilerOptions: Record<string, unknown> = {
         ...JAVASCRIPT_OPTIONS,

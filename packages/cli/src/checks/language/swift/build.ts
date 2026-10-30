@@ -1,5 +1,5 @@
 import { join, relative } from 'node:path';
-import { remember } from '#cli/system/files/cache.ts';
+import { remember } from '#cli/system/cache.ts';
 import { type Files } from '#cli/types/system/files.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
@@ -94,7 +94,7 @@ export async function runSwiftBuild(
     planned: PlannedCheck,
     plan: SwiftBuildPlan,
 ): Promise<SwiftBuildOutput> {
-    return remember(session.reads, SWIFT_BUILD_OUTPUTS, plan.folder, async (): Promise<SwiftBuildOutput> => {
+    return remember(session.cache, SWIFT_BUILD_OUTPUTS, plan.folder, async (): Promise<SwiftBuildOutput> => {
         const { files, source } = prepareBuild(session.root, planned.files, plan.folder);
         if (plan.kind === 'package' && plan.purpose === 'analyze')
             files.deleteTree(convertToPosixPath(relative(plan.folder, plan.scratch)));

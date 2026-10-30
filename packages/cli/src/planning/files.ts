@@ -173,7 +173,7 @@ function filterReadableFiles(planned: PlannedScope, check: Check, files: Tracked
             check.id === ENCODING_CHECK ||
             !file.tags.includes('text') ||
             file.tags.includes('symlink') ||
-            isUtf8(readBytes(planned.session.reads, file.path))
+            isUtf8(readBytes(planned.session.cache, file.path))
         );
     });
 }

@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { createRunCache } from '#cli/system/cache.ts';
 import { parseSqlFile } from '#cli/parsers/code/sql.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildDatabaseSchema } from '#cli/checks/database/postgres/schema.ts';
@@ -14,7 +14,7 @@ import {
 } from '#tests/config/checks/database/postgres/schema.ts';
 
 test('table and column renames retain their foreign keys, indexes, and row security', async () => {
-    const renamedTable = await parseSqlFile(RENAMED_TABLE_SQL, createReadCache(process.cwd()));
+    const renamedTable = await parseSqlFile(RENAMED_TABLE_SQL, createRunCache(process.cwd()));
     const schema = buildDatabaseSchema([
         {
             path: 'migrations/1_rename.sql',
@@ -50,11 +50,11 @@ test('table and column renames retain their foreign keys, indexes, and row secur
 test('keys count as indexes, a table constraint names its columns, and a dropped table leaves', async () => {
     const createdTables = await parseSqlFile(
         'CREATE TABLE posts (id UUID PRIMARY KEY, author_id UUID REFERENCES users (id), team_id UUID, CONSTRAINT team_fk FOREIGN KEY (team_id) REFERENCES teams (id));\nCREATE TABLE drafts (id UUID PRIMARY KEY, post_id UUID REFERENCES posts (id));',
-        createReadCache(process.cwd()),
+        createRunCache(process.cwd()),
     );
     const addedIndex = await parseSqlFile(
         'CREATE INDEX posts_author_idx ON posts (author_id, id);\nDROP TABLE drafts;',
-        createReadCache(process.cwd()),
+        createRunCache(process.cwd()),
     );
     const fields = buildDatabaseSchema([
         {
@@ -81,7 +81,7 @@ test('keys count as indexes, a table constraint names its columns, and a dropped
 });
 
 test('table recreation discards security, keys, and indexes from the old table', async () => {
-    const recreatedTable = await parseSqlFile(RECREATED_TABLE_SQL, createReadCache(process.cwd()));
+    const recreatedTable = await parseSqlFile(RECREATED_TABLE_SQL, createRunCache(process.cwd()));
     const fields = buildDatabaseSchema([
         {
             path: 'migrations/1_reset.sql',
@@ -98,7 +98,7 @@ test('table recreation discards security, keys, and indexes from the old table',
 });
 
 test('removing one equivalent index preserves the other until it is removed, and disabling row security removes it', async () => {
-    const equivalentIndexes = await parseSqlFile(EQUIVALENT_INDEXES_SQL, createReadCache(process.cwd()));
+    const equivalentIndexes = await parseSqlFile(EQUIVALENT_INDEXES_SQL, createRunCache(process.cwd()));
     const initial = {
         path: 'migrations/1_create.sql',
         name: '1_create.sql',
@@ -110,7 +110,7 @@ test('removing one equivalent index preserves the other until it is removed, and
     expect(kept.indexed.get('public.posts')).toStrictEqual([['author_id']]);
     const removedIndex = await parseSqlFile(
         'DROP INDEX second;\nALTER TABLE posts DISABLE ROW LEVEL SECURITY;\n',
-        createReadCache(process.cwd()),
+        createRunCache(process.cwd()),
     );
     const removed = buildDatabaseSchema([
         initial,
@@ -127,7 +127,7 @@ test('removing one equivalent index preserves the other until it is removed, and
 });
 
 test('dropped foreign and unique constraints remove only the fields they own', async () => {
-    const droppedConstraints = await parseSqlFile(DROPPED_CONSTRAINTS_SQL, createReadCache(process.cwd()));
+    const droppedConstraints = await parseSqlFile(DROPPED_CONSTRAINTS_SQL, createRunCache(process.cwd()));
     const initial = {
         path: 'migrations/1_keys.sql',
         name: '1_keys.sql',
@@ -138,7 +138,7 @@ test('dropped foreign and unique constraints remove only the fields they own', a
     const kept = buildDatabaseSchema([initial]);
     expect(kept.foreignKeys.map((key) => key.columns)).toStrictEqual([['team_id']]);
     expect(kept.indexed.get('public.posts')).toStrictEqual([['author_id']]);
-    const removedIndex = await parseSqlFile('DROP INDEX author_index;', createReadCache(process.cwd()));
+    const removedIndex = await parseSqlFile('DROP INDEX author_index;', createRunCache(process.cwd()));
     const removed = buildDatabaseSchema([
         initial,
         {
@@ -155,7 +155,7 @@ test('dropped foreign and unique constraints remove only the fields they own', a
 test('an unnamed foreign key gets the PostgreSQL default name and does not count as an index', async () => {
     const unnamedKeys = await parseSqlFile(
         'CREATE TABLE posts (id int PRIMARY KEY, author_id int REFERENCES users(id), title text UNIQUE, CHECK (id > 0));',
-        createReadCache(process.cwd()),
+        createRunCache(process.cwd()),
     );
     const initial = {
         path: 'migrations/1_keys.sql',
@@ -169,7 +169,7 @@ test('an unnamed foreign key gets the PostgreSQL default name and does not count
     expect(fields.indexed.get('public.posts')).toStrictEqual([['id'], ['title']]);
     const droppedForeignKey = await parseSqlFile(
         'ALTER TABLE posts DROP CONSTRAINT posts_author_id_fkey;',
-        createReadCache(process.cwd()),
+        createRunCache(process.cwd()),
     );
     const removed = buildDatabaseSchema([
         initial,
@@ -188,7 +188,7 @@ test('an unnamed foreign key gets the PostgreSQL default name and does not count
 test('column additions and removals update foreign keys and indexes', async () => {
     const addedColumn = await parseSqlFile(
         'CREATE TABLE posts (id int); ALTER TABLE posts ADD COLUMN user_id int REFERENCES users(id); CREATE INDEX post_users ON posts(user_id);',
-        createReadCache(process.cwd()),
+        createRunCache(process.cwd()),
     );
     const initial = {
         path: 'migrations/1_create.sql',
@@ -199,7 +199,7 @@ test('column additions and removals update foreign keys and indexes', async () =
     };
     const added = buildDatabaseSchema([initial]);
     expect(added.foreignKeys.map(({ columns }) => columns)).toStrictEqual([['user_id']]);
-    const droppedColumn = await parseSqlFile('ALTER TABLE posts DROP COLUMN user_id;', createReadCache(process.cwd()));
+    const droppedColumn = await parseSqlFile('ALTER TABLE posts DROP COLUMN user_id;', createRunCache(process.cwd()));
     const removed = buildDatabaseSchema([
         initial,
         {
@@ -217,7 +217,7 @@ test('column additions and removals update foreign keys and indexes', async () =
 test('renamed constraints and indexes can be dropped by their new names', async () => {
     const renamedConstraints = await parseSqlFile(
         'CREATE TABLE posts (id int, user_id int, CONSTRAINT user_fk FOREIGN KEY(user_id) REFERENCES users(id)); CREATE INDEX user_idx ON posts(user_id); ALTER TABLE posts RENAME CONSTRAINT user_fk TO renamed_fk; ALTER INDEX user_idx RENAME TO renamed_idx; ALTER TABLE posts DROP CONSTRAINT renamed_fk; DROP INDEX renamed_idx;',
-        createReadCache(process.cwd()),
+        createRunCache(process.cwd()),
     );
     const migration = {
         path: 'migrations/1_rename.sql',
@@ -234,7 +234,7 @@ test('renamed constraints and indexes can be dropped by their new names', async 
 test('partial indexes do not cover foreign keys and schema changes retain security and index ownership', async () => {
     const movedSchema = await parseSqlFile(
         'CREATE TABLE posts (id int, user_id int REFERENCES users(id)); CREATE INDEX partial_users ON posts(user_id) WHERE user_id > 0; ALTER TABLE posts ENABLE ROW LEVEL SECURITY; ALTER TABLE posts SET SCHEMA client;',
-        createReadCache(process.cwd()),
+        createRunCache(process.cwd()),
     );
     const migration = {
         path: 'migrations/1_move.sql',

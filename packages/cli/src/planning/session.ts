@@ -1,10 +1,10 @@
 import { readSettings } from '#cli/settings/read.ts';
+import { createRunCache } from '#cli/system/cache.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
+import type { RunCache } from '#cli/types/system/cache.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listEnabledChecks } from '#cli/planning/checks.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { listToolProjectPins } from '#cli/manifests/tools.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
@@ -52,18 +52,18 @@ function buildScopes(
 async function readSessionRepository({
     settings,
     configurationsByName,
-    reads,
+    cache,
     listing,
 }: {
     settings: Settings;
     configurationsByName: Map<string, Configuration>;
-    reads: ReadCache;
+    cache: RunCache;
     listing: RepositoryListing;
 }): Promise<Repository> {
     const selected = new Map(
         ['', ...settings.scopes.keys()].map((path) => [path, selectForScope(settings, path, configurationsByName)]),
     );
-    return readRepository(reads, listing, {
+    return readRepository(cache, listing, {
         generatedPaths: listConfigurationGeneratedPaths(selected),
         scopes: [...settings.scopes].map(([path, scope]) => ({
             path,
@@ -79,7 +79,7 @@ Refuse invalid settings or configuration choices.
 @param root the repository root.
 @param options where the tools sit, and what the run already read.
 @param options.toolsRoot the working repository with the installed tools.
-@param options.reads the run cache.
+@param options.cache the run cache.
 @param options.listing the files of the repository, or none to list them.
 @param options.settingsFile the settings to use, or none to read them from the repository.
 @param options.resources the cleanup stack of the caller.
@@ -89,7 +89,7 @@ export async function openSession(
     root: string,
     {
         toolsRoot = root,
-        reads = createReadCache(root),
+        cache = createRunCache(root),
         listing,
         settingsFile: requestedSettings,
         resources = new DisposableStack(),
@@ -106,8 +106,8 @@ export async function openSession(
     const repository = await readSessionRepository({
         settings,
         configurationsByName,
-        reads,
-        listing: listing ?? (await listRepositoryFiles(reads)),
+        cache,
+        listing: listing ?? (await listRepositoryFiles(cache)),
     });
     let pin: PackageManagerPin | undefined;
     const readPackageManager = () =>
@@ -132,7 +132,7 @@ export async function openSession(
         repository,
         scopes,
         inspections: new Map(),
-        reads,
+        cache,
     };
     session.toolConfigurations = selectToolConfigurations(session, session.configuredChecks);
     if (Object.keys(listToolProjectPins(session.toolConfigurations).npm).length > 0)

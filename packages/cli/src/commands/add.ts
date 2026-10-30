@@ -49,7 +49,7 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
         state: 'already selected',
     });
     return await applySettingsEdit(root, {
-        reads: context.reads,
+        cache: context.cache,
         listing: context.listing,
         edit: input,
         summary,

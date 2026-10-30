@@ -64,7 +64,7 @@ function addWorkflow(session: Session, generated: Generation): void {
                           session.toolsRoot,
                           session.packageManager,
                           session.timeoutSeconds,
-                          session.reads,
+                          session.cache,
                       ),
             setupCommand: settings.ci.setup_command,
             projectInstall: settings.ci.setup_command === undefined ? listProjectInstallLines(session) : [],
@@ -103,13 +103,13 @@ function buildAttributesBlock(outsidePaths: string[], authored: string): string 
 }
 
 function addManagedBlocks(session: Session, rules: RuleFile[], generated: Generation): void {
-    const { settings, reads } = session;
+    const { settings, cache } = session;
     const outsidePaths = listWrittenPaths(session).map((path) => path.slice(1));
-    const text = find(reads, GITATTRIBUTES_FILE) ?? '';
+    const text = find(cache, GITATTRIBUTES_FILE) ?? '';
     const authored = stripBlock(text, { path: GITATTRIBUTES_FILE });
     generated.blocks.push({ path: GITATTRIBUTES_FILE, body: buildAttributesBlock(outsidePaths, authored) });
     if (!settings.rules.enabled) return;
-    const agents = find(reads, AGENTS_FILE) ?? '';
+    const agents = find(cache, AGENTS_FILE) ?? '';
     const agentsText = stripBlock(agents, { path: AGENTS_FILE });
     const block = buildAgentsBlock({
         hasOwnTitle: hasTopHeading(agentsText),

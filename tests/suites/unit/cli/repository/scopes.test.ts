@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { createRunCache } from '#cli/system/cache.ts';
 import { symlink, writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
@@ -44,7 +44,7 @@ test.each([...WORKSPACE_FILE_CASES])(
         ]);
         const scopes = detectScopeFolders(
             repository.files,
-            await readDependencyFiles(createReadCache(sandbox.path), repository.files),
+            await readDependencyFiles(createRunCache(sandbox.path), repository.files),
             readConfigurations().values(),
         );
         expect(scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
@@ -60,7 +60,7 @@ test('broad workspace patterns skip .gspot/.venv and its outside interpreter lin
     expect(listWorkspaceFolders(root)).toStrictEqual(['packages/app']);
     const folders = detectScopeFolders(
         repository.files,
-        await readDependencyFiles(createReadCache(root), repository.files),
+        await readDependencyFiles(createRunCache(root), repository.files),
         readConfigurations().values(),
     ).map((scope) => scope.path);
     expect(folders).toStrictEqual(['packages/app']);
@@ -70,7 +70,7 @@ test('every folder that holds a project file is a scope, the root and lint-only 
     await using sandbox = await testdir(PROJECT_SCOPE_FILES);
 
     const repository = await readTestRepository(sandbox.path);
-    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
     const found = detectScopeFolders(repository.files, dependencyFiles, readConfigurations().values());
     expect(found.map((scope) => [scope.path, scope.origin])).toStrictEqual([...PROJECT_SCOPES]);
 });
@@ -90,7 +90,7 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
     ]);
     const folders = detectScopeFolders(
         repository.files,
-        await readDependencyFiles(createReadCache(sandbox.path), repository.files),
+        await readDependencyFiles(createRunCache(sandbox.path), repository.files),
         readConfigurations().values(),
     ).map((scope) => scope.path);
     expect(folders).toStrictEqual(['packages/custom', 'packages/process']);
@@ -101,7 +101,7 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
     const corrected = await readTestRepository(sandbox.path);
     const correctedFolders = detectScopeFolders(
         corrected.files,
-        await readDependencyFiles(createReadCache(sandbox.path), corrected.files),
+        await readDependencyFiles(createRunCache(sandbox.path), corrected.files),
         readConfigurations().values(),
     ).map((scope) => scope.path);
     expect(correctedFolders).toStrictEqual(['packages/custom', 'packages/next', 'packages/process']);
@@ -111,7 +111,7 @@ test('Python scopes use the dependency files read with the repository', async ()
     await using sandbox = await testdir(PYTHON_WORKSPACE_FILES);
 
     const repository = await readTestRepository(sandbox.path);
-    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
     await writeFile(join(sandbox.path, 'pyproject.toml'), '[invalid');
     expect(
         detectScopeFolders(repository.files, dependencyFiles, readConfigurations().values()).map((scope) => scope.path),

@@ -1,8 +1,8 @@
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import type { RunCache } from '#cli/types/system/cache.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
 import { type Repository } from '#cli/types/repository/files.ts';
 import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
@@ -215,15 +215,15 @@ export function readLintJobs(root: string, paths: string[]): string[] {
 /**
 Find config files to replace, hooks, CI, agent files, and lint folders.
 
-@param reads the run cache.
+@param cache the run cache.
 @param repository the inventory and parsed package declarations.
 @returns what to replace, keep, or report.
 */
 export async function readRepositorySetup(
-    reads: ReadCache,
+    cache: RunCache,
     repository: Pick<Repository, 'files' | 'dependencyFiles' | 'hasGit'>,
 ): Promise<RepositorySetup> {
-    const root = reads.root;
+    const root = cache.root;
     const { files, dependencyFiles } = repository;
     const paths = new Set(files.map((file) => file.path));
     const configurationsByName = readConfigurations();

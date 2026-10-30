@@ -185,7 +185,7 @@ export async function checkGspotSuppressions(session: Session, planned: PlannedC
         const syntaxes = listSuppressionSyntaxes(scope, files);
         for (const file of files) {
             const forms = syntaxes.filter((form) => form.covered.has(file.path));
-            const source = read(session.reads, file.path);
+            const source = read(session.cache, file.path);
             const comments = await parseComments(file.path, source, file.tags);
             found.push(
                 ...comments.flatMap((comment, index) => {

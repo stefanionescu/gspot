@@ -30,7 +30,7 @@ export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck)
         session.root,
         planned.scope.path,
         planned.files.filter((file) => file.tags.includes(TYPESCRIPT_TAG)).map((file) => file.path),
-        session.reads,
+        session.cache,
     );
     const scopeTsconfig =
         project === undefined
@@ -50,14 +50,14 @@ export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck)
     ]);
     const required = selectRequiredTsconfigOptions(session.settings.level, planned.scope.configurations);
     const projects = [...tsconfigPaths].flatMap((path) => {
-        const parsed = readTsconfig(session.root, join(session.root, path), session.reads);
+        const parsed = readTsconfig(session.root, join(session.root, path), session.cache);
         return parsed === undefined || (parsed.fileNames.length === 0 && (parsed.projectReferences?.length ?? 0) > 0)
             ? []
             : { path, parsed };
     });
     const unchecked = projects.filter(
         ({ path }) =>
-            !claimProjectCheck(session.reads, {
+            !claimProjectCheck(session.cache, {
                 check: planned.check.id,
                 path: join(session.root, path),
                 scope: planned.scope.path,

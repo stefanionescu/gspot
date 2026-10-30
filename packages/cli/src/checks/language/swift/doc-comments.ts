@@ -63,7 +63,7 @@ Reports each public or open function and initializer whose doc comment leaves a 
 export async function checkSwiftDocComments(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
     const findings: CheckFinding[] = [];
-    await visitParsedSources({ reads: session.reads, resources: session.resources, files }, (source) => {
+    await visitParsedSources({ cache: session.cache, resources: session.resources, files }, (source) => {
         for (const declaration of source.rootNode.descendantsOfType([...DOCUMENTED_DECLARATIONS])) {
             if (!isPublicDeclaration(declaration)) continue;
             const missing = listMissingParameters(declaration);

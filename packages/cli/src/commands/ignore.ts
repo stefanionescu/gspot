@@ -63,7 +63,7 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
     });
     input.table['ignore'] = list;
     return await applySettingsEdit(root, {
-        reads: context.reads,
+        cache: context.cache,
         listing: context.listing,
         edit: input,
         summary: formatIgnoreSummary(options, paths),

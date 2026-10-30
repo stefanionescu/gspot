@@ -1,7 +1,7 @@
 import { isUtf8 } from 'node:buffer';
 import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
+import type { RunCache } from '#cli/types/system/cache.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { MISSING_TRACKED_FILE_MESSAGE } from '#cli/config/system/files/reads.ts';
@@ -26,15 +26,15 @@ function readFilePrefix(path: string, limit: number): Buffer {
 /**
 Read the first bytes of a file, with the resolved root of the run and any cached bytes.
 
-@param reads the run cache.
+@param cache the run cache.
 @param path the root-relative file.
 @param limit the maximum byte count.
 @returns the bytes read.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Doctor and the repository read take a file prefix through the run cache and the link check of this module.
-export function readCachedPrefix(reads: ReadCache, path: string, limit: number): Buffer {
-    const held = reads.sources.get(path);
-    return held === undefined ? readFilePrefix(readContainedPath(reads.root, path), limit) : held.subarray(0, limit);
+export function readCachedPrefix(cache: RunCache, path: string, limit: number): Buffer {
+    const held = cache.sources.get(path);
+    return held === undefined ? readFilePrefix(readContainedPath(cache.root, path), limit) : held.subarray(0, limit);
 }
 
 /**
@@ -44,7 +44,7 @@ Read file bytes inside a folder, and refuse a link outside it. A run cache keeps
 @param path the root-relative file.
 @returns the file bytes.
 */
-export function readBytes(source: string | ReadCache, path: string): Buffer {
+export function readBytes(source: string | RunCache, path: string): Buffer {
     if (typeof source === 'string') return readFileSync(readContainedPath(realpathSync(source), path));
     const held = source.sources.get(path);
     if (held !== undefined) return held;
@@ -60,7 +60,7 @@ Read UTF-8 text, or return undefined for a missing file.
 @param path the root-relative file.
 @returns the file text.
 */
-export function find(source: string | ReadCache, path: string): string | undefined {
+export function find(source: string | RunCache, path: string): string | undefined {
     try {
         return decodeUtf8Text(path, readBytes(source, path));
     } catch (error) {
@@ -79,7 +79,7 @@ Read tracked UTF-8 text and refuse a missing file.
 @param source the folder of the relative path, or the run cache of that folder.
 @param path the tracked file path.
 */
-export function read(source: string | ReadCache, path: string): string {
+export function read(source: string | RunCache, path: string): string {
     const text = find(source, path);
     if (text === undefined)
         throw new GspotError(

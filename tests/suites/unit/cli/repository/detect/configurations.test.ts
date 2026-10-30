@@ -3,10 +3,10 @@ import * as filesystem from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, writeFile } from 'node:fs/promises';
+import { createRunCache } from '#cli/system/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
@@ -24,7 +24,7 @@ import {
 
 async function detectSandboxConfigurations(root: string): Promise<string[]> {
     const repository = await readTestRepository(root);
-    const dependencyFiles = await readDependencyFiles(createReadCache(root), repository.files);
+    const dependencyFiles = await readDependencyFiles(createRunCache(root), repository.files);
     return detectConfigurations({ root, files: repository.files, dependencyFiles }, readConfigurations()).map(
         ({ configuration }) => configuration,
     );
@@ -93,7 +93,7 @@ test('a FastAPI dependency proposes fastapi and python in its own scope until it
     });
 
     const repository = await readTestRepository(sandbox.path);
-    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
     const configurationsByName = readConfigurations();
     const proposed = detectConfigurations(
         { root: sandbox.path, files: repository.files, dependencyFiles },
@@ -112,7 +112,7 @@ test('a FastAPI dependency proposes fastapi and python in its own scope until it
         ).filter((detection) => detection.configuration === 'fastapi'),
     ).toStrictEqual([]);
     await writeFile(join(sandbox.path, 'api', path), path.endsWith('.txt') ? '# dependencies removed\n' : '');
-    const corrected = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    const corrected = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
     expect(
         detectConfigurations(
             { root: sandbox.path, files: repository.files, dependencyFiles: corrected },
@@ -198,7 +198,7 @@ test('Testing Library is detected only in the scope that declares it', async () 
     });
 
     const session = await openSession(sandbox.path);
-    const projects = await readDependencyFiles(createReadCache(sandbox.path), session.repository.files);
+    const projects = await readDependencyFiles(createRunCache(sandbox.path), session.repository.files);
     expect(
         ['child', 'neighbor'].map((scope) =>
             detectConfigurations(
@@ -219,7 +219,7 @@ test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection within its p
     });
 
     const repository = await readTestRepository(sandbox.path);
-    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
     const configuration = buildConfiguration('runtime', {
         group: 'general',
         tables: `[detect]\nruntimes = ["${row.runtime}"]\n`,

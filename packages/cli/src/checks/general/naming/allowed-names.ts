@@ -24,7 +24,7 @@ async function readSourceNames(session: Session, planned: PlannedCheck): Promise
             const folders = buildFolderIdentifiers(file.path, language, containers);
             const { identifiers, error } = await parseIdentifiers(
                 file.path,
-                read(session.reads, file.path),
+                read(session.cache, file.path),
                 language,
                 session,
             );

@@ -1,11 +1,11 @@
 import pLimit from 'p-limit';
 import { join, relative } from 'node:path';
 import { availableParallelism } from 'node:os';
+import { remember } from '#cli/system/cache.ts';
 import { getTool } from '#cli/manifests/tools.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
-import { remember } from '#cli/system/files/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
@@ -65,7 +65,7 @@ async function findUnrunnableResult(
         ),
     );
     if ('status' in docker) return { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE };
-    const result = await remember(session.reads, DOCKER_AVAILABILITY, session.root, () =>
+    const result = await remember(session.cache, DOCKER_AVAILABILITY, session.root, () =>
         spawnProcess([docker.path, 'info'], {
             cwd: session.root,
             timeoutSeconds: session.timeoutSeconds,

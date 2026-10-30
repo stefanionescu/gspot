@@ -28,7 +28,7 @@ function listMissingOutputs(
     return outputs
         .filter((target) => {
             try {
-                readBytes(session.reads, target.path);
+                readBytes(session.cache, target.path);
                 return false;
             } catch (error) {
                 if (hasErrorCode(error, 'ENOENT')) return true;

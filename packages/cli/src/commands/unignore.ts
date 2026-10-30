@@ -105,7 +105,7 @@ async function runUnignoreCommand(
     if (kept.length === 0) delete input.table['ignore'];
     else input.table['ignore'] = kept;
     return await applySettingsEdit(root, {
-        reads: context.reads,
+        cache: context.cache,
         listing: context.listing,
         edit: input,
         summary,

@@ -66,7 +66,7 @@ Runs deptry on the scope. Passes the project's extend_exclude list again with .g
 */
 export async function checkPythonDeptry(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
-    const text = find(session.reads, pyproject);
+    const text = find(session.cache, pyproject);
     if (text === undefined) throw new GspotError('skip', NO_PYPROJECT_NOTE);
     const { extend_exclude: exclusions, known_first_party: firstParty } = parseTomlFile(pyproject, text, deptrySchema)
         .tool.deptry;
@@ -99,7 +99,7 @@ async function listLongFunctions(
     path: string,
     limit: number,
 ): Promise<CheckFinding[]> {
-    const { functions } = await readPythonFiles({ reads: session.reads, resources: session.resources, files });
+    const { functions } = await readPythonFiles({ cache: session.cache, resources: session.resources, files });
     const findings = await Promise.all(
         functions
             .filter((definition) => definition.path === path)
@@ -167,7 +167,7 @@ export function checkPythonPipInstalls(session: Session, planned: PlannedCheck):
     const installs = files
         .filter((file) => INSTALL_FILE_SUFFIXES.some((ending) => file.path.endsWith(ending)))
         .flatMap((file) =>
-            read(session.reads, file.path)
+            read(session.cache, file.path)
                 .split('\n')
                 .flatMap((text, index): CheckFinding[] =>
                     PIP_INSTALL.test(text) && !text.trimStart().startsWith('#')
@@ -196,7 +196,7 @@ export async function checkPythonPlaceholderDocstrings(
     planned: PlannedCheck,
 ): Promise<CheckFinding[]> {
     const { functions, modules } = await readPythonFiles({
-        reads: session.reads,
+        cache: session.cache,
         resources: session.resources,
         files: planned.files,
     });
@@ -227,7 +227,7 @@ export async function checkPythonPlaceholderDocstrings(
 }
 
 async function detectDocstringStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
-    const module = await parsePythonModule(path, read(session.reads, path), session);
+    const module = await parsePythonModule(path, read(session.cache, path), session);
     using tree = module.tree;
     for (const node of tree.rootNode.descendantsOfType(['function_definition', 'class_definition'])) {
         const docstring = findDocstring(node);
@@ -277,7 +277,7 @@ export async function checkPythonPydoclint(session: CheckSession, planned: Plann
     const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
     const configured = parsePydoclintOptions(
         pyproject,
-        find(session.reads, pyproject) ?? '',
+        find(session.cache, pyproject) ?? '',
         planned.scope.settings.tables[RUFF_TABLE]?.docstring_convention,
         session.settings.level,
     );

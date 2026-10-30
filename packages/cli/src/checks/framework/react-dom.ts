@@ -24,10 +24,10 @@ Reports a project whose react and react-dom resolve to different versions.
 export function checkReactDomReactVersions(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
-    const specifiers = readDependencySpecifiers(session.reads, packageJsonPath);
+    const specifiers = readDependencySpecifiers(session.cache, packageJsonPath);
     if (specifiers === undefined) return [];
     if (![REACT_PACKAGE, REACT_DOM_PACKAGE].every((name) => specifiers.has(name))) return [];
-    const locked = readLockedVersions(session.reads, folder, JAVASCRIPT_LOCKFILES);
+    const locked = readLockedVersions(session.cache, folder, JAVASCRIPT_LOCKFILES);
     const versions = locked ?? specifiers;
     const react = versions.get(REACT_PACKAGE) ?? '';
     const reactDom = versions.get(REACT_DOM_PACKAGE) ?? '';

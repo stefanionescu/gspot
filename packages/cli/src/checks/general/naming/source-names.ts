@@ -1,5 +1,5 @@
+import { remember } from '#cli/system/cache.ts';
 import type { Session } from '#cli/types/session.ts';
-import { remember } from '#cli/system/files/cache.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 import { parseSource, selectGrammar } from '#cli/parsers/code/grammars.ts';
@@ -39,17 +39,17 @@ Lists the identifiers a file declares, or none when no extractor reads its langu
 @param file the repository path of the source.
 @param text the source to parse.
 @param language the configuration that covers the file.
-@param session the read cache and parser resources.
+@param session the run cache and parser resources.
 @returns the identifiers in source order, or a syntax error.
 */
 export function parseIdentifiers(
     file: string,
     text: string,
     language: string,
-    session: Pick<Session, 'reads' | 'resources'>,
+    session: Pick<Session, 'cache' | 'resources'>,
 ): Promise<IdentifierRead> {
-    return remember(session.reads, IDENTIFIERS, file, async (): Promise<IdentifierRead> => {
-        if (language === 'sql') return extractSqlIdentifiers(file, text, session.reads);
+    return remember(session.cache, IDENTIFIERS, file, async (): Promise<IdentifierRead> => {
+        if (language === 'sql') return extractSqlIdentifiers(file, text, session.cache);
         const grammar = selectGrammar(file, language);
         if (grammar === undefined) return { identifiers: [], error: undefined };
         using tree = await parseSource(grammar, text, session);

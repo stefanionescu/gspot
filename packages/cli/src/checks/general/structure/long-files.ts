@@ -27,7 +27,7 @@ export async function checkStructureLongFiles(session: Session, planned: Planned
     });
     const findings = await Promise.all(
         sources.map(async ({ file, language, limit }) => {
-            const text = read(session.reads, file.path);
+            const text = read(session.cache, file.path);
             const count = await countCodeLines(text, language);
             return count <= limit
                 ? []

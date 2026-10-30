@@ -43,7 +43,7 @@ Reports Swift sources that no Xcode target holds.
 */
 export function checkXcodeFilesWithoutTarget(session: Session, planned: PlannedCheck): CheckFinding[] {
     const projects = listSourcePaths(planned.files, [PBXPROJ_SUFFIX]).map((path) =>
-        parseProjectSources(read(session.reads, path), path),
+        parseProjectSources(read(session.cache, path), path),
     );
     if (projects.length === 0) return [];
     const referenced = new Set(projects.flatMap((project) => [...project.sources]));
@@ -82,7 +82,7 @@ export function checkXcodeAssets(session: Session, planned: PlannedCheck): Check
     return listSourcePaths(planned.files, [ASSET_CONTENTS])
         .filter((path) => path.includes(XCASSETS_FOLDER))
         .flatMap((path) => {
-            const text = read(session.reads, path);
+            const text = read(session.cache, path);
             const at = { file: path, line: 1 };
             const parsed = parseCheckedFile(path, () => parseJsonFile(path, text, assetContentsSchema));
             if ('error' in parsed) return [parsed.error];
@@ -117,7 +117,7 @@ Reports asset sets that no source or Xcode build setting names.
 */
 export function checkXcodeUnusedAssets(session: Session, planned: PlannedCheck): CheckFinding[] {
     const sourceTexts = listSourcePaths(planned.files, ASSET_REFERENCE_ENDINGS).map((path) =>
-        read(session.reads, path),
+        read(session.cache, path),
     );
     return listSourcePaths(planned.files, [ASSET_CONTENTS])
         .filter((path) => NAMED_SETS.some((ending) => path.endsWith(ending)))
@@ -148,7 +148,7 @@ Checks that each string catalog parses and that every string has every locale th
 */
 export function checkXcodeXcstrings(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [XCSTRINGS_SUFFIX]).flatMap((path) => {
-        const text = read(session.reads, path);
+        const text = read(session.cache, path);
         const at = { file: path, line: 1 };
         const parsed = parseCheckedFile(path, () => parseJsonFile(path, text, stringsFileSchema));
         if ('error' in parsed) return [parsed.error];
@@ -184,7 +184,7 @@ Reports each entitlement that xcode.allowed_entitlements does not list.
 export function checkXcodeEntitlements(session: Session, planned: PlannedCheck): CheckFinding[] {
     const allowed = new Set(getTable(planned.scope.settings, 'xcode').allowed_entitlements);
     return listSourcePaths(planned.files, [ENTITLEMENTS_SUFFIX]).flatMap((path) => {
-        const text = read(session.reads, path);
+        const text = read(session.cache, path);
         return text
             .matchAll(PLIST_KEY)
             .filter((match) => !allowed.has(match.groups?.['name'] ?? ''))
@@ -209,7 +209,7 @@ Reports each plist that turns App Transport Security off for every host.
 */
 export function checkXcodeAppTransportSecurity(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [PLIST_SUFFIX]).flatMap((path): CheckFinding[] => {
-        const text = read(session.reads, path);
+        const text = read(session.cache, path);
         const found = INSECURE_TRANSPORT_SETTING.exec(text);
         if (found === null) return [];
         const line = getPosition(text, found.index).line;

@@ -85,7 +85,7 @@ test.each([...UNREADABLE_RESOURCES])(
         const target = join(sandbox.path, path);
         await rm(target);
         await mkdir(target);
-        session.reads.sources.delete(path);
+        session.cache.sources.delete(path);
         const error = await captureRejection(getBuiltInCheck(check)(session, planned));
         expect(error.message).toBe(`${path} could not be read. Check the file and its permissions.`);
     },

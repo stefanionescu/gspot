@@ -106,7 +106,7 @@ function findMissingConfigFile(
 ): CheckResult | undefined {
     const files = openFiles(session.root);
     const missing = [...configFiles, ...listCommandConfigFiles(session, planned, command)].find(
-        (path) => (path.startsWith(`${GSPOT_FOLDER}/`) ? files.read(path) : find(session.reads, path)) === undefined,
+        (path) => (path.startsWith(`${GSPOT_FOLDER}/`) ? files.read(path) : find(session.cache, path)) === undefined,
     );
     if (missing === undefined) return undefined;
     return { ...base, status: 'error', note: `The generated file ${missing} is missing. Run gspot apply.` };

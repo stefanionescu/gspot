@@ -120,7 +120,7 @@ function validateProseLine(file: string, prose: ProseLine, index: PathIndex): Ch
 
 function listPackageBinaries(session: Session, folders: string[]): string[] {
     return folders.flatMap((folder) => {
-        const manifest = readCachedPackageJson(session.reads, posix.join(folder, PACKAGE_JSON));
+        const manifest = readCachedPackageJson(session.cache, posix.join(folder, PACKAGE_JSON));
         const bin = manifest?.['bin'];
         if (typeof bin === 'string') {
             const name = manifest?.name?.split('/').at(-1);
@@ -147,7 +147,7 @@ function readTaskNames(session: Session, scopePath: string): TaskNames {
     let scripts: string[] = [];
     let packages: string[] = [];
     for (const { path } of ancestors) {
-        const found = readCachedPackageJson(session.reads, posix.join(path, PACKAGE_JSON));
+        const found = readCachedPackageJson(session.cache, posix.join(path, PACKAGE_JSON));
         if (found === undefined) continue;
         scripts = found.scripts === undefined ? [] : Object.keys(found.scripts);
         packages = [path, ...(path === '' ? listWorkspaceFolders(session.root) : [])];
@@ -156,7 +156,7 @@ function readTaskNames(session: Session, scopePath: string): TaskNames {
     return {
         mise: new Set([
             ...files.flatMap((file) => {
-                const text = find(session.reads, file);
+                const text = find(session.cache, file);
                 return text === undefined ? [] : parseMiseTasks(text, file);
             }),
             ...ancestors.flatMap(({ path }) =>
@@ -239,14 +239,14 @@ export function checkDocsMissingPaths(session: Session, planned: PlannedCheck): 
     );
     const repositoryPaths = listRepositoryPaths(session, planned);
     const isIgnored = buildGitignoreMatcher(
-        session.reads,
+        session.cache,
         session.repository.files.map((file) => file.path),
     );
     const projects = Map.groupBy(files, (file) => selectScopePath(file.path, session.repository.scopeFolders));
     return [...projects].flatMap(([scope, sources]) => {
         const index: PathIndex = { paths: repositoryPaths, isIgnored, tasks: readTaskNames(session, scope) };
         return sources.flatMap((file) => {
-            const text = read(session.reads, file.path);
+            const text = read(session.cache, file.path);
             return extractProseLines(text).flatMap((prose) => validateProseLine(file.path, prose, index));
         });
     });

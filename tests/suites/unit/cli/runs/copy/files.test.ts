@@ -152,7 +152,7 @@ test.each([false, true])(
                 paths: ['apps/web/main.js'],
             });
             const dependencyPaths = listWorkspaceDependencySources(
-                session.reads,
+                session.cache,
                 input.scope.path,
                 session.repository.files,
             );

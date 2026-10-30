@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { createRunCache } from '#cli/system/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { SOURCE_KIND } from '#cli/config/repository/files/classify.ts';
@@ -29,7 +29,7 @@ test('Python dependency groups with includes keep every dependency', async () =>
     });
 
     const repository = await readTestRepository(sandbox.path);
-    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
     expect(dependencyFiles[0]!.dependencies).toStrictEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
 });
 
@@ -38,7 +38,7 @@ test('a pytest table counts as a pytest dependency', async () => {
     const source = '[tool.pytest.ini_options]\ntestpaths = ["tests"]\n';
     await createFileTree(sandbox.path, { 'pyproject.toml': source, 'source.py': 'print("authored")\n' });
     const repository = await readTestRepository(sandbox.path);
-    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
     expect(dependencyFiles[0]?.dependencies).toStrictEqual({ pytest: 'tool.pytest' });
 });
 
@@ -57,7 +57,7 @@ test.each(INVALID_DEPENDENCY_FILES)(
                 size: 1,
             },
         ];
-        const error = await captureRejection(readDependencyFiles(createReadCache(sandbox.path), files));
+        const error = await captureRejection(readDependencyFiles(createRunCache(sandbox.path), files));
         expect(error).toMatchObject({ name: 'GspotError', code: 'parse', cause: expect.any(Error) as Error });
         expect(error.message).toStartWith(prefix);
     },
@@ -69,14 +69,14 @@ test('a dependency file that disappears after the repository read is an error', 
 
     const repository = await readTestRepository(sandbox.path);
     await rm(join(sandbox.path, path));
-    const error = await captureRejection(readDependencyFiles(createReadCache(sandbox.path), repository.files));
+    const error = await captureRejection(readDependencyFiles(createRunCache(sandbox.path), repository.files));
     expect(error).toMatchObject({
         name: 'GspotError',
         code: 'filesystem',
         message: 'pyproject.toml is tracked but missing. Restore it or commit its deletion.',
     });
     await mkdir(join(sandbox.path, path));
-    const readError = await captureRejection(readDependencyFiles(createReadCache(sandbox.path), repository.files));
+    const readError = await captureRejection(readDependencyFiles(createRunCache(sandbox.path), repository.files));
     expect(readError).toMatchObject({
         name: 'GspotError',
         code: 'filesystem',
@@ -100,7 +100,7 @@ test('package.json reads keep your own fields and tell a missing file from inval
             message: PACKAGE_JSON_ERROR,
         }),
     );
-    const error = await captureRejection(readDependencyFiles(createReadCache(sandbox.path), repository.files));
+    const error = await captureRejection(readDependencyFiles(createRunCache(sandbox.path), repository.files));
     expect(error).toMatchObject({
         name: 'GspotError',
         code: 'parse',
@@ -115,7 +115,7 @@ test('package.json reads keep your own fields and tell a missing file from inval
         }),
     );
     await rm(join(sandbox.path, 'package.json'));
-    const readError = await captureRejection(readDependencyFiles(createReadCache(sandbox.path), repository.files));
+    const readError = await captureRejection(readDependencyFiles(createRunCache(sandbox.path), repository.files));
     expect(readError).toMatchObject({
         name: 'GspotError',
         code: 'filesystem',
@@ -127,7 +127,7 @@ test('declared framework dependencies follow the nearest npm project', async () 
     await using sandbox = await testdir(PROJECT_DEPENDENCY_FILES);
 
     const repository = await readTestRepository(sandbox.path);
-    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
     for (const { scope, names } of PROJECT_DEPENDENCY_SCOPES) {
         expect(listProjectDependencyNames(dependencyFiles, scope), scope).toStrictEqual([...names]);
     }
@@ -161,7 +161,7 @@ test.each([...PYTHON_DEPENDENCY_CASES])(
     async ({ path, source }) => {
         await using sandbox = await testdir({ [`api/${path}`]: source });
         const repository = await readTestRepository(sandbox.path);
-        const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+        const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
         expect(Object.keys(dependencyFiles[0]!.dependencies).toSorted(compareText)).toStrictEqual([
             'fastapi',
             'friendly-bard',
@@ -182,7 +182,7 @@ test.each(['constructor', 'toString', '__proto__'])(
             kind: 'source',
             tags: ['text'],
         });
-        expect(await readDependencyFiles(createReadCache(sandbox.path), repository.files)).toStrictEqual([]);
+        expect(await readDependencyFiles(createRunCache(sandbox.path), repository.files)).toStrictEqual([]);
     },
 );
 
@@ -190,7 +190,7 @@ test('optional runtime dependencies remain installed beside development tools', 
     await using sandbox = await testdir({
         'package.json': '{"devDependencies":{"eslint":"9.0.0"},"optionalDependencies":{"react":"19.0.0"}}',
     });
-    const files = await readDependencyFiles(createReadCache(sandbox.path), [
+    const files = await readDependencyFiles(createRunCache(sandbox.path), [
         {
             path: 'package.json',
             kind: 'source' as const,

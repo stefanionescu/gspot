@@ -2,6 +2,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { writeSettings } from '#cli/settings/file.ts';
+import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
@@ -9,7 +10,6 @@ import { generateFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { RECORD_FIELDS } from '#cli/settings/schema-lookup.ts';
@@ -44,9 +44,9 @@ export async function applySettingsEdit(
     const { edit, summary } = options;
     const writer = openFiles(root);
     const result = buildEditedSettings(root, edit);
-    options.reads?.sources.set(SETTINGS_FILE, Buffer.from(result.text));
+    options.cache?.sources.set(SETTINGS_FILE, Buffer.from(result.text));
     const session = await openSession(root, {
-        reads: options.reads,
+        cache: options.cache,
         listing: options.listing,
         settingsFile: { settings: result.settings, text: result.text },
     });
@@ -88,11 +88,11 @@ writes into.
 export async function prepareSettingsEdit(cwd: string, scopePath?: string): Promise<SettingsEditContext> {
     const root = await readRepositoryRoot(cwd);
     const input = readSettingsEdit(root);
-    const reads = createReadCache(root);
-    reads.sources.set(SETTINGS_FILE, Buffer.from(input.text));
+    const cache = createRunCache(root);
+    cache.sources.set(SETTINGS_FILE, Buffer.from(input.text));
     const settings = readSettings(input.text, root);
-    const listing = await listRepositoryFiles(reads);
-    const session = await openSession(root, { settingsFile: { settings, text: input.text }, reads, listing });
+    const listing = await listRepositoryFiles(cache);
+    const session = await openSession(root, { settingsFile: { settings, text: input.text }, cache, listing });
     const path = scopePath === undefined ? '' : buildArgumentPath(root, cwd, scopePath);
     if (!session.scopes.some((scope) => scope.path === path))
         throw new GspotError(
@@ -100,7 +100,7 @@ export async function prepareSettingsEdit(cwd: string, scopePath?: string): Prom
             `There is no scope called ${path}. Name a project folder or a written scope.`,
         );
     const scopeTable = getScopeTable(input.table, path);
-    return { root, edit: input, settings, reads, listing, session, scope: path, scopeTable };
+    return { root, edit: input, settings, cache, listing, session, scope: path, scopeTable };
 }
 
 /**

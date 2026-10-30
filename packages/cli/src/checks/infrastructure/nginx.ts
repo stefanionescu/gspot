@@ -68,7 +68,7 @@ function copyNginxFiles(session: Session, planned: PlannedCheck, path: string, w
     for (let pendingFile = pending.shift(); pendingFile !== undefined; pendingFile = pending.shift()) {
         if (copies.has(pendingFile.target)) continue;
         const source = join(folder, `${String(copies.size)}.conf`);
-        const bytes = readBytes(session.reads, pendingFile.path);
+        const bytes = readBytes(session.cache, pendingFile.path);
         writeFileSync(source, bytes);
         const text = bytes.toString('utf8');
         copies.set(pendingFile.target, { ...pendingFile, source, text });

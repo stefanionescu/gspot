@@ -52,7 +52,7 @@ Group path ignores by source, before the ignores of a check.
 @param session the repository to read.
 */
 export function buildIgnoreSections(session: Session): IgnoreSection[] {
-    const { reads, repository, scopes } = session;
+    const { cache, repository, scopes } = session;
     const generatorOutputs = scopes.flatMap(({ path: scopePath, configurations }) =>
         configurations.flatMap((configuration) => configuration.generated.map((file) => join(scopePath, file))),
     );
@@ -81,7 +81,7 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
         {
             key: 'generators',
             title: IGNORE_SECTION_TITLES.generators,
-            patterns: [...readLinguistPatterns(reads, trackedPaths), ...generatorOutputs],
+            patterns: [...readLinguistPatterns(cache, trackedPaths), ...generatorOutputs],
         },
         {
             key: 'configurations',

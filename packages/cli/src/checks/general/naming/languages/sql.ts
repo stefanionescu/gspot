@@ -1,6 +1,6 @@
 import type { Node } from '@pgsql/types';
 import { getPosition } from '#cli/system/text.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
+import type { RunCache } from '#cli/types/system/cache.ts';
 import { parseSqlFile, listSqlTokens, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { CATEGORY_LABELS } from '#cli/config/checks/general/naming/languages/identifier.ts';
 import type { SqlName, Identifier, IdentifierRead } from '#cli/types/checks/general/naming.ts';
@@ -201,10 +201,10 @@ Lists the identifiers a SQL file declares, or the parse error.
 
 @param file the repository path of the source.
 @param source the SQL to parse.
-@param reads the cache that SQL checks share.
+@param cache the cache that SQL checks share.
 */
-export async function extractSqlIdentifiers(file: string, source: string, reads: ReadCache): Promise<IdentifierRead> {
-    const parsed = await parseSqlFile(source, reads);
+export async function extractSqlIdentifiers(file: string, source: string, cache: RunCache): Promise<IdentifierRead> {
+    const parsed = await parseSqlFile(source, cache);
     if (parsed.error !== undefined) return { identifiers: [], error: parsed.error };
     // eslint-disable-next-line unicorn/prefer-spread -- reason: SQL offsets count UTF-16 code units, including each surrogate half.
     const characters = parsed.source.split('');

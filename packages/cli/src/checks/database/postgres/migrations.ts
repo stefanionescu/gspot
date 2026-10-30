@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
+import { remember } from '#cli/system/cache.ts';
 import { read } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
-import { remember } from '#cli/system/files/cache.ts';
 import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
@@ -30,9 +30,9 @@ const MIGRATIONS = Symbol('migrations');
 async function parseMigrations(session: Session, paths: Pick<Migration, 'path' | 'version'>[]): Promise<Migration[]> {
     const migrations: Migration[] = [];
     for (const { path, version } of paths) {
-        const text = extractForwardText(read(session.reads, path));
+        const text = extractForwardText(read(session.cache, path));
         const name = posix.basename(path);
-        const parsed = await parseSqlFile(text, session.reads);
+        const parsed = await parseSqlFile(text, session.cache);
         migrations.push({
             path,
             name,
@@ -56,7 +56,7 @@ export async function readMigrations(session: Session, planned: PlannedCheck): P
     const paths = listMigrationPaths(planned);
     if (paths.length === 0) return { migrations: [], findings: [] };
     const key = JSON.stringify(paths);
-    const migrations = await remember(session.reads, MIGRATIONS, key, () =>
+    const migrations = await remember(session.cache, MIGRATIONS, key, () =>
         parseMigrations(
             session,
             paths
@@ -126,7 +126,7 @@ const COMMITTED_MIGRATIONS = Symbol('committed migrations');
 /**
 Read the committed text of each migration file at a revision. A repository without Git has none.
 
-@param session the repository and its read cache.
+@param session the repository and its run cache.
 @param paths the migration files.
 @param revision the commit to read, or `HEAD`.
 @returns the text of each file that the revision holds, by path.
@@ -139,7 +139,7 @@ export async function readCommittedMigrations(
     if (!session.repository.hasGit) return new Map<string, string>();
     const commit = revision === 'HEAD' ? await readHead(session.root, session.cancelSignal) : revision;
     if (commit === undefined) return new Map<string, string>();
-    return remember(session.reads, COMMITTED_MIGRATIONS, `${commit}\0${JSON.stringify(paths)}`, async () => {
+    return remember(session.cache, COMMITTED_MIGRATIONS, `${commit}\0${JSON.stringify(paths)}`, async () => {
         const committed = await listRevisionFiles(session.root, { kind: 'commit', hash: commit }, session.cancelSignal);
         const selected = new Set(paths);
         const files = committed.filter(

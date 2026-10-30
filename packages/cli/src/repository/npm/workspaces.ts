@@ -1,8 +1,8 @@
 import { realpathSync } from 'node:fs';
+import { remember } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { remember } from '#cli/system/files/cache.ts';
+import type { RunCache } from '#cli/types/system/cache.ts';
 import { join, posix, dirname, relative } from 'node:path';
-import type { ReadCache } from '#cli/types/system/files.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
@@ -40,12 +40,12 @@ function listWorkspacePackages(root: string): Package[] {
 
 const WORKSPACE_SOURCES = Symbol('workspace sources');
 
-function listWorkspaceImportFolders(reads: ReadCache, folder: string, ordered: string[]): string[] {
-    const root = reads.root;
-    const typescriptProject = readTsconfigProject(root, folder, [], reads);
+function listWorkspaceImportFolders(cache: RunCache, folder: string, ordered: string[]): string[] {
+    const root = cache.root;
+    const typescriptProject = readTsconfigProject(root, folder, [], cache);
     return typescriptProject === undefined
         ? []
-        : listSourceFiles(root, folder, reads, {
+        : listSourceFiles(root, folder, cache, {
               ...typescriptProject.config,
               fileNames: typescriptProject.config.fileNames.filter((file) =>
                   isInScope(convertToPosixPath(relative(root, file)), folder),
@@ -60,19 +60,19 @@ function listWorkspaceImportFolders(reads: ReadCache, folder: string, ordered: s
 List the files of the workspace packages that a project imports or depends on, and the files that those packages
 publish.
 
-@param reads the run cache.
+@param cache the run cache.
 @param scopePath the owning project.
 @param files the source inventory.
 @returns the repository-relative paths.
 */
-export function listWorkspaceDependencySources(reads: ReadCache, scopePath: string, files: TrackedFile[]): string[] {
-    const root = reads.root;
+export function listWorkspaceDependencySources(cache: RunCache, scopePath: string, files: TrackedFile[]): string[] {
+    const root = cache.root;
     const tracked = new Set(files.map((file) => file.path));
     const packageJsonPath = listEnclosingFolders(scopePath)
         .map((folder) => joinScope(folder, PACKAGE_JSON))
         .find((path) => tracked.has(path));
     if (packageJsonPath === undefined) return [];
-    return remember(reads, WORKSPACE_SOURCES, JSON.stringify([root, packageJsonPath]), () => {
+    return remember(cache, WORKSPACE_SOURCES, JSON.stringify([root, packageJsonPath]), () => {
         const projectRoot = extractParentFolder(packageJsonPath);
         const ordered = [...new Set([projectRoot, ...listWorkspaceFolders(root)])].toSorted(
             (left, right) => right.length - left.length,
@@ -95,7 +95,7 @@ export function listWorkspaceDependencySources(reads: ReadCache, scopePath: stri
                 ...packageJson.peerDependencies,
                 ...packageJson.optionalDependencies,
             });
-            const sources = listWorkspaceImportFolders(reads, folder, ordered);
+            const sources = listWorkspaceImportFolders(cache, folder, ordered);
             const dependencies = [...packages]
                 .filter(([, dependency]) => dependency?.name !== undefined && names.includes(dependency.name))
                 .map(([path]) => path);

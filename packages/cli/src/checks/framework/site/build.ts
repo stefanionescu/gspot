@@ -1,7 +1,7 @@
 import { join, relative } from 'node:path';
+import { remember } from '#cli/system/cache.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { remember } from '#cli/system/files/cache.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import type { CheckSession } from '#cli/types/session.ts';
@@ -36,7 +36,7 @@ async function runSiteBuild(session: CheckSession, planned: PlannedCheck, copyRo
 }
 
 function readSiteBuild(session: CheckSession, planned: PlannedCheck): Promise<SiteBuild> {
-    return remember(session.reads, SITE_BUILDS, join(session.root, planned.scope.path), async () => {
+    return remember(session.cache, SITE_BUILDS, join(session.root, planned.scope.path), async () => {
         const folder = await createCheckCopy(session, planned);
         return runSiteBuild(session, planned, session.resources.use(folder).path);
     });

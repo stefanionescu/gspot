@@ -120,7 +120,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         .flatMap((configuration) => configuration.tools)
         .some((tool) => tool.replace_key?.some((replacement) => replacement.pointer === true) === true);
     return applySettingsEdit(root, {
-        reads: context.reads,
+        cache: context.cache,
         listing: context.listing,
         edit: input,
         summary,

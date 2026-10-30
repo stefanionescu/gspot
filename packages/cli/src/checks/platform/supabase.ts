@@ -146,7 +146,7 @@ function readSupabaseProjectFile(
     planned: PlannedCheck,
 ): Parsed<SupabaseProjectFile, CheckFinding> | undefined {
     const local = joinScope(planned.scope.path, SUPABASE_PROJECT_FILE);
-    const text = find(session.reads, local);
+    const text = find(session.cache, local);
     return text === undefined
         ? undefined
         : parseCheckedFile(local, () => parseTomlFile(local, text, supabaseProjectFileSchema));
@@ -315,7 +315,7 @@ export function checkSupabaseServiceRoleKey(session: Session, planned: PlannedCh
             extensions.some((extension) => file.path.endsWith(extension)),
     );
     return files.flatMap((file) =>
-        read(session.reads, file.path)
+        read(session.cache, file.path)
             .split('\n')
             .flatMap((text, index): CheckFinding[] => {
                 if (!SERVICE_ROLE_KEY_NAMES.some((name) => text.includes(name))) return [];

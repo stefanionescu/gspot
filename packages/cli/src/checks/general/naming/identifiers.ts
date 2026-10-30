@@ -17,7 +17,7 @@ export async function checkNamingIdentifiers(session: Session, planned: PlannedC
     const settings = readNamingSettings(session.settings, planned.scope);
     const findings: CheckFinding[] = [];
     for (const { file, language } of listNamedFiles(planned)) {
-        const text = read(session.reads, file.path);
+        const text = read(session.cache, file.path);
         const { identifiers, error } = await parseIdentifiers(file.path, text, language, session);
         if (error !== undefined) {
             findings.push({

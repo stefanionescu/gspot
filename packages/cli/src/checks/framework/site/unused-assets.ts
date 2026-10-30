@@ -109,7 +109,7 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
         .values()
         .filter((path) => TEXT_EXTENSIONS.has(posix.extname(path)))
         .map((path) => {
-            const text = find(session.reads, path);
+            const text = find(session.cache, path);
             return text === undefined ? undefined : readAssetSource(path, text, planned.scope.path);
         })
         .filter((source) => source !== undefined)

@@ -89,7 +89,7 @@ function readComposeDocuments(session: Session, planned: PlannedCheck): ComposeD
     const groups = groupComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
     for (const group of groups) {
         const declarations = [...group.before, group.last].flatMap(({ path }) => {
-            const parsed = parseCheckedFile(path, () => parseYamlFile(path, read(session.reads, path), composeSchema));
+            const parsed = parseCheckedFile(path, () => parseYamlFile(path, read(session.cache, path), composeSchema));
             if ('error' in parsed) {
                 documents.findings.push(parsed.error);
                 return [];
@@ -190,7 +190,7 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Chec
                 ];
                 const ignore = paths
                     .values()
-                    .map((path) => ({ path, text: find(session.reads, path) }))
+                    .map((path) => ({ path, text: find(session.cache, path) }))
                     .find((file): file is typeof file & { text: string } => file.text !== undefined);
                 if (ignore === undefined)
                     return [

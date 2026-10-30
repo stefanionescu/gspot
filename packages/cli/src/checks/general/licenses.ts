@@ -158,7 +158,7 @@ async function scanProject(
               };
     const scanned = await scan(session, { ...planned, scope }, start);
     if (scanned.length === 0) throw new GspotError('tool', EMPTY_SCAN_MESSAGE);
-    const found = findNearestLockfile(session.reads, dirname(dependencyFile), lockfiles);
+    const found = findNearestLockfile(session.cache, dirname(dependencyFile), lockfiles);
     const locked = found === undefined ? undefined : new Set(PACKAGE_PARSERS[found.lockfile](found.path, found.text));
     const lockedKeys =
         ecosystem === 'python' && locked !== undefined
@@ -182,7 +182,7 @@ async function scanLicenses(session: CheckSession, planned: PlannedCheck) {
         (project) =>
             project.skip === undefined &&
             (basename(project.dependencyFile) !== PACKAGE_JSON ||
-                (readDependencySpecifiers(session.reads, project.dependencyFile)?.size ?? 0) > 0),
+                (readDependencySpecifiers(session.cache, project.dependencyFile)?.size ?? 0) > 0),
     );
     const inventories = await Promise.all(scanned.map((project) => scanProject(session, planned, project)));
     return { inventories, hasSkipped: projects.some(({ skip }) => skip !== undefined) };

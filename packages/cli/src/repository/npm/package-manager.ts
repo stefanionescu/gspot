@@ -1,14 +1,14 @@
 import semver from 'semver';
 import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
+import { remember } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { remember } from '#cli/system/files/cache.ts';
 import { CI_NODE } from '#cli/config/generation/ci.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import type { RunCache } from '#cli/types/system/cache.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import type { ReadCache } from '#cli/types/system/files.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { VERSION_FLAG } from '#cli/config/executables/versions.ts';
@@ -136,16 +136,16 @@ Resolve an undeclared package manager version only when generating or installing
 @param root the working folder for the query of an undeclared version.
 @param packageManager the declared or detected name and version.
 @param timeoutSeconds the limit for the version query.
-@param reads the run cache that owns the resolved version.
+@param cache the run cache that owns the resolved version.
 */
 export function readPackageManagerVersion(
     root: string,
     packageManager: PackageManagerPin,
     timeoutSeconds: number,
-    reads: ReadCache,
+    cache: RunCache,
 ): PackageManager {
     const key = JSON.stringify([root, packageManager.name, packageManager.version]);
-    return remember(reads, PACKAGE_MANAGER_VERSIONS, key, (): PackageManager => {
+    return remember(cache, PACKAGE_MANAGER_VERSIONS, key, (): PackageManager => {
         const { name, version } = packageManager;
         if (version !== undefined) return { name, version };
         const result = spawnProcessBlocking([name, VERSION_FLAG], {
@@ -171,18 +171,18 @@ Resolve a package manager for the tool project, using npm when the repository pi
 @param root the folder for a version query.
 @param packageManager the repository package manager pin.
 @param timeoutSeconds the version query limit.
-@param reads the run cache for resolved versions.
+@param cache the run cache for resolved versions.
 @returns a package manager that can hold back new tool releases.
 */
 export function readToolPackageManager(
     root: string,
     packageManager: PackageManagerPin,
     timeoutSeconds: number,
-    reads: ReadCache,
+    cache: RunCache,
 ): PackageManager & { name: Exclude<PackageManager['name'], 'yarn'> } {
     const name = packageManager.name === 'yarn' ? NPM_TOOL : packageManager.name;
     const selected = name === packageManager.name ? packageManager : { name };
-    return { ...readPackageManagerVersion(root, selected, timeoutSeconds, reads), name };
+    return { ...readPackageManagerVersion(root, selected, timeoutSeconds, cache), name };
 }
 
 /**

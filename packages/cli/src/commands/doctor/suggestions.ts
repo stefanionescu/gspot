@@ -145,7 +145,7 @@ function listUnownedConfigFiles(
         .filter((configFile) => !isEditedInPlace(configFile, generated.managedKeys))
         .filter(
             (configFile) =>
-                !hasGeneratedHeader(readCachedPrefix(session.reads, configFile.path, BANNER_BYTES).toString('utf8')),
+                !hasGeneratedHeader(readCachedPrefix(session.cache, configFile.path, BANNER_BYTES).toString('utf8')),
         )
         .flatMap((configFile) => {
             const configuration = session.configurationsByName
@@ -162,7 +162,7 @@ List setup suggestions for the repository.
 */
 export async function listSuggestions(session: Session): Promise<Suggestions> {
     const configurations = session.toolConfigurations;
-    const repositorySetup = await readRepositorySetup(session.reads, session.repository);
+    const repositorySetup = await readRepositorySetup(session.cache, session.repository);
     const generated = generateFiles(session);
     const tools = new Set(configurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));

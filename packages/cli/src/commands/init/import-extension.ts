@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { setKey } from '#cli/settings/edit.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import type { RunCache } from '#cli/types/system/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
@@ -17,11 +17,11 @@ import { BUNDLER_PACKAGES, IMPORT_EXTENSION_SETTING } from '#cli/config/commands
 function detectImportExtension(
     repository: Repository,
     scopePath: string,
-    reads: ReadCache,
+    cache: RunCache,
 ): ImportExtensionStyle | undefined {
     const ts = requireTypescript();
     const path = join(repository.root, joinScope(scopePath, TSCONFIG_FILE));
-    const options = readTsconfig(repository.root, path, reads)?.options;
+    const options = readTsconfig(repository.root, path, cache)?.options;
     if (
         options !== undefined &&
         (options.allowImportingTsExtensions === true || options.rewriteRelativeImportExtensions === true)
@@ -44,7 +44,7 @@ export function buildImportExtensionTables(
     scopes: ScopeConfigurations[],
     repository: Repository,
 ): Map<string, TomlTable> {
-    const reads = createReadCache(repository.root);
+    const cache = createRunCache(repository.root);
     return new Map(
         scopes.flatMap(({ scope, selected: configurations }): [string, TomlTable][] => {
             if (
@@ -52,7 +52,7 @@ export function buildImportExtensionTables(
                 configurations.some((configuration) => Object.hasOwn(configuration.defaults, IMPORT_EXTENSION_SETTING))
             )
                 return [];
-            const style = detectImportExtension(repository, scope, reads);
+            const style = detectImportExtension(repository, scope, cache);
             if (style === undefined) return [];
             const table: TomlTable = {};
             setKey(table, IMPORT_EXTENSION_SETTING, style);

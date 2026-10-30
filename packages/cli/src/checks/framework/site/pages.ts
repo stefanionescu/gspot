@@ -150,7 +150,7 @@ async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Pr
     );
     const styles: string[] = [];
     for (const file of files) {
-        const text = read(session.reads, file.path);
+        const text = read(session.cache, file.path);
         if (STYLE_EXTENSIONS.has(extname(file.path))) {
             styles.push(text);
             continue;

@@ -1,13 +1,13 @@
 import type ts from 'typescript';
+import { remember } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text.ts';
-import { remember } from '#cli/system/files/cache.ts';
 import { buildBaseResult } from '#cli/runs/results.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { RunCache } from '#cli/types/system/cache.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -116,7 +116,7 @@ export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourc
 /**
 Shares a project compile across scopes, but never skips a second run in the same scope.
 
-@param reads the run cache.
+@param cache the run cache.
 @param projectCheck what identifies the compile.
 @param projectCheck.check the ID of the planned tsc run.
 @param projectCheck.path the tsconfig of the project.
@@ -125,7 +125,7 @@ Shares a project compile across scopes, but never skips a second run in the same
 @returns whether another scope already checks this project with these flags.
 */
 export function claimProjectCheck(
-    reads: ReadCache,
+    cache: RunCache,
     projectCheck: { check: string; path: string; scope: string; required: Record<string, boolean> },
 ): boolean {
     const { check, path, scope, required } = projectCheck;
@@ -134,7 +134,7 @@ export function claimProjectCheck(
         path,
         Object.entries(required).toSorted(([left], [right]) => compareText(left, right)),
     ]);
-    return remember(reads, CHECKED_PROJECTS, key, () => scope) !== scope;
+    return remember(cache, CHECKED_PROJECTS, key, () => scope) !== scope;
 }
 
 /**
@@ -158,7 +158,7 @@ export async function runTsc(
     );
     const target = project === undefined ? join(session.root, planned.scope.path, TSCONFIG_FILE) : project.path;
     if (
-        claimProjectCheck(session.reads, {
+        claimProjectCheck(session.cache, {
             check: planned.check.id,
             path: target,
             scope: planned.scope.path,
@@ -191,12 +191,12 @@ Rewrites each copied tsconfig so reference builds write their output into the co
 @param copy the referenced projects and the copy.
 */
 export function writeReferenceProjects(copy: TypeScriptReferenceCopy): void {
-    const { root, copyRoot, projects, reads } = copy;
+    const { root, copyRoot, projects, cache } = copy;
     const configurations = new Map([
         ...projects,
         ...projects.values().flatMap((config) =>
             config.extendedTsconfigFiles.map((path) => {
-                return [path, readTsconfig(root, path, reads) as ParsedTsconfig] as const;
+                return [path, readTsconfig(root, path, cache) as ParsedTsconfig] as const;
             }),
         ),
     ]);
@@ -210,7 +210,7 @@ export function writeReferenceProjects(copy: TypeScriptReferenceCopy): void {
 /**
 Lists the tsconfig files and sources of each project, for the copy.
 
-@param session the repository and read cache.
+@param session the repository and run cache.
 @param projects each scope path with its parsed tsconfig.
 @returns the repository-relative paths.
 */
@@ -218,7 +218,7 @@ export function listCompilerFiles(session: Session, projects: Iterable<readonly 
     return [...projects]
         .flatMap(([scope, config]) => [
             ...config.tsconfigFiles,
-            ...listSourceFiles(session.root, scope, session.reads, config).map((source) => source.fileName),
+            ...listSourceFiles(session.root, scope, session.cache, config).map((source) => source.fileName),
         ])
         .map((path) => convertToPosixPath(relative(session.root, path)))
         .filter(isInside);

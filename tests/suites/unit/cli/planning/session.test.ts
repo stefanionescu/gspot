@@ -14,7 +14,7 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 
-test('a copied session generates settings from its replacement inventory and read cache', async () => {
+test('a copied session generates settings from its replacement inventory and run cache', async () => {
     await using sandbox = await testdir({
         ...SESSION_FILES,
         'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { rules: true }),
@@ -23,7 +23,7 @@ test('a copied session generates settings from its replacement inventory and rea
     const previous = buildConfigFiles(opened);
     await writeFile(join(sandbox.path, 'run'), NODE_SCRIPT);
     const fresh = await openSession(sandbox.path);
-    const copied = { ...opened, reads: fresh.reads, repository: fresh.repository, scopes: fresh.scopes };
+    const copied = { ...opened, cache: fresh.cache, repository: fresh.repository, scopes: fresh.scopes };
     const generated = buildConfigFiles(copied);
     expect(generated.files).not.toStrictEqual(previous.files);
     expect(generated.files).toStrictEqual(buildConfigFiles(fresh).files);

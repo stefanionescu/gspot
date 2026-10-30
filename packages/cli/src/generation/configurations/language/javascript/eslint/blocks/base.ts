@@ -143,7 +143,7 @@ function buildRootBlock(
                 ...pluginOptions,
                 [IMPORT_BOUNDARIES_RULE]: buildImportBoundariesRule(
                     session.scopes,
-                    readScopeAliases(session.root, '', session.reads),
+                    readScopeAliases(session.root, '', session.cache),
                 ),
                 ...IMPORT_LAYOUT_RULES,
             },
@@ -205,7 +205,7 @@ export function buildClosingBlocks(
             (file) =>
                 file.kind === 'source' &&
                 basename(file.path) === PACKAGE_JSON &&
-                readCachedPackageJson(session.reads, file.path)?.['private'] === true,
+                readCachedPackageJson(session.cache, file.path)?.['private'] === true,
         )
         .map((file) => escapeGlob(file.path));
     const selectorGroups = buildSelectorBlocks(session.scopes, level, session.settings.structure.reexports);

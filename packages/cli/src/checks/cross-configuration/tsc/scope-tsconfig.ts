@@ -22,14 +22,14 @@ import {
 /**
 Builds the scope compiler configuration, extending its authored project when present.
 
-@param session the repository and read cache.
+@param session the repository and run cache.
 @param scope the scope and settings.
 @param file the absolute destination of the configuration.
 @returns the compiler configuration.
 */
 export function buildTsconfig(session: Session, scope: Scope, file: string): Record<string, unknown> {
     const ts = requireTypescript();
-    const { root, toolsRoot, reads } = session;
+    const { root, toolsRoot, cache } = session;
     const ownFiles =
         Map.groupBy(session.repository.files, (file) =>
             selectScopePath(file.path, session.repository.scopeFolders),
@@ -42,7 +42,7 @@ export function buildTsconfig(session: Session, scope: Scope, file: string): Rec
         root,
         scope.path,
         scopeFiles.map((scopeFile) => scopeFile.path),
-        reads,
+        cache,
     );
     const projectRoots =
         ts.getEffectiveTypeRoots(

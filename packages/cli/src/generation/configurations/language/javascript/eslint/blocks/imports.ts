@@ -103,14 +103,14 @@ Resolve nested project boundaries against the aliases of each project.
 */
 export function buildScopeImportBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintBlock[] {
     const {
-        session: { root, reads, scopes },
+        session: { root, cache, scopes },
         nodeFiles,
     } = planned;
     return scopes
         .filter((scope) => scope.path !== '')
         .map((scope) => {
             const path = scope.path;
-            const aliases = readScopeAliases(root, path, reads);
+            const aliases = readScopeAliases(root, path, cache);
             return {
                 files: [
                     joinScope(

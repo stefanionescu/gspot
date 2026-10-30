@@ -176,7 +176,7 @@ function readMessageFiles(
     const paths = new Set([...files, ...files.map((file) => selectBaseFile(file, messageFiles))]);
     for (const path of paths) {
         if (!messageFiles.paths.has(path)) continue;
-        const text = read(session.reads, path);
+        const text = read(session.cache, path);
         const tree = parseTree(text);
         const messages = parseCheckedFile(path, () => flattenMessages(parseJsonFile(path, text, messagesSchema)));
         if ('error' in messages) findings.push(messages.error);

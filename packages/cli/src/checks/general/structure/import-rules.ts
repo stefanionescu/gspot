@@ -103,7 +103,7 @@ async function validateFileImports(
 ): Promise<CheckFinding[]> {
     const from = lookup.findOwner(source.path);
     if (from === undefined) return [];
-    using tree = await parseSource(source.grammar, read(session.reads, source.path));
+    using tree = await parseSource(source.grammar, read(session.cache, source.path));
     return listImports(tree.rootNode).flatMap(({ node, module, owners }) => {
         const owner = findRefusedOwner(lookup, from, owners);
         if (owner === undefined) return [];

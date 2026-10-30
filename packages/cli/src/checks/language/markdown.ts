@@ -118,7 +118,7 @@ Reports invalid code fences at their error lines.
 export async function checkMarkdownFences(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const findings: CheckFinding[] = [];
     for (const file of planned.files) {
-        const text = read(session.reads, file.path);
+        const text = read(session.cache, file.path);
         const errors = await validateCodeFences(text, session);
         findings.push(
             ...errors.map((error) => ({

@@ -1,5 +1,5 @@
 import type { LimitFunction } from 'p-limit';
-import type { ReadCache } from '#cli/types/system/files.ts';
+import type { RunCache } from '#cli/types/system/cache.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { ConfiguredCheck } from '#cli/types/planning.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
@@ -17,7 +17,7 @@ export type Session = {
     inspections: Map<string, ToolInspection>;
     startRunner: StartRunner;
     toolsRoot: string;
-    reads: ReadCache;
+    cache: RunCache;
     resources: DisposableStack;
     packageManager: PackageManagerPin | undefined;
     cancelSignal?: AbortSignal | undefined;
@@ -32,7 +32,7 @@ export type CheckSession = Session & { readMiseBinPaths: () => string[]; limitPr
 
 export type SessionOptions = {
     toolsRoot?: string;
-    reads?: ReadCache | undefined;
+    cache?: RunCache | undefined;
     listing?: RepositoryListing | undefined;
     settingsFile?: SettingsFile;
     resources?: DisposableStack;

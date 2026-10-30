@@ -87,7 +87,7 @@ export async function checkGithubActionsActionlint(session: CheckSession, planne
         ].map((file) => [file.path, file]),
     );
     for (const file of actionFiles.values()) {
-        const source = read(session.reads, file.path);
+        const source = read(session.cache, file.path);
         const replaced = replaceSelfReferences(source);
         if (replaced !== source) replacements.set(file.path, replaced);
     }

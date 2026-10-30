@@ -35,7 +35,7 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     else if (match.setting.type === 'list') removeFromList(scopeTable, key, keys);
     else removeTableKeys(scopeTable, key, keys);
     return await applySettingsEdit(root, {
-        reads: edit.reads,
+        cache: edit.cache,
         listing: edit.listing,
         edit: input,
         summary: keys.length === 0 ? `Removed your value for ${key}.` : `Removed ${keys.join(' and ')} from ${key}.`,

@@ -43,13 +43,13 @@ test('an edit after a lookup reuses the cached repository bytes', async () => {
     });
     const context = await prepareSettingsEdit(sandbox.path);
     readSetting(context, 'limits.file_lines');
-    expect(context.reads.sources.has('package.json')).toBe(true);
-    using read = spyOn(context.reads.sources, 'get');
-    using save = spyOn(context.reads.sources, 'set');
+    expect(context.cache.sources.has('package.json')).toBe(true);
+    using read = spyOn(context.cache.sources, 'get');
+    using save = spyOn(context.cache.sources, 'set');
     setKey(context.edit.table, 'limits.file_lines', 200);
     const result = await applySettingsEdit(context.root, {
         edit: context.edit,
-        reads: context.reads,
+        cache: context.cache,
         listing: context.listing,
         summary: 'Set limits.file_lines to 200.',
     });

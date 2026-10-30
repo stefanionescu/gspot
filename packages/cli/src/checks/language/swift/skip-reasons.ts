@@ -62,7 +62,7 @@ Reports each skipped test without a reason, and each unavailable declaration wit
 export async function checkSwiftSkipReasons(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
     const findings: CheckFinding[] = [];
-    await visitParsedSources({ reads: session.reads, resources: session.resources, files }, (source) => {
+    await visitParsedSources({ cache: session.cache, resources: session.resources, files }, (source) => {
         const skipped = listUnexplainedSkips(source.rootNode, source.text.split('\n'));
         for (const node of skipped)
             findings.push({

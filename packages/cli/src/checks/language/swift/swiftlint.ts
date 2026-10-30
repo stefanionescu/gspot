@@ -73,7 +73,7 @@ export function listSwiftlintConfigFiles(session: Session, planned: PlannedCheck
         const parents = folders.slice(0, folders.indexOf(planned.scope.path));
         for (const folder of parents) {
             const path = posix.join(folder, SWIFTLINT_CONFIG_FILE);
-            if (find(session.reads, path) !== undefined) paths.push(path);
+            if (find(session.cache, path) !== undefined) paths.push(path);
         }
     }
     return [...new Set(paths)].toSorted((a, b) => compareText(a, b));

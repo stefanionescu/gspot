@@ -3,9 +3,9 @@ import { join, dirname } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { createRunCache } from '#cli/system/cache.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -30,7 +30,7 @@ test('tool discovery finds nested config files and skips root .gspot and vendore
     await using sandbox = await testdir(PRETTIER_SETTINGS_FILES);
 
     const repository = await readTestRepository(sandbox.path);
-    const discovered = await readRepositorySetup(createReadCache(sandbox.path), {
+    const discovered = await readRepositorySetup(createRunCache(sandbox.path), {
         hasGit: repository.hasGit,
         files: repository.files,
         dependencyFiles: [],
@@ -70,7 +70,7 @@ test('tool discovery reads tool sections through a link inside the repository', 
     const source = '[tool.ruff]\nline-length = 100\n';
     await createFileTree(sandbox.path, { 'settings/python.toml': source });
     await symlink('settings/python.toml', join(sandbox.path, 'pyproject.toml'));
-    const repositorySetup = await readRepositorySetup(createReadCache(sandbox.path), {
+    const repositorySetup = await readRepositorySetup(createRunCache(sandbox.path), {
         hasGit: false,
         files: [],
         dependencyFiles: [],
@@ -90,14 +90,14 @@ test.each([...LINKED_RULE_FOLDERS])(
         await mkdir(dirname(join(root, path)), { recursive: true });
         await symlink(join(sandbox.path, 'outside'), join(root, path), 'dir');
         expect(
-            await readRepositorySetup(createReadCache(root), { hasGit: false, files: [], dependencyFiles: [] }).then(
+            await readRepositorySetup(createRunCache(root), { hasGit: false, files: [], dependencyFiles: [] }).then(
                 ({ ruleFolders }) => ruleFolders,
             ),
         ).toStrictEqual([path]);
         await unlink(join(root, path));
         await createFileTree(root, { [`${path}/guide.md`]: 'authored rules\n' });
         expect(
-            await readRepositorySetup(createReadCache(root), { hasGit: false, files: [], dependencyFiles: [] }).then(
+            await readRepositorySetup(createRunCache(root), { hasGit: false, files: [], dependencyFiles: [] }).then(
                 ({ ruleFolders }) => ruleFolders,
             ),
         ).toStrictEqual([path]);
@@ -264,7 +264,7 @@ test('hook discovery includes executable Git hooks and leaves gspot hooks out', 
     const hooks = [{ kind: 'hooksPath' as const, path: '.git/hooks', files: ['pre-commit'] }];
     expect(await readHooks({ root: sandbox.path, hasGit: true })).toStrictEqual({ hooksPath: '', hooks });
     expect(
-        await readRepositorySetup(createReadCache(sandbox.path), { hasGit: true, files: [], dependencyFiles: [] }).then(
+        await readRepositorySetup(createRunCache(sandbox.path), { hasGit: true, files: [], dependencyFiles: [] }).then(
             ({ hooks }) => hooks,
         ),
     ).toStrictEqual(hooks);

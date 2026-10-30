@@ -26,7 +26,7 @@ function selectDefaultFolder(folders: readonly string[], packageFolder: string, 
 }
 
 async function listPackageModules(session: Session, path: string, swiftFiles: string[]): Promise<SwiftModule[]> {
-    using tree = await parseSource('swift', read(session.reads, path));
+    using tree = await parseSource('swift', read(session.cache, path));
     const packageFolder = extractParentFolder(path);
     return tree.rootNode.descendantsOfType('call_expression').flatMap((call) => {
         const callee = call.namedChildren[0];
@@ -45,7 +45,7 @@ async function listPackageModules(session: Session, path: string, swiftFiles: st
 }
 
 function listXcodeModules(session: Session, path: string, swiftFiles: string[]): SwiftModule[] {
-    const project = parseProjectSources(read(session.reads, path), path);
+    const project = parseProjectSources(read(session.cache, path), path);
     return project.targets.map((target) => ({
         name: target.name.replaceAll(NON_WORD_CHARACTERS, '_'),
         files: swiftFiles.filter(

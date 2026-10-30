@@ -1,11 +1,11 @@
 import { join, dirname, relative } from 'node:path';
+import { createRunCache } from '#cli/system/cache.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
@@ -31,7 +31,7 @@ export async function checkTsc(session: CheckSession, planned: PlannedCheck): Pr
         listCheckedFiles(session.scopes, planned)
             .filter((file) => file.tags.includes(TYPESCRIPT_TAG))
             .map((file) => file.path),
-        session.reads,
+        session.cache,
     );
     const references = (project?.config.projectReferences ?? []).length > 0 ? project : undefined;
     const prerequisites =
@@ -52,10 +52,10 @@ export async function checkTsc(session: CheckSession, planned: PlannedCheck): Pr
         writeReferenceProjects({
             root: session.root,
             copyRoot: scratch.path,
-            reads: session.reads,
+            cache: session.cache,
             projects: references.projects,
         });
-        scratchSession = { ...session, root: scratch.path, reads: createReadCache(scratch.path) };
+        scratchSession = { ...session, root: scratch.path, cache: createRunCache(scratch.path) };
         scopeProject = { ...references, path: join(scratch.path, relative(session.root, references.path)) };
     }
     const result = restoreCommandPaths(

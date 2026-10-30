@@ -44,7 +44,7 @@ function validateUrl(url: URL, hosts: Set<string>): string | undefined {
 }
 
 function validateLockfileHosts(session: Session, path: string, hosts: Set<string>): CheckFinding[] {
-    const text = read(session.reads, path);
+    const text = read(session.cache, path);
     let nextOffset = 0;
     return listLockfileUrls(path, text).flatMap((url) => {
         let offset = text.indexOf(url, nextOffset);
@@ -127,7 +127,7 @@ function findMiseFilePin(
     let pin: { path: string; version: string } | undefined;
     const paths = listEnclosingFolders(folder).flatMap((base) => MISE_FILES.map((file) => posix.join(base, file)));
     for (const path of paths) {
-        const text = find(session.reads, path);
+        const text = find(session.cache, path);
         if (text === undefined) continue;
         const parsed = parseCheckedFile(path, () => parseTomlFile(path, text, miseToolsSchema));
         if ('error' in parsed) {
@@ -156,7 +156,7 @@ Reports a packageManager field that names another version than the mise pin of t
 export function checkDependenciesPackageManagerPin(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
-    const writtenPin = splitPackageManager(readCachedPackageJson(session.reads, packageJsonPath)?.packageManager);
+    const writtenPin = splitPackageManager(readCachedPackageJson(session.cache, packageJsonPath)?.packageManager);
     if (writtenPin === undefined) return [];
     const { tool, version } = writtenPin;
     const { pin, findings } = findMiseFilePin(session, folder, tool);
@@ -203,13 +203,13 @@ Reports a package.json whose dependencies differ from what its lockfile records,
 export function checkDependenciesStaleLockfile(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
-    const found = findNearestLockfile(session.reads, folder, IMPORTER_LOCKFILES);
+    const found = findNearestLockfile(session.cache, folder, IMPORTER_LOCKFILES);
     if (found === undefined) return [];
     const sections =
         found.lockfile === 'pnpm-lock.yaml'
             ? STALE_LOCKFILE_SECTIONS.filter((section) => section !== 'peerDependencies')
             : STALE_LOCKFILE_SECTIONS;
-    const specifiers = readDependencySpecifiers(session.reads, packageJsonPath, sections);
+    const specifiers = readDependencySpecifiers(session.cache, packageJsonPath, sections);
     if (specifiers === undefined) return [];
     let locked = new Map(
         SPECIFIER_PARSERS[found.lockfile](posix.join(found.base, found.lockfile), found.text).map(

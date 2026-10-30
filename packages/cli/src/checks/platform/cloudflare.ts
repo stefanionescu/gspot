@@ -107,7 +107,7 @@ Reports syntax errors in each _redirects file.
 */
 export function checkCloudflareRedirects(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [REDIRECTS_FILE]).flatMap((path) =>
-        validateRedirects(read(session.reads, path)).map((invalidLine) => ({
+        validateRedirects(read(session.cache, path)).map((invalidLine) => ({
             file: path,
             line: invalidLine.number,
             rule: SYNTAX_RULE,
@@ -124,7 +124,7 @@ Reports syntax errors in each _headers file, and each security header that the b
 */
 export function checkCloudflareHeaders(session: Session, planned: PlannedCheck): CheckFinding[] {
     return listSourcePaths(planned.files, [HEADERS_FILE]).flatMap((path) => {
-        const { blocks, errors } = parseHeadersFile(read(session.reads, path));
+        const { blocks, errors } = parseHeadersFile(read(session.cache, path));
         return [
             ...errors.map((error) => ({
                 file: path,

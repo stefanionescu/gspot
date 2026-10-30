@@ -2,13 +2,13 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
+import { createRunCache } from '#cli/system/cache.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { README, LICENSE } from '#tests/config/documents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -185,7 +185,7 @@ test.each([...MALFORMED_TASK_FILES])(
 
         const session = await openSession(sandbox.path);
         await writeFile(join(sandbox.path, path), text);
-        session.reads = createReadCache(sandbox.path);
+        session.cache = createRunCache(sandbox.path);
         const input = planSandboxCheck(session, 'docs/missing-paths', { paths: [document] });
         const failure = await captureRejection(getBuiltInCheck('docs/missing-paths')(session, input));
         expect(failure.message).toBe(message);
@@ -210,7 +210,7 @@ test('missing-paths: a document in a child scope does not read unrelated or shad
 
     const session = await openSession(sandbox.path);
     await createFileTree(sandbox.path, { 'package.json': '{broken', 'sibling/package.json': '{broken' });
-    session.reads = createReadCache(sandbox.path);
+    session.cache = createRunCache(sandbox.path);
 
     expect(
         await getBuiltInCheck('docs/missing-paths')(

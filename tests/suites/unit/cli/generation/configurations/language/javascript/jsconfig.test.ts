@@ -53,7 +53,7 @@ test.each(['basic', 'all'] as const)('JavaScript implicit parameters follow leve
     const project = readTsconfig(
         sandbox.path,
         join(sandbox.path, getManifestTarget('javascript', 'jsconfig.json')),
-        session.reads,
+        session.cache,
     )!;
     const program = ts.createProgram(project.fileNames, { ...project.options, noLib: true });
     const errorCodes = new Set(program.getSemanticDiagnostics().map(({ code }) => code));

@@ -1,9 +1,9 @@
 import { cp } from 'node:fs/promises';
 import { runGit } from '#cli/system/git.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { createRunCache } from '#cli/system/cache.ts';
 import type { GitFile } from '#cli/types/parsers/git.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
+import type { RunCache } from '#cli/types/system/cache.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
@@ -112,20 +112,20 @@ export async function copyDependencies(
 }
 
 function readMatchingTsconfig(
-    reads: ReadCache,
+    cache: RunCache,
     path: string,
     unchangedPaths: ReadonlySet<string>,
 ): ParsedTsconfig | undefined {
     if (!unchangedPaths.has(path)) return undefined;
     let tsconfig: ParsedTsconfig | undefined;
     try {
-        tsconfig = readTsconfig(reads.root, join(reads.root, path), reads);
+        tsconfig = readTsconfig(cache.root, join(cache.root, path), cache);
     } catch (error) {
         if (!(error instanceof GspotError) || error.code !== 'configuration') throw error;
         return undefined;
     }
     const changed = tsconfig?.tsconfigFiles.some((file) => {
-        const local = convertToPosixPath(relative(reads.root, file));
+        const local = convertToPosixPath(relative(cache.root, file));
         return !splitSystemPath(local).includes(NODE_MODULES) && !unchangedPaths.has(local);
     });
     return changed === true ? undefined : tsconfig;
@@ -146,13 +146,13 @@ export async function readDeclarationDependencies(
     cancelSignal?: AbortSignal,
 ): Promise<DeclarationDependencies> {
     const tracked = new Set(indexFiles.map(({ path }) => path));
-    const reads = createReadCache(root);
+    const cache = createRunCache(root);
     let paths = new Set<string>();
     let mismatched = false;
     for (const indexFile of indexFiles) {
         const name = basename(indexFile.path);
         if (name !== TSCONFIG_FILE && name !== JSCONFIG_FILE) continue;
-        const tsconfig = readMatchingTsconfig(reads, indexFile.path, unchangedPaths);
+        const tsconfig = readMatchingTsconfig(cache, indexFile.path, unchangedPaths);
         if (tsconfig === undefined) {
             mismatched = true;
             continue;
@@ -163,7 +163,7 @@ export async function readDeclarationDependencies(
         const selected = listUntrackedDeclarations(
             root,
             tracked,
-            listSourceFiles(root, dirname(indexFile.path), reads, {
+            listSourceFiles(root, dirname(indexFile.path), cache, {
                 ...tsconfig,
                 fileNames: tsconfig.fileNames.filter((path) => isInside(relative(root, path))),
             })

@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { compareText } from '#cli/system/text.ts';
+import { createRunCache } from '#cli/system/cache.ts';
 import { type Sandbox } from '#tests/types/sandbox.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { tsconfigSchema } from '#tests/schemas/tsconfig.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { type RunReport } from '#cli/types/commands/check.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
@@ -52,7 +52,7 @@ const installedSandbox = shareInstalledSandbox({
 
 test('nextjs/tsc generates types and checks a referenced project without writing build output', async () => {
     const { root } = installedSandbox();
-    const parsed = readTsconfig(root, join(root, 'tsconfig.json'), createReadCache(root))!.raw;
+    const parsed = readTsconfig(root, join(root, 'tsconfig.json'), createRunCache(root))!.raw;
     const authored = JSON.stringify({
         ...parsed,
         references: [{ path: './compiler-ref' }],

@@ -81,7 +81,7 @@ async function runValeOnStdin(
     command: string[],
     folder: string,
 ): Promise<ValeAlert[]> {
-    const text = read(session.reads, route.path);
+    const text = read(session.cache, route.path);
     const result = await runCheckTool(
         session,
         planned,

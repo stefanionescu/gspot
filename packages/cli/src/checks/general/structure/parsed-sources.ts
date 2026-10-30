@@ -1,7 +1,7 @@
+import { remember } from '#cli/system/cache.ts';
 import { read } from '#cli/system/files/reads.ts';
 import { Query, type Node } from 'web-tree-sitter';
 import type { Session } from '#cli/types/session.ts';
-import { remember } from '#cli/system/files/cache.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
@@ -38,16 +38,16 @@ Parse the scope sources once for each list of paths, and free their trees with t
 @returns the trees and their query captures.
 */
 export function readParsedSources(
-    session: Pick<Session, 'reads' | 'resources'>,
+    session: Pick<Session, 'cache' | 'resources'>,
     planned: Pick<PlannedCheck, 'files' | 'scope'>,
 ): Promise<ParsedSource[]> {
-    return remember(session.reads, PARSED_SOURCES, JSON.stringify(planned.files.map((file) => file.path)), async () => {
+    return remember(session.cache, PARSED_SOURCES, JSON.stringify(planned.files.map((file) => file.path)), async () => {
         const sources: ParsedSource[] = [];
         for (const file of planned.files) {
             if (file.kind !== 'source') continue;
             const language = detectLanguage(file);
             if (language === undefined || !planned.scope.settings.configurations.includes(language)) continue;
-            const tree = session.resources.use(await parseSource(language, read(session.reads, file.path), session));
+            const tree = session.resources.use(await parseSource(language, read(session.cache, file.path), session));
             const source = { path: file.path, language, tree, captures: new Map<string, Node[]>() };
             sources.push(source);
             captureSource(source);

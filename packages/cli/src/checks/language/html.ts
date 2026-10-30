@@ -121,7 +121,7 @@ Reports inline scripts, handler attributes, and script links in each HTML file.
 export async function checkHtmlInlineScripts(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'html' as const }));
     const findings: CheckFinding[] = [];
-    await visitParsedSources({ reads: session.reads, resources: session.resources, files }, (source) => {
+    await visitParsedSources({ cache: session.cache, resources: session.resources, files }, (source) => {
         findings.push(...validateInlineScripts(source), ...validateScriptAttributes(source));
     });
     return findings;

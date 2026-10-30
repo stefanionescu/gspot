@@ -1,10 +1,10 @@
+import { remember } from '#cli/system/cache.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { Parsed } from '#cli/types/shapes.ts';
 import type { TextRange } from '#cli/types/text.ts';
 import { dirname, basename } from 'node:path/posix';
 import type { Node, ParseResult } from '@pgsql/types';
-import { remember } from '#cli/system/files/cache.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
+import type { RunCache } from '#cli/types/system/cache.ts';
 
 import type {
     SqlFile,
@@ -124,10 +124,10 @@ export function listNodeFields<Kind extends keyof SqlNodeFields>(
 Parse a PostgreSQL file once per run.
 
 @param text the original SQL, including supported psql syntax.
-@param reads the run cache.
+@param cache the run cache.
 */
-export function parseSqlFile(text: string, reads: ReadCache): Promise<SqlFile> {
-    return remember(reads, PARSED_SQL_FILES, text, async (): Promise<SqlFile> => {
+export function parseSqlFile(text: string, cache: RunCache): Promise<SqlFile> {
+    return remember(cache, PARSED_SQL_FILES, text, async (): Promise<SqlFile> => {
         const { text: source, variables } = replacePsqlSyntax(text);
         if (source.trim() === '') return { source, variables, statements: [], error: undefined };
         const parsed = await parsePostgres(source);

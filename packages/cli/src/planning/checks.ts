@@ -240,16 +240,16 @@ export function listEnabledChecks(scopes: Scope[], settings: Settings): Configur
 /**
 Check whether the project supplies coverage.py settings.
 
-@param session the repository read cache.
+@param session the run cache.
 @param scope the project folder relative to the repository.
 @returns whether pytest must use the project's coverage configuration.
 */
 export function hasProjectCoverage(session: Session, scope: string): boolean {
-    if (find(session.reads, joinScope(scope, '.coveragerc')) !== undefined) return true;
-    const pyproject = find(session.reads, joinScope(scope, PYPROJECT_TOML));
+    if (find(session.cache, joinScope(scope, '.coveragerc')) !== undefined) return true;
+    const pyproject = find(session.cache, joinScope(scope, PYPROJECT_TOML));
     const project = pyproject === undefined ? undefined : parseTomlFile(joinScope(scope, PYPROJECT_TOML), pyproject);
     if (isTable(project?.['tool']) && Object.hasOwn(project['tool'], 'coverage')) return true;
     return ['setup.cfg', 'tox.ini'].some((name) =>
-        COVERAGE_INI_SECTION.test(find(session.reads, joinScope(scope, name)) ?? ''),
+        COVERAGE_INI_SECTION.test(find(session.cache, joinScope(scope, name)) ?? ''),
     );
 }

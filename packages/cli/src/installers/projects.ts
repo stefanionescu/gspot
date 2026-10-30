@@ -77,7 +77,7 @@ List the state of each tool project lockfile. It resolves and writes nothing.
 export async function listStaleLockfiles(
     session: Pick<
         Session,
-        'root' | 'toolsRoot' | 'packageManager' | 'timeoutSeconds' | 'reads' | 'toolConfigurations' | 'scopes'
+        'root' | 'toolsRoot' | 'packageManager' | 'timeoutSeconds' | 'cache' | 'toolConfigurations' | 'scopes'
     >,
     generated: GeneratedFile[],
 ): Promise<StaleLockfile[]> {

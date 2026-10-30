@@ -2,7 +2,7 @@ import ignore from 'ignore';
 import { posix } from 'node:path';
 import { read } from '#cli/system/files/reads.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
+import type { RunCache } from '#cli/types/system/cache.ts';
 import type { PathIgnore } from '#cli/types/repository/files.ts';
 import { isInside, extractParentFolder } from '#cli/system/paths.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
@@ -28,17 +28,17 @@ export function isIgnored(path: string, ignores: PathIgnore[]): boolean {
 /**
 Build a test for paths that a tracked .gitignore ignores, or that sit inside an ignored folder.
 
-@param reads the run cache.
+@param cache the run cache.
 @param trackedPaths the tracked files of the repository.
 */
-export function buildGitignoreMatcher(reads: ReadCache, trackedPaths: string[]): (path: string) => boolean {
+export function buildGitignoreMatcher(cache: RunCache, trackedPaths: string[]): (path: string) => boolean {
     const ignores: PathIgnore[] = trackedPaths
         .filter((path) => posix.basename(path) === GITIGNORE_FILE)
         .map((file) => {
             const folder = extractParentFolder(file);
             return {
                 base: joinScope(folder, ''),
-                matcher: ignore().add(read(reads, file)),
+                matcher: ignore().add(read(cache, file)),
             };
         });
     return (path) => {

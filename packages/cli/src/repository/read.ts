@@ -4,7 +4,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { INDEX_LINE } from '#cli/config/parsers/git.ts';
 import { join, posix, dirname, resolve } from 'node:path';
-import { type ReadCache } from '#cli/types/system/files.ts';
+import { type RunCache } from '#cli/types/system/cache.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
 import { detectScopeFolders } from '#cli/repository/scopes.ts';
@@ -37,10 +37,10 @@ async function readAttributes(root: string, paths: string[]): Promise<Map<string
 List the tracked files and the untracked files that Git does not ignore. Each file comes with its first bytes and its Git
 attributes.
 
-@param reads the run cache.
+@param cache the run cache.
 */
-export async function listRepositoryFiles(reads: ReadCache): Promise<RepositoryListing> {
-    const root = reads.root;
+export async function listRepositoryFiles(cache: RunCache): Promise<RepositoryListing> {
+    const root = cache.root;
     const hasGit = await isGitRepository(root);
     const unreadablePaths: string[] = [];
     const index = hasGit
@@ -60,7 +60,7 @@ export async function listRepositoryFiles(reads: ReadCache): Promise<RepositoryL
         : new Map<string, Record<string, string>>();
     const files = listedFiles.map((listedFile) => ({
         ...listedFile,
-        prefix: listedFile.isSymlink ? Buffer.alloc(0) : readCachedPrefix(reads, listedFile.path, FILE_PREFIX_BYTES),
+        prefix: listedFile.isSymlink ? Buffer.alloc(0) : readCachedPrefix(cache, listedFile.path, FILE_PREFIX_BYTES),
     }));
     return { root, hasGit, index, attributes, files, unreadablePaths };
 }
@@ -68,7 +68,7 @@ export async function listRepositoryFiles(reads: ReadCache): Promise<RepositoryL
 /**
 Classify the listed files, and read the dependency files and the written and discovered scopes.
 
-@param reads the run cache.
+@param cache the run cache.
 @param listing the files that listRepositoryFiles found.
 @param options what the read needs.
 @param options.generatedPaths the generated and vendored path rules.
@@ -76,7 +76,7 @@ Classify the listed files, and read the dependency files and the written and dis
 @param options.configurationsByName the shipped configurations.
 */
 export async function readRepository(
-    reads: ReadCache,
+    cache: RunCache,
     listing: RepositoryListing,
     { generatedPaths, scopes, configurationsByName }: RepositoryReadOptions,
 ): Promise<Repository> {
@@ -86,12 +86,12 @@ export async function readRepository(
     for (const listedFile of listing.files) {
         const file = classifyFile(root, listedFile, listedFile.prefix, { generatedPaths, attributes });
         if (!listedFile.isSymlink && file.kind === 'source' && file.path.endsWith(SWIFT_EXTENSION)) {
-            const tags = await detectSwiftTags(file.path, read(reads, file.path));
+            const tags = await detectSwiftTags(file.path, read(cache, file.path));
             file.tags.push(...tags);
         }
         tracked.push(file);
     }
-    const dependencyFiles = await readDependencyFiles(reads, tracked);
+    const dependencyFiles = await readDependencyFiles(cache, tracked);
     const discovered = detectScopeFolders(tracked, dependencyFiles, configurationsByName.values());
     const written: ScopeFolder[] = [
         { ...ROOT_SCOPE, configurations: [] },
@@ -123,16 +123,16 @@ export async function readRepository(
 /**
 Read generated and vendored selectors from each tracked attribute file.
 
-@param reads the run cache.
+@param cache the run cache.
 @param paths the tracked root-relative files.
 */
-export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[] {
+export function readLinguistPatterns(cache: RunCache, paths: string[]): string[] {
     return [
         ...new Set(
             paths
                 .filter((path) => posix.basename(path) === GITATTRIBUTES_FILE)
                 .flatMap((path) => {
-                    const authored = stripBlock(find(reads, path) ?? '', { path });
+                    const authored = stripBlock(find(cache, path) ?? '', { path });
                     return parseAttributePatterns(authored, posix.dirname(path))
                         .filter((rule) =>
                             Object.entries(mergeAttributes(rule.attributes)).some(

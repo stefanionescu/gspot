@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { createReadCache } from '#cli/system/files/cache.ts';
+import { createRunCache } from '#cli/system/cache.ts';
 import { type Identifier } from '#cli/types/checks/general/naming.ts';
 import { parseIdentifiers } from '#cli/checks/general/naming/source-names.ts';
 
@@ -16,7 +16,7 @@ import {
 async function listIdentifiers(file: string, source: string, language: string): Promise<Identifier[]> {
     using resources = new DisposableStack();
     const { identifiers } = await parseIdentifiers(file, source, language, {
-        reads: createReadCache(process.cwd()),
+        cache: createRunCache(process.cwd()),
         resources,
     });
     return identifiers;

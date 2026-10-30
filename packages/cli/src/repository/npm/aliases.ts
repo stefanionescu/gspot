@@ -1,7 +1,7 @@
 import { isTable } from '#cli/system/tables.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
+import type { RunCache } from '#cli/types/system/cache.ts';
 import { join, dirname, resolve, relative } from 'node:path';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
@@ -45,14 +45,14 @@ Resolve package imports and TypeScript paths for one scope. TypeScript paths win
 
 @param root the root that alias paths start from.
 @param scopePath the folder, empty for the root.
-@param reads the run cache for compiler settings.
+@param cache the run cache for compiler settings.
 @returns aliases relative to the repository root.
 */
-export function readScopeAliases(root: string, scopePath: string, reads: ReadCache): Record<string, string> {
+export function readScopeAliases(root: string, scopePath: string, cache: RunCache): Record<string, string> {
     const prefix = joinScope(scopePath, '');
     const aliases = readPackageAliases(root, prefix);
     const path = join(root, prefix, TSCONFIG_FILE);
-    const config = readTsconfig(root, path, reads);
+    const config = readTsconfig(root, path, cache);
     if (config === undefined) return aliases;
     const options = config.options;
     const paths = options.paths === undefined ? [] : Object.entries(options.paths);

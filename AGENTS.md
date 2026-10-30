@@ -102,7 +102,7 @@ You can edit the other keys of that file.
   `tests/suites/e2e/` installs the packed packages into a fresh project.
 - In unit check tests, choose the entrypoint for the assertion:
     - Use `runSandboxCheck` for one check's findings or error.
-    - Use `planSandboxCheck` with `getBuiltInCheck` when files or the read cache change after the session opens.
+    - Use `planSandboxCheck` with `getBuiltInCheck` when files or the run cache change after the session opens.
     - Use `runCheckCode` for a command check whose plan the test changes.
     - Use `runChecks` with `buildRunOptions` for status, notes, skip causes, or cancellation.
     - Use `assertCheckSample` for a sample that fails and passes after its fix.

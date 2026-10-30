@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { createRunCache } from '#cli/system/cache.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildInitSettings } from '#cli/commands/init/settings-text.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { ARRAY_COMMENT_CASES } from '#tests/config/settings/text/array-comments.ts';
@@ -29,9 +29,9 @@ test('a template keeps authored spelling, record order, comments, and inline tab
 
 test('setting level keeps the opening init comment first', async () => {
     await using sandbox = await testdir();
-    const reads = createReadCache(sandbox.path);
+    const cache = createRunCache(sandbox.path);
     const configurationsByName = readConfigurations();
-    const repository = await readRepository(reads, await listRepositoryFiles(reads), {
+    const repository = await readRepository(cache, await listRepositoryFiles(cache), {
         generatedPaths: [],
         scopes: [],
         configurationsByName,

@@ -143,7 +143,7 @@ export function checkRepositoryEncoding(session: Session, planned: PlannedCheck)
                 (file) =>
                     file.tags.includes('text') &&
                     !file.tags.includes('symlink') &&
-                    !isUtf8(readBytes(session.reads, file.path)),
+                    !isUtf8(readBytes(session.cache, file.path)),
             )
             .map((file) => ({
                 file: file.path,

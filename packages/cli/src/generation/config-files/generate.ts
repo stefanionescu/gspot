@@ -1,7 +1,7 @@
 import { join } from 'node:path/posix';
+import { remember } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
-import { remember } from '#cli/system/files/cache.ts';
 import type { ConfigFile } from '#cli/types/manifests.ts';
 import { buildConfigFile } from '#cli/generation/config-files/build.ts';
 import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';
@@ -20,14 +20,14 @@ import type {
 const CONFIG_FILES = Symbol('config files');
 
 /**
-Reuse generated settings only while the session keeps the same repository read cache.
+Reuse generated settings only while the session keeps the same run cache.
 
 @param session the current settings, scopes, and repository files.
 */
 export function buildConfigFiles(session: Session): ConfigFileGeneration {
     const repositorySession =
         session.root === session.repository.root ? session : { ...session, root: session.repository.root };
-    return remember(session.reads, CONFIG_FILES, session.repository, () => buildScopeConfigFiles(repositorySession));
+    return remember(session.cache, CONFIG_FILES, session.repository, () => buildScopeConfigFiles(repositorySession));
 }
 
 function buildOwnedOutput(

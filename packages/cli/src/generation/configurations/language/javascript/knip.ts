@@ -103,7 +103,7 @@ function listFileTaskPackages(planned: PlannedConfigFile): string[] {
     const dependencyNames = new Set(dependencyFiles.flatMap((file) => Object.keys(file.dependencies)));
     const names = files
         .filter((file) => file.kind === 'source' && isFileTask(file.path))
-        .flatMap((file) => listRunPackages(read(planned.session.reads, file.path)));
+        .flatMap((file) => listRunPackages(read(planned.session.cache, file.path)));
     return [...new Set(names)]
         .filter((name) => dependencyNames.has(name))
         .toSorted((left, right) => compareText(left, right));
