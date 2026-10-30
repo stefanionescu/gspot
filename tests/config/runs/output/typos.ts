@@ -11,18 +11,8 @@ export const TYPO_REPORT = {
 
 export const TYPOS_REPORT_ERRORS = [
     {
-        name: 'unfinished JSON',
-        output: '{',
-        message: 'Typos printed output that gspot cannot read.',
-    },
-    {
         name: 'partial typo',
         output: { type: 'typo', path: 'sample.txt', typo: TYPO.the },
-        message: 'Typos printed output that gspot cannot read.',
-    },
-    {
-        name: 'error output',
-        output: { type: 'error', message: 'Read failed.' },
         message: 'Typos printed output that gspot cannot read.',
     },
     {

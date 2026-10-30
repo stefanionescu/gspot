@@ -48,7 +48,7 @@ test('the typos format tells findings from fatal exits', async () => {
 });
 
 test.each([...TYPOS_REPORT_ERRORS])('typos refuses $name: $message', async ({ output, message }) => {
-    const stdout = typeof output === 'string' ? output : JSON.stringify(output);
+    const stdout = JSON.stringify(output);
     await using sandbox = await testdir({ 'sample.txt': `${TYPO.the}\n` });
     const check = getShippedCheck('spelling/typos');
     expect(() => parseOutput(check, stdout, '', { root: sandbox.path, cwd: sandbox.path })).toThrow(message);

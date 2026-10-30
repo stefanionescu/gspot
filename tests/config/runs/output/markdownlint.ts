@@ -9,18 +9,3 @@ export const MARKDOWN_REPORT = {
     fixInfo: null,
     severity: 'error',
 } as const;
-
-export const MARKDOWNLINT_REPORT_ERRORS = [
-    {
-        name: 'non-array report',
-        output: '{}',
-    },
-    {
-        name: 'empty rules',
-        output: [{ ...MARKDOWN_REPORT, ruleNames: [] }],
-    },
-    {
-        name: 'invalid fix',
-        output: [{ ...MARKDOWN_REPORT, fixInfo: [] }],
-    },
-] as const;

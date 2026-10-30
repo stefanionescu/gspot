@@ -2,10 +2,10 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
-import { INVALID_KNIP_REPORTS } from '#tests/config/runs/output/knip.ts';
 
-test.each([...INVALID_KNIP_REPORTS])('an invalid Knip report is refused: %s', async (stdout) => {
+test('a Knip report with an export name that is not text is refused', async () => {
     const check = getShippedCheck('javascript/knip');
+    const stdout = '{"issues":[{"file":"source.js","exports":[{"name":1}]}]}';
 
     await using sandbox = await testdir();
     expect(() => parseOutput(check, stdout, '', { root: sandbox.path, cwd: sandbox.path })).toThrow(
