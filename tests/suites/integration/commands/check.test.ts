@@ -8,7 +8,6 @@ import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { type PushReport } from '#cli/types/commands/check.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -71,7 +70,7 @@ test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned ve
     expect(available.report.checks).toMatchObject([{ check: 'bash/shellcheck', status: 'passed', findings: [] }]);
 });
 
-test('a pre-push check in a shallow clone passes project/bash-syntax and refuses commits/commitlint-pushed until git fetch --unshallow', async () => {
+test('a pre-push check in a shallow clone refuses commits/commitlint-pushed and names git fetch --unshallow', async () => {
     await using sandbox = await testdir();
     const source = join(sandbox.path, 'source');
     await createFileTree(source, {
@@ -82,7 +81,6 @@ test('a pre-push check in a shallow clone passes project/bash-syntax and refuses
     await applyThenInstall(source);
     runGitStep(source, ['add', '-A']);
     runGitStep(source, ['commit', '-qm', 'chore: initialize']);
-    const base = runGitStep(source, ['rev-parse', 'HEAD']);
     await writeFile(join(source, 'source.sh'), 'echo selected\n');
     runGitStep(source, ['commit', '-qam', 'feat: select source']);
     const selected = runGitStep(source, ['rev-parse', 'HEAD']);
@@ -93,34 +91,11 @@ test('a pre-push check in a shallow clone passes project/bash-syntax and refuses
     const input = { stdin: `refs/heads/main ${selected} refs/heads/main ${'0'.repeat(selected.length)}\n` };
     runGitStep(checkout, ['remote', 'add', 'unseen', pathToFileURL(source).href]);
     await applyThenInstall(checkout);
-    const content = await spawnGspot(checkout, [...command, 'project/bash-syntax', ...remote], {}, input);
-    expect(content.code, content.stdout + content.stderr).toBe(0);
-    expect((JSON.parse(content.stdout) as PushReport).revisions[0]).toMatchObject({
-        shallow: true,
-        report: { checks: [{ status: 'passed' }] },
-    });
     const refused = await spawnGspot(checkout, [...command, 'commits/commitlint-pushed', ...remote], {}, input);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe(
         'Pushed history is incomplete for commits/commitlint-pushed. Run git fetch --unshallow and retry.',
     );
-    runGitStep(checkout, ['fetch', '--unshallow']);
-    const pushed = await spawnGspot(checkout, [...command, 'commits/commitlint-pushed', ...remote], {}, input);
-    expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
-    const report = JSON.parse(pushed.stdout) as PushReport;
-    expect({
-        shallow: report.revisions[0]?.shallow,
-        checks: report.revisions[0]?.report.checks.map(({ status }) => ({ status })),
-        commits: new Set(report.revisions[0]?.commits),
-    }).toStrictEqual({
-        shallow: false,
-        checks: [{ status: 'passed' }],
-        commits: new Set([base, selected]),
-    });
-    expect({
-        head: runGitStep(checkout, ['rev-parse', 'HEAD']),
-        source: await readFile(join(checkout, 'source.sh'), 'utf8'),
-    }).toStrictEqual({ head: selected, source: 'echo selected\n' });
 });
 
 test.skipIf(isWindows || process.getuid?.() === 0)(

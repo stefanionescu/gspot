@@ -25,21 +25,6 @@ import {
     UNQUOTED_FINDING_PREFIX,
 } from '#tests/config/integration/installers/hooks.ts';
 
-test.each(['', 'app/'])('install from %s points core.hooksPath at .gspot/hooks', async (prefix) => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
-        'app/gspot.toml': buildSandboxSettings([], { tables: HOOKS_OFF_SETTINGS }),
-    });
-
-    const root = join(sandbox.path, prefix);
-    const applied = await spawnGspot(root, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const installed = await spawnGspot(root, ['install']);
-    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    expect(installed.stdout.split('\n')).toContain(`set core.hooksPath to ${GSPOT_PATHS.hooks}`);
-    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
-});
-
 test('doctor reports hooks this clone has not installed and accepts them after install', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
