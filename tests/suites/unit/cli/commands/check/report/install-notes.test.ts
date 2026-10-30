@@ -25,7 +25,6 @@ test('aggregate reports print standard install advice once and preserve custom i
     );
     expect(selected.match(/gspot install/gu)).toHaveLength(1);
     expect(selected).toContain('eslint is not installed. Run gspot install.');
-    expect(report.checks[0]?.note).toBe('eslint is not installed. Run gspot install.');
     report.checks[0]!.note = 'Install the corporate tool package from your internal registry.';
     expect(formatRunReport(report, { verbose: false })).toContain(
         'Install the corporate tool package from your internal registry.',

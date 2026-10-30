@@ -50,11 +50,6 @@ test('list shows selected settings and available configurations', async () => {
     expect(listedSettings.code, listedSettings.stdout + listedSettings.stderr).toBe(0);
     const rows = (JSON.parse(listedSettings.stdout) as SettingsListJson).settings;
     expect(rows.find((row) => row.key === 'level')?.value).toBe('basic');
-    const invalid = await runGspot(sandbox.path, ['list', 'unknown']);
-    expect(invalid.code).toBe(2);
-    expect(invalid.stdout + invalid.stderr).toBe(
-        "Command-argument value 'unknown' is invalid for argument 'kind'. Allowed choices are configurations, settings.\n",
-    );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

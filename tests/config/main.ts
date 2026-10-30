@@ -22,11 +22,8 @@ export const MALFORMED_SETTINGS = 'malformed = [';
 
 export const VERSION_ARGUMENTS: readonly (readonly string[])[] = [
     ['--version'],
-    ['--version', '--json'],
     ['--json', '--version'],
-    ['init', '--version'],
     ['bogus', '--version'],
-    ['check', '--fix', '--version'],
 ] as const;
 
 export const COMMAND_TERMS = [

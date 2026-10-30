@@ -3,7 +3,6 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
-import { NEEDS_GIT_MESSAGE } from '#tests/config/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { type DoctorReport } from '#cli/types/commands/doctor.ts';
@@ -18,18 +17,12 @@ import {
     REMOVED_CONFIGURATION_CASES,
 } from '#tests/config/commands/doctor/suggestions.ts';
 
-test('doctor names Git setup for commitlint and apply --dry-run refuses outside Git', async () => {
+test('doctor names Git setup for commitlint outside Git', async () => {
     await using sandbox = await testdir({
         'package.json': COMMITLINT_PACKAGE,
         'gspot.toml': buildSandboxSettings([], { level: 'all' }),
     });
 
-    const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
-    expect(preview.code).toBe(2);
-    expect(JSON.parse(preview.stdout)).toStrictEqual({
-        error: 'git',
-        message: NEEDS_GIT_MESSAGE,
-    });
     const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
     expect((JSON.parse(doctor.stdout) as DoctorReport).suggestions.unowned).toStrictEqual([
         { path: 'package.json', note: 'commitlint requires a Git repository', command: 'git init' },

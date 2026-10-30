@@ -4,7 +4,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { symlink, readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { NEEDS_GIT_MESSAGE } from '#tests/config/git.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -158,22 +157,13 @@ test('init lists your .editorconfig under write and not under delete when the ge
     expect(runGitStep(sandbox.path, ['show', 'HEAD:.editorconfig'])).toBe(authored.trimEnd());
 });
 
-test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that apply', async ({ hasGit, changes }) => {
+test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that apply', async ({ changes }) => {
     await using sandbox = await testdir({ 'control.txt': PRESERVE_SOURCE });
 
-    if (hasGit) commitAll(sandbox.path);
+    commitAll(sandbox.path);
     const commandArguments = ['init', '--yes', '--json', '--no-configurations'];
     const before = await readTree(sandbox.path);
     const preview = await runGspot(sandbox.path, [...commandArguments, '--dry-run']);
-    if (!hasGit) {
-        expect(preview.code, preview.stdout + preview.stderr).toBe(2);
-        expect(JSON.parse(preview.stdout)).toStrictEqual({
-            error: 'git',
-            message: NEEDS_GIT_MESSAGE,
-        });
-        expect(await readTree(sandbox.path)).toStrictEqual(before);
-        return;
-    }
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(preview.stderr).toBe('');
     const report = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
@@ -183,7 +173,7 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.path, '.gitignore'))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gspot/.gitignore'))).toBe(true);
-    expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(hasGit);
+    expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(true);
     expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe(PRESERVE_SOURCE);
 });
 

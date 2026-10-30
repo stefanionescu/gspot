@@ -1,10 +1,9 @@
 import * as os from 'node:os';
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { readTree } from '#tests/setup/system/files.ts';
-import { NEEDS_GIT_MESSAGE } from '#tests/config/git.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
@@ -69,33 +68,6 @@ test('--only names the configuration that an unselected check needs', async () =
         message: 'python/ruff belongs to python, which no scope selects. Run gspot add python.',
     });
 });
-
-test.each(['--changed', '--staged', '--hook'])(
-    'check %s outside Git exits 2 with a git error and changes nothing',
-    async (flag) => {
-        await using sandbox = await testdir();
-        const settings = stringify({
-            configurations: [],
-            command_check: [
-                { id: 'sandbox/paths', command: buildProgramCommand('fakes/tool'), paths: ['api/**'], stage: 'commit' },
-            ],
-        });
-        await createFileTree(sandbox.path, { 'gspot.toml': settings, 'api/source.txt': 'before' });
-        const result = await runGspot(sandbox.path, [
-            'check',
-            flag,
-            ...(flag === '--hook' ? ['pre-push'] : []),
-            '--json',
-        ]);
-        expect(result.code).toBe(2);
-        expect(JSON.parse(result.stdout)).toStrictEqual({
-            error: 'git',
-            message: NEEDS_GIT_MESSAGE,
-        });
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-        expect(await readFile(join(sandbox.path, 'api/source.txt'), 'utf8')).toBe('before');
-    },
-);
 
 test.each([...FIX_REFUSALS])('check %p exits 2 and leaves the working tree as it was', async (flags, expected) => {
     await using sandbox = await createFixableSandbox();

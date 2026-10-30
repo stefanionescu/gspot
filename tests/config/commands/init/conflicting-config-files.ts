@@ -8,7 +8,6 @@ export const REPLACED_PYPROJECT_TABLES = [
         note: 'tool.basedpyright settings stay here, and the generated basedpyright config file takes over. Delete the section; the generated config file replaces it.',
         text: '[tool.basedpyright]\ntypeCheckingMode = "basic"\n',
         source: { file: 'main.py', text: 'VALUE = 1\n' },
-        tool: 'basedpyright',
         generated: 'pyrightconfig.json',
     },
     {
@@ -17,7 +16,6 @@ export const REPLACED_PYPROJECT_TABLES = [
         note: 'tool.pyright settings stay here, and the generated basedpyright config file takes over. Delete the section; the generated config file replaces it.',
         text: '[tool.pyright]\ntypeCheckingMode = "basic"\n',
         source: { file: 'main.py', text: 'VALUE = 1\n' },
-        tool: 'basedpyright',
         generated: 'pyrightconfig.json',
     },
     {
@@ -26,7 +24,6 @@ export const REPLACED_PYPROJECT_TABLES = [
         note: 'tool.sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.',
         text: '[tool.sqlfluff.core]\ndialect = "postgres"\n',
         source: { file: 'query.sql', text: 'SELECT 1;\n' },
-        tool: 'sqlfluff',
         generated: `${GSPOT_PATHS.configurations}/language/sql/sqlfluff.cfg`,
     },
 ] as const;

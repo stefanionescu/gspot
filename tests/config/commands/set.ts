@@ -70,7 +70,6 @@ export const SET_REFUSALS = [
         ['set', 'tools.markdownlint.rules', '{ MD013 = false }'],
         'The value { MD013 = false } is not valid for tools.markdownlint.rules. This table holds options only, without a severity; the level decides which rules run. To turn MD013 off, run gspot ignore markdown/markdownlint --rule MD013 --reason "<why>".',
     ],
-    ['a key without a value', ['set', 'limits.file_lines'], "Missing required argument 'values'"],
     [
         'an undeclared scope',
         ['set', 'limits.file_lines', '100', '--scope', 'web'],

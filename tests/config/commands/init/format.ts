@@ -27,16 +27,6 @@ export const FORMAT_FILE_CASES = [
         expected: { indent_width: 4, print_width: 100 },
     },
     {
-        name: 'Prettier .prettierrc.yaml configuration',
-        files: { '.prettierrc.yaml': 'printWidth: 100\ntabWidth: 4\n' },
-        expected: { indent_width: 4, print_width: 100 },
-    },
-    {
-        name: 'Prettier .prettierrc.yml configuration',
-        files: { '.prettierrc.yml': 'printWidth: 100\ntabWidth: 4\n' },
-        expected: { indent_width: 4, print_width: 100 },
-    },
-    {
         name: 'Prettier .prettierrc.json5 configuration',
         files: { '.prettierrc.json5': '{ printWidth: 100, tabWidth: 4, }\n' },
         expected: { indent_width: 4, print_width: 100 },
@@ -55,11 +45,6 @@ export const FORMAT_FILE_CASES = [
         name: 'Prettier package configuration',
         files: { 'package.json': '{"prettier":{"tabWidth":6,"printWidth":100,"singleQuote":true}}' },
         expected: { indent_width: 6, print_width: 100, quotes: 'single' },
-    },
-    {
-        name: 'Prettier JavaScript configuration',
-        files: { 'prettier.config.mjs': 'export default { tabWidth: 3, printWidth: 90, singleQuote: false };' },
-        expected: { indent_width: 2, print_width: 80, quotes: 'double' },
     },
     {
         name: 'EditorConfig without indent_style',

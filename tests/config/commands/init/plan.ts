@@ -1,13 +1,4 @@
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-
-export const GIT_PLAN_CASES = [
-    { name: 'a folder outside Git', hasGit: false, changes: [GSPOT_PATHS.miseProject, GSPOT_PATHS.npmProject] },
-    {
-        name: 'a Git repository',
-        hasGit: true,
-        changes: [],
-    },
-] as const;
+export const GIT_PLAN_CASES = [{ name: 'a Git repository', changes: [] }] as const;
 
 export const EDITORCONFIG_WRITE = [
     {

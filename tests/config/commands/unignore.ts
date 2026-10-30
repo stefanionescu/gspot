@@ -1,10 +1,3 @@
-export const SHELLCHECK_RULE_IGNORE = {
-    tables: `[[ignore]]
-check = "bash/shellcheck"
-rule = "SC2086"
-`,
-} as const;
-
 export const UPDATED_GITATTRIBUTES = 'updated  .gitattributes';
 
 export const TOOLS_CHANGED_LINE =

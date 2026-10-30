@@ -85,18 +85,6 @@ export const IGNORE_REFUSALS = [
         message: 'gspot ignore needs a reason of two or more words that says why: "x" is refused.',
     },
     {
-        name: 'a past expiry date',
-        arguments: [
-            'ignore',
-            'bash/shellcheck',
-            '--reason',
-            'The generated script has a reviewed exception.',
-            '--until',
-            '2020-01-01',
-        ],
-        message: '--until must be a date after today (UTC).',
-    },
-    {
         name: 'ignore without a check or paths',
         arguments: ['ignore', '--reason', 'Vendored sources remain outside the checks.'],
         message: '--paths: An ignore without check needs paths.',

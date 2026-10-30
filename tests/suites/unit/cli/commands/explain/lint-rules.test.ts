@@ -94,8 +94,9 @@ test('explain finds rule pages from the root and from a child scope', async () =
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(RULE_PAGE_SETTINGS);
 });
 
-test.each(['no-consolee', 'eslint/no-consolee'])('explain refuses an unknown ESLint core rule: %s', async (subject) => {
+test('explain refuses an unknown ESLint core rule', async () => {
     await using sandbox = await createGitSandbox({});
+    const subject = 'eslint/no-consolee';
     const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({

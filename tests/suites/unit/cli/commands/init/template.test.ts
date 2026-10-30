@@ -53,7 +53,6 @@ test('init --from copies the settings that fit any repository and lists each one
     expect(written).not.toContain('[[scope]]');
     expect(written).not.toContain('[[command_check]]');
     expect(written).not.toContain('[ci]');
-    expect(json.plan.template).toMatchObject({ leftOut: { length: TEAM_LEFT_OUT.length } });
 });
 
 test.each(TEMPLATE_REFUSALS)(

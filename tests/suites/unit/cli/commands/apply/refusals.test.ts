@@ -126,14 +126,14 @@ test.each([...LINKED_FILE_CASES])(
     },
 );
 
-test.each([false, true])('apply refuses a newer pin and writes nothing (dry run: %p)', async (dryRun) => {
+test('apply refuses a newer pin and writes nothing', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         '.gspot/version': '9.9.9\n',
         '.gspot/preserve.txt': 'keep generated content',
     });
     const before = await readTree(sandbox.path);
-    const refused = await runGspot(sandbox.path, ['apply', ...(dryRun ? ['--dry-run'] : []), '--json']);
+    const refused = await runGspot(sandbox.path, ['apply', '--json']);
     expect(refused.code).toBe(2);
     expect(JSON.parse(refused.stdout) as CommandFailureJson).toStrictEqual({ error: 'pin', message: PIN_MESSAGE });
     expect(await readTree(sandbox.path)).toStrictEqual(before);

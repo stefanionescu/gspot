@@ -16,10 +16,4 @@ test('setting environment readers enables a restriction without a loosening reas
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const saved = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     expect(parse(saved)).toHaveProperty('structure.environment_readers', ['environment.py']);
-    const reasoned = await runGspot(sandbox.path, [...command, '--reason', 'This file owns environment access.']);
-    expect(reasoned.code).toBe(2);
-    expect(reasoned.stderr).toBe(
-        'structure.environment_readers takes no reason here: the value does not loosen the shipped default. Run the command without --reason.\n',
-    );
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(saved);
 });

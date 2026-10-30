@@ -98,7 +98,7 @@ test('a linked .gspot folder stops init, and nothing outside changes', async () 
 });
 
 test.each(UNCOMMITTED_FORMAT_CASES)('init refuses to replace $path absent from HEAD: $state', async (variant) => {
-    const { state, path } = variant;
+    const { path } = variant;
     await using sandbox = await testdir({ 'source.js': 'export const count = 1;\n' });
     await prepareUncommittedFormat(sandbox.path, variant);
     const before = await readTree(sandbox.path);
@@ -112,9 +112,7 @@ test.each(UNCOMMITTED_FORMAT_CASES)('init refuses to replace $path absent from H
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(2);
         expect(result.stderr).toBe(
-            state === 'no Git'
-                ? 'gspot needs a Git repository. Run git init, then gspot init.\n'
-                : `init replaces ${path}, and Git does not hold them unchanged at HEAD. Commit them or move them away, then run gspot init again.\n`,
+            `init replaces ${path}, and Git does not hold them unchanged at HEAD. Commit them or move them away, then run gspot init again.\n`,
         );
         expect(await readTree(sandbox.path)).toStrictEqual(before);
     }

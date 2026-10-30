@@ -86,10 +86,21 @@ test('an unknown command exits 2 and names the closest command', async () => {
     });
 });
 
-test.each(['init', 'install', 'apply', 'check'])('%s refuses a folder outside Git before writing', async (command) => {
+test.each([
+    { command: 'init', options: ['--yes'] },
+    { command: 'install', options: [] },
+    { command: 'apply', options: [] },
+    { command: 'check', options: [] },
+    { command: 'set', options: ['level', 'all'] },
+    { command: 'unset', options: ['level'] },
+    { command: 'add', options: ['bash'] },
+    { command: 'remove', options: ['bash', '--reason', 'The project keeps no shell scripts.'] },
+    { command: 'ignore', options: ['bash/shellcheck', '--reason', 'The generated scripts are checked upstream.'] },
+    { command: 'unignore', options: ['bash/shellcheck'] },
+])('$command refuses a folder outside Git before writing', async ({ command, options }) => {
     await using sandbox = await testdir({ 'package.json': '{"private":true}' });
     const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, [command, ...(command === 'init' ? ['--yes'] : []), '--json']);
+    const result = await runGspot(sandbox.path, [command, ...options, '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
         error: 'git',

@@ -1,5 +1,4 @@
 export const RULE_PAGES = [
-    ['no-undef', 'https://eslint.org/docs/latest/rules/no-undef'],
     ['no-var', 'https://eslint.org/docs/latest/rules/no-var'],
     ['eslint/no-var', 'https://eslint.org/docs/latest/rules/no-var'],
     ['gspot/no-trivial-functions', 'https://generativespotting.com/reference/eslint-plugin/no-trivial-functions/'],

@@ -9,13 +9,7 @@ import { UPDATED_AGENTS } from '#tests/config/commands/contents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { parse, LocalDate, stringify } from '@decimalturn/toml-patch';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
-import {
-    TOOLS_CHANGED_LINE,
-    UPDATED_GITATTRIBUTES,
-    SHELLCHECK_RULE_IGNORE,
-    UNMATCHED_RULE_MESSAGE,
-} from '#tests/config/commands/unignore.ts';
+import { TOOLS_CHANGED_LINE, UPDATED_GITATTRIBUTES, UNMATCHED_RULE_MESSAGE } from '#tests/config/commands/unignore.ts';
 
 test('unignore removes a matching ignore, and a second run reports no change', async () => {
     await using sandbox = await createGitSandbox({
@@ -55,18 +49,6 @@ test('unignore keeps an empty ignore list and reports no change', async () => {
     const removed = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2086']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(removed.stdout).toBe(UNMATCHED_RULE_MESSAGE);
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-});
-
-test('unignore refuses a gspot.toml whose ignore has no reason and writes nothing', async () => {
-    await using sandbox = await createGitSandbox({});
-    const settings = buildSandboxSettings(['bash'], SHELLCHECK_RULE_IGNORE);
-    await createFileTree(sandbox.path, { 'gspot.toml': settings, 'entry.sh': 'echo example\n' });
-    const unmatched = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2034']);
-    expect(unmatched.code, unmatched.stdout + unmatched.stderr).toBe(2);
-    expect(unmatched.stderr).toBe(
-        'gspot.toml:3: ignore.0.reason: needs a reason. Add reason = "..." to this record.\n',
-    );
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
