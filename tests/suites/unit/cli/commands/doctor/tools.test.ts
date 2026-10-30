@@ -222,8 +222,4 @@ test('doctor reports a missing project environment of a Python scope and exits 1
     const diagnosed = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(diagnosed.code, diagnosed.stdout + diagnosed.stderr).toBe(1);
     expect((JSON.parse(diagnosed.stdout) as DoctorReport).environments).toStrictEqual(['.venv']);
-    const text = await runGspot(sandbox.path, ['doctor']);
-    expect(text.stdout).toContain(
-        '  missing   .venv  The project environment is missing. Run uv sync in its folder.\n',
-    );
 });

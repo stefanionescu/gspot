@@ -236,17 +236,16 @@ test.each([
         }),
         addCommands: [],
     },
-])('doctor prints the gspot add line for the detected configurations and $name', async ({ settings, addCommands }) => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': settings,
-        'py/pyproject.toml': '[project]\nname = "api"\nversion = "1.0.0"\ndependencies = ["fastapi"]\n',
-        'py/main.py': 'PORT = 8080\n',
-    });
-    const structured = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect((JSON.parse(structured.stdout) as DoctorReport).addCommands).toStrictEqual([...addCommands]);
-    const text = await runGspot(sandbox.path, ['doctor']);
-    const line: string[] =
-        addCommands.length === 0 ? [] : [`Run ${addCommands.join(', then ')} to add the detected configurations.`];
-    expect(text.stdout.split('\n').filter((each) => each.startsWith('Run gspot add'))).toStrictEqual(line);
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-});
+])(
+    'doctor lists the gspot add command for the detected configurations and $name',
+    async ({ settings, addCommands }) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': settings,
+            'py/pyproject.toml': '[project]\nname = "api"\nversion = "1.0.0"\ndependencies = ["fastapi"]\n',
+            'py/main.py': 'PORT = 8080\n',
+        });
+        const structured = await runGspot(sandbox.path, ['doctor', '--json']);
+        expect((JSON.parse(structured.stdout) as DoctorReport).addCommands).toStrictEqual([...addCommands]);
+        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+    },
+);

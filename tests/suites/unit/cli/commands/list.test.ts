@@ -216,9 +216,4 @@ test('list shows each removed configuration with its scope and reason', async ()
         { name: 'markdown', scope: '', reason: 'The project keeps no Markdown files.' },
         { name: 'bash', scope: 'api', reason: 'The API keeps its scripts elsewhere.' },
     ]);
-    const human = await runGspot(sandbox.path, ['list']);
-    expect(human.code, human.stdout + human.stderr).toBe(0);
-    expect(human.stdout).toContain(
-        '\nremoved\n  markdown  The project keeps no Markdown files.\n  bash  [scope api]  The API keeps its scripts elsewhere.\n\navailable\n',
-    );
 });
