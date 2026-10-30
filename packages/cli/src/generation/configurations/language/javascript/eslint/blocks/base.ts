@@ -1,5 +1,4 @@
 import { escapeGlob } from '#cli/system/paths.ts';
-import { getLimit } from '#cli/settings/scopes.ts';
 import { MISE_TASKS_GLOB } from '#cli/config/files/names.ts';
 import { readScopeAliases } from '#cli/repository/npm/aliases.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
@@ -7,7 +6,6 @@ import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { getPreset } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 import { buildSelectorBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/selectors.ts';
-import { BARREL_FILES_RULE } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/limits.ts';
 import { buildScopeFiles, listCodeTestFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import { buildRestrictedImportBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 
@@ -146,20 +144,6 @@ function buildRootBlock(
                     readScopeAliases(session.root, '', session.reads),
                 ),
                 ...IMPORT_LAYOUT_RULES,
-                ...(session.settings.structure.reexports === 'index-only'
-                    ? {
-                          [BARREL_FILES_RULE]: [
-                              'error',
-                              {
-                                  amountOfExportsToConsiderModuleAsBarrel: getLimit(
-                                      planned.scope.settings,
-                                      'index_exports',
-                                      'typescript',
-                                  ),
-                              },
-                          ],
-                      }
-                    : {}),
             },
         },
         calls: buildRootCalls(plugins, boundaryBlocks.length > 0),
@@ -249,23 +233,7 @@ export function buildClosingBlocks(
         {
             fields: {
                 files: eslintFiles.javascript,
-                rules: {
-                    ...rules.javascript,
-                    ...(session.settings.structure.reexports === 'index-only'
-                        ? {
-                              [BARREL_FILES_RULE]: [
-                                  'error',
-                                  {
-                                      amountOfExportsToConsiderModuleAsBarrel: getLimit(
-                                          planned.scope.settings,
-                                          'index_exports',
-                                          'javascript',
-                                      ),
-                                  },
-                              ],
-                          }
-                        : {}),
-                },
+                rules: rules.javascript,
             },
         },
     ];

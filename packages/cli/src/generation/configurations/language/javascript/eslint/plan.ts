@@ -90,9 +90,9 @@ export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslin
             code: {
                 ...BASE_RULES,
                 'no-restricted-syntax': ['error', ...(level === 'all' ? BASE_SELECTORS : [])],
-                ...buildScopeLimitRules(settings).code,
+                ...buildScopeLimitRules(settings, repositorySettings.structure.reexports).code,
             },
-            javascript: buildScopeLimitRules(settings).javascript,
+            javascript: buildScopeLimitRules(settings, repositorySettings.structure.reexports).javascript,
         },
         blockWriter: {
             applied: new Set(),

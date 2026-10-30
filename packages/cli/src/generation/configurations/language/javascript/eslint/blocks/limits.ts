@@ -1,5 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
+import type { ParsedStructure } from '#cli/types/settings/values.ts';
 import { type ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
@@ -11,29 +12,42 @@ import {
     ESLINT_LIMIT_RULES,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/limits.ts';
 
-function buildLimitRules(scopeSettings: ScopeSettings, language: 'typescript' | 'javascript'): Record<string, unknown> {
-    return Object.fromEntries(
-        Object.entries(ESLINT_LIMIT_RULES).map(([rule, limitRule]) => {
+function buildLimitRules(
+    scopeSettings: ScopeSettings,
+    language: 'typescript' | 'javascript',
+    reexports: ParsedStructure['reexports'],
+): Record<string, unknown> {
+    const barrelRule: [string, unknown] = [
+        BARREL_FILES_RULE,
+        ['error', { amountOfExportsToConsiderModuleAsBarrel: getLimit(scopeSettings, 'index_exports', language) }],
+    ];
+    return Object.fromEntries([
+        ...Object.entries(ESLINT_LIMIT_RULES).map(([rule, limitRule]): [string, unknown] => {
             const maximum = getLimit(scopeSettings, limitRule.limit, language);
             return [rule, ['error', 'options' in limitRule ? { max: maximum, ...limitRule.options } : maximum]];
         }),
-    );
+        ...(reexports === 'index-only' ? [barrelRule] : []),
+    ]);
 }
 
 /**
 Build the code and JavaScript limit rules of one scope.
 
 @param settings the configured size and complexity thresholds for this project.
+@param reexports the structure.reexports mode, which turns on the barrel-files rule at index-only.
 @returns the limit rules, by rule ID.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The configuration builder table or shared block builders call this function.
-export function buildScopeLimitRules(settings: ScopeSettings): EslintLevelRules {
+export function buildScopeLimitRules(
+    settings: ScopeSettings,
+    reexports: ParsedStructure['reexports'],
+): EslintLevelRules {
     return {
         code: {
-            ...buildLimitRules(settings, 'typescript'),
+            ...buildLimitRules(settings, 'typescript', reexports),
             'sonarjs/no-identical-functions': ['error', getTable(settings, 'duplication').min_lines],
         },
-        javascript: buildLimitRules(settings, 'javascript'),
+        javascript: buildLimitRules(settings, 'javascript', reexports),
     };
 }
 
@@ -52,20 +66,10 @@ export function buildLimitRuleBlocks(
     if (repositorySettings.level !== 'all') return [];
     const { scopes } = session;
     const limitsByScope = new Map(
-        scopes.map(({ settings }): [ScopeSettings, EslintLevelRules] => {
-            const rules = buildScopeLimitRules(settings);
-            if (repositorySettings.structure.reexports === 'index-only') {
-                rules.code[BARREL_FILES_RULE] = [
-                    'error',
-                    { amountOfExportsToConsiderModuleAsBarrel: getLimit(settings, 'index_exports', 'typescript') },
-                ];
-                rules.javascript[BARREL_FILES_RULE] = [
-                    'error',
-                    { amountOfExportsToConsiderModuleAsBarrel: getLimit(settings, 'index_exports', 'javascript') },
-                ];
-            }
-            return [settings, rules];
-        }),
+        scopes.map(({ settings }): [ScopeSettings, EslintLevelRules] => [
+            settings,
+            buildScopeLimitRules(settings, repositorySettings.structure.reexports),
+        ]),
     );
     return scopes
         .toSorted((left, right) => compareScopeDepth(left.path, right.path))
