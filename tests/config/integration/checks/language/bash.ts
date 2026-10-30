@@ -13,6 +13,10 @@ fi
     printf "%s\n" "$1"
 fi
 `,
+    'library.bash': String.raw`if [[ -n "$1" ]]; then
+    printf "%s\n" "$1"
+fi
+`,
     'unchecked.sh': `#!/bin/bash
 dir="\${1:-.}"
 cd "\${dir}"

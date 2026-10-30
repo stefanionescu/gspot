@@ -66,7 +66,7 @@ test('ShellCheck reports dialect findings by shebang and an unchecked cd, bash/s
             .filter(({ check }) => check === 'bash/shellcheck')
             .map(({ scope, status, fileCount, findings }) => ({ scope, status, fileCount, findings })),
     ).toStrictEqual([
-        { scope: '', status: 'passed', fileCount: 6, findings: [] },
+        { scope: '', status: 'passed', fileCount: 7, findings: [] },
         { scope: 'app', status: 'passed', fileCount: 2, findings: [] },
     ]);
 });
