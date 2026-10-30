@@ -10,7 +10,7 @@ import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
-import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/config/e2e/cli.ts';
+import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/config/e2e.ts';
 
 async function assertConflictingConfigFiles(root: string, output: string): Promise<void> {
     const { plan } = JSON.parse(output) as InitJson;

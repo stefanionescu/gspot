@@ -19,8 +19,8 @@ import { AUTHENTICATION_REQUIRED_MESSAGE } from '#tests/config/setup/runner.ts';
 import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/package-managers.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
+import { PACKAGE_MANAGER_AGE_REFUSALS } from '#tests/config/integration/installers.ts';
 import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
-import { PACKAGE_MANAGER_AGE_REFUSALS } from '#tests/config/integration/installers/npm.ts';
 import { REGISTRY_HOST, PNPM_WORKSPACE, NPM_REGISTRY_TOKEN } from '#tests/config/setup/sandboxes.ts';
 
 test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(

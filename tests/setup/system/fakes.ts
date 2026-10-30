@@ -13,9 +13,9 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import type { ProgramName } from '#tests/types/programs.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import type { spawnProcess } from '#cli/system/processes.ts';
+import { UNPINNED_NPM_MESSAGE } from '#tests/config/setup/system.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { UNPINNED_NPM_MESSAGE } from '#tests/config/setup/system/fakes.ts';
 
 /**
 Replace the child command found by this path or program name, or without a name every child command but Git. Run the

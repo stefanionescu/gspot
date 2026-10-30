@@ -10,7 +10,7 @@ import {
     QUOTED_PSQL_SOURCES,
     FROZEN_MIGRATION_CASES,
     FROZEN_MIGRATION_PATHS,
-} from '#tests/config/parsers/code/sql.ts';
+} from '#tests/config/parsers/code/code.ts';
 
 test('empty SQL has no statements', async () => {
     const result = await parseSqlFile('', createRunCache(process.cwd()));

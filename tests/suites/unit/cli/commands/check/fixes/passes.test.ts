@@ -12,8 +12,8 @@ import { type RunOptions } from '#cli/types/commands/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { FIX_LINTER_CASES } from '#tests/config/commands/check/fixes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { FIX_LINTER_CASES } from '#tests/config/commands/check/fixes/passes.ts';
 import { runGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { SQL_COMMAND_CHECK, SQL_SEARCH_ARGUMENTS } from '#tests/config/commands/samples.ts';
 

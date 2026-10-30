@@ -16,7 +16,7 @@ import {
     EDITORCONFIG_WRITE,
     ATTRIBUTES_PLAN_ROW,
     QUALITY_PACKAGE_FILES,
-} from '#tests/config/commands/init/plan.ts';
+} from '#tests/config/commands/init/init.ts';
 
 test.each([
     { name: 'a new .gitattributes under write', files: {}, attributes: 'write' },

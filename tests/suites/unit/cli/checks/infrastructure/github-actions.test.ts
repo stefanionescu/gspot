@@ -22,7 +22,7 @@ import {
     ACTIONLINT_EXITS,
     WORKFLOW_TEXT_CASES,
     OUTSIDE_GITHUB_ACTIONS,
-} from '#tests/config/checks/infrastructure/github-actions.ts';
+} from '#tests/config/checks/infrastructure/infrastructure.ts';
 
 test('actionlint copies root actions and unchanged actions outside .github with workflow replacements', async () => {
     await using sandbox = await testdir({

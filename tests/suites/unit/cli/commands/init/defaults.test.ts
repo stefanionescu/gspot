@@ -7,7 +7,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { stripDefaults } from '#cli/commands/init/defaults.ts';
-import { DEFAULT_CASES } from '#tests/config/commands/init/defaults.ts';
+import { DEFAULT_CASES } from '#tests/config/commands/init/init.ts';
 
 test.each([...DEFAULT_CASES])('init strips $name without changing inherited values', ({ source, expected }) => {
     const authored = parseTomlFile('gspot.toml', source);

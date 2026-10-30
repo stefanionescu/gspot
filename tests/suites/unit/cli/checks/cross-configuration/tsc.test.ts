@@ -18,7 +18,7 @@ import {
     REFERENCE_BUILD_FILES,
     REFERENCE_BUILD_RESULTS,
     IMPLICIT_RETURNS_IGNORE,
-} from '#tests/config/checks/cross-configuration/tsc.ts';
+} from '#tests/config/checks/cross-configuration/cross-configuration.ts';
 
 test('a project with its own tsconfig.json keeps its own compiler options', async () => {
     await using sandbox = await createGitSandbox({

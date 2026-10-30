@@ -4,7 +4,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
-import { PYTHON_IMPORT_EXCLUSIONS } from '#tests/config/generation/configurations/general/duplication.ts';
+import { PYTHON_IMPORT_EXCLUSIONS } from '#tests/config/generation/configurations/general.ts';
 
 test.each(PYTHON_IMPORT_EXCLUSIONS)(
     'jscpd import exclusions preserve executable code in $source',

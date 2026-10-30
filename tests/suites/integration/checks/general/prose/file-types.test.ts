@@ -16,7 +16,7 @@ import {
     CONCRETE_RULE,
     PROSE_COMMENT_CASES,
     MARKDOWN_COMMENT_CASES,
-} from '#tests/config/integration/checks/general/prose/file-types.ts';
+} from '#tests/config/integration/checks/general/prose/prose.ts';
 
 test('prose/vale reports a finding in a .sh file and passes after the fix', async () => {
     const sandbox = installedSandbox();

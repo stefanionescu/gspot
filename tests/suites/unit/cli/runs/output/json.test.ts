@@ -12,7 +12,7 @@ import {
     NESTED_LIST_FORMAT,
     NESTED_LIST_OUTPUT,
     INVALID_FINDING_REPORTS,
-} from '#tests/config/runs/output/json.ts';
+} from '#tests/config/runs/output/output.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The tests of this file parse a JSON report through it, and jscpd reports the inlined copies as clones.
 function parseJsonReport(checkId: string, output: unknown, stdout: string): Finding[] {

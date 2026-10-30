@@ -12,7 +12,7 @@ import {
     REASON_VALUES,
     SCOPE_ROOT_MESSAGE,
     SCOPE_SETTING_EXPLANATION,
-} from '#tests/config/commands/explain/settings.ts';
+} from '#tests/config/commands/explain.ts';
 
 test.each(NAMING_LIMITS)(
     "explain shows each scope's default and value naming limit: $key",

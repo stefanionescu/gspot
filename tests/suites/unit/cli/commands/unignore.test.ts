@@ -9,7 +9,7 @@ import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { UPDATED_AGENTS } from '#tests/config/commands/contents.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { TOOLS_CHANGED_LINE, UPDATED_GITATTRIBUTES } from '#tests/config/commands/unignore.ts';
+import { TOOLS_CHANGED_LINE, UPDATED_GITATTRIBUTES } from '#tests/config/commands/commands.ts';
 
 test('unignore removes a matching ignore, and a second run reports no change', async () => {
     await using sandbox = await createGitSandbox({

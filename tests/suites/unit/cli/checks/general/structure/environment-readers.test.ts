@@ -15,7 +15,7 @@ import {
     OS_VALUE_SOURCE,
     PYTHON_ENVIRONMENT_SOURCE,
     BASH_ENVIRONMENT_READ_CASES,
-} from '#tests/config/checks/general/structure/environment-readers.ts';
+} from '#tests/config/checks/general/structure/structure.ts';
 
 test('Swift environment reads outside the env files are reported; comments and strings are not', async () => {
     await using sandbox = await testdir({

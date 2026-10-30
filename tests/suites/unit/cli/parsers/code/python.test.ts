@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { DOCSTRING_CASES } from '#tests/config/parsers/code/python.ts';
+import { DOCSTRING_CASES } from '#tests/config/parsers/code/code.ts';
 import { findDocstring, parsePythonModule } from '#cli/parsers/code/python.ts';
 
 test.each(DOCSTRING_CASES)('a Python %p string has docstring value %p', async (prefix, expected) => {

@@ -12,7 +12,7 @@ import {
     SQUAWK_VERSION_CASES,
     SQUAWK_MIGRATION_FILES,
     CHILD_POSTGRES_SCOPE_TABLES,
-} from '#tests/config/generation/configurations/database/postgres.ts';
+} from '#tests/config/generation/configurations/database.ts';
 
 test.each([...SQUAWK_VERSION_CASES])(
     'Squawk skips migrations through version %s without rounding',

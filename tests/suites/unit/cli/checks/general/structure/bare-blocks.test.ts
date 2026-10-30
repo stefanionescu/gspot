@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { SWIFT_BARE_BLOCKS, SWIFT_BLOCKS_FIXED } from '#tests/config/checks/general/structure/bare-blocks.ts';
+import { SWIFT_BARE_BLOCKS, SWIFT_BLOCKS_FIXED } from '#tests/config/checks/general/structure/structure.ts';
 
 test('a Swift do block without catch is reported, and a do block with catch is not', async () => {
     await using sandbox = await testdir({

@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { LONG_PYTHON_FILE, LONG_JAVASCRIPT_FILE } from '#tests/config/checks/general/structure/long-files.ts';
+import { LONG_PYTHON_FILE, LONG_JAVASCRIPT_FILE } from '#tests/config/checks/general/structure/structure.ts';
 
 test.each(['.sh', '.bats', ''])('Bash %s heredocs and multiline strings count as code lines', async (extension) => {
     const source = '#!/bin/sh\n# comment\ncat <<\'EOF\'\n# literal\nEOF\nvalue="first\n# literal\nlast"\n';

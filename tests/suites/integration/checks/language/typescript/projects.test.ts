@@ -19,7 +19,7 @@ import {
     AUTHORED_TSCONFIG,
     IMPLICIT_PROJECT_FILES,
     TYPESCRIPT_PROJECTS_SANDBOX,
-} from '#tests/config/integration/checks/language/typescript/projects.ts';
+} from '#tests/config/integration/checks/language/typescript.ts';
 
 async function runTscCheck(root: string): Promise<TypecheckResult> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'typescript/tsc', '--json']));

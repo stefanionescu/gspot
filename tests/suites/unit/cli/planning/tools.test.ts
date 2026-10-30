@@ -10,7 +10,7 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { listOtherTools, listCheckTools } from '#cli/planning/tools.ts';
-import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS, ARCHITECTURE_REQUIREMENTS } from '#tests/config/planning/tools.ts';
+import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS, ARCHITECTURE_REQUIREMENTS } from '#tests/config/planning/planning.ts';
 
 test('basic tRPC server files select the boundaries plugin without import rules', async () => {
     await using sandbox = await testdir({

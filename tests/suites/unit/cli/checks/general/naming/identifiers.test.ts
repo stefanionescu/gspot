@@ -15,7 +15,7 @@ import {
     PYTHON_TYPE_SOURCE,
     TEST_FILE_FINDINGS,
     REACT_COMPONENT_SOURCE,
-} from '#tests/config/checks/general/naming/identifiers.ts';
+} from '#tests/config/checks/general/naming/naming.ts';
 
 test.each([...FRAMEWORK_NAMES])(
     `$configuration's allowed function name $name passes only inside its scope`,

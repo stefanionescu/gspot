@@ -15,7 +15,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { formatUpToDate, writeGeneratedFiles } from '#cli/generation/write.ts';
-import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/config/generation/write.ts';
+import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/config/generation/generation.ts';
 
 async function applyPackageFields(root: string, scenario: PackageFieldScenario): Promise<Map<string, string>> {
     const session = await openSession(root);

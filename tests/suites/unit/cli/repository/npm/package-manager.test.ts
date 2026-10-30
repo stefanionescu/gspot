@@ -24,7 +24,7 @@ import {
     NON_EXACT_PNPM_VERSIONS,
     PACKAGE_MANAGER_PIN_CASES,
     UNSUPPORTED_PACKAGE_MANAGERS,
-} from '#tests/config/repository/npm/package-manager.ts';
+} from '#tests/config/repository/npm.ts';
 
 test('without a packageManager field or Bun on PATH, the tool project uses npm at the version it prints', async () => {
     await using sandbox = await createGitSandbox({});

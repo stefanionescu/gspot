@@ -33,7 +33,7 @@ import {
     PYTHON_TOOL_LOCKFILE,
     UV_LOCKFILE_MISMATCHES,
     LOCKFILE_PASSWORD_ERROR,
-} from '#tests/config/installers/pypi.ts';
+} from '#tests/config/installers/installers.ts';
 
 const pythonProject = (parse(PYTHON_TOOL_PROJECT) as { project: PythonToolProject }).project;
 

@@ -9,7 +9,7 @@ import {
     TYPESCRIPT_CASES,
     TYPESCRIPT_SANDBOX,
     ARCHITECTURE_SETTINGS,
-} from '#tests/config/integration/checks/language/typescript/default-checks.ts';
+} from '#tests/config/integration/checks/language/typescript.ts';
 
 const installedSandbox = shareInstalledSandbox(TYPESCRIPT_SANDBOX);
 

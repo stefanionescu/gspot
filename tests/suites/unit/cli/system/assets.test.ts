@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { cp, symlink, readFile } from 'node:fs/promises';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
-import { BASH_MANIFEST, PACKAGE_FOLDER } from '#tests/config/system/assets.ts';
+import { BASH_MANIFEST, PACKAGE_FOLDER } from '#tests/config/system/system.ts';
 
 async function writePackageFolder(folder: string): Promise<string> {
     const root = join(import.meta.dir, '../../../../..');

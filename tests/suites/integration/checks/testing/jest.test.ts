@@ -14,7 +14,7 @@ import {
     JEST_COVERAGE_TABLES,
     COVERAGE_THRESHOLD_MESSAGE,
     CORRECTED_MATH_TEST_SOURCE,
-} from '#tests/config/integration/checks/testing/jest.ts';
+} from '#tests/config/integration/checks/testing/testing.ts';
 
 async function runJestCoverage(root: string, code: number): Promise<RunReport['checks']> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'jest/coverage', '--json']));

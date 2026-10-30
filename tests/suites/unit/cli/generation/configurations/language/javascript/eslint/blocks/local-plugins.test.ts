@@ -19,7 +19,7 @@ import {
     DUPLICATE_PLUGIN_ERROR,
     CONFLICTING_LOCAL_PLUGIN_FILES,
     CONFLICTING_LOCAL_PLUGIN_TABLES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/blocks/local-plugins.ts';
+} from '#tests/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
 test('a scope plugin reaches its scope, and an inherited root plugin writes one rule block', async () => {
     await using sandbox = await testdir({

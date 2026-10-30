@@ -15,7 +15,7 @@ import {
     LICENSED_PACKAGES,
     LICENSES_ROOT_PACKAGE,
     PIP_LICENSES_PYPROJECT,
-} from '#tests/config/integration/checks/general/licenses.ts';
+} from '#tests/config/integration/checks/general/general.ts';
 
 test('licenses/allowed accepts an allowed license choice and reports a disallowed dependency', async () => {
     await using sandbox = await createGitSandbox({

@@ -14,10 +14,10 @@ import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { SELECTED_SOURCE, GIT_HOOK_REPORT } from '#tests/config/runs/copy.ts';
 import { readHead, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { SELECTED_SOURCE, GIT_HOOK_REPORT } from '#tests/config/runs/copy/revision.ts';
 import { mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
 
 test('a revision copy of a nested gspot.toml keeps the repository around it', async () => {

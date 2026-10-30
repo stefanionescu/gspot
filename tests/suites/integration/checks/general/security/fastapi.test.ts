@@ -9,7 +9,7 @@ import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import {
     FASTAPI_SOURCE,
     FASTAPI_CONFIGURATION_CASES,
-} from '#tests/config/integration/checks/general/security/fastapi.ts';
+} from '#tests/config/integration/checks/general/security/security.ts';
 import {
     SEMGREP_CHECK,
     SEMGREP_SANDBOX,

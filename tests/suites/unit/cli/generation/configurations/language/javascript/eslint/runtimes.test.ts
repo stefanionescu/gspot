@@ -15,7 +15,7 @@ import {
     WINDOW_UNDEFINED_MESSAGE,
     PROCESS_UNDEFINED_MESSAGE,
     RUNTIME_OVERRIDE_SETTINGS,
-} from '#tests/config/generation/configurations/language/javascript/eslint/runtimes.ts';
+} from '#tests/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($runtime)', async (row) => {
     await using sandbox = await testdir({

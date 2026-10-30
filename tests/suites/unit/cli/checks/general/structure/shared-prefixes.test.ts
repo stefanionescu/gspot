@@ -15,7 +15,7 @@ import {
     PREFIX_TREE,
     NEST_SUFFIX_FILES,
     NESTJS_PREFIX_RESULTS,
-} from '#tests/config/checks/general/structure/shared-prefixes.ts';
+} from '#tests/config/checks/general/structure/structure.ts';
 
 test('shared-prefixes groups files and folders once, and honors an ignore and a raised limit', async () => {
     const settings = buildSandboxSettings(['typescript'], { level: 'all' });

@@ -5,12 +5,7 @@ import { UNCLOSED_PACKAGES } from '#tests/config/yaml.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { rm, mkdir, symlink, writeFile } from 'node:fs/promises';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
-
-import {
-    INACTIVE_LERNA_FILES,
-    NESTED_WORKSPACE_FILES,
-    OUTSIDE_WORKSPACE_FILES,
-} from '#tests/config/repository/npm/workspaces.ts';
+import { INACTIVE_LERNA_FILES, NESTED_WORKSPACE_FILES, OUTSIDE_WORKSPACE_FILES } from '#tests/config/repository/npm.ts';
 
 test('workspace detection stays inside the folder', async () => {
     await using sandbox = await testdir(NESTED_WORKSPACE_FILES);

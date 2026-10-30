@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { SWIFT_DEPENDENCY_CALLS } from '#tests/config/parsers/projects.ts';
 import { DEPENDENCY_FILE_PARSERS } from '#cli/parsers/projects/dependencies.ts';
-import { SWIFT_DEPENDENCY_CALLS } from '#tests/config/parsers/projects/dependencies.ts';
 
 test('Swift dependencies include package calls and exclude comments, strings, local paths, and binary targets', async () => {
     const parsed = await DEPENDENCY_FILE_PARSERS.get('Package.swift')!('Package.swift', SWIFT_DEPENDENCY_CALLS);

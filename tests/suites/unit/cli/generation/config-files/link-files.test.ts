@@ -18,7 +18,7 @@ import {
     DEFAULT_EXPORT,
     XCTEST_LINK_FILE_CASES,
     MARKDOWNLINT_SCOPE_TABLES,
-} from '#tests/config/generation/config-files/link-files.ts';
+} from '#tests/config/generation/config-files.ts';
 
 test.each([...XCTEST_LINK_FILE_CASES])(
     'XCTest folder link files keep their SwiftLint overrides in scope "$scope"',

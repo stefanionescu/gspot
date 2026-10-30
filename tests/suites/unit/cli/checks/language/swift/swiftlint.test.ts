@@ -13,7 +13,7 @@ import { mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { getBuiltInCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
 import { listSwiftlintConfigFiles } from '#cli/checks/language/swift/swiftlint.ts';
 import { UNEXPECTED_PLAN_MESSAGE } from '#tests/config/checks/language/swift/messages.ts';
-import { ANALYZER_EXIT_CASES, NESTED_SWIFTLINT_FILES } from '#tests/config/checks/language/swift/swiftlint.ts';
+import { ANALYZER_EXIT_CASES, NESTED_SWIFTLINT_FILES } from '#tests/config/checks/language/swift/swift.ts';
 
 test.each([...ANALYZER_EXIT_CASES])(
     'analyzer: build exit $buildCode and analyzer exit $analyzerCode report the failed stage',

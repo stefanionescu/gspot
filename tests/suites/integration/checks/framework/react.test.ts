@@ -2,7 +2,7 @@ import { test } from 'bun:test';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { REACT_CASES, WEB_TSCONFIG, CLEAN_COMPONENT } from '#tests/config/integration/checks/framework/react.ts';
+import { REACT_CASES, WEB_TSCONFIG, CLEAN_COMPONENT } from '#tests/config/integration/checks/framework/framework.ts';
 
 const installedSandbox = shareInstalledSandbox({
     ...({

@@ -6,7 +6,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { SUPABASE_SANDBOX } from '#tests/config/integration/checks/samples.ts';
 import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { SECRET_LOG_FILES } from '#tests/config/integration/checks/general/security/supabase.ts';
+import { SECRET_LOG_FILES } from '#tests/config/integration/checks/general/security/security.ts';
 import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 describe.skipIf(!hasToolBuild('deno') || !hasToolBuild('semgrep'))('Supabase secret-log rule', () => {

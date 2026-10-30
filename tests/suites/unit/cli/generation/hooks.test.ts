@@ -12,8 +12,8 @@ import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { selectStartRunner } from '#cli/repository/npm/package-manager.ts';
-import { HOOK_CASES, START_COMMANDS } from '#tests/config/generation/hooks.ts';
 import { chmod, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
+import { HOOK_CASES, START_COMMANDS } from '#tests/config/generation/generation.ts';
 import { createGitSandbox, createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
 
 test('gspot writes check hooks without unused Git LFS hooks', async () => {

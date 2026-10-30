@@ -13,7 +13,7 @@ import {
     VITEST_SOURCE,
     UNTESTED_SOURCE,
     VITEST_PROJECT_FILES,
-} from '#tests/config/integration/checks/testing/vitest.ts';
+} from '#tests/config/integration/checks/testing/testing.ts';
 
 const vitestProjectFiles = {
     ...VITEST_PROJECT_FILES,

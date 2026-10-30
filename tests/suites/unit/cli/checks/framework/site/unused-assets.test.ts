@@ -7,12 +7,7 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-
-import {
-    GLOB_ASSET_CASES,
-    SCOPE_ASSET_FILES,
-    ASSET_REFERENCE_CASES,
-} from '#tests/config/checks/framework/site/unused-assets.ts';
+import { GLOB_ASSET_CASES, SCOPE_ASSET_FILES, ASSET_REFERENCE_CASES } from '#tests/config/checks/framework/site.ts';
 
 async function prepareAssetRepository(resources: AsyncDisposableStack, files: Record<string, string>): Promise<string> {
     const sandbox = resources.use(

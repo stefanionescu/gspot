@@ -7,7 +7,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { LOCKED_SCOPE_SETTINGS, REQUIREMENTS_FILE_FINDING } from '#tests/config/checks/language/python/pip-installs.ts';
+import { LOCKED_SCOPE_SETTINGS, REQUIREMENTS_FILE_FINDING } from '#tests/config/checks/language/python.ts';
 
 test('a requirements file is reported only in a scope with a lockfile and passes once removed', async () => {
     await using sandbox = await testdir({

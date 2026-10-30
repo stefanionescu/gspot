@@ -7,7 +7,7 @@ import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { SVELTE_CASES, CLEAN_SVELTE, SVELTE_SANDBOX } from '#tests/config/integration/checks/framework/svelte.ts';
+import { SVELTE_CASES, CLEAN_SVELTE, SVELTE_SANDBOX } from '#tests/config/integration/checks/framework/framework.ts';
 
 const installedSandbox = shareInstalledSandbox({
     ...SVELTE_SANDBOX,

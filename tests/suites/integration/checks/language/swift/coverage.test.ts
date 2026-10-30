@@ -12,7 +12,7 @@ import {
     XCTEST_COVERAGE_TESTS,
     XCTEST_COVERAGE_SOURCE,
     COVERAGE_TARGET_SETTINGS,
-} from '#tests/config/integration/checks/language/swift/coverage.ts';
+} from '#tests/config/integration/checks/language/swift/swift.ts';
 
 test.skipIf(!isMacos)(
     'swift/coverage reports a target under its coverage limit and passes after testing the uncovered function',

@@ -2,7 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { FUNCTION_SIZE_SOURCE } from '#tests/config/checks/language/python/function-size.ts';
+import { FUNCTION_SIZE_SOURCE } from '#tests/config/checks/language/python.ts';
 
 test('a Python function over limits.python.function_lines is reported, counting code lines only', async () => {
     await using sandbox = await testdir({

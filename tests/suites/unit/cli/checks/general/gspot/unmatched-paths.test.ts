@@ -6,7 +6,7 @@ import { buildEslint } from '#tests/setup/eslint/lint.ts';
 import { TERMS_SOURCE } from '#tests/config/typescript.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { UNMATCHED_PATH_CASES } from '#tests/config/checks/general/gspot/unmatched-paths.ts';
+import { UNMATCHED_PATH_CASES } from '#tests/config/checks/general/gspot/gspot.ts';
 
 test.each([...UNMATCHED_PATH_CASES])(
     'gspot/unmatched-paths reports each setting path without a tracked match: $name',

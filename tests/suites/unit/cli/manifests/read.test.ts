@@ -13,7 +13,7 @@ import {
     EXAMPLE_MANIFEST_PATH,
     MINIMUM_VERSION_CASES,
     MANIFEST_INVARIANT_CASES,
-} from '#tests/config/manifests/read.ts';
+} from '#tests/config/manifests.ts';
 
 async function readTestManifests(
     files: Record<string, string>,

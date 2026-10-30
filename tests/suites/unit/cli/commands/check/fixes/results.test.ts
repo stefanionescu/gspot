@@ -12,9 +12,9 @@ import { buildProgramPin } from '#tests/setup/cli/tools.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { FIXER_RESULTS } from '#tests/config/commands/check/fixes.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { FIXER_RESULTS } from '#tests/config/commands/check/fixes/results.ts';
 import { planFixer, buildRunOptions, buildFixerSettings } from '#tests/setup/cli/runs.ts';
 import { buildProgramCommand, buildProgramArguments } from '#tests/setup/system/programs.ts';
 

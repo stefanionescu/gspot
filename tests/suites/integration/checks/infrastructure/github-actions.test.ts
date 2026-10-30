@@ -17,7 +17,7 @@ import {
     CHECKOUT_WORKFLOW,
     REQUIRED_INPUT_WORKFLOW,
     TEMPLATE_INJECTION_WORKFLOW,
-} from '#tests/config/integration/checks/infrastructure/github-actions.ts';
+} from '#tests/config/integration/checks/infrastructure.ts';
 
 test('workflow security checks report an untrusted expression in a run step', async () => {
     await using sandbox = await createGitSandbox({

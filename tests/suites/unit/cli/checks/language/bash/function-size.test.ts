@@ -9,7 +9,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { type SizeCase } from '#tests/types/function-size.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PASSED_BASH_RESULTS } from '#tests/config/checks/language/bash/runs.ts';
-import { COUNTED_LOOPS, BASH_SIZE_CASES, CORRECTED_LOOPS } from '#tests/config/checks/language/bash/function-size.ts';
+import { COUNTED_LOOPS, BASH_SIZE_CASES, CORRECTED_LOOPS } from '#tests/config/checks/language/bash/bash.ts';
 
 test('Bash function-size counts C-style loops as branches and nesting, not their header assignments, in each scope', async () => {
     const options = buildRunOptions({ only: ['bash/function-size'] });

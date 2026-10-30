@@ -9,7 +9,7 @@ import {
     MKTEMP_CLEANUP_CASES,
     CONTINUED_TRAP_SOURCE,
     FORWARDING_CALL_CASES,
-} from '#tests/config/parsers/code/bash.ts';
+} from '#tests/config/parsers/code/code.ts';
 
 test.each(BASH_COMMENT_CASES)(
     'Bash comments keep quoted and parameter hashes as code: %s',

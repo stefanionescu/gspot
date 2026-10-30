@@ -21,7 +21,7 @@ import {
     COMMIT_MESSAGES,
     UNTYPED_MESSAGE_RULES,
     COMMITLINT_LEVEL_RESULTS,
-} from '#tests/config/integration/checks/general/commits.ts';
+} from '#tests/config/integration/checks/general/general.ts';
 
 async function assertDraftCheck(root: string, draft: string, rules: string[] = []): Promise<void> {
     const checked = parseCheckReport(

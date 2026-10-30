@@ -8,7 +8,7 @@ import { TOOL_PROJECTS_MESSAGE } from '#tests/config/messages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { FAILED_NPM_VERSION, OUTDATED_TOOL_PROJECTS } from '#tests/config/commands/install.ts';
+import { FAILED_NPM_VERSION, OUTDATED_TOOL_PROJECTS } from '#tests/config/commands/commands.ts';
 
 test('apply starts no npm, and install reports a failed npm version lookup', async () => {
     await using sandbox = await createGitSandbox({

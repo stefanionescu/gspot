@@ -15,7 +15,7 @@ import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
 import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 import { listBuiltFiles, readSuccessfulBuild } from '#cli/checks/framework/site/build.ts';
-import { BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/config/checks/framework/site/build.ts';
+import { BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/config/checks/framework/site.ts';
 
 test('build: a push run builds the site without changing committed dist files or Git status', async () => {
     await using sandbox = await testdir({

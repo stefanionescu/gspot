@@ -123,7 +123,7 @@ allowed_names = ["reason_when"]
 reason = "gspot list settings --json and the shipped setting definitions name this field reason_when."
 
 [[naming.override]]
-paths = ["packages/cli/configurations/general/data-files/**", "packages/cli/src/generation/configurations/general/data-files.ts", "tests/config/generation/configurations/general/data-files.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/suites/unit/cli/generation/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/checks/general/security/sensitive-data.test.ts"]
+paths = ["packages/cli/configurations/general/data-files/**", "packages/cli/src/generation/configurations/general/data-files.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/suites/unit/cli/generation/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/checks/general/security/sensitive-data.test.ts"]
 allowed_names = ["data-files", "data-files.test", "sensitive-data", "sensitive-data.test"]
 reason = "These files and folders take the names of the data-files configuration and the security/sensitive-data check."
 
@@ -331,7 +331,7 @@ reason = "This file reproduces upstream license notices and terms whose wording 
 [[ignore]]
 check = "prose/vale"
 rule = "gspot.session-identifiers"
-paths = ["tests/config/integration/checks/general/prose/scopes.ts"]
+paths = ["tests/config/integration/checks/general/prose/prose.ts"]
 reason = "This sample URL holds a session identifier so that the Vale test sees the rule report it."
 
 [[ignore]]

@@ -16,7 +16,7 @@ import {
     EXPRESS_RESPONSE_CASES,
     EXPRESS_SCOPE_SETTINGS,
     EXPRESS_SOURCE_FINDINGS,
-} from '#tests/config/integration/checks/general/security/express.ts';
+} from '#tests/config/integration/checks/general/security/security.ts';
 
 describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
     const installedSandbox = shareInstalledSandbox(SEMGREP_SANDBOX);

@@ -12,7 +12,7 @@ import { PYTHON_SANDBOX, ARITHMETIC_MODULE_PATH } from '#tests/config/integratio
 import {
     DOCSTRING_MODULES,
     PYDOCLINT_CHECK_ARGUMENTS,
-} from '#tests/config/integration/checks/language/python/pydoclint.ts';
+} from '#tests/config/integration/checks/language/python/python.ts';
 
 const installedSandbox = shareInstalledSandbox(PYTHON_SANDBOX);
 

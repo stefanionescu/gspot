@@ -13,7 +13,7 @@ import {
     TRAP_FUNCTION_SOURCE,
     UNUSED_FUNCTION_CASES,
     LITERAL_FUNCTION_REFERENCES,
-} from '#tests/config/checks/language/bash/unused-functions.ts';
+} from '#tests/config/checks/language/bash/bash.ts';
 
 test.each(TRAP_SCRIPT_FORMS)('a function called by trap %s is not reported', async (script) => {
     await using sandbox = await testdir({

@@ -18,7 +18,7 @@ import {
     ROOT_STYLELINT_RULES,
     CORRECTED_STYLESHEETS,
     ALL_LEVEL_STYLELINT_TABLES,
-} from '#tests/config/integration/checks/language/css.ts';
+} from '#tests/config/integration/checks/language/language.ts';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['css'],

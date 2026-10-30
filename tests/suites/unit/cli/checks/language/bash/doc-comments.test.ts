@@ -5,7 +5,7 @@ import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DOC_COMMENT_CASES, SHEBANG_DOC_SCRIPT } from '#tests/config/checks/language/bash/doc-comments.ts';
+import { DOC_COMMENT_CASES, SHEBANG_DOC_SCRIPT } from '#tests/config/checks/language/bash/bash.ts';
 
 test('a shebang does not become the first function summary, with or without a blank line', async () => {
     await using sandbox = await testdir({

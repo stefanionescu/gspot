@@ -15,7 +15,7 @@ import {
     CHILD_RULE_PAGE,
     RULE_PAGE_SETTINGS,
     SHELLCHECK_RULE_PAGE,
-} from '#tests/config/commands/explain/lint-rules.ts';
+} from '#tests/config/commands/explain.ts';
 
 test('explain shellcheck/SC2086 gives the rule page and the gspot ignore commands', async () => {
     await using sandbox = await createGitSandbox({});

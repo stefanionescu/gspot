@@ -15,7 +15,7 @@ import {
     SUPPRESSION_REASONS,
     TYPESCRIPT_SUPPRESSIONS,
     SUPPRESSION_REASON_CASES,
-} from '#tests/config/checks/general/gspot/suppressions/reasons.ts';
+} from '#tests/config/checks/general/gspot/suppressions.ts';
 
 test('@ts-ignore, @ts-expect-error and @ts-nocheck need a reason; the same text in a string is not a comment', async () => {
     await using sandbox = await testdir();

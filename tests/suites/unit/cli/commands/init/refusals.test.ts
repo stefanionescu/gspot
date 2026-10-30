@@ -10,7 +10,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PRESERVE_SOURCE } from '#tests/config/commands/contents.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { UNCOMMITTED_FORMAT_CASES } from '#tests/config/commands/init/refusals.ts';
+import { UNCOMMITTED_FORMAT_CASES } from '#tests/config/commands/init/init.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {

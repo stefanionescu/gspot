@@ -21,7 +21,7 @@ import {
     NEXTJS_SANDBOX,
     REFERENCE_PROJECT_FILES,
     REFERENCED_PROJECT_FINDING,
-} from '#tests/config/integration/checks/framework/nextjs.ts';
+} from '#tests/config/integration/checks/framework/framework.ts';
 
 async function readCheckReport(sandbox: Sandbox, checks: string[], code: number): Promise<RunReport> {
     const result = parseCheckReport(await spawnGspot(sandbox.root, ['check', '--only', checks.join(','), '--json']));

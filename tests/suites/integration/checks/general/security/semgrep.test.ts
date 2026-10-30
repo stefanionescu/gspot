@@ -30,7 +30,7 @@ import {
     SECURITY_RULE_FINDINGS,
     PLATFORM_SOURCE_FINDINGS,
     MALFORMED_SEMGREP_RESULTS,
-} from '#tests/config/integration/checks/general/security/semgrep.ts';
+} from '#tests/config/integration/checks/general/security/security.ts';
 
 describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
     const installedSandbox = shareInstalledSandbox(SEMGREP_SANDBOX);

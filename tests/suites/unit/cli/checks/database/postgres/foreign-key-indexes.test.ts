@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { COMPOSITE_INDEX_CASES } from '#tests/config/checks/database/postgres/foreign-key-indexes.ts';
+import { COMPOSITE_INDEX_CASES } from '#tests/config/checks/database/postgres/postgres.ts';
 
 test.each([...COMPOSITE_INDEX_CASES])(
     'a composite foreign key with index ($columns) produces $count findings',

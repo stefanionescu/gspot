@@ -22,7 +22,7 @@ import {
     TITLED_DOCUMENT,
     REQUEST_FLOW_IMAGE,
     MARKDOWNLINT_TABLES,
-} from '#tests/config/integration/checks/language/markdown.ts';
+} from '#tests/config/integration/checks/language/language.ts';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['markdown'],

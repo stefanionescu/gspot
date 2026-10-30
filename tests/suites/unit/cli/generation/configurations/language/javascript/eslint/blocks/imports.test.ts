@@ -10,7 +10,7 @@ import { HOST_MODULE } from '#tests/config/generation/configurations/language/ja
 import {
     SORT_CASES,
     SORT_RULES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/blocks/imports.ts';
+} from '#tests/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
 test('a bundler scope uses extensionless imports while the Node.js parent keeps .js suffixes', async () => {
     await using sandbox = await testdir({

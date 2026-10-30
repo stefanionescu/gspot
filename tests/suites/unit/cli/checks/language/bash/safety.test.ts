@@ -11,9 +11,9 @@ import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
-import { CONTINUED_TRAP_SOURCE } from '#tests/config/parsers/code/bash.ts';
+import { CONTINUED_TRAP_SOURCE } from '#tests/config/parsers/code/code.ts';
 import { PASSED_BASH_RESULTS } from '#tests/config/checks/language/bash/runs.ts';
-import { BASH_SAFETY_CASES, COMMAND_SAFETY_CASES } from '#tests/config/checks/language/bash/safety.ts';
+import { BASH_SAFETY_CASES, COMMAND_SAFETY_CASES } from '#tests/config/checks/language/bash/bash.ts';
 
 test('a recursive removal outside a mktemp cleanup trap is reported', async () => {
     await using sandbox = await testdir({

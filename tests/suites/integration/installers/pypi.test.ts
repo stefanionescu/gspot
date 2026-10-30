@@ -24,7 +24,7 @@ import {
     ZIP_FILE_OPTIONS,
     UV_RELEASE_CUTOFF_LINE,
     PYTHON_INDEX_CREDENTIALS,
-} from '#tests/config/integration/installers/pypi.ts';
+} from '#tests/config/integration/installers.ts';
 
 const resources = new AsyncDisposableStack();
 

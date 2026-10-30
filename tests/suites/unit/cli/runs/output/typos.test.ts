@@ -8,7 +8,7 @@ import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { TYPO_REPORT, TYPOS_REPORT_ERRORS, TYPOS_FINDING_CASES } from '#tests/config/runs/output/typos.ts';
+import { TYPO_REPORT, TYPOS_REPORT_ERRORS, TYPOS_FINDING_CASES } from '#tests/config/runs/output/output.ts';
 
 test('the typos format tells findings from fatal exits', async () => {
     await using sandbox = await testdir({

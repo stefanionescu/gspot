@@ -14,7 +14,7 @@ import {
     NGINX_SERVER,
     NGINX_SCOPE_TABLES,
     NGINX_INCLUDE_FILES,
-} from '#tests/config/integration/checks/infrastructure/nginx.ts';
+} from '#tests/config/integration/checks/infrastructure.ts';
 
 test.skipIf(!isLinux || Bun.which('docker') === null)(
     'nginx/syntax follows include globs to the source line and tells invalid configuration from an unavailable image',

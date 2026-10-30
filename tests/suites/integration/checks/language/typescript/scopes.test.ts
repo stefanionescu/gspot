@@ -19,7 +19,7 @@ import {
     TYPESCRIPT_SCOPES_SANDBOX,
     STANDALONE_TYPESCRIPT_FILES,
     STANDALONE_TYPESCRIPT_FINDINGS,
-} from '#tests/config/integration/checks/language/typescript/scopes.ts';
+} from '#tests/config/integration/checks/language/typescript.ts';
 
 const installedSandbox = shareInstalledSandbox(TYPESCRIPT_SCOPES_SANDBOX);
 

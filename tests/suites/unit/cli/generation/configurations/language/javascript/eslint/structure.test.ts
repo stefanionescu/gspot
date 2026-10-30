@@ -22,7 +22,7 @@ import {
     ENTRYPOINT_SOURCE,
     LEVEL_REEXPORT_CASES,
     TRIVIAL_ENTRYPOINT_FILES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/structure.ts';
+} from '#tests/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 async function listTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
     await writeFile(join(root, 'gspot.toml'), settings);

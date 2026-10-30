@@ -24,7 +24,7 @@ import {
     NUMPY_DOCSTRING_MODULE,
     GOOGLE_DOCSTRING_MODULE,
     PYDOCLINT_PROJECT_CASES,
-} from '#tests/config/checks/language/python/pydoclint.ts';
+} from '#tests/config/checks/language/python.ts';
 
 test.each([...PYDOCLINT_PROJECT_CASES])('pydoclint $name', async ({ project, setting, expected }) => {
     await using sandbox = await testdir();

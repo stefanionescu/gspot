@@ -19,7 +19,7 @@ import {
     UNKNOWN_SUBJECT_CASES,
     SYNTAX_CHECK_EXPLANATION,
     CONFIGURATION_DETECTION_LINES,
-} from '#tests/config/commands/explain/subjects.ts';
+} from '#tests/config/commands/explain.ts';
 
 test('a path explanation lists the command checks and the ignores that apply', async () => {
     await using sandbox = await createGitSandbox({});

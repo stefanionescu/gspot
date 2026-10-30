@@ -8,7 +8,7 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { writeNpmrc, readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
-import { NPMRC_REFUSALS, LINKED_NODE_FILES, NPM_PREFIX_ENVIRONMENT } from '#tests/config/installers/npm/registry.ts';
+import { NPMRC_REFUSALS, LINKED_NODE_FILES, NPM_PREFIX_ENVIRONMENT } from '#tests/config/installers/npm/npm.ts';
 
 test.each([...NPMRC_REFUSALS])(
     'an invalid .npmrc setting stops the registry read: $name',

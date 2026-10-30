@@ -26,7 +26,7 @@ import {
     NEXTJS_LOCALE_CASES,
     CONFIGURATION_CHOICES,
     PLATFORM_PROJECT_FILES,
-} from '#tests/config/commands/init/selection.ts';
+} from '#tests/config/commands/init/init.ts';
 
 async function listPlannedConfigurations(root: string): Promise<string[]> {
     const result = await runGspot(root, ['init', '--yes', '--json']);

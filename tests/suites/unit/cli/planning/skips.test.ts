@@ -9,7 +9,7 @@ import { listToolProjectPins } from '#cli/manifests/tools.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { VUE_TSC_SKIP, NEXT_INTL_PROJECTS } from '#tests/config/planning/skips.ts';
+import { VUE_TSC_SKIP, NEXT_INTL_PROJECTS } from '#tests/config/planning/planning.ts';
 
 test('a check whose required setting is missing is skipped with a note naming the setting', async () => {
     const settings = buildSandboxSettings(['xcode'], { level: 'all' });

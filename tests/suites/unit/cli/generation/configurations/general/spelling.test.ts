@@ -5,7 +5,7 @@ import { parse, stringify } from '@decimalturn/toml-patch';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
-import { BRITISH_SCOPE_SETTINGS } from '#tests/config/generation/configurations/general/spelling.ts';
+import { BRITISH_SCOPE_SETTINGS } from '#tests/config/generation/configurations/general.ts';
 
 test('typos.toml lists each allowed word once and keeps quoted paths', async () => {
     const words = ['café', "apostrophe'word", 'long-term'];

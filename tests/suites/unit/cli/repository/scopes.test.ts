@@ -22,7 +22,7 @@ import {
     WORKSPACE_FILE_CASES,
     PRIVATE_TOOL_PACKAGES,
     PYTHON_WORKSPACE_FILES,
-} from '#tests/config/repository/scopes.ts';
+} from '#tests/config/repository/repository.ts';
 
 test.each(PROJECT_FILE_FOLDERS)('%s with the project file %s marks the folder %j', (path, pattern, folder) => {
     expect(findProjectFolder(path, pattern)).toBe(folder);

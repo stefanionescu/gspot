@@ -16,7 +16,7 @@ import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
-import { APPLY_WRITE_MESSAGE, INSTALL_WRITE_MESSAGE } from '#tests/config/commands/apply/dry-run.ts';
+import { APPLY_WRITE_MESSAGE, INSTALL_WRITE_MESSAGE } from '#tests/config/commands/apply.ts';
 
 async function createAppliedSandbox(): Promise<TestdirResult> {
     const sandbox = await createGitSandbox({

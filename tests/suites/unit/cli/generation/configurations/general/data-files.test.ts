@@ -6,7 +6,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
-import { MAPPED_SCHEMAS, MAPPED_SCHEMA_RECORDS } from '#tests/config/generation/configurations/general/data-files.ts';
+import { MAPPED_SCHEMAS, MAPPED_SCHEMA_RECORDS } from '#tests/config/generation/configurations/general.ts';
 
 test.each([true, false])(
     'the v8r catalog maps mise, gspot.toml, and the custom schemas (custom schemas: %p)',

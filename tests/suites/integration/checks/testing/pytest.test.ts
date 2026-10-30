@@ -13,7 +13,7 @@ import {
     PYTEST_SANDBOX,
     PYTEST_PYPROJECT,
     COVERAGE_LIMIT_CASES,
-} from '#tests/config/integration/checks/testing/pytest.ts';
+} from '#tests/config/integration/checks/testing/testing.ts';
 
 const installedSandbox = shareInstalledSandbox({ install: false, ...PYTEST_SANDBOX, commands: [['uv', 'sync']] });
 

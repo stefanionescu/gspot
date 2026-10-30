@@ -18,7 +18,7 @@ import {
     DEFAULT_LEVEL_TSCONFIG,
     MISSING_TSCONFIG_MESSAGE,
     ALL_LEVEL_OPTION_FINDINGS,
-} from '#tests/config/checks/language/typescript.ts';
+} from '#tests/config/checks/language/language.ts';
 
 test.each([...TSCONFIG_READ_ERRORS])(
     '$name is a read error that names the file, not missing options',

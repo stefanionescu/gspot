@@ -27,7 +27,7 @@ import {
     OPENAPI_SCOPE_SETTINGS,
     POSTGRES_SCOPE_SETTINGS,
     SITE_PACKAGE_MANAGER_CASES,
-} from '#tests/config/settings/scopes.ts';
+} from '#tests/config/settings/settings.ts';
 
 async function readNestedScopes(): Promise<Scope[]> {
     await using sandbox = await testdir({

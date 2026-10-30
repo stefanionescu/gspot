@@ -6,7 +6,7 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { NODE_SCRIPT } from '#tests/config/typescript.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { SESSION_FILES } from '#tests/config/planning/session.ts';
+import { SESSION_FILES } from '#tests/config/planning/planning.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 

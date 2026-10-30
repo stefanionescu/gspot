@@ -12,7 +12,7 @@ import {
     SPELLING_SANDBOX,
     SPELLING_IGNORE_CASES,
     SPELLING_LOCALE_SETTINGS,
-} from '#tests/config/integration/checks/general/spelling.ts';
+} from '#tests/config/integration/checks/general/general.ts';
 
 const installedSandbox = shareInstalledSandbox(SPELLING_SANDBOX);
 

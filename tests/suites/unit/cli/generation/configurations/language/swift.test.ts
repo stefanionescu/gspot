@@ -7,8 +7,8 @@ import type { SwiftlintOutput } from '#tests/types/swift.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
-import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/checks/infrastructure/xcode.ts';
-import { SWIFT_PROJECT_SETTINGS } from '#tests/config/generation/configurations/language/swift.ts';
+import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/checks/infrastructure/infrastructure.ts';
+import { SWIFT_PROJECT_SETTINGS } from '#tests/config/generation/configurations/language/language.ts';
 
 test("SwiftFormat reads each scope's Swift version from Package.swift", async () => {
     await using sandbox = await testdir({

@@ -23,7 +23,7 @@ import {
     TRIVY_SCOPE_TABLES,
     TRIVY_SCOPE_RESULTS,
     ROOT_USER_DOCKERFILE,
-} from '#tests/config/integration/checks/infrastructure/docker.ts';
+} from '#tests/config/integration/checks/infrastructure.ts';
 
 async function importImage(root: string, tag: string, contents: string | Buffer): Promise<void> {
     await writeFile(join(root, 'payload.pem'), contents);

@@ -8,7 +8,7 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { UNSAFE_PATH_MESSAGE } from '#tests/config/messages.ts';
 import { symlink, realpath, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { TSCONFIG_PARSE_ERRORS } from '#tests/config/parsers/projects/tsconfig.ts';
+import { TSCONFIG_PARSE_ERRORS } from '#tests/config/parsers/projects.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 
 test('a tsconfig can extend a dependency installed above the repository', async () => {

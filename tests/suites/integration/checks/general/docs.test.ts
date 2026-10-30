@@ -9,7 +9,7 @@ import type { LinkFailure } from '#tests/types/reports.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { LINK_PAGE, ROOT_LINK_FILES, LINK_SCOPE_TABLES } from '#tests/config/integration/checks/general/docs.ts';
+import { LINK_PAGE, ROOT_LINK_FILES, LINK_SCOPE_TABLES } from '#tests/config/integration/checks/general/general.ts';
 
 async function assertLinkFailures(root: string, checkId: string, failures: readonly LinkFailure[]): Promise<void> {
     const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', checkId, '--json']));

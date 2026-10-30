@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { BASE_CHECK } from '#tests/config/runs/command/check.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { FILELESS_COVERAGE_CASES } from '#tests/config/runs/command/output.ts';
 import { buildCheckResult, parseCommandFindings } from '#cli/runs/command/output.ts';
-import { FILELESS_COVERAGE_CASES } from '#tests/config/runs/command/output/coverage.ts';
 
 test.each(FILELESS_COVERAGE_CASES)(
     '$check exit $code keeps the fileless result as a failed check',

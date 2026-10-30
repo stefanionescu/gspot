@@ -2,8 +2,8 @@ import { test, describe } from 'bun:test';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { SUPABASE_CASES } from '#tests/config/integration/checks/platform.ts';
 import { SUPABASE_SANDBOX } from '#tests/config/integration/checks/samples.ts';
-import { SUPABASE_CASES } from '#tests/config/integration/checks/platform/supabase.ts';
 
 describe.skipIf(!hasToolBuild('deno'))('Supabase samples', () => {
     const installedSandbox = shareInstalledSandbox(SUPABASE_SANDBOX);

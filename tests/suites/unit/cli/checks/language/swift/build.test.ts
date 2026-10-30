@@ -28,7 +28,7 @@ import {
     FAILED_BUILD_FINDINGS,
     PRIVATE_OTHER_FINDING,
     SWIFT_REPLACEMENT_CASES,
-} from '#tests/config/checks/language/swift/build.ts';
+} from '#tests/config/checks/language/swift/swift.ts';
 
 test('compiler: a failed Swift build without source errors exits 2, and the next build passes', async () => {
     using resources = new DisposableStack();

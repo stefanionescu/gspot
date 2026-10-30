@@ -19,7 +19,7 @@ import {
     SECRET_FILES,
     FIXED_SECRET_FILES,
     DOTENV_LINTER_CASES,
-} from '#tests/config/integration/checks/general/secrets.ts';
+} from '#tests/config/integration/checks/general/general.ts';
 
 async function prepareSecrets(root: string): Promise<void> {
     runGitStep(root, ['init', '-q']);

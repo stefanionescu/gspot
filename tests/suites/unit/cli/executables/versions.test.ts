@@ -9,7 +9,12 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { VERSION_OUTPUTS, SYSTEM_BASH_VERSIONS, PROGRAM_VERSION_STATES } from '#tests/config/executables/versions.ts';
+
+import {
+    VERSION_OUTPUTS,
+    SYSTEM_BASH_VERSIONS,
+    PROGRAM_VERSION_STATES,
+} from '#tests/config/executables/executables.ts';
 
 test('an npm tool is the version its package holds, whatever it prints', async () => {
     await using sandbox = await testdir();

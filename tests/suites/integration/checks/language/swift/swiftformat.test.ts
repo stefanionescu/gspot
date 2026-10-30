@@ -21,7 +21,7 @@ import {
     BLOCK_COMMENT_FINDINGS,
     INLINE_COMMENT_FINDINGS,
     SPACED_COMMENT_FINDINGS,
-} from '#tests/config/integration/checks/language/swift/swiftformat.ts';
+} from '#tests/config/integration/checks/language/swift/swift.ts';
 
 const installedSandbox = shareInstalledSandbox(SWIFT_SANDBOX);
 

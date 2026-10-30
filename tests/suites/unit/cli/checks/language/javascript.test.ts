@@ -16,7 +16,7 @@ import { fakeNpmTool, fakeCommands } from '#tests/setup/system/fakes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
-import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/checks/language/javascript.ts';
+import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/checks/language/language.ts';
 
 test('javascript/tsc checks a stale jsconfig and skips an absent one with apply advice', async () => {
     await using sandbox = await testdir({

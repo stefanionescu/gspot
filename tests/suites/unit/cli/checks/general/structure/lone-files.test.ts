@@ -16,7 +16,7 @@ import {
     LONE_CODE_FILES,
     ROUTE_FILE_CASES,
     FRAMEWORK_COMPONENT_CASES,
-} from '#tests/config/checks/general/structure/lone-files.ts';
+} from '#tests/config/checks/general/structure/structure.ts';
 
 test('an untracked neighbor does not hide a selected tracked lone file', async () => {
     await using sandbox = await testdir({

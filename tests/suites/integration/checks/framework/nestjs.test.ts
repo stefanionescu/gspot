@@ -3,7 +3,7 @@ import { NESTJS_SANDBOX } from '#tests/config/nestjs.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { NESTJS_CASES } from '#tests/config/integration/checks/framework/nestjs.ts';
+import { NESTJS_CASES } from '#tests/config/integration/checks/framework/framework.ts';
 
 const installedSandbox = shareInstalledSandbox({
     ...NESTJS_SANDBOX,

@@ -9,7 +9,7 @@ import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writePlans, planManagedKeys } from '#cli/repository/writer.ts';
-import { BUN_SCANNER_KEYS } from '#tests/config/generation/configurations/general/dependencies.ts';
+import { BUN_SCANNER_KEYS } from '#tests/config/generation/configurations/general.ts';
 
 test('a scope that uses Bun gets the scanner that gspot.toml names in its bunfig.toml', async () => {
     await using sandbox = await testdir({

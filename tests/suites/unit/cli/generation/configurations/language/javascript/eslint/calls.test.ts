@@ -5,7 +5,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { CONFIG_FILE_PROJECT } from '#tests/config/generation/config-files/selection.ts';
+import { CONFIG_FILE_PROJECT } from '#tests/config/generation/config-files.ts';
 
 test('generated ESLint modules hold static imports and calls without executable expressions', async () => {
     const configurations = [...readConfigurations().keys()];

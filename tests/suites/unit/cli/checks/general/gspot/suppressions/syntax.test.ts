@@ -9,7 +9,7 @@ import {
     QUOTED_ESLINT_COMMENTS,
     LIMIT_SUPPRESSION_CASES,
     SUPPRESSION_SYNTAX_CASES,
-} from '#tests/config/checks/general/gspot/suppressions/syntax.ts';
+} from '#tests/config/checks/general/gspot/suppressions.ts';
 
 describe.each([...SUPPRESSION_SYNTAX_CASES])(
     'suppression comments match $name',

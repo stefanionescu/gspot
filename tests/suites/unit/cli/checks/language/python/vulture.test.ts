@@ -13,7 +13,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { VULTURE_OUTPUT } from '#tests/config/checks/language/python/vulture.ts';
+import { VULTURE_OUTPUT } from '#tests/config/checks/language/python.ts';
 
 test('vulture reads every Python file of the scope and reports unused definitions and unreachable code only', async () => {
     await using sandbox = await testdir({

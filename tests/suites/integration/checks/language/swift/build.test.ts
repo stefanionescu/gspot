@@ -17,7 +17,7 @@ import {
     XCODE_TOOL_PROJECT,
     SWIFT_PACKAGE_CASES,
     SWIFT_PACKAGE_SANDBOX,
-} from '#tests/config/integration/checks/language/swift/build.ts';
+} from '#tests/config/integration/checks/language/swift/swift.ts';
 
 test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports a changed source', async () => {
     await using sandbox = await createGitSandbox({

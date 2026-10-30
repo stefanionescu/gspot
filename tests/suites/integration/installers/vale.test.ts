@@ -11,13 +11,13 @@ import { VALE_PACKAGES_INI } from '#tests/config/vale.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
-import { PREVIOUS_BYTES } from '#tests/config/installers/vale.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
 import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { PREVIOUS_BYTES } from '#tests/config/installers/installers.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { hasValePackages, installValePackages } from '#cli/installers/vale.ts';
@@ -28,7 +28,7 @@ import {
     AUTHORED_STYLE_PATH,
     AUTHORED_VALE_FILES,
     VALE_INSTALL_FAILURES,
-} from '#tests/config/integration/installers/vale.ts';
+} from '#tests/config/integration/installers.ts';
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 

@@ -5,7 +5,7 @@ import { BASH_SANDBOX } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { INLINE_SCRIPT_CASES } from '#tests/config/checks/language/bash/inline-scripts.ts';
+import { INLINE_SCRIPT_CASES } from '#tests/config/checks/language/bash/bash.ts';
 
 test('a heredoc that writes a data file is not reported', async () => {
     await using sandbox = await testdir({

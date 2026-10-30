@@ -1,4 +1,0 @@
-export const GENERATED_WRITE_MESSAGE = 'Generated write denied';
-
-export const STOPPED_ERROR_MESSAGE =
-    'gspot stopped because of an internal error: Generated write denied. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n';

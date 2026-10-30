@@ -11,7 +11,7 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { fakeTerminals } from '#tests/setup/system/fakes.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { STOPPED_ERROR_MESSAGE, GENERATED_WRITE_MESSAGE } from '#tests/config/commands/init/write.ts';
+import { STOPPED_ERROR_MESSAGE, GENERATED_WRITE_MESSAGE } from '#tests/config/commands/init/init.ts';
 
 test('init keeps the old config file when the generated one cannot be written', async () => {
     await using sandbox = await testdir();

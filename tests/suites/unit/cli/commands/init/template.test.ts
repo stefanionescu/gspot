@@ -17,7 +17,7 @@ import {
     TEMPLATE_REFUSALS,
     COMMENTED_TEMPLATE,
     TEMPLATE_SCOPE_FILES,
-} from '#tests/config/commands/init/template.ts';
+} from '#tests/config/commands/init/init.ts';
 
 test('init --from copies the settings that fit any repository and lists each one it leaves out', async () => {
     await using team = await testdir({ 'gspot.toml': TEAM_TEMPLATE });

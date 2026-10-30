@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { createRunCache } from '#cli/system/cache.ts';
 import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
-import { LOCKED_VERSION_CASES } from '#tests/config/parsers/projects/lockfiles.ts';
+import { LOCKED_VERSION_CASES } from '#tests/config/parsers/projects.ts';
 
 test.each([...LOCKED_VERSION_CASES])(
     '$name reads the direct dependency versions of its importer',

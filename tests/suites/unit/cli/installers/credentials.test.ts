@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { INSTALL_OUTPUT_LIMIT } from '#cli/config/installers/installers.ts';
-import { LEAKED_LOCKFILES, REGISTRY_PASSWORDS } from '#tests/config/installers/credentials.ts';
+import { LEAKED_LOCKFILES, REGISTRY_PASSWORDS } from '#tests/config/installers/installers.ts';
 import { extractUrlPasswords, redactInstallOutput, assertCredentialFreeLockfile } from '#cli/installers/credentials.ts';
 
 test.each(REGISTRY_PASSWORDS)('registry passwords are read in both encodings from %s', (url, expected) => {

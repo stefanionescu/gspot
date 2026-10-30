@@ -16,7 +16,7 @@ import {
     PROSE_STYLE_CASES,
     PRODUCT_WORD_SETTINGS,
     DEFAULT_LEVEL_STYLE_FILES,
-} from '#tests/config/generation/configurations/general/prose.ts';
+} from '#tests/config/generation/configurations/general.ts';
 
 test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (level) => {
     await using sandbox = await createGitSandbox({

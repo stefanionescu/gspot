@@ -13,7 +13,7 @@ import {
     LIST_SCOPE_ROWS,
     LIST_SCOPE_SETTINGS,
     SHFMT_IGNORE_SETTINGS,
-} from '#tests/config/commands/list.ts';
+} from '#tests/config/commands/commands.ts';
 
 test('list shows selected settings and available configurations', async () => {
     await using sandbox = await createGitSandbox({});

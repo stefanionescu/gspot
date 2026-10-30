@@ -27,7 +27,7 @@ import {
     RUFF_VERSION_CASES,
     PARAMETER_LIMIT_CASE,
     UNUSED_IMPORT_SOURCE,
-} from '#tests/config/integration/checks/language/python/ruff.ts';
+} from '#tests/config/integration/checks/language/python/python.ts';
 
 const installedSandbox = shareInstalledSandbox(RUFF_SANDBOX);
 

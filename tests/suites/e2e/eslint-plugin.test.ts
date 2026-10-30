@@ -11,7 +11,7 @@ import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { cp, lstat, mkdir, readdir, writeFile } from 'node:fs/promises';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
-import { PLUGIN_TYPES_SOURCE, PLUGIN_PACKED_FILES } from '#tests/config/e2e/eslint-plugin.ts';
+import { PLUGIN_TYPES_SOURCE, PLUGIN_PACKED_FILES } from '#tests/config/e2e.ts';
 
 async function assertPluginExports(consumer: string): Promise<void> {
     const [program = ''] = buildProgramArguments('processes/eslint-plugin');

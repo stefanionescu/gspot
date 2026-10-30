@@ -14,7 +14,7 @@ import {
     TRANSLATION_TABLES,
     TRANSLATION_SANDBOX,
     TRANSLATION_FINDINGS,
-} from '#tests/config/checks/library/translations.ts';
+} from '#tests/config/checks/library.ts';
 
 test('a missing base locale is reported and restoring it enables key comparisons', async () => {
     await using sandbox = await testdir({

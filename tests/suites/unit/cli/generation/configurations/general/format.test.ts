@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import * as prettier from 'prettier';
 import { test, expect } from 'bun:test';
-import { type Options } from 'prettier';
+import type { Options } from 'prettier';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
@@ -15,7 +15,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 import { PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/format.ts';
-import { EDITORCONFIG_SELECTOR_ERRORS } from '#tests/config/generation/configurations/general/format.ts';
+import { EDITORCONFIG_SELECTOR_ERRORS } from '#tests/config/generation/configurations/general.ts';
 
 test.each([...EDITORCONFIG_SELECTOR_ERRORS])(
     'a format override selector that EditorConfig cannot express is a settings error ($pattern)',

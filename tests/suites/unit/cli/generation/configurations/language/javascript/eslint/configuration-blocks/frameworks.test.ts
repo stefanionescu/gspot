@@ -15,7 +15,7 @@ import {
     EXPRESS_FINDINGS,
     NEXTJS_ROUTE_FILES,
     HTML_INJECTION_CASES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/frameworks.ts';
+} from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 test('Vue, Svelte and Astro files parse in their scopes, and a scope without them gets none of their rules', async () => {
     await using sandbox = await testdir({

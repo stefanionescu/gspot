@@ -11,7 +11,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { DEPTRY_SCOPE_PATHS } from '#tests/config/checks/language/python/deptry.ts';
+import { DEPTRY_SCOPE_PATHS } from '#tests/config/checks/language/python.ts';
 
 test('deptry skips a scope without pyproject.toml', async () => {
     await using sandbox = await testdir({

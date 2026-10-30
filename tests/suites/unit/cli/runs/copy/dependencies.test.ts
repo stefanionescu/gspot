@@ -22,7 +22,7 @@ import {
     DECLARATION_COPY_FILES,
     LOCKED_NPM_PROJECT_FILES,
     EXTERNAL_DEPENDENCY_FILES,
-} from '#tests/config/runs/copy/dependencies.ts';
+} from '#tests/config/runs/copy.ts';
 
 test('an index copy links installed packages and redirects workspace links into the copy', async () => {
     await using sandbox = await testdir(WORKSPACE_LOCK_FILES);

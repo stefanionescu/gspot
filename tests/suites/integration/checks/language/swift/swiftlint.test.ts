@@ -22,7 +22,7 @@ import {
     PARSER_SOURCE,
     PARAMETER_LIMIT_CASE,
     CORRECTED_PARSER_SOURCE,
-} from '#tests/config/integration/checks/language/swift/swiftlint.ts';
+} from '#tests/config/integration/checks/language/swift/swift.ts';
 
 const installedSandbox = shareInstalledSandbox(SWIFT_SANDBOX);
 

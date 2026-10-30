@@ -24,7 +24,7 @@ import {
     NEXT_CACHE_BYTES,
     AUTHORED_NEXT_ENV,
     ROUTE_TYPES_COMMENT,
-} from '#tests/config/checks/framework/nextjs.ts';
+} from '#tests/config/checks/framework/framework.ts';
 
 async function prepareNextjsBuild(root: string, scopePath: string): Promise<Session> {
     await createFileTree(root, {

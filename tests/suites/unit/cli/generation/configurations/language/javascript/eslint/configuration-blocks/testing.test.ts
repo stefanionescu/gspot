@@ -8,7 +8,7 @@ import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import {
     TESTING_LIBRARY_CASES,
     ASSERTION_RULE_OWNERS,
-} from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/testing.ts';
+} from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 test.each(['js', 'jsx'])('Jest rules apply only to their scope for .%s files', async (extension) => {
     await using sandbox = await testdir({

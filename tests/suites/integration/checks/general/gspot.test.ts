@@ -11,7 +11,7 @@ import {
     VALE_SUPPRESSIONS,
     RUFF_SUPPRESSIONS,
     VALE_SUPPRESSION_SETTINGS,
-} from '#tests/config/integration/checks/general/gspot.ts';
+} from '#tests/config/integration/checks/general/general.ts';
 
 test('suppression detection agrees with Ruff on every noqa comment form and place', async () => {
     const paths = RUFF_SUPPRESSIONS.map((_, index) => `source_${String(index)}.py`);

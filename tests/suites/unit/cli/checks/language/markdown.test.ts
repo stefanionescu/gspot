@@ -2,7 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { MARKDOWN_FENCE_CASES } from '#tests/config/checks/language/markdown.ts';
+import { MARKDOWN_FENCE_CASES } from '#tests/config/checks/language/language.ts';
 
 test.each([...MARKDOWN_FENCE_CASES])(
     'markdown/fences reports each fence that does not parse: $name',

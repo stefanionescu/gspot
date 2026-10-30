@@ -8,7 +8,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { GUIDE_READ_MARKDOWN, SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/documents.ts';
-import { PACKAGE_STYLE_CASES } from '#tests/config/integration/checks/general/prose/scopes.ts';
+import { PACKAGE_STYLE_CASES } from '#tests/config/integration/checks/general/prose/prose.ts';
 import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);

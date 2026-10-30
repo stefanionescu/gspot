@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { TOOL_PATTERN_CASES } from '#tests/config/runs/command/output/tool-patterns.ts';
+import { TOOL_PATTERN_CASES } from '#tests/config/runs/command/output.ts';
 
 test.each(TOOL_PATTERN_CASES)(
     '$check reports actionable output and ignores summary lines',

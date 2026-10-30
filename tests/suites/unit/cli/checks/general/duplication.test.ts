@@ -11,7 +11,7 @@ import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { JSCPD_SCOPE_FINDINGS } from '#tests/config/checks/general/duplication.ts';
+import { JSCPD_SCOPE_FINDINGS } from '#tests/config/checks/general/general.ts';
 
 async function prepareDuplicationSandbox(resources: AsyncDisposableStack): Promise<string> {
     const folder = resources.use(await testdir());

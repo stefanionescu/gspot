@@ -20,7 +20,7 @@ import {
     PARTLY_TRANSLATED_STRINGS,
     ENTITLEMENT_SCOPE_RESULTS,
     INVALID_RESOURCE_DOCUMENTS,
-} from '#tests/config/checks/infrastructure/xcode.ts';
+} from '#tests/config/checks/infrastructure/infrastructure.ts';
 
 test('Xcode sources follow group paths and target membership instead of duplicate filenames', async () => {
     await using sandbox = await testdir({

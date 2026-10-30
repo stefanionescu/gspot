@@ -18,12 +18,7 @@ import { MISE_TRUST, TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
-
-import {
-    UNQUOTED_SCRIPT,
-    HOOKS_OFF_SETTINGS,
-    UNQUOTED_FINDING_PREFIX,
-} from '#tests/config/integration/installers/hooks.ts';
+import { UNQUOTED_SCRIPT, HOOKS_OFF_SETTINGS, UNQUOTED_FINDING_PREFIX } from '#tests/config/integration/installers.ts';
 
 test('doctor reports hooks this clone has not installed and accepts them after install', async () => {
     await using sandbox = await createGitSandbox({

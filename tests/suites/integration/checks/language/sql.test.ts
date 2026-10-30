@@ -12,7 +12,7 @@ import {
     SQL_SANDBOX,
     SQL_FUNCTION_SOURCE,
     SQLFLUFF_DIALECT_SETTINGS,
-} from '#tests/config/integration/checks/language/sql.ts';
+} from '#tests/config/integration/checks/language/language.ts';
 
 const installedSandbox = shareInstalledSandbox(SQL_SANDBOX);
 

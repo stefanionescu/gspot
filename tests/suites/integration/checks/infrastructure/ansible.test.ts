@@ -10,12 +10,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { writeSandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { spawnGspot, listFindingRows, parseCheckReport, listScopeFindingRows } from '#tests/setup/cli/commands.ts';
-
-import {
-    ANSIBLE_CONFIG,
-    ANSIBLE_SANDBOX,
-    ANSIBLE_PLAYBOOK,
-} from '#tests/config/integration/checks/infrastructure/ansible.ts';
+import { ANSIBLE_CONFIG, ANSIBLE_SANDBOX, ANSIBLE_PLAYBOOK } from '#tests/config/integration/checks/infrastructure.ts';
 
 describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
     const installedSandbox = shareInstalledSandbox(ANSIBLE_SANDBOX);

@@ -11,7 +11,7 @@ import {
     DEFINER_REPAIRS,
     SECURITY_ALTERATIONS,
     DEFINER_FUNCTION_SQL,
-} from '#tests/config/checks/database/postgres/definer-search-path.ts';
+} from '#tests/config/checks/database/postgres/postgres.ts';
 
 test.each([...DEFINER_REPAIRS])('definer-search-path accepts a later $name migration', async ({ sql }) => {
     await using sandbox = await testdir({

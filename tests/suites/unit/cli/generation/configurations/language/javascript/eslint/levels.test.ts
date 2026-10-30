@@ -19,7 +19,7 @@ import {
     COALESCING_CORRECTED,
     DOCUMENTED_PRICE_SOURCE,
     CONFIGURATION_RULE_OPTIONS,
-} from '#tests/config/generation/configurations/language/javascript/eslint/levels.ts';
+} from '#tests/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 test.each([...LEVELS])('%s keeps the syntax selectors of a configuration inside its scope', async (level) => {
     await using sandbox = await createGitSandbox({

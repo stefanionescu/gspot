@@ -5,7 +5,7 @@ import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { ASTRO_PAGE, ASTRO_PAGE_PATH } from '#tests/config/integration/checks/framework/astro.ts';
+import { ASTRO_PAGE, ASTRO_PAGE_PATH } from '#tests/config/integration/checks/framework/framework.ts';
 import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/integration/checks/component-samples.ts';
 
 const installedSandbox = shareInstalledSandbox({

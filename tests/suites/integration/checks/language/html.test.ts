@@ -13,7 +13,7 @@ import {
     AUTOPLAY_PAGE,
     AUTOPLAY_CHECKS,
     CONTROLLED_PLAYBACK_PAGE,
-} from '#tests/config/integration/checks/language/html.ts';
+} from '#tests/config/integration/checks/language/language.ts';
 
 const installedSandbox = shareInstalledSandbox(HTML_SANDBOX);
 

@@ -17,7 +17,7 @@ import {
     STAGED_FORMAT_SOURCE,
     EDITORCONFIG_SAMPLES,
     STAGED_FORMAT_CHECK_ARGUMENTS,
-} from '#tests/config/integration/checks/general/format.ts';
+} from '#tests/config/integration/checks/general/general.ts';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['format'],

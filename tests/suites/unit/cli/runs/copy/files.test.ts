@@ -13,8 +13,8 @@ import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { listWorkspaceSources } from '#cli/repository/npm/workspaces.ts';
 import { createCopy, createCheckCopy, selectCopyPaths } from '#cli/runs/copy/files.ts';
+import { TEST_WORKSPACE_FILES, WORKSPACE_SOURCE_FILES } from '#tests/config/runs/copy.ts';
 import { cp, mkdir, lstat, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
-import { TEST_WORKSPACE_FILES, WORKSPACE_SOURCE_FILES } from '#tests/config/runs/copy/files.ts';
 
 test('a copy isolates workspace sources and links external dependencies and executable tools', async () => {
     await using sandbox = await testdir();

@@ -10,8 +10,8 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { GROUPED_PBXPROJ } from '#tests/config/checks/infrastructure/xcode.ts';
 import { NAMED_TARGET_SOURCE, NATIVE_TARGET_SOURCE } from '#tests/config/xcode.ts';
+import { GROUPED_PBXPROJ } from '#tests/config/checks/infrastructure/infrastructure.ts';
 
 import {
     REFUSAL_HELP,
@@ -21,7 +21,7 @@ import {
     PYTHON_IMPORT_RULES,
     UNCOVERED_FILE_MESSAGE,
     SWIFTPM_DEFAULT_FOLDERS,
-} from '#tests/config/checks/general/structure/import-rules.ts';
+} from '#tests/config/checks/general/structure/structure.ts';
 
 test('structure/import-rules reports a Python file outside every rule and each refused import, a relative one too', async () => {
     await using sandbox = await testdir({

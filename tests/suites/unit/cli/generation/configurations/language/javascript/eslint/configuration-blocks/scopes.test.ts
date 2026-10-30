@@ -12,7 +12,7 @@ import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import {
     MATCHING_SCOPE_FILES,
     MATCHING_SCOPE_SETTINGS,
-} from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/scopes.ts';
+} from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 test("a nested scope whose configuration blocks match its parent's gets no copy, and the parent block covers it", async () => {
     await using sandbox = await testdir({

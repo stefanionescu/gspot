@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { SEMGREP_IGNORE, INITIAL_SETTINGS, SCOPE_SETTING_WRITES } from '#tests/config/settings/edit.ts';
+import { SEMGREP_IGNORE, INITIAL_SETTINGS, SCOPE_SETTING_WRITES } from '#tests/config/settings/settings.ts';
 import { setKey, removeKey, getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 
 test('an edit writes the new ignore as a table and keeps the authored comment', async () => {

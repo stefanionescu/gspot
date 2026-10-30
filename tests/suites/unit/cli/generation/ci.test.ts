@@ -18,7 +18,7 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
 import { CI_NODE, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation/generation.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
-import { LINT_STEPS, SETUP_CASES, LINUX_PIPELINE, SETUP_ARGUMENTS } from '#tests/config/generation/ci.ts';
+import { LINT_STEPS, SETUP_CASES, LINUX_PIPELINE, SETUP_ARGUMENTS } from '#tests/config/generation/generation.ts';
 
 test('the GitHub workflow runs one lint job and gives the GitHub token to the gspot install only', () => {
     const workflow = parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow;

@@ -22,7 +22,7 @@ import {
     KNIP_UNUSED_FILES,
     KNIP_WORKSPACE_FILES,
     KNIP_COMPONENT_FILES,
-} from '#tests/config/generation/configurations/language/javascript/knip.ts';
+} from '#tests/config/generation/configurations/language/javascript/javascript.ts';
 
 const knipArguments = [...KNIP_ARGUMENTS, '--config', getManifestTarget('javascript', 'knip.json'), '--include'];
 

@@ -17,7 +17,7 @@ import {
     NGINX_MOUNT_CASES,
     NGINX_UPSTREAM_CONF,
     NGINX_FAILURE_CASES,
-} from '#tests/config/checks/infrastructure/nginx.ts';
+} from '#tests/config/checks/infrastructure/infrastructure.ts';
 
 test.each([...NGINX_MOUNT_CASES])(
     'nginx/syntax mounts the nginx.conf and its certificates and maps upstream hosts: $name',

@@ -21,7 +21,7 @@ import {
     PRETTIER_PATH_IGNORE,
     PRETTIER_ADDED_IGNORE,
     PRETTIER_INITIAL_IGNORE,
-} from '#tests/config/commands/apply/writes.ts';
+} from '#tests/config/commands/apply.ts';
 
 test('apply leaves generated files writable, keeps their bytes, and deletes a stray owned file and its folder', async () => {
     await using sandbox = await createGitSandbox({

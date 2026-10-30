@@ -14,7 +14,7 @@ import {
     ZUSTAND_FILES,
     DRIZZLE_SCOPE_SETTINGS,
     UNCHECKED_ROUTER_FILES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/libraries.ts';
+} from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 test('Drizzle reports delete and update without where only for its client names', async () => {
     await using sandbox = await testdir({

@@ -6,8 +6,8 @@ import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { YARN_CLIENTS } from '#tests/config/installers/projects.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { YARN_CLIENTS } from '#tests/config/installers/installers.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test.each([...YARN_CLIENTS])(

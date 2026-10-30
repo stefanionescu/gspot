@@ -29,7 +29,7 @@ import {
     COVERAGE_CHECK_TABLES,
     RELATIVE_PATH_FINDINGS,
     MDX_MISSING_PATH_FINDINGS,
-} from '#tests/config/checks/general/docs/validation.ts';
+} from '#tests/config/checks/general/docs.ts';
 
 test('required files run in root and child scopes even without any Markdown file', async () => {
     await using sandbox = await testdir({

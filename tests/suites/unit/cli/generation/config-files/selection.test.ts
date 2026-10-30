@@ -24,7 +24,7 @@ import {
     IGNORED_CHECK_FILES,
     UNPARSED_CONFIG_FILES,
     NESTED_PYTHON_SETTINGS,
-} from '#tests/config/generation/config-files/selection.ts';
+} from '#tests/config/generation/config-files.ts';
 
 test('a child project receives Python configuration only after its first Python file', async () => {
     await using sandbox = await testdir({

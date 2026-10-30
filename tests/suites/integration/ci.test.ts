@@ -17,7 +17,7 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { CLI_BIN, applyThenInstall } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { type CiDocument, type GithubWorkflow } from '#tests/types/ci.ts';
-import { CI_CHECKS, GITHUB_WORKFLOW } from '#tests/config/integration/ci.ts';
+import { CI_CHECKS, GITHUB_WORKFLOW } from '#tests/config/integration/integration.ts';
 
 async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
     runGitStep(root, ['init', '-q']);

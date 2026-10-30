@@ -22,7 +22,7 @@ import {
     REGISTRY_SCOPE_RESULTS,
     LOCKFILE_DOWNLOAD_CASES,
     ALLOWED_GITHUB_REGISTRIES,
-} from '#tests/config/checks/general/dependencies.ts';
+} from '#tests/config/checks/general/general.ts';
 
 test('dependencies/lockfiles accepts a vendored file tarball without treating it as a download', async () => {
     await using sandbox = await testdir({

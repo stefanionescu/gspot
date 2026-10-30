@@ -5,7 +5,7 @@ import { CAFE_SCRIPT_PATH } from '#tests/config/paths.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR, SEMGREP_REFUSED_REPORTS } from '#tests/config/runs/output/semgrep.ts';
+import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR, SEMGREP_REFUSED_REPORTS } from '#tests/config/runs/output/output.ts';
 
 test('Semgrep rule findings and source parse errors keep positions and Unicode paths', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\neval input\n' });

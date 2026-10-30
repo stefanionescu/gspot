@@ -21,7 +21,7 @@ import {
     UNTESTED_COVERAGE_RESULTS,
     SWIFT_PACKAGE_COVERAGE_FILES,
     SWIFT_PACKAGE_COVERAGE_TARGETS,
-} from '#tests/config/checks/language/swift/coverage.ts';
+} from '#tests/config/checks/language/swift/swift.ts';
 
 test.each([...XCTEST_FAILURES])(
     'swift/coverage: XCTest coverage classifies $failure and passes after the fix',

@@ -9,7 +9,7 @@ import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
-import { UNREAD_ARGUMENT_CASES } from '#tests/config/checks/language/bash/unread-arguments.ts';
+import { UNREAD_ARGUMENT_CASES } from '#tests/config/checks/language/bash/bash.ts';
 
 test('main "$@" with a main that reads no argument is not reported', async () => {
     await using sandbox = await testdir({

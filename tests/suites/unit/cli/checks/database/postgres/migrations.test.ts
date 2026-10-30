@@ -18,7 +18,7 @@ import {
     POSTGRES_CHECKS,
     MALFORMED_MIGRATION_PATH,
     DEFAULT_MIGRATION_FOLDER_FILES,
-} from '#tests/config/checks/database/postgres/migrations.ts';
+} from '#tests/config/checks/database/postgres/postgres.ts';
 
 test('postgres/migration-order reports a migration that does not parse at its line and column, the other postgres checks skip, and the fixed migration passes', async () => {
     await using sandbox = await testdir({

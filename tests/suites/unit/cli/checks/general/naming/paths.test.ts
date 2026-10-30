@@ -17,7 +17,7 @@ import {
     NEXTJS_FOLDER_NAMES,
     NUMBERED_FILE_FINDINGS,
     NUMBERED_PREFIX_OVERRIDE,
-} from '#tests/config/checks/general/naming/paths.ts';
+} from '#tests/config/checks/general/naming/naming.ts';
 
 test('[slug] path brackets are allowed in every scope and banned file names are reported', async () => {
     await using sandbox = await testdir({

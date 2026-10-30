@@ -20,7 +20,7 @@ import {
     VALE_OUTPUT_CASES,
     VALE_SANDBOX_FILES,
     VALE_INSTALLED_FILES,
-} from '#tests/config/checks/general/prose.ts';
+} from '#tests/config/checks/general/general.ts';
 
 test('Vale gets the timeout setting, and its alerts become findings with file, line and column', async () => {
     await using sandbox = await testdir();

@@ -7,7 +7,7 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { GENERATOR_LIMITS, BUILT_IN_LIMIT_CASES } from '#tests/config/planning/readers.ts';
+import { GENERATOR_LIMITS, BUILT_IN_LIMIT_CASES } from '#tests/config/planning/planning.ts';
 
 test('limit readers belong to the requested language', async () => {
     await using sandbox = await testdir({

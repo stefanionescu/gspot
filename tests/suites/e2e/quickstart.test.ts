@@ -9,8 +9,8 @@ import { TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { SWIFT_TUTORIAL, PYTHON_TUTORIAL } from '#tests/config/e2e.ts';
 import { listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { SWIFT_TUTORIAL, PYTHON_TUTORIAL } from '#tests/config/e2e/quickstart.ts';
 import { runCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
 
 test('the Python quickstart reports its finding through the installed hook and passes after the fix', async () => {

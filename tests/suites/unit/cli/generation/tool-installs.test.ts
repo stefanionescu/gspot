@@ -7,12 +7,12 @@ import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { ToolPackageJson } from '#tests/types/packages.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { YARN_CLIENTS } from '#tests/config/installers/projects.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { YARN_CLIENTS } from '#tests/config/installers/installers.ts';
 import type { PythonToolProject } from '#cli/types/installers/installers.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
-import { STYLESHEET_CASES, LICENSE_TOOL_CASES, REACT_NATIVE_TSCONFIG } from '#tests/config/generation/tool-installs.ts';
+import { STYLESHEET_CASES, LICENSE_TOOL_CASES, REACT_NATIVE_TSCONFIG } from '#tests/config/generation/generation.ts';
 
 test.each([...STYLESHEET_CASES])('$name installs postcss-html when Stylelint is selected', async (row) => {
     await using sandbox = await testdir({

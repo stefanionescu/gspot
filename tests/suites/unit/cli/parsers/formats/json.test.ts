@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { SYNTAX_ERRORS } from '#tests/config/parsers/formats/json.ts';
+import { SYNTAX_ERRORS } from '#tests/config/parsers/formats.ts';
 import { openJsonFile, parseJsonFile } from '#cli/parsers/formats/json.ts';
 
 test.each(['null', '[]', '42'])(

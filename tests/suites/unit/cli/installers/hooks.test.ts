@@ -15,7 +15,12 @@ import { chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { installHooks, readHookStatus } from '#cli/installers/hooks.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox, createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
-import { HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH, HOOK_CONFIGURATION_CASES } from '#tests/config/installers/hooks.ts';
+
+import {
+    HOOK_REPOSITORIES,
+    STOCK_LFS_PRE_PUSH,
+    HOOK_CONFIGURATION_CASES,
+} from '#tests/config/installers/installers.ts';
 
 test.each([...HOOK_REPOSITORIES])(
     'a repository with $name keeps its hooks, gets the lines to add, and is ready only after both lines',

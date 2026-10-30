@@ -12,9 +12,9 @@ import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/vale.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
-import { PREVIOUS_BYTES } from '#tests/config/installers/vale.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PREVIOUS_BYTES } from '#tests/config/installers/installers.ts';
 import { hasValePackages, installValePackages } from '#cli/installers/vale.ts';
 import { VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/installers/installers.ts';
 
