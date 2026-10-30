@@ -5,3 +5,12 @@ export const DUBIOUS_GIT_ENVIRONMENT = {
     GIT_CONFIG_KEY_0: 'safe.directory',
     GIT_CONFIG_VALUE_0: '',
 } as const;
+
+export const ROOT_DISCOVERY_CASES = [
+    {
+        name: 'the nearest gspot.toml',
+        files: { 'gspot.toml': 'configurations = []\n' },
+        start: 'nested',
+    },
+    { name: 'the requested folder when no gspot.toml exists', files: {}, start: '' },
+] as const;

@@ -6,12 +6,14 @@ import { openSession } from '#cli/planning/session.ts';
 import { openWriter } from '#cli/repository/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { formatHeader } from '#cli/generation/header.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import type { PackageFieldScenario } from '#tests/types/write.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { formatUpToDate, writeGeneratedFiles } from '#cli/generation/write.ts';
 
 import {
@@ -180,4 +182,22 @@ test('at level basic, prose keeps its Vale configuration and removes installed s
     await writeGeneratedFiles(session, generateFiles(session), writer);
     expect(await isOnDisk(join(sandbox.path, '.gspot/vale'))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/general/prose/vale.ini'))).toBe(true);
+});
+
+test('apply preserves a copied header example and removes an obsolete scoped pointer', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown'], { scopes: [{ path: 'docs', configurations: [] }] }),
+        'examples/.editorconfig': `${formatHeader('.editorconfig')}root = true\n`,
+        'docs/.markdownlint.jsonc': `${formatHeader('.markdownlint.jsonc')}{"extends":"../.markdownlint.jsonc"}\n`,
+        'README.md': '# Root\n',
+        'docs/README.md': '# Docs\n',
+    });
+    commitAll(sandbox.path);
+    const before = await readFile(join(sandbox.path, 'examples/.editorconfig'));
+    const session = await openSession(sandbox.path);
+    using writer = openWriter(sandbox.path);
+    const report = await writeGeneratedFiles(session, generateFiles(session), writer);
+    expect(await readFile(join(sandbox.path, 'examples/.editorconfig'))).toStrictEqual(before);
+    expect(report.removed).toContain('docs/.markdownlint.jsonc');
+    expect(await isOnDisk(join(sandbox.path, 'docs/.markdownlint.jsonc'))).toBe(false);
 });

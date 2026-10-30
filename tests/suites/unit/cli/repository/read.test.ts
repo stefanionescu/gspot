@@ -13,9 +13,18 @@ import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository/read.ts';
 import { buildProcessResult, runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { ROOT_DISCOVERY_CASES, DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository/read.ts';
 import { SHA256, INDEX_PATH, INDEX_LINE_FAILURE, INVALID_INDEX_LINES } from '#tests/config/parsers/git.ts';
+
+test.each([...ROOT_DISCOVERY_CASES])(
+    'outside Git, gspot takes $name as the repository root',
+    async ({ files, start }) => {
+        await using sandbox = await testdir({ ...files, 'nested/source.ts': 'export {});\n' });
+
+        expect(readRepositoryRoot(join(sandbox.path, start))).toBe(sandbox.path);
+    },
+);
 
 test('a Git ownership refusal while finding the root stays a Git error', async () => {
     await using sandbox = await testdir({ 'source.txt': 'source\n' });

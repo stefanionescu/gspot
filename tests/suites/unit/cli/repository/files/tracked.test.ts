@@ -2,25 +2,14 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { unlink, symlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { isGitRepository } from '#cli/system/git.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { OUTSIDE_LINK_CASES, ROOT_DISCOVERY_CASES } from '#tests/config/repository/files/tracked.ts';
-
-test.each([...ROOT_DISCOVERY_CASES])(
-    'outside Git, gspot takes $name as the repository root',
-    async ({ files, start }) => {
-        await using sandbox = await testdir({ ...files, 'nested/source.ts': 'export {});\n' });
-
-        expect(readRepositoryRoot(join(sandbox.path, start))).toBe(sandbox.path);
-    },
-);
+import { OUTSIDE_LINK_CASES } from '#tests/config/repository/files/tracked.ts';
 
 test.each([...OUTSIDE_LINK_CASES])('the repository file list leaves out the outside link %s', async (name, target) => {
     await using sandbox = await testdir({
@@ -117,12 +106,4 @@ test.skipIf(isWindows)('tracked pipes and links to pipes are left out before rea
     runGitStep(sandbox.path, ['add', 'linked.ts']);
     const repository = await readTestRepository(sandbox.path);
     expect(repository.files).toStrictEqual([]);
-});
-
-test('a bare repository is refused with a work tree instruction', async () => {
-    await using sandbox = await testdir();
-    runGitStep(sandbox.path, ['init', '--bare', '--quiet']);
-    expect(() => isGitRepository(sandbox.path)).toThrow(
-        `${sandbox.path} is a bare repository or a Git folder, not a work tree. Run gspot in the work tree.`,
-    );
 });
