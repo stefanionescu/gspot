@@ -68,9 +68,10 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
                 ];
             });
         });
+    const detectedNames = new Set(detected.map((detection) => detection.configuration));
     const rows = new Map<string, Suggestions['suggested'][number]>();
     for (const configuration of selectedConfigurations) {
-        const suggested = expandSuggestions([configuration.name], configurationsByName, new Set());
+        const suggested = expandSuggestions([configuration.name], configurationsByName, detectedNames);
         for (const name of suggested)
             if (!selected.has(name) && !rows.has(name))
                 rows.set(name, {

@@ -25,9 +25,20 @@ test('doctor names Git setup for commitlint outside Git', async () => {
     expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(COMMITLINT_PACKAGE);
 });
 
-test('doctor leaves undetected CSS out of suggestions for a selected Next.js scope', async () => {
+test.each([
+    {
+        scenario: 'leaves undetected CSS out of suggestions for a selected Next.js scope',
+        files: { 'app/.keep': '' },
+        suggested: [],
+    },
+    {
+        scenario: 'suggests CSS through React for a selected Next.js scope that holds a stylesheet',
+        files: { 'app/styles.css': '.title { color: red; }\n' },
+        suggested: [{ configuration: 'css', evidence: 'suggested by react', command: 'gspot add css' }],
+    },
+])('doctor $scenario', async ({ files, suggested }) => {
     await using sandbox = await testdir({
-        'app/.keep': '',
+        ...files,
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
             rules: true,
@@ -36,7 +47,7 @@ test('doctor leaves undetected CSS out of suggestions for a selected Next.js sco
     });
 
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect((JSON.parse(result.stdout) as DoctorReport).suggestions.suggested).toStrictEqual([]);
+    expect((JSON.parse(result.stdout) as DoctorReport).suggestions.suggested).toStrictEqual([...suggested]);
 });
 
 test('doctor suggests gspot set level all for a commitlint field in package.json at level basic', async () => {
