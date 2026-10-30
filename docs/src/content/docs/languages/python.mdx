@@ -13,11 +13,15 @@ checks. These checks run for the `python` configuration:
 ## Before you start
 
 Install gspot with mise, as the [Quickstart](/start/quickstart/) shows for a repository without `package.json`. Use uv for
-your project. basedpyright and pytest read the `.venv` of the project, so sync it before you run the checks:
+your project. basedpyright and pytest read the `.venv` of the project, so sync it before you run `gspot init`, and in a
+clone before you run `gspot install`:
 
 ```shell
 uv sync
 ```
+
+`gspot init` writes the basedpyright settings for the `.venv` only when `uv.lock` exists. If you sync after init, run
+`gspot apply` to write them again.
 
 gspot names its pinned Python on every uv call. A `.python-version` file or a `UV_PYTHON` variable in the repository
 leaves the tool environment alone, and your project keeps its own pin.
