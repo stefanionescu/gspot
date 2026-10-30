@@ -17,12 +17,14 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { UNPINNED_NPM_MESSAGE } from '#tests/config/setup/system/fakes.ts';
 
 /**
-Replace one child command, found by its program name, and run the others normally.
+Replace one child command, found by its path or program name, and run the others normally.
 */
 export function fakeCommand(name: string, spawn: typeof spawnProcess): Mock<typeof spawnProcess> {
     const runProcess = processes.spawnProcess;
     return spyOn(processes, 'spawnProcess').mockImplementation((command, options) =>
-        basename(command[0] ?? '') === name ? spawn(command, options) : runProcess(command, options),
+        [command[0], basename(command[0] ?? '')].includes(name)
+            ? spawn(command, options)
+            : runProcess(command, options),
     );
 }
 
