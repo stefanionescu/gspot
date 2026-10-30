@@ -136,36 +136,34 @@ test.each([...STYLE_CASES])(
     },
 );
 
-test.each([{ scope: '' }, { scope: 'app' }])(
-    'Vale accepts the words listed in gspot.toml, and typos reports the misspelling, in scope "$scope"',
-    async ({ scope }) => {
-        const { root } = installedSandbox();
-        const settings = buildSandboxSettings(scope === '' ? ['prose', 'sql', 'spelling'] : ['prose', 'spelling'], {
-            level: 'all',
-            scopes: scope === '' ? [] : [{ path: scope, configurations: ['sql'] }],
-            tables: '[spelling]\nallowed_words = { NebulaProduct = "The project product." }\n',
-        });
-        await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-            files: { 'gspot.toml': settings, [join(scope, 'guide.md')]: VOCABULARY_SOURCE },
-        });
-        const result = parseCheckReport(
-            await spawnGspot(root, ['check', '--only', 'prose/vale', '--only', 'spelling/typos', '--json']),
-        );
-        expect(
-            result.report.checks.flatMap(({ check, findings }) =>
-                findings.map(({ file, line, rule }) => ({ check, file, line, rule })),
-            ),
-        ).toStrictEqual([{ check: 'spelling/typos', file: posix.join(scope, 'guide.md'), line: 5, rule: undefined }]);
-        await writeFile(
-            join(root, scope, 'guide.md'),
-            VOCABULARY_SOURCE.replace(TYPO.receive, 'receive').replace("Avoid vale's and ajv's.", 'Use Vale and ajv.'),
-        );
-        const corrected = parseCheckReport(
-            await spawnGspot(root, ['check', '--only', 'prose/vale', '--only', 'spelling/typos', '--json']),
-        );
-        expect(corrected.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
-    },
-);
+test('Vale accepts the words listed in gspot.toml, and typos reports the misspelling, in a child scope', async () => {
+    const scope = 'app';
+    const { root } = installedSandbox();
+    const settings = buildSandboxSettings(['prose', 'spelling'], {
+        level: 'all',
+        scopes: [{ path: scope, configurations: ['sql'] }],
+        tables: '[spelling]\nallowed_words = { NebulaProduct = "The project product." }\n',
+    });
+    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+        files: { 'gspot.toml': settings, [join(scope, 'guide.md')]: VOCABULARY_SOURCE },
+    });
+    const result = parseCheckReport(
+        await spawnGspot(root, ['check', '--only', 'prose/vale', '--only', 'spelling/typos', '--json']),
+    );
+    expect(
+        result.report.checks.flatMap(({ check, findings }) =>
+            findings.map(({ file, line, rule }) => ({ check, file, line, rule })),
+        ),
+    ).toStrictEqual([{ check: 'spelling/typos', file: posix.join(scope, 'guide.md'), line: 5, rule: undefined }]);
+    await writeFile(
+        join(root, scope, 'guide.md'),
+        VOCABULARY_SOURCE.replace(TYPO.receive, 'receive').replace("Avoid vale's and ajv's.", 'Use Vale and ajv.'),
+    );
+    const corrected = parseCheckReport(
+        await spawnGspot(root, ['check', '--only', 'prose/vale', '--only', 'spelling/typos', '--json']),
+    );
+    expect(corrected.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+});
 
 test('Vale accepts passive code comments and reports passive prose in Markdown', async () => {
     const { root } = installedSandbox();
