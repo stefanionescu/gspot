@@ -55,7 +55,7 @@ export async function checkDuplicationJscpd(session: CheckSession, planned: Plan
     writeFileSync(configFile, JSON.stringify({ ...shipped, path: [...owned].map((path) => join(session.root, path)) }));
     const commandArguments = [JSCPD_TOOL, CONFIG_FLAG, configFile, ...JSCPD_ARGUMENTS, OUTPUT_FLAG, workFolder.path];
     const result = await runCheckTool(session, planned, commandArguments, { cwd: session.root });
-    if (result.code !== 0) throw new Error(`The jscpd command failed: ${formatOutputTail(result)}`);
+    if (result.code !== 0) throw new GspotError('check', `The jscpd command failed: ${formatOutputTail(result)}`);
     let bytes: Buffer;
     try {
         bytes = readBytes(workFolder.path, JSCPD_REPORT_FILE);

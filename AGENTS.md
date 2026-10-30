@@ -110,6 +110,7 @@ You can edit the other keys of that file.
   A test may import such a function when other product code imports it too. Exit codes, JSON output, and other CLI
   behavior belong to `tests/suites/unit/cli/commands/`.
 - End no file with an export list.
+- Throw `GspotError` for what the user can fix. Throw a plain `Error` only for a broken invariant.
 - Write every type as a TypeScript `type` alias.
 - Use the types that a package publishes when the code already depends on that package. Do not add a dependency for its
   types alone.

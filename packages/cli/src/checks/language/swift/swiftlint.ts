@@ -1,6 +1,7 @@
 import { join, posix } from 'node:path';
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
@@ -33,7 +34,8 @@ export async function checkSwiftSwiftlintAnalyze(
 ): Promise<CheckFinding[]> {
     const plan = planSwiftBuild(session, planned, 'analyze');
     const build = await runSwiftBuild(session, planned, plan);
-    if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
+    if (build.code !== 0)
+        throw new GspotError('check', `Cannot analyze Swift because the build exited ${String(build.code)}.`);
     const configFile = join(session.root, getConfigFilePath(session, planned, SWIFTLINT_TOOL));
     const commandArguments = [
         ...SWIFTLINT_ANALYZE_COMMAND,

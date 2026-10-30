@@ -24,7 +24,7 @@ function getCheckTool(
         inspectTool({ ...session, cwd: options.cwd, miseBinPaths: session.readMiseBinPaths() }, tool),
     );
     if ('status' in availability) {
-        if (availability.status === 'error') throw new Error(availability.note);
+        if (availability.status === 'error') throw new GspotError('check', availability.note);
         throw new GspotError('tool', availability.note);
     }
     return { name: tool.name, path: availability.path, env };
@@ -124,6 +124,6 @@ export async function runCheckTool(
         }),
     );
     if (failure?.status === 'missing') throw new GspotError('tool', failure.note);
-    if (failure !== undefined) throw new Error(failure.note);
+    if (failure !== undefined) throw new GspotError('check', failure.note);
     return result;
 }

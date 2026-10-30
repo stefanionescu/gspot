@@ -26,7 +26,10 @@ async function runSiteBuild(session: CheckSession, planned: PlannedCheck, copyRo
     const folder = join(copyRoot, folderPath);
     const built = result.code === 0 ? lstatSync(folder, { throwIfNoEntry: false }) : undefined;
     if (built?.isSymbolicLink() === true)
-        throw new Error(`The build output folder is a link: ${convertToPosixPath(relative(copyRoot, folder))}`);
+        throw new GspotError(
+            'check',
+            `The build output folder is a link: ${convertToPosixPath(relative(copyRoot, folder))}`,
+        );
     const isBuilt = built?.isDirectory() === true;
     const failure = result.code === 0 ? `It wrote no ${folderPath} folder.` : formatOutputTail(result);
     return { cwd, command, folder, built: isBuilt, failure };
@@ -52,9 +55,9 @@ export function listBuiltFiles(folder: string): string[] {
         const absolute = join(root, path);
         if (lstatSync(absolute).isDirectory()) return true;
         if (!isInside(relative(root, realpathSync.native(absolute))))
-            throw new Error(`The build output links outside the build folder: ${path}`);
+            throw new GspotError('check', `The build output links outside the build folder: ${path}`);
         const stat = statSync(absolute);
-        if (stat.isDirectory()) throw new Error(`The build output entry is a directory link: ${path}`);
+        if (stat.isDirectory()) throw new GspotError('check', `The build output entry is a directory link: ${path}`);
         if (stat.isFile()) found.push(path);
         return false;
     });

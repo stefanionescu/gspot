@@ -254,7 +254,8 @@ export async function checkSupabaseDenoLint(session: CheckSession, planned: Plan
             target: posix.dirname(entrypoint.path),
         });
         if (result.code !== 0 && result.stdout.trim() === '')
-            throw new Error(
+            throw new GspotError(
+                'check',
                 formatOutputTail(result, `deno lint stopped with exit ${String(result.code)} and no report.`),
             );
         const report = parseToolOutput(DENO_LINT_NAME, result.stdout, denoLintOutputSchema);

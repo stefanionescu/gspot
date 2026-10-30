@@ -214,6 +214,9 @@ export function assertToolFindings(
     toolName: string,
 ): CheckFinding[] {
     if (result.code !== 0 && findings.length === 0)
-        throw new Error(`The ${toolName} command failed (exit ${String(result.code)}): ${formatOutputTail(result)}`);
+        throw new GspotError(
+            'check',
+            `The ${toolName} command failed (exit ${String(result.code)}): ${formatOutputTail(result)}`,
+        );
     return findings;
 }

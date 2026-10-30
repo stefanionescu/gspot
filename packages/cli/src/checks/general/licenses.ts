@@ -60,7 +60,8 @@ async function readLicenseOutput<Value>(
     schema: z.ZodType<Value>,
 ): Promise<Value> {
     const result = await runCheckTool(session, planned, command, { cwd });
-    if (result.code !== 0) throw new Error(`${command.join(' ')} did not run: ${formatOutputTail(result)}`);
+    if (result.code !== 0)
+        throw new GspotError('check', `${command.join(' ')} did not run: ${formatOutputTail(result)}`);
     return parseToolOutput(command[0], result.stdout, schema);
 }
 

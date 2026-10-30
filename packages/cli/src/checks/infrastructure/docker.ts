@@ -1,4 +1,5 @@
 import { join, posix } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
 import { read, find } from '#cli/system/files/reads.ts';
 import { parseCheckedFile } from '#cli/checks/syntax.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
@@ -223,7 +224,7 @@ async function scanImage(session: CheckSession, planned: PlannedCheck, image: st
     if (result.code !== 0 && result.code !== TRIVY_FINDINGS_EXIT_CODE) {
         const output = result.stderr.trim() === '' ? result : { stdout: '', stderr: result.stderr };
         const detail = formatOutputTail(output, `exit ${String(result.code)}`);
-        throw new Error(`Trivy could not scan ${image}: ${detail}`);
+        throw new GspotError('check', `Trivy could not scan ${image}: ${detail}`);
     }
     const report = parseToolOutput('Trivy', result.stdout, trivyImageOutputSchema);
     return (report.Results ?? []).flatMap((target) => [

@@ -1,6 +1,7 @@
 import { statSync } from 'node:fs';
 import { sep, join } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { type Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
@@ -31,7 +32,7 @@ import {
 
 function assertArgumentList(value: unknown, name: string): string[] {
     if (Array.isArray(value) && value.every((element) => typeof element === 'string')) return value;
-    throw new Error(`Command setting ${name} must contain only string arguments.`);
+    throw new GspotError('settings', `Command setting ${name} must contain only string arguments.`);
 }
 
 function expandEachPlaceholder(planned: PlannedCheck, argument: string): string[] | undefined {
@@ -97,7 +98,10 @@ Find the path of the config file that {config_file:<name>} names, with the confi
 export function getConfigFilePath(session: Session, planned: PlannedCheck, name: string): string {
     const configFile = listConfigFiles(session, planned).find(({ file }) => extractConfigFileName(file) === name);
     if (!configFile)
-        throw new Error(`Check ${planned.check.id} names {config_file:${name}} and no configuration writes it.`);
+        throw new GspotError(
+            'settings',
+            `Check ${planned.check.id} names {config_file:${name}} and no configuration writes it.`,
+        );
     return getConfigFileTarget(planned.scope.path, configFile, buildConfigFiles(session));
 }
 

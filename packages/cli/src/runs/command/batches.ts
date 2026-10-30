@@ -1,3 +1,4 @@
+import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CommandLine, Substitutions } from '#cli/types/runs/command.ts';
@@ -55,7 +56,7 @@ export function splitFileArguments(files: string[], fixed: string[], platform: N
                     : Buffer.byteLength(argument) + 1),
             0,
         );
-    if (budget < 0) throw new Error(TOOL_ARGUMENTS_MESSAGE);
+    if (budget < 0) throw new GspotError('check', TOOL_ARGUMENTS_MESSAGE);
     const batches: string[][] = [[]];
     let used = 0;
     const measured = files.map((file) => ({
@@ -66,7 +67,7 @@ export function splitFileArguments(files: string[], fixed: string[], platform: N
                 : Buffer.byteLength(file) + 1,
     }));
     for (const { file, size } of measured) {
-        if (size > budget) throw new Error(`${file} is too long for one command line. Shorten its path.`);
+        if (size > budget) throw new GspotError('check', `${file} is too long for one command line. Shorten its path.`);
         const last = batches.at(-1) as string[];
         if (used + size > budget) {
             batches.push([file]);

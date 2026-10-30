@@ -49,7 +49,7 @@ Set a dotted key to a value, and create tables on the way.
 export function setKey(table: TomlTable, key: string, value: unknown): void {
     const { path, name } = splitKey(key);
     const parent = createTable(table, path);
-    if (parent === undefined) throw new Error(`${key} runs through a value that is not a table.`);
+    if (parent === undefined) throw new GspotError('settings', `${key} runs through a value that is not a table.`);
     parent[name] = value;
 }
 

@@ -1,6 +1,5 @@
 import { join, posix } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
-import { hasErrorCode } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
@@ -11,6 +10,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { Substitutions } from '#cli/types/runs/command.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { type GeneratorOutput } from '#cli/types/configurations.ts';
@@ -170,7 +170,8 @@ export async function checkGeneratorOutputs(session: CheckSession, planned: Plan
     let stdout = '';
     for (const commandLine of commands) {
         const result = await runCheckTool(session, planned, commandLine.commandArguments, { cwd });
-        if (result.code !== 0) throw new Error(`The generator command failed: ${formatOutputTail(result)}`);
+        if (result.code !== 0)
+            throw new GspotError('check', `The generator command failed: ${formatOutputTail(result)}`);
         stdout = result.stdout;
     }
     const after = readOutputContents(outputFiles);

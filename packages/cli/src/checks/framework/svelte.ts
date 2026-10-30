@@ -1,4 +1,5 @@
 import { join, dirname } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
@@ -28,7 +29,8 @@ function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): CheckF
         .map((line) => FAILURE_LINE.exec(line)?.groups?.['message'])
         .find((text) => text !== undefined);
     if (failure !== undefined)
-        throw new Error(
+        throw new GspotError(
+            'check',
             `The svelte-check run failed: ${parseToolOutput(SVELTE_CHECK_RULE, failure, failureMessageSchema)}`,
         );
     return lines.flatMap((line): CheckFinding[] => {

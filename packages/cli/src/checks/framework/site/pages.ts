@@ -1,6 +1,7 @@
 import { gzipSync } from 'node:zlib';
 import { pathToFileURL } from 'node:url';
 import { getTable } from '#cli/settings/scopes.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
@@ -128,13 +129,13 @@ export async function checkSiteHtmlValidate(session: CheckSession, planned: Plan
     const findings: CheckFinding[] = [];
     for (const batch of splitFileArguments(pages, command, process.platform)) {
         const result = await runCheckTool(session, planned, [...command, ...batch], { cwd: build.cwd });
-        if (![0, 1].includes(result.code)) throw new Error(`HTML validation failed: ${result.stderr}`);
+        if (![0, 1].includes(result.code)) throw new GspotError('check', `HTML validation failed: ${result.stderr}`);
         const parsed = parseOutput(planned.check, readBytes(reports.path, HTML_VALIDATE_OUTPUT).toString('utf8'), '', {
             root: build.folder,
             cwd: build.folder,
         });
         if (result.code === 1 && parsed.length === 0)
-            throw new Error(`HTML validation failed without findings: ${result.stderr}`);
+            throw new GspotError('check', `HTML validation failed without findings: ${result.stderr}`);
         appendBuildFindings(findings, parsed, getTable(planned.scope.settings, 'site').build_folder);
     }
     return findings;
@@ -186,7 +187,7 @@ export async function checkSitePurgecss(session: CheckSession, planned: PlannedC
         },
         { cwd: build.folder, stdin: JSON.stringify({ configFile, css: sheets, content: PURGECSS_CONTENT }) },
     );
-    if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
+    if (result.code !== 0) throw new GspotError('check', `Unused CSS analysis failed: ${result.stderr}`);
     const report = parseToolOutput('PurgeCSS', result.stdout, purgecssOutputSchema);
     const styles = await readScopeStyles(session, planned);
     return report.flatMap((sheet) =>

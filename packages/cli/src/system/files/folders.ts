@@ -2,6 +2,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import picomatch from 'picomatch';
 import { globSync } from 'tinyglobby';
+import { GspotError } from '#cli/system/errors.ts';
 import type { TemporaryFolder } from '#cli/types/system/files.ts';
 import { PARENT_SEGMENT } from '#cli/config/system/files/folders.ts';
 import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
@@ -20,7 +21,7 @@ function hasSymlinkPrefix(folder: string, pattern: string): boolean {
 function assertInsideFolder(pattern: string): void {
     const bare = pattern.startsWith(GLOB_EXCLUDE) ? pattern.slice(1) : pattern;
     const climbs = bare.startsWith('/') || DRIVE_LETTER.test(bare) || PARENT_SEGMENT.test(bare);
-    if (climbs) throw new Error(`A path pattern cannot leave its folder: ${pattern}`);
+    if (climbs) throw new GspotError('filesystem', `A path pattern cannot leave its folder: ${pattern}`);
 }
 
 /**

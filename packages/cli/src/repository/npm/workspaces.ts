@@ -85,7 +85,10 @@ export function listWorkspaceDependencySources(reads: ReadCache, scopePath: stri
             index += 1;
             const packageJson = packages.get(folder);
             if (packageJson === undefined)
-                throw new Error(`The workspace package.json is missing: ${posix.join(folder, PACKAGE_JSON)}`);
+                throw new GspotError(
+                    'filesystem',
+                    `The workspace package.json is missing: ${posix.join(folder, PACKAGE_JSON)}`,
+                );
             const names = Object.keys({
                 ...packageJson.dependencies,
                 ...packageJson.devDependencies,

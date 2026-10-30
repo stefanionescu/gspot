@@ -43,7 +43,7 @@ function assertValeRan(result: SpawnResult): void {
     if (result.code === 0 && !result.missing) return;
     const lines = `${result.stderr}\n${result.stdout}`.split('\n').filter((line) => line.trim() !== '');
     const reason = lines.find((line) => VALE_ERROR_LINE.test(line)) ?? lines[0] ?? NO_OUTPUT;
-    throw new Error(`Vale did not run (exit ${String(result.code)}): ${reason.trim()}`);
+    throw new GspotError('check', `Vale did not run (exit ${String(result.code)}): ${reason.trim()}`);
 }
 
 async function runValeOnPaths(
