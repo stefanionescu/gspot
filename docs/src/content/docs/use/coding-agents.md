@@ -42,5 +42,5 @@ gspot deletes the file.
 
 ## These docs for agents
 
-`/llms.txt` holds the setup steps for agents and links these docs as plain text: `/llms-small.txt` for the guides,
-and `/llms-full.txt` for every page.
+`/llms.txt` holds the setup steps for agents and links these docs as plain text: `/llms-small.txt` without the
+reference of commands, settings, configurations, and checks, and `/llms-full.txt` with every page.
