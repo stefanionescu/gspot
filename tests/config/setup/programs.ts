@@ -27,7 +27,6 @@ export const PROGRAM_NAMES = [
     'processes/environment',
     'processes/assets',
     'processes/eslint-plugin',
-    'fakes/exec',
     'fakes/generator',
     'fakes/site-build',
     'fakes/package-bin',
