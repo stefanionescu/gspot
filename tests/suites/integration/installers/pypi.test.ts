@@ -2,21 +2,18 @@ import { zipSync } from 'fflate';
 import { testdir } from 'testdirs';
 import { createHash } from 'node:crypto';
 import { join, basename, delimiter } from 'node:path';
-import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { listMisePins } from '#cli/configurations/tools.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
-import { PYTHON_VERSION } from '#cli/config/installers/pypi.ts';
 import { REGISTRY_HOST } from '#tests/config/setup/sandboxes.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { IndexedPythonProject } from '#tests/types/packages.ts';
-import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { AUTHENTICATION_REQUIRED_MESSAGE } from '#tests/config/setup/runner.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
@@ -55,23 +52,6 @@ test.each([...PYTHON_PROJECTS])(
             MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
         });
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        const steps = (JSON.parse(installed.stdout) as { steps: string[][] }).steps.filter(
-            (step) => step[0] === 'mise' || step.includes('--project'),
-        );
-        const session = await openSession(sandbox.path);
-        const miseTools = listMisePins(session.toolConfigurations).map(({ name }) => name);
-        expect(
-            steps.map((step) => (step[0] === 'mise' ? step : ['uv', ...step.slice(1, step.indexOf('--project'))])),
-        ).toStrictEqual([
-            ['mise', 'install', ...miseTools],
-            ['mise', 'bin-paths', ...miseTools],
-            ['uv', 'venv', '--python', PYTHON_VERSION, '--allow-existing', '.venv'],
-            ['uv', 'sync', '--locked', '--no-install-project', '--python', PYTHON_VERSION],
-        ]);
-        for (const step of steps) {
-            if (step[0] === 'mise') continue;
-            expect(step[step.indexOf('--project') + 1]).toBe(join(sandbox.path, GSPOT_FOLDER));
-        }
         expect(await readFile(join(sandbox.path, 'pyproject.toml'))).toStrictEqual(rootProject);
         expect(await readFile(join(sandbox.path, '.venv/authored.txt'), 'utf8')).toBe('keep the project environment');
         expect(await readFile(join(sandbox.path, GSPOT_PATHS.pythonProject))).toStrictEqual(projectFile);

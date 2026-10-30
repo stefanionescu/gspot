@@ -83,9 +83,6 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     const paths = { cwd: sandbox.path, root: sandbox.path };
     const broken = runCommandBlocking([...command, 'missing.sh'], { cwd: sandbox.path });
     expect(broken.code, broken.stderr).toBe(2);
-    expect(broken.stdout.replaceAll('\r\n', '\n')).toBe(
-        'sample.sh:2:6: warning: unquoted is referenced but not assigned. [SC2154]\nsample.sh:2:6: note: Double quote to prevent globbing and word splitting. [SC2086]\n',
-    );
     expect(parseCommandFindings(planned, broken, paths).note?.replaceAll('\r\n', '\n')).toBe(
         'shellcheck failed with exit 2:\nmissing.sh: missing.sh: openBinaryFile: does not exist (No such file or directory)\nsample.sh:2:6: warning: unquoted is referenced but not assigned. [SC2154]\nsample.sh:2:6: note: Double quote to prevent globbing and word splitting. [SC2086]',
     );

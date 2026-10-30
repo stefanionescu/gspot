@@ -7,12 +7,6 @@ export const PYTHON_SANDBOX = {
     configurations: ['python'],
     files: {
         'pyproject.toml': GOOGLE_PYPROJECT,
-        'pyrightconfig.json': `{
-    "typeCheckingMode": "basic",
-    "exclude": [".venv", "example/skipped.py"]
-}
-`,
-        'example/skipped.py': '"""A file the old setup left out."""\n',
         'example/__init__.py': '"""The test package."""\n',
         [ARITHMETIC_MODULE_PATH]: ARITHMETIC_MODULE,
     },

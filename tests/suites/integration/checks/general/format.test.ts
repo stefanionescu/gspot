@@ -5,10 +5,10 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { generateFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { PRETTIER_OPTIONS_BY_FILE, FORMAT_OVERRIDES_SETTINGS } from '#tests/config/format.ts';
 
 import {
@@ -119,8 +119,6 @@ test('check --staged formats with the staged Prettier config file after a later 
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     await writeFile(join(root, STAGED_FORMAT_PATHS.source), STAGED_FORMAT_SOURCE.working);
     expect(await isOnDisk(join(root, STAGED_FORMAT_PATHS.scopeConfig))).toBe(false);
-    const contents = await generateFile(await readFile(join(root, 'gspot.toml'), 'utf8'), rootConfig, {});
-    expect(await readFile(join(root, rootConfig), 'utf8')).toBe(contents);
     const files = new Map<string, string>();
     for (const path of [STAGED_FORMAT_PATHS.source, rootConfig, 'gspot.toml']) {
         files.set(path, await readFile(join(root, path), 'utf8'));

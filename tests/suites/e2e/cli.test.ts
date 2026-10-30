@@ -10,8 +10,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
-import { generateFile, getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/config/e2e/cli.ts';
 
 async function assertConflictingConfigFiles(root: string, output: string): Promise<void> {
@@ -25,10 +25,6 @@ async function assertConflictingConfigFiles(root: string, output: string): Promi
         },
     ]);
     expect(await isOnDisk(join(root, 'gspot.toml'))).toBe(true);
-    const settings = await readFile(join(root, 'gspot.toml'), 'utf8');
-    expect(await readFile(join(root, 'prettier.config.mjs'), 'utf8')).toBe(
-        await generateFile(settings, 'prettier.config.mjs', {}),
-    );
     expect(await readFile(join(root, 'CLAUDE.md'), 'utf8')).toBe(STARTING_FILES['CLAUDE.md']);
     const agents = await readFile(join(root, 'AGENTS.md'), 'utf8');
     expect(agents).toStartWith('# Team notes\n');

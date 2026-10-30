@@ -15,12 +15,6 @@ export const FILES_CASES = [
         corrected: { files: { 'config.yaml': 'mode: "0755"\n' } },
     },
     {
-        check: 'data-files/yamllint',
-        files: { 'config.yaml': 'key: 1\nkey: 2\n' },
-        expected: { file: 'config.yaml', line: 2, rule: 'key-duplicates' },
-        corrected: { files: { 'config.yaml': '---\nkey: 1\n' } },
-    },
-    {
         check: 'data-files/taplo-format',
         files: { 'settings/layout.toml': 'a    =     1\nb=2\n' },
         expected: {

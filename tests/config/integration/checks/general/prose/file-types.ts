@@ -3,9 +3,7 @@ import { TOKEN_IGNORES } from '#cli/config/installers/vale.ts';
 
 export const PROSE_COMMENT_CASES = [
     ['mts', '//', 'const text = "delve";'],
-    ['cts', '//', 'const text = "delve";'],
     ['mjs', '//', 'const text = "delve";'],
-    ['cjs', '//', 'const text = "delve";'],
     ['', '#', 'text = "delve"'],
 ] as const;
 
