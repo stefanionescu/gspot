@@ -5,8 +5,8 @@ import type { CheckResult } from '#cli/types/runs/check.ts';
 import { INCOMPLETE_STATUSES } from '#cli/config/runs/results.ts';
 import { FAILED_STATUSES } from '#cli/config/commands/check/run.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/terminal.ts';
+import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { NO_FILES_MESSAGE } from '#cli/config/commands/check/results.ts';
-import { listDetectedAdditions } from '#cli/repository/configurations.ts';
 import type { FixReport, RunReport, FinishedRun } from '#cli/types/commands/check.ts';
 
 function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {

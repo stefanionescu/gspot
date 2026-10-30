@@ -16,8 +16,8 @@ import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/flags.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
+import { selectForInit, listDetectedAdditions } from '#cli/repository/proposals.ts';
 import type { ConfigurationsOptions } from '#cli/types/generation/settings-edit.ts';
-import { selectForInit, listDetectedAdditions } from '#cli/repository/configurations.ts';
 import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/remove.ts';
 import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
 
