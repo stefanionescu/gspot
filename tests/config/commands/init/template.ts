@@ -131,10 +131,10 @@ export const COPIED_TEMPLATE = `#:schema ./.gspot/gspot.schema.json
 # Change these settings with gspot set, unset, add, remove, ignore, or unignore.
 configurations = ['typescript']
 
+[hooks]
+enabled = true
+
 # Keep modules short.
 [limits]
 file_lines = 100
-
-[hooks]
-enabled = true
 `;

@@ -1,13 +1,14 @@
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
+import { buildSettingsToml } from '#cli/settings/text.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isReasonedValue, readSettingsFile } from '#cli/settings/file.ts';
+import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
+import { SETTINGS_FILE, SETTINGS_PREFACE } from '#cli/config/settings/file.ts';
 import { isTable, getValueAt, createTable, normalizeTables } from '#cli/system/tables.ts';
-import { TOML_FORMAT, SETTINGS_FILE, SETTINGS_PREFACE } from '#cli/config/settings/file.ts';
 import type { SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
-import { parseTomlFile, parseTomlSyntax, buildPatchedToml } from '#cli/parsers/formats/toml.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, its key split repeats at each call.
 function splitKey(key: string): SettingKey {
@@ -28,7 +29,7 @@ export function buildEditedSettings(root: string, edit: SettingsEdit): EditedSet
     const body = text.slice(opening.length);
     const next = isDeepStrictEqual(normalizeTables(table), normalizeTables(previous))
         ? text
-        : opening + buildPatchedToml(parseTomlSyntax(body, previous), table, TOML_FORMAT);
+        : opening + buildSettingsToml(parseTomlSyntax(body, previous), table);
     const settings = parseSettings(next, root);
     if (Array.isArray(settings))
         throw new GspotError(

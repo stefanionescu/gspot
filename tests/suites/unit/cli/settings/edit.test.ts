@@ -17,7 +17,7 @@ test('an edit writes the new ignore as a table and keeps the authored comment', 
     const proposed = buildEditedSettings(sandbox.path, edit);
     expect(proposed.text).toBe(
         `${SCHEMA_DIRECTIVE}\n` +
-            '# Authored selection.\nconfigurations = ["security",]\n\n[[ignore]]\ncheck = "security/semgrep"\nrule = "js/file-system-race"\npaths = ["sample.js"]\nreason = "The sandbox owns its temporary files."\n\n',
+            '# Authored selection.\nconfigurations = ["security",]\n\n[[ignore]]\ncheck = "security/semgrep"\nrule = "js/file-system-race"\npaths = ["sample.js"]\nreason = "The sandbox owns its temporary files."\n',
     );
     expect(proposed.settings.ignore).toStrictEqual([SEMGREP_IGNORE]);
     await writeFile(path, proposed.text);
@@ -33,7 +33,7 @@ test('setting a nested key, then deleting it, removes the empty table', async ()
     const addedEdit = readSettingsEdit(sandbox.path);
     setKey(addedEdit.table, 'limits.bash.file_lines', 100);
     const written = buildEditedSettings(sandbox.path, addedEdit).text;
-    expect(written).toBe(`${INITIAL_SETTINGS}\n[limits]\nbash = {file_lines = 100}\n`);
+    expect(written).toBe(`${INITIAL_SETTINGS}\n[limits]\nbash = { file_lines = 100 }\n`);
     await writeFile(path, written);
     const removedEdit = readSettingsEdit(sandbox.path);
     removeKey(removedEdit.table, 'limits.bash.file_lines');
@@ -90,4 +90,17 @@ test('reordering keys does not change the file', async () => {
     const result = buildEditedSettings(sandbox.path, edit);
     expect(result.changed).toBe(false);
     expect(result.text).toBe(source);
+});
+
+test('an edit writes a new list longer than format.print_width one item per line, as Taplo does', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': `${INITIAL_SETTINGS}\n[format]\nprint_width = 40\nindent_width = 2\n`,
+    });
+    const edit = readSettingsEdit(sandbox.path);
+    setKey(edit.table, 'naming.banned_words', ['alpha', 'beta']);
+    setKey(edit.table, 'test_files', ['generated/first/**', 'generated/second/**']);
+    const result = buildEditedSettings(sandbox.path, edit);
+    expect(result.text).toBe(
+        `${INITIAL_SETTINGS}test_files = [\n  "generated/first/**",\n  "generated/second/**",\n]\n\n[format]\nprint_width = 40\nindent_width = 2\n\n[naming]\nbanned_words = ["alpha", "beta"]\n`,
+    );
 });

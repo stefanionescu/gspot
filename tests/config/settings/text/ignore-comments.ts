@@ -4,7 +4,7 @@ export const IGNORE_COMMENT_CASES = [
         source: '# Root owner\nlevel="all"\n',
         target: 'level="all"\n[[ignore]]\ncheck="docs/links"\npaths=["docs/**"]\nreason="Private documentation"\nuntil=2026-12-31\n',
         expected:
-            '# Root owner\nlevel="all"\n\n[[ignore]]\ncheck = "docs/links"\npaths = ["docs/**"]\nreason = "Private documentation"\nuntil = 2026-12-31\n\n',
+            '# Root owner\nlevel="all"\n\n[[ignore]]\ncheck = "docs/links"\npaths = ["docs/**"]\nreason = "Private documentation"\nuntil = 2026-12-31\n',
     },
     {
         name: 'merged ignores date array comments',

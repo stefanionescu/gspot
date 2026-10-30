@@ -31,14 +31,13 @@ indent_width = 2
 
 [[scope]]
 path = "app"
-format = {indent_width = 4}
+format = { indent_width = 4 }
 
 [[scope]]
 path = "app/worker"
 
 [[scope]]
 path = "notes"
-
 `,
     },
     {
@@ -53,15 +52,14 @@ path="app/worker"
 limits.python.file_lines=300
 `,
         expected: `[limits]
-file_lines = {value = 500, reason = "Reviewed root files need this ceiling."}
+file_lines = { value = 500, reason = "Reviewed root files need this ceiling." }
 
 [[scope]]
 path = "app"
-limits = {python = {file_lines = 300}}
+limits = { python = { file_lines = 300 } }
 
 [[scope]]
 path = "app/worker"
-
 `,
     },
 ] as const;

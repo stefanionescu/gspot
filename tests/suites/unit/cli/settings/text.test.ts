@@ -55,6 +55,6 @@ test('setting level keeps a written value equal to its default', async () => {
     setKey(edit.table, 'level', 'all');
     const result = buildEditedSettings(sandbox.path, edit);
     expect(result.text).toBe(
-        `#:schema ./.gspot/gspot.schema.json\nconfigurations = ["bash"]\n\nlevel = "all"\n# Keep the chosen format.\n[format]\nprint_width = 120\nindent_width = 4\n`,
+        `#:schema ./.gspot/gspot.schema.json\nlevel = "all"\nconfigurations = ["bash"]\n\n# Keep the chosen format.\n[format]\nprint_width = 120\nindent_width = 4\n`,
     );
 });
