@@ -30,7 +30,7 @@ gspot check --json
 
 When present, `notChecked` lists `{ configuration, evidence }` objects for detected configurations that your settings
 neither select nor record in `removed_configurations`. Both fields hold strings. gspot omits the array when empty.
-The list does not change `exitCode`. Run `gspot add` to select them, or
+The list does not change `exitCode`. Run `gspot add <name>` to select one, or
 `gspot remove <name> --reason "<why>"` to decline one.
 
 ## Check results

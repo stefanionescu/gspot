@@ -87,7 +87,7 @@ export const COMMAND_HELP = {
         summary: 'Add configurations',
         group: 'Change gspot.toml:',
         description:
-            'Select configurations in gspot.toml, then write the generated files again. gspot also selects the configurations that they need, but gspot.toml lists only the names you give.\n\nRun gspot add without names to detect new code and projects. It preserves your settings and explicit removals.\n\nRun gspot install next when the configurations need new tools.',
+            'Select configurations in gspot.toml, then write the generated files again. gspot also selects the configurations that they need, but gspot.toml lists only the names you give.\n\nTo find the configurations that new code needs, run gspot doctor. It prints the gspot add line to run for each scope.\n\nRun gspot install next when the configurations need new tools.',
         arguments: {
             configuration: 'Configuration names, such as pytest. Run gspot list to see them',
         },

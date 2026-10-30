@@ -171,7 +171,7 @@ function formatMissingChecks(checks: readonly CheckResult[], { selectedOnly }: {
 function formatNotChecked(notChecked: RunReport['notChecked']): string[] {
     if (notChecked === undefined) return [];
     const choices = notChecked.map(({ configuration, evidence }) => `${configuration} (${evidence})`).join(', ');
-    return [`note     Not checked: ${choices}. Run gspot add, or gspot remove <name> --reason "<why>".`];
+    return [`note     Not checked: ${choices}. Run gspot add <name>, or gspot remove <name> --reason "<why>".`];
 }
 
 /**

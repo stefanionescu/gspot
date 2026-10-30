@@ -34,7 +34,7 @@ export const COMMAND_TERMS = [
     'install',
     'apply',
     'check [paths...]',
-    'add [configuration...]',
+    'add <configuration...>',
     'remove <configuration...>',
     'set <setting> <values...>',
     'unset <setting> [items...]',

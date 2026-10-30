@@ -218,3 +218,31 @@ test.each([...CI_PREFERENCE_CASES])(
         expect((JSON.parse(result.stdout) as DoctorReport).ci).toBe(ci);
     },
 );
+
+test.each([
+    {
+        name: 'names the scope of a project folder',
+        settings: buildSandboxSettings(['markdown']),
+        addCommands: ['gspot add fastapi python --scope py'],
+    },
+    {
+        name: 'leaves out a removed configuration',
+        settings: buildSandboxSettings(['markdown'], {
+            tables: '[removed_configurations]\npython = "External tooling checks Python."\nfastapi = "External tooling checks FastAPI."\n',
+        }),
+        addCommands: [],
+    },
+])('doctor prints the gspot add line for the detected configurations and $name', async ({ settings, addCommands }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': settings,
+        'py/pyproject.toml': '[project]\nname = "api"\nversion = "1.0.0"\ndependencies = ["fastapi"]\n',
+        'py/main.py': 'PORT = 8080\n',
+    });
+    const structured = await runGspot(sandbox.path, ['doctor', '--json']);
+    expect((JSON.parse(structured.stdout) as DoctorReport).addCommands).toStrictEqual([...addCommands]);
+    const text = await runGspot(sandbox.path, ['doctor']);
+    const line: string[] =
+        addCommands.length === 0 ? [] : [`Run ${addCommands.join(', then ')} to add the detected configurations.`];
+    expect(text.stdout.split('\n').filter((each) => each.startsWith('Run gspot add'))).toStrictEqual(line);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+});

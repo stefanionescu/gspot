@@ -15,7 +15,6 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { VERSION_FLAG } from '#cli/config/tools/versions.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
-import { compareText, formatCount } from '#cli/system/text.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { findMissingProjectEnvironment } from '#cli/tools/uv.ts';
@@ -26,6 +25,8 @@ import type { ToolInspection } from '#cli/types/tools/inspection.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
+import { listDetectedAdditions } from '#cli/repository/configurations.ts';
+import { compareText, formatCount, quoteArgument } from '#cli/system/text.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { findMissingBuild, listDistinctTools } from '#cli/configurations/tools.ts';
@@ -180,6 +181,9 @@ async function buildDoctorReport(session: Session, pin: string | undefined): Pro
         tools,
         environments,
         suggestions: listSuggestions(session),
+        addCommands: listDetectedAdditions(session).map(({ scope, configurations }) =>
+            ['gspot add', ...configurations, ...(scope === '' ? [] : ['--scope', quoteArgument(scope)])].join(' '),
+        ),
         hooks: hooks.text,
         ci: formatCiState(session),
         ruleFiles: selectRuleFiles(session).length,
@@ -203,7 +207,9 @@ function formatDoctorReport(report: DoctorReport): string {
         ),
         '',
         ...formatSuggestions(report.suggestions),
-        ...(report.suggestions.detected.length === 0 ? [] : ['Run gspot add to add the detected configurations.', '']),
+        ...(report.addCommands.length === 0
+            ? []
+            : [`Run ${report.addCommands.join(', then ')} to add the detected configurations.`, '']),
         `hooks: ${report.hooks}`,
         ...report.submodules.map((path) => `submodule  ${path} (contents are not read)`),
         `ci: ${report.ci}`,

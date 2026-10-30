@@ -14,7 +14,7 @@ the order of untouched settings and tables.
 
 | You want to                                         | Do this                                                                            | Read                                                            |
 | --------------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Detect new configurations                           | `gspot add`, then `gspot install`                                                  | [Choose configurations](#choose-configurations)                 |
+| Detect new configurations                           | `gspot doctor`, its `gspot add` line, then `gspot install`                         | [Choose configurations](#choose-configurations)                 |
 | Use a configuration                                 | `gspot add <configuration>`                                                        | [Choose configurations](#choose-configurations)                 |
 | Stop using a configuration                          | `gspot remove <configuration> --reason "<why>"`                                    | [Choose configurations](#choose-configurations)                 |
 | Give one folder its own configurations and settings | A `[[scope]]` record, then `--scope <path>` on `add`, `remove`, `set`, and `unset` | [Monorepos](/configure/monorepos/)                              |
@@ -95,9 +95,9 @@ does not suggest it again; `gspot add nextjs` reverses that. gspot does not remo
 selected configuration needs. `removed_configurations` keeps one reason for each removed configuration, such as
 `nextjs = "The app no longer uses Next.js."`. When the tools change, gspot prints a reminder to run `gspot install`.
 
-Run `gspot add` without names to detect and select configurations from the current files and dependencies, then run
-`gspot install`. It leaves configurations listed in `removed_configurations` out. Name a configuration explicitly to
-select it again.
+Run `gspot doctor` to detect the configurations that the current files and dependencies need. It prints the
+`gspot add <names>` line to run for each scope, and leaves out configurations listed in `removed_configurations`. Run
+that line, then `gspot install`. Name a removed configuration explicitly to select it again.
 
 gspot always selects most general configurations, such as `secrets`, `spelling`, and `security`, even when you write the
 list yourself, and `gspot add` and `gspot remove` refuse them. To run fewer of their checks, change the level, or turn
@@ -249,7 +249,8 @@ gspot install
 
 ## When files of a language appear or go
 
-When files of a language or framework appear, select its configuration with `gspot add`, then run `gspot install`.
+When files of a language or framework appear, run `gspot doctor`, run the `gspot add` line it prints, then run
+`gspot install`.
 
 When the files go away, its checks become inactive. Its configurations, settings, ignores, and command checks stay in
 gspot.toml. `gspot apply` writes generated files from your saved settings and does not change `configurations` or

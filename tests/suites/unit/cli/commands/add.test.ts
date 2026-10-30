@@ -117,49 +117,17 @@ test('add names a repeated configuration once and saves it once', async () => {
     ).toStrictEqual(['python', 'pytest']);
 });
 
-test('add with no names puts Python and FastAPI in their project scope', async () => {
+test('add without names exits 2 and writes nothing', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['markdown']),
-        'py/pyproject.toml': '[project]\nname = "api"\nversion = "1.0.0"\ndependencies = ["fastapi"]\n',
-        'py/main.py': 'PORT = 8080\n',
-    });
-    const result = await runGspot(sandbox.path, ['add', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const settings = readSettings(readFileSync(join(sandbox.path, SETTINGS_FILE), 'utf8'), sandbox.path);
-    expect(settings.configurations).toStrictEqual(['markdown']);
-    expect(settings.scopes.get('py')?.configurations).toContain('python');
-    expect(settings.scopes.get('py')?.configurations).toContain('fastapi');
-    const report = JSON.parse(result.stdout) as { changed: boolean; summary: string };
-    expect(report.changed).toBe(true);
-    expect(report.summary).toContain('to scope py');
-});
-
-test('add skips an explicitly removed configuration and writes nothing when nothing is new', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml':
-            'configurations = []\nremoved_configurations = { value = ["python"], reason = "External tooling checks Python." }\n',
+        'gspot.toml': buildSandboxSettings([]),
         'main.py': 'PORT = 8080\n',
     });
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, ['add']);
     expect(result).toStrictEqual({
-        code: 0,
-        stdout: 'No change: gspot.toml selects every configuration the code needs.\n',
-        stderr: '',
-    });
-    const json = await runGspot(sandbox.path, ['add', '--json']);
-    expect(JSON.parse(json.stdout)).toStrictEqual({ changed: false, summary: result.stdout.trimEnd() });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
-test('add without names refuses --scope and writes nothing', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, ['add', '--scope', '.']);
-    expect(result).toStrictEqual({
         code: 2,
         stdout: '',
-        stderr: '--scope needs configuration names. Run gspot add without --scope to detect every project.\n',
+        stderr: "Missing required argument 'configuration'\n",
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

@@ -49,7 +49,7 @@ its findings in those paths only. A staged or pushed run keeps every finding.
 ## Newly detected configurations
 
 Every check run, including hooks and CI, detects configurations that your settings neither select nor remove. It
-prints one warning before the summary, naming each configuration and the evidence from files or dependencies. Run `gspot add` to select the detected configurations, then `gspot install`. To decline one, run
+prints one warning before the summary, naming each configuration and the evidence from files or dependencies. Run `gspot add <name>` to select a detected configuration, then `gspot install`. To decline one, run
 `gspot remove <name> --reason "<why>"`. The warning does not change the exit code.
 
 ## Fix findings automatically

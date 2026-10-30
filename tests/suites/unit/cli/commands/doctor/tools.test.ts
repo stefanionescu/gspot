@@ -210,6 +210,7 @@ test('doctor --json reports every field when the required tools are missing', as
         tools,
         environments: [],
         suggestions: { detected: [], suggested: [], undetected: [], unowned: [], lintJobs: [] },
+        addCommands: [],
         hooks: 'none',
         ci: 'none',
         ruleFiles: 0,

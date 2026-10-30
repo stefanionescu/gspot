@@ -1,15 +1,12 @@
-import { GspotError } from '#cli/system/errors.ts';
-import { getScopeTable } from '#cli/settings/edit.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { SCOPE_OPTION } from '#cli/config/commands/flags.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
-import { listDetectedAdditions } from '#cli/repository/configurations.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { ConfigurationsOptions } from '#cli/types/generation/settings-edit.ts';
-import { applySettingsEdit, prepareSettingsEdit, prepareConfigurationEdit } from '#cli/generation/settings-edit.ts';
+import { applySettingsEdit, prepareConfigurationEdit } from '#cli/generation/settings-edit.ts';
 
 function restoreConfigurations(table: TomlTable, added: string[]): void {
     const previous = table['removed_configurations'];
@@ -26,40 +23,7 @@ function formatConfigurationChange(changed: string[], unchanged: string[], where
     return summary;
 }
 
-async function addDetectedConfigurations(options: ConfigurationsOptions): Promise<CommandResult> {
-    if (options.scope !== undefined)
-        throw new GspotError(
-            'arguments',
-            '--scope needs configuration names. Run gspot add without --scope to detect every project.',
-        );
-    const context = await prepareSettingsEdit(options.cwd);
-    const additions = listDetectedAdditions(context.session);
-    if (additions.length === 0) {
-        const summary = 'No change: gspot.toml selects every configuration the code needs.';
-        return { text: summary + '\n', json: { changed: false, summary }, exitCode: 0 };
-    }
-    for (const addition of additions) {
-        const table = getScopeTable(context.edit.table, addition.scope);
-        const previous = Array.isArray(table['configurations']) ? (table['configurations'] as unknown[]) : [];
-        table['configurations'] = [...new Set([...previous, ...addition.configurations])];
-    }
-    const summary = additions
-        .map(({ scope, configurations, evidence }) => {
-            const where = scope === '' ? '' : ' to scope ' + scope;
-            const found = evidence.length === 0 ? '' : ' (' + evidence.map((match) => match.evidence).join('; ') + ')';
-            return `Added ${new Intl.ListFormat('en', { type: 'conjunction' }).format(configurations)}${where}${found}.`;
-        })
-        .join('\n');
-    return applySettingsEdit(context.root, {
-        edit: context.edit,
-        reads: context.reads,
-        listing: context.listing,
-        summary,
-    });
-}
-
 async function runAddCommand(options: ConfigurationsOptions): Promise<CommandResult> {
-    if (options.configurations.length === 0) return addDetectedConfigurations(options);
     const { root, input, scope, scopeTable, scopeSettings, selected, context } =
         await prepareConfigurationEdit(options);
     if (options.configurations.every((name) => selected.includes(name))) {
@@ -98,7 +62,7 @@ Register the add command.
 export function registerAdd(program: Command, onResult: CommandCompletion): void {
     program
         .command('add')
-        .argument('[configuration...]', COMMAND_HELP.add.arguments['configuration'])
+        .argument('<configuration...>', COMMAND_HELP.add.arguments['configuration'])
         .summary(COMMAND_HELP.add.summary)
         .description(COMMAND_HELP.add.description)
         .option(SCOPE_OPTION, COMMAND_HELP.add.options[SCOPE_OPTION], stripTrailingSlashes)

@@ -9,7 +9,7 @@ export const CANCELED_MESSAGE = 'Canceled. Nothing was written.';
 export const WROTE_PLAN_MESSAGE = 'Wrote the plan above.';
 
 export const SETTINGS_EXIST_MESSAGE =
-    'This repository already has a gspot.toml. Run gspot add to add newly detected configurations, or gspot doctor to inspect its setup.';
+    'This repository already has a gspot.toml. Run gspot doctor to inspect its setup; it prints the gspot add line for newly detected configurations.';
 
 export const NOTHING_WRITTEN_MESSAGE = 'Nothing written.\n';
 

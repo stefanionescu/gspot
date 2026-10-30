@@ -15,7 +15,7 @@ test('new Python files appear in JSON and one text note until explicitly removed
     const text = await runGspot(sandbox.path, command);
     expect(text.code, text.stdout + text.stderr).toBe(0);
     expect(text.stdout).toContain(
-        'Not checked: python (1 .py file). Run gspot add, or gspot remove <name> --reason "<why>".',
+        'Not checked: python (1 .py file). Run gspot add <name>, or gspot remove <name> --reason "<why>".',
     );
     expect(text.stdout.match(/Not checked:/gu)).toHaveLength(1);
     const removed = await runGspot(sandbox.path, ['remove', 'python', '--reason', 'External tooling checks Python.']);

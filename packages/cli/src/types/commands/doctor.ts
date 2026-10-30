@@ -17,6 +17,7 @@ export type DoctorReport = {
     tools: ToolInspection[];
     environments: string[];
     suggestions: Suggestions;
+    addCommands: string[];
     hooks: string;
     ci: string;
     ruleFiles: number;
