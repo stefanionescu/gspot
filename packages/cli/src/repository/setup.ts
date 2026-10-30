@@ -4,7 +4,6 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { type Repository } from '#cli/types/repository/files.ts';
 import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
-import type { ManagedKeys } from '#cli/types/repository/writer.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -18,13 +17,8 @@ import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository/setup.ts'
 import { statSync, lstatSync, readdirSync, realpathSync, readFileSync } from 'node:fs';
 import { readPackageJson, listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import { LFS_HOOKS, HOOK_SHEBANG, LFS_GUARD_PREFIX } from '#cli/config/generation/hooks.ts';
+import { type CiJob, type RepositoryHooks, type RepositorySetup } from '#cli/types/repository/setup.ts';
 
-import {
-    type CiJob,
-    type RepositoryHooks,
-    type RepositorySetup,
-    type ConflictingConfigFile,
-} from '#cli/types/repository/setup.ts';
 import {
     RUN_WORD,
     LINT_TASK,
@@ -271,16 +265,4 @@ export function readRepositorySetup(
         lintFolders: LINT_FOLDERS.filter((name) => listFolder(root, name).length > 0),
         toolOnlyPackages,
     };
-}
-
-/**
-Check whether generated field edits cover an existing tool settings section.
-
-@param configFile the existing file or section.
-@param fileEdits the generated field edits.
-*/
-export function isEditedInPlace(configFile: ConflictingConfigFile, fileEdits: ManagedKeys[]): boolean {
-    return fileEdits.some(
-        (output) => output.path === configFile.path && output.keys.some((field) => field.key[0] === configFile.key),
-    );
 }

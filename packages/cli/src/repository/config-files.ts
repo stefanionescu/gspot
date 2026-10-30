@@ -12,6 +12,7 @@ import { YAML_EXTENSIONS } from '#cli/config/repository/setup.ts';
 import { TOML_EXTENSION } from '#cli/config/repository/writer.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
+import type { ManagedKeys } from '#cli/types/repository/writer.ts';
 import type { ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 import { JSON_EXTENSION, INI_EXTENSIONS } from '#cli/config/repository/config-files.ts';
 
@@ -126,4 +127,16 @@ export function listConflictingConfigFiles(
     const selected = [...configurations];
     const located = { inventory, projectFolders: new Set(['', ...listProjectFolders(inventory, selected)]) };
     return selected.flatMap((configuration) => listConfigurationConflicts(root, configuration, located));
+}
+
+/**
+Check whether generated field edits cover an existing tool settings section.
+
+@param configFile the existing file or section.
+@param fileEdits the generated field edits.
+*/
+export function isEditedInPlace(configFile: ConflictingConfigFile, fileEdits: ManagedKeys[]): boolean {
+    return fileEdits.some(
+        (output) => output.path === configFile.path && output.keys.some((field) => field.key[0] === configFile.key),
+    );
 }

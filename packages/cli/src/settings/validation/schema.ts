@@ -115,7 +115,7 @@ function formatUnknownKey(segments: KeyPath, key: string): string {
     return `There is no setting called ${key}.${formatSimilarKeys(segments, key)} See ${SETTINGS_REFERENCE_URL} for every setting.`;
 }
 
-function listConfigurationConflicts(settings: Settings): SettingsError[] {
+function listRemovedSelections(settings: Settings): SettingsError[] {
     const tables = listSettingsTables(settings);
     const errors: SettingsError[] = [];
     for (const { table, path } of tables)
@@ -158,7 +158,7 @@ export function assertSettings(settings: Settings, root: string): SettingsError[
         .filter((configuration) => configuration.group === 'general')
         .toArray();
     const errors: SettingsError[] = [
-        ...listConfigurationConflicts(settings),
+        ...listRemovedSelections(settings),
         ...validateSettingReasons(settings),
         ...validateSettingRules(settings),
         ...validateSwiftTargets(settings, rootKeys),

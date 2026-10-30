@@ -1,10 +1,12 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { runGitBlocking } from '#cli/system/git.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { isEditedInPlace } from '#cli/repository/setup.ts';
-import type { ManagedKeys } from '#cli/types/repository/writer.ts';
-import type { ConflictingConfigFiles } from '#cli/types/commands/init.ts';
+import { writePlans } from '#cli/repository/writer.ts';
+import { isEditedInPlace } from '#cli/repository/config-files.ts';
+import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { parsePrettierFile } from '#cli/commands/init/formatter-settings.ts';
+import type { WritePlan, ManagedKeys } from '#cli/types/repository/writer.ts';
+import type { InitPlan, ConflictingConfigFiles } from '#cli/types/commands/init.ts';
 import type { RepositorySetup, ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 
 import {
@@ -14,14 +16,7 @@ import {
     READ_COMMITTED_MESSAGE,
 } from '#cli/config/commands/init/conflicting-config-files.ts';
 
-/**
-List config files whose working copies match their committed contents.
-
-@param root the repository folder.
-@param paths the config files init replaces.
-@returns none without a commit.
-*/
-export function listCommittedPaths(root: string, paths: string[]): Set<string> {
+function listCommittedPaths(root: string, paths: string[]): Set<string> {
     const head = runGitBlocking(root, ['rev-parse', VERIFY_FLAG, '--quiet', 'HEAD']);
     if (head.code !== 0) return new Set();
     const tracked = runGitBlocking(root, ['ls-files', '-z', '--', ...paths]);
@@ -78,4 +73,43 @@ export function readConflictingConfigFiles(
         addConflictingConfigFile(file, conflicts);
     }
     return conflicts;
+}
+
+/**
+Refuse to replace a config file unless Git holds it unchanged in the last commit, so that the user can restore it.
+
+@param root the repository folder.
+@param paths the config files init deletes.
+*/
+export function assertConflictingFilesCommitted(root: string, paths: string[]): void {
+    const committed = listCommittedPaths(root, paths);
+    const uncommitted = paths.filter((path) => !committed.has(path));
+    if (uncommitted.length > 0)
+        throw new GspotError(
+            'arguments',
+            `init replaces ${uncommitted.join(', ')}, and Git does not hold them unchanged at HEAD. Commit them or move them away, then run gspot init again.`,
+        );
+}
+
+/**
+Delete the config files that init replaces, and keep each one that changed after init read it.
+
+@param writer the repository writer.
+@param deleted the config files that the plan deletes.
+@param reviewed the contents init read before it showed the plan.
+@returns the paths that init kept.
+*/
+export function deleteConflictingConfigFiles(
+    writer: Files,
+    deleted: InitPlan['delete'],
+    reviewed: ReadonlyMap<string, FileContents | undefined>,
+): string[] {
+    const kept: string[] = [];
+    const plans: WritePlan[] = [];
+    for (const file of deleted) {
+        if (reviewed.get(file.path) === undefined) kept.push(file.path);
+        else plans.push({ path: file.path, status: 'changed' });
+    }
+    writePlans(writer, plans);
+    return kept;
 }

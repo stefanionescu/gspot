@@ -7,11 +7,11 @@ import type { Session } from '#cli/types/session.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { writePlans } from '#cli/repository/writer.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { createInterface } from 'node:readline/promises';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
+import type { ReadCache } from '#cli/types/system/files.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
@@ -19,7 +19,6 @@ import { readTemplate } from '#cli/commands/init/template.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { readRepositorySetup } from '#cli/repository/setup.ts';
 import type { SettingsFile } from '#cli/types/settings/file.ts';
-import type { WritePlan } from '#cli/types/repository/writer.ts';
 import { formatDetection } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/repository/configurations.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
@@ -29,20 +28,16 @@ import type { RepositoryListing } from '#cli/types/repository/read.ts';
 import { planInitFiles, formatInitPlan } from '#cli/commands/init/plan.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import type { Files, ReadCache, FileContents } from '#cli/types/system/files.ts';
 import { FROM_OPTION, FROM_CONFLICT_MESSAGE } from '#cli/config/commands/init/template.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings-text.ts';
 import { readRepository, readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts';
-import { listCommittedPaths, readConflictingConfigFiles } from '#cli/commands/init/conflicting-config-files.ts';
+import type { InitJson, InitScan, InitOptions, InitPlanning, DetectionSummary } from '#cli/types/commands/init.ts';
 
-import type {
-    InitJson,
-    InitPlan,
-    InitScan,
-    InitOptions,
-    InitPlanning,
-    DetectionSummary,
-} from '#cli/types/commands/init.ts';
+import {
+    readConflictingConfigFiles,
+    deleteConflictingConfigFiles,
+    assertConflictingFilesCommitted,
+} from '#cli/commands/init/conflicting-config-files.ts';
 import {
     YES_FLAG,
     LEVEL_OPTION,
@@ -129,16 +124,6 @@ export function registerInit(program: Command, onResult: CommandCompletion): voi
         });
 }
 
-function assertConflictingFilesCommitted(root: string, paths: string[]): void {
-    const committed = listCommittedPaths(root, paths);
-    const uncommitted = paths.filter((path) => !committed.has(path));
-    if (uncommitted.length > 0)
-        throw new GspotError(
-            'arguments',
-            `init replaces ${uncommitted.join(', ')}, and Git does not hold them unchanged at HEAD. Commit them or move them away, then run gspot init again.`,
-        );
-}
-
 async function openPlannedSession(
     root: string,
     { reads, listing, settingsFile }: { reads: ReadCache; listing: RepositoryListing; settingsFile: SettingsFile },
@@ -211,21 +196,6 @@ async function askConfirmation({ yes }: { yes: boolean }): Promise<boolean> {
     for await (const answer of createInterface({ input: process.stdin, terminal: false }))
         return ACCEPT_ANSWER.test(answer.trim());
     throw new GspotError('prompt', CANCELED_MESSAGE);
-}
-
-function deleteConflictingConfigFiles(
-    writer: Files,
-    deleted: InitPlan['delete'],
-    reviewed: ReadonlyMap<string, FileContents | undefined>,
-): string[] {
-    const kept: string[] = [];
-    const plans: WritePlan[] = [];
-    for (const file of deleted) {
-        if (reviewed.get(file.path) === undefined) kept.push(file.path);
-        else plans.push({ path: file.path, status: 'changed' });
-    }
-    writePlans(writer, plans);
-    return kept;
 }
 
 async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<ApplyReport> {
