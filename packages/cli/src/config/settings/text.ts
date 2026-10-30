@@ -1,7 +1,3 @@
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-
-export const SCHEMA_DIRECTIVE = `#:schema ./${GSPOT_PATHS.settingsSchema}`;
-
 export const ROOT_KEYS = [
     'level',
     'configurations',

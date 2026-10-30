@@ -53,7 +53,7 @@ test('ignore merges paths into one record and prints them, and unignore removes 
     );
     const saved = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     expect(saved).toBe(
-        '# Comment on configurations.\n#:schema ./.gspot/gspot.schema.json\nconfigurations = ["bash"]\n[[command_check]]\nid = "project/bash-syntax"\ncommand = ["bash", "-n", "{file}"]\npaths = ["**/*.sh"]\nstage = "commit"\noutput = { format = "regex", pattern = "^.*: line (?<line>\\\\d+): (?<message>.*)$" }\n[rules]\nenabled = false\n[hooks]\n# Keep the push selection.\nenabled = false\n\n[[ignore]]\ncheck = "bash/shellcheck"\npaths = ["a.sh"]\nreason = "The inputs demonstrate word splitting."\n',
+        '# Comment on configurations.\nconfigurations = ["bash"]\n[[command_check]]\nid = "project/bash-syntax"\ncommand = ["bash", "-n", "{file}"]\npaths = ["**/*.sh"]\nstage = "commit"\noutput = { format = "regex", pattern = "^.*: line (?<line>\\\\d+): (?<message>.*)$" }\n[rules]\nenabled = false\n[hooks]\n# Keep the push selection.\nenabled = false\n\n[[ignore]]\ncheck = "bash/shellcheck"\npaths = ["a.sh"]\nreason = "The inputs demonstrate word splitting."\n',
     );
 });
 

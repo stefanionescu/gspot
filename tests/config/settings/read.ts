@@ -25,13 +25,13 @@ export const DUPLICATED_REASON_ERRORS = [
         key: 'limits.file_lines',
         text: '[limits]\nfile_lines = { value = 400, reason = "x" }\n',
         message:
-            'gspot.toml:4: limits.file_lines.reason: limits.file_lines needs a reason of two or more words that says why: "x" is refused.',
+            'gspot.toml:3: limits.file_lines.reason: limits.file_lines needs a reason of two or more words that says why: "x" is refused.',
     },
     {
         key: 'docs.allowed_urls',
         text: '[docs]\nallowed_urls = { value = ["https://example.com/docs"], reason = "x" }\n',
         message:
-            'gspot.toml:4: docs.allowed_urls.reason: docs.allowed_urls needs a reason of two or more words that says why: "x" is refused.',
+            'gspot.toml:3: docs.allowed_urls.reason: docs.allowed_urls needs a reason of two or more words that says why: "x" is refused.',
     },
 ];
 
@@ -43,7 +43,7 @@ export const KEY_PATH_CASES = [
             tables: '[[licenses.allowed_package]]\nname = "example"\nversion = "latest"\nreason = "Reviewed its MIT license."\n',
         },
         where: [
-            'gspot.toml:5: licenses.allowed_package.0.version: The value "latest" is not valid for licenses.allowed_package.0.version. Name an exact version, a semver range such as ^1.2.0, or * for every version.',
+            'gspot.toml:4: licenses.allowed_package.0.version: The value "latest" is not valid for licenses.allowed_package.0.version. Name an exact version, a semver range such as ^1.2.0, or * for every version.',
         ],
         correction: ['"latest"', '"^1.2.3"'],
     },
@@ -54,7 +54,7 @@ export const KEY_PATH_CASES = [
             tables: '[[naming.override]]\npaths = ["src/**"]\nignored_names_pattern = "("\nreason = "The library exports these reviewed names."\n',
         },
         where: [
-            'gspot.toml:5: naming.override.0.ignored_names_pattern: The value "(" is not valid for naming.override.0.ignored_names_pattern. Use a valid Unicode regular expression.',
+            'gspot.toml:4: naming.override.0.ignored_names_pattern: The value "(" is not valid for naming.override.0.ignored_names_pattern. Use a valid Unicode regular expression.',
         ],
         correction: ['"("', '"^_"'],
     },
@@ -64,7 +64,7 @@ export const KEY_PATH_CASES = [
         options: { rules: true, tables: '[[tools.eslint.override]]\npaths = []\nrules = {eqeqeq = ["always"]}\n' },
         correction: ['paths = []', 'paths = ["src"]'],
         where: [
-            'gspot.toml:4: tools.eslint.override.0.paths: The value [] is not valid for tools.eslint.override.0.paths. Use a valid list value: ',
+            'gspot.toml:3: tools.eslint.override.0.paths: The value [] is not valid for tools.eslint.override.0.paths. Use a valid list value: ',
         ],
     },
     {
@@ -73,7 +73,7 @@ export const KEY_PATH_CASES = [
         options: { rules: true, tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = 0}\n' },
         correction: ['eqeqeq = 0', 'eqeqeq = ["always"]'],
         where: [
-            'gspot.toml:5: tools.eslint.override.0.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
+            'gspot.toml:4: tools.eslint.override.0.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
         ],
     },
     {
@@ -85,7 +85,7 @@ export const KEY_PATH_CASES = [
         },
         correction: ['rulez', 'rules'],
         where: [
-            'gspot.toml:5: tools.eslint.override.0.rulez: rulez is not a field of [[tools.eslint.override]]. The allowed fields are paths, rules, and runtime. Did you mean rules?',
+            'gspot.toml:4: tools.eslint.override.0.rulez: rulez is not a field of [[tools.eslint.override]]. The allowed fields are paths, rules, and runtime. Did you mean rules?',
         ],
     },
 ] as const;
@@ -148,7 +148,7 @@ export const INVALID_TOOL_ENUMS = [
         configuration: 'docker',
         tables: '[tools.trivy]\nseverity = ["SEVERE"]\n',
         message:
-            'gspot.toml:4: tools.trivy.severity.0: The value "SEVERE" is not valid for tools.trivy.severity.0. Use UNKNOWN or LOW or MEDIUM or HIGH or CRITICAL.',
+            'gspot.toml:3: tools.trivy.severity.0: The value "SEVERE" is not valid for tools.trivy.severity.0. Use UNKNOWN or LOW or MEDIUM or HIGH or CRITICAL.',
     },
 ] as const;
 

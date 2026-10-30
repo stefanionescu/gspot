@@ -1,5 +1,4 @@
-export const TEAM_TEMPLATE = `#:schema ./.gspot/gspot.schema.json
-# gspot settings for this repository. Change them with gspot set, unset, add, remove, ignore, and unignore.
+export const TEAM_TEMPLATE = `# gspot settings for this repository. Change them with gspot set, unset, add, remove, ignore, and unignore.
 
 configurations = ["typescript"]
 level = "all"
@@ -115,8 +114,7 @@ configurations = ['typescript']
 file_lines = 100
 `;
 
-export const COPIED_TEMPLATE = `#:schema ./.gspot/gspot.schema.json
-# Change these settings with gspot set, unset, add, remove, ignore, or unignore.
+export const COPIED_TEMPLATE = `# Change these settings with gspot set, unset, add, remove, ignore, or unignore.
 configurations = ['typescript']
 
 [hooks]

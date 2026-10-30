@@ -1,5 +1,4 @@
 import { basename } from 'node:path/posix';
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { listHookNames } from '#cli/installers/hooks.ts';
@@ -9,7 +8,6 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import { FROZEN_INSTALLS } from '#cli/config/generation/ci.ts';
-import { buildJsonSchema } from '#cli/settings/json-schema.ts';
 import type { RuleFile } from '#cli/types/generation/rules.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
@@ -138,10 +136,7 @@ export function generateFiles(session: Session): Generation {
     const { settings } = session;
     const { packageManager, toolConfigurations } = session;
     const generated: Generation = {
-        files: [
-            { path: GSPOT_PATHS.gitignore, content: TOOL_FOLDER_IGNORES.join('\n') + '\n' },
-            { path: GSPOT_PATHS.settingsSchema, content: `${JSON.stringify(buildJsonSchema(), null, JSON_INDENT)}\n` },
-        ],
+        files: [{ path: GSPOT_PATHS.gitignore, content: TOOL_FOLDER_IGNORES.join('\n') + '\n' }],
         blocks: [],
         managedKeys: [],
     };

@@ -29,12 +29,6 @@ test.each([true, false])(
                         name: 'mise',
                         fileMatch: expect.arrayContaining(['mise.toml', '.gspot/mise.toml']) as string[],
                     }) as object,
-                    {
-                        name: 'gspot',
-                        description: 'The gspot settings file',
-                        fileMatch: ['gspot.toml'],
-                        location: '.gspot/gspot.schema.json',
-                    },
                     ...(hasSchemas ? MAPPED_SCHEMA_RECORDS : []),
                 ],
             },

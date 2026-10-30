@@ -1,7 +1,6 @@
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 
 import {
-    SCHEMA_FILE,
     UV_LOCKFILE,
     NODE_MODULES,
     MISE_LOCKFILE,
@@ -15,7 +14,6 @@ export const GSPOT_PATHS = {
     configurations: `${GSPOT_FOLDER}/configurations`,
     hooks: `${GSPOT_FOLDER}/hooks`,
     gitignore: `${GSPOT_FOLDER}/.gitignore`,
-    settingsSchema: `${GSPOT_FOLDER}/${SCHEMA_FILE}`,
     miseProject: `${GSPOT_FOLDER}/${MISE_CONFIG_FILE}`,
     miseLockfile: `${GSPOT_FOLDER}/${MISE_LOCKFILE}`,
     npmProject: `${GSPOT_FOLDER}/package.json`,

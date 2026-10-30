@@ -10,7 +10,6 @@ import {
     MISE_SCHEMA,
     YAMLLINT_CHECK,
     YAMLLINT_RULES,
-    SETTINGS_SCHEMA,
     TAPLO_FORMATTING,
     YAMLLINT_YAML_OPTIONS,
     YAMLLINT_RULE_OPTIONS,
@@ -53,7 +52,7 @@ export function buildV8rFile(planned: PlannedConfigFile): string {
         ...V8R_NOTES,
         stringifyYaml({
             ignoreErrors: true,
-            customCatalog: { schemas: [MISE_SCHEMA, SETTINGS_SCHEMA, ...schemas] },
+            customCatalog: { schemas: [MISE_SCHEMA, ...schemas] },
         }),
     ].join('\n');
 }

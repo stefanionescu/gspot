@@ -89,56 +89,56 @@ export const REFUSED_RULE_OPTIONS = [
         configuration: 'commits',
         toml: '[tools.commitlint.rules]\nheader-max-length = 0\n',
         message:
-            'gspot.toml:4: tools.commitlint.rules.header-max-length: This table holds options only, without a severity; the level decides which rules run. To turn header-max-length off, run gspot ignore commits/commitlint --rule header-max-length --reason "<why>".',
+            'gspot.toml:3: tools.commitlint.rules.header-max-length: This table holds options only, without a severity; the level decides which rules run. To turn header-max-length off, run gspot ignore commits/commitlint --rule header-max-length --reason "<why>".',
     },
     {
         tool: 'eslint',
         configuration: 'javascript',
         toml: '[tools.eslint.rules]\neqeqeq = "error"\n',
         message:
-            'gspot.toml:4: tools.eslint.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
+            'gspot.toml:3: tools.eslint.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
     },
     {
         tool: 'markdownlint',
         configuration: 'markdown',
         toml: '[tools.markdownlint.rules]\nMD041 = true\n',
         message:
-            'gspot.toml:4: tools.markdownlint.rules.MD041: This table holds options only, without a severity; the level decides which rules run. To turn MD041 off, run gspot ignore markdown/markdownlint --rule MD041 --reason "<why>".',
+            'gspot.toml:3: tools.markdownlint.rules.MD041: This table holds options only, without a severity; the level decides which rules run. To turn MD041 off, run gspot ignore markdown/markdownlint --rule MD041 --reason "<why>".',
     },
     {
         tool: 'markdownlint',
         configuration: 'markdown',
         toml: '[tools.markdownlint.rules]\ndefault = {}\n',
         message:
-            'gspot.toml:4: tools.markdownlint.rules.default: Name a rule by its ID, such as MD010 = { spaces_per_tab = 4 }. This table holds rule options only.',
+            'gspot.toml:3: tools.markdownlint.rules.default: Name a rule by its ID, such as MD010 = { spaces_per_tab = 4 }. This table holds rule options only.',
     },
     {
         tool: 'stylelint',
         configuration: 'css',
         toml: '[tools.stylelint.rules]\ncolor-hex-length = ["short", { severity = "warning" }]\n',
         message:
-            'gspot.toml:4: tools.stylelint.rules.color-hex-length: This table holds options only, without a severity; the level decides which rules run. To turn color-hex-length off, run gspot ignore css/stylelint --rule color-hex-length --reason "<why>".',
+            'gspot.toml:3: tools.stylelint.rules.color-hex-length: This table holds options only, without a severity; the level decides which rules run. To turn color-hex-length off, run gspot ignore css/stylelint --rule color-hex-length --reason "<why>".',
     },
     {
         tool: 'yamllint',
         configuration: 'data-files',
         toml: '[tools.yamllint.rules]\ntruthy = true\n',
         message:
-            'gspot.toml:4: tools.yamllint.rules.truthy: This table holds options only, without a severity; the level decides which rules run. To turn truthy off, run gspot ignore data-files/yamllint --rule truthy --reason "<why>".',
+            'gspot.toml:3: tools.yamllint.rules.truthy: This table holds options only, without a severity; the level decides which rules run. To turn truthy off, run gspot ignore data-files/yamllint --rule truthy --reason "<why>".',
     },
     {
         tool: 'yamllint',
         configuration: 'data-files',
         toml: '[tools.yamllint.rules]\ntruthy = { ignore = "**" }\n',
         message:
-            'gspot.toml:4: tools.yamllint.rules.truthy: This table holds options only, without a severity; the level decides which rules run. To turn truthy off, run gspot ignore data-files/yamllint --rule truthy --reason "<why>".',
+            'gspot.toml:3: tools.yamllint.rules.truthy: This table holds options only, without a severity; the level decides which rules run. To turn truthy off, run gspot ignore data-files/yamllint --rule truthy --reason "<why>".',
     },
     {
         tool: 'stylelint',
         configuration: 'css',
         toml: '[tools.stylelint.rules]\ncolor-named = false\n',
         message:
-            'gspot.toml:4: tools.stylelint.rules.color-named: This table holds options only, without a severity; the level decides which rules run. To turn color-named off, run gspot ignore css/stylelint --rule color-named --reason "<why>".',
+            'gspot.toml:3: tools.stylelint.rules.color-named: This table holds options only, without a severity; the level decides which rules run. To turn color-named off, run gspot ignore css/stylelint --rule color-named --reason "<why>".',
     },
 ] as const;
 

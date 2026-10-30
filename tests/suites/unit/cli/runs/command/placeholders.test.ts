@@ -78,7 +78,7 @@ test('an empty list setting is refused as a settings error', async () => {
     expect(JSON.parse(empty.stdout)).toStrictEqual({
         error: 'settings',
         message:
-            'gspot.toml:5: openapi.generate_command: The value [] is not valid for openapi.generate_command. Use a valid list value: The command that writes the OpenAPI document from the code, run in the project scope folder.',
+            'gspot.toml:4: openapi.generate_command: The value [] is not valid for openapi.generate_command. Use a valid list value: The command that writes the OpenAPI document from the code, run in the project scope folder.',
     });
 });
 

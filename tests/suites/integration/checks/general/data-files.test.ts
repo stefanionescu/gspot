@@ -5,9 +5,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { UNCLOSED_SEQUENCE } from '#tests/config/yaml.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildJsonSchema } from '#cli/settings/json-schema.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
@@ -134,26 +132,6 @@ on:
     await assertYamlFiles(root, 'truthy');
     await writeFile(join(root, 'app/settings/project.yaml'), YAML_SCOPE_FILES['app/settings/project.yaml']);
     await assertYamlFiles(root);
-});
-
-test('v8r checks gspot.toml against the schema in .gspot', async () => {
-    const { root } = installedSandbox();
-    await using _change = await applySandboxChanges(installedSandbox(), {
-        files: {},
-        settings: '\n[[ignore]]\ncheck = "data-files/yamllint"\nreason = "The sample holds no YAML."\n',
-    });
-    const command = ['check', SETTINGS_FILE, '--only', 'data-files/v8r', '--json'];
-    const accepted = parseCheckReport(await spawnGspot(root, command));
-    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect(accepted.report.checks).toMatchObject([
-        { check: 'data-files/v8r', status: 'passed', command: expect.arrayContaining([SETTINGS_FILE]) as string[] },
-    ]);
-    await writeFile(join(root, GSPOT_PATHS.settingsSchema), '{ "not": {} }\n');
-    const rejected = parseCheckReport(await spawnGspot(root, command));
-    expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-    expect(rejected.report.checks).toMatchObject([
-        { check: 'data-files/v8r', status: 'failed', findings: [matchFields({ file: SETTINGS_FILE })] },
-    ]);
 });
 
 test('Taplo validates test file patterns and tool rule options against the local settings schema', async () => {

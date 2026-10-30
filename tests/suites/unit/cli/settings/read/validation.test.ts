@@ -240,10 +240,10 @@ test('unknown configurations are refused where they are written, with a suggesti
     );
     const suggestion = 'See https://generativespotting.com/reference/configurations/ for the available configurations.';
     expect(errors).toStrictEqual([
-        `gspot.toml:2: configurations.0: There is no configuration called bas. Did you mean bash, supabase? ${suggestion}`,
-        `gspot.toml:2: configurations.2: There is no configuration called bas. Did you mean bash, supabase? ${suggestion}`,
-        `gspot.toml:5: scope.0.configurations.0: There is no configuration called pythonn. Did you mean python? ${suggestion}`,
-        `gspot.toml:5: scope.0.configurations.1: There is no configuration called bas. Did you mean bash, supabase? ${suggestion}`,
+        `gspot.toml:1: configurations.0: There is no configuration called bas. Did you mean bash, supabase? ${suggestion}`,
+        `gspot.toml:1: configurations.2: There is no configuration called bas. Did you mean bash, supabase? ${suggestion}`,
+        `gspot.toml:4: scope.0.configurations.0: There is no configuration called pythonn. Did you mean python? ${suggestion}`,
+        `gspot.toml:4: scope.0.configurations.1: There is no configuration called bas. Did you mean bash, supabase? ${suggestion}`,
     ]);
 });
 
@@ -256,7 +256,7 @@ test('a scope path through a link to a folder outside the repository is refused'
         buildSandboxSettings(['bash'], { rules: true, scopes: [{ path: 'linked' }] }),
         root,
     );
-    expect(found).toStrictEqual(['gspot.toml:4: scope.0.path: linked is a link. gspot does not write through links.']);
+    expect(found).toStrictEqual(['gspot.toml:3: scope.0.path: linked is a link. gspot does not write through links.']);
 });
 
 test('a Semgrep rule file or a scope plugin module that names no file is refused at its key', async () => {

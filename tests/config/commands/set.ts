@@ -6,8 +6,7 @@ path = "api"
 configurations = ["bash"]
 `;
 
-export const BANNED_WORD_SETTINGS = `#:schema ./.gspot/gspot.schema.json
-configurations = ["naming", "typescript"]
+export const BANNED_WORD_SETTINGS = `configurations = ["naming", "typescript"]
 
 [rules]
 enabled = false
@@ -20,8 +19,7 @@ export const BANNED_WORD_SCOPES = [
     {
         name: 'root',
         scope: '',
-        written: `#:schema ./.gspot/gspot.schema.json
-configurations = ["naming", "typescript"]
+        written: `configurations = ["naming", "typescript"]
 
 [rules]
 enabled = false
@@ -36,8 +34,7 @@ path = "app"
     {
         name: 'child',
         scope: 'app',
-        written: `#:schema ./.gspot/gspot.schema.json
-configurations = ["naming", "typescript"]
+        written: `configurations = ["naming", "typescript"]
 
 [rules]
 enabled = false

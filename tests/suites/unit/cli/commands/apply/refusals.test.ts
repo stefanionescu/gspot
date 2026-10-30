@@ -56,14 +56,14 @@ test('a malformed reason reports a settings error and apply preserves the author
     });
     await createFileTree(sandbox.path, { 'gspot.toml': source });
     const message =
-        'gspot.toml:4: limits.file_lines.reason: The value 42 is not valid for limits.file_lines.reason. Use a valid string value: Why this code needs more than the default; required when you raise the value.';
+        'gspot.toml:3: limits.file_lines.reason: The value 42 is not valid for limits.file_lines.reason. Use a valid string value: Why this code needs more than the default; required when you raise the value.';
     const checked = await runGspot(sandbox.path, ['check', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(2);
     expect(JSON.parse(checked.stdout)).toStrictEqual({ error: 'settings', message });
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(2);
     expect(applied.stdout + applied.stderr).toBe(
-        'gspot.toml:4: limits.file_lines.reason: The value 42 is not valid for limits.file_lines.reason. Use a valid string value: Why this code needs more than the default; required when you raise the value.\n',
+        'gspot.toml:3: limits.file_lines.reason: The value 42 is not valid for limits.file_lines.reason. Use a valid string value: Why this code needs more than the default; required when you raise the value.\n',
     );
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(source);
     expect(await isOnDisk(join(sandbox.path, GSPOT_FOLDER))).toBe(false);

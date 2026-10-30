@@ -139,7 +139,7 @@ test('set writes a TOML list of tables as tables and refuses a value that is not
     expect(read.code, read.stdout + read.stderr).toBe(2);
     expect(JSON.parse(read.stdout) as CommandFailureJson).toStrictEqual({
         error: 'settings',
-        message: String.raw`gspot.toml:4: tools.eslint.restricted_imports.0: The value "{name = \"a\", message = \"Use its public entrypoint.\"}" is not valid for tools.eslint.restricted_imports.0. Use a valid table value.`,
+        message: String.raw`gspot.toml:3: tools.eslint.restricted_imports.0: The value "{name = \"a\", message = \"Use its public entrypoint.\"}" is not valid for tools.eslint.restricted_imports.0. Use a valid table value.`,
     });
 });
 

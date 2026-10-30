@@ -44,7 +44,6 @@ export const RULES_WRITTEN_FILES = [
     '.gspot/configurations/general/secrets/rules/SECRETS.md',
     '.gspot/configurations/general/security/rules/SECURITY.md',
     '.gspot/configurations/general/spelling/typos.toml',
-    '.gspot/gspot.schema.json',
     '.gspot/mise.toml',
     '.gspot/package.json',
     '.gspot/pyproject.toml',

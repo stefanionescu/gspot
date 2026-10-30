@@ -7,9 +7,9 @@ import { RECORD_FIELDS } from '#cli/settings/schema-lookup.ts';
 import type { TaploLayout } from '#cli/types/settings/text.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
 import { TOML_FORMAT, SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { ROOT_KEYS, LAST_TABLES, FIRST_TABLES } from '#cli/config/settings/text.ts';
 import type { TomlBlock, TomlValue, TomlSyntax } from '#cli/types/parsers/formats/toml.ts';
 import { isTable, getValueAt, stripUndefined, normalizeTables } from '#cli/system/tables.ts';
-import { ROOT_KEYS, LAST_TABLES, FIRST_TABLES, SCHEMA_DIRECTIVE } from '#cli/config/settings/text.ts';
 
 import {
     isTomlKind,
@@ -230,9 +230,9 @@ export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable 
 }
 
 /**
-Build the text of a new gspot.toml: the schema directive, the preface, and the settings written over the template, whose comments stay.
+Build the text of a new gspot.toml: the preface and the settings written over the template, whose comments stay.
 
-@param preface the comment lines under the directive.
+@param preface the comment lines at the top.
 @param template the gspot.toml text that init copies with --from, or an empty text.
 @param written the values to write, before defaults.
 @returns the TOML 1.0 text.
@@ -243,5 +243,5 @@ export function buildSettingsText(preface: string, template: string, written: To
     const body = isDeepStrictEqual(normalizeTables(written), normalizeTables(syntax.value))
         ? template
         : buildSettingsToml(syntax, written);
-    return `${SCHEMA_DIRECTIVE}\n${opening}${body}`;
+    return `${opening}${body}`;
 }

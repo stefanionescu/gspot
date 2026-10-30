@@ -95,7 +95,7 @@ test('an override of no-restricted-imports is refused with its owning setting', 
     expect(refused.code).toBe(2);
     expect({ stdout: refused.stdout, stderr: refused.stderr }).toStrictEqual({
         stdout: '',
-        stderr: 'gspot.toml:9: tools.eslint.override.0.rules.no-restricted-imports: gspot writes the options of no-restricted-imports from tools.eslint.restricted_imports. Change that setting instead: gspot set tools.eslint.restricted_imports <value>, with --reason when you raise it.\n',
+        stderr: 'gspot.toml:8: tools.eslint.override.0.rules.no-restricted-imports: gspot writes the options of no-restricted-imports from tools.eslint.restricted_imports. Change that setting instead: gspot set tools.eslint.restricted_imports <value>, with --reason when you raise it.\n',
     });
 });
 

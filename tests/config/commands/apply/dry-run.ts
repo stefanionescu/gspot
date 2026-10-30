@@ -17,7 +17,6 @@ export const MISSING_GENERATED_PATHS = [
     '.gspot/configurations/general/spelling/typos.toml',
     '.gspot/configurations/language/bash/semgrep.yml',
     '.gspot/configurations/language/bash/shellcheckrc',
-    '.gspot/gspot.schema.json',
     '.gspot/mise.lock',
     '.gspot/mise.toml',
     '.gspot/package-lock.json',

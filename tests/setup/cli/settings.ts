@@ -2,7 +2,6 @@ import { createFileTree } from 'testdirs';
 import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { type Level } from '#cli/types/configurations.ts';
-import { SCHEMA_DIRECTIVE } from '#cli/config/settings/text.ts';
 import { type WrittenSettings } from '#cli/types/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
@@ -44,7 +43,7 @@ export function buildSandboxSettings(
         .join('');
     const tables = options.tables ?? '';
     const rules = options.rules === true || tables.includes('[rules]') ? '' : '\n[rules]\nenabled = false\n';
-    return `${SCHEMA_DIRECTIVE}\n${levelLine}configurations = [${selected}]\n${scopes}${tables}${ignored}${rules}`;
+    return `${levelLine}configurations = [${selected}]\n${scopes}${tables}${ignored}${rules}`;
 }
 
 /**

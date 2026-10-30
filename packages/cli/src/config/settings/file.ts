@@ -78,4 +78,4 @@ export const COMMAND_CHECK_ID = /^[^\s,]+$/u;
 
 export const TOML_FORMAT = { inlineTableStart: 1, bracketSpacing: false, trailingComma: false } as const;
 
-export const SETTINGS_PREFACE = /^(?:#:schema[^\n]*\n)?(?:# Change these settings[^\n]*\n)?/u;
+export const SETTINGS_PREFACE = /^(?:# Change these settings[^\n]*\n)?/u;

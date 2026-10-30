@@ -2,20 +2,18 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { SCHEMA_DIRECTIVE } from '#cli/config/settings/text.ts';
 import { SEMGREP_IGNORE, INITIAL_SETTINGS, SCOPE_SETTING_WRITES } from '#tests/config/settings/edit.ts';
 import { setKey, removeKey, getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 
 test('an edit writes the new ignore as a table and keeps the authored comment', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
-    await writeFile(path, `${SCHEMA_DIRECTIVE}\n# Authored selection.\nconfigurations = ["security",]\n`);
+    await writeFile(path, '# Authored selection.\nconfigurations = ["security",]\n');
     const edit = readSettingsEdit(sandbox.path);
     setKey(edit.table, 'ignore', [SEMGREP_IGNORE]);
     const proposed = buildEditedSettings(sandbox.path, edit);
     expect(proposed.text).toBe(
-        `${SCHEMA_DIRECTIVE}\n` +
-            '# Authored selection.\nconfigurations = ["security",]\n\n[[ignore]]\ncheck = "security/semgrep"\nrule = "js/file-system-race"\npaths = ["sample.js"]\nreason = "The sandbox owns its temporary files."\n',
+        '# Authored selection.\nconfigurations = ["security",]\n\n[[ignore]]\ncheck = "security/semgrep"\nrule = "js/file-system-race"\npaths = ["sample.js"]\nreason = "The sandbox owns its temporary files."\n',
     );
     expect(proposed.settings.ignore).toStrictEqual([SEMGREP_IGNORE]);
     await writeFile(path, proposed.text);

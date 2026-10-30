@@ -7,14 +7,13 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { stripDefaults } from '#cli/commands/init/defaults.ts';
-import { SCHEMA_DIRECTIVE } from '#cli/config/settings/text.ts';
 import { DEFAULT_CASES } from '#tests/config/commands/init/defaults.ts';
 
 test.each([...DEFAULT_CASES])('init strips $name without changing inherited values', ({ source, expected }) => {
     const authored = parseTomlFile('gspot.toml', source);
     const stripped = stripDefaults(authored);
     const output = buildSettingsText('', '', stripped);
-    expect(output).toBe(`${SCHEMA_DIRECTIVE}\n${expected}`);
+    expect(output).toBe(expected);
     expect(stripDefaults(stripped)).toStrictEqual(stripped);
 });
 
@@ -30,7 +29,5 @@ test.each([
     expect(after.scopes.map(({ path, settings }) => [path, getTable(settings, 'supabase')])).toStrictEqual(
         before.scopes.map(({ path, settings }) => [path, getTable(settings, 'supabase')]),
     );
-    expect(
-        buildSettingsText('', written.slice(SCHEMA_DIRECTIVE.length + 1), parseTomlFile('gspot.toml', written)),
-    ).toBe(written);
+    expect(buildSettingsText('', written, parseTomlFile('gspot.toml', written))).toBe(written);
 });

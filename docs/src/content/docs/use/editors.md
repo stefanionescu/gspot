@@ -29,13 +29,6 @@ lists every file gspot writes.
 
 ## Validate `gspot.toml`
 
-gspot writes the JSON Schema of its own version to `gspot.schema.json` in the `.gspot` folder, and starts `gspot.toml`
-with a line that points to it:
-
-```toml title="gspot.toml"
-#:schema ./.gspot/gspot.schema.json
-```
-
-Editors that read Taplo directives validate `gspot.toml` against the version your repository pins, and so does the v8r
-check of `data-files`. SchemaStore lists the [newest schema](https://generativespotting.com/gspot.schema.json) for a
-`gspot.toml` without that line.
+SchemaStore lists the [JSON Schema of `gspot.toml`](https://generativespotting.com/gspot.schema.json) for the newest
+gspot version. Editors that read SchemaStore, and the v8r check of `data-files`, validate `gspot.toml` against it. gspot
+itself checks `gspot.toml` against the version your repository pins on every run.
