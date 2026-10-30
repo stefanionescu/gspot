@@ -12,7 +12,6 @@ import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { printProgress } from '#cli/commands/check/report.ts';
 import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
-import { DRY_RUN_FLAG } from '#cli/config/commands/dry-run.ts';
 import { readGitText, readGitPaths } from '#cli/system/git.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -36,7 +35,6 @@ import {
     VERBOSE_FLAG,
     PROGRESS_CLEAR,
     CHANGED_OPTION,
-    DRY_RUN_MESSAGE,
     NO_BASE_REVISION,
     PRE_COMMIT_OPTION,
     PUSH_STDIN_MESSAGE,
@@ -92,7 +90,6 @@ function buildCheckOptions(paths: string[], flags: CheckFlags, cwd: string): Che
         cwd,
         staged: flags.staged === true || hook === 'pre-commit',
         fix: flags.fix === true,
-        dryRun: flags.dryRun === true,
         verbose: flags.verbose === true,
         paths: hook === 'commit-msg' ? [] : paths,
         ...stripUndefined({
@@ -117,7 +114,6 @@ function assertPushFlags(flags: CheckFlags): void {
         flags.staged === true ? STAGED_FLAG : undefined,
         flags.changed === undefined ? undefined : CHANGED_FLAG,
         flags.fix === true ? FIX_FLAG : undefined,
-        flags.dryRun === true ? DRY_RUN_FLAG : undefined,
     ].filter((value) => value !== undefined);
     if (conflicts.length > 0)
         throw new GspotError(
@@ -164,7 +160,6 @@ function assertReadableMessageFile(options: CheckOptions): void {
 }
 
 function parseCheckFlags(paths: string[], flags: CheckFlags, cwd: string): { root: string; options: CheckOptions } {
-    if (flags.dryRun === true && flags.fix !== true) throw new GspotError('arguments', DRY_RUN_MESSAGE);
     const options = buildCheckOptions(paths, flags, cwd);
     assertCheckSelection(options, flags);
     const root = readRepositoryRoot(options.cwd);
@@ -267,7 +262,6 @@ export function registerCheck(program: Command, onResult: CommandCompletion): vo
         .option(STAGED_FLAG, COMMAND_HELP.check.options[STAGED_FLAG])
         .option(CHANGED_OPTION, COMMAND_HELP.check.options[CHANGED_OPTION])
         .option(FIX_FLAG, COMMAND_HELP.check.options[FIX_FLAG])
-        .option(DRY_RUN_FLAG, COMMAND_HELP.check.options[DRY_RUN_FLAG])
         .addOption(new Option(HOOK_OPTION, COMMAND_HELP.check.options[HOOK_OPTION]).choices(CHECK_HOOKS))
         .option(VERBOSE_FLAG, COMMAND_HELP.check.options[VERBOSE_FLAG])
         .action(async (paths, flags) => {

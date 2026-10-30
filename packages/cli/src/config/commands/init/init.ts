@@ -23,4 +23,4 @@ export const LEVEL_OPTION = '--level <level>';
 
 export const YES_FLAG = '--yes';
 
-export const JSON_NEEDS_YES_MESSAGE = '--json needs --yes or --dry-run, because gspot cannot ask while it prints JSON.';
+export const JSON_NEEDS_YES_MESSAGE = '--json needs --yes, because gspot cannot ask while it prints JSON.';

@@ -116,7 +116,6 @@ Swagger lint rules.
 Start a repository from the setup of another one with the path of its `gspot.toml`:
 
 ```shell
-gspot init --from ../api/gspot.toml --dry-run
 gspot init --from ../api/gspot.toml
 gspot install
 ```

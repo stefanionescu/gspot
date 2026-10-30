@@ -5,11 +5,11 @@ description: Review the init plan and move the settings you need.
 
 ## Read the plan
 
-`gspot init --dry-run` prints the plan and writes nothing. Read it before you accept. The level decides which tools
+`gspot init` prints the plan and asks before it writes. Read the plan before you accept. The level decides which tools
 run, and so which config files the plan replaces. To plan for level `all` from the start:
 
 ```shell
-gspot init --dry-run --level all
+gspot init --level all
 ```
 
 The plan has these parts:

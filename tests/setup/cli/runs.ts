@@ -10,7 +10,7 @@ Options for an in-process run of every stage, with no fixes.
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: `AGENTS.md` names it as the options of runChecks.
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
-    return { stage: 'all', fix: false, dryRun: false, cwd: process.cwd(), pathArguments: [], ...overrides };
+    return { stage: 'all', fix: false, cwd: process.cwd(), pathArguments: [], ...overrides };
 }
 
 /**

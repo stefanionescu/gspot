@@ -8,18 +8,17 @@ export const COMMAND_HELP = {
         options: {
             '--from <file>': "Start from another repository's gspot.toml",
             '--yes': 'Accept the plan without a question (needed without a terminal)',
-            '--dry-run': 'Print the plan and write nothing',
             '--configurations <names...>': 'Use these configurations at the root instead of the detected ones',
             '--no-configurations': 'Select no configurations at the root',
             '--level <level>':
                 'Start at this level, so the plan replaces the config files that this level runs (default: basic)',
-            '--json': 'Print the result as JSON. Needs --yes or --dry-run',
+            '--json': 'Print the result as JSON. Needs --yes',
         },
         exitCodes: [
-            ['0', 'The plan was written, printed, or declined.'],
+            ['0', 'The plan was written or declined.'],
             ['2', 'An argument is not valid, or init could not finish.'],
         ],
-        example: 'gspot init --dry-run',
+        example: 'gspot init --level all',
     },
     install: {
         summary: 'Install the tools and turn on the Git hooks in this clone',
@@ -68,7 +67,6 @@ export const COMMAND_HELP = {
             '--changed [ref]':
                 'Check the files changed since ref (default: the upstream branch, else the default branch). An empty ref, or a ref of all zeros as CI gives for a new branch, checks every file',
             '--fix': 'Run the fixers, then run the checks on the fixed files',
-            '--dry-run': 'With --fix: print the changes the fixers would make, and write nothing',
             '--hook <hook>': 'Run as that Git hook runs. Put the arguments that Git gives the hook after --',
             '--verbose': 'Also print the passed and skipped checks, each command, and each ignore',
             '--json': 'Print the report as JSON',

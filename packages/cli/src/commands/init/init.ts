@@ -28,7 +28,6 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { RepositoryListing } from '#cli/types/repository/read.ts';
 import { planInitFiles, formatInitPlan } from '#cli/commands/init/plan.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
-import { DRY_RUN_FLAG, DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { Files, ReadCache, FileContents } from '#cli/types/system/files.ts';
 import { listForeignDisableComments } from '#cli/commands/init/eslint-disable-comments.ts';
@@ -68,10 +67,6 @@ async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJ
     print(formatDetection(initPlan.detection));
     print(formatInitPlan(plan));
     const json: InitJson = { root, plan, settings: settingsText, written: false };
-    if (options.dryRun) {
-        print(`${DRY_RUN_NOTE}\n`);
-        return { text: '', json, exitCode: 0 };
-    }
     const accepted = await askConfirmation({ yes: options.yes });
     if (!accepted) return { text: NOTHING_WRITTEN_MESSAGE, json, exitCode: 0 };
     const written = await writeInitFiles(root, initPlan);
@@ -98,20 +93,18 @@ export function registerInit(program: Command, onResult: CommandCompletion): voi
         .description(COMMAND_HELP.init.description)
         .option(FROM_OPTION, COMMAND_HELP.init.options[FROM_OPTION])
         .option(YES_FLAG, COMMAND_HELP.init.options[YES_FLAG])
-        .option(DRY_RUN_FLAG, COMMAND_HELP.init.options[DRY_RUN_FLAG])
         .option(CONFIGURATIONS_OPTION, COMMAND_HELP.init.options[CONFIGURATIONS_OPTION])
         .option(NO_CONFIGURATIONS_FLAG, COMMAND_HELP.init.options[NO_CONFIGURATIONS_FLAG])
         .addOption(new Option(LEVEL_OPTION, COMMAND_HELP.init.options[LEVEL_OPTION]).choices(LEVELS))
         .action(async (flags, command) => {
             assertTemplateFlags(flags.from, flags.configurations);
             const template = flags.from === undefined ? undefined : readTemplate(flags.from, process.cwd());
-            if (command.getOptionValue('json') === true && flags.yes !== true && flags.dryRun !== true)
+            if (command.getOptionValue('json') === true && flags.yes !== true)
                 throw new GspotError('arguments', JSON_NEEDS_YES_MESSAGE);
             onResult(
                 await runInitCommand({
                     cwd: process.cwd(),
                     yes: flags.yes === true,
-                    dryRun: flags.dryRun === true,
                     ...stripUndefined({
                         level: flags.level,
                         template,

@@ -1,7 +1,7 @@
 export const EXTERNAL_COMMAND_GUIDE = `Run commands from the repository root.
 
 \`\`\`shell
-gspot init --from ../api/gspot.toml --dry-run
+gspot init --from ../api/gspot.toml
 curl -fsSL -o ../team.toml https://raw.githubusercontent.com/acme/policies/<commit>/gspot.toml
 gh api "repos/acme/policies/contents/gspot.toml?ref=<commit>" -H "Accept: application/vnd.github.raw" > ../team.toml
 gspot init --from ../team.toml

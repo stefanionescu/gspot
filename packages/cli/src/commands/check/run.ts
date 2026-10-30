@@ -196,10 +196,7 @@ async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckR
 async function planAfterFixes(session: CheckSession, options: RunOptions): Promise<PlanAfterFixes> {
     const planned = planChecks(session, options);
     if (!options.fix) return { session, planned, fixes: undefined };
-    const fixes = await runFixers(session, planned, {
-        dryRun: options.dryRun,
-    });
-    if (options.dryRun) return { session, planned, fixes };
+    const fixes = await runFixers(session, planned);
     const fixed = buildCheckSession(
         await openSession(session.root, {
             toolsRoot: session.toolsRoot,

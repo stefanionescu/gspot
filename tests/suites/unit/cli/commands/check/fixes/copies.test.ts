@@ -1,134 +1,45 @@
-import * as os from 'node:os';
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { test, spyOn, expect } from 'bun:test';
+import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import { rm, stat, mkdir, readdir, readFile } from 'node:fs/promises';
 import { planFixer, buildFixerSettings } from '#tests/setup/cli/runs.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
-import { COPY_FAILURES } from '#tests/config/commands/check/fixes/copies.ts';
 
-test("a fixer's {root} environment paths point into the copy during a dry run", async () => {
+test('a fix in a copy writes only the selected file back and removes the copy', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildFixerSettings(),
         'source.txt': 'original',
-        'café settings.txt': 'corrected',
+        'unowned.json': '{}',
     });
 
-    const trace = join(sandbox.path, 'execution-root');
     const session = await openSession(sandbox.path);
+    const trace = join(sandbox.path, 'workspace-path');
     const planned = planFixer(
         session,
         buildProgramCommand(
             'fakes/tool',
-            '--write',
-            'café settings.txt=scratch corrected',
-            '--copy-environment-file',
-            'source.txt=SANDBOX_SETTINGS',
+            '--refuse-file',
+            'unowned.json',
             '--record-cwd',
             trace,
+            '--write',
+            'source.txt=corrected',
+            '--exit',
+            '3',
         ),
     );
-    planned.check.env = { SANDBOX_SETTINGS: '{root}/café settings.txt' };
-    const result = await runFixers(buildCheckSession(session), [planned], { dryRun: true });
+    planned.check.run_in_copy = true;
+    planned.check.exit_codes = [3];
+    const result = await runFixers(buildCheckSession(session), [planned]);
     expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
-    expect(result.diffs).toStrictEqual([
-        `===================================================================\n--- a/source.txt\n+++ b/source.txt\n@@ -1,1 +1,1 @@\n-original\n\\ No newline at end of file\n+scratch corrected\n\\ No newline at end of file\n`,
-    ]);
-    const executionRoot = await readFile(trace, 'utf8');
-    expect(executionRoot).not.toBe(sandbox.path);
-    expect(await isOnDisk(executionRoot)).toBe(false);
-    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
-    expect(await readFile(join(sandbox.path, 'café settings.txt'), 'utf8')).toBe('corrected');
-});
-
-test.each([false, true])(
-    'a fix in a copy writes only the selected file back and removes the copy (dry run %p)',
-    async (preview) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildFixerSettings(),
-            'source.txt': 'original',
-            'unowned.json': '{}',
-        });
-
-        const session = await openSession(sandbox.path);
-        const trace = join(sandbox.path, 'workspace-path');
-        const planned = planFixer(
-            session,
-            buildProgramCommand(
-                'fakes/tool',
-                '--refuse-file',
-                'unowned.json',
-                '--record-cwd',
-                trace,
-                '--write',
-                'source.txt=corrected',
-                '--exit',
-                '3',
-            ),
-        );
-        planned.check.run_in_copy = true;
-        planned.check.exit_codes = [3];
-        const result = await runFixers(buildCheckSession(session), [planned], { dryRun: preview });
-        expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
-        expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'corrected');
-        expect(await readFile(join(sandbox.path, 'unowned.json'), 'utf8')).toBe('{}');
-        expect(await isOnDisk(await readFile(trace, 'utf8'))).toBe(false);
-        expect(result.diffs).toStrictEqual(
-            preview
-                ? [
-                      `===================================================================\n--- a/source.txt\n+++ b/source.txt\n@@ -1,1 +1,1 @@\n-original\n\\ No newline at end of file\n+corrected\n\\ No newline at end of file\n`,
-                  ]
-                : [],
-        );
-    },
-);
-
-test('a failed dry-run fix removes its copy and keeps the source bytes', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
-
-    const session = await openSession(sandbox.path);
-    const planned = planFixer(
-        session,
-        buildProgramCommand('fakes/tool', '--write', 'source.txt=partial', '--print-cwd', '--exit', '3'),
-    );
-    const temporary = join(sandbox.path, 'scratch');
-    await mkdir(temporary);
-    using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-    const report = await runFixers(buildCheckSession(session), [planned], { dryRun: true });
-    expect(report.results).toMatchObject([{ status: 'failed' }]);
-    expect(await readdir(temporary)).toStrictEqual([]);
-    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
-    expect(report.changed).toStrictEqual(['source.txt']);
-    expect(report.diffs).toStrictEqual([
-        `===================================================================\n--- a/source.txt\n+++ b/source.txt\n@@ -1,1 +1,1 @@\n-original\n\\ No newline at end of file\n+partial\n\\ No newline at end of file\n`,
-    ]);
-});
-
-test.each([...COPY_FAILURES])('a failed $operation removes the copy', async ({ operation, message }) => {
-    await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
-
-    const session = await openSession(sandbox.path);
-    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--replace-with-folder', 'source.txt'));
-    if (operation === 'copy') {
-        await rm(join(sandbox.path, 'source.txt'));
-        await mkdir(join(sandbox.path, 'source.txt'));
-    }
-    const temporary = join(sandbox.path, 'scratch');
-    await mkdir(temporary);
-    using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-    const error = await captureRejection(runFixers(buildCheckSession(session), [planned], { dryRun: true }));
-    expect(error.message).toContain(message);
-    expect(await readdir(temporary)).toStrictEqual([]);
-    if (operation === 'copy') {
-        const attributes = await stat(join(sandbox.path, 'source.txt'));
-        expect(attributes.isDirectory()).toBe(true);
-    } else expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
+    expect(await readFile(join(sandbox.path, 'unowned.json'), 'utf8')).toBe('{}');
+    expect(await isOnDisk(await readFile(trace, 'utf8'))).toBe(false);
 });
 
 test.each([false, true])(
@@ -148,7 +59,7 @@ test.each([false, true])(
         );
         planned.check.run_in_copy = isolated;
         session.cancelSignal = controller.signal;
-        const execution = runFixers(buildCheckSession(session), [planned], { dryRun: false });
+        const execution = runFixers(buildCheckSession(session), [planned]);
         try {
             expect(await waitForFile(ready)).toBe(true);
             const pid = Number(await readFile(ready, 'utf8'));
@@ -167,13 +78,9 @@ test.each([false, true])(
             await execution;
         }
         delete session.cancelSignal;
-        const correctedRun = await runFixers(
-            buildCheckSession(session),
-            [planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'))],
-            {
-                dryRun: false,
-            },
-        );
+        const correctedRun = await runFixers(buildCheckSession(session), [
+            planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected')),
+        ]);
         const corrected = correctedRun.results[0]!;
         expect(corrected.status).toBe('changed');
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');

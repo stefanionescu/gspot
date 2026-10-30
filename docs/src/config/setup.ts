@@ -82,8 +82,8 @@ ${SETUP_COMMANDS.map(({ label, add }) => `   - ${label}: \`${add}\``).join('\n')
 2. Ask the user which level, and wait for the answer. ${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY} Level \`all\` also
    installs a few more tools. Suggest \`basic\`, the default, for an existing codebase, and \`all\` for a new
    repository or one that agents write. The level decides which config files the plan replaces.
-3. Run \`gspot init --dry-run --level <level>\`. Show the user the plan: the configurations, the scopes, the config
-   files that gspot replaces, and the Git hooks. CI stays off; \`gspot doctor\` suggests how to enable it.
+3. Run \`gspot init --level <level>\`. Without a terminal, it prints the plan and stops before it writes. Show the
+   user the plan: the configurations, the scopes, the config files that gspot replaces, and the Git hooks. CI stays off; \`gspot doctor\` suggests how to enable it.
    Ask whether the plan is right, and wait for the answer. After init, \`gspot add <configuration>\` and \`gspot remove <configuration> --reason "<why>"\` change it.
 4. Run \`gspot init --yes --level <level>\`.
 5. Run \`gspot install\`. It installs the pinned tools and turns on the Git hooks. If it names a program that it

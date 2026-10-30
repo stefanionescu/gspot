@@ -18,7 +18,7 @@ export const PROGRAM_EXIT_CODES = [
 ] as const;
 
 export const PROGRAM_HELP_FOOTER =
-    'Example:\n  gspot init --dry-run\n\nRun gspot <command> --help to see the options of one command.\n';
+    'Example:\n  gspot init\n\nRun gspot <command> --help to see the options of one command.\n';
 
 export const CODE_MARK = '`';
 

@@ -51,7 +51,7 @@ bun run --no-install gspot check
 4. `gspot check` runs the checks on every file. From then on, the Git hooks check each commit and push.
 
 gspot starts at level `basic`. To start at level `all`, add `--level all` to the init command. To print the plan
-and write nothing, add `--dry-run`.
+and write nothing, answer no when init asks.
 
 Commit `gspot.toml` and the files that `gspot init` and `gspot install` wrote. In each new clone, install the
 dependencies first, then run the install command above.

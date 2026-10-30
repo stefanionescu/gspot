@@ -16,8 +16,6 @@ export const PRE_COMMIT_OPTION = '--hook pre-commit';
 
 export const COMMIT_FILE_MESSAGE = '--hook commit-msg needs one commit message file after --.';
 
-export const DRY_RUN_MESSAGE = '--dry-run previews the fixes. Add --fix.';
-
 export const CHECK_STOPPED_MESSAGE = 'Check stopped before every check finished.';
 
 export const ONLY_OPTION = '--only <checks>';

@@ -4,8 +4,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { symlink, readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { PRESERVE_SOURCE } from '#tests/config/commands/contents.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -30,15 +30,7 @@ test.each([
         'package.json': '{"name":"example","private":true,"type":"module","devDependencies":{"typescript":"^5.0.0"}}\n',
         ...files,
     });
-    const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, [
-        'init',
-        '--yes',
-        '--dry-run',
-        '--configurations',
-        'typescript',
-        '--json',
-    ]);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'typescript', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.configurations.find(({ configuration }) => configuration === 'javascript')?.origin).toBe('required');
@@ -49,32 +41,27 @@ test.each([
     );
     expect(plan.delete).toStrictEqual([]);
     expect(plan.lintFolders).toStrictEqual([]);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('the init plan leaves existing CI files apart from tool settings that the generated config files replace', async () => {
     await using sandbox = await testdir(SHARED_SETUP_FILES);
 
     commitAll(sandbox.path);
-    const before = await readTree(sandbox.path);
-    const preview = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'sql', '--dry-run']);
+    const preview = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'sql']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(preview.stderr).toBe('');
     const kept = preview.stdout.split('keep\n', 2)[1]?.split('\n\n', 1)[0];
     expect(kept).toBe(
         '  setup.cfg       sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.\n  .gitlab-ci.yml  existing CI file',
     );
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('init leaves an unsupported CI pipeline in place and names it in the plan', async () => {
     await using sandbox = await createGitSandbox({ 'bitbucket-pipelines.yml': '{}\n' });
-    const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--no-configurations', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.keep.map((file) => file.path)).toStrictEqual(['bitbucket-pipelines.yml']);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('the init plan groups test runners and infrastructure under their own labels', async () => {
@@ -84,7 +71,7 @@ test('the init plan groups test runners and infrastructure under their own label
     });
 
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--dry-run']);
+    const result = await runGspot(sandbox.path, ['init', '--yes']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout.split('\n').filter((line) => /^(?:testing|infrastructure|tools)\s/u.test(line))).toStrictEqual(
         ['testing              jest  jest in package.json', 'infrastructure       docker  Dockerfile'],
@@ -100,19 +87,18 @@ test('the init plan lists each submodule once and reads none of it', async () =>
     const commitId = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
     runGitStep(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${commitId},external project`]);
     await symlink(outside.path, join(sandbox.path, 'external project'), 'dir');
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--no-configurations', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations', '--json']);
     expect(result.code).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({
         plan: { keep: [{ path: 'external project', note: 'submodule; init does not read it' }] },
     });
     expect(await readFile(join(outside.path, 'package.json'), 'utf8')).toBe('{');
-    expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
 });
 
 test('init plans no scope for an old lint folder, and --level all replaces the config files of that level', async () => {
     await using sandbox = await testdir(QUALITY_PACKAGE_FILES);
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--json', '--dry-run', '--level', 'all']);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--json', '--level', 'all']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan, settings } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
     expect(plan.level).toBe('all');
@@ -129,7 +115,7 @@ test('init names disable comments for rules that the new setup does not load', a
         'src/old.js':
             '// eslint-disable-next-line local-rules/no-legacy -- the old setup had this rule\nexport const value = 1;\n/* eslint-disable no-console, unicorn/no-null */\n',
     });
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--json', '--dry-run']);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.keep).toStrictEqual([
@@ -141,18 +127,11 @@ test('init lists your .editorconfig under write and not under delete when the ge
     const authored = 'root = true\n[*]\nindent_style = space\nindent_size = 2\n';
     await using sandbox = await createGitSandbox({ '.editorconfig': authored });
     commitAll(sandbox.path);
-    const before = await readTree(sandbox.path);
-    const commandArguments = ['init', '--yes', '--configurations', 'format', '--json'];
-
-    const preview = await runGspot(sandbox.path, [...commandArguments, '--dry-run']);
-
-    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const { plan } = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'plan'>>;
+    const initialized = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'format', '--json']);
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    const { plan } = JSON.parse(initialized.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.delete.map(({ path }) => path)).not.toContain('.editorconfig');
     expect(plan.write.filter(({ path }) => path === '.editorconfig')).toStrictEqual([...EDITORCONFIG_WRITE]);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-    const initialized = await runGspot(sandbox.path, commandArguments);
-    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, '.editorconfig'), 'utf8')).not.toBe(authored);
     expect(runGitStep(sandbox.path, ['show', 'HEAD:.editorconfig'])).toBe(authored.trimEnd());
 });
@@ -161,16 +140,11 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     await using sandbox = await testdir({ 'control.txt': PRESERVE_SOURCE });
 
     commitAll(sandbox.path);
-    const commandArguments = ['init', '--yes', '--json', '--no-configurations'];
-    const before = await readTree(sandbox.path);
-    const preview = await runGspot(sandbox.path, [...commandArguments, '--dry-run']);
-    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    expect(preview.stderr).toBe('');
-    const report = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
-    expect(report.plan.change.map((file) => file.path)).toStrictEqual([...changes]);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-    const initialized = await runGspot(sandbox.path, commandArguments);
+    const initialized = await runGspot(sandbox.path, ['init', '--yes', '--json', '--no-configurations']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    expect(initialized.stderr).toBe('');
+    const report = JSON.parse(initialized.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
+    expect(report.plan.change.map((file) => file.path)).toStrictEqual([...changes]);
     expect(await isOnDisk(join(sandbox.path, '.gitignore'))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gspot/.gitignore'))).toBe(true);
     expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(true);
@@ -182,14 +156,14 @@ test.each([false, true])(
     async (github) => {
         await using sandbox = await createGitSandbox({ 'package.json': '{"private":true}\n' });
         if (github) runGitStep(sandbox.path, ['remote', 'add', 'origin', 'https://github.com/example/project.git']);
-        const result = await runGspot(sandbox.path, ['init', '--dry-run']);
-        expect(result.code, result.stdout + result.stderr).toBe(0);
+        const result = await runGspot(sandbox.path, ['init']);
+        expect(result.code, result.stdout + result.stderr).toBe(2);
         expect(result.stdout).toContain('existing hooks');
         expect(result.stdout).toContain('existing ci');
         expect(result.stdout).toContain(
             'CI is off. To turn it on, run gspot set ci.enabled true; for GitLab, also run gspot set ci.provider gitlab.',
         );
-        const json = await runGspot(sandbox.path, ['init', '--dry-run', '--yes', '--json']);
+        const json = await runGspot(sandbox.path, ['init', '--yes', '--json']);
         expect(json.code, json.stdout + json.stderr).toBe(0);
         const output = JSON.parse(json.stdout) as Required<Pick<InitJson, 'settings'>>;
         expect(readSettings(output.settings, sandbox.path).written).not.toHaveProperty('ci');
@@ -204,7 +178,7 @@ test('init lists at most five unchecked paths of an unsupported extension', asyn
         ),
         'README.md': '# Project\n',
     });
-    const result = await runGspot(sandbox.path, ['init', '--dry-run']);
+    const result = await runGspot(sandbox.path, ['init', '--yes']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const rows = result.stdout.split('\n').filter((line) => line.startsWith('not checked'));
     expect(rows).toHaveLength(5);
@@ -221,7 +195,7 @@ test('the text plan names scope evidence, configuration origin and replaced file
         'entry.sh': '#!/usr/bin/env bash\nprintf "ready\\n"\n',
     });
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'bash', '--dry-run']);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'bash']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toContain('scopes               app   a project file in each');
     expect(result.stdout).toContain('  bash             named        6 checks (4 off at basic)');
@@ -234,14 +208,7 @@ test('init distinguishes named, required and always selected configurations', as
         'source.ts': 'export {};\n',
         'tsconfig.json': '{}\n',
     });
-    const result = await runGspot(sandbox.path, [
-        'init',
-        '--yes',
-        '--configurations',
-        'typescript',
-        '--dry-run',
-        '--json',
-    ]);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'typescript', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.configurations.find(({ configuration }) => configuration === 'typescript')?.origin).toBe('named');
@@ -251,21 +218,21 @@ test('init distinguishes named, required and always selected configurations', as
 
 test('init identifies a configuration detected from a file', async () => {
     await using sandbox = await createGitSandbox({ Dockerfile: 'FROM node:24\n' });
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--json']);
+    const text = await runGspot(sandbox.path, ['init']);
+    expect(text.code, text.stdout + text.stderr).toBe(2);
+    expect(text.stdout).not.toContain('gspot replaces');
+    expect(text.stdout).not.toContain('gspot leaves');
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.configurations.find(({ configuration }) => configuration === 'docker')?.origin).toBe('detected');
-    const text = await runGspot(sandbox.path, ['init', '--yes', '--dry-run']);
-    expect(text.code, text.stdout + text.stderr).toBe(0);
-    expect(text.stdout).not.toContain('gspot replaces');
-    expect(text.stdout).not.toContain('gspot leaves');
 });
 
 test('a runtime dependency selects licenses during init', async () => {
     await using sandbox = await createGitSandbox({
         'package.json': '{"name":"example","private":true,"dependencies":{"react":"19.1.1"}}\n',
     });
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as InitJson;
     expect(plan.configurations.map(({ configuration }) => configuration)).toContain('licenses');

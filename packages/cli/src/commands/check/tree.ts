@@ -8,7 +8,6 @@ import { readHookStatus } from '#cli/installers/hooks.ts';
 import { findSettingsSkip } from '#cli/planning/skips.ts';
 import { type StageFilter } from '#cli/types/planning.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
-import { DRY_RUN_NOTE } from '#cli/config/commands/dry-run.ts';
 import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { isInScope, buildArgumentPath } from '#cli/repository/scopes.ts';
@@ -49,7 +48,6 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
             stage,
             fix: options.fix,
             verbose: options.verbose,
-            dryRun: options.dryRun,
             onProgress: options.onProgress,
             staged: staging.staged,
             changed: changed?.paths,
@@ -182,11 +180,9 @@ export async function runTreeCheck(
     const reportText =
         formatAllFilesHeader(options, revision) +
         formatRunReport(result.report, { verbose: options.verbose, selectedOnly: options.only !== undefined });
-    const text = result.fixes
-        ? `${formatFixes(result.fixes, { dryRun: options.dryRun }).join('\n')}\n${reportText}`
-        : reportText;
+    const text = result.fixes ? `${formatFixes(result.fixes).join('\n')}\n${reportText}` : reportText;
     return {
-        text: options.dryRun ? `${text}${DRY_RUN_NOTE}\n` : text,
+        text,
         json: { ...result.report, ...stripUndefined({ fixes: result.fixes }) },
         exitCode: result.report.exitCode,
     };

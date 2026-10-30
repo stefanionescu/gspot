@@ -16,29 +16,6 @@ import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts
 import { type Generation, type OutdatedFile } from '#cli/types/generation/files.ts';
 import { ON_DISK_LABEL, DIFF_CONTEXT_LINES, BLOCK_ON_DISK_LABEL } from '#cli/config/generation/outdated.ts';
 
-/**
-Build a source diff with the shared Git context.
-
-@param path the changed repository path.
-@param before the previous text.
-@param after the next text.
-@param names labels for the previous and next text.
-@returns the unified diff.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Fixes and outdated generated files print a diff in the same format through it.
-export function buildDiff(path: string, before: string, after: string, names: [string, string]): string {
-    return createTwoFilesPatch(
-        `a/${convertToPosixPath(path)}`,
-        `b/${convertToPosixPath(path)}`,
-        before,
-        after,
-        ...names,
-        {
-            context: DIFF_CONTEXT_LINES,
-        },
-    );
-}
-
 function listOutdatedOutputs(files: Files, generated: Generation): OutdatedFile[] {
     return generated.files.flatMap((file): OutdatedFile[] => {
         const onDisk = files.read(file.path);
@@ -53,7 +30,15 @@ function listOutdatedOutputs(files: Files, generated: Generation): OutdatedFile[
                 diff:
                     disk === file.content
                         ? `old mode ${onDisk.mode.toString(OCTAL_RADIX)}\nnew mode ${mode.toString(OCTAL_RADIX)}\n`
-                        : buildDiff(file.path, disk, file.content, [ON_DISK_LABEL, 'generated']),
+                        : createTwoFilesPatch(
+                              `a/${convertToPosixPath(file.path)}`,
+                              `b/${convertToPosixPath(file.path)}`,
+                              disk,
+                              file.content,
+                              ON_DISK_LABEL,
+                              'generated',
+                              { context: DIFF_CONTEXT_LINES },
+                          ),
             },
         ];
     });
@@ -70,7 +55,15 @@ function listOutdatedBlocks(files: Files, generated: Generation): OutdatedFile[]
             outdated.push({
                 path: block.path,
                 kind: 'changed',
-                diff: buildDiff(block.path, onDisk, wanted, [BLOCK_ON_DISK_LABEL, 'generated']),
+                diff: createTwoFilesPatch(
+                    `a/${convertToPosixPath(block.path)}`,
+                    `b/${convertToPosixPath(block.path)}`,
+                    onDisk,
+                    wanted,
+                    BLOCK_ON_DISK_LABEL,
+                    'generated',
+                    { context: DIFF_CONTEXT_LINES },
+                ),
             });
     }
     return outdated;

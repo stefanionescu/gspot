@@ -54,18 +54,17 @@ prints one warning before the summary, naming each configuration and the evidenc
 
 ## Fix findings automatically
 
-Run the formatters and the other fixers, then check again. Add `--dry-run` to see the changes without writing them:
+Run the formatters and the other fixers, then check again:
 
 ```shell
 gspot check --fix
-gspot check --fix --dry-run
 ```
 
 The changes stay in your working tree, unstaged, so review them before you commit. To add a fixer for your own command,
 see [command checks](/configure/command-checks/#add-a-fix-command).
 
 When a fix leaves a code file that fails to parse, gspot puts back the text that the file held before the fixers. It
-names the file and exits with code 2. With `--dry-run`, gspot writes nothing, names the file, and exits with code 2.
+names the file and exits with code 2.
 
 ## Statuses and exit codes
 

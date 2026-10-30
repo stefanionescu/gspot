@@ -8,11 +8,9 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import type { InitJson } from '#cli/types/commands/init.ts';
 import { fakeTerminals } from '#tests/setup/system/fakes.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { SQLFLUFF_KEPT_NOTE } from '#tests/config/commands/init/messages.ts';
 import { STOPPED_ERROR_MESSAGE, GENERATED_WRITE_MESSAGE } from '#tests/config/commands/init/write.ts';
 
 test('init keeps the old config file when the generated one cannot be written', async () => {
@@ -41,9 +39,6 @@ test('init keeps a shared file that was edited after the plan', async () => {
         'query.sql': 'SELECT 1;\n',
     });
 
-    const preview = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'sql', '--json']);
-    const plan = (JSON.parse(preview.stdout) as InitJson).plan;
-    expect(plan.keep).toStrictEqual([{ path: 'setup.cfg', note: SQLFLUFF_KEPT_NOTE }]);
     const edited = `[sqlfluff]
 exclude_rules = LT01, RF01
 [flake8]

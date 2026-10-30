@@ -73,7 +73,6 @@ export type InitOptions = {
     template?: Template;
     cwd: string;
     yes: boolean;
-    dryRun: boolean;
     level?: Level;
     configurations?: string[];
 };

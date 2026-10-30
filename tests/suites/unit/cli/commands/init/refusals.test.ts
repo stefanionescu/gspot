@@ -57,7 +57,7 @@ test('init --json without --yes names --yes before reading the repository', asyn
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
         error: 'arguments',
-        message: '--json needs --yes or --dry-run, because gspot cannot ask while it prints JSON.',
+        message: '--json needs --yes, because gspot cannot ask while it prints JSON.',
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -97,20 +97,12 @@ test.each(UNCOMMITTED_FORMAT_CASES)('init refuses to replace $path absent from H
     await using sandbox = await testdir({ 'source.js': 'export const count = 1;\n' });
     await prepareUncommittedFormat(sandbox.path, variant);
     const before = await readTree(sandbox.path);
-    for (const isDryRun of [true, false]) {
-        const result = await runGspot(sandbox.path, [
-            'init',
-            '--yes',
-            '--configurations',
-            'javascript',
-            ...(isDryRun ? ['--dry-run'] : []),
-        ]);
-        expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(result.stderr).toBe(
-            `init replaces ${path}, and Git does not hold them unchanged at HEAD. Commit them or move them away, then run gspot init again.\n`,
-        );
-        expect(await readTree(sandbox.path)).toStrictEqual(before);
-    }
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--configurations', 'javascript']);
+    expect(result.code, result.stdout + result.stderr).toBe(2);
+    expect(result.stderr).toBe(
+        `init replaces ${path}, and Git does not hold them unchanged at HEAD. Commit them or move them away, then run gspot init again.\n`,
+    );
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 async function prepareUncommittedFormat(

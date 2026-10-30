@@ -21,8 +21,8 @@ import {
 test('init --from copies the settings that fit any repository and lists each one it leaves out', async () => {
     await using team = await testdir({ 'gspot.toml': TEAM_TEMPLATE });
     await using sandbox = await createGitSandbox({});
-    const preview = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml'), '--dry-run']);
-    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    const preview = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml')]);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(2);
     expect(preview.stdout).toContain(`left out of ${join(team.path, 'gspot.toml')}`);
     for (const { key, note } of TEAM_LEFT_OUT) {
         expect(preview.stdout).toContain(key);
@@ -60,7 +60,7 @@ test.each(TEMPLATE_REFUSALS)(
     async ({ files, from, message }) => {
         await using sandbox = await createGitSandbox(files);
         const before = await readTree(sandbox.path);
-        const result = await runGspot(sandbox.path, ['init', '--from', from, '--dry-run']);
+        const result = await runGspot(sandbox.path, ['init', '--from', from]);
         expect(result.code).toBe(2);
         expect(result.stderr).toBe(`${message}\n`);
         expect(await readTree(sandbox.path)).toStrictEqual(before);
@@ -77,7 +77,6 @@ test.each(['--configurations', '--no-configurations'])(
             'missing.toml',
             flag,
             ...(flag === '--configurations' ? ['python'] : []),
-            '--dry-run',
         ]);
         expect(result.code).toBe(2);
         expect(result.stderr).toBe(

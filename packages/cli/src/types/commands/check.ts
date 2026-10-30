@@ -33,7 +33,6 @@ export type CheckOptions = {
     push?: PushInput;
     base?: string;
     fix: boolean;
-    dryRun: boolean;
     stage?: StageFilter;
     messageFile?: string;
     verbose: boolean;
@@ -68,7 +67,6 @@ export type CheckFlags = {
     staged?: boolean;
     changed?: boolean | string;
     fix?: boolean;
-    dryRun?: boolean;
     hook?: HookName;
     verbose?: boolean;
 };
@@ -98,7 +96,7 @@ export type FixRounds = { results: FixResult[]; before: PathBytes; after: PathBy
 
 type PushInput = { stdin: string; remote?: string };
 
-export type FixReport = { results: FixResult[]; changed: string[]; broken: string[]; diffs: string[] };
+export type FixReport = { results: FixResult[]; changed: string[]; broken: string[] };
 
 export type FixResult = { check: string; changed: string[] } & (
     | { status: 'changed' | 'unchanged' | 'skipped' }
@@ -118,7 +116,6 @@ export type RunOptions = PlanOptions & {
     started?: Date;
     stage: StageFilter;
     onProgress?: (progress: CheckProgress) => void;
-    dryRun: boolean;
     comparison?: NonNullable<RunReport['comparison']>;
     unstagedChanges?: number;
     cwd: string;

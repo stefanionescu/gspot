@@ -1,7 +1,7 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
@@ -29,7 +29,7 @@ import {
 } from '#tests/config/commands/init/selection.ts';
 
 async function listPlannedConfigurations(root: string): Promise<string[]> {
-    const result = await runGspot(root, ['init', '--yes', '--json', '--dry-run']);
+    const result = await runGspot(root, ['init', '--yes', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const plan = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     return plan.plan.configurations.map((each) => each.configuration);
@@ -65,27 +65,12 @@ test('init leaves javascript out of a root package.json with only tool dependenc
     });
 
     const before = await readTree(sandbox.path);
-    const commandArguments = [...['init', '--yes'].filter((argument) => argument !== '--yes'), '--dry-run'];
-    const preview = await runGspot(sandbox.path, commandArguments);
-    const accepted = await runGspot(sandbox.path, [...commandArguments, '--yes']);
-    for (const result of [preview, accepted]) {
-        expect(result.code, result.stdout + result.stderr).toBe(0);
-    }
-    expect(preview.stdout.slice(preview.stdout.indexOf('\nconfigurations\n'))).toBe(
-        accepted.stdout.slice(accepted.stdout.indexOf('\nconfigurations\n')),
-    );
-    const json = await runGspot(sandbox.path, [...commandArguments, '--yes', '--json']);
-    expect(json.code, json.stdout + json.stderr).toBe(0);
-    const output = JSON.parse(json.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
-    expect(
-        output.plan.configurations
-            .map(({ configuration }) => configuration)
-            .filter((configuration) => !listAlwaysSelected().includes(configuration)),
-    ).toStrictEqual(['licenses', 'javascript']);
-    expect([...readSettings(output.settings, sandbox.path).scopes.keys()]).toStrictEqual(['app']);
+    const preview = await runGspot(sandbox.path, ['init']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(2);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
-    const written = await runGspot(sandbox.path, ['init', '--yes', '--json']);
-    expect(written.code, written.stdout + written.stderr).toBe(0);
+    const accepted = await runGspot(sandbox.path, ['init', '--yes']);
+    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
+    expect(accepted.stdout.slice(0, preview.stdout.length)).toBe(preview.stdout);
     const session = await openSession(sandbox.path);
     expect(session.repository.scopeFolders.map(({ path }) => path)).toStrictEqual(['', 'app']);
     expect(
@@ -139,16 +124,19 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
 });
 
 test('init selects a suggested language only when the repository holds its files', async () => {
-    await using sandbox = await testdir({
+    const files = {
         'package.json': '{"name":"example","private":true,"type":"module","dependencies":{"vue":"3.5.22"}}\n',
         'src/Greeting.vue': `<script setup>
 const name = 1;
 </script>
 <template><p>{{ name }}</p></template>
 `,
-    });
+    };
+    await using sandbox = await testdir(files);
+    await using styled = await testdir({ ...files, ...STYLE_SOURCE_FILES });
 
     commitAll(sandbox.path);
+    commitAll(styled.path);
     const defaults = await listPlannedConfigurations(sandbox.path);
     expect(defaults.filter((configuration) => !listAlwaysSelected().includes(configuration))).toStrictEqual([
         'css',
@@ -156,9 +144,7 @@ const name = 1;
         'vue',
         'licenses',
     ]);
-    await createFileTree(sandbox.path, STYLE_SOURCE_FILES);
-    commitAll(sandbox.path);
-    const typed = await listPlannedConfigurations(sandbox.path);
+    const typed = await listPlannedConfigurations(styled.path);
     expect(typed.filter((configuration) => !listAlwaysSelected().includes(configuration))).toStrictEqual([
         'css',
         'javascript',
@@ -166,14 +152,13 @@ const name = 1;
         'vue',
         'licenses',
     ]);
-    expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
 });
 
 test('init proposes a scope for a Swift package, not for a lint-only package, and says that its eslint pin moved to .gspot/package.json', async () => {
     await using sandbox = await testdir(PLATFORM_PROJECT_FILES);
 
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--json', '--dry-run']);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings' | 'plan'>>;
     const proposed = settingsSchema.parse(parse(output.settings) as TomlTable);
@@ -196,7 +181,7 @@ test.each([...NEXTJS_LOCALE_CASES])(
         });
 
         const configurations = ['--configurations', 'nextjs', ...(named ? ['translations'] : [])];
-        const result = await runGspot(sandbox.path, ['init', '--yes', '--json', '--dry-run', ...configurations]);
+        const result = await runGspot(sandbox.path, ['init', '--yes', '--json', ...configurations]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
         expect(plan.configurations.some(({ configuration }) => configuration === 'translations')).toBe(isSelected);
@@ -204,27 +189,28 @@ test.each([...NEXTJS_LOCALE_CASES])(
 );
 
 test('init proposes workspace scopes without a lockfile, and writes nothing when the workspace file is broken', async () => {
-    await using sandbox = await createGitSandbox({
+    const files = {
         'package.json': '{"private":true,"packageManager":"pnpm@9.0.0","workspaces":["packages/*"]}',
         'packages/api/package.json': '{"name":"api"}',
         'packages/api/source.js': 'export const port = 8080;\n',
-    });
+    };
+    await using sandbox = await createGitSandbox(files);
+    await using broken = await createGitSandbox({ ...files, 'pnpm-workspace.yaml': UNCLOSED_PACKAGES });
 
-    const command = ['init', '--yes'];
-    const proposed = await runGspot(sandbox.path, [...command, '--dry-run', '--json']);
+    const command = ['init', '--yes', '--json'];
+    const proposed = await runGspot(sandbox.path, command);
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
     const plan = JSON.parse(proposed.stdout) as Required<Pick<InitJson, 'settings'>>;
     const settings = readSettings(plan.settings, sandbox.path);
     expect([...settings.scopes.keys()]).toStrictEqual(['packages/api']);
-    await writeFile(join(sandbox.path, 'pnpm-workspace.yaml'), UNCLOSED_PACKAGES);
-    const before = await readTree(sandbox.path);
-    const refused = await runGspot(sandbox.path, [...command, '--json']);
+    const before = await readTree(broken.path);
+    const refused = await runGspot(broken.path, command);
     expect(refused.code).toBe(2);
     expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'filesystem' });
     expect((JSON.parse(refused.stdout) as { message: string }).message).toStartWith(
         'pnpm-workspace.yaml is not a valid workspace file: ',
     );
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    expect(await readTree(broken.path)).toStrictEqual(before);
 });
 
 test('init keeps root Docker and GitHub configurations beside an app scope', async () => {
@@ -234,7 +220,7 @@ test('init keeps root Docker and GitHub configurations beside an app scope', asy
         'app/package.json': '{"name":"example-app","private":true}',
         'app/index.js': 'export const port = 8080;\n',
     });
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--json']);
+    const result = await runGspot(sandbox.path, ['init', '--yes', '--json']);
     expect(result.code, result.stderr).toBe(0);
     const { settings } = JSON.parse(result.stdout) as InitJson;
     const parsed = readSettings(settings, sandbox.path);
@@ -249,7 +235,7 @@ test('init names an uninstalled tsconfig extension and the dependency install st
         'tsconfig.json': '{"extends":"@tsconfig/node22/tsconfig.json"}',
         'index.ts': 'export const port = 8080;\n',
     });
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--dry-run']);
+    const result = await runGspot(sandbox.path, ['init', '--yes']);
     expect(result.code).toBe(2);
     expect(result.stderr).toBe(
         'tsconfig.json extends @tsconfig/node22/tsconfig.json, which is not installed. Install the project dependencies, then run the command again.\n',

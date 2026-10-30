@@ -40,10 +40,3 @@ export const FIXER_RESULTS = [
         note: 'sandbox/fixer exited 3',
     },
 ] as const;
-
-export const FIXER_CRASH_CASES = [
-    [false, 0],
-    [false, 3],
-    [true, 0],
-    [true, 3],
-] as const;

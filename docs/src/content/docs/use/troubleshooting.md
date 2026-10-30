@@ -38,8 +38,8 @@ ran. Run one check alone with `gspot check --only <check>`. A tool command that 
 
 ## `There is no terminal to ask in`
 
-`gspot init` asks before it writes, and it cannot ask in CI or anywhere without a terminal. Pass `--yes` to accept the
-plan, or `--dry-run` to print it.
+`gspot init` asks before it writes, and it cannot ask in CI or anywhere without a terminal. It prints the plan first.
+Pass `--yes` to accept the plan.
 
 ## npm exec cannot find gspot
 

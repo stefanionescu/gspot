@@ -18,7 +18,6 @@ import {
     TOOL_MISSING_MESSAGE,
     STANDARD_INSTALL_HELP,
     UNCHANGED_FIX_MESSAGE,
-    UNCHANGED_PREVIEW_MESSAGE,
 } from '#cli/config/commands/check/report.ts';
 
 function formatCheckedContent(comparison: CheckProgress['comparison']): string {
@@ -215,22 +214,12 @@ export function printProgress(progress: CheckProgress): void {
 }
 
 /**
-Format the fixes as lines: the dry-run diffs, or the changed files and the files that the fixers broke.
+Format the fixes as lines: the changed files and the files that the fixers broke.
 
 @param fixes the fixer report.
-@param options how to show the fixes.
-@param options.dryRun whether the run shows fixes and writes nothing.
 */
-export function formatFixes(fixes: FixReport, options: { dryRun: boolean }): string[] {
-    const { dryRun } = options;
+export function formatFixes(fixes: FixReport): string[] {
     const count = fixes.changed.length;
-    if (dryRun)
-        return [
-            ...fixes.diffs,
-            count === 0 ? UNCHANGED_PREVIEW_MESSAGE : `${formatCount(count, 'file')} would change.`,
-            ...fixes.broken.map((path) => `The fixers would leave a syntax error in ${path}.`),
-            '',
-        ];
     if (count === 0 && fixes.broken.length === 0) return [UNCHANGED_FIX_MESSAGE];
     return [
         ...(count === 0

@@ -12,21 +12,21 @@ gspot check --json
 
 ## Report fields
 
-| Field             | Meaning                                                                                                             |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `version`         | The gspot version that made the report.                                                                             |
-| `stage`           | The selected stage: `commit`, `push`, `message`, `manual`, or `all` for the default run.                            |
-| `started`         | Start time as an ISO 8601 timestamp.                                                                                |
-| `duration`        | Elapsed run time in milliseconds.                                                                                   |
-| `comparison`      | When present, the selected content (`working-tree`, `index`, or `commit`) and its reference.                        |
-| `checks`          | The result of every planned check, skipped ones included, with their findings.                                      |
-| `ignores`         | Ignores in effect, with their check, optional lint rule, paths, and reason.                                         |
-| `unstagedChanges` | Number of changed files left out when the run reads the staging area.                                               |
-| `partial`         | Whether the run selected only staged files, changed files, or named paths.                                          |
-| `notes`           | Notes about the run, such as skipped preparation or file selection.                                                 |
-| `fixes`           | When fixes ran: changed files, files restored after broken fixes, fixer errors, and the preview diffs of a dry run. |
-| `failed`          | Check IDs that failed or stopped with an error, and the checks whose fixer failed.                                  |
-| `exitCode`        | The process exit code. See [Exit codes](/reference/commands/#exit-codes).                                           |
+| Field             | Meaning                                                                                      |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| `version`         | The gspot version that made the report.                                                      |
+| `stage`           | The selected stage: `commit`, `push`, `message`, `manual`, or `all` for the default run.     |
+| `started`         | Start time as an ISO 8601 timestamp.                                                         |
+| `duration`        | Elapsed run time in milliseconds.                                                            |
+| `comparison`      | When present, the selected content (`working-tree`, `index`, or `commit`) and its reference. |
+| `checks`          | The result of every planned check, skipped ones included, with their findings.               |
+| `ignores`         | Ignores in effect, with their check, optional lint rule, paths, and reason.                  |
+| `unstagedChanges` | Number of changed files left out when the run reads the staging area.                        |
+| `partial`         | Whether the run selected only staged files, changed files, or named paths.                   |
+| `notes`           | Notes about the run, such as skipped preparation or file selection.                          |
+| `fixes`           | When fixes ran: changed files, files restored after broken fixes, and fixer errors.          |
+| `failed`          | Check IDs that failed or stopped with an error, and the checks whose fixer failed.           |
+| `exitCode`        | The process exit code. See [Exit codes](/reference/commands/#exit-codes).                    |
 
 When present, `notChecked` lists `{ configuration, evidence }` objects for detected configurations that your settings
 neither select nor record in `removed_configurations`. Both fields hold strings. gspot omits the array when empty.

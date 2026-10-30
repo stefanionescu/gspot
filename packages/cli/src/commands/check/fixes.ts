@@ -1,10 +1,10 @@
 import { compareText } from '#cli/system/text.ts';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
+import { createCopy } from '#cli/runs/copy/files.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { buildDiff } from '#cli/generation/outdated.ts';
 import { type Tool } from '#cli/types/configurations.ts';
 import { runToolProcess } from '#cli/runs/command/tool.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
@@ -14,7 +14,6 @@ import { type CheckRunOptions } from '#cli/types/runs/check.ts';
 import { type CommandLaunch } from '#cli/types/runs/command.ts';
 import { listCopyFiles } from '#cli/runs/command/placeholders.ts';
 import { type SpawnResult } from '#cli/types/system/processes.ts';
-import { createCopy, selectCopyPaths } from '#cli/runs/copy/files.ts';
 import { type GrammarName } from '#cli/types/parsers/code/grammars.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
 import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
@@ -161,25 +160,20 @@ function listChangedPaths(before: PathBytes, after: PathBytes): string[] {
         .toArray();
 }
 
-async function runFixerRounds(
-    session: CheckSession,
-    checks: PlannedCheck[],
-    sourceRoot: string,
-    paths: string[],
-): Promise<FixRounds> {
+async function runFixerRounds(session: CheckSession, checks: PlannedCheck[], paths: string[]): Promise<FixRounds> {
     const results = new Map<number, FixResult>();
     let firstBefore: PathBytes | undefined;
     let after: PathBytes = new Map();
     const fixedContents = new Map<number, PathBytes>();
     let pending = checks.map((check, index) => ({ check, index }));
     for (let round = 0; round < FIX_ROUNDS && pending.length > 0; round += 1) {
-        const before = readContents(sourceRoot, paths);
+        const before = readContents(session.root, paths);
         firstBefore ??= before;
         for (const { check, index } of pending) {
-            results.set(index, mergeResults(results.get(index), await runFixer(session, check, sourceRoot)));
+            results.set(index, mergeResults(results.get(index), await runFixer(session, check, session.root)));
             fixedContents.set(
                 index,
-                readContents(sourceRoot, [
+                readContents(session.root, [
                     ...new Set([
                         ...(checks[index] as PlannedCheck).files.map((file) => file.path),
                         ...(checks[index] as PlannedCheck).triggerPaths,
@@ -187,7 +181,7 @@ async function runFixerRounds(
                 ]),
             );
         }
-        after = readContents(sourceRoot, paths);
+        after = readContents(session.root, paths);
         pending = checks.flatMap((check, index) => {
             const changed = new Set(listChangedPaths(fixedContents.get(index) as PathBytes, after));
             const files = check.files.filter((file) => changed.has(file.path) && after.get(file.path) !== undefined);
@@ -234,48 +228,24 @@ function restoreBrokenFiles(root: string, broken: string[], rounds: FixRounds): 
 }
 
 /**
-Runs fixes in passes and collects their results. A dry run always removes its copy.
+Runs fixes in passes and collects their results.
 
 @param session the repository and its tools.
 @param planned the checks to fix.
-@param options the fix mode.
-@param options.dryRun whether to run in a copy and report diffs.
 */
-export async function runFixers(
-    session: CheckSession,
-    planned: PlannedCheck[],
-    { dryRun }: { dryRun: boolean },
-): Promise<FixReport> {
+export async function runFixers(session: CheckSession, planned: PlannedCheck[]): Promise<FixReport> {
     const checks = planned.filter((check) => check.check.fix !== undefined);
     const paths = [
         ...new Set(
             checks.flatMap((check) => [...new Set([...check.files.map((file) => file.path), ...check.triggerPaths])]),
         ),
     ].toSorted((a, b) => compareText(a, b));
-    using scratch = dryRun
-        ? await createCopy(
-              selectCopyPaths(
-                  session.root,
-                  [...paths, ...session.repository.files.map((file) => file.path)],
-                  session.repository.scopeFolders.map((scope) => scope.path),
-              ),
-          )
-        : undefined;
-    const root = scratch?.path ?? session.root;
-    const rounds = await runFixerRounds(session, checks, root, paths);
+    const rounds = await runFixerRounds(session, checks, paths);
     const { before, after, results } = rounds;
     const changed = listChangedPaths(before, after);
     const broken = await listBrokenFiles(changed, before, after);
-    if (!dryRun) restoreBrokenFiles(session.root, broken, rounds);
-    const diffs = dryRun
-        ? changed.map((path) =>
-              buildDiff(path, before.get(path)?.toString('utf8') ?? '', after.get(path)?.toString('utf8') ?? '', [
-                  '',
-                  '',
-              ]),
-          )
-        : [];
-    return { results, changed: dryRun ? changed : changed.filter((path) => !broken.includes(path)), broken, diffs };
+    restoreBrokenFiles(session.root, broken, rounds);
+    return { results, changed: changed.filter((path) => !broken.includes(path)), broken };
 }
 
 function buildFixResult(

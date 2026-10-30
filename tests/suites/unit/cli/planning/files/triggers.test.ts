@@ -96,7 +96,7 @@ test.each(LAST_FILE_CHANGES)(
     },
 );
 
-test('a fixer of a deleted trigger path restores it, and a dry run leaves it deleted', async () => {
+test('a fixer of a deleted trigger path restores it', async () => {
     await using sandbox = await testdir({
         'gspot.toml': TWO_SCOPES_SETTINGS,
         'api/source.ts': 'export {};\n',
@@ -111,10 +111,7 @@ test('a fixer of a deleted trigger path restores it, and a dry run leaves it del
     const api = planChecks(session, { ...TSC_PUSH_OPTIONS, changed: paths }).find(
         (check) => check.scope.path === 'api',
     )!;
-    const preview = await runFixers(buildCheckSession(session), [api], { dryRun: true });
-    expect(preview.changed).toStrictEqual(['api/source.ts']);
-    expect(await isOnDisk(join(sandbox.path, 'api/source.ts'))).toBe(false);
-    const applied = await runFixers(buildCheckSession(session), [api], { dryRun: false });
+    const applied = await runFixers(buildCheckSession(session), [api]);
     expect(applied.changed).toStrictEqual(['api/source.ts']);
     expect(await readFile(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
 });
