@@ -62,7 +62,6 @@ example = "A Compose service with the unknown key `bogus` fails to parse. Remove
 files = { paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose.{yml,yaml}", "**/compose.*.{yml,yaml}", "**/compose-*.{yml,yaml}"] }
 help = "Read the message Compose prints; it names the key and the service."
 name = "compose"
-needs = ["docker"]
 output = { format = "lines" }
 runs = "scope"
 stage = "push"
