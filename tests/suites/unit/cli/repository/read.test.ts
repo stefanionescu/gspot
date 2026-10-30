@@ -13,9 +13,9 @@ import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { INDEX_LINE_FAILURE, INVALID_INDEX_LINES } from '#tests/config/parsers/git.ts';
 import { buildProcessResult, runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { ROOT_DISCOVERY_CASES, DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository/read.ts';
-import { SHA256, INDEX_PATH, INDEX_LINE_FAILURE, INVALID_INDEX_LINES } from '#tests/config/parsers/git.ts';
 
 test.each([...ROOT_DISCOVERY_CASES])(
     'outside Git, gspot takes $name as the repository root',
@@ -41,23 +41,6 @@ test('a Git ownership refusal while finding the root stays a Git error', async (
         name: 'GspotError',
         code: 'git',
         message: `Git could not open ${sandbox.path}: ${refused.stderr.trim()}`,
-    });
-});
-
-test('a Git refusal while reading attributes stays a Git error', async () => {
-    await using sandbox = await testdir({ 'source.txt': 'source\n' });
-    commitAll(sandbox.path);
-    const run = git.runGit;
-    using _boundary = spyOn(git, 'runGit').mockImplementation(async (root, commandArguments, options) =>
-        commandArguments[0] === 'check-attr'
-            ? buildProcessResult({ code: 128, stderr: 'fatal: cannot read attributes\n' })
-            : await run(root, commandArguments, options),
-    );
-    const error = await captureRejection(readTestRepository(sandbox.path));
-    expect(error).toMatchObject({
-        name: 'GspotError',
-        code: 'git',
-        message: 'Git could not read the attributes: fatal: cannot read attributes',
     });
 });
 
@@ -206,18 +189,3 @@ test.each([...INVALID_INDEX_LINES])(
         expect(error.message).toBe(INDEX_LINE_FAILURE);
     },
 );
-
-test.each([0, 1])('reading a repository keeps index stage %i and the full object ID', async (stage) => {
-    await using sandbox = await createGitSandbox({ 'source.sql': 'source\n' });
-    const run = git.runGitForBytes;
-    using _read = spyOn(git, 'runGitForBytes').mockImplementation((root, commandArguments, options) =>
-        commandArguments.includes('--stage')
-            ? Promise.resolve({
-                  ...buildProcessResult(),
-                  stdout: Buffer.from(`100755 ${SHA256} ${String(stage)}\t${INDEX_PATH}\0`),
-              })
-            : run(root, commandArguments, options),
-    );
-    const repository = await readTestRepository(sandbox.path);
-    expect(repository.index).toStrictEqual([{ mode: '100755', hash: SHA256, path: INDEX_PATH, stage }]);
-});

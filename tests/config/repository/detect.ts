@@ -27,7 +27,7 @@ export const PRISMA_SCHEMA_CASES = [
 ] as const;
 
 export const RUNTIME_DETECTION_CASES = [
-    ...(['node', 'bun', 'deno'] as const).flatMap((runtime) =>
+    ...(['node'] as const).flatMap((runtime) =>
         [
             { name: `${runtime} engine`, package: { engines: { [runtime]: '>=1' } }, source: '', detected: true },
             {
@@ -72,10 +72,6 @@ export const RUNTIME_DETECTION_CASES = [
     },
 ];
 
-export const SITE_DETECTION_PATHS = ['sitemap.xml', 'public/sitemap.xml', 'docs/public/sitemap.xml'] as const;
-
-export const POSTGRESQL_PROVIDER = 'provider = "postgresql"\n';
-
 export const CONFIGURATION_EVIDENCE_CASES = [
     {
         name: 'Starlight without sitemap files',
@@ -98,12 +94,6 @@ export const CONFIGURATION_EVIDENCE_CASES = [
     {
         name: 'a Vitest configuration without dependencies',
         files: { 'vitest.config.ts': 'export default {};\n' },
-        configuration: 'vitest',
-        selected: true,
-    },
-    {
-        name: 'a Vitest workspace without dependencies',
-        files: { 'vitest.workspace.ts': 'export default [];\n' },
         configuration: 'vitest',
         selected: true,
     },

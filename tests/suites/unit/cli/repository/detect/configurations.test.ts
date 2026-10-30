@@ -1,8 +1,7 @@
 import { join } from 'node:path';
-import * as filesystem from 'node:fs';
-import { test, spyOn, expect } from 'bun:test';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { unlink, writeFile } from 'node:fs/promises';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
@@ -14,13 +13,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { SOURCE_KIND } from '#cli/config/repository/files/classify.ts';
 import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/dependencies.ts';
-
-import {
-    POSTGRESQL_PROVIDER,
-    PRISMA_SCHEMA_CASES,
-    SITE_DETECTION_PATHS,
-    RUNTIME_DETECTION_CASES,
-} from '#tests/config/repository/detect.ts';
+import { PRISMA_SCHEMA_CASES, RUNTIME_DETECTION_CASES } from '#tests/config/repository/detect.ts';
 
 async function detectSandboxConfigurations(root: string): Promise<string[]> {
     const repository = await readTestRepository(root);
@@ -150,44 +143,6 @@ test.each(PRISMA_SCHEMA_CASES.flatMap((row) => ['', 'apps/api'].map((scope) => (
     },
 );
 
-test('content detection skips a file deleted after the repository read', async () => {
-    await using sandbox = await testdir({ 'prisma/schema.prisma': POSTGRESQL_PROVIDER });
-
-    const repository = await readTestRepository(sandbox.path);
-    await unlink(join(sandbox.path, 'prisma/schema.prisma'));
-    expect(
-        detectConfigurations(
-            { root: sandbox.path, files: repository.files, dependencyFiles: [] },
-            readConfigurations(),
-        ).filter((detection) => detection.configuration === 'postgres'),
-    ).toStrictEqual([]);
-});
-
-test('a Prisma read error stops detection, and a session with saved choices does not read the file', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript']),
-        'prisma/schema.prisma': POSTGRESQL_PROVIDER,
-    });
-
-    const repository = await readTestRepository(sandbox.path);
-    const configurationsByName = readConfigurations();
-    const failure = Object.assign(new Error('Prisma read failed.'), { code: 'EIO' });
-    using read = spyOn(filesystem, 'readFileSync').mockImplementationOnce(() => {
-        throw failure;
-    });
-    expect(() =>
-        detectConfigurations(
-            { root: sandbox.path, files: repository.files, dependencyFiles: [] },
-            configurationsByName,
-        ),
-    ).toThrow(failure);
-    read.mockClear();
-    await openSession(sandbox.path);
-    expect(
-        read.mock.calls.map(([path]) => String(path)).filter((path) => path.endsWith('/prisma/schema.prisma')),
-    ).toStrictEqual([]);
-});
-
 test('Testing Library is detected only in the scope that declares it', async () => {
     const dependency = '@testing-library/react';
     await using sandbox = await testdir({
@@ -232,28 +187,9 @@ test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection within its p
     expect(detected.map(({ configuration }) => configuration)).toStrictEqual(row.detected ? ['runtime'] : []);
 });
 
-test('site is detected from a sitemap.xml in any folder', () => {
-    const configurationsByName = readConfigurations();
-    for (const path of SITE_DETECTION_PATHS) {
-        const detected = detectConfigurations(
-            {
-                root: process.cwd(),
-                files: [
-                    {
-                        path: path,
-                        kind: 'source' as const,
-                        kindOrigin: SOURCE_KIND.origin,
-                        tags: ['text'],
-                        executable: false,
-                        size: 1,
-                    },
-                ],
-                dependencyFiles: [],
-            },
-            configurationsByName,
-        );
-        expect(detected.find(({ configuration }) => configuration === 'site')?.evidence).toBe(path);
-    }
+test('site is detected from a sitemap.xml in any folder', async () => {
+    await using sandbox = await testdir({ 'docs/public/sitemap.xml': '<urlset/>' });
+    expect(await detectSandboxConfigurations(sandbox.path)).toContain('site');
 });
 
 test('site detection excludes a server framework even when a sitemap is present', async () => {

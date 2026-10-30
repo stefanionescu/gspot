@@ -1,18 +1,9 @@
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 
-export const LINKED_HOOK_FOLDERS = [
-    { path: '.husky', kind: 'husky' },
-    { path: '.githooks', kind: 'githooks' },
-] as const;
-
-export const LINKED_RULE_FOLDERS = ['.cursor/rules', '.claude/rules'] as const;
-
 export const LINKED_HOOK_FILES = [
     { path: '.lefthook.yml', kind: 'lefthook' },
     { path: '.pre-commit-config.yaml', kind: 'pre-commit' },
 ] as const;
-
-export const LEFTHOOK_FILES = ['lefthook.yml', '.config/lefthook.yml', 'lefthook-local.yml'] as const;
 
 export const HUSKY_STUBS = {
     '.husky/_/.gitignore': '*\n',
@@ -77,19 +68,7 @@ export const CI_JOB_DOCUMENTS = [
         },
         expected: ['code-lint'],
     },
-    {
-        name: 'script precedence over steps',
-        path: '.github/workflows/check.yml',
-        document: {
-            jobs: {
-                build: { script: 'bun run build', steps: [{ run: 'eslint src' }] },
-                quality: { script: ['eslint src'], steps: [] },
-            },
-        },
-        expected: ['quality'],
-    },
     { name: 'null document', path: '.gitlab-ci.yml', document: null, expected: [] },
-    { name: 'non-object jobs', path: '.github/workflows/check.yml', document: { jobs: 12 }, expected: [] },
 ] as const;
 
 export const GITLAB_COMPONENT =

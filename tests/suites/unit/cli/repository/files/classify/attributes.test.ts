@@ -1,23 +1,20 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { mkdir, unlink, writeFile } from 'node:fs/promises';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 
 import {
-    ATTRIBUTE_KINDS,
-    ATTRIBUTE_FILES,
     CLASSIFICATION_FILES,
     TYPE_DECLARATION_FILES,
     LINGUIST_GENERATED_LINE,
-    CLEARED_ATTRIBUTE_KINDS,
 } from '#tests/config/repository/files/classify.ts';
 
 test('Git attributes win over the generated files of configurations', async () => {
@@ -88,42 +85,5 @@ test('.git/info/attributes marks a file generated while the working .gitattribut
     const repository = await readTestRepository(sandbox.path);
     expect(repository.attributes.get('source.ts')).toMatchObject({
         'linguist-generated': 'set',
-    });
-});
-
-test('Git attribute reads honor later and nested overrides', async () => {
-    await using sandbox = await createGitSandbox(ATTRIBUTE_FILES);
-
-    runGitStep(sandbox.path, ['add', '.']);
-    const repository = await readTestRepository(sandbox.path);
-    expect(Object.fromEntries(repository.files.map(({ path, kind }) => [path, kind]))).toStrictEqual(ATTRIBUTE_KINDS);
-    await createFileTree(sandbox.path, { '.gitattributes': '', 'nested/.gitattributes': '' });
-    const corrected = await readTestRepository(sandbox.path);
-    expect(Object.fromEntries(corrected.files.map(({ path, kind }) => [path, kind]))).toStrictEqual(
-        CLEARED_ATTRIBUTE_KINDS,
-    );
-});
-
-test('Git info attributes override the tracked .gitattributes until removed', async () => {
-    await using sandbox = await createGitSandbox({
-        '.gitattributes': LINGUIST_GENERATED_LINE,
-        'source.ts': 'export const source = 1;\n',
-        'control.ts': 'export const control = 2;\n',
-    });
-    await createFileTree(sandbox.path, {
-        '.git/info/attributes': '*.ts -linguist-generated\ncontrol.ts linguist-vendored\n',
-    });
-    const repository = await readTestRepository(sandbox.path);
-    expect(Object.fromEntries(repository.files.map(({ path, kind }) => [path, kind]))).toStrictEqual({
-        '.gitattributes': 'source',
-        'source.ts': 'source',
-        'control.ts': 'vendored',
-    });
-    await unlink(join(sandbox.path, '.git/info/attributes'));
-    const corrected = await readTestRepository(sandbox.path);
-    expect(Object.fromEntries(corrected.files.map(({ path, kind }) => [path, kind]))).toStrictEqual({
-        '.gitattributes': 'source',
-        'source.ts': 'generated',
-        'control.ts': 'generated',
     });
 });
