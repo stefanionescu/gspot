@@ -46,7 +46,7 @@ Keep the language and framework configurations that add source files to shared c
 
 @param configurations the configurations in use.
 */
-export function filterSourceConfigurations(configurations: Configuration[]): Configuration[] {
+export function listSourceConfigurations(configurations: Configuration[]): Configuration[] {
     const groups: readonly string[] = SOURCE_FILE_GROUPS;
     return configurations.filter((configuration) => groups.includes(configuration.group));
 }

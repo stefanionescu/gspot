@@ -16,7 +16,7 @@ import {
     ALIAS_IMPORT_SELECTORS,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/selectors.ts';
 
-function filterDistinctLists(lists: string[][]): string[][] {
+function listDistinctLists(lists: string[][]): string[][] {
     const seen = new Set<string>();
     return lists.filter((list) => {
         const key = JSON.stringify(list);
@@ -26,8 +26,8 @@ function filterDistinctLists(lists: string[][]): string[][] {
     });
 }
 
-function groupSelectors(selectors: SelectorPaths[]): SelectorBlock[] {
-    const boundaries = filterDistinctLists(
+function listSelectorBlocks(selectors: SelectorPaths[]): SelectorBlock[] {
+    const boundaries = listDistinctLists(
         selectors.flatMap((each) => [each.files ?? [], each.except ?? []]).filter((paths) => paths.length > 0),
     );
     let groups: { files: string[][]; ignores: string[]; matched: string[][] }[] = [
@@ -108,7 +108,7 @@ export function buildSelectorBlocks(
             applied.push(...REEXPORT_SELECTORS.map((selector) => ({ selector, message: REEXPORT_MESSAGE, except })));
         }
         applied.push(...listSettingSelectors(scope, level));
-        return groupSelectors(applied).map((group) => ({
+        return listSelectorBlocks(applied).map((group) => ({
             ...group,
             scope: scope.path,
             ignoredScopes: listNestedScopes(scopePaths, scope.path),

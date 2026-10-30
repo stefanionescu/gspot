@@ -105,7 +105,7 @@ function selectRoute(file: TrackedFile): ProseRoute | undefined {
     return grammar === undefined ? undefined : { path: file.path, mode: grammar.mode, extension: grammar.extension };
 }
 
-function groupRoutes(files: TrackedFile[]): ProseRouteBatch[] {
+function listRouteBatches(files: TrackedFile[]): ProseRouteBatch[] {
     const routes = files.map((file) => selectRoute(file)).filter((route) => route !== undefined);
     const pathRoutes = routes.filter((each) => each.mode === 'path');
     const byExtension = Map.groupBy(pathRoutes, (route) => route.extension)
@@ -126,7 +126,7 @@ export async function checkProseVale(session: CheckSession, planned: PlannedChec
         throw new GspotError('tool', VALE_PACKAGES_MESSAGE);
     const command = [VALE_TOOL, CONFIG_FLAG, join(session.root, GSPOT_PATHS.valeConfigFile), ...VALE_ARGUMENTS];
     const folder = dirname(join(session.root, GSPOT_PATHS.valeConfigFile));
-    const groups = groupRoutes(
+    const groups = listRouteBatches(
         planned.files.filter(
             (file) => file.kind === 'source' && (session.settings.level === 'all' || file.tags.includes('markdown')),
         ),

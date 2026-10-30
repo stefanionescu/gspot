@@ -7,7 +7,7 @@ import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import { buildAvailableSettings, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import type { CliReference, SettingVariant, CommandReference } from '#docs/types/reference.ts';
 
-function groupSettingVariants(configurations: CliReference['configurations']): SettingVariant[] {
+function listSettingVariants(configurations: CliReference['configurations']): SettingVariant[] {
     const settings = new Map<string, SettingVariant[]>();
     const ownedSettings = [
         ...buildAvailableSettings([], 'basic')
@@ -76,7 +76,7 @@ function readCliReference(): CliReference {
         commands: buildProgram(() => {}).commands.map((command) => buildCommandReference(command)),
         configurations,
         checks: listChecksById(configurations).values().toArray(),
-        settings: groupSettingVariants(configurations),
+        settings: listSettingVariants(configurations),
         schema: buildJsonSchema(),
     };
 }

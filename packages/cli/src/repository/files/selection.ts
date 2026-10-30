@@ -2,8 +2,8 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
+import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
-import { filterSourceConfigurations } from '#cli/manifests/select.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
 import { TEST_FILES_PLACEHOLDER } from '#cli/config/repository/files/selection.ts';
 import type { TrackedFile, CoveredFilesOptions } from '#cli/types/repository/files.ts';
@@ -77,7 +77,7 @@ export function listCoveredFiles(
     const matches = [
         owners,
         ...defaults,
-        ...(owners.languages ? filterSourceConfigurations(configurations).map(({ files }) => files) : []),
+        ...(owners.languages ? listSourceConfigurations(configurations).map(({ files }) => files) : []),
     ].map((table) => buildFileMatcher(table));
     return scopeFiles.filter((file) => {
         const scopeFile = { ...file, path: scope === '' ? file.path : file.path.slice(scope.length + 1) };

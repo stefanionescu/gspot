@@ -46,7 +46,7 @@ function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
     );
 }
 
-function groupImportBlocks(
+function listImportBlocks(
     body: TSESTree.Statement[],
     sourceType: RuleContext['languageOptions']['sourceType'],
 ): ImportBlock[] {
@@ -169,7 +169,7 @@ export const noCommentsInImports = createRule<[], 'comment'>({
         const comments = mergeCommentLines(source, text);
         return {
             Program(node) {
-                for (const { first, last } of groupImportBlocks(node.body, context.languageOptions.sourceType)) {
+                for (const { first, last } of listImportBlocks(node.body, context.languageOptions.sourceType)) {
                     const nextStatement = node.body[node.body.indexOf(last) + 1];
                     const end = nextStatement === undefined ? text.length : getStatementOffset(nextStatement);
                     const misplaced = comments.filter(

@@ -9,8 +9,8 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { filterSourceConfigurations } from '#cli/manifests/select.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
@@ -35,7 +35,7 @@ Runs jscpd over the scope and reports the clones.
 export async function checkDuplicationJscpd(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     using workFolder = createTemporaryFolder();
     const owned = new Set(
-        filterSourceConfigurations(planned.scope.configurations).flatMap((configuration) =>
+        listSourceConfigurations(planned.scope.configurations).flatMap((configuration) =>
             listCoveredFiles(configuration.files, planned.files, {
                 configurations: planned.scope.configurations,
                 scopePath: planned.scope.path,

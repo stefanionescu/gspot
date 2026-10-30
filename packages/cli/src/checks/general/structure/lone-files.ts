@@ -2,8 +2,8 @@ import type { Session } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
+import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import { filterSourceConfigurations } from '#cli/manifests/select.ts';
 import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 import { LONE_FILE_RULE } from '#cli/config/checks/general/structure/lone-files.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';
@@ -17,7 +17,7 @@ Reports each leaf folder that holds only one code file.
 export function checkStructureLoneFiles(_session: Session, planned: PlannedCheck): CheckFinding[] {
     const files = listCodeFiles(planned);
     const tree = buildFolderTree(planned.files);
-    const extensions = filterSourceConfigurations(planned.scope.configurations).flatMap(
+    const extensions = listSourceConfigurations(planned.scope.configurations).flatMap(
         (configuration) => configuration.files.extensions,
     );
     const isRouteFile = buildPathMatcher(

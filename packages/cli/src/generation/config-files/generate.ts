@@ -49,7 +49,7 @@ function buildOwnedOutput(
     }
 }
 
-function groupToolOutputs(ownedFiles: OwnedSourceFile[], generated: ConfigFileBuildState): BuiltConfigFile[][] {
+function listToolOutputs(ownedFiles: OwnedSourceFile[], generated: ConfigFileBuildState): BuiltConfigFile[][] {
     const owners = ownedFiles[0]?.configFile.per_scope === true ? ownedFiles : ownedFiles.slice(0, 1);
     const outputs = owners.flatMap((each) => buildOwnedOutput(each, ownedFiles, generated));
     return Map.groupBy(outputs, ({ file }) => file.content)
@@ -79,7 +79,7 @@ function addSourceFiles(configFiles: OwnedConfigFile[], generated: ConfigFileBui
     const sourced = configFiles.filter((each): each is OwnedSourceFile => each.configFile.source !== undefined);
     const sources = Map.groupBy(sourced, ({ configFile }) => configFile.target);
     for (const [target, ownedFiles] of sources) {
-        const groups = groupToolOutputs(ownedFiles, generated);
+        const groups = listToolOutputs(ownedFiles, generated);
         for (const [index, group] of groups.entries()) addToolOutput(target, group, index, generated);
     }
 }

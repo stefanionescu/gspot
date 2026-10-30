@@ -41,7 +41,7 @@ import {
     TRIVY_FINDINGS_EXIT_CODE,
 } from '#cli/config/checks/infrastructure/docker.ts';
 
-function groupComposeFiles(files: TrackedFile[]): ComposeFiles[] {
+function listComposeFiles(files: TrackedFile[]): ComposeFiles[] {
     const groups = new Map<string, ComposeFiles>();
     for (const file of files) {
         const baseName = COMPOSE_OVERRIDE.exec(posix.basename(file.path))?.groups?.['base'];
@@ -86,7 +86,7 @@ function listBuildContexts(declarations: ComposeDeclaration[], folder: string): 
 
 function readComposeDocuments(session: Session, planned: PlannedCheck): ComposeDocuments {
     const documents: ComposeDocuments = { declarations: [], contexts: new Map(), findings: [] };
-    const groups = groupComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
+    const groups = listComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
     for (const group of groups) {
         const declarations = [...group.before, group.last].flatMap(({ path }) => {
             const parsed = parseCheckedFile(path, () => parseYamlFile(path, read(session.cache, path), composeSchema));
@@ -114,7 +114,7 @@ Validates each Compose project with its overrides.
 @param planned the Compose check and its files.
 */
 export async function checkDockerCompose(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const groups = groupComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
+    const groups = listComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
     return runCommandBatches(
         session,
         planned,

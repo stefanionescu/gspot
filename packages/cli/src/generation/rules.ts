@@ -60,7 +60,7 @@ function buildLevelRuleText(text: string, level: Level): string {
     return output.join('').trimEnd() + '\n';
 }
 
-function groupIndexLines(files: RuleFile[]): [string, string[]][] {
+function listIndexLines(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();
     for (const file of files) {
         if (FIRST_READ.includes(file.path)) continue;
@@ -88,7 +88,7 @@ function formatRulesIndex(files: RuleFile[]): string[] {
         '',
         ...RULE_INDEX_LINES,
         '',
-        ...groupIndexLines(files).flatMap(([label, paths]) => [
+        ...listIndexLines(files).flatMap(([label, paths]) => [
             `## ${label}`,
             '',
             ...paths.map((path) => `- ${path}`),

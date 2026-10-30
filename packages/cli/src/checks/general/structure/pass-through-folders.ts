@@ -2,7 +2,7 @@ import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
-import { filterSourceConfigurations } from '#cli/manifests/select.ts';
+import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';
 import { isInInstalledFolder, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { PASS_THROUGH_FOLDER_RULE } from '#cli/config/checks/general/structure/pass-through-folders.ts';
@@ -14,7 +14,7 @@ Reports each folder inside the scope that holds only one folder, above the code 
 @param planned the scope files.
 */
 export function checkStructurePassThroughFolders(session: Session, planned: PlannedCheck): CheckFinding[] {
-    const extensions = filterSourceConfigurations(planned.scope.configurations).flatMap(
+    const extensions = listSourceConfigurations(planned.scope.configurations).flatMap(
         (configuration) => configuration.files.extensions,
     );
     const code = listCodeFiles(planned).filter((file) => extensions.some((extension) => file.path.endsWith(extension)));

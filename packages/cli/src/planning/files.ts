@@ -42,8 +42,7 @@ function listProjectCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, sc
                   scopePath,
                   settings: scope.settings,
               });
-    if (filterNarrowedFiles(planned, scopeCheck, stripIgnoredFiles(matches, check, scope).files).length === 0)
-        return [];
+    if (listNarrowedFiles(planned, scopeCheck, stripIgnoredFiles(matches, check, scope).files).length === 0) return [];
     return [check.runs, check.id].some((value) => ['scope', LARGE_FILES_CHECK, ENCODING_CHECK].includes(value))
         ? scopeFiles
         : scopeFiles.filter((file) => file.kind !== 'binary');
@@ -72,7 +71,7 @@ function stripIgnoredFiles(files: TrackedFile[], check: Check, scope: Scope): Pi
     };
 }
 
-function filterNarrowedFiles(planned: PlannedScope, scopeCheck: ScopeCheck, files: TrackedFile[]): TrackedFile[] {
+function listNarrowedFiles(planned: PlannedScope, scopeCheck: ScopeCheck, files: TrackedFile[]): TrackedFile[] {
     const { narrowedPaths } = planned;
     if (!narrowedPaths) return files;
     const isTouched =
@@ -162,7 +161,7 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
     );
 }
 
-function filterReadableFiles(planned: PlannedScope, check: Check, files: TrackedFile[]): TrackedFile[] {
+function listReadableFiles(planned: PlannedScope, check: Check, files: TrackedFile[]): TrackedFile[] {
     if (check.id === LARGE_FILES_CHECK) return files;
     const scopes = planned.session.scopes;
     return files.filter((file) => {
@@ -198,10 +197,10 @@ export function selectCheckFiles(
         triggerPaths.length === 0
             ? listRunFiles(planned, scopeCheck, scopePath)
             : listScopeFiles(planned, scopePath, check.runs);
-    files = filterReadableFiles(planned, check, files);
+    files = listReadableFiles(planned, check, files);
     if (!keepsChildScopes) files = files.filter((file) => children.every((child) => !isInScope(file.path, child)));
     if (check.runs === 'files')
-        return { ...stripIgnoredFiles(filterNarrowedFiles(planned, scopeCheck, files), check, scope), triggerPaths };
+        return { ...stripIgnoredFiles(listNarrowedFiles(planned, scopeCheck, files), check, scope), triggerPaths };
     const selected = stripIgnoredFiles(files, check, scope);
     if (check.id === ENCODING_CHECK) triggerPaths.push(...planned.session.repository.unreadablePaths);
     return { ...selected, triggerPaths };
