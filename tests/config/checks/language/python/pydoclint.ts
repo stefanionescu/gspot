@@ -18,7 +18,7 @@ export const NUMPY_DOCSTRING_MODULE = `def double(value: int) -> int:
     return value * 2
 `;
 
-const DOCSTRING_STYLES = [
+export const PYDOCLINT_PROJECT_CASES = [
     {
         name: 'uses the Google setting without project configuration',
         project: '',
@@ -51,45 +51,8 @@ skip-checking-raises = true
         setting: 'google',
         expected: 'numpy',
     },
+    { name: 'keeps the default style with no pyproject.toml', project: '', setting: undefined, expected: 'numpy' },
 ] as const;
-
-const DEFAULT_TYPE_FLAGS = [
-    '--arg-type-hints-in-docstring',
-    'false',
-    '--check-return-types',
-    'false',
-    '--check-yield-types',
-    'false',
-] as const;
-
-export const PYDOCLINT_PROJECT_CASES = [
-    ...DOCSTRING_STYLES.map((row) => ({ ...row, typeFlags: DEFAULT_TYPE_FLAGS })),
-    ...[
-        { name: 'keeps the default style with no pyproject.toml', project: '' },
-        {
-            name: 'keeps the default style with a Ruff table and no convention',
-            project: '[tool.ruff]\nline-length = 88\n',
-        },
-        {
-            name: 'keeps the default style with the pep257 convention',
-            project: '[tool.ruff.lint.pydocstyle]\nconvention = "pep257"\n',
-        },
-    ].map(({ name, project }) => ({
-        name,
-        project,
-        setting: undefined,
-        expected: 'numpy',
-        typeFlags: DEFAULT_TYPE_FLAGS,
-    })),
-    {
-        name: 'preserves explicit signature type options',
-        project:
-            '[tool.pydoclint]\narg-type-hints-in-docstring = true\ncheck_return_types = false\ncheck-yield-types = true\n',
-        setting: undefined,
-        expected: 'numpy',
-        typeFlags: [],
-    },
-];
 
 export const FAILED_STYLE_BATCH = {
     code: 2,

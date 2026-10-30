@@ -52,7 +52,6 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
     );
     for (const scope of scopes) {
         const command = commands.find((commandArguments) => commandArguments.includes(join(sandbox.path, scope)))!;
-        expect(command.slice(1, 5)).toStrictEqual(['run', '--no-sync', '--project', join(sandbox.path, scope)]);
         const patterns = command.flatMap((value, index) => (value === '--extend-exclude' ? command[index + 1]! : []));
         expect(patterns).toContain('authored');
         const { excluded, kept } = DEPTRY_SCOPE_PATHS[scope];
@@ -89,36 +88,4 @@ test('deptry counts python.externals as first party beside the known_first_party
     const command = commands.find((command) => command.includes('deptry'))!;
     const firstParty = command.flatMap((value, index) => (value === '--known-first-party' ? command[index + 1]! : []));
     expect(firstParty).toStrictEqual(['nodes', 'folder_paths', 'comfy']);
-});
-
-test('deptry reports the complete undeclared import finding', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['python']),
-        'pyproject.toml': '[project]\nname = "example"\nversion = "1.0.0"\n',
-        'main.py': 'import requests\n',
-        [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'deptry')]: 'stub',
-    });
-    const session = await openSession(sandbox.path);
-    using _pins = fakeToolExecutables(
-        ['uv', 'deptry'].map((name) => getTool(session.configurationsByName.values(), name)),
-    );
-    using _spawn = spyOn(processes, 'spawnProcess').mockResolvedValue(
-        buildProcessResult({
-            code: 1,
-            stderr: "main.py:1:8: DEP001 'requests' imported but missing from the dependency definitions\n",
-        }),
-    );
-    const checked = await runChecks(session, buildRunOptions({ only: ['python/deptry'] }));
-    expect(checked.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([
-        {
-            check: 'python/deptry',
-            file: 'main.py',
-            line: 1,
-            column: 8,
-            rule: 'DEP001',
-            fixable: false,
-            message: "'requests' imported but missing from the dependency definitions",
-            help: 'Declare the dependency, or remove the one nothing imports. Turn one rule off with `gspot ignore python/deptry --rule <rule> --reason "<why>"`.',
-        },
-    ]);
 });

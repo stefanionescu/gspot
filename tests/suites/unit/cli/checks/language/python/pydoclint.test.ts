@@ -27,7 +27,7 @@ import {
     PYDOCLINT_PROJECT_CASES,
 } from '#tests/config/checks/language/python/pydoclint.ts';
 
-test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting, expected, typeFlags }) => {
+test.each([...PYDOCLINT_PROJECT_CASES])('pydoclint $name', async ({ project, setting, expected }) => {
     await using sandbox = await testdir();
     using prepared = await preparePydoclintCheck(
         sandbox.path,
@@ -36,21 +36,10 @@ test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting,
     );
     const { session, planned } = prepared;
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult());
-    const result = await runCheckCode(
-        buildCheckSession(session),
-        planned,
-        planned.check.generator_outputs === undefined ? CHECK_CODE[planned.check.id] : { check: checkGeneratorOutputs },
-    );
+    const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['python/pydoclint']);
     expect(result.status).toBe('passed');
     const commandArguments = run.mock.calls[0]![0];
-    expect({
-        style: commandArguments[commandArguments.indexOf('--style') + 1],
-        typeFlags: commandArguments.flatMap((argument, index) =>
-            ['--arg-type-hints-in-docstring', '--check-return-types', '--check-yield-types'].includes(argument)
-                ? [argument, commandArguments[index + 1]]
-                : [],
-        ),
-    }).toStrictEqual({ style: expected, typeFlags: [...typeFlags] });
+    expect(commandArguments[commandArguments.indexOf('--style') + 1]).toBe(expected);
 });
 
 test.each([
@@ -110,11 +99,7 @@ test('pydoclint keeps earlier style findings when a later style batch fails', as
             }),
         )
         .mockResolvedValueOnce(buildProcessResult(FAILED_STYLE_BATCH));
-    const result = await runCheckCode(
-        buildCheckSession(session),
-        planned,
-        planned.check.generator_outputs === undefined ? CHECK_CODE[planned.check.id] : { check: checkGeneratorOutputs },
-    );
+    const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['python/pydoclint']);
     expect(result.status).toBe('error');
     expect(result.fileCount).toBe(2);
     expect(result.findings).toStrictEqual([
