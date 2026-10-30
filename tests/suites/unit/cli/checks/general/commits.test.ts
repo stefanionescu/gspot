@@ -44,9 +44,9 @@ test('references reports each line that links to an AI session, and skips commen
     ]);
 });
 
-test('references passes a message with a co-author trailer and links that name no session', async () => {
+test('references passes a co-author trailer, links that name no session, build stages, versions, and standard names', async () => {
     const findings = await checkMessage(
-        'fix(cli): report the missing configuration\n\nSee https://chatgpt.com/ and https://claude.ai/code.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@example.com>\n',
+        'fix(docker): copy the binary in stage 2 of the build\n\nSee https://chatgpt.com/ and https://claude.ai/code.\nKeep UTF-8, ISO-8601, and CVE-2024-1234 as written, and require Node 24.15.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@example.com>\n',
     );
     expect(findings).toStrictEqual([]);
 });
@@ -71,11 +71,4 @@ test('references reports finding IDs, plan steps, and issue footers without a nu
         { rule: 'plan-step', line: '4' },
         { rule: 'issue-footer', line: '6' },
     ]);
-});
-
-test('references passes build stages, version numbers, and standard names', async () => {
-    const findings = await checkMessage(
-        'fix(docker): copy the binary in stage 2 of the build\n\nKeep UTF-8, ISO-8601, and CVE-2024-1234 as written, and require Node 24.15.\n',
-    );
-    expect(findings).toStrictEqual([]);
 });

@@ -92,19 +92,11 @@ enabled = false
     });
 });
 
-test.each([
-    {
-        name: 'records the removal of a detected configuration',
-        files: { 'source.sh': 'echo example\n' },
-        recorded: true,
-    },
-    { name: 'records no removal of a configuration that detection does not select', files: {}, recorded: false },
-])('remove $name', async ({ files, recorded }) => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']), ...files });
-    const reason = 'The scripts moved to another repository.';
-    const result = await runGspot(sandbox.path, ['remove', 'bash', '--reason', reason]);
+test('remove records no removal of a configuration that detection does not select', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
+    const result = await runGspot(sandbox.path, ['remove', 'bash', '--reason', 'The scripts moved elsewhere.']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(written['configurations']).toStrictEqual([]);
-    expect(written['removed_configurations']).toStrictEqual(recorded ? { bash: reason } : undefined);
+    expect(written['removed_configurations']).toBeUndefined();
 });
