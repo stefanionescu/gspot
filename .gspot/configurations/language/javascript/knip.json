@@ -11,6 +11,7 @@
         "docs/dist/**",
         "docs/.astro/**",
         "docs/.wrangler/**",
+        "tests/tools/**",
         "findings/**",
         ".gspot/**",
         "eslint.config.mjs",
@@ -117,6 +118,7 @@
                 "tests/setup/programs/**/*.ts",
                 "packages/eslint-plugin/src/plugin.ts",
                 "tests/setup/runner/prepare.ts",
+                "tests/setup/sandboxes/tool-project.ts",
                 "tests/setup/runner/integration.ts",
                 "packages/cli/src/checks/framework/site/purgecss-process.ts",
                 "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts",
@@ -208,6 +210,7 @@
                 "setup/runner/unit.ts",
                 "setup/programs/**/*.ts",
                 "setup/runner/prepare.ts",
+                "setup/sandboxes/tool-project.ts",
                 "setup/runner/integration.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
@@ -222,36 +225,7 @@
                 "**/Tests/**",
                 "**/*Tests.swift"
             ],
-            "ignoreDependencies": [
-                "@darraghor/eslint-plugin-nestjs-typed",
-                "@next/eslint-plugin-next",
-                "@react-native/eslint-plugin",
-                "@vitest/eslint-plugin",
-                "bats",
-                "eslint-plugin-drizzle",
-                "eslint-plugin-expo",
-                "eslint-plugin-i18next",
-                "eslint-plugin-jest",
-                "@eslint-react/eslint-plugin",
-                "eslint-plugin-react-hooks",
-                "eslint-plugin-react-refresh",
-                "eslint-plugin-svelte",
-                "eslint-plugin-testing-library",
-                "eslint-plugin-vue",
-                "eslint-plugin-vuejs-accessibility",
-                "pnpm",
-                "supabase",
-                "svelte-eslint-parser",
-                "vue-eslint-parser",
-                "yarn",
-                "@nestjs/common",
-                "@nestjs/core",
-                "@tanstack/eslint-plugin-query",
-                "eslint-plugin-jsx-a11y-x",
-                "reflect-metadata",
-                "rxjs",
-                "vue"
-            ]
+            "ignoreDependencies": []
         }
     }
 }

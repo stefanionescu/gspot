@@ -9,12 +9,10 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { type RunReport } from '#cli/types/commands/check.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
-import nextPackage from 'next/package.json' with { type: 'json' };
 import workspacePackage from '#root-package' with { type: 'json' };
-import reactPackage from 'react/package.json' with { type: 'json' };
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import reactDomPackage from 'react-dom/package.json' with { type: 'json' };
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -32,12 +30,12 @@ async function readCheckReport(sandbox: Sandbox, checks: string[], code: number)
 
 const dependencies = Object.fromEntries(
     Object.entries({
-        next: nextPackage.version,
+        next: SANDBOX_PACKAGES.next,
         ...NEXT_PACKAGE.dependencies,
-        react: reactPackage.version,
-        'react-dom': reactDomPackage.version,
+        react: SANDBOX_PACKAGES.react,
+        'react-dom': SANDBOX_PACKAGES['react-dom'],
         typescript: testsPackage.devDependencies.typescript,
-        '@types/react': testsPackage.devDependencies['@types/react'],
+        '@types/react': SANDBOX_PACKAGES['@types/react'],
         '@types/node': workspacePackage.devDependencies['@types/node'],
     }).toSorted(([left], [right]) => left.localeCompare(right)),
 );

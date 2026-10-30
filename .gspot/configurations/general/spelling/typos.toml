@@ -33,6 +33,7 @@ extend-exclude = [
   "docs/dist/**",
   "docs/.astro/**",
   "docs/.wrangler/**",
+  "tests/tools/**",
   "findings/**",
   # Files that gspot generates
   ".gspot/**",

@@ -4,12 +4,15 @@ import { readFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
-import sveltePackage from 'svelte/package.json' with { type: 'json' };
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { SVELTE_CASES, CLEAN_SVELTE, SVELTE_SANDBOX } from '#tests/config/integration/checks/framework/svelte.ts';
 
-const installedSandbox = shareInstalledSandbox({ ...SVELTE_SANDBOX, dependencies: { svelte: sveltePackage.version } });
+const installedSandbox = shareInstalledSandbox({
+    ...SVELTE_SANDBOX,
+    dependencies: { svelte: SANDBOX_PACKAGES.svelte },
+});
 
 test('Prettier reports and fixes a Svelte component through the Svelte plugin', async () => {
     const { root } = installedSandbox();

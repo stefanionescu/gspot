@@ -10,6 +10,7 @@ node_modules/
 /docs/dist/
 /docs/.astro/
 /docs/.wrangler/
+/tests/tools/
 
 /findings/
 

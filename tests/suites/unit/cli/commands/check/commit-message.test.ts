@@ -5,7 +5,7 @@ import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -19,7 +19,7 @@ test('check --hook commit-msg passes a conventional message and leaves it unchan
     using _command = spyOn(processes, 'spawnProcess').mockImplementation((command, options) =>
         spawn(
             parse(command[0]!).name === 'commitlint'
-                ? [executables.sync('commitlint', { path: join(testModules, '.bin') }), ...command.slice(1)]
+                ? [executables.sync('commitlint', { path: join(toolModules, '.bin') }), ...command.slice(1)]
                 : command,
             options,
         ),

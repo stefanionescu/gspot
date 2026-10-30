@@ -26,6 +26,28 @@ export const SANDBOX_PACKAGE_JSON = {
 
 export const SANDBOX_GITIGNORE = 'node_modules\n';
 
+export const SANDBOX_PACKAGES = {
+    '@nestjs/common': '11.2.3',
+    '@nestjs/core': '11.2.3',
+    '@types/react': '19.1.13',
+    '@vitest/coverage-v8': '4.1.12',
+    astro: '7.3.8',
+    bats: '1.13.0',
+    jest: '30.2.0',
+    next: '16.4.1',
+    pnpm: '10.34.6',
+    react: '19.1.1',
+    'react-dom': '19.1.1',
+    'reflect-metadata': '0.2.2',
+    rxjs: '7.8.2',
+    supabase: '2.118.0',
+    svelte: '5.57.0',
+    vitest: '4.1.12',
+    vue: '3.5.42',
+    wrangler: '4.151.1',
+    yarn: '1.22.22',
+} as const;
+
 export const NPM_PROJECT_FILES = {
     'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
     'source.js': 'export const greeting="hello";',

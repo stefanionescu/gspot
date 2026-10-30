@@ -9,7 +9,7 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { test, expect, describe, beforeAll, beforeEach } from 'bun:test';
@@ -182,7 +182,7 @@ test.each(['', 'app'])(
         });
         commitAll(sandbox.path);
         const execution = { cwd: join(sandbox.path, scope), env: {} };
-        const command = [join(testModules, '.bin/commitlint'), '--edit', join(sandbox.path, messageFile)];
+        const command = [join(toolModules, '.bin/commitlint'), '--edit', join(sandbox.path, messageFile)];
         const before = await runCommand(command, execution);
         expect(before.code, before.stdout + before.stderr).toBe(0);
         const initialized = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations', '--level', 'all']);

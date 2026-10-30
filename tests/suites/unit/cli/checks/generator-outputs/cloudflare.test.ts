@@ -106,7 +106,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
     ]);
 });
 
-test('the wrangler types of tests/node_modules write a cloudflare-env.d.ts that passes, and a changed binding reports the file', async () => {
+test('the wrangler types of the test tools write a cloudflare-env.d.ts that passes, and a changed binding reports the file', async () => {
     using _environment = overrideEnvironment({ WRANGLER_SEND_METRICS: 'false' });
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['cloudflare'], {

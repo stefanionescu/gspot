@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-#MISE description="Install the locked packages and write the docs site types."
+#MISE description="Install the locked packages and the test tools, and write the docs site types."
 set -euo pipefail
 
 bun install --frozen-lockfile
+mkdir -p tests/tools
+bun tests/setup/sandboxes/tool-project.ts >tests/tools/package.json
+bun install --cwd tests/tools --linker isolated
 bun --cwd docs --bun astro sync

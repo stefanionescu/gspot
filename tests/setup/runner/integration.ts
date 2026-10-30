@@ -8,7 +8,7 @@ import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { createNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { testModules, workspaceModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { toolModules, workspaceModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { MISE_LOCK_ENVIRONMENT, GIT_ISOLATION_ENVIRONMENT } from '#tests/config/setup/environment.ts';
 
 import {
@@ -67,7 +67,7 @@ resources.use(
         PATH: [
             dirname(join(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH)),
             ...toolFolders,
-            join(testModules, '.bin'),
+            join(toolModules, '.bin'),
             join(workspaceModules, '.bin'),
             readEnvironmentVariable('PATH') ?? '',
         ].join(delimiter),

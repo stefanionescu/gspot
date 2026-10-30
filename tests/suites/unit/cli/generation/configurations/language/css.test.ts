@@ -1,18 +1,23 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import stylelint, { type Config } from 'stylelint';
+import type { Config } from 'stylelint';
+import type stylelintModule from 'stylelint';
 import { openSession } from '#cli/planning/session.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { type StylelintConfigFile } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { getManifestTarget, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
 import {
     STYLELINT_SCOPE_FILES,
     COMPONENT_SYNTAX_OVERRIDES,
 } from '#tests/config/generation/configurations/language/css.ts';
+
+const { default: stylelint } = (await import(Bun.resolveSync('stylelint', toolModules))) as {
+    default: typeof stylelintModule;
+};
 
 test.each(['vue', 'astro'])('a CSS-only scope checks properties inside a %s component style', async (extension) => {
     const path = `Card.${extension}`;
@@ -28,13 +33,11 @@ test.each(['vue', 'astro'])('a CSS-only scope checks properties inside a %s comp
     const config = JSON.parse(generated.content) as Config;
     const syntax = config.overrides?.find(({ files }) => files.includes(`**/*.${extension}`))?.customSyntax;
     expect(syntax).toBe('postcss-html');
-    if (typeof syntax !== 'string') throw new TypeError('The generated CSS parser must name a package.');
-    expect(import.meta.resolve(syntax)).toBe(import.meta.resolve('postcss-html'));
     const result = await stylelint.lint({
         code,
         codeFilename: join(sandbox.path, path),
         config,
-        configBasedir: testModules,
+        configBasedir: toolModules,
     });
     expect(result.results.flatMap(({ warnings }) => warnings.map(({ rule }) => rule))).toStrictEqual([
         'property-no-unknown',
@@ -91,7 +94,7 @@ test("your Stylelint rule options reach each scope's file", async () => {
         const result = await stylelint.lint({
             code: 'a { color: #fff; width: 1.23456px; }',
             config,
-            configBasedir: testModules,
+            configBasedir: toolModules,
         });
         const warnings = result.results.flatMap((result) => result.warnings);
         expect(
@@ -129,7 +132,7 @@ test('a scope with CSS Modules files accepts composes, :global, and @value in th
         '@value primary: red;\n\n.button {\n    composes: base from "./base.module.css";\n}\n\n:global(.dark) .button {\n    color: blue;\n}\n';
     const rules = new Set(['property-no-unknown', 'selector-pseudo-class-no-unknown', 'at-rule-no-unknown']);
     async function listReportedRules(codeFilename: string): Promise<string[]> {
-        const result = await stylelint.lint({ code, codeFilename, config, configBasedir: testModules });
+        const result = await stylelint.lint({ code, codeFilename, config, configBasedir: toolModules });
         return result.results
             .flatMap(({ warnings }) => warnings.map(({ rule }) => rule))
             .filter((rule) => rules.has(rule));

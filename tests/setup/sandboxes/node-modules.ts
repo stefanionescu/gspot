@@ -10,7 +10,9 @@ const FOLDER_LINK_TYPE = isWindows ? 'junction' : 'dir';
 
 export const workspaceModules = join(REPOSITORY_ROOT, 'node_modules');
 
-export const testModules = join(import.meta.dir, '../../node_modules');
+const testModules = join(import.meta.dir, '../../node_modules');
+
+export const toolModules = join(import.meta.dir, '../../tools/node_modules');
 
 async function listPackageNames(modulesFolder: string): Promise<string[]> {
     const listed = await readdir(modulesFolder);
@@ -27,17 +29,17 @@ async function listPackageNames(modulesFolder: string): Promise<string[]> {
 }
 
 /**
-Link test packages before workspace packages, with their .bin and the workspace .bun store.
+Link tool packages before test and workspace packages, with the tool .bin and the workspace .bun store.
 Links to the real package folders keep relative dependencies that Windows store junctions break.
 */
 export async function linkInstalledModules(modulesFolder: string): Promise<void> {
     const packages = await Promise.all(
-        [testModules, workspaceModules].map(async (store) => {
+        [toolModules, testModules, workspaceModules].map(async (store) => {
             const names = await listPackageNames(store);
             return names.map((name) => [store, name] as const);
         }),
     );
-    const links = [[workspaceModules, '.bun'] as const, [testModules, '.bin'] as const, ...packages.flat()];
+    const links = [[workspaceModules, '.bun'] as const, [toolModules, '.bin'] as const, ...packages.flat()];
     for (const [store, name] of links) {
         const destination = join(modulesFolder, name);
         if (await isOnDisk(destination)) continue;
@@ -48,15 +50,16 @@ export async function linkInstalledModules(modulesFolder: string): Promise<void>
 }
 
 /**
-Link declared packages and the installed packages they depend on, so a copy of node_modules holds only those. A test
-package wins over a workspace package of the same name, as in linkInstalledModules.
+Link declared packages and the installed packages they depend on, so a copy of node_modules holds only those. A tool
+package wins over a test or workspace package of the same name, as in linkInstalledModules.
 */
 export async function linkPackages(modulesFolder: string, names: readonly string[]): Promise<void> {
     const pending = await Promise.all(
-        names.map(
-            async (name) =>
-                [name, join((await isOnDisk(join(testModules, name))) ? testModules : workspaceModules, name)] as const,
-        ),
+        names.map(async (name) => {
+            const stores = [toolModules, testModules];
+            const found = await Promise.all(stores.map((store) => isOnDisk(join(store, name))));
+            return [name, join(stores[found.indexOf(true)] ?? workspaceModules, name)] as const;
+        }),
     );
     const found = new Map<string, string>();
     for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
@@ -86,6 +89,6 @@ Link the installed TypeScript package and its executable launchers.
 export async function linkTypescript(modulesFolder: string): Promise<void> {
     await mkdir(modulesFolder, { recursive: true });
     await linkPackages(modulesFolder, ['typescript']);
-    await symlink(await realpath(join(testModules, '.bin')), join(modulesFolder, '.bin'), FOLDER_LINK_TYPE);
+    await symlink(await realpath(join(toolModules, '.bin')), join(modulesFolder, '.bin'), FOLDER_LINK_TYPE);
     await writeFile(join(modulesFolder, '.gitignore'), IGNORE_ALL_PATTERN);
 }

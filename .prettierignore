@@ -15,6 +15,7 @@ build/
 /findings/
 /packages/*/dist/
 /packages/cli/grammars/
+/tests/tools/
 node_modules/
 
 # Files that gspot generates

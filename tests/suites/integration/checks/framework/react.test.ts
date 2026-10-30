@@ -1,6 +1,6 @@
 import { test } from 'bun:test';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import testsPackage from '#tests/package.json' with { type: 'json' };
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { REACT_CASES, WEB_TSCONFIG, CLEAN_COMPONENT } from '#tests/config/integration/checks/framework/react.ts';
 
@@ -11,9 +11,9 @@ const installedSandbox = shareInstalledSandbox({
         files: { 'src/Greeting.tsx': CLEAN_COMPONENT },
     } as const),
     dependencies: {
-        '@types/react': testsPackage.devDependencies['@types/react'],
-        react: testsPackage.devDependencies.react,
-        'react-dom': testsPackage.devDependencies['react-dom'],
+        '@types/react': SANDBOX_PACKAGES['@types/react'],
+        react: SANDBOX_PACKAGES.react,
+        'react-dom': SANDBOX_PACKAGES['react-dom'],
     },
 });
 

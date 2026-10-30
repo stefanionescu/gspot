@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { TYPE_ERROR_MESSAGE } from '#tests/config/typescript.ts';
-import astroPackage from 'astro/package.json' with { type: 'json' };
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { ASTRO_PAGE, ASTRO_PAGE_PATH } from '#tests/config/integration/checks/framework/astro.ts';
@@ -11,7 +11,7 @@ import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/integration/che
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['typescript', 'astro', 'format'],
-    dependencies: { astro: astroPackage.version },
+    dependencies: { astro: SANDBOX_PACKAGES.astro },
     json: { 'tsconfig.json': COMPONENT_TSCONFIG },
     files: { 'src/answer.ts': ANSWER_MODULE, [ASTRO_PAGE_PATH]: ASTRO_PAGE },
 });

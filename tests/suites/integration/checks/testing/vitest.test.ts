@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rm, writeFile } from 'node:fs/promises';
 import { createFileTree, type TestdirResult } from 'testdirs';
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import vitestPackage from 'vitest/package.json' with { type: 'json' };
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
@@ -23,7 +23,7 @@ const vitestProjectFiles = {
             version: '1.0.0',
             private: true,
             type: 'module',
-            devDependencies: { vitest: vitestPackage.version },
+            devDependencies: { vitest: SANDBOX_PACKAGES.vitest },
         }) + '\n',
 };
 

@@ -1,4 +1,4 @@
-import testsPackage from '#tests/package.json';
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
 
 export const COMPONENT_FILES = {
@@ -64,11 +64,11 @@ export const MOBILE_FILES: Record<string, string> = {
     ...MOBILE_SOURCE_FILES,
     'bare/package.json': JSON.stringify({
         private: true,
-        dependencies: { react: testsPackage.devDependencies.react, ...REACT_NATIVE_DEPENDENCIES },
+        dependencies: { react: SANDBOX_PACKAGES.react, ...REACT_NATIVE_DEPENDENCIES },
     }),
     'expo-app/package.json': JSON.stringify({
         private: true,
-        dependencies: { react: testsPackage.devDependencies.react, ...REACT_NATIVE_DEPENDENCIES, expo: '54.0.0' },
+        dependencies: { react: SANDBOX_PACKAGES.react, ...REACT_NATIVE_DEPENDENCIES, expo: '54.0.0' },
     }),
 };
 

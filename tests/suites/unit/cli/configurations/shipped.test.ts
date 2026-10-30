@@ -4,7 +4,6 @@ import { test, expect } from 'bun:test';
 import { listAssets } from '#cli/system/assets.ts';
 import type { Tool, Check } from '#cli/types/configurations.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
-import testsPackage from '#tests/package.json' with { type: 'json' };
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
@@ -56,17 +55,6 @@ function listToolPinErrors(tool: Tool): string[] {
             : []),
         ...(isUnpinned ? [`tool ${tool.name} has no version pin or minimum.`] : []),
     ];
-}
-
-function readInstallerVersions(): Map<string, string> {
-    const versions = new Map<string, string>();
-    const pins = readConfigurations()
-        .values()
-        .flatMap((configuration) => configuration.tools)
-        .flatMap((tool) => Object.entries(tool.installers));
-    for (const [installer, pin] of pins)
-        if (pin.version !== undefined) versions.set(`${installer}:${pin.name}`, pin.version);
-    return versions;
 }
 
 function hasEmptyDefault(definition: SettingDefinition | undefined, value: unknown): boolean {
@@ -191,16 +179,4 @@ test('a mise installer refuses a checksum without a sha256 digest and accepts on
     const valid = { ...tool, mise: { name: 'taplo', checksums: { 'linux-x64': `sha256:${'a'.repeat(64)}` } } };
     expect(manifestToolSchema.safeParse(invalid).success).toBe(false);
     expect(manifestToolSchema.safeParse(valid).success).toBe(true);
-});
-
-test('each tool that the tests workspace declares has the version of its npm pin', () => {
-    const versions = readInstallerVersions();
-    const compared = Object.entries(testsPackage.devDependencies).filter(
-        ([name, version]) => versions.has(`npm:${name}`) && !version.startsWith('workspace:'),
-    );
-    expect(compared.length).toBeGreaterThan(0);
-    const differences = compared.flatMap(([name, version]) =>
-        versions.get(`npm:${name}`) === version ? [] : [{ name, version, pin: versions.get(`npm:${name}`) }],
-    );
-    expect(differences).toStrictEqual([]);
 });

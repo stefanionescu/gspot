@@ -1,5 +1,5 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { join, dirname } from 'node:path';
 import { createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -9,6 +9,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { LOWERCASE_SELECT_SQL } from '#tests/config/sql.ts';
 import { type RunOptions } from '#cli/types/commands/check.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -23,11 +24,7 @@ test.each([...FIX_LINTER_CASES])(
         const check = readConfigurations()
             .get(row.configuration)!
             .checks.find((check) => check.id === `${row.configuration}/${row.tool}`)!;
-        const executable = join(
-            dirname(await Bun.resolve(`${row.tool}/package.json`, import.meta.dir)),
-            'bin',
-            row.executable,
-        );
+        const executable = join(toolModules, row.tool, 'bin', row.executable);
         const command = [process.execPath, executable, '--config', row.config];
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings([], {

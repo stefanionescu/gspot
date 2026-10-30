@@ -39,8 +39,6 @@ A more specific rule wins over a general one.
 - `.gspot/configurations/general/engineering/rules/CLI.md`: when you change a command-line program that the project ships.
 - `.gspot/configurations/general/engineering/rules/COMMENTS.md`: when you write or change a comment.
 - `.gspot/configurations/general/engineering/rules/ERRORS.md`: when you write code that raises, catches, or reports an error.
-- `.gspot/configurations/general/engineering/rules/HTTP.md`: when you change an HTTP service.
-- `.gspot/configurations/general/engineering/rules/LOGGING.md`: when you add or change logging.
 - `.gspot/configurations/general/engineering/rules/PLANNING.md`: before you write a plan.
 - `.gspot/configurations/general/engineering/rules/SETTINGS.md`: when you change how a program reads its settings or environment.
 - `.gspot/configurations/general/engineering/rules/TASKS.md`: when you change `mise` tasks, `package.json` scripts, a `Makefile`, or another task runner.
@@ -98,8 +96,8 @@ You can edit the other keys of that file.
 - Commit straight to `main`. Do not open branches or pull requests.
 - A check that runs a linter takes the linter's name. A check that runs a project command takes the name of what it
   checks.
-- A unit test runs the source in process. It may run Git, `mkfifo`, and the tools of `tests/node_modules`, but makes no
-  network call.
+- A unit test runs the source in process. It may run Git, `mkfifo`, and the npm tools that `mise run setup` installs
+  from the manifests into `tests/tools/`, but makes no network call.
 - A test that installs tools, runs the packed packages, or contacts a registry belongs in `tests/suites/integration/`.
   `tests/suites/e2e/` installs the packed packages into a fresh project.
 - In unit check tests, choose the entrypoint for the assertion:

@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { type RunReport } from '#cli/types/commands/check.ts';
-import jestPackage from 'jest/package.json' with { type: 'json' };
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -32,7 +32,7 @@ test("jest/coverage at level all uses the scope's coverage limits and runs only 
         'package.json': '{"name":"jest-scoped-acceptance","private":true}\n',
         'sibling.test.cjs': 'throw new Error("Tests outside the selected project must not execute");\n',
         'app/package.json':
-            JSON.stringify({ name: 'jest-nested', private: true, devDependencies: { jest: jestPackage.version } }) +
+            JSON.stringify({ name: 'jest-nested', private: true, devDependencies: { jest: SANDBOX_PACKAGES.jest } }) +
             '\n',
         'app/math.cjs': MATH_SOURCE,
         'app/math.test.cjs': MATH_TEST_SOURCE,

@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import testsPackage from '#tests/package.json';
 import { parse } from '@decimalturn/toml-patch';
 import { getTool } from '#cli/configurations/tools.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -9,6 +8,7 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import type { ToolPackageJson } from '#cli/types/installers/npm.ts';
 import { YARN_CLIENTS } from '#tests/config/installers/projects.ts';
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { PythonToolProject } from '#cli/types/installers/pypi.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
@@ -33,7 +33,7 @@ test('a React Native project without Expo installs no Expo or DOM lint plugins',
         'package.json': JSON.stringify({
             name: 'example',
             private: true,
-            dependencies: { ...REACT_NATIVE_DEPENDENCIES, react: testsPackage.devDependencies.react },
+            dependencies: { ...REACT_NATIVE_DEPENDENCIES, react: SANDBOX_PACKAGES.react },
         }),
         'tsconfig.json': JSON.stringify(REACT_NATIVE_TSCONFIG),
     });

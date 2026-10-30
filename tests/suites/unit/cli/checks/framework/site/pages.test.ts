@@ -10,7 +10,7 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -118,7 +118,7 @@ test.each([...BUILT_PAGE_CASES])(
 
 test.each([...PURGECSS_STYLE_CASES])('site/purgecss checks $name', async ({ source, css, expected }) => {
     const { version } = getTool(readConfigurations().values(), 'purgecss');
-    const library = pathToFileURL(join(testModules, 'purgecss/lib/purgecss.esm.js')).href;
+    const library = pathToFileURL(join(toolModules, 'purgecss/lib/purgecss.esm.js')).href;
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['site'], {
             level: 'all',

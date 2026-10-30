@@ -3,8 +3,10 @@ import { test, expect } from 'bun:test';
 import { sep, join, relative } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 import { cp, lstat, mkdir, readdir, writeFile } from 'node:fs/promises';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
@@ -43,7 +45,7 @@ test('the installed ESLint plugin loads through import and require and enforces 
     const peerPackages = [
         `eslint@${eslintPluginPackage.devDependencies.eslint}`,
         `typescript@${testsPackage.devDependencies.typescript}`,
-        `typescript-eslint@${testsPackage.devDependencies['typescript-eslint']}`,
+        `typescript-eslint@${listToolProjectPins(readConfigurations().values().toArray()).npm['typescript-eslint']!}`,
     ];
     const installed = await runCommand(
         [

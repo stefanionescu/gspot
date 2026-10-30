@@ -284,7 +284,7 @@ paths = ["packages/cli/src/**"]
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 
 [tools.knip]
-entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config-files/purgecss.ts"]
+entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/tool-project.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config-files/purgecss.ts"]
 
 [[scope]]
 path = "docs"
@@ -300,8 +300,6 @@ tools.knip.ignore_dependencies = { value = ["tree-sitter-bash", "tree-sitter-css
 [[scope]]
 path = "tests"
 configurations = ["zod"]
-removed_configurations = { value = ["jest", "nestjs", "nextjs", "react", "react-dom", "svelte", "vitest", "vue"], reason = "The test code uses none of these frameworks; only the sandboxes that the tests create do." }
-tools.knip.ignore_dependencies = { value = ["@darraghor/eslint-plugin-nestjs-typed", "@next/eslint-plugin-next", "@react-native/eslint-plugin", "@vitest/eslint-plugin", "bats", "eslint-plugin-drizzle", "eslint-plugin-expo", "eslint-plugin-i18next", "eslint-plugin-jest", "@eslint-react/eslint-plugin", "eslint-plugin-react-hooks", "eslint-plugin-react-refresh", "eslint-plugin-svelte", "eslint-plugin-testing-library", "eslint-plugin-vue", "eslint-plugin-vuejs-accessibility", "pnpm", "supabase", "svelte-eslint-parser", "vue-eslint-parser", "yarn", "@nestjs/common", "@nestjs/core", "@tanstack/eslint-plugin-query", "eslint-plugin-jsx-a11y-x", "reflect-metadata", "rxjs", "vue"], reason = "Native sandbox commands load these packages from the linked tests installation." }
 
 [[import_rule]]
 name = "cli-config"
@@ -420,11 +418,6 @@ can_import = ["cli-types"]
 check = "dependencies/osv-scanner"
 rule = "GHSA-ch52-4w7c-c8xp"
 reason = "As checked on 2026-10-20, no release fixes the max-stale flaw: bun.lock holds 4.2.0, and 4.3.0 changes only Vary handling. Astro and make-fetch-happen use it in the docs and tests workspaces, which share no cached responses between users."
-
-[[ignore]]
-check = "dependencies/osv-scanner"
-rule = "GHSA-gcqx-w48m-w2h4"
-reason = "As checked on 2026-10-29, no release fixes the prototype poisoning of mergeObject: deepmerge 4.3.1 stays the latest, and jest-config 30.5.2 still asks for ^4.3.1. jest-config merges only the globals of a Jest config and its preset, and Jest runs in the tests workspace on sandboxes that the tests write."
 
 [[ignore]]
 check = "docs/missing-paths"
