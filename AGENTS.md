@@ -96,7 +96,8 @@ You can edit the other keys of that file.
 - In a new clone, run `mise install`, `mise run setup`, and `mise exec -- gspot install`.
 
 - Commit straight to `main`. Do not open branches or pull requests.
-- Name a tool check after its tool. Name a built-in check after what it checks.
+- A check that runs a linter takes the linter's name. A check that runs a project command takes the name of what it
+  checks.
 - A unit test runs the source in process. It may run Git, `mkfifo`, and the tools of `tests/node_modules`, but makes no
   network call.
 - A test that installs tools, runs the packed packages, or contacts a registry belongs in `tests/suites/integration/`.
@@ -110,10 +111,8 @@ You can edit the other keys of that file.
 - Keep CLI calls, and imports of the functions that the check registry names, out of `tests/suites/unit/cli/checks/`.
   A test may import such a function when other product code imports it too. Exit codes, JSON output, and other CLI
   behavior belong to `tests/suites/unit/cli/commands/`.
-- Give every exported function a doc comment, as the lint rules require. Write no other comments: names say what the
-  code does.
-- Export a declaration where you declare it. End no file with an export list.
-- Write every type as a TypeScript `type` alias. Never write JSDoc type tags in a `.ts` file.
+- End no file with an export list.
+- Write every type as a TypeScript `type` alias.
 - Use the types that a package publishes when the code already depends on that package. Do not add a dependency for its
   types alone.
 - Write a JavaScript module that gspot ships as a TypeScript source in `packages/cli/configurations/`. The manifest
