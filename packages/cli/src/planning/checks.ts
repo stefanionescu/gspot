@@ -4,7 +4,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { getTool, getToolName } from '#cli/manifests/tools.ts';
+import { getTool, findToolName } from '#cli/manifests/tools.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
@@ -44,7 +44,7 @@ function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck 
     const { check, configuration } = scopeCheck;
     const isRootCheck = (ROOT_RUNS as readonly string[]).includes(check.runs);
     const rootScope = getRootScope(session.scopes);
-    const name = getToolName(check);
+    const name = findToolName(check);
     const tool = name === undefined ? undefined : getTool(session.configurationsByName.values(), name);
     const plannedCheck: PlannedCheck = {
         scope: isRootCheck ? rootScope : scope,
@@ -224,7 +224,7 @@ export function listEnabledChecks(scopes: Scope[], settings: Settings): Configur
             const rootOnly = (ROOT_RUNS as readonly string[]).includes(check.runs);
             if (rootOnly && singleRuns.has(check.id)) return [];
             if (rootOnly) singleRuns.add(check.id);
-            const name = getToolName(check);
+            const name = findToolName(check);
             const tool =
                 name === undefined
                     ? undefined

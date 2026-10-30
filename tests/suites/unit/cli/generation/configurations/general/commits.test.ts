@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { getValueAt } from '#cli/system/tables.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
@@ -24,5 +24,5 @@ test('commitlint refuses inactive scope-case options and keeps them when no scop
     const generated = buildGeneratedFiles(await openSession(sandbox.path));
     const target = getManifestTarget('commits', 'commitlint.json');
     const content = generated.files.find(({ path }) => path === target)!.content;
-    expect(getValueAt(JSON.parse(content), ['rules', 'scope-case'])).toStrictEqual([2, 'always', 'upper-case']);
+    expect(findValueAt(JSON.parse(content), ['rules', 'scope-case'])).toStrictEqual([2, 'always', 'upper-case']);
 });

@@ -1,6 +1,6 @@
 import { LINE_BREAK } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { getValueAt } from '#cli/system/tables.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
@@ -24,7 +24,7 @@ function buildJsonSyntaxError(stdout: string, cause?: unknown): GspotError {
 }
 
 function listAt(value: unknown, path: string | undefined): unknown[] {
-    const found = path === undefined || path === '' ? value : getValueAt(value, path.split('.'));
+    const found = path === undefined || path === '' ? value : findValueAt(value, path.split('.'));
     if (!Array.isArray(found))
         throw new GspotError('output', `Required JSON report array ${path ?? '<root>'} is missing or invalid.`);
     return found;
@@ -33,7 +33,7 @@ function listAt(value: unknown, path: string | undefined): unknown[] {
 function listChains(chain: unknown[], keys: string[]): unknown[][] {
     const [key, ...rest] = keys;
     if (key === undefined) return [chain];
-    const children = getValueAt(chain[0], key.split('.')) === undefined ? [] : listAt(chain[0], key);
+    const children = findValueAt(chain[0], key.split('.')) === undefined ? [] : listAt(chain[0], key);
     return children.flatMap((child) => listChains([child, ...chain], rest));
 }
 
@@ -51,7 +51,7 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
         (fields?.[name] ?? '')
             .split(' ')
             .filter((path) => path !== '')
-            .map((path) => sources.map((source) => getValueAt(source, path.split('.'))));
+            .map((path) => sources.map((source) => findValueAt(source, path.split('.'))));
     const getField = (name: string): string | undefined => {
         const joined = getFieldValues(name)
             .map(

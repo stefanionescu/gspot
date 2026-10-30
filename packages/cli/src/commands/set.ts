@@ -5,7 +5,7 @@ import { isReasonedValue } from '#cli/settings/file.ts';
 import { COMMAND_SUGGESTION } from '#cli/config/main.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { isTable, getValueAt } from '#cli/system/tables.ts';
+import { isTable, findValueAt } from '#cli/system/tables.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
@@ -76,7 +76,7 @@ function buildReasonTable(options: SetOptions): ParsedSettingValue {
 function setSettingValue(scopeTable: TomlTable, change: ParsedSettingValue, setting: Setting, key: string): void {
     if (change.type === 'list') setKey(scopeTable, key, change.value);
     else if (setting.type === 'table' && isTable(change.value)) {
-        const written = getValueAt(scopeTable, key.split('.'));
+        const written = findValueAt(scopeTable, key.split('.'));
         const writtenValue = isReasonedValue(written) ? written.value : written;
         setKey(scopeTable, key, { ...(isTable(writtenValue) && writtenValue), ...change.value });
     } else setKey(scopeTable, key, change.value);
@@ -85,7 +85,7 @@ function setSettingValue(scopeTable: TomlTable, change: ParsedSettingValue, sett
 function setSetting(scopeTable: TomlTable, change: ParsedSettingValue, setting: Setting, options: SetOptions): void {
     setSettingValue(scopeTable, change, setting, options.key);
     if (options.reason === undefined || setting.reason_values === true) return;
-    const written = getValueAt(scopeTable, options.key.split('.'));
+    const written = findValueAt(scopeTable, options.key.split('.'));
     const value = isReasonedValue(written) ? written.value : written;
     setKey(scopeTable, options.key, { value, reason: options.reason });
 }

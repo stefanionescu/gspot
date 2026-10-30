@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text.ts';
-import { getValueAt } from '#cli/system/tables.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -51,7 +51,7 @@ test('negative ignores follow positives for ordered tools and stay out of tools 
     expect(eslint).toContain('"!src/keep.ts"');
     expect(eslint.indexOf('"src/**"')).toBeLessThan(eslint.indexOf('"!src/keep.ts"'));
     const typos: unknown = parse(output.files.find(({ path }) => path.endsWith('/typos.toml'))!.content);
-    const paths = getValueAt(typos, ['files', 'extend-exclude']) as string[];
+    const paths = findValueAt(typos, ['files', 'extend-exclude']) as string[];
     expect(paths.indexOf('src/**')).toBeLessThan(paths.indexOf('!src/keep.ts'));
     expect(paths).toContain('!src/keep.ts');
     const knip = JSON.parse(output.files.find(({ path }) => path.endsWith('/knip.json'))!.content) as {
@@ -157,7 +157,7 @@ test.each([...PATH_IGNORE_CASES])(
         });
         const content = await buildGeneratedFile(settings, path, { 'source.js': 'export const port = 8080;\n' });
         const parsed: unknown = path.endsWith('.toml') ? parse(content) : (JSON.parse(content) as unknown);
-        const patterns = getValueAt(parsed, nativePath);
+        const patterns = findValueAt(parsed, nativePath);
         expect(patterns).toContain('selected/**');
         expect(patterns).not.toContain('rule-only/**');
         expect(patterns).not.toContain('other/**');
@@ -259,7 +259,7 @@ test('root paths in the generated-files section are anchored, so an authored too
     });
     expect({ root: root.ignored, authored: authored.ignored }).toStrictEqual({ root: true, authored: false });
     const duplication = output.files.find(({ path }) => path.endsWith('/jscpd.json'))!;
-    const ignored = getValueAt(JSON.parse(duplication.content), ['ignore']);
+    const ignored = findValueAt(JSON.parse(duplication.content), ['ignore']);
     expect(ignored).toContain('eslint.config.mjs');
     expect(ignored).not.toContain('**/eslint.config.mjs');
 });

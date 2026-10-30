@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { parse as parseIni } from 'ini';
 import { parse as parseYaml } from 'yaml';
 import { writeFile } from 'node:fs/promises';
-import { getValueAt } from '#cli/system/tables.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import { join, extname, basename } from 'node:path';
 import { openSession } from '#cli/planning/session.ts';
 import { LEVELS } from '#cli/config/manifests/names.ts';
@@ -175,7 +175,7 @@ test('an ignore whose reason equals a built-in section title keeps its paths in 
     const files = buildGeneratedFiles(await openSession(sandbox.path)).files;
     const content = files.find(({ path }) => path === getManifestTarget('javascript', 'jsconfig.json'))!.content;
     const jsconfig: unknown = JSON.parse(content);
-    expect(getValueAt(jsconfig, ['exclude'])).toContain('../../../../legacy/**');
+    expect(findValueAt(jsconfig, ['exclude'])).toContain('../../../../legacy/**');
 });
 
 function parseJson(text: string, path: string): void {

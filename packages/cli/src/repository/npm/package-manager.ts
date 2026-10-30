@@ -57,7 +57,7 @@ function readFirstPackageManager(
 ): PackageManagerField | { name: PackageManagerPin['name']; version?: undefined } {
     for (const path of packageJsonPaths) {
         const packageJson = readPackageJson(root, path);
-        const pin = packageJson === undefined ? undefined : getPackageManagerPin(packageJson);
+        const pin = packageJson === undefined ? undefined : findPackageManagerPin(packageJson);
         if (pin !== undefined) return pin;
         const lockfile = LOCKFILES.filter((row) => 'configuration' in row && row.configuration === 'javascript').find(
             ({ file }) => existsSync(join(root, dirname(path), file)),
@@ -73,7 +73,7 @@ Read and validate the package manager pin written in package.json.
 
 @param packageJson the repository package fields.
 */
-export function getPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
+export function findPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
     if (packageJson.packageManager !== undefined) return parsePackageManagerField(packageJson.packageManager);
     const engines = packageJson.devEngines?.packageManager;
     const engine = Array.isArray(engines) ? engines[0] : engines;

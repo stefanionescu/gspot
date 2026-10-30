@@ -3,7 +3,7 @@ import type { Session } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Node, DefElem, TypeName } from '@pgsql/types';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
-import { getNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
+import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { PUBLIC_SCHEMA } from '#cli/config/checks/database/postgres/schema.ts';
 import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import type { SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
@@ -28,10 +28,10 @@ function buildFunctionKey(names: Node[] | undefined, parameters: (TypeName | und
 
 function setFunctionSecurity(security: FunctionSecurity, action: DefElem): boolean {
     if (action.defname === 'security') {
-        security.definer = getNodeFields(action.arg, 'Boolean')?.boolval === true;
+        security.definer = findNodeFields(action.arg, 'Boolean')?.boolval === true;
         return true;
     }
-    const setting = getNodeFields(action.arg, 'VariableSetStmt');
+    const setting = findNodeFields(action.arg, 'VariableSetStmt');
     if (action.defname !== 'set' || setting === undefined) return false;
     if (setting.name !== 'search_path' && setting.kind !== 'VAR_RESET_ALL') return false;
     security.path = setting.kind !== 'VAR_RESET' && setting.kind !== 'VAR_RESET_ALL';
@@ -51,12 +51,13 @@ function listLooseDefiners(migrations: Migration[]): FunctionSecurity[] {
                 migration,
                 statement,
                 definer: options.some(
-                    (option) => option.defname === 'security' && getNodeFields(option.arg, 'Boolean')?.boolval === true,
+                    (option) =>
+                        option.defname === 'security' && findNodeFields(option.arg, 'Boolean')?.boolval === true,
                 ),
                 path: options.some(
                     (option) =>
                         option.defname === 'set' &&
-                        getNodeFields(option.arg, 'VariableSetStmt')?.name === 'search_path',
+                        findNodeFields(option.arg, 'VariableSetStmt')?.name === 'search_path',
                 ),
             });
         },

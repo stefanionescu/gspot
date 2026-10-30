@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { getValueAt } from '#cli/system/tables.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -22,7 +22,7 @@ test.each([...SQUAWK_VERSION_CASES])(
             getManifestTarget('postgres', 'squawk.toml'),
             SQUAWK_MIGRATION_FILES,
         );
-        expect(getValueAt(parse(text), ['excluded_paths'])).toStrictEqual(expected);
+        expect(findValueAt(parse(text), ['excluded_paths'])).toStrictEqual(expected);
     },
 );
 
@@ -34,7 +34,7 @@ test('the Squawk config file of a Postgres child scope excludes the frozen migra
     const session = await openSession(sandbox.path);
     const path = getConfigFilePath(session, 'squawk', 'app');
     const text = buildGeneratedFiles(session).files.find((file) => file.path === path)!.content;
-    expect(getValueAt(parse(text), ['excluded_paths'])).toStrictEqual([
+    expect(findValueAt(parse(text), ['excluded_paths'])).toStrictEqual([
         'app/migrations/V2_first.sql',
         'migrations/V1_root.sql',
         'other/migrations/V1_other.sql',

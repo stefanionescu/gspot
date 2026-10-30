@@ -17,7 +17,7 @@ import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } fr
 import type { PackageManager, PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
 
 import {
-    getPackageManagerPin,
+    findPackageManagerPin,
     readPackageManagerVersion,
     buildPackageManagerCommand,
 } from '#cli/repository/npm/package-manager.ts';
@@ -197,7 +197,7 @@ function readProjectPackageManager(
     name: PackageManagerPin['name'],
 ): PackageManager {
     const packageJson = readPackageJson(session.root, joinScope(scopePath, PACKAGE_JSON));
-    const written = packageJson === undefined ? undefined : getPackageManagerPin(packageJson);
+    const written = packageJson === undefined ? undefined : findPackageManagerPin(packageJson);
     const pin = [written, session.packageManager].find((each) => each?.name === name) ?? { name };
     return readPackageManagerVersion(session.toolsRoot, pin, session.timeoutSeconds, session.cache);
 }

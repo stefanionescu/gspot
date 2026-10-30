@@ -1,5 +1,5 @@
 import type { Constraint } from '@pgsql/types';
-import { getNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
+import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import type { SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
 import { PUBLIC_SCHEMA, SCHEMA_NAME_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/checks/database/postgres/schema.ts';
 
@@ -111,7 +111,7 @@ const ALTERATIONS: SchemaAlterations = {
         state.indexes = state.indexes.filter((index) => index.table !== at.table || index.constraint !== name);
     },
     AT_AddColumn: (state, at, command) => {
-        const column = getNodeFields(command.def, 'ColumnDef');
+        const column = findNodeFields(command.def, 'ColumnDef');
         for (const node of listNodeFields(column?.constraints, 'Constraint'))
             addConstraint(state, at, node, column?.colname ?? '');
     },
@@ -123,7 +123,7 @@ const ALTERATIONS: SchemaAlterations = {
         state.indexes = state.indexes.filter((index) => index.table !== at.table || !index.columns.includes(name));
     },
     AT_AddConstraint: (state, at, command) => {
-        const node = getNodeFields(command.def, 'Constraint');
+        const node = findNodeFields(command.def, 'Constraint');
         if (node !== undefined) addConstraint(state, at, node);
     },
 };

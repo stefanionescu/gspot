@@ -27,7 +27,7 @@ export async function detectSwiftTags(path: string, text: string): Promise<strin
     using tree = await parseSource('swift', text);
     const imports = tree.rootNode
         .descendantsOfType(SWIFT_IMPORT_NODE)
-        .map((node) => getImportedModule(node))
+        .map((node) => findImportedModule(node))
         .filter((name) => name !== undefined);
     const attributes = tree.rootNode.descendantsOfType(SWIFT_ATTRIBUTE_NODE);
     const isTest =
@@ -53,6 +53,6 @@ Get the top-level module named by a Swift import declaration.
 @returns the imported module, when the declaration names one.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Swift tags and the Swift import rules read the imported module by the same rule.
-export function getImportedModule(node: Node): string | undefined {
+export function findImportedModule(node: Node): string | undefined {
     return node.namedChildren.find((child) => child.type === SWIFT_IDENTIFIER_NODE)?.text.split('.', 1)[0];
 }

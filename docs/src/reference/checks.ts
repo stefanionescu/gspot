@@ -3,7 +3,7 @@ import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import { GROUP_LABELS } from '#cli/config/manifests/names.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
-import { getTool, getToolName, hasRuleOutput } from '#cli/manifests/tools.ts';
+import { getTool, findToolName, hasRuleOutput } from '#cli/manifests/tools.ts';
 import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
 import type { GuideCheck, Suppression, ReferencePage } from '#docs/types/reference.ts';
 import { formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
@@ -30,7 +30,7 @@ import {
 } from '#docs/config/reference.ts';
 
 function formatToolNames(check: Check): string | undefined {
-    const program = getToolName(check);
+    const program = findToolName(check);
     if (program === undefined) return undefined;
     const setting = SETTING_ONLY_PLACEHOLDER.exec(program)?.groups?.['name'];
     const tool = setting === undefined ? program : `the command in \`${setting}\``;
@@ -60,7 +60,7 @@ function formatTurnOff(check: Check, suppressions: Map<string, Suppression>): st
         `gspot ignore ${check.id} --paths "<glob>" --reason "<why>"`,
         ...(hasRuleOutput(check) ? [`gspot ignore ${check.id} --rule <rule> --reason "<why>"`] : []),
     ];
-    const program = getToolName(check);
+    const program = findToolName(check);
     const comment = formatSuppressionComment(program === undefined ? undefined : suppressions.get(program));
     return `Turn it off for some files${hasRuleOutput(check) ? LINT_RULES_MESSAGE : ''}, with a reason:\n\n\`\`\`shell\n${commands.join('\n')}\n\`\`\`${comment}`;
 }
@@ -168,7 +168,7 @@ export function listGuideChecks(configurations: string[]): GuideCheck[] {
 }
 
 function listToolSystems(check: Check): string[] | undefined {
-    const program = getToolName(check);
+    const program = findToolName(check);
     const builds = program === undefined ? undefined : getTool(CLI_REFERENCE.configurations, program).builds;
     if (builds === undefined && check.operating_systems === undefined) return undefined;
     return OPERATING_SYSTEMS.filter(

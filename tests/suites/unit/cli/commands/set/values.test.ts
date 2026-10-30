@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { parse } from '@decimalturn/toml-patch';
-import { getValueAt } from '#cli/system/tables.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
@@ -36,11 +36,11 @@ test('set writes and unset removes a setting of a configuration that detection s
     const set = await runGspot(sandbox.path, ['set', 'licenses.allowed', 'MIT']);
     expect(set.code, set.stdout + set.stderr).toBe(0);
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    expect(getValueAt(written, ['licenses', 'allowed'])).toStrictEqual(['MIT']);
+    expect(findValueAt(written, ['licenses', 'allowed'])).toStrictEqual(['MIT']);
     const unset = await runGspot(sandbox.path, ['unset', 'licenses.allowed']);
     expect(unset.code, unset.stdout + unset.stderr).toBe(0);
     const reset = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    expect(getValueAt(reset, ['licenses', 'allowed'])).toBeUndefined();
+    expect(findValueAt(reset, ['licenses', 'allowed'])).toBeUndefined();
 });
 
 test('set names -- when a value reads as an option, and takes the values after --', async () => {
@@ -54,7 +54,7 @@ test('set names -- when a value reads as an option, and takes the values after -
     expect(set.code, set.stdout + set.stderr).toBe(0);
     expect(set.stdout.split('\n', 1)[0]).toBe('Set ci.setup_command to ["bun","install","--frozen-lockfile"].');
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    expect(getValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['bun', 'install', '--frozen-lockfile']);
+    expect(findValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['bun', 'install', '--frozen-lockfile']);
 });
 
 test.each([...NO_CHANGE_COMMANDS])(
@@ -125,7 +125,7 @@ test('set writes a TOML list of tables as tables and refuses a list of strings',
     ]);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-    expect(getValueAt(parse(settings) as TomlTable, ['tools', 'eslint', 'restricted_imports'])).toStrictEqual([
+    expect(findValueAt(parse(settings) as TomlTable, ['tools', 'eslint', 'restricted_imports'])).toStrictEqual([
         { name: 'unreviewed-module', message: 'Import the reviewed entrypoint for this dependency.' },
     ]);
     const refused = await runGspot(sandbox.path, [
@@ -182,7 +182,7 @@ test.each([...LOOSENED_SETTINGS])(
             expect(result.code, result.stdout + result.stderr).toBe(0);
         }
         const contents = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-        const saved = getValueAt(contents, key.split('.'));
+        const saved = findValueAt(contents, key.split('.'));
         expect(saved).toStrictEqual({ value: [second], reason: SETTING_REASON });
     },
 );
@@ -202,7 +202,7 @@ test.each([...LOOSENED_SETTINGS])(
         const changed = await runGspot(sandbox.path, ['set', key, value, '--scope', 'app', '--reason', SETTING_REASON]);
         expect(changed.code, changed.stdout + changed.stderr).toBe(0);
         const saved = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-        expect(getValueAt(saved, key.split('.'))).toMatchObject({ value: [second], reason: SETTING_REASON });
+        expect(findValueAt(saved, key.split('.'))).toMatchObject({ value: [second], reason: SETTING_REASON });
         const restored = await runGspot(sandbox.path, ['unset', key, '--scope', 'app']);
         expect(restored.code, restored.stdout + restored.stderr).toBe(0);
         const listed = await runGspot(sandbox.path, ['list', 'settings', '--json']);
@@ -244,7 +244,7 @@ test.each([...STRING_SETTING_VALUES])('set keeps words as strings for $key: $wor
     const result = await runGspot(sandbox.path, ['set', key, ...words]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    expect(getValueAt(written, key.split('.'))).toStrictEqual(value);
+    expect(findValueAt(written, key.split('.'))).toStrictEqual(value);
 });
 
 test('--json after the value separator stays a setup command argument', async () => {
@@ -254,7 +254,7 @@ test('--json after the value separator stays a setup command argument', async ()
     expect(result.stdout).toStartWith('Set ci.setup_command to ["echo","--json"].');
     expect(result.stderr).toBe('');
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    expect(getValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['echo', '--json']);
+    expect(findValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['echo', '--json']);
 });
 
 test('set preserves repeated command arguments and replaces the previous command', async () => {
@@ -262,13 +262,13 @@ test('set preserves repeated command arguments and replaces the previous command
     const first = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'make', '-C', 'make']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    const contents = getValueAt(written, ['ci', 'setup_command']);
+    const contents = findValueAt(written, ['ci', 'setup_command']);
     expect(contents).toStrictEqual(['make', '-C', 'make']);
     const second = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'npm', 'ci']);
     expect(second.code, second.stdout + second.stderr).toBe(0);
     expect(second.stdout.split('\n', 1)[0]).toStartWith('Set ci.setup_command to ["npm","ci"].');
     const rewritten = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    const rewrittenCommand = getValueAt(rewritten, ['ci', 'setup_command']);
+    const rewrittenCommand = findValueAt(rewritten, ['ci', 'setup_command']);
     expect(rewrittenCommand).toStrictEqual(['npm', 'ci']);
 });
 
@@ -279,6 +279,6 @@ test('set replaces the written values of an ordinary list', async () => {
     const second = await runGspot(sandbox.path, ['set', 'naming.banned_words', 'secondword']);
     expect(second.code, second.stdout + second.stderr).toBe(0);
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    const contents = getValueAt(written, ['naming', 'banned_words']);
+    const contents = findValueAt(written, ['naming', 'banned_words']);
     expect(contents).toStrictEqual(['secondword']);
 });

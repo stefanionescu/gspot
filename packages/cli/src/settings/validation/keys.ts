@@ -10,7 +10,7 @@ import type { Setting, WrittenSetting, AvailableSettings } from '#cli/types/sett
 import {
     findSetting,
     listWrittenKeys,
-    getWrittenSetting,
+    findWrittenSetting,
     listSettingsTables,
     findSettingDefault,
     listApplicableTables,
@@ -63,7 +63,7 @@ function validateWrittenKey(
 ): SettingsError[] {
     const match = findSetting(availableSettings, key);
     if (!match) return [{ path: key.split('.'), message: formatUnknownSetting(availableSettings, key) }];
-    const written = getWrittenSetting(table, key);
+    const written = findWrittenSetting(table, key);
     if (!written) return [];
     const shipped = findSettingDefault(availableSettings, settings, match, scopePath)?.value;
     return validateWrittenReason(key, written, match.setting, scopePath, shipped);
@@ -86,7 +86,7 @@ function listUnsettledConflicts(
     for (const { selected, scope, path } of availableByScope) {
         const tables = listApplicableTables(settings, scope);
         for (const { key, message: text } of selected.errors)
-            if (tables.every(({ table }) => getWrittenSetting(table, key) === undefined))
+            if (tables.every(({ table }) => findWrittenSetting(table, key) === undefined))
                 errors.push({ path, message: text });
     }
     return errors;

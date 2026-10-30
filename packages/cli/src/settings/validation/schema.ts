@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { getValueAt } from '#cli/system/tables.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
@@ -31,7 +31,7 @@ import {
 function formatEmptyIgnorePaths(issue: z.core.$ZodIssue, path: KeyPath, syntax: TomlSyntax): SettingsError | undefined {
     const [record, index, field] = path;
     if (issue.code !== 'too_small' || record !== 'ignore' || field !== 'paths' || index === undefined) return undefined;
-    const check = getValueAt(syntax.value, [record, index, 'check']);
+    const check = findValueAt(syntax.value, [record, index, 'check']);
     const message =
         typeof check === 'string'
             ? `paths = [] matches no path. Leave out paths to ignore ${check} everywhere, or list the paths.`
@@ -65,7 +65,7 @@ export function formatSettingsIssue(issue: z.core.$ZodIssue, syntax: TomlSyntax)
         return issue.keys.map((key) => ({ path: [...segments, key], message: formatUnknownKey(segments, key) }));
     let schema: z.ZodType | undefined = settingsSchema;
     for (const segment of segments) schema = findChildSchema(schema, segment);
-    const message = formatFileValueError(schema, issue, getValueAt(syntax.value, segments));
+    const message = formatFileValueError(schema, issue, findValueAt(syntax.value, segments));
     return [{ path: segments, message }];
 }
 

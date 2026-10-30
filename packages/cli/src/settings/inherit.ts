@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { compareText } from '#cli/system/text.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
-import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { commandSchema } from '#cli/schemas/manifests/fields.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, SettingsTable } from '#cli/types/settings/file.ts';
@@ -73,7 +73,7 @@ function mergeTable(
 ): InheritedValue {
     let result = inherited;
     const written = possibleKeys
-        .map((writtenKey) => ({ writtenKey, found: getWrittenSetting(table.table, writtenKey) }))
+        .map((writtenKey) => ({ writtenKey, found: findWrittenSetting(table.table, writtenKey) }))
         .filter((row): row is typeof row & { found: NonNullable<typeof row.found> } => row.found !== undefined);
     const owner = table.scope === '' ? SETTINGS_FILE : `[scope ${JSON.stringify(table.scope)}]`;
     const origin = table.scope === '' ? 'root' : 'scope';
@@ -83,7 +83,7 @@ function mergeTable(
             value: mergeValue(
                 setting,
                 result.origin === 'configuration' ? undefined : result.value,
-                getValueAt(table.table, writtenKey.split('.')),
+                findValueAt(table.table, writtenKey.split('.')),
             ),
             source: writtenKey === key ? owner : `${owner} (${writtenKey})`,
             origin,
@@ -171,8 +171,8 @@ Get the written value of a dotted key.
 @param key the dotted setting name.
 @returns undefined when the key has no value.
 */
-export function getWrittenSetting(settings: Pick<Settings, 'written'>, key: string): WrittenSetting | undefined {
-    const value: unknown = getValueAt(settings.written, key.split('.'));
+export function findWrittenSetting(settings: Pick<Settings, 'written'>, key: string): WrittenSetting | undefined {
+    const value: unknown = findValueAt(settings.written, key.split('.'));
     if (value === undefined) return undefined;
     return isReasonedValue(value)
         ? {
@@ -309,7 +309,7 @@ export function listWrittenKeys(settings: SettingsTable, availableSettings: Avai
     }
     const settingKeys = availableSettings.settings
         .keys()
-        .filter((key) => getWrittenSetting(settings, key) !== undefined)
+        .filter((key) => findWrittenSetting(settings, key) !== undefined)
         .toArray();
     return [...new Set([...settingKeys, ...keys])];
 }

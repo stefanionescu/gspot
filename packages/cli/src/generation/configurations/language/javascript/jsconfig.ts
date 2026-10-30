@@ -1,6 +1,6 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { getValueAt } from '#cli/system/tables.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import { join, dirname, relative } from 'node:path';
 import { JSCONFIG_FILE } from '#cli/config/files/names.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
@@ -33,7 +33,7 @@ function buildExtendedExclude(
     const declaring = chain
         .map((file) => ({
             file,
-            exclude: getValueAt(file === paths.owner ? authored.raw : readTsconfig(root, file, cache)?.raw, [
+            exclude: findValueAt(file === paths.owner ? authored.raw : readTsconfig(root, file, cache)?.raw, [
                 'exclude',
             ]),
         }))
@@ -107,7 +107,7 @@ export function buildJsconfigFile(planned: PlannedConfigFile): string {
     const jsconfig: Record<string, unknown> = { compilerOptions };
     const isExtensionless = hasExtensionlessSources(planned, importStyle);
     const hasSourceSelection = SOURCE_SELECTION_FIELDS.some(
-        (field) => getValueAt(jsconfigOwner?.raw, [field]) !== undefined,
+        (field) => findValueAt(jsconfigOwner?.raw, [field]) !== undefined,
     );
     if (!hasSourceSelection)
         jsconfig['include'] = JAVASCRIPT_EXTENSIONS.map((extension) => `${prefix}**/*.${extension}`);

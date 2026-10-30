@@ -4,9 +4,9 @@ import { isDeepStrictEqual } from 'node:util';
 import { modify, applyEdits } from 'jsonc-parser';
 import { GspotError } from '#cli/system/errors.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
-import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { NPM_SETTING_PREFIX } from '#cli/config/installers/npm/project.ts';
@@ -80,7 +80,7 @@ function parseDevelopmentDependencies(
     if (!isTable(dependencies)) return undefined;
     const pins: Dependencies = {};
     for (const [dependency, value] of Object.entries(dependencies)) {
-        const specifier = packageManager === 'pnpm' ? getValueAt(value, ['specifier']) : value;
+        const specifier = packageManager === 'pnpm' ? findValueAt(value, ['specifier']) : value;
         if (typeof specifier !== 'string') return undefined;
         pins[dependency] = specifier;
     }
@@ -176,7 +176,13 @@ function isPnpmLockfileFresh(
     return (
         matches &&
         Object.entries(dependencies).every(([name, pin]) => {
-            const version = getValueAt(document, ['importers', PNPM_ROOT_IMPORTER, 'devDependencies', name, 'version']);
+            const version = findValueAt(document, [
+                'importers',
+                PNPM_ROOT_IMPORTER,
+                'devDependencies',
+                name,
+                'version',
+            ]);
             return (
                 typeof version === 'string' &&
                 version.split(PNPM_PEER_START, 1)[0] === pin &&

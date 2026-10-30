@@ -4,9 +4,9 @@ import { selectConfigurations } from '#cli/manifests/select.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { findSettingSchema } from '#cli/settings/schema-lookup.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
-import { isTable, addTable, getValueAt } from '#cli/system/tables.ts';
 import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/scopes.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
+import { isTable, addTable, findValueAt } from '#cli/system/tables.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
 import type { Settings, TableValues, TableSettings } from '#cli/types/settings/file.ts';
@@ -174,8 +174,8 @@ Read a language's limit, falling back to the scope's general limit.
 */
 export function getLimit(scopeSettings: ScopeSettings, key: string, language?: string): number {
     const value =
-        getValueAt(scopeSettings.tables.limits, [language ?? '', key]) ??
-        getValueAt(scopeSettings.tables.limits, [key]);
+        findValueAt(scopeSettings.tables.limits, [language ?? '', key]) ??
+        findValueAt(scopeSettings.tables.limits, [key]);
     if (typeof value !== 'number')
         throw new TypeError(
             `The selected scope has no ${[language, key].filter((name) => name !== undefined).join('.')} limit.`,

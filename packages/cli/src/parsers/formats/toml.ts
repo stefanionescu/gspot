@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import { MESSAGE_END } from '#cli/config/parsers/formats/errors.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
-import { isTable, getValueAt, normalizeTables } from '#cli/system/tables.ts';
+import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
 import type { KeyPath, EditableFile } from '#cli/types/parsers/editable-file.ts';
 import { patch, stringify, parseDocument, parse as parseToml } from '@decimalturn/toml-patch';
 import { PATCH_FORMAT, TABLE_PROPERTY_FLAGS, MISSING_RANGE_MESSAGE } from '#cli/config/parsers/formats/toml.ts';
@@ -148,7 +148,7 @@ export function openTomlFile(path: string, text: string): EditableFile {
     const document: Record<string, unknown> = parseTomlFile(path, text);
     const previous = parseTomlSyntax(text, document);
     return {
-        getValue: (keys) => getValueAt(document, keys),
+        getValue: (keys) => findValueAt(document, keys),
         set(keys, value) {
             if (keys.some((key) => typeof key !== 'string')) throw new Error(`${path} requires TOML table keys.`);
             const key = keys.at(-1);
@@ -178,7 +178,7 @@ function buildTablePath(
     const path: KeyPath[number][] = [];
     for (const [index, key] of node.key.item.value.entries()) {
         path.push(key);
-        if (!Array.isArray(getValueAt(positions.value, path))) continue;
+        if (!Array.isArray(findValueAt(positions.value, path))) continue;
         const name = JSON.stringify(node.key.item.value.slice(0, index + 1));
         let position = positions.active.get(name) ?? 0;
         if (isTomlKind(node, 'TableArray') && index === node.key.item.value.length - 1) {

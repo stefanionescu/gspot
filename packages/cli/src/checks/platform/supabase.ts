@@ -16,8 +16,8 @@ import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import { getNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { parseCheckedFile } from '#cli/checks/cross-configuration/syntax.ts';
 import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/syntax.ts';
 import type { SqlStatement, SqlNodeFields } from '#cli/types/parsers/code/sql.ts';
@@ -51,29 +51,30 @@ function listEqualityBuckets(expression: SqlNodeFields['A_Expr']): string[] {
         [expression.lexpr, expression.rexpr],
         [expression.rexpr, expression.lexpr],
     ]) {
-        if (listNodeFields(getNodeFields(column, 'ColumnRef')?.fields, 'String').at(-1)?.sval !== 'bucket_id') continue;
-        const name = getNodeFields(value, 'A_Const')?.sval?.sval;
+        if (listNodeFields(findNodeFields(column, 'ColumnRef')?.fields, 'String').at(-1)?.sval !== 'bucket_id')
+            continue;
+        const name = findNodeFields(value, 'A_Const')?.sval?.sval;
         if (name !== undefined) return [name];
     }
     return [];
 }
 
 function listMembershipBuckets(expression: SqlNodeFields['A_Expr']): string[] {
-    if (listNodeFields(getNodeFields(expression.lexpr, 'ColumnRef')?.fields, 'String').at(-1)?.sval !== 'bucket_id')
+    if (listNodeFields(findNodeFields(expression.lexpr, 'ColumnRef')?.fields, 'String').at(-1)?.sval !== 'bucket_id')
         return [];
     let values: Node[] | undefined;
-    if (expression.kind === 'AEXPR_IN') values = getNodeFields(expression.rexpr, 'List')?.items;
-    if (expression.kind === 'AEXPR_OP_ANY') values = getNodeFields(expression.rexpr, 'A_ArrayExpr')?.elements;
+    if (expression.kind === 'AEXPR_IN') values = findNodeFields(expression.rexpr, 'List')?.items;
+    if (expression.kind === 'AEXPR_OP_ANY') values = findNodeFields(expression.rexpr, 'A_ArrayExpr')?.elements;
     return listNodeFields(values, 'A_Const').flatMap((literal) => literal.sval?.sval ?? []);
 }
 
 function listBucketConditions(node: Node | undefined): string[] {
-    const boolean = getNodeFields(node, 'BoolExpr');
+    const boolean = findNodeFields(node, 'BoolExpr');
     if (boolean !== undefined) {
         if (boolean.boolop === 'NOT_EXPR') return [];
         return (boolean.args ?? []).flatMap((child) => listBucketConditions(child));
     }
-    const expression = getNodeFields(node, 'A_Expr');
+    const expression = findNodeFields(node, 'A_Expr');
     if (expression === undefined || listNodeFields(expression.name, 'String')[0]?.sval !== '=') return [];
     return expression.kind === 'AEXPR_OP' ? listEqualityBuckets(expression) : listMembershipBuckets(expression);
 }

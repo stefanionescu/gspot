@@ -4,7 +4,7 @@ import { getPosition } from '#cli/system/text.ts';
 import { JSONC_OPTIONS } from '#cli/config/parsers/formats/json.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
-import { isTable, getValueAt, normalizeTables } from '#cli/system/tables.ts';
+import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
 import { parse, modify, applyEdits, type ParseError, printParseErrorCode } from 'jsonc-parser';
 
 export function parseJsonFile(path: string, text: string): Record<string, unknown>;
@@ -44,9 +44,9 @@ export function openJsonFile(path: string, text: string): EditableFile {
     let editedText = text;
     let document = parseJsonFile(path, editedText);
     return {
-        getValue: (keys) => normalizeTables(getValueAt(document, keys)),
+        getValue: (keys) => normalizeTables(findValueAt(document, keys)),
         set(keys, value) {
-            if (isDeepStrictEqual(normalizeTables(getValueAt(document, keys)), normalizeTables(value))) return;
+            if (isDeepStrictEqual(normalizeTables(findValueAt(document, keys)), normalizeTables(value))) return;
             const offset = editedText.startsWith('\uFEFF') ? 1 : 0;
             const source = editedText.slice(offset);
             const next = editedText.slice(0, offset) + applyEdits(source, modify(source, [...keys], value, {}));

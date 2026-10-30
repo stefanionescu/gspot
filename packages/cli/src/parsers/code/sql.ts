@@ -94,7 +94,7 @@ Get the fields of a PostgreSQL parse tree node when the node has the given kind.
 @returns the fields of that kind, or undefined for another kind.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The Postgres checks and the SQL parser select node fields by kind through its one cast.
-export function getNodeFields<Kind extends keyof SqlNodeFields>(
+export function findNodeFields<Kind extends keyof SqlNodeFields>(
     node: Node | undefined,
     kind: Kind,
 ): SqlNodeFields[Kind] | undefined {
@@ -115,7 +115,7 @@ export function listNodeFields<Kind extends keyof SqlNodeFields>(
     kind: Kind,
 ): SqlNodeFields[Kind][] {
     return (nodes ?? []).flatMap((node) => {
-        const fields = getNodeFields(node, kind);
+        const fields = findNodeFields(node, kind);
         return fields === undefined ? [] : [fields];
     });
 }

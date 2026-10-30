@@ -1,6 +1,6 @@
 import { formatCount } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { getValueAt } from '#cli/system/tables.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import { readHooks } from '#cli/repository/setup.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -88,7 +88,7 @@ function hasUnmanagedScanner(session: Session, writer: Files): boolean {
         const previous = writer.read(path);
         if (
             previous !== undefined &&
-            getValueAt(parseTomlFile(path, previous.bytes.toString('utf8')), SCANNER_KEY) !== undefined
+            findValueAt(parseTomlFile(path, previous.bytes.toString('utf8')), SCANNER_KEY) !== undefined
         )
             return true;
     }

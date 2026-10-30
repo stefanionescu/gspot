@@ -4,7 +4,7 @@ import { buildSettings } from '#cli/settings/read.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { isTable, getValueAt } from '#cli/system/tables.ts';
+import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { WrittenTable } from '#cli/types/commands/init.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
@@ -23,7 +23,7 @@ function isInheritedValueChanged(
 ): boolean {
     const consumers = tables.filter(({ scope }) => isInScope(scope, writtenTable.scope));
     const omitted = structuredClone(writtenTable.table);
-    Reflect.deleteProperty(getValueAt(omitted, segments.slice(0, -1)) as TomlTable, name);
+    Reflect.deleteProperty(findValueAt(omitted, segments.slice(0, -1)) as TomlTable, name);
     const changed = { ...settings };
     if (writtenTable.scope === '') changed.written = omitted;
     else {

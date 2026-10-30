@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
-import { getValueAt } from '#cli/system/tables.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
@@ -39,5 +39,5 @@ test.each([...IMPORT_STYLE_CASES])('init writes the import style of $name', asyn
     const result = await runGspot(sandbox.path, ['init', '--yes', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings'>>;
-    expect(getValueAt(parse(output.settings), ['tools', 'eslint', 'import_extension'])).toBe(expected);
+    expect(findValueAt(parse(output.settings), ['tools', 'eslint', 'import_extension'])).toBe(expected);
 });

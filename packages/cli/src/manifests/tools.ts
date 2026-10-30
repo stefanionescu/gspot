@@ -134,7 +134,7 @@ Get the tool that a check names, or the first word of its command.
 @returns undefined for a built-in check without a tool.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning, explain, the gspot check, and the docs read the program of a check through it.
-export function getToolName(check: Check): string | undefined {
+export function findToolName(check: Check): string | undefined {
     return typeof check.tool === 'string' ? check.tool : check.command?.[0];
 }
 

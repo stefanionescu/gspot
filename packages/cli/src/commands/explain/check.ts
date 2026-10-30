@@ -15,13 +15,19 @@ import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import type { Tool, Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import type { CheckFacts, CheckIgnore, Explanation, LintRuleDocs } from '#cli/types/commands/explain.ts';
-import { getTool, getToolName, hasRuleOutput, extractRulePrefix, extractConfigFileName } from '#cli/manifests/tools.ts';
 
 import {
     ESLINT_MANIFEST_TOOL,
     STYLELINT_MANIFEST_TOOL,
     JAVASCRIPT_CONFIGURATION,
 } from '#cli/config/manifests/names.ts';
+import {
+    getTool,
+    findToolName,
+    hasRuleOutput,
+    extractRulePrefix,
+    extractConfigFileName,
+} from '#cli/manifests/tools.ts';
 import {
     REPOSITORY_COMMAND,
     RUN_IN_COPY_MESSAGE,
@@ -72,7 +78,7 @@ function buildCheckFacts(
     configurationsByName: Map<string, Configuration>,
     session: Session | undefined,
 ): CheckFacts {
-    const toolName = getToolName(check);
+    const toolName = findToolName(check);
     const installedRules = new Set(session === undefined ? [] : selectRuleFiles(session).map((file) => file.path));
     const settings = (configuration === undefined ? [] : (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []))
         .filter((setting) => toolName !== undefined && setting.name.startsWith(`tools.${toolName}.`))
@@ -299,7 +305,7 @@ export async function explainLintRule(root: string, tool: string, rule: string):
         .values()
         .find(
             ({ check: declaration }) =>
-                getToolName(declaration) === ruleTool || declaration.id.endsWith(`/${ruleTool}`),
+                findToolName(declaration) === ruleTool || declaration.id.endsWith(`/${ruleTool}`),
         );
     if (!found) return undefined;
     const docs = await readLintRuleDocs(root, ruleTool, identifier);

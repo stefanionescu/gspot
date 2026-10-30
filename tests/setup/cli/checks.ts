@@ -10,7 +10,7 @@ import * as environment from '#cli/system/environment.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
-import { getTool, getToolName } from '#cli/manifests/tools.ts';
+import { getTool, findToolName } from '#cli/manifests/tools.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
@@ -50,7 +50,7 @@ export function planSandboxCheck(
             (check.runs === 'once' || selectScopePath(file.path, session.repository.scopeFolders) === path) &&
             (paths === undefined || paths.includes(file.path)),
     );
-    const tool = getToolName(check);
+    const tool = findToolName(check);
     return {
         scope,
         configuration,

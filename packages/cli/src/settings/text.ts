@@ -7,7 +7,7 @@ import { RECORD_FIELDS } from '#cli/settings/schema-lookup.ts';
 import type { TaploLayout } from '#cli/types/settings/text.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
 import { TOML_FORMAT, SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { isTable, getValueAt, normalizeTables } from '#cli/system/tables.ts';
+import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
 import { ROOT_KEYS, LAST_TABLES, FIRST_TABLES } from '#cli/config/settings/text.ts';
 import type { TomlBlock, TomlValue, TomlSyntax } from '#cli/types/parsers/formats/toml.ts';
 
@@ -176,7 +176,7 @@ function formatTaploValues(text: string, previous: Record<string, unknown>, layo
         const { value } = pathNode.node;
         const [start, end] = getTomlRange(value);
         const isList = isTomlKind(value, 'InlineArray') || isTomlKind(value, 'InlineTable');
-        const isWritten = !isDeepStrictEqual(getValueAt(previous, pathNode.path), getValueAt(edited, pathNode.path));
+        const isWritten = !isDeepStrictEqual(findValueAt(previous, pathNode.path), findValueAt(edited, pathNode.path));
         return isList && isWritten && !text.slice(start, end).includes('\n')
             ? [{ start, end, text: formatTaploRow(text, value, layout) }]
             : [];

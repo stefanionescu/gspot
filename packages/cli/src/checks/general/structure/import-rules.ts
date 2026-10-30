@@ -10,7 +10,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
-import { getImportedModule } from '#cli/parsers/code/swift.ts';
+import { findImportedModule } from '#cli/parsers/code/swift.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { SWIFT_IMPORT_NODE } from '#cli/config/parsers/code/swift.ts';
 import type { ImportRule } from '#cli/types/settings/import-rules.ts';
@@ -159,7 +159,7 @@ async function validatePythonImports(
 function listSwiftImports(syntaxRoot: Node, path: string, modules: SwiftModule[], lookup: RuleLookup): ImportOwners[] {
     const own = new Set(modules.filter((module) => module.files.includes(path)).map(({ name }) => name));
     return syntaxRoot.descendantsOfType(SWIFT_IMPORT_NODE).flatMap((node) => {
-        const name = getImportedModule(node);
+        const name = findImportedModule(node);
         const module = modules.find((each) => each.name === name);
         return module === undefined || own.has(module.name)
             ? []

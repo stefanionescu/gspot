@@ -1,14 +1,14 @@
 import { read } from '#cli/system/files/reads.ts';
 import { type Session } from '#cli/types/session.ts';
-import { getToolName } from '#cli/manifests/tools.ts';
+import { findToolName } from '#cli/manifests/tools.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { TOOL_LOCKFILES } from '#cli/config/files/gspot.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
-import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { INSTALL_HELP } from '#cli/config/executables/inspect.ts';
@@ -98,7 +98,7 @@ function listSuppressionSyntaxes(scope: Scope, scopeFiles: TrackedFile[]): Suppr
         ),
     );
     return [...definitions].map(([tool, definition]) => {
-        const readers = checks.filter(({ check }) => getToolName(check) === tool);
+        const readers = checks.filter(({ check }) => findToolName(check) === tool);
         const reason = new RegExp(definition.reason, 'u');
         return {
             tool,
@@ -218,12 +218,12 @@ export function checkGspotUnmatchedPaths(session: Session, _planned: PlannedChec
                 const names = keys
                     .filter(
                         (field, index) =>
-                            field !== 'value' || !isReasonedValue(getValueAt(table.written, keys.slice(0, index))),
+                            field !== 'value' || !isReasonedValue(findValueAt(table.written, keys.slice(0, index))),
                     )
                     .filter((field): field is string => typeof field === 'string')
                     .filter((field, index, fields) => field !== 'paths' || index !== fields.length - 1);
                 const key = [...path, ...names].join('.');
-                const written = getValueAt(table.written, names);
+                const written = findValueAt(table.written, names);
                 const where =
                     Array.isArray(written) && written.some((element) => isTable(element)) ? `[[${key}]]` : key;
                 findings.push({
