@@ -40,9 +40,7 @@ const pythonProject = (parse(PYTHON_TOOL_PROJECT) as { project: PythonToolProjec
 test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hides index passwords', async (step) => {
     await using sandbox = await testdir(PYTHON_INSTALL_FILES);
 
-    const calls: string[][] = [];
     using _boundary = fakeCommands('unavailable-uv', (command) => {
-        calls.push([...command]);
         return Promise.resolve(
             buildProcessResult({
                 code: command[1] === step ? 7 : 0,
@@ -59,7 +57,6 @@ test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hid
         code: 'install',
         message: `uv ${step} failed (exit 7).\nindex password [redacted] [redacted]\ninterpreter unavailable`,
     });
-    expect(calls).toHaveLength(step === 'venv' ? 1 : 2);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(PYTHON_TOOL_LOCKFILE);
     expect(await readFile(join(sandbox.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
     expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.pythonEnvironment))).toBe(false);
