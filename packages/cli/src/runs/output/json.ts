@@ -2,8 +2,8 @@ import { LINE_BREAK } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import type { ToolOutput } from '#cli/types/runs/output.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
 
 import {
     JSON_START,
@@ -11,7 +11,7 @@ import {
     JSON_PREVIEW_LENGTH,
     EMPTY_FINDING_MESSAGE,
     INVALID_FINDING_MESSAGE,
-} from '#cli/config/runs/output/json.ts';
+} from '#cli/config/runs/output.ts';
 
 function buildJsonSyntaxError(stdout: string, cause?: unknown): GspotError {
     const first = stdout

@@ -1,5 +1,5 @@
+import type { SqlFile } from '#cli/types/parsers/code.ts';
 import type { FindingPlace } from '#cli/types/runs/check.ts';
-import type { SqlFile } from '#cli/types/parsers/code/sql.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { NamingCase, NamedCategory } from '#cli/types/settings/naming.ts';
 

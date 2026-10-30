@@ -8,7 +8,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { type SpawnResult } from '#cli/types/system/processes.ts';
+import { type SpawnResult } from '#cli/types/system/system.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { APP_FOLDERS, EXPO_PACKAGE_JSON, FAILED_DOCTOR_OUTPUT } from '#tests/config/checks/framework/expo.ts';

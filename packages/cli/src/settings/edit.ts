@@ -3,10 +3,10 @@ import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { buildSettingsToml } from '#cli/settings/text.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
+import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { isReasonedValue, readSettingsFile } from '#cli/settings/file.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
-import { SETTINGS_FILE, SETTINGS_PREFACE } from '#cli/config/settings/file.ts';
+import { SETTINGS_FILE, SETTINGS_PREFACE } from '#cli/config/settings/settings.ts';
 import { isTable, addTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
 import type { SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
 

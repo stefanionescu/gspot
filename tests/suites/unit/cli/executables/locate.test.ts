@@ -5,7 +5,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { rm, writeFile } from 'node:fs/promises';
 import * as processes from '#cli/system/processes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import type { SpawnOptions } from '#cli/types/system/processes.ts';
+import type { SpawnOptions } from '#cli/types/system/system.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { readMiseBinPaths, listExecutablePaths } from '#cli/executables/locate.ts';

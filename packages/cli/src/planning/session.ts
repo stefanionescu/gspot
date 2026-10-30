@@ -1,23 +1,23 @@
 import { readSettings } from '#cli/settings/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
-import type { RunCache } from '#cli/types/system/cache.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listEnabledChecks } from '#cli/planning/checks.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
+import type { RunCache } from '#cli/types/system/system.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { listToolProjectPins } from '#cli/manifests/tools.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { Settings } from '#cli/types/settings/settings.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import { selectToolConfigurations } from '#cli/planning/tools.ts';
 import type { Session, SessionOptions } from '#cli/types/session.ts';
-import type { RepositoryListing } from '#cli/types/repository/read.ts';
+import type { PackageManagerPin } from '#cli/types/repository/npm.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
+import type { RepositoryListing } from '#cli/types/repository/repository.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
-import type { PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
 import { mergeDetectedDefaults, buildAvailableSettings } from '#cli/settings/available.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/npm/package-manager.ts';
 

@@ -130,8 +130,8 @@ repository.
 - Other files take their constants from `config/` and their types from `types/`. They declare no module-level
   literal constants or types. Declare schemas only in `schemas/`, including schemas used by one file.
   A value computed at import time stays with the behavior that uses it.
-- Give each `config/`, `types/`, and `schemas/` file the path of the code or folder that reads it.
-  For example, `packages/cli/src/config/generation/ci.ts` holds the values of `packages/cli/src/generation/ci.ts`.
+- Give each `config/`, `types/`, and `schemas/` file the path of the folder whose files read it.
+  For example, `packages/cli/src/config/generation/generation.ts` holds the values of `packages/cli/src/generation/`.
 - A value that code in other folders also reads stays with the behavior it belongs to, and the others import it.
 - Values that no one file owns go in a topic file of their folder, or at the top of `config/` when several top-level
   folders read them. Topic files that share a word sit in a folder of that word, such as `config/files/`.

@@ -4,13 +4,13 @@ import { selectConfigurations } from '#cli/manifests/select.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { findSettingSchema } from '#cli/settings/schema-lookup.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
-import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/scopes.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
 import { isTable, addTable, findValueAt } from '#cli/system/tables.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
+import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/settings.ts';
 import { getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
-import type { Settings, TableValues, TableSettings } from '#cli/types/settings/file.ts';
 import { isInScope, isScopeCovered, compareScopeDepth } from '#cli/repository/scopes.ts';
+import type { Settings, TableValues, TableSettings } from '#cli/types/settings/settings.ts';
 import { SETTING_LANGUAGES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
 
 import type {

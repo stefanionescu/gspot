@@ -20,7 +20,7 @@ import {
     DETECTION_GAP_WIDTH,
     UNCHECKED_FILES_SHOWN,
     DETECTION_LABEL_WIDTH,
-} from '#cli/config/commands/init/detection.ts';
+} from '#cli/config/commands/init.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Eleven rows of the init summary share this label and gap layout.
 function formatDetectionRow(label: string, names: string[]): string | undefined {

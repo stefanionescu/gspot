@@ -7,7 +7,7 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { spawnProcess, streamProcess } from '#cli/system/processes.ts';
-import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
+import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/system.ts';
 import { STREAM_FAILURE, STOPPED_CAPTURES } from '#tests/config/system/processes.ts';
 
 import {

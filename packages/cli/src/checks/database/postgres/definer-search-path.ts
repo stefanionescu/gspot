@@ -4,15 +4,15 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Node, DefElem, TypeName } from '@pgsql/types';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
-import { PUBLIC_SCHEMA } from '#cli/config/checks/database/postgres/schema.ts';
 import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
-import type { SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
+import type { SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/code.ts';
 import type { Migration, FunctionSecurity } from '#cli/types/checks/database/postgres.ts';
 
 import {
+    PUBLIC_SCHEMA,
     SECURITY_DEFINER_MESSAGE,
     DEFINER_SEARCH_PATH_RULE,
-} from '#cli/config/checks/database/postgres/definer-search-path.ts';
+} from '#cli/config/checks/database/postgres.ts';
 
 function buildFunctionKey(names: Node[] | undefined, parameters: (TypeName | undefined)[]): string {
     const path = listNodeFields(names, 'String').map(({ sval = '' }) => sval);

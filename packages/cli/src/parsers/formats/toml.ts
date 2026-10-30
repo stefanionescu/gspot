@@ -1,10 +1,9 @@
 import type { z } from 'zod';
-import { MESSAGE_END } from '#cli/config/parsers/formats/errors.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
 import type { KeyPath, EditableFile } from '#cli/types/parsers/editable-file.ts';
 import { patch, stringify, parseDocument, parse as parseToml } from '@decimalturn/toml-patch';
-import { PATCH_FORMAT, TABLE_PROPERTY_FLAGS, MISSING_RANGE_MESSAGE } from '#cli/config/parsers/formats/toml.ts';
+import { MESSAGE_END, PATCH_FORMAT, TABLE_PROPERTY_FLAGS, MISSING_RANGE_MESSAGE } from '#cli/config/parsers/formats.ts';
 
 import {
     type TomlBlock,
@@ -21,7 +20,7 @@ import {
     type TomlTablePositions,
     type TomlAnchoredComment,
     type TomlCommentPlacement,
-} from '#cli/types/parsers/formats/toml.ts';
+} from '#cli/types/parsers/formats.ts';
 
 function findTomlTable(
     document: Record<string, unknown>,

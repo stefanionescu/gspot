@@ -2,19 +2,18 @@ import { isUtf8 } from 'node:buffer';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
-import { ROOT_RUNS } from '#cli/config/planning/checks.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { extractConfigFileName } from '#cli/manifests/tools.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
 import { listCheckFiles, listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { isInScope, joinScope, selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
-import { ENCODING_CHECK, LARGE_FILES_CHECK, IGNORED_PATHS_MESSAGE } from '#cli/config/planning/files.ts';
+import { ROOT_RUNS, ENCODING_CHECK, LARGE_FILES_CHECK, IGNORED_PATHS_MESSAGE } from '#cli/config/planning.ts';
 
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
     const prefix = joinScope(scopePath, '');

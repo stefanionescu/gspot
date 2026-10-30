@@ -9,9 +9,9 @@ import { type CommandArgument } from '#cli/types/runs/command.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { GENERATED_HEADER_TEXT } from '#cli/config/generation/generation.ts';
 import { buildCommandSetup, buildCommandLaunch } from '#cli/runs/command/check.ts';
 
 import {

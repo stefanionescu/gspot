@@ -14,7 +14,7 @@ import { listStrayPaths, hasManagedKeys } from '#cli/repository/writer.ts';
 import { listOwnablePaths } from '#cli/generation/config-files/link-files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { type Generation, type OutdatedFile } from '#cli/types/generation/files.ts';
-import { ON_DISK_LABEL, DIFF_CONTEXT_LINES, BLOCK_ON_DISK_LABEL } from '#cli/config/generation/outdated.ts';
+import { ON_DISK_LABEL, DIFF_CONTEXT_LINES, BLOCK_ON_DISK_LABEL } from '#cli/config/generation/generation.ts';
 
 function listOutdatedOutputs(files: Files, generated: Generation): OutdatedFile[] {
     return generated.files.flatMap((file): OutdatedFile[] => {

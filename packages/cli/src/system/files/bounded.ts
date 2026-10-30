@@ -12,7 +12,7 @@ import {
     OWNER_WRITE_BIT,
     TEMPORARY_FILE_SUFFIX,
     TEMPORARY_FILE_PREFIX,
-} from '#cli/config/system/files/bounded.ts';
+} from '#cli/config/system/files.ts';
 import {
     openSync,
     lstatSync,

@@ -4,13 +4,12 @@ import { createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { GITHUB_WORKFLOW } from '#cli/config/generation/ci.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
 import { CALLER_WORKFLOW } from '#tests/config/github-actions.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { GITHUB_WORKFLOW, GENERATED_HEADER_TEXT } from '#cli/config/generation/generation.ts';
 import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {

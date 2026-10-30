@@ -9,39 +9,43 @@ import parseExpression from 'spdx-expression-parse';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { listLicenseProjects } from '#cli/planning/tools.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
+import { PYTHON_EXECUTABLE } from '#cli/config/executables.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
-import { PYTHON_EXECUTABLE } from '#cli/config/executables/uv.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 import type { PlannedCheck, LicenseProject } from '#cli/types/planning.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/licenses.ts';
-import { PYTHON_LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
-import { PACKAGE_JSON, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
 import { splitIdentity, PACKAGE_PARSERS, findNearestLockfile } from '#cli/parsers/projects/lockfiles.ts';
-import { pythonLicenseOutputSchema, javascriptLicenseOutputSchema } from '#cli/schemas/checks/general/licenses.ts';
+import { pythonLicenseOutputSchema, javascriptLicenseOutputSchema } from '#cli/schemas/checks/general.ts';
 
+import {
+    PACKAGE_JSON,
+    PYTHON_LOCKFILES,
+    JAVASCRIPT_LOCKFILES,
+    PYTHON_NAME_SEPARATORS,
+} from '#cli/config/parsers/projects.ts';
 import type {
     AllowedPackage,
     LicensedPackage,
     ProjectLicenses,
     PythonLicenseOutput,
-} from '#cli/types/checks/general/licenses.ts';
+} from '#cli/types/checks/general/general.ts';
 import {
-    RULES,
     ANY_VERSION,
+    LICENSE_RULES,
     LICENSE_CHOICE,
     TROVE_LICENSES,
     UNKNOWN_LICENSE,
     EMPTY_SCAN_MESSAGE,
     CLASSIFIER_SEPARATOR,
     NO_ALLOWED_LICENSES_NOTE,
-} from '#cli/config/checks/general/licenses.ts';
+} from '#cli/config/checks/general/general.ts';
 
 function isSpdxExpression(license: string): boolean {
     try {
@@ -213,7 +217,7 @@ function listUnusedRecords(planned: PlannedCheck, inventories: ProjectLicenses[]
         .map((record) => ({
             file: SETTINGS_FILE,
             line: 1,
-            rule: RULES.unusedRecord,
+            rule: LICENSE_RULES.unusedRecord,
             message: `${record.name}@${record.version} matches no locked or installed project dependency. Remove the \`[[licenses.allowed_package]]\` record or correct its name or version.`,
         }));
 }
@@ -234,7 +238,7 @@ export async function checkAllowed(session: CheckSession, planned: PlannedCheck)
                 {
                     file: dependencyFile,
                     line: 1,
-                    rule: RULES.disallowedLicense,
+                    rule: LICENSE_RULES.disallowedLicense,
                     message: `${name} uses ${license}, which is not allowed.`,
                 },
             ];

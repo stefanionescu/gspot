@@ -2,15 +2,7 @@ import type { Node } from 'web-tree-sitter';
 import { replaceRanges } from '#cli/system/text.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import type { ParseCache } from '#cli/types/parsers/code/grammars.ts';
 
-import type {
-    TrapScript,
-    TrapCleanup,
-    ScriptSyntax,
-    TemporaryPath,
-    ScriptTemporaryPaths,
-} from '#cli/types/parsers/code/bash.ts';
 import {
     findSourceLine,
     parseTrapScripts,
@@ -18,6 +10,14 @@ import {
     listScriptCommands,
     listSwallowedLines,
 } from '#cli/parsers/code/traps.ts';
+import type {
+    ParseCache,
+    TrapScript,
+    TrapCleanup,
+    ScriptSyntax,
+    TemporaryPath,
+    ScriptTemporaryPaths,
+} from '#cli/types/parsers/code.ts';
 import {
     SHIFT_COMMAND,
     NOT_LINE_BREAK,
@@ -33,7 +33,7 @@ import {
     TEMPORARY_FILE_COMMAND,
     LOCAL_DECLARATION_WORDS,
     ALL_POSITIONAL_PARAMETERS,
-} from '#cli/config/parsers/code/bash.ts';
+} from '#cli/config/parsers/code.ts';
 
 function findHighestParameter(node: Node): number {
     const expansions = node.descendantsOfType([...EXPANSION_NODES]);

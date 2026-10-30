@@ -12,9 +12,9 @@ import type { CheckFinding } from '#cli/types/runs/check.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { lstatSync, realpathSync, readlinkSync } from 'node:fs';
 import { isInside, extractParentFolder } from '#cli/system/paths.ts';
+import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
 import { join, posix, dirname, resolve, relative, isAbsolute } from 'node:path';
-import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files/classify.ts';
-import { RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/checks/general/repository.ts';
+import { REPOSITORY_RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/checks/general/general.ts';
 
 /**
 Reports each tracked file over `repository.max_file_kilobytes`, except generated, vendored, and Git Large File Storage (LFS) files.
@@ -38,7 +38,7 @@ export function checkLargeFiles(session: Session, planned: PlannedCheck): CheckF
             {
                 file: file.path,
                 line: 1,
-                rule: RULES.size,
+                rule: REPOSITORY_RULES.size,
                 message: `${String(Math.round(file.size / BYTES_PER_KILOBYTE))} kB is over the ${String(limitKilobytes)} kB limit; mark it as generated or vendored in .gitattributes, move it to LFS, or ignore this finding with a reason.`,
             },
         ];
@@ -57,7 +57,7 @@ function listInvalidLinks(session: Session): CheckFinding[] {
                     {
                         file: path,
                         line: 1,
-                        rule: RULES.absoluteLink,
+                        rule: REPOSITORY_RULES.absoluteLink,
                         message: `${path} uses an absolute link target.`,
 
                         help: ABSOLUTE_LINK_HELP,
@@ -75,7 +75,7 @@ function listInvalidLinks(session: Session): CheckFinding[] {
                       {
                           file: path,
                           line: 1,
-                          rule: RULES.outwardLink,
+                          rule: REPOSITORY_RULES.outwardLink,
                           message: `${path} links outside the repository.`,
 
                           help: OUTWARD_LINK_HELP,
@@ -116,7 +116,7 @@ export function checkLocalFiles(session: Session, _planned: PlannedCheck): Check
         .map((path) => ({
             file: path,
             line: 1,
-            rule: RULES.trackedFile,
+            rule: REPOSITORY_RULES.trackedFile,
             message: `${path} is tracked; its selected configuration declares it untracked. Remove it from the Git index and add it to .gitignore.`,
         }));
     const links = listInvalidLinks(session);
@@ -133,7 +133,7 @@ export function checkEncoding(session: Session, planned: PlannedCheck): CheckFin
     const unreadable = session.repository.unreadablePaths.map((path) => ({
         file: path,
         line: 1,
-        rule: RULES.pathEncoding,
+        rule: REPOSITORY_RULES.pathEncoding,
         message: `${path} is not a UTF-8 path. Rename the file using UTF-8.`,
     }));
     return [
@@ -148,7 +148,7 @@ export function checkEncoding(session: Session, planned: PlannedCheck): CheckFin
             .map((file) => ({
                 file: file.path,
                 line: 1,
-                rule: RULES.encoding,
+                rule: REPOSITORY_RULES.encoding,
                 message: `${file.path} is not UTF-8 text. Save it as UTF-8, then run the command again.`,
             })),
     ];

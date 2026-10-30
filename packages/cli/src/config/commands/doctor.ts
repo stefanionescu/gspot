@@ -1,4 +1,4 @@
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
+import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/generation.ts';
 
 export const VERSION_GAP = 4;
 

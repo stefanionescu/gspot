@@ -7,7 +7,7 @@ import { readSettings } from '#cli/settings/read.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { FIRST_READ } from '#cli/config/generation/rules.ts';
+import { FIRST_READ } from '#cli/config/generation/generation.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
 import { REVIEWED_REASON } from '#tests/config/settings/reasons.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';

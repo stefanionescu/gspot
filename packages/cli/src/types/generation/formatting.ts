@@ -1,5 +1,5 @@
-import type { ParsedSettings } from '#cli/types/settings/file.ts';
 import { type Defined, type Optional } from '#cli/types/shapes.ts';
+import type { ParsedSettings } from '#cli/types/settings/settings.ts';
 
 export type FormatOverride = {
     files: string[];

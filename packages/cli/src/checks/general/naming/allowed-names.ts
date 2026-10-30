@@ -3,11 +3,11 @@ import type { Session } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { readNamingDefaults } from '#cli/manifests/naming.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { FileNames } from '#cli/types/checks/general/naming.ts';
-import { UNUSED_RECORD_RULE } from '#cli/config/checks/general/naming/allowed-names.ts';
+import { UNUSED_RECORD_RULE } from '#cli/config/checks/general/naming/naming.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/checks/general/naming/source-names.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/general/naming/paths.ts';
 

@@ -4,12 +4,12 @@ import { testdir, createFileTree } from 'testdirs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import type { PackageManager } from '#cli/types/repository/npm.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { startNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
 import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import type { NpmProject, NpmRegistry } from '#tests/types/packages.ts';
 import prettierPackage from 'prettier/package.json' with { type: 'json' };
-import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 
 import {
     REGISTRY_HOST,

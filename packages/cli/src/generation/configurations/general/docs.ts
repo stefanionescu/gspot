@@ -11,7 +11,7 @@ import {
     LYCHEE_ROOT_LINKS,
     LYCHEE_MDX_EXPRESSION,
     LYCHEE_REPOSITORY_LINKS,
-} from '#cli/config/generation/configurations/general/docs.ts';
+} from '#cli/config/generation/configurations/general.ts';
 
 /**
 Build lychee.toml: a note on why the file exists, and the lychee link exclusions as TOML.

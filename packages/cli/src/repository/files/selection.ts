@@ -4,8 +4,8 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
+import { TEST_FILES_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
-import { TEST_FILES_PLACEHOLDER } from '#cli/config/repository/files/selection.ts';
 import type { TrackedFile, CoveredFilesOptions } from '#cli/types/repository/files.ts';
 
 function addPluginExtensions(table: Configuration['files'], configurations: Configuration[]): Configuration['files'] {

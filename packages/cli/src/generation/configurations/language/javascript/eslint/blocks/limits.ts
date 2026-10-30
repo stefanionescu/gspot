@@ -10,7 +10,7 @@ import { splitGlobs, buildNodePatterns } from '#cli/generation/configurations/la
 import {
     BARREL_FILES_RULE,
     ESLINT_LIMIT_RULES,
-} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/limits.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
 function buildLimitRules(
     scopeSettings: ScopeSettings,

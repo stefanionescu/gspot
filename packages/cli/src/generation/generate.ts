@@ -9,22 +9,20 @@ import { buildHookFiles } from '#cli/generation/hooks.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import { listToolProjectPins } from '#cli/manifests/tools.ts';
-import { FROZEN_INSTALLS } from '#cli/config/generation/ci.ts';
-import type { RuleFile } from '#cli/types/generation/rules.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
+import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
 import { listWrittenPaths } from '#cli/generation/config-files/ignore-files.ts';
 import { buildLinkFieldEdits } from '#cli/generation/config-files/link-files.ts';
 import { readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
-import type { FrozenLockfile, CiPackageManager } from '#cli/types/generation/ci.ts';
-import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files/classify.ts';
 import { buildMiseInstall, buildPythonInstall } from '#cli/generation/tool-installs.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { buildBunScannerEdits } from '#cli/generation/configurations/general/dependencies.ts';
+import type { RuleFile, FrozenLockfile, CiPackageManager } from '#cli/types/generation/generation.ts';
 
 import {
     buildGithubWorkflow,
@@ -34,13 +32,14 @@ import {
 } from '#cli/generation/ci.ts';
 import {
     LF_ATTRIBUTES,
+    FROZEN_INSTALLS,
     NPM_TOOL_PROJECT,
     AUTO_LF_ATTRIBUTES,
     TOOL_FOLDER_IGNORES,
     GIT_ATTRIBUTES_BLOCK,
     ATTRIBUTE_GLOB_CHARACTERS,
     ATTRIBUTE_QUOTED_CHARACTERS,
-} from '#cli/config/generation/generate.ts';
+} from '#cli/config/generation/generation.ts';
 
 function listWorkflowPackageManagers(session: Session, generated: Generation, lockfiles: string[]): CiPackageManager[] {
     const packageManagers = new Set<CiPackageManager>(

@@ -1,11 +1,11 @@
 import { basename } from 'node:path/posix';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { MISE_TASKS_GLOB } from '#cli/config/files/names.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { readScopeAliases } from '#cli/repository/npm/aliases.ts';
 import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { buildSelectorBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/selectors.ts';
 import { buildScopeFiles, listCodeTestFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import { buildRestrictedImportBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
@@ -14,7 +14,7 @@ import {
     BASE_SELECTORS,
     PRESETS_AFTER_CONFIGURATIONS,
     PRESETS_BEFORE_CONFIGURATIONS,
-} from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 import {
     type EslintBlock,
     type EslintFiles,
@@ -53,7 +53,7 @@ import {
     BOUNDARIES_FILES_SETTING,
     BOUNDARIES_PLUGIN_IMPORT,
     LEVEL_ALL_PLUGIN_IMPORTS,
-} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
 function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): ConfigurationBlocks['blocks'] {
     const { session, projects } = planned;

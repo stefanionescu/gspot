@@ -1,7 +1,7 @@
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { type HookName } from '#cli/types/generation/files.ts';
-import { type IgnoreRecord } from '#cli/types/settings/file.ts';
 import { type CanceledCommandJson } from '#cli/types/terminal.ts';
+import { type IgnoreRecord } from '#cli/types/settings/settings.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
 import { type PlanOptions, type StageFilter, type PlannedCheck } from '#cli/types/planning.ts';
 import { type StagedPaths, type ChangedPaths, type PushedRevisions } from '#cli/types/repository/revisions.ts';

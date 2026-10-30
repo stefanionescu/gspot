@@ -8,18 +8,18 @@ import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { parseCheckedFile } from '#cli/checks/cross-configuration/syntax.ts';
 import { PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/files/names.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
-import { stringsFileSchema, assetContentsSchema } from '#cli/schemas/checks/infrastructure/xcode.ts';
+import { stringsFileSchema, assetContentsSchema } from '#cli/schemas/checks/infrastructure.ts';
 
 import {
-    RULES,
     PLIST_KEY,
     IMAGE_SET,
     NAMED_SETS,
+    XCODE_RULES,
     PLIST_SUFFIX,
     WORD_SEPARATOR,
     ASSET_CONTENTS,
@@ -33,7 +33,7 @@ import {
     ASSET_REFERENCE_ENDINGS,
     INSECURE_TRANSPORT_MESSAGE,
     INSECURE_TRANSPORT_SETTING,
-} from '#cli/config/checks/infrastructure/xcode.ts';
+} from '#cli/config/checks/infrastructure.ts';
 
 /**
 Reports Swift sources that no Xcode target holds.
@@ -60,7 +60,7 @@ export function checkFilesWithoutTarget(session: Session, planned: PlannedCheck)
         .map((file) => ({
             file,
             line: 1,
-            rule: RULES.untargeted,
+            rule: XCODE_RULES.untargeted,
             message: UNTARGETED_FILE_MESSAGE,
         }));
 }
@@ -94,7 +94,7 @@ export function checkAssets(session: Session, planned: PlannedCheck): CheckFindi
                 return [
                     {
                         ...at,
-                        rule: RULES.emptySet,
+                        rule: XCODE_RULES.emptySet,
                         message: EMPTY_SET_MESSAGE,
                     },
                 ];
@@ -103,7 +103,7 @@ export function checkAssets(session: Session, planned: PlannedCheck): CheckFindi
                 .filter((name) => !repositoryPaths.has(posix.join(folder, name)))
                 .map((name) => ({
                     ...at,
-                    rule: RULES.missingImage,
+                    rule: XCODE_RULES.missingImage,
                     message: `The image ${name} is not in the set.`,
                 }));
         });
@@ -135,7 +135,7 @@ export function checkXcodeUnusedAssets(session: Session, planned: PlannedCheck):
         .map((path) => ({
             file: path,
             line: 1,
-            rule: RULES.unusedAsset,
+            rule: XCODE_RULES.unusedAsset,
             message: `No source names the asset ${extractAssetSetName(path)}.`,
         }));
 }
@@ -167,7 +167,7 @@ export function checkXcstrings(session: Session, planned: PlannedCheck): CheckFi
             return [
                 {
                     ...at,
-                    rule: RULES.missingTranslation,
+                    rule: XCODE_RULES.missingTranslation,
                     message: `"${key}" has no translation for ${missing.join(', ')}.`,
                 },
             ];
@@ -193,7 +193,7 @@ export function checkEntitlements(session: Session, planned: PlannedCheck): Chec
                 return {
                     file: path,
                     line,
-                    rule: RULES.entitlement,
+                    rule: XCODE_RULES.entitlement,
                     message: `${match.groups?.['name'] ?? ''} is not an allowed entitlement.`,
                 };
             })
@@ -217,7 +217,7 @@ export function checkAppTransportSecurity(session: Session, planned: PlannedChec
             {
                 file: path,
                 line,
-                rule: RULES.arbitraryLoads,
+                rule: XCODE_RULES.arbitraryLoads,
                 message: INSECURE_TRANSPORT_MESSAGE,
             },
         ];

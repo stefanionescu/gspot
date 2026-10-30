@@ -10,12 +10,12 @@ import type { ConfigFile } from '#cli/types/manifests.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import type { ManagedKeys } from '#cli/types/repository/writer.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
+import type { ManagedKeys } from '#cli/types/repository/repository.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/generation.ts';
 import type { GeneratedFile, ConfigFileOwner, PlannedLinkField } from '#cli/types/generation/files.ts';
 import { escapeGlob, convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
 
@@ -23,7 +23,7 @@ import {
     TARGET_PLACEHOLDER,
     OVERRIDES_PLACEHOLDER,
     TARGET_MODULE_PLACEHOLDER,
-} from '#cli/config/generation/config-files/link-files.ts';
+} from '#cli/config/generation/config-files.ts';
 
 function fillTarget(body: string, linkFilePath: string, targetPath: string): string {
     const relativePath = convertToPosixPath(relative(dirname(linkFilePath), targetPath));

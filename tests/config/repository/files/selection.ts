@@ -1,4 +1,4 @@
-import { SOURCE_KIND } from '#cli/config/repository/files/classify.ts';
+import { SOURCE_KIND } from '#cli/config/repository/files.ts';
 
 export const MIGRATION_CASES = [
     ['', ['migrations/V1_root.sql']],

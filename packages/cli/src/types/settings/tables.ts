@@ -1,5 +1,5 @@
 import { type Defined } from '#cli/types/shapes.ts';
-import type { TableValues } from '#cli/types/settings/file.ts';
+import type { TableValues } from '#cli/types/settings/settings.ts';
 import type { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 
 export type ConfigurationTables = Defined<

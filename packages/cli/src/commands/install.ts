@@ -11,7 +11,7 @@ import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import type { InstallCommandJson } from '#cli/types/commands/install.ts';
+import type { InstallCommandJson } from '#cli/types/commands/commands.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 
 import {
@@ -19,7 +19,7 @@ import {
     TOOL_PROJECTS_MESSAGE,
     TOOLS_INSTALLED_MESSAGE,
     INSTALLATION_STOPPED_MESSAGE,
-} from '#cli/config/commands/install.ts';
+} from '#cli/config/commands/commands.ts';
 
 function hasOutdatedToolProjects(files: Files, generated: Generation): boolean {
     return [...TOOL_PROJECT_FILES].some((path) => {

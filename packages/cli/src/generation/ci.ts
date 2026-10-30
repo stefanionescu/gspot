@@ -5,16 +5,16 @@ import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { STRICT_MODE } from '#cli/config/checks/language/bash.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { STRICT_MODE } from '#cli/config/checks/language/bash/script-layout.ts';
 import { PACKAGE_MANAGERS, YARN_BERRY_MAJOR } from '#cli/config/repository/npm.ts';
-import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation/ci.ts';
+import type { PackageManager, PackageManagerPin } from '#cli/types/repository/npm.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
-import type { PackageManager, PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
+import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation/generation.ts';
 
 import {
     findPackageManagerPin,
@@ -52,7 +52,7 @@ import {
     GITHUB_EXPRESSION_START,
     CI_CACHE_MISS_CONDITION,
     GITHUB_EXPRESSION_MESSAGE,
-} from '#cli/config/generation/ci.ts';
+} from '#cli/config/generation/generation.ts';
 
 function buildActionPin({ name, sha, version }: ActionPin): Scalar {
     const node = new Scalar(`${name}@${sha}`);

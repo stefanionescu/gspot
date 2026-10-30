@@ -1,7 +1,7 @@
-import { ASTRO_FILES } from '#cli/config/generation/configurations/framework/astro.ts';
+import { ASTRO_FILES } from '#cli/config/generation/configurations/framework.ts';
 import type { EslintScope, ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES } from '#cli/config/generation/configurations/language/typescript.ts';
-import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
+import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
+import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES } from '#cli/config/generation/configurations/language/language.ts';
 
 /**
 Apply the parser of typescript-eslint to TypeScript files, its strict typed rules to every typed file, and the

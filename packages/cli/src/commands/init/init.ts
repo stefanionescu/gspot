@@ -10,24 +10,23 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { createInterface } from 'node:readline/promises';
-import type { RunCache } from '#cli/types/system/cache.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import type { RunCache } from '#cli/types/system/system.ts';
 import { selectForInit } from '#cli/repository/proposals.ts';
 import { readTemplate } from '#cli/commands/init/template.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { readRepositorySetup } from '#cli/repository/setup.ts';
-import type { SettingsFile } from '#cli/types/settings/file.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { formatDetection } from '#cli/commands/init/detection.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
+import type { SettingsFile } from '#cli/types/settings/settings.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import type { RepositoryListing } from '#cli/types/repository/read.ts';
 import { planInitFiles, formatInitPlan } from '#cli/commands/init/plan.ts';
+import type { RepositoryListing } from '#cli/types/repository/repository.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { FROM_OPTION, FROM_CONFLICT_MESSAGE } from '#cli/config/commands/init/template.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings-text.ts';
 import { readRepository, readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts';
 import type { InitJson, InitScan, InitOptions, InitPlanning, DetectionSummary } from '#cli/types/commands/init.ts';
@@ -39,6 +38,7 @@ import {
 } from '#cli/commands/init/conflicting-config-files.ts';
 import {
     YES_FLAG,
+    FROM_OPTION,
     LEVEL_OPTION,
     ACCEPT_ANSWER,
     CONFIRM_PROMPT,
@@ -47,12 +47,13 @@ import {
     WROTE_PLAN_MESSAGE,
     NO_TERMINAL_MESSAGE,
     NEXT_INSTALL_MESSAGE,
+    FROM_CONFLICT_MESSAGE,
     CONFIGURATIONS_OPTION,
     SETTINGS_EXIST_MESSAGE,
     NO_CONFIGURATIONS_FLAG,
     JSON_NEEDS_YES_MESSAGE,
     NOTHING_WRITTEN_MESSAGE,
-} from '#cli/config/commands/init/init.ts';
+} from '#cli/config/commands/init.ts';
 
 async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJson>> {
     const root = await readRepositoryRoot(options.cwd);

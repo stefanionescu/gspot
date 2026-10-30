@@ -3,9 +3,9 @@ import type { Session } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
+import { PASS_THROUGH_FOLDER_RULE } from '#cli/config/checks/general/structure.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';
 import { isInInstalledFolder, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
-import { PASS_THROUGH_FOLDER_RULE } from '#cli/config/checks/general/structure/pass-through-folders.ts';
 
 /**
 Reports each folder inside the scope that holds only one folder, above the code of the scope.

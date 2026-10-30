@@ -6,7 +6,7 @@ import {
     HADOLINT_CHECK,
     HADOLINT_DEFAULT_LEVEL_OFF,
     HADOLINT_FAILURE_THRESHOLD,
-} from '#cli/config/generation/configurations/infrastructure/docker.ts';
+} from '#cli/config/generation/configurations/infrastructure.ts';
 
 /**
 Build hadolint.yml: the Hadolint exclusions and trusted registry settings.

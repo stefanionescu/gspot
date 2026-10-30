@@ -5,32 +5,31 @@ import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { UV_TOOL } from '#cli/config/executables/uv.ts';
 import { findSystemSkip } from '#cli/planning/skips.ts';
 import { listCheckTools } from '#cli/planning/tools.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
-import type { MiseInstall } from '#cli/types/installers/mise.ts';
 import type { Tool, MiseToolPin } from '#cli/types/manifests.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { redactInstallOutput } from '#cli/installers/credentials.ts';
-import { miseLockfileSchema } from '#cli/schemas/installers/mise.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
+import { miseLockfileSchema } from '#cli/schemas/installers/installers.ts';
 import { MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/files/names.ts';
 import { runInstallStep, runRequiredInstallStep } from '#cli/installers/steps.ts';
+import type { MiseInstall, ToolInstall } from '#cli/types/installers/installers.ts';
 import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/executables/locate.ts';
 import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/manifests/tools.ts';
 
 import {
+    UV_TOOL,
     MISE_BIN_PATHS_ARGUMENTS,
     MISE_CEILING_PATHS_VARIABLE,
     MISE_TRUSTED_PATHS_VARIABLE,
-} from '#cli/config/executables/locate.ts';
+} from '#cli/config/executables.ts';
 import {
     MISE_TOOL_NOUN,
     GITHUB_RATE_LIMIT,
@@ -43,7 +42,7 @@ import {
     MISE_RELEASE_PROTOCOL,
     MISE_INSTALL_ARGUMENTS,
     MISE_LOCKED_ENVIRONMENT,
-} from '#cli/config/installers/mise.ts';
+} from '#cli/config/installers/installers.ts';
 
 function selectMiseTools(session: Session, tools: Tool[]) {
     const configurations = session.toolConfigurations;

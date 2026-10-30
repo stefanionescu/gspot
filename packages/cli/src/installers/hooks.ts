@@ -9,9 +9,9 @@ import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { ConfiguredCheck } from '#cli/types/planning.ts';
 import type { HookName } from '#cli/types/generation/files.ts';
 import { type Repository } from '#cli/types/repository/files.ts';
-import { type RepositorySetup } from '#cli/types/repository/setup.ts';
-import { CHECK_HOOKS, HOOK_CHECKS } from '#cli/config/generation/hooks.ts';
-import type { HookPlan, HookStatus } from '#cli/types/installers/hooks.ts';
+import { type RepositorySetup } from '#cli/types/repository/repository.ts';
+import { CHECK_HOOKS, HOOK_CHECKS } from '#cli/config/generation/generation.ts';
+import type { HookPlan, HookStatus } from '#cli/types/installers/installers.ts';
 
 import {
     NO_GIT_STATUS,
@@ -21,7 +21,7 @@ import {
     HOOK_COMMENT_LINE,
     HOOK_FOLDER_KINDS,
     NOT_INSTALLED_STATUS,
-} from '#cli/config/installers/hooks.ts';
+} from '#cli/config/installers/installers.ts';
 
 function formatForeignHooks(hooks: RepositorySetup['hooks'], session: Session): string {
     const runner = session.startRunner;

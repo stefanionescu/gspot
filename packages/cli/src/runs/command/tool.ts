@@ -5,10 +5,10 @@ import { GspotError } from '#cli/system/errors.ts';
 import { listOtherTools } from '#cli/planning/tools.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
-import type { SpawnResult } from '#cli/types/system/processes.ts';
+import type { SpawnResult } from '#cli/types/system/system.ts';
 import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts';
-import type { ProcessFailure, ToolRunOptions } from '#cli/types/executables/run.ts';
 import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
+import type { ProcessFailure, ToolRunOptions } from '#cli/types/executables/executables.ts';
 import type { CheckTool, CheckToolOptions, CheckToolProgram, ToolProcessResult } from '#cli/types/runs/command.ts';
 
 function getCheckTool(

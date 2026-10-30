@@ -7,11 +7,11 @@ import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { WrittenTable } from '#cli/types/commands/init.ts';
+import { DETECTED_SETTINGS } from '#cli/config/commands/init.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
-import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
-import { DETECTED_SETTINGS } from '#cli/config/commands/init/defaults.ts';
+import type { Settings, TomlTable } from '#cli/types/settings/settings.ts';
 
 function isInheritedValueChanged(
     name: string,

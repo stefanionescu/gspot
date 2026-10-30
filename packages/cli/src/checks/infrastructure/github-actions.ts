@@ -5,9 +5,9 @@ import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
+import { GIT_FOLDER } from '#cli/config/repository/files.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
-import { GIT_FOLDER } from '#cli/config/repository/files/tracked.ts';
 import { isMap, isSeq, isAlias, isScalar, type Scalar, parseDocument, type Document } from 'yaml';
 
 import {
@@ -16,7 +16,7 @@ import {
     SELF_REFERENCE_PREFIX,
     ENCODED_DOLLAR_SUFFIX,
     SELF_REPOSITORY_MARKER,
-} from '#cli/config/checks/infrastructure/github-actions.ts';
+} from '#cli/config/checks/infrastructure.ts';
 
 function listStepReferences(steps: unknown): unknown[] {
     if (!isSeq(steps)) return [];

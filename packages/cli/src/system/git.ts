@@ -3,15 +3,18 @@ import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
-import type { GitLookup, GitRepository, GitEnvironment, GitVariableGroups } from '#cli/types/system/git.ts';
 import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
-import {
-    type SpawnResult,
-    type SpawnOptions,
-    type StdoutReader,
-    type AsyncSpawnOptions,
-} from '#cli/types/system/processes.ts';
+import type {
+    GitLookup,
+    SpawnResult,
+    SpawnOptions,
+    StdoutReader,
+    GitRepository,
+    GitEnvironment,
+    GitVariableGroups,
+    AsyncSpawnOptions,
+} from '#cli/types/system/system.ts';
 import {
     GIT_LOCALE,
     GIT_PROGRAM,
@@ -32,7 +35,7 @@ import {
     GIT_COMMAND_CONFIGURATION,
     GIT_LOCAL_VARIABLES_ARGUMENTS,
     GIT_NONLOCAL_ENVIRONMENT_NAME,
-} from '#cli/config/system/git.ts';
+} from '#cli/config/system/system.ts';
 
 let inheritedGit: { localVariables: string[]; repository?: GitLookup } | undefined;
 

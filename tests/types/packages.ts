@@ -1,6 +1,5 @@
 import type { Sandbox } from '#tests/types/sandbox.ts';
-import type { MiseVersion } from '#cli/types/installers/mise.ts';
-import type { ToolPackageManager } from '#cli/types/installers/install.ts';
+import type { MiseVersion, ToolPackageManager } from '#cli/types/installers/installers.ts';
 
 export type GspotProject = AsyncDisposable & {
     root: string;

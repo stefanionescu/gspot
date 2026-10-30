@@ -10,7 +10,7 @@ import {
     YAMLLINT_RULES,
     YAMLLINT_YAML_OPTIONS,
     YAMLLINT_RULE_OPTIONS,
-} from '#cli/config/generation/configurations/general/data-files.ts';
+} from '#cli/config/generation/configurations/general.ts';
 
 /**
 Build v8r.yml: the v8r schema catalog, including the configured file selectors.

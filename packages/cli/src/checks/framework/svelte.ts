@@ -8,12 +8,12 @@ import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
+import { TSCONFIG_COPY_FOLDER } from '#cli/config/checks/cross-configuration/tsc.ts';
 import { buildTsconfig } from '#cli/checks/cross-configuration/tsc/scope-tsconfig.ts';
-import { TSCONFIG_COPY_FOLDER } from '#cli/config/checks/cross-configuration/tsc/compiler.ts';
-import { svelteFindingSchema, failureMessageSchema } from '#cli/schemas/checks/framework/svelte.ts';
+import { svelteFindingSchema, failureMessageSchema } from '#cli/schemas/checks/framework/framework.ts';
 
 import {
     FAILURE_LINE,
@@ -21,7 +21,7 @@ import {
     SVELTE_CHECK_RULE,
     SVELTE_CHECK_COMMAND,
     SVELTE_TSCONFIG_FLAG,
-} from '#cli/config/checks/framework/svelte.ts';
+} from '#cli/config/checks/framework/framework.ts';
 
 function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): CheckFinding[] {
     const lines = stdout.split('\n');

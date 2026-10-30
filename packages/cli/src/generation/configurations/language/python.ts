@@ -6,8 +6,8 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { type PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { type FormatSettings } from '#cli/types/generation/formatting.ts';
+import { DEFAULT_QUOTES } from '#cli/config/generation/configurations/general.ts';
 import { UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
-import { DEFAULT_QUOTES } from '#cli/config/generation/configurations/general/format.ts';
 import { getTable, getLimit, listIgnores, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
@@ -25,7 +25,7 @@ import {
     BASEDPYRIGHT_LEVELS,
     BASEDPYRIGHT_OPTIONS,
     BASEDPYRIGHT_ALL_LEVEL_OPTIONS,
-} from '#cli/config/generation/configurations/language/python.ts';
+} from '#cli/config/generation/configurations/language/language.ts';
 
 function listIgnoredGlobs(planned: PlannedConfigFile, checkId: string, root: string): string[] {
     const shared = convertToGlobs(buildIgnoreSections(planned.session)).filter(

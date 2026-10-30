@@ -11,10 +11,10 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { read, readBytes } from '#cli/system/files/reads.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
 import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
@@ -23,7 +23,6 @@ import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { readSitemapUrls } from '#cli/checks/framework/site/sitemap.ts';
 import { join, extname, relative, normalize, isAbsolute } from 'node:path';
 import { purgecssOutputSchema } from '#cli/schemas/checks/framework/site.ts';
-import { PURGECSS_TOOL } from '#cli/config/checks/framework/site/purgecss-process.ts';
 import { listBuiltFiles, readSuccessfulBuild } from '#cli/checks/framework/site/build.ts';
 
 import {
@@ -33,6 +32,7 @@ import {
     LYCHEE_TOOL,
     EXCLUDE_FLAG,
     SITEMAP_FILE,
+    PURGECSS_TOOL,
     ROOT_DIR_FLAG,
     CSS_EXTENSION,
     STYLE_SCOPING,
@@ -48,7 +48,7 @@ import {
     UNLISTED_PAGE_MESSAGE,
     HTML_VALIDATE_CONFIG_FLAG,
     HTML_VALIDATE_FORMATTER_FLAG,
-} from '#cli/config/checks/framework/site/pages.ts';
+} from '#cli/config/checks/framework/site.ts';
 
 function listPossiblePages(pathname: string): [string, ...string[]] {
     const path = decodeURIComponent(pathname).replace(LEADING_SLASH, '');

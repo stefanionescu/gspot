@@ -7,11 +7,11 @@ import {
     NAME_NODES,
     DECLARATIONS,
     PATTERN_LISTS,
-    CALLABLE_NODES,
     PATTERN_FIELDS,
-    PARAMETER_NODES,
     COMPONENT_FACTORY,
-} from '#cli/config/checks/general/naming/languages/typescript.ts';
+    TYPESCRIPT_CALLABLE_NODES,
+    TYPESCRIPT_PARAMETER_NODES,
+} from '#cli/config/checks/general/naming/languages.ts';
 
 function addPattern(found: FileIdentifiers, node: Node | null, category: NamedCategory): void {
     if (node === null) return;
@@ -37,7 +37,7 @@ function addParameter(found: FileIdentifiers, parameter: Node): void {
 function addParameters(found: FileIdentifiers, node: Node): void {
     const parameters = node.childForFieldName('parameters')?.namedChildren ?? [];
     for (const parameter of parameters) {
-        if (PARAMETER_NODES.has(parameter.type)) addParameter(found, parameter);
+        if (TYPESCRIPT_PARAMETER_NODES.has(parameter.type)) addParameter(found, parameter);
         else addPattern(found, parameter, 'parameters');
     }
     addPattern(found, node.childForFieldName('parameter'), 'parameters');
@@ -99,7 +99,7 @@ export function extractTypescriptIdentifiers(syntaxRoot: Node, file: string, lan
         addPattern(found, node.childForFieldName('left'), 'variables');
     for (const node of syntaxRoot.descendantsOfType('catch_clause'))
         addPattern(found, node.childForFieldName('parameter'), 'variables');
-    const callables = syntaxRoot.descendantsOfType([...CALLABLE_NODES]);
+    const callables = syntaxRoot.descendantsOfType([...TYPESCRIPT_CALLABLE_NODES]);
     for (const node of callables) addParameters(found, node);
     return found.identifiers;
 }

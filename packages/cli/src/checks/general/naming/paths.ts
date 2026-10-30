@@ -7,11 +7,11 @@ import type { PathContainer } from '#cli/types/manifests.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { readNamingDefaults } from '#cli/manifests/naming.ts';
 import type { Identifier } from '#cli/types/checks/general/naming.ts';
-import { REST_SEGMENT } from '#cli/config/checks/general/naming/paths.ts';
+import { REST_SEGMENT } from '#cli/config/checks/general/naming/naming.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
 import { listNamedFiles } from '#cli/checks/general/naming/source-names.ts';
 import { validateIdentifiers } from '#cli/checks/general/naming/validation.ts';
-import { CATEGORY_LABELS } from '#cli/config/checks/general/naming/languages/identifier.ts';
+import { CATEGORY_LABELS } from '#cli/config/checks/general/naming/languages.ts';
 
 function parseSegmentName(
     segment: string,

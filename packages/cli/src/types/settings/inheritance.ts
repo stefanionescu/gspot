@@ -1,9 +1,9 @@
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { ScopeFolder } from '#cli/types/repository/files.ts';
+import type { PATH_ROLES } from '#cli/config/settings/settings.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { PATH_ROLES } from '#cli/config/settings/available.ts';
 import type { ReasonRequirement } from '#cli/types/settings/definitions.ts';
-import type { Settings, TableValues, IgnoreRecord, SettingsTable } from '#cli/types/settings/file.ts';
+import type { Settings, TableValues, IgnoreRecord, SettingsTable } from '#cli/types/settings/settings.ts';
 
 export type RemovedConfiguration = { name: string; scope: string; reason: string };
 

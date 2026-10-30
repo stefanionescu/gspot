@@ -3,10 +3,10 @@ import { GspotError } from '#cli/system/errors.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { type Level } from '#cli/types/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { type WrittenSettings } from '#cli/types/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { type WrittenSettings } from '#cli/types/settings/settings.ts';
 import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 
 /**

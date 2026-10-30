@@ -1,4 +1,4 @@
-import { CI_PINS } from '#cli/config/generation/ci.ts';
+import { CI_PINS } from '#cli/config/generation/generation.ts';
 import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
 
 export const LEVEL_SUMMARY =

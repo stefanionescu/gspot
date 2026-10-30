@@ -8,17 +8,15 @@ import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { removeKey, getScopeTable } from '#cli/settings/edit.ts';
-import { MANAGED_KEYS_NOTE } from '#cli/config/generation/write.ts';
+import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
-import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/flags.ts';
+import { MANAGED_KEYS_NOTE } from '#cli/config/generation/generation.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
+import type { ConfigurationsOptions } from '#cli/types/generation/generation.ts';
 import { selectForInit, listDetectedAdditions } from '#cli/repository/proposals.ts';
-import type { ConfigurationsOptions } from '#cli/types/generation/settings-edit.ts';
-import { GSPOT_REMOVE, REMOVE_CONFIGURATION_MESSAGE } from '#cli/config/commands/remove.ts';
 import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
 
 import {
@@ -26,6 +24,12 @@ import {
     formatConfigurationChange,
     readConfigurationEditContext,
 } from '#cli/generation/settings-edit.ts';
+import {
+    SCOPE_OPTION,
+    GSPOT_REMOVE,
+    REASON_OPTION,
+    REMOVE_CONFIGURATION_MESSAGE,
+} from '#cli/config/commands/commands.ts';
 
 function assertRemovable(names: string[], kept: string[], configurationsByName: Map<string, Configuration>): void {
     for (const configuration of names) {

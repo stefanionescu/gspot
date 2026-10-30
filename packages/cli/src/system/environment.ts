@@ -1,7 +1,7 @@
 import { homedir } from 'node:os';
 import { join, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import { CACHE_FOLDER_NAME, OPERATING_SYSTEMS, CACHE_FOLDER_MESSAGE } from '#cli/config/system/environment.ts';
+import { CACHE_FOLDER_NAME, OPERATING_SYSTEMS, CACHE_FOLDER_MESSAGE } from '#cli/config/system/system.ts';
 
 /**
 Build the environment for tool processes. Merge Windows names that differ only in case, and keep their spelling.

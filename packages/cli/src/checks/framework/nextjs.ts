@@ -11,7 +11,7 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import type { ConfigurationCheck } from '#cli/types/manifests.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { TYPESCRIPT_TAG } from '#cli/config/checks/cross-configuration/tsc/compiler.ts';
+import { TYPESCRIPT_TAG } from '#cli/config/checks/cross-configuration/tsc.ts';
 import { runTsc, restoreCommandPaths } from '#cli/checks/cross-configuration/tsc/compiler.ts';
 
 import {
@@ -22,7 +22,7 @@ import {
     CI_ENVIRONMENT,
     TYPESCRIPT_TSC_CHECK,
     NEXT_TYPEGEN_COMMAND,
-} from '#cli/config/checks/framework/nextjs.ts';
+} from '#cli/config/checks/framework/framework.ts';
 
 function formatNextjsFailure(text: string): string {
     const lines = stripVTControlCharacters(text).trim().split('\n');

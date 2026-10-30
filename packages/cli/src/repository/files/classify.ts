@@ -2,14 +2,14 @@ import { posix } from 'node:path';
 import { read } from '#cli/system/files/reads.ts';
 import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import { extractExtension } from '#cli/system/paths.ts';
+import { MARKERS } from '#cli/config/parsers/formats.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { MARKERS } from '#cli/config/parsers/formats/managed-blocks.ts';
 import type { ConfigFile, Configuration } from '#cli/types/manifests.ts';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
 
 import type {
     FileTags,
@@ -59,7 +59,7 @@ import {
     GENERATED_HEADER_LINE,
     ENV_EXECUTABLE_SUFFIX,
     GENERATOR_OUTPUT_BANNERS,
-} from '#cli/config/repository/files/classify.ts';
+} from '#cli/config/repository/files.ts';
 
 function findConfiguredKind(path: string, rules: FileKindRules): FileClassification | undefined {
     const attribute = findAttributeKind(rules.attributes.get(path));

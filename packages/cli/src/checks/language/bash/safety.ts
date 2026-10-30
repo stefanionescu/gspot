@@ -4,12 +4,12 @@ import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 
 import {
-    RULES,
+    SAFETY_RULES,
     RECURSIVE_FLAG,
     BROAD_KILL_COMMANDS,
     IGNORED_FAILURE_MESSAGE,
     RECURSIVE_REMOVE_MESSAGE,
-} from '#cli/config/checks/language/bash/safety.ts';
+} from '#cli/config/checks/language/bash.ts';
 
 /**
 Reports each unsafe process kill or removal, and at level `all`, each discarded failure.
@@ -27,7 +27,7 @@ export async function checkSafety(session: Session, planned: PlannedCheck): Prom
                     {
                         file: file.path,
                         line: command.line,
-                        rule: RULES.broadKill,
+                        rule: SAFETY_RULES.broadKill,
                         message: kill,
                     },
                 ];
@@ -43,7 +43,7 @@ export async function checkSafety(session: Session, planned: PlannedCheck): Prom
                       {
                           file: file.path,
                           line: command.line,
-                          rule: RULES.recursiveRemove,
+                          rule: SAFETY_RULES.recursiveRemove,
                           message: RECURSIVE_REMOVE_MESSAGE,
                       },
                   ];
@@ -52,7 +52,7 @@ export async function checkSafety(session: Session, planned: PlannedCheck): Prom
             ? file.swallowedLines.map((line) => ({
                   file: file.path,
                   line,
-                  rule: RULES.ignoredFailure,
+                  rule: SAFETY_RULES.ignoredFailure,
                   message: IGNORED_FAILURE_MESSAGE,
               }))
             : []),

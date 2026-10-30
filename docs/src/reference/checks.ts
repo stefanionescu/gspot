@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
 import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import { GROUP_LABELS } from '#cli/config/manifests/names.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/system/system.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
-import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
+import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/runs/command.ts';
 import { getTool, findToolName, hasRuleOutput } from '#cli/manifests/tools.ts';
-import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
 import type { GuideCheck, Suppression, ReferencePage } from '#docs/types/reference.ts';
 import { formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
 

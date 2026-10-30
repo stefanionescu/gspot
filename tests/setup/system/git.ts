@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { stat, chmod } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { EXECUTABLE_BITS } from '#cli/config/repository/files/tracked.ts';
 
 /**
 Run git and return its trimmed output; throw when git fails.

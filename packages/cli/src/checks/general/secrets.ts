@@ -7,11 +7,11 @@ import { buildBaseResult } from '#cli/runs/results.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
+import type { EnvironmentRead } from '#cli/types/parsers/code.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { readPushedRange } from '#cli/repository/revisions/push.ts';
-import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import type { EnvironmentRead } from '#cli/types/parsers/code/environment.ts';
 import { type CheckResult, type CheckFinding } from '#cli/types/runs/check.ts';
 import { getSiblingCommand, listPushedCommits } from '#cli/checks/cross-configuration/pushed-commits.ts';
 import { listPythonEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
@@ -24,7 +24,7 @@ import {
     GITLEAKS_STAGED_FLAG,
     GITLEAKS_STAGED_CHECK,
     ENVIRONMENT_READ_LANGUAGES,
-} from '#cli/config/checks/general/secrets.ts';
+} from '#cli/config/checks/general/general.ts';
 
 async function readEnvironmentReferences(
     session: Session,

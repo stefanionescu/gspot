@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { readSettings } from '#cli/settings/read.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

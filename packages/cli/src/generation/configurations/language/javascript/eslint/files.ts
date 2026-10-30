@@ -7,7 +7,7 @@ import { buildPathMatcher, includeFolderContents } from '#cli/system/matchers.ts
 import {
     CODE_LANGUAGES,
     COMPONENT_CONFIGURATIONS,
-} from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 import {
     type EslintFiles,
     type PathExpressions,

@@ -2,17 +2,17 @@ import { join } from 'node:path';
 import { setKey } from '#cli/settings/edit.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import type { RunCache } from '#cli/types/system/cache.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
+import type { RunCache } from '#cli/types/system/system.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
+import type { TomlTable } from '#cli/types/settings/settings.ts';
 import type { ScopeConfigurations } from '#cli/types/commands/init.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
 import type { ImportExtensionStyle } from '#cli/types/settings/tools.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { BUNDLER_PACKAGES, IMPORT_EXTENSION_SETTING } from '#cli/config/commands/init/import-extension.ts';
+import { BUNDLER_PACKAGES, IMPORT_EXTENSION_SETTING } from '#cli/config/commands/init.ts';
 
 function detectImportExtension(
     repository: Repository,

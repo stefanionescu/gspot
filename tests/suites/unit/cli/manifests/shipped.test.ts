@@ -4,10 +4,10 @@ import { test, expect } from 'bun:test';
 import { listAssets } from '#cli/system/assets.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { EACH_PLACEHOLDER } from '#cli/config/runs/command.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
-import { manifestToolSchema } from '#cli/schemas/manifests/tool.ts';
+import { manifestToolSchema } from '#cli/schemas/manifests/manifests.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
-import { EACH_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
 import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 

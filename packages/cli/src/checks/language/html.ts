@@ -2,13 +2,13 @@ import type { Node } from 'web-tree-sitter';
 import { decodeHTMLAttribute } from 'entities';
 import type { Session } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { SourceTree } from '#cli/types/parsers/code.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
-import type { SourceTree } from '#cli/types/parsers/code/grammars.ts';
-import type { MarkupAttribute } from '#cli/types/checks/language/html.ts';
+import type { MarkupAttribute } from '#cli/types/checks/language/language.ts';
 
 import {
-    RULES,
+    HTML_RULES,
     SCRIPT_SCHEMES,
     URL_ATTRIBUTES,
     EVENT_ATTRIBUTE,
@@ -18,7 +18,7 @@ import {
     ACTIVE_DOCUMENT_TYPES,
     EXECUTABLE_SCRIPT_TYPES,
     DOCUMENT_URL_ATTRIBUTES,
-} from '#cli/config/checks/language/html.ts';
+} from '#cli/config/checks/language/language.ts';
 
 function listElementAttributes(element: Node): MarkupAttribute[] {
     const tag = element.namedChildren.find((child) => child.type === 'start_tag' || child.type === 'self_closing_tag');
@@ -71,7 +71,7 @@ function validateInlineScripts(source: SourceTree): CheckFinding[] {
                     file: source.path,
                     line: element.startPosition.row + 1,
                     column: element.startPosition.column + 1,
-                    rule: RULES.inlineScript,
+                    rule: HTML_RULES.inlineScript,
                     message: INLINE_SCRIPT_MESSAGE,
                 },
             ];
@@ -94,7 +94,7 @@ function validateScriptAttributes(source: SourceTree): CheckFinding[] {
                 return [
                     {
                         ...position,
-                        rule: RULES.handlerAttribute,
+                        rule: HTML_RULES.handlerAttribute,
                         message: `The ${attribute.name} attribute is inline script. Attach the handler from a script file.`,
                     },
                 ];
@@ -104,7 +104,7 @@ function validateScriptAttributes(source: SourceTree): CheckFinding[] {
                 : [
                       {
                           ...position,
-                          rule: RULES.scriptLink,
+                          rule: HTML_RULES.scriptLink,
                           message: `A ${scheme} URL embeds executable content. Use an external file.`,
                       },
                   ];

@@ -6,13 +6,14 @@ import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { extractUrlPasswords } from '#cli/installers/credentials.ts';
-import { NPMRC_FILE, NPM_SETTING_PREFIX } from '#cli/config/installers/npm/project.ts';
 
 import {
+    NPMRC_FILE,
     CREDENTIAL_KEY,
     CONNECTION_KEYS,
     CERTIFICATE_KEYS,
     REGISTRY_AUTH_KEY,
+    NPM_SETTING_PREFIX,
     CONNECTION_URL_KEY,
     REGISTRY_URL_MESSAGE,
     READ_REGISTRY_MESSAGE,
@@ -20,7 +21,7 @@ import {
     NPM_SCOPE_REGISTRY_KEY,
     ENCODED_CREDENTIAL_KEY,
     NPM_SETTING_VARIABLE_PREFIX,
-} from '#cli/config/installers/npm/registry.ts';
+} from '#cli/config/installers/npm.ts';
 
 async function readRegistrySettings(root: string): Promise<Record<string, unknown>> {
     const [npmConfig, { default: npmDefinitions }] = await Promise.all([

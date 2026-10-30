@@ -4,21 +4,21 @@ import { selectForScope } from '#cli/settings/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
+import type { TomlSyntax } from '#cli/types/parsers/formats.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { LimitLanguage } from '#cli/types/settings/values.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import type { WrittenConfiguration } from '#cli/types/manifests.ts';
 import { listUnknownConfigurations } from '#cli/manifests/select.ts';
-import type { TomlSyntax } from '#cli/types/parsers/formats/toml.ts';
-import { NO_CHECK_PATHS_MESSAGE } from '#cli/config/settings/file.ts';
 import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
+import { NO_CHECK_PATHS_MESSAGE } from '#cli/config/settings/settings.ts';
 import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
-import type { Settings, SettingsError } from '#cli/types/settings/file.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { formatFileValueError } from '#cli/settings/validation/messages.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
+import type { Settings, SettingsError } from '#cli/types/settings/settings.ts';
+import { RECORD_PATHS_MESSAGE, SETTINGS_REFERENCE_URL } from '#cli/config/settings/validation.ts';
 import { RECORD_FIELDS, findChildSchema, unwrapSettingSchema } from '#cli/settings/schema-lookup.ts';
-import { RECORD_PATHS_MESSAGE, SETTINGS_REFERENCE_URL } from '#cli/config/settings/validation/schema.ts';
 
 import {
     validateScopePaths,

@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { compareText } from '#cli/system/text.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import { ALL_FILES_GLOB, CLI_PACKAGE_JSON } from '#cli/config/system/assets.ts';
+import { ALL_FILES_GLOB, CLI_PACKAGE_JSON } from '#cli/config/system/system.ts';
 
 const packageFolder = dirname(createRequire(import.meta.url).resolve(CLI_PACKAGE_JSON));
 

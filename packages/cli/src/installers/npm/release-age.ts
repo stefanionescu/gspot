@@ -1,15 +1,9 @@
 import { join } from 'node:path';
 import { stringify } from 'yaml';
 import { writeFileSync } from 'node:fs';
+import type { PackageManager } from '#cli/types/repository/npm.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
-import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
-
-import {
-    GSPOT_PACKAGES,
-    MINUTES_PER_DAY,
-    SECONDS_PER_DAY,
-    RELEASE_AGE_FILES,
-} from '#cli/config/installers/npm/release-age.ts';
+import { GSPOT_PACKAGES, MINUTES_PER_DAY, SECONDS_PER_DAY, RELEASE_AGE_FILES } from '#cli/config/installers/npm.ts';
 
 /**
 Set the minimum release age for the tool project lockfile. Pass flags to npm and write local settings for pnpm and Bun.

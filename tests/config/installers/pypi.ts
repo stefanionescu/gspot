@@ -1,5 +1,5 @@
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { PYTHON_VERSION } from '#cli/config/installers/pypi.ts';
+import { PYTHON_VERSION } from '#cli/config/installers/installers.ts';
 
 export const UV_TOML = `index-url = "https://alex:test%2Bpassword@example.com/simple"
 find-links = ["wheels", "https://example.com/wheels"]

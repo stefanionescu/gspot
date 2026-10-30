@@ -43,7 +43,7 @@ import {
     CONFIGURATION_BLOCKS_SUFFIX,
     PRESETS_AFTER_CONFIGURATIONS,
     PRESETS_BEFORE_CONFIGURATIONS,
-} from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 function buildConfigurationFiles(
     planned: PlannedConfigFile,

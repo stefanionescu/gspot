@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { checkSchema, manifestSchema } from '#cli/schemas/manifests/manifest.ts';
 import { type LEVELS, type STAGES, type GROUPS } from '#cli/config/manifests/names.ts';
-import type { namingOverrideSchema, namingDefaultsSchema } from '#cli/schemas/manifests/naming.ts';
+import type { namingOverrideSchema, namingDefaultsSchema } from '#cli/schemas/manifests/manifests.ts';
 
 export type RequirementWalk = {
     configurationsByName: Map<string, Configuration>;

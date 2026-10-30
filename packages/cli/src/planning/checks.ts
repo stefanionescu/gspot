@@ -2,18 +2,18 @@ import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getTool, findToolName } from '#cli/manifests/tools.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { Settings } from '#cli/types/settings/settings.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import type { Check, ScopeCheck } from '#cli/types/manifests.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { findFirstSkip, findSettingsSkip } from '#cli/planning/skips.ts';
 import { isRootOnlyCheck, selectCheckFiles } from '#cli/planning/files.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
-import { ROOT_RUNS, COVERAGE_DIMENSIONS, COVERAGE_INI_SECTION } from '#cli/config/planning/checks.ts';
+import { ROOT_RUNS, COVERAGE_DIMENSIONS, COVERAGE_INI_SECTION } from '#cli/config/planning.ts';
 import { type PlanOptions, type PlannedScope, type PlannedCheck, type ConfiguredCheck } from '#cli/types/planning.ts';
 
 function listScopeChecks(settings: Settings, scope: Scope): ScopeCheck[] {

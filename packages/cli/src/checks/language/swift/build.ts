@@ -21,7 +21,7 @@ import {
     REPORTED_LEVELS,
     SWIFT_BUILD_NAME,
     MACOS_PRIVATE_PATH,
-} from '#cli/config/checks/language/swift/build.ts';
+} from '#cli/config/checks/language/swift.ts';
 
 const SWIFT_BUILD_OUTPUTS = Symbol('swift build outputs');
 

@@ -15,7 +15,7 @@ import {
     RESULT_JSON_INDENT,
     TERMINAL_COLOR_SEQUENCE,
     TERMINAL_CONTROL_CHARACTERS,
-} from '#cli/config/system/terminal.ts';
+} from '#cli/config/system/system.ts';
 
 let options: OutputOptions = { isJson: false, colored: false };
 

@@ -8,7 +8,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { type InitJson } from '#cli/types/commands/init.ts';
-import { type TomlTable } from '#cli/types/settings/file.ts';
+import { type TomlTable } from '#cli/types/settings/settings.ts';
 import { type FormatSettings } from '#cli/types/generation/formatting.ts';
 
 import {

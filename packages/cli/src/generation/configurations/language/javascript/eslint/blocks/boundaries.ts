@@ -3,7 +3,7 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { TRPC_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
 import { listCodeTestFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
-import { CODE_LANGUAGES } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
+import { CODE_LANGUAGES } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 import type {
     EslintBlock,
@@ -26,7 +26,7 @@ import {
     BOUNDARY_SOURCE_TEMPLATE,
     BOUNDARY_DEPENDENCY_NODES,
     BOUNDARY_DEPENDENCY_SELECTORS,
-} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/boundaries.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
 function buildDependencyPolicies({
     importRules,

@@ -9,13 +9,19 @@ import { assertCheckExists } from '#cli/manifests/read.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
-import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
+import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
+import type { IgnoreOptions } from '#cli/types/commands/commands.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { GLOB_BRACKETS, IGNORE_CHECK_MESSAGE } from '#cli/config/commands/ignore.ts';
-import { RULE_OPTION, PATHS_OPTION, REASON_OPTION } from '#cli/config/commands/flags.ts';
 import { writeSettingsEdit, readSettingsEditContext } from '#cli/generation/settings-edit.ts';
+
+import {
+    RULE_OPTION,
+    PATHS_OPTION,
+    GLOB_BRACKETS,
+    REASON_OPTION,
+    IGNORE_CHECK_MESSAGE,
+} from '#cli/config/commands/commands.ts';
 
 function escapeLiteralPaths(root: string, paths: string[] | undefined): string[] | undefined {
     return paths?.map((path) => {

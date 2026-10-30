@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import { parse, parseAllDocuments } from 'yaml';
-import { MESSAGE_END } from '#cli/config/parsers/formats/errors.ts';
+import { MESSAGE_END } from '#cli/config/parsers/formats.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 
 export function parseYamlFile(path: string, text: string): unknown;

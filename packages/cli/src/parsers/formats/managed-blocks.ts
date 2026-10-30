@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import type { TextRange } from '#cli/types/text.ts';
-import { MARKERS, BLOCK_STYLES, LEADING_NEWLINE } from '#cli/config/parsers/formats/managed-blocks.ts';
+import { MARKERS, BLOCK_STYLES, LEADING_NEWLINE } from '#cli/config/parsers/formats.ts';
 
 /**
 Locate one complete block. Refuse ambiguous or malformed markers.

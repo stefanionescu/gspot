@@ -1,15 +1,15 @@
 import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { isTable } from '#cli/system/tables.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
-import type { ShippedRule } from '#cli/types/generation/rules.ts';
+import type { Settings } from '#cli/types/settings/settings.ts';
 import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
 import { compareText, formatSimilarNames } from '#cli/system/text.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/manifests/names.ts';
-import { RULES_FOLDER, MANIFEST_FILE } from '#cli/config/manifests/read.ts';
+import type { ShippedRule } from '#cli/types/generation/generation.ts';
+import { RULES_FOLDER, MANIFEST_FILE } from '#cli/config/manifests/manifests.ts';
 import type { Tool, Check, Configuration, ParsedManifest, ConfigurationCheck } from '#cli/types/manifests.ts';
 
 let shippedConfigurations: Map<string, Configuration> | undefined;

@@ -6,7 +6,7 @@ import type { Session } from '#cli/types/session.ts';
 import { buildValeIni } from '#cli/installers/vale.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { VALE_PACKAGES, VALE_PACKAGE_URLS } from '#cli/config/installers/vale.ts';
+import { VALE_PACKAGES, VALE_PACKAGE_URLS } from '#cli/config/installers/installers.ts';
 
 import {
     ACRONYMS,
@@ -20,7 +20,7 @@ import {
     CAPITALIZATION_STYLES,
     BANNED_HEADING_MESSAGE,
     ACRONYM_DEFINITION_PATTERN,
-} from '#cli/config/generation/configurations/general/prose.ts';
+} from '#cli/config/generation/configurations/general.ts';
 
 function listExceptions(words: string[]): string[] {
     return [...new Set([...words, ...ACRONYMS])]

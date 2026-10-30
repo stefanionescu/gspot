@@ -24,16 +24,15 @@ import { buildHadolintFile } from '#cli/generation/configurations/infrastructure
 import { buildMarkdownlintFile } from '#cli/generation/configurations/language/markdown.ts';
 import { buildOsvScannerFile } from '#cli/generation/configurations/general/dependencies.ts';
 import { buildSpectralFile } from '#cli/generation/configurations/infrastructure/openapi.ts';
-import { TAPLO_FORMATTING } from '#cli/config/generation/configurations/general/data-files.ts';
 import { buildPeripheryFile } from '#cli/generation/configurations/language/swift/periphery.ts';
 import { buildSwiftlintFile } from '#cli/generation/configurations/language/swift/swiftlint.ts';
 import { buildJsconfigFile } from '#cli/generation/configurations/language/javascript/jsconfig.ts';
 import { buildSwiftformatFile } from '#cli/generation/configurations/language/swift/swiftformat.ts';
 import { buildV8rFile, buildYamllintFile } from '#cli/generation/configurations/general/data-files.ts';
 import { buildRuffFile, buildBasedpyrightFile } from '#cli/generation/configurations/language/python.ts';
-import { ALT_TEXT_TOKENS, ALT_TEXT_MESSAGE } from '#cli/config/generation/configurations/general/prose.ts';
 import { buildEslintFile } from '#cli/generation/configurations/language/javascript/eslint/config-file.ts';
-import { TRIVY_TABLE, TRIVY_SKIPPED_FOLDERS } from '#cli/config/generation/configurations/infrastructure/docker.ts';
+import { TRIVY_TABLE, TRIVY_SKIPPED_FOLDERS } from '#cli/config/generation/configurations/infrastructure.ts';
+import { ALT_TEXT_TOKENS, TAPLO_FORMATTING, ALT_TEXT_MESSAGE } from '#cli/config/generation/configurations/general.ts';
 
 import {
     buildPrettierFile,
@@ -54,7 +53,7 @@ import {
     CONFIG_FILE_REFERENCE,
     SEMGREP_RULE_PACK_FILE,
     ANSIBLE_LINT_ALWAYS_OFF,
-} from '#cli/config/generation/config-files/build.ts';
+} from '#cli/config/generation/config-files.ts';
 import {
     buildValeIniFile,
     buildLengthStyle,

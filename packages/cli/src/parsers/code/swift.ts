@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 
 import {
     SWIFT_TEST_TAG,
@@ -15,7 +15,7 @@ import {
     SWIFT_TEST_TARGET_TAG,
     SWIFT_TEST_ATTRIBUTES,
     SWIFT_TEST_TARGET_CALLS,
-} from '#cli/config/parsers/code/swift.ts';
+} from '#cli/config/parsers/code.ts';
 
 /**
 Identify Swift imports, test declarations, and package targets without matching comment or string text.

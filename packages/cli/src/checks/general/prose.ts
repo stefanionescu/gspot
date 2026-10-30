@@ -6,17 +6,17 @@ import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { hasValePackages } from '#cli/installers/vale.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { SCRIPT_TAG } from '#cli/config/repository/files.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import type { SpawnResult } from '#cli/types/system/system.ts';
 import { join, dirname, relative, isAbsolute } from 'node:path';
 import { VALE_TOOL, PROSE_GRAMMARS } from '#cli/config/prose.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
+import { valeOutputSchema } from '#cli/schemas/checks/general.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
-import type { SpawnResult } from '#cli/types/system/processes.ts';
-import { SCRIPT_TAG } from '#cli/config/repository/files/classify.ts';
-import { valeOutputSchema } from '#cli/schemas/checks/general/prose.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import type { ValeAlert, ProseRoute, ProseRouteBatch } from '#cli/types/checks/general/prose.ts';
+import type { ValeAlert, ProseRoute, ProseRouteBatch } from '#cli/types/checks/general/general.ts';
 
 import {
     VALE_NAME,
@@ -25,7 +25,7 @@ import {
     VALE_ARGUMENTS,
     VALE_ERROR_LINE,
     VALE_PACKAGES_MESSAGE,
-} from '#cli/config/checks/general/prose.ts';
+} from '#cli/config/checks/general/general.ts';
 
 function parseValeAlerts(stdout: string): ValeAlert[] {
     return Object.entries(parseToolOutput(VALE_NAME, stdout, valeOutputSchema)).flatMap(([file, alerts]) =>

@@ -5,8 +5,8 @@ import { isReasonedValue } from '#cli/settings/file.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { Settings, SettingsError } from '#cli/types/settings/file.ts';
 import type { ReasonRequirement } from '#cli/types/settings/definitions.ts';
+import type { Settings, SettingsError } from '#cli/types/settings/settings.ts';
 
 import {
     EMPTY_REASON,
@@ -14,7 +14,7 @@ import {
     ADD_REASON_MESSAGE,
     REMOVAL_NEEDS_REASON,
     REMOVAL_REASON_SUGGESTION,
-} from '#cli/config/settings/validation/reasons.ts';
+} from '#cli/config/settings/validation.ts';
 
 function isLimitLoosening(direction: Exclude<ReasonRequirement, 'adding'>, value: unknown, shipped: unknown): boolean {
     if (typeof value !== 'number' || typeof shipped !== 'number') return false;

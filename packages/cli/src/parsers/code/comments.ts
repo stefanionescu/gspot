@@ -4,28 +4,27 @@ import type { Node } from 'web-tree-sitter';
 import { extractExtension } from '#cli/system/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { listSqlTokens } from '#cli/parsers/code/sql.ts';
+import { SCRIPT_TAG } from '#cli/config/repository/files.ts';
 import { getPosition, replaceRanges } from '#cli/system/text.ts';
-import { NOT_LINE_BREAK } from '#cli/config/parsers/code/bash.ts';
 import type { TextRange, SourcePosition } from '#cli/types/text.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import { SCRIPT_TAG } from '#cli/config/repository/files/classify.ts';
-import type { GrammarName } from '#cli/types/parsers/code/grammars.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { getTomlRange, parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
-import type { CommentParser, SourceComment, ComponentScript } from '#cli/types/parsers/code/comments.ts';
+import type { GrammarName, CommentParser, SourceComment, ComponentScript } from '#cli/types/parsers/code.ts';
 
 import {
     MDX_ESM,
     MDX_COMMENT,
     TSX_LANGUAGES,
     COMMENT_NODES,
+    NOT_LINE_BREAK,
     ASTRO_EXTENSION,
     HTML_COMMENT_END,
     BLOCK_COMMENT_END,
     ASTRO_FRONT_MATTER,
     YAML_SCALAR_TOKENS,
     HTML_ALTERNATE_COMMENT_END,
-} from '#cli/config/parsers/code/comments.ts';
+} from '#cli/config/parsers/code.ts';
 
 function buildComment(text: string, start: number, end: number, line: number): SourceComment {
     const lineStart = text.lastIndexOf('\n', start - 1) + 1;

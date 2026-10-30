@@ -6,21 +6,22 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import type { ScriptFile, LayoutFinding } from '#cli/types/checks/language/bash.ts';
-import { MAIN_FUNCTION, BASH_SOURCE_COMMANDS } from '#cli/config/checks/language/bash/scripts.ts';
 
 import {
-    RULES,
     MAIN_CALL,
     STRICT_MODE,
+    MAIN_FUNCTION,
     BASH_SHEBANGS,
     OPTION_COMMANDS,
+    SCRIPT_LAYOUT_RULES,
+    BASH_SOURCE_COMMANDS,
     LIBRARY_DECLARATIONS,
     LIBRARY_FLOW_MESSAGE,
     LIBRARY_MAIN_MESSAGE,
     MAIN_FUNCTION_MESSAGE,
     EXECUTABLE_BIT_MESSAGE,
     LIBRARY_COMMAND_FINDINGS,
-} from '#cli/config/checks/language/bash/script-layout.ts';
+} from '#cli/config/checks/language/bash.ts';
 
 function validateStrictMode(codeLines: NumberedLine[]): LayoutFinding[] {
     const first = codeLines.findIndex((line) => !OPTION_COMMANDS.some((command) => line.text.startsWith(command)));
@@ -30,7 +31,7 @@ function validateStrictMode(codeLines: NumberedLine[]): LayoutFinding[] {
         : [
               {
                   line: codeLines[0]?.number ?? 1,
-                  rule: RULES.strictMode,
+                  rule: SCRIPT_LAYOUT_RULES.strictMode,
                   message: `Put ${STRICT_MODE} before the first command.`,
               },
           ];
@@ -40,12 +41,12 @@ function validateMainFunction(file: ScriptFile, codeLines: NumberedLine[]): Layo
     if (file.functions.length === 0) return [];
     const issues: LayoutFinding[] = [];
     if (file.functions.filter((scriptFunction) => scriptFunction.name === MAIN_FUNCTION).length !== 1)
-        issues.push({ line: 1, rule: RULES.mainFunction, message: MAIN_FUNCTION_MESSAGE });
+        issues.push({ line: 1, rule: SCRIPT_LAYOUT_RULES.mainFunction, message: MAIN_FUNCTION_MESSAGE });
     const last = codeLines.at(-1);
     if (last?.text !== MAIN_CALL)
         issues.push({
             line: last?.number ?? 1,
-            rule: RULES.mainCall,
+            rule: SCRIPT_LAYOUT_RULES.mainCall,
             message: `An executable ends with ${MAIN_CALL}.`,
         });
     return issues;
@@ -59,7 +60,7 @@ function validateLibraryStatement(statement: ScriptFile['statements'][number], f
         const finding = LIBRARY_COMMAND_FINDINGS.get(command ?? '');
         if (finding !== undefined) return [{ line: statement.line, ...finding }];
     }
-    return [{ line: statement.line, rule: RULES.libraryFlow, message: LIBRARY_FLOW_MESSAGE }];
+    return [{ line: statement.line, rule: SCRIPT_LAYOUT_RULES.libraryFlow, message: LIBRARY_FLOW_MESSAGE }];
 }
 
 function validateLibraryScript(file: ScriptFile, codeLines: NumberedLine[]): LayoutFinding[] {
@@ -68,13 +69,13 @@ function validateLibraryScript(file: ScriptFile, codeLines: NumberedLine[]): Lay
         return [
             {
                 line: last.number,
-                rule: RULES.executableBit,
+                rule: SCRIPT_LAYOUT_RULES.executableBit,
                 message: EXECUTABLE_BIT_MESSAGE,
             },
         ];
     const issues: LayoutFinding[] = [];
     if (file.functions.some((scriptFunction) => scriptFunction.name === MAIN_FUNCTION))
-        issues.push({ line: 1, rule: RULES.libraryMain, message: LIBRARY_MAIN_MESSAGE });
+        issues.push({ line: 1, rule: SCRIPT_LAYOUT_RULES.libraryMain, message: LIBRARY_MAIN_MESSAGE });
     return [...issues, ...file.statements.flatMap((statement) => validateLibraryStatement(statement, file))];
 }
 
@@ -83,7 +84,7 @@ function validateScriptFile(file: ScriptFile): CheckFinding[] {
     if (!BASH_SHEBANGS.has(file.lines[0] ?? ''))
         issues.push({
             line: 1,
-            rule: RULES.shebang,
+            rule: SCRIPT_LAYOUT_RULES.shebang,
             message: `The first line is not one of ${[...BASH_SHEBANGS].join(' or ')}.`,
         });
     const code = listCodeLines(file.code);
@@ -93,7 +94,7 @@ function validateScriptFile(file: ScriptFile): CheckFinding[] {
         if (temporary.cleanupLines.length === 0)
             issues.push({
                 line: temporary.line,
-                rule: RULES.mktempTrap,
+                rule: SCRIPT_LAYOUT_RULES.mktempTrap,
                 message: `The temporary path ${temporary.name} needs a trap that removes it.`,
             });
     return issues.map(({ line, rule, message: text }) => ({
@@ -118,7 +119,7 @@ export async function checkScriptLayout(session: Session, planned: PlannedCheck)
     });
     return scripts.flatMap((file) =>
         validateScriptFile(file).filter(
-            (finding) => finding.rule !== RULES.libraryFlow || !isEnvironmentReader(file.path),
+            (finding) => finding.rule !== SCRIPT_LAYOUT_RULES.libraryFlow || !isEnvironmentReader(file.path),
         ),
     );
 }

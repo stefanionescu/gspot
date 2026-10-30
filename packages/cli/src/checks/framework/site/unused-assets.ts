@@ -7,12 +7,16 @@ import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
-import { FILENAME_TAGS } from '#cli/config/repository/files/classify.ts';
+import { FILENAME_TAGS } from '#cli/config/repository/files.ts';
 import { SYMLINK_MODE, GIT_FILE_MODES } from '#cli/config/files/modes.ts';
-import type { AssetSource, AssetGlobImport } from '#cli/types/checks/site.ts';
-import { ASTRO_EXTENSION, ASTRO_FRONT_MATTER } from '#cli/config/parsers/code/comments.ts';
-import { COMPONENT_SCRIPT, COMPONENT_EXTENSION } from '#cli/config/parsers/code/environment.ts';
+import type { AssetSource, AssetGlobImport } from '#cli/types/checks/framework/site.ts';
 
+import {
+    ASTRO_EXTENSION,
+    COMPONENT_SCRIPT,
+    ASTRO_FRONT_MATTER,
+    COMPONENT_EXTENSION,
+} from '#cli/config/parsers/code.ts';
 import {
     ASSET_FOLDER,
     TEXT_EXTENSIONS,
@@ -21,7 +25,7 @@ import {
     UNUSED_ASSET_MESSAGE,
     ASSET_REFERENCE_PREFIX,
     ASSET_REFERENCE_SUFFIX,
-} from '#cli/config/checks/framework/site/unused-assets.ts';
+} from '#cli/config/checks/framework/site.ts';
 
 function readGlobPatterns(node: ts.Node): string[] | undefined {
     const ts = requireTypescript();

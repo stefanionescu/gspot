@@ -9,7 +9,7 @@ import {
     MARKDOWNLINT_RULES,
     MARKDOWNLINT_ALL_RULES,
     MARKDOWNLINT_PRETTIER_DISABLED,
-} from '#cli/config/generation/configurations/language/markdown.ts';
+} from '#cli/config/generation/configurations/language/language.ts';
 
 /**
 Build markdownlint.jsonc: the Markdown lint rules for the level, indentation, and your own rule options.

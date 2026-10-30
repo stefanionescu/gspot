@@ -2,17 +2,17 @@ import { cp } from 'node:fs/promises';
 import { runGit } from '#cli/system/git.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import type { GitFile } from '#cli/types/parsers/git.ts';
-import type { RunCache } from '#cli/types/system/cache.ts';
+import type { RunCache } from '#cli/types/system/system.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
+import type { GitFile } from '#cli/types/parsers/parsers.ts';
 import { join, dirname, basename, relative } from 'node:path';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
+import type { ParsedTsconfig } from '#cli/types/parsers/projects.ts';
+import { GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/runs/copy.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
 import { NODE_MODULES, JSCONFIG_FILE } from '#cli/config/files/names.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
-import type { ParsedTsconfig } from '#cli/types/parsers/projects/tsconfig.ts';
 import type { CopyPlan, DeclarationDependencies } from '#cli/types/runs/copy.ts';
 import { readTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
-import { GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/runs/copy/dependencies.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 
 import {

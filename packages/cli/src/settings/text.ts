@@ -1,15 +1,13 @@
 import { isDeepStrictEqual } from 'node:util';
 import { compareText } from '#cli/system/text.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { RECORD_FIELDS } from '#cli/settings/schema-lookup.ts';
-import type { TaploLayout } from '#cli/types/settings/text.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
-import { TOML_FORMAT, SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
-import { ROOT_KEYS, LAST_TABLES, FIRST_TABLES } from '#cli/config/settings/text.ts';
-import type { TomlBlock, TomlValue, TomlSyntax } from '#cli/types/parsers/formats/toml.ts';
+import type { TomlTable, TaploLayout } from '#cli/types/settings/settings.ts';
+import type { TomlBlock, TomlValue, TomlSyntax } from '#cli/types/parsers/formats.ts';
+import { ROOT_KEYS, TOML_FORMAT, LAST_TABLES, FIRST_TABLES, SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 
 import {
     isTomlKind,

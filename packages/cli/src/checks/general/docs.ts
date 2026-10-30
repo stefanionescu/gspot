@@ -7,28 +7,28 @@ import { find, read } from '#cli/system/files/reads.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { NPM_BIN_FOLDER } from '#cli/config/executables.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { LICENSE_FILE } from '#cli/config/repository/files.ts';
+import { LEADING_DOT_SLASH } from '#cli/config/runs/output.ts';
 import { parseMiseTasks } from '#cli/parsers/projects/mise.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
-import { NPM_BIN_FOLDER } from '#cli/config/executables/locate.ts';
 import { TRAILING_SLASH } from '#cli/config/files/path-patterns.ts';
-import { LEADING_DOT_SLASH } from '#cli/config/runs/output/text.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
-import { LICENSE_FILE } from '#cli/config/repository/files/classify.ts';
 import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { MISE_FILES, MISE_TASK_FOLDERS } from '#cli/config/files/names.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { replaceSettingPlaceholders } from '#cli/runs/command/placeholders.ts';
-import type { PathIndex, TaskNames, ProseLine } from '#cli/types/checks/general/docs.ts';
+import type { PathIndex, TaskNames, ProseLine } from '#cli/types/checks/general/general.ts';
 import { listExecutableNames, includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
 
 import {
-    RULES,
     BUN_RUN,
     MISE_RUN,
+    DOCS_RULES,
     README_FILE,
     RUN_COMMAND,
     LICENSE_PATH,
@@ -47,7 +47,7 @@ import {
     TRAILING_PUNCTUATION,
     RELATIVE_PATH_PREFIXES,
     MISSING_LICENSE_MESSAGE,
-} from '#cli/config/checks/general/docs.ts';
+} from '#cli/config/checks/general/general.ts';
 
 function listGeneratorPaths(planned: PlannedCheck): string[] {
     const paths: string[] = [];
@@ -92,7 +92,7 @@ function validateProseLine(file: string, prose: ProseLine, index: PathIndex): Ch
         .map((token) => ({
             file,
             line: number,
-            rule: RULES.missingPath,
+            rule: DOCS_RULES.missingPath,
             message: `${token} names no tracked file or folder.`,
         }));
     const runs = line
@@ -111,7 +111,7 @@ function validateProseLine(file: string, prose: ProseLine, index: PathIndex): Ch
         .map((match) => ({
             file,
             line: number,
-            rule: RULES.missingTask,
+            rule: DOCS_RULES.missingTask,
             message: `${match[0]} names no task or script.`,
         }))
         .toArray();
@@ -265,7 +265,7 @@ export function checkRequiredFiles(session: Session, planned: PlannedCheck): Che
     if (!repositoryPaths.has(readme))
         findings.push({
             file: readme,
-            rule: RULES.missingReadme,
+            rule: DOCS_RULES.missingReadme,
             message: `The scope ${planned.scope.path === '' ? ROOT_SCOPE_LABEL : planned.scope.path} has no README.md.`,
         });
     if (
@@ -274,7 +274,7 @@ export function checkRequiredFiles(session: Session, planned: PlannedCheck): Che
     )
         findings.push({
             file: LICENSE_PATH,
-            rule: RULES.missingLicense,
+            rule: DOCS_RULES.missingLicense,
             message: MISSING_LICENSE_MESSAGE,
         });
     return findings;

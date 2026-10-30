@@ -2,16 +2,13 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { VARIABLE_NAME } from '#cli/config/parsers/code.ts';
 import { findFunctionNode } from '#cli/parsers/code/bash.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
-import { VARIABLE_NAME } from '#cli/config/parsers/code/environment.ts';
-import type { EnvironmentRead } from '#cli/types/parsers/code/environment.ts';
+import type { EnvironmentRead } from '#cli/types/parsers/code.ts';
 import { readParsedSources } from '#cli/checks/general/structure/parsed-sources.ts';
+import { UNNAMED_VARIABLE_LABEL, READ_OUTSIDE_READER_RULE } from '#cli/config/checks/general/structure.ts';
 
-import {
-    UNNAMED_VARIABLE_LABEL,
-    READ_OUTSIDE_READER_RULE,
-} from '#cli/config/checks/general/structure/environment-readers.ts';
 import {
     listBashEnvironmentReads,
     listSwiftEnvironmentReads,

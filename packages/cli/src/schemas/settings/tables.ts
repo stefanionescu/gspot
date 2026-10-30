@@ -1,19 +1,21 @@
 import { z } from 'zod';
-import { ciFields } from '#cli/schemas/settings/ci.ts';
-import { hooksSchema } from '#cli/schemas/settings/hooks.ts';
-import { rulesSchema } from '#cli/schemas/settings/rules.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
-import { namingSchema } from '#cli/schemas/settings/naming.ts';
-import { licensesSchema } from '#cli/schemas/settings/licenses.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 import type { ToolTableSchemas } from '#cli/types/settings/tables.ts';
-import { TABLE_DESCRIPTIONS } from '#cli/config/settings/json-schema.ts';
-import { pythonSchema, javascriptSchema } from '#cli/schemas/settings/languages.ts';
+import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION } from '#cli/config/parsers/code.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { commandSchema, nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
-import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION } from '#cli/config/parsers/code/sql.ts';
-import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
+import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES, TABLE_DESCRIPTIONS } from '#cli/config/settings/settings.ts';
 
+import {
+    ciFields,
+    hooksSchema,
+    rulesSchema,
+    namingSchema,
+    pythonSchema,
+    licensesSchema,
+    javascriptSchema,
+} from '#cli/schemas/settings/settings.ts';
 import {
     formatSchema,
     percentageSchema,

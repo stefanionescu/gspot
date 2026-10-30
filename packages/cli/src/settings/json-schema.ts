@@ -1,13 +1,13 @@
 import { z } from 'zod';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 
 import {
     SCHEMA_URL,
+    SETTINGS_FILE,
     HIDDEN_FACT_KEYS,
     SCHEMA_DESCRIPTION,
     JSON_SCHEMA_DIALECT,
-} from '#cli/config/settings/json-schema.ts';
+} from '#cli/config/settings/settings.ts';
 
 /**
 Build the editor schema for this gspot version.

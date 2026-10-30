@@ -1,17 +1,12 @@
 import { z } from 'zod';
-import { ciSchema } from '#cli/schemas/settings/ci.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { hooksSchema } from '#cli/schemas/settings/hooks.ts';
-import { rulesSchema } from '#cli/schemas/settings/rules.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
-import { namingSchema } from '#cli/schemas/settings/naming.ts';
-import { TABLE_DESCRIPTIONS } from '#cli/config/settings/json-schema.ts';
-import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { levelSchema, commandCheckFields } from '#cli/schemas/manifests/fields.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools/tables.ts';
-import { DEVICE_NAME, UNSAFE_PATH_END, UNSAFE_CHARACTERS, RESERVED_SEGMENTS } from '#cli/config/system/files/names.ts';
+import { DEVICE_NAME, UNSAFE_PATH_END, UNSAFE_CHARACTERS, RESERVED_SEGMENTS } from '#cli/config/system/files.ts';
+import { ciSchema, hooksSchema, rulesSchema, namingSchema, importRulesSchema } from '#cli/schemas/settings/settings.ts';
 
 import {
     formatSchema,
@@ -23,10 +18,11 @@ import {
     COMMAND_CHECK_ID,
     GSPOT_FOLDER_PATH,
     SETTINGS_EXAMPLES,
+    TABLE_DESCRIPTIONS,
     SCOPE_PATH_MESSAGES,
     NO_CHECK_RULE_MESSAGE,
     NO_CHECK_PATHS_MESSAGE,
-} from '#cli/config/settings/file.ts';
+} from '#cli/config/settings/settings.ts';
 
 export const ignoreSchema = z
     .strictObject({

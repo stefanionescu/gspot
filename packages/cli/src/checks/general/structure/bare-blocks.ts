@@ -2,7 +2,7 @@ import type { Session } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { readParsedSources } from '#cli/checks/general/structure/parsed-sources.ts';
-import { BARE_BLOCK_RULE, BARE_BLOCK_MESSAGE } from '#cli/config/checks/general/structure/bare-blocks.ts';
+import { BARE_BLOCK_RULE, BARE_BLOCK_MESSAGE } from '#cli/config/checks/general/structure.ts';
 
 /**
 Reports each Swift `do` block without a `catch` block, which only groups statements. ESLint reports the bare blocks

@@ -10,17 +10,17 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
+import { miseToolsSchema } from '#cli/schemas/checks/general.ts';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { parseCheckedFile } from '#cli/checks/cross-configuration/syntax.ts';
-import { miseToolsSchema } from '#cli/schemas/checks/general/dependencies.ts';
 import { readCachedPackageJson, readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 
 import {
+    PACKAGE_JSON,
     IMPORTER_LOCKFILES,
     PNPM_ROOT_IMPORTER,
     JAVASCRIPT_LOCKFILES,
-} from '#cli/config/parsers/projects/lockfiles.ts';
+} from '#cli/config/parsers/projects.ts';
 import {
     listSpecifiers,
     listLockfileUrls,
@@ -28,15 +28,15 @@ import {
     findNearestLockfile,
 } from '#cli/parsers/projects/lockfiles.ts';
 import {
-    RULES,
     NPM_TOOL_PREFIX,
+    DEPENDENCY_RULES,
     DOWNLOAD_PROTOCOLS,
     LOCKFILE_KEY_SUFFIX,
     STALE_LOCKFILE_SECTIONS,
     LOCKFILE_UPDATE_COMMANDS,
     PACKAGE_MANAGER_HASH_SEPARATOR,
     PACKAGE_MANAGER_VERSION_SEPARATOR,
-} from '#cli/config/checks/general/dependencies.ts';
+} from '#cli/config/checks/general/general.ts';
 
 function validateUrl(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;
@@ -60,7 +60,7 @@ function validateLockfileHosts(session: Session, path: string, hosts: Set<string
                   {
                       file: path,
                       ...getPosition(text, Math.max(0, offset)),
-                      rule: RULES.host,
+                      rule: DEPENDENCY_RULES.host,
                       message: message,
                   },
               ];
@@ -85,7 +85,7 @@ function listForeignLockfiles(planned: PlannedCheck): CheckFinding[] {
         .map((path) => ({
             file: path,
             line: 1,
-            rule: RULES.foreignLockfile,
+            rule: DEPENDENCY_RULES.foreignLockfile,
             message: `This scope holds lockfiles of ${String(pathsByPackageManager.size)} package managers: ${listed}. Keep one.`,
         }))
         .toArray();
@@ -166,7 +166,7 @@ export function checkPackageManagerPin(session: Session, planned: PlannedCheck):
         {
             file: packageJsonPath,
             line: 1,
-            rule: RULES.packageManagerPin,
+            rule: DEPENDENCY_RULES.packageManagerPin,
             message: `packageManager names ${tool} ${version}, but ${pin.path} pins ${tool} ${pin.version}. Write one version in both.`,
         },
     ];
@@ -225,7 +225,7 @@ export function checkStaleLockfile(session: Session, planned: PlannedCheck): Che
     return compareSpecifiers(specifiers, locked, found.path).map((message) => ({
         file: packageJsonPath,
         line: 1,
-        rule: RULES.staleLockfile,
+        rule: DEPENDENCY_RULES.staleLockfile,
         message: `${message} Run ${command} and commit the lockfile.`,
     }));
 }

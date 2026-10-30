@@ -6,8 +6,8 @@ import { runCheckTool } from '#cli/runs/command/tool.ts';
 import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
 
 import {
@@ -18,7 +18,7 @@ import {
     BLOCK_END_PREFIXES,
     EXPO_DOCTOR_COMMAND,
     UNINSTALLED_EXPO_MESSAGE,
-} from '#cli/config/checks/framework/expo.ts';
+} from '#cli/config/checks/framework/framework.ts';
 
 function parseExpoDoctor(stdout: string): string[] {
     const lines = stripVTControlCharacters(stdout)

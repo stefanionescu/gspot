@@ -1,4 +1,4 @@
-import type { ProseRoute } from '#cli/types/checks/general/prose.ts';
+import type { ProseRoute } from '#cli/types/checks/general/general.ts';
 
 export const VALE_TOOL = 'vale';
 

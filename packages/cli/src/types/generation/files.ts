@@ -1,8 +1,8 @@
 import type { Session } from '#cli/types/session.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
-import type { ManagedKeys } from '#cli/types/repository/writer.ts';
-import type { IGNORE_SECTION_TITLES } from '#cli/config/generation/config-files/ignore-files.ts';
+import type { ManagedKeys } from '#cli/types/repository/repository.ts';
+import type { CHECK_HOOKS } from '#cli/config/generation/generation.ts';
+import type { IGNORE_SECTION_TITLES } from '#cli/config/generation/config-files.ts';
 
 import {
     type Tool,

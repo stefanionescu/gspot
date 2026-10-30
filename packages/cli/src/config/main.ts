@@ -1,3 +1,5 @@
+export const PROCESS_ARGUMENTS_START = 2;
+
 export const UNKNOWN_COMMAND_NAME = /unknown command '([^']+)'/u;
 
 export const COMMAND_SUGGESTION = /\(Did you mean ([^?)]+)\??\)/u;

@@ -1,8 +1,8 @@
+import { LIMIT_READERS } from '#cli/config/planning.ts';
 import { findSettingsSkip } from '#cli/planning/skips.ts';
 import type { SettingReader } from '#cli/types/planning.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
-import { LIMIT_READERS } from '#cli/config/planning/readers.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { Settings } from '#cli/types/settings/settings.ts';
 
 /**
 List the selected checks that read a limit and whether its rules run at this level.

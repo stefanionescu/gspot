@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { INSTALL_OUTPUT_LIMIT } from '#cli/config/installers/credentials.ts';
+import { INSTALL_OUTPUT_LIMIT } from '#cli/config/installers/installers.ts';
 import { LEAKED_LOCKFILES, REGISTRY_PASSWORDS } from '#tests/config/installers/credentials.ts';
 import { extractUrlPasswords, redactInstallOutput, assertCredentialFreeLockfile } from '#cli/installers/credentials.ts';
 

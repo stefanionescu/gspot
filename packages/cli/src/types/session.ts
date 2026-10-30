@@ -1,13 +1,13 @@
 import type { LimitFunction } from 'p-limit';
-import type { RunCache } from '#cli/types/system/cache.ts';
+import type { RunCache } from '#cli/types/system/system.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { ConfiguredCheck } from '#cli/types/planning.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
-import type { RepositoryListing } from '#cli/types/repository/read.ts';
-import type { Settings, SettingsFile } from '#cli/types/settings/file.ts';
 import type { ToolInspection } from '#cli/types/executables/inspection.ts';
-import { type StartRunner, type PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
+import type { RepositoryListing } from '#cli/types/repository/repository.ts';
+import type { Settings, SettingsFile } from '#cli/types/settings/settings.ts';
+import { type StartRunner, type PackageManagerPin } from '#cli/types/repository/npm.ts';
 
 export type Session = {
     configuredChecks: ConfiguredCheck[];

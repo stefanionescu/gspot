@@ -11,7 +11,7 @@ import { expandCommand } from '#cli/runs/command/placeholders.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
 import { isInScope, listNestedScopes, findProjectFolder } from '#cli/repository/scopes.ts';
-import { ANSIBLE_CONFIG_FILE, ANSIBLE_CONFIG_EXTENSION } from '#cli/config/checks/infrastructure/ansible.ts';
+import { ANSIBLE_CONFIG_FILE, ANSIBLE_CONFIG_EXTENSION } from '#cli/config/checks/infrastructure.ts';
 
 async function lintProject(
     session: CheckSession,

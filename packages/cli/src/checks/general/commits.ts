@@ -18,7 +18,7 @@ import {
     COMMITLINT_CHECK,
     MESSAGE_REFERENCES,
     GIT_COMMIT_MESSAGE_ARGUMENTS,
-} from '#cli/config/checks/general/commits.ts';
+} from '#cli/config/checks/general/general.ts';
 
 /**
 Checks every pushed commit message, including empty commits that change no files.

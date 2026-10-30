@@ -10,15 +10,15 @@ import { runToolProcess } from '#cli/runs/command/tool.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { isReportedCrash } from '#cli/runs/command/output.ts';
 import { type FileContents } from '#cli/types/system/files.ts';
+import { type SpawnResult } from '#cli/types/system/system.ts';
 import { type CheckRunOptions } from '#cli/types/runs/check.ts';
 import { type CommandLaunch } from '#cli/types/runs/command.ts';
 import { listCopyFiles } from '#cli/runs/command/placeholders.ts';
-import { type SpawnResult } from '#cli/types/system/processes.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
+import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/commands/check.ts';
 import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts';
 import { buildCommandSetup, buildCommandLaunch } from '#cli/runs/command/check.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
-import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/commands/check/fixes.ts';
 import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 import { type FixReport, type FixResult, type FixRounds, type PathBytes } from '#cli/types/commands/check.ts';
 

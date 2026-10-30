@@ -2,10 +2,10 @@ import { stringify } from '@decimalturn/toml-patch';
 import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import { selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
+import { SQUAWK_CHECK } from '#cli/config/checks/database/postgres.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
-import { SQUAWK_CHECK } from '#cli/config/checks/database/postgres/migrations.ts';
-import { SQUAWK_TABLE, SQUAWK_DEFAULT_LEVEL_OFF } from '#cli/config/generation/configurations/database/postgres.ts';
+import { SQUAWK_TABLE, SQUAWK_DEFAULT_LEVEL_OFF } from '#cli/config/generation/configurations/database.ts';
 
 /**
 Build squawk.toml: the disabled Squawk migration rules.

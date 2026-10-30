@@ -7,15 +7,15 @@ import type { Level } from '#cli/types/manifests.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, posix, dirname, resolve } from 'node:path';
-import type { Settings } from '#cli/types/settings/file.ts';
 import { downloadArchive } from '#cli/installers/downloads.ts';
+import type { Settings } from '#cli/types/settings/settings.ts';
 import { VALE_TOOL, PROSE_GRAMMARS } from '#cli/config/prose.ts';
 import { runRequiredInstallStep } from '#cli/installers/steps.ts';
-import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import type { ToolInstall } from '#cli/types/installers/installers.ts';
 import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts';
+import { VALE_STYLES_PATH } from '#cli/config/generation/configurations/general.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
-import { VALE_STYLES_PATH } from '#cli/config/generation/configurations/general/prose.ts';
 
 import {
     VOCAB_LINE,
@@ -42,7 +42,7 @@ import {
     VALE_PACKAGE_FOLDERS,
     VALE_PACKAGE_RELEASES,
     VALE_INSTALL_ARGUMENTS,
-} from '#cli/config/installers/vale.ts';
+} from '#cli/config/installers/installers.ts';
 
 async function downloadValePackages(install: ToolInstall, folder: string): Promise<string[]> {
     const packages: string[] = [];

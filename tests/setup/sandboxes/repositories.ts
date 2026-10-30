@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { HOOKS_SETTINGS } from '#tests/config/hooks.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';

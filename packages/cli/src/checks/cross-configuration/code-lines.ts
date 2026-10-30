@@ -1,5 +1,5 @@
+import type { GrammarName } from '#cli/types/parsers/code.ts';
 import { maskGrammarComments } from '#cli/parsers/code/comments.ts';
-import type { GrammarName } from '#cli/types/parsers/code/grammars.ts';
 
 /**
 Skip blank lines and lines that hold only a comment of the grammar.

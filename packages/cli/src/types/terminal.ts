@@ -1,4 +1,4 @@
-import type { ErrorCode } from '#cli/types/system/errors.ts';
+import type { ErrorCode } from '#cli/types/system/system.ts';
 
 export type OutputOptions = { isJson: boolean; colored: boolean };
 

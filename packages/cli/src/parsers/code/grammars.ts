@@ -4,21 +4,21 @@ import { remember } from '#cli/system/cache.ts';
 import { read } from '#cli/system/files/reads.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
 
 import {
     GRAMMARS_FOLDER,
     GRAMMAR_EXTENSIONS,
     GRAMMAR_CONFIGURATIONS,
     GRAMMAR_FILE_EXTENSION,
-} from '#cli/config/parsers/code/grammars.ts';
+} from '#cli/config/parsers/code.ts';
 import {
     type ParseCache,
     type SourceTree,
     type GrammarName,
     type ParserGrammars,
     type GrammarSourceFiles,
-} from '#cli/types/parsers/code/grammars.ts';
+} from '#cli/types/parsers/code.ts';
 
 const PARSED_TREES = Symbol('parsed trees');
 

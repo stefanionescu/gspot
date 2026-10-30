@@ -9,7 +9,7 @@ import type { CheckResult } from '#cli/types/runs/check.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { TYPESCRIPT_TAG } from '#cli/config/checks/cross-configuration/tsc/compiler.ts';
+import { TYPESCRIPT_TAG } from '#cli/config/checks/cross-configuration/tsc.ts';
 
 import {
     runTsc,

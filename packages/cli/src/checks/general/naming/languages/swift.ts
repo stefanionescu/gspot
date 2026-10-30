@@ -2,7 +2,7 @@ import type { Node } from 'web-tree-sitter';
 import type { NamedCategory } from '#cli/types/settings/naming.ts';
 import { addIdentifier } from '#cli/checks/general/naming/languages/identifier.ts';
 import type { Identifier, FileIdentifiers } from '#cli/types/checks/general/naming.ts';
-import { TYPE_NODES, MEMBER_PARENTS, CALLABLE_NODES } from '#cli/config/checks/general/naming/languages/swift.ts';
+import { TYPE_NODES, MEMBER_PARENTS, SWIFT_CALLABLE_NODES } from '#cli/config/checks/general/naming/languages.ts';
 
 function addTypes(found: FileIdentifiers, syntaxRoot: Node): void {
     const declarations = syntaxRoot.descendantsOfType([...TYPE_NODES]);
@@ -21,7 +21,7 @@ function addParameters(found: FileIdentifiers, declaration: Node): void {
 }
 
 function addFunctions(found: FileIdentifiers, syntaxRoot: Node): void {
-    const declarations = syntaxRoot.descendantsOfType([...CALLABLE_NODES]);
+    const declarations = syntaxRoot.descendantsOfType([...SWIFT_CALLABLE_NODES]);
     for (const node of declarations) {
         addParameters(found, node);
         const name = node.childForFieldName('name');

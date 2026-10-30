@@ -5,8 +5,8 @@ import type { NumberedLine } from '#cli/types/text.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
-import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/syntax.ts';
-import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/checks/platform/cloudflare.ts';
+import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/checks/platform.ts';
+import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/cross-configuration.ts';
 
 import {
     HEADERS_FILE,
@@ -26,7 +26,7 @@ import {
     MALFORMED_HEADER_MESSAGE,
     HEADER_WITHOUT_PATH_MESSAGE,
     REDIRECT_DESTINATION_MESSAGE,
-} from '#cli/config/checks/platform/cloudflare.ts';
+} from '#cli/config/checks/platform.ts';
 
 function splitContentLines(text: string): NumberedLine[] {
     return text

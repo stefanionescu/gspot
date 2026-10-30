@@ -7,7 +7,7 @@ import { runCommandCheck } from '#cli/runs/command/check.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
-import { SEMGREP_TOOL, SEMGREP_RULE_EXTENSION } from '#cli/config/checks/general/security.ts';
+import { SEMGREP_TOOL, SEMGREP_RULE_EXTENSION } from '#cli/config/checks/general/general.ts';
 
 function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
     const { configurations, path: scopePath, settings } = planned.scope;

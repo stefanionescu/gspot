@@ -5,7 +5,6 @@ import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { formatCount, quoteArgument } from '#cli/system/text.ts';
 import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
 import { getColors, stripControlCharacters } from '#cli/system/terminal.ts';
-import { PROGRESS_CLEAR, SHORT_HASH_LENGTH } from '#cli/config/commands/check/check.ts';
 import { type FixReport, type RunReport, type CheckProgress } from '#cli/types/commands/check.ts';
 
 import {
@@ -13,13 +12,15 @@ import {
     STAGED_FILES,
     WORKING_TREE,
     NOTE_STATUSES,
+    PROGRESS_CLEAR,
     FINDINGS_SHOWN,
+    SHORT_HASH_LENGTH,
     FIXER_ERROR_PREFIX,
     CHECK_STATUS_COLORS,
     TOOL_MISSING_MESSAGE,
     STANDARD_INSTALL_HELP,
     UNCHANGED_FIX_MESSAGE,
-} from '#cli/config/commands/check/report.ts';
+} from '#cli/config/commands/check.ts';
 
 function formatCheckedContent(comparison: CheckProgress['comparison']): string {
     if (comparison?.content === 'index') return STAGED_FILES;

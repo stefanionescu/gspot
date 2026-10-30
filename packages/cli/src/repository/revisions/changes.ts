@@ -1,8 +1,8 @@
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { GIT_UNTRACKED_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
 import type { StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
-import { GIT_UNTRACKED_FILES_ARGUMENTS } from '#cli/config/repository/files/tracked.ts';
 
 import {
     ORIGIN_HEAD,
@@ -18,7 +18,7 @@ import {
     GIT_STAGED_DIFF_ARGUMENTS,
     GIT_REMOTE_HEADS_ARGUMENTS,
     GIT_CHANGED_COMMITS_ARGUMENTS,
-} from '#cli/config/repository/revisions/changes.ts';
+} from '#cli/config/repository/revisions.ts';
 
 async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[string, string][]> {
     const lines = await readGitLines(root, GIT_REMOTE_HEADS_ARGUMENTS, {

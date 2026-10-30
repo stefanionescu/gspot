@@ -4,7 +4,7 @@ import { listCodeLines } from '#cli/parsers/code/bash.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
-import { COUNT_LIMITS } from '#cli/config/checks/language/bash/function-size.ts';
+import { COUNT_LIMITS } from '#cli/config/checks/language/bash.ts';
 
 /**
 Checks each shell function against the size limits: code lines, branches, nesting, and assignments.

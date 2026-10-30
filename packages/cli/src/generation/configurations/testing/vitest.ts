@@ -3,7 +3,7 @@ import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generatio
 import {
     TEST_RULE_NAMES,
     CONFIGURATION_PLUGINS,
-} from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 /**
 Apply the Vitest recommended preset and the test rules to the test files.

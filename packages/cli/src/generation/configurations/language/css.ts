@@ -12,7 +12,7 @@ import {
     CSS_MODULES_OVERRIDE,
     STYLELINT_BASE_RULES,
     STYLELINT_DEFAULT_LEVEL_OFF,
-} from '#cli/config/generation/configurations/language/css.ts';
+} from '#cli/config/generation/configurations/language/language.ts';
 
 function buildComponentOverrides(tailwindFunctions: string[], picked: Record<string, unknown>, offRules: string[]) {
     return STYLELINT_COMPONENTS.map((override) => {

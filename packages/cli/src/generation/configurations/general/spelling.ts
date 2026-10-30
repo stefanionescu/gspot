@@ -18,7 +18,7 @@ import {
     EXTEND_EXCLUDE_LINE,
     TYPOS_LOCKFILE_GLOBS,
     TYPOS_IGNORE_PATTERNS,
-} from '#cli/config/generation/configurations/general/spelling.ts';
+} from '#cli/config/generation/configurations/general.ts';
 
 function buildTyposSections(planned: PlannedConfigFile): IgnoreSection[] {
     const sections = [

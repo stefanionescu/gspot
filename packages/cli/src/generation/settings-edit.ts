@@ -8,19 +8,19 @@ import { openSession } from '#cli/planning/session.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { RECORD_FIELDS } from '#cli/settings/schema-lookup.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
-import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
+import type { Settings, TomlTable } from '#cli/types/settings/settings.ts';
 import { formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
 import { readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts';
+import { FIX_APPLY_MESSAGE, ADD_REMOVE_MESSAGE } from '#cli/config/generation/generation.ts';
 import { getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
-import { FIX_APPLY_MESSAGE, ADD_REMOVE_MESSAGE } from '#cli/config/generation/settings-edit.ts';
 import type { Scope, SettingMatch, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
 
@@ -29,7 +29,7 @@ import type {
     ConfigurationChange,
     SettingsEditContext,
     ConfigurationsOptions,
-} from '#cli/types/generation/settings-edit.ts';
+} from '#cli/types/generation/generation.ts';
 
 /**
 Edit settings, check them, and write them and their generated files. Installs nothing.

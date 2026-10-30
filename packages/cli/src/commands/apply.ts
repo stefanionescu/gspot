@@ -9,11 +9,17 @@ import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { OutdatedFile } from '#cli/types/generation/files.ts';
-import { GENERATED_FILE_NOUN } from '#cli/config/generation/write.ts';
-import type { DryRunJson, ApplyOptions } from '#cli/types/commands/apply.ts';
+import { GENERATED_FILE_NOUN } from '#cli/config/generation/generation.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
+import type { DryRunJson, ApplyOptions } from '#cli/types/commands/commands.ts';
 import { formatUpToDate, formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
-import { DRY_RUN_FLAG, DRY_RUN_NOTE, APPLY_WRITE_MESSAGE, INSTALL_WRITE_MESSAGE } from '#cli/config/commands/apply.ts';
+
+import {
+    DRY_RUN_FLAG,
+    DRY_RUN_NOTE,
+    APPLY_WRITE_MESSAGE,
+    INSTALL_WRITE_MESSAGE,
+} from '#cli/config/commands/commands.ts';
 
 function formatFileChanges(files: OutdatedFile[], repair: string): string[] {
     if (files.length === 0) return [];

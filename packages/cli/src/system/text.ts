@@ -1,5 +1,12 @@
 import type { TextRange, TextPosition } from '#cli/types/text.ts';
-import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, UNQUOTED_ARGUMENT, SIMILAR_NAME_LIMIT } from '#cli/config/system/text.ts';
+
+import {
+    TYPO_MIN,
+    LIST_LIMIT,
+    TYPO_FRACTION,
+    UNQUOTED_ARGUMENT,
+    SIMILAR_NAME_LIMIT,
+} from '#cli/config/system/system.ts';
 
 /**
 Select up to SIMILAR_NAME_LIMIT names close enough to look like a typo, closest first.

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { npmLockfileSchema, bunLockfileSchema, pnpmLockfileSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
+import { npmLockfileSchema, bunLockfileSchema, pnpmLockfileSchema } from '#cli/schemas/parsers/projects.ts';
 
 export const bunPackageSchema = z.tuple([z.string(), z.string(), z.record(z.string(), z.unknown()), z.string()]);
 

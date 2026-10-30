@@ -2,10 +2,10 @@ import ignore from 'ignore';
 import { posix } from 'node:path';
 import { read } from '#cli/system/files/reads.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import type { RunCache } from '#cli/types/system/cache.ts';
+import type { RunCache } from '#cli/types/system/system.ts';
+import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
 import type { PathIgnore } from '#cli/types/repository/files.ts';
 import { isInside, extractParentFolder } from '#cli/system/paths.ts';
-import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
 
 /**
 Test a path against ignore files in order, keeping later negations.

@@ -4,8 +4,8 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
-import { manifestToolSchema } from '#cli/schemas/manifests/tool.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { manifestToolSchema } from '#cli/schemas/manifests/manifests.ts';
 
 import {
     DECLARATION_ORDERS,

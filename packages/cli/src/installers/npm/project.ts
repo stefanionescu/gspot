@@ -5,15 +5,15 @@ import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { TRAILING_PERIOD } from '#cli/config/text.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { VERSION_FLAG } from '#cli/config/executables.ts';
 import { listToolProjectPins } from '#cli/manifests/tools.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
-import { VERSION_FLAG } from '#cli/config/executables/versions.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import type { ReplacementRequest } from '#cli/types/repository/writer.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
+import type { ToolInstall } from '#cli/types/installers/installers.ts';
+import type { ReplacementRequest } from '#cli/types/repository/repository.ts';
 import { runInstallStep, explainReleaseAgeHold } from '#cli/installers/steps.ts';
 import { buildPackageManagerCommand } from '#cli/repository/npm/package-manager.ts';
 import { writeNpmrc, extractRegistryCredentials } from '#cli/installers/npm/registry.ts';
@@ -35,7 +35,7 @@ import {
     NPM_CONFIG_FOLDER_VARIABLE,
     LOCKFILE_CREDENTIAL_MESSAGE,
     NPM_LOCKFILE_CREDENTIAL_MESSAGE,
-} from '#cli/config/installers/npm/project.ts';
+} from '#cli/config/installers/npm.ts';
 
 async function createNpmLockfile(
     install: NpmToolInstall,

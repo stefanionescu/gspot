@@ -7,7 +7,7 @@ import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/ignores.ts';
 import { createFileTree, type TestdirResult } from 'testdirs';
-import { type DryRunJson } from '#cli/types/commands/apply.ts';
+import { type DryRunJson } from '#cli/types/commands/commands.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

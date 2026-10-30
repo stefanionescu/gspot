@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers/projects.ts';
 
 test('YAML files resolve merge keys before returning the document', () => {
     expect(parseYamlFile('compose.yaml', 'base: &base {name: example}\ncopy: {<<: *base}\n')).toStrictEqual({

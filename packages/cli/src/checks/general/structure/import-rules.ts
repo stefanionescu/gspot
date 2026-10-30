@@ -10,17 +10,17 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
+import { SWIFT_IMPORT_NODE } from '#cli/config/parsers/code.ts';
 import { findImportedModule } from '#cli/parsers/code/swift.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
-import { SWIFT_IMPORT_NODE } from '#cli/config/parsers/code/swift.ts';
-import type { ImportRule } from '#cli/types/settings/import-rules.ts';
-import { NODE_SHEBANG_TAG } from '#cli/config/repository/files/classify.ts';
+import type { ImportRule } from '#cli/types/settings/settings.ts';
+import { NODE_SHEBANG_TAG } from '#cli/config/repository/files.ts';
 import { SWIFT_EXTENSION, MISE_TASKS_GLOB } from '#cli/config/files/names.ts';
 import { listSwiftModules } from '#cli/checks/general/structure/swift-modules.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
 import { SWIFT_CONFIGURATION, PYTHON_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
-import { IMPORT_RULE_CATEGORY } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/boundaries.ts';
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
+import { IMPORT_RULE_CATEGORY } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
 import {
     type RuleLookup,
@@ -30,7 +30,6 @@ import {
     type LocatedImport,
 } from '#cli/types/checks/general/structure.ts';
 import {
-    RULES,
     RELATIVE_IMPORT,
     IMPORT_RULES_SKIP,
     PYTHON_EXTENSIONS,
@@ -40,8 +39,9 @@ import {
     PYTHON_MODULE_SUFFIXES,
     UNCOVERED_FILE_MESSAGE,
     IMPORT_RULE_EXTENSIONS,
+    IMPORT_RULE_CHECK_RULES,
     PYTHON_IMPORT_STATEMENT,
-} from '#cli/config/checks/general/structure/import-rules.ts';
+} from '#cli/config/checks/general/structure.ts';
 
 function buildRuleLookup(rules: ImportRule[]): RuleLookup {
     const matchers = rules.map((rule) => buildPathMatcher(rule.paths));
@@ -80,7 +80,7 @@ function listUncoveredFiles(planned: PlannedCheck, lookup: RuleLookup): CheckFin
         .map((file) => ({
             file: file.path,
             line: 1,
-            rule: RULES.uncoveredFile,
+            rule: IMPORT_RULE_CHECK_RULES.uncoveredFile,
             message: UNCOVERED_FILE_MESSAGE,
         }));
 }
@@ -113,7 +113,7 @@ async function validateFileImports(
                 file: source.path,
                 line: node.startPosition.row + 1,
                 column: node.startPosition.column + 1,
-                rule: RULES.refusedImport,
+                rule: IMPORT_RULE_CHECK_RULES.refusedImport,
                 message: message,
             },
         ];

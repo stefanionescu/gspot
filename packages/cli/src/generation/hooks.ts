@@ -1,6 +1,6 @@
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import type { StartRunner } from '#cli/types/repository/npm.ts';
 import type { HookName, GeneratedFile } from '#cli/types/generation/files.ts';
-import type { StartRunner } from '#cli/types/repository/npm/package-manager.ts';
 
 import {
     LFS_HOOKS,
@@ -10,7 +10,7 @@ import {
     LFS_MISSING_GUARD,
     PUSH_INPUT_REPLAY,
     COMMIT_MESSAGE_PATH_LINES,
-} from '#cli/config/generation/hooks.ts';
+} from '#cli/config/generation/generation.ts';
 
 function buildHookScript(name: HookName, runner: StartRunner, lfsHooks: readonly string[]): string {
     const program = runner.name;

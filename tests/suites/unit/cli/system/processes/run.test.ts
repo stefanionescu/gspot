@@ -7,8 +7,8 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { limitCommand } from '#tests/setup/system/processes.ts';
 import type { ProcessBackend } from '#tests/types/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import type { AsyncSpawnOptions } from '#cli/types/system/system.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 
 test.each(buildProcessBackends())(

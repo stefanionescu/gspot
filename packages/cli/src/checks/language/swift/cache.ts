@@ -8,13 +8,13 @@ import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { MODE_BITS, PRIVATE_FOLDER } from '#cli/config/files/modes.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
 import type { SwiftBuildPlan, SwiftBuildSetup, SwiftBuildPurpose } from '#cli/types/checks/language/swift.ts';
 
 import {
@@ -38,7 +38,7 @@ import {
     XCODE_DESTINATION_FLAG,
     XCODE_WORKSPACE_SUFFIX,
     PACKAGE_SCRATCH_FOLDER,
-} from '#cli/config/checks/language/swift/cache.ts';
+} from '#cli/config/checks/language/swift.ts';
 
 function readBuildSources(root: string, paths: string[]): Map<string, FileContents> {
     const source = openFiles(root);

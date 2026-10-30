@@ -4,7 +4,7 @@ import { writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { TOOL_LOCKFILES } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { type DryRunJson } from '#cli/types/commands/apply.ts';
+import { type DryRunJson } from '#cli/types/commands/commands.ts';
 import { type ApplyReport } from '#cli/types/generation/files.ts';
 import { readTree, isOnDisk } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

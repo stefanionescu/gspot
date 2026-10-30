@@ -18,7 +18,7 @@ import type {
     AsyncSpawnOptions,
     ProcessTermination,
     ProcessTreeControl,
-} from '#cli/types/system/processes.ts';
+} from '#cli/types/system/system.ts';
 import {
     FAILED_CODE,
     OUTPUT_LIMIT,
@@ -34,7 +34,7 @@ import {
     PROCESS_CLEANUP_MESSAGE,
     EXIT_CLEANUP_MILLISECONDS,
     OUTPUT_CLOSE_MILLISECONDS,
-} from '#cli/config/system/processes.ts';
+} from '#cli/config/system/system.ts';
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env: Record<string, string | undefined> = { ...buildSpawnEnvironment(options.env), PWD: options.cwd };

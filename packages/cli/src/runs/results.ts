@@ -1,7 +1,7 @@
 import { realpathSync } from 'node:fs';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { INCOMPLETE_STATUSES } from '#cli/config/runs/results.ts';
+import { INCOMPLETE_STATUSES } from '#cli/config/runs/runs.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
 import { type CheckResult, type BuiltInCheck } from '#cli/types/runs/check.ts';
 

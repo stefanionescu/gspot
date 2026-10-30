@@ -1,6 +1,6 @@
 import { statSync } from 'node:fs';
 import { parseArgs } from 'node:util';
-import { EXECUTABLE_BITS } from '#cli/config/repository/files/tracked.ts';
+import { EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
 import { CHECK_STAGED_COPY_OPTIONS } from '#tests/config/setup/programs.ts';
 
 const { values } = parseArgs({ options: CHECK_STAGED_COPY_OPTIONS });

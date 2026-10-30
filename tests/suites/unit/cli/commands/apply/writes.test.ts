@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { type ApplyReport } from '#cli/types/generation/files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -14,7 +14,7 @@ import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { getRuleFilePath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { TOOLS_CHANGED_NOTE, STALE_LOCKFILE_NOTE } from '#cli/config/generation/write.ts';
+import { TOOLS_CHANGED_NOTE, STALE_LOCKFILE_NOTE } from '#cli/config/generation/generation.ts';
 
 import {
     FORMAT_SETTINGS,

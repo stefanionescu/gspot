@@ -5,11 +5,11 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { claimProjectCheck } from '#cli/checks/cross-configuration/tsc/compiler.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { TYPESCRIPT_TAG, PARENT_TSCONFIG_SKIP } from '#cli/config/checks/cross-configuration/tsc.ts';
 import { selectRequiredTsconfigOptions } from '#cli/checks/cross-configuration/tsc/scope-tsconfig.ts';
-import { TYPESCRIPT_TAG, PARENT_TSCONFIG_SKIP } from '#cli/config/checks/cross-configuration/tsc/compiler.ts';
 
 import {
     OPTION_HELP,
@@ -17,7 +17,7 @@ import {
     STRICT_FAMILY_OPTIONS,
     MISSING_TSCONFIG_RULE,
     MISSING_TSCONFIG_MESSAGE,
-} from '#cli/config/checks/language/typescript.ts';
+} from '#cli/config/checks/language/language.ts';
 
 /**
 Reports each required compiler option that a scope tsconfig leaves off.

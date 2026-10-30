@@ -1,12 +1,12 @@
 import { formatCount } from '#cli/system/text.ts';
 import { getColors } from '#cli/system/terminal.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import type { Settings } from '#cli/types/settings/settings.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
-import { GENERATED_FILE_NOUN } from '#cli/config/generation/write.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { GENERATED_FILE_NOUN } from '#cli/config/generation/generation.ts';
 import { listMisePins, listToolProjectPins } from '#cli/manifests/tools.ts';
 import type { InitPlan, InitScan, InitFileRow } from '#cli/types/commands/init.ts';
 
@@ -27,7 +27,7 @@ import {
     LINT_FOLDERS_HEADING,
     CHANGE_LATER_MESSAGE,
     UNREAD_SUBMODULE_MESSAGE,
-} from '#cli/config/commands/init/plan.ts';
+} from '#cli/config/commands/init.ts';
 
 function buildToolProjectRows(configurations: Configuration[]): InitPlan['change'] {
     const pins = listToolProjectPins(configurations);

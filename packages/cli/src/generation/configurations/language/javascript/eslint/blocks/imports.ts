@@ -7,7 +7,6 @@ import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { readScopeAliases, readPackageAliases } from '#cli/repository/npm/aliases.ts';
 import { FOLDER_CONTENTS, PATH_SEPARATOR_PATTERN } from '#cli/config/files/path-patterns.ts';
 import { buildNodePatterns } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
-import { IMPORT_BOUNDARIES_RULE } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
 
 import {
     type EslintBlock,
@@ -17,7 +16,7 @@ import {
 import {
     CODE_LANGUAGES,
     ESLINT_SETTINGS_TABLE,
-} from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 import {
     REGEX_SYMBOLS,
     ANY_DEPTH_PREFIX,
@@ -25,9 +24,10 @@ import {
     EXTENSIONLESS_CODE,
     FILE_EXTENSION_RULE,
     NODE_SCRIPT_PATTERNS,
+    IMPORT_BOUNDARIES_RULE,
     IMPORT_BOUNDARY_FOLDERS,
     TYPESCRIPT_EXTENSION_MAP,
-} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/imports.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
 /**
 Build the n/file-extension-in-import blocks for each project and path style.

@@ -1,5 +1,5 @@
-import type { RunCache } from '#cli/types/system/cache.ts';
-import type { ParsedTsconfig } from '#cli/types/parsers/projects/tsconfig.ts';
+import type { RunCache } from '#cli/types/system/system.ts';
+import type { ParsedTsconfig } from '#cli/types/parsers/projects.ts';
 
 export type TypeScriptReferenceCopy = {
     root: string;

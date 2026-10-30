@@ -19,9 +19,9 @@ import { buildTypescriptBlocks } from '#cli/generation/configurations/language/t
 import { buildTanstackQueryBlocks } from '#cli/generation/configurations/library/tanstack-query.ts';
 import { buildTestingLibraryBlocks } from '#cli/generation/configurations/library/testing-library.ts';
 import { joinScope, isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
+import { PLUGIN_RULE_BLOCKS } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 import { buildPluginRuleBlocks } from '#cli/generation/configurations/language/javascript/eslint/plugin-rules.ts';
 import { buildTestFiles, listCodeTestFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
-import { PLUGIN_RULE_BLOCKS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 import type {
     EslintPlugins,

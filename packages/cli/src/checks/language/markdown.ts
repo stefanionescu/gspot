@@ -6,11 +6,11 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
+import { JSONC_OPTIONS } from '#cli/config/parsers/formats.ts';
+import type { CodeFence } from '#cli/types/parsers/formats.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
-import { JSONC_OPTIONS } from '#cli/config/parsers/formats/json.ts';
-import type { CodeFence } from '#cli/types/parsers/formats/markdown.ts';
-import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/syntax.ts';
-import type { ParseCache, GrammarName } from '#cli/types/parsers/code/grammars.ts';
+import type { ParseCache, GrammarName } from '#cli/types/parsers/code.ts';
+import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/cross-configuration.ts';
 import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser';
 
 import type {
@@ -18,7 +18,7 @@ import type {
     FenceSyntaxError,
     FormatFenceParser,
     GrammarFenceParser,
-} from '#cli/types/checks/language/markdown.ts';
+} from '#cli/types/checks/language/language.ts';
 import {
     ELLIPSIS_LINE,
     FENCE_PARSERS,
@@ -32,7 +32,7 @@ import {
     SYNTAX_ERROR_MESSAGE,
     GRAMMAR_FENCE_PARSERS,
     CAMEL_CASE_REPLACEMENT,
-} from '#cli/config/checks/language/markdown.ts';
+} from '#cli/config/checks/language/language.ts';
 
 function findJsonSyntaxError(body: string, options: ParseOptions): FenceSyntaxError | undefined {
     const errors: ParseError[] = [];

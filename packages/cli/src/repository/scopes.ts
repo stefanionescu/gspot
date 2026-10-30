@@ -4,12 +4,11 @@ import { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import { LINT_FOLDERS } from '#cli/config/repository/setup.ts';
-import { EVERY_FILE_GLOBS } from '#cli/config/repository/scopes.ts';
+import type { DependencyFile } from '#cli/types/parsers/projects.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import type { ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
-import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 import { GLOB_EXCLUDE, FOLDER_CONTENTS } from '#cli/config/files/path-patterns.ts';
+import { LINT_FOLDERS, EVERY_FILE_GLOBS } from '#cli/config/repository/repository.ts';
 import { isInside, escapeGlob, convertToPosixPath, isInInstalledFolder } from '#cli/system/paths.ts';
 
 /**

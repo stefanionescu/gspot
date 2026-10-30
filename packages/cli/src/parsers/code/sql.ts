@@ -4,7 +4,7 @@ import type { Parsed } from '#cli/types/shapes.ts';
 import type { TextRange } from '#cli/types/text.ts';
 import { dirname, basename } from 'node:path/posix';
 import type { Node, ParseResult } from '@pgsql/types';
-import type { RunCache } from '#cli/types/system/cache.ts';
+import type { RunCache } from '#cli/types/system/system.ts';
 
 import type {
     SqlFile,
@@ -13,7 +13,7 @@ import type {
     SqlStatement,
     MatchedToken,
     SqlNodeFields,
-} from '#cli/types/parsers/code/sql.ts';
+} from '#cli/types/parsers/code.ts';
 import {
     FROZEN_ALL,
     FROZEN_NONE,
@@ -22,7 +22,7 @@ import {
     MIGRATION_VERSION,
     DOLLAR_TAG_BLOCKER,
     PRISMA_MIGRATION_FILE,
-} from '#cli/config/parsers/code/sql.ts';
+} from '#cli/config/parsers/code.ts';
 
 /**
 Select migration paths at or below the written version.

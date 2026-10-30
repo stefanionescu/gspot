@@ -2,23 +2,19 @@ import type ts from 'typescript';
 import type { Node } from 'web-tree-sitter';
 import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
-import { EXPANSION_NODES } from '#cli/config/parsers/code/bash.ts';
-import { ASTRO_EXTENSION, ASTRO_FRONT_MATTER } from '#cli/config/parsers/code/comments.ts';
+import type { EnvironmentRead, EnvironmentKind, EnvironmentNames, EnvironmentScope } from '#cli/types/parsers/code.ts';
 
-import type {
-    EnvironmentRead,
-    EnvironmentKind,
-    EnvironmentNames,
-    EnvironmentScope,
-} from '#cli/types/parsers/code/environment.ts';
 import {
     OS_MODULE,
     OCTAL_RADIX,
     VARIABLE_NAME,
+    EXPANSION_NODES,
+    ASTRO_EXTENSION,
     SCRIPT_LANGUAGE,
     COMPONENT_SCRIPT,
     HEXADECIMAL_RADIX,
     SWIFT_ENVIRONMENT,
+    ASTRO_FRONT_MATTER,
     MAXIMUM_CODE_POINT,
     PYTHON_SCOPE_NODES,
     COMPONENT_EXTENSION,
@@ -28,7 +24,7 @@ import {
     OS_ENVIRONMENT_MEMBERS,
     JAVASCRIPT_ENVIRONMENT_FIELDS,
     JAVASCRIPT_ENVIRONMENT_GETTERS,
-} from '#cli/config/parsers/code/environment.ts';
+} from '#cli/config/parsers/code.ts';
 
 /**
 Read expansions of the environment names that the environment readers declare.

@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import picomatch from 'picomatch';
 import { globSync } from 'tinyglobby';
 import { GspotError } from '#cli/system/errors.ts';
+import { PARENT_SEGMENT } from '#cli/config/system/files.ts';
 import type { TemporaryFolder } from '#cli/types/system/files.ts';
-import { PARENT_SEGMENT } from '#cli/config/system/files/folders.ts';
 import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
 import { DRIVE_LETTER, GLOB_EXCLUDE } from '#cli/config/files/path-patterns.ts';
 

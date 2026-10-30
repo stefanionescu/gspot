@@ -3,7 +3,7 @@ import { join, dirname, delimiter } from 'node:path';
 import { afterAll, setDefaultTimeout } from 'bun:test';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { rm, mkdtemp, readFile } from 'node:fs/promises';
-import { SIGNAL_EXIT_CODES } from '#cli/config/system/terminal.ts';
+import { SIGNAL_EXIT_CODES } from '#cli/config/system/system.ts';
 import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { startNpmRegistry } from '#tests/setup/runner/npm-registry.ts';

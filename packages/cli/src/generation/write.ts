@@ -11,8 +11,8 @@ import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { listOwnablePaths } from '#cli/generation/config-files/link-files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { type Generation, type ApplyReport } from '#cli/types/generation/files.ts';
+import { SCANNER_KEY, BUNFIG_FILE } from '#cli/config/generation/configurations/general.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/files/gspot.ts';
-import { SCANNER_KEY, BUNFIG_FILE } from '#cli/config/generation/configurations/general/dependencies.ts';
 
 import {
     planBlock,
@@ -30,7 +30,7 @@ import {
     TOOLS_CHANGED_NOTE,
     GENERATED_FILE_NOUN,
     STALE_LOCKFILE_NOTE,
-} from '#cli/config/generation/write.ts';
+} from '#cli/config/generation/generation.ts';
 
 /**
 Say that the generated files need no change.

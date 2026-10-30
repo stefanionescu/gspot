@@ -2,8 +2,8 @@ import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
-import type { ManagedKeys } from '#cli/types/repository/writer.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
+import type { ManagedKeys } from '#cli/types/repository/repository.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 
@@ -12,7 +12,7 @@ import {
     BUNFIG_FILE,
     OSV_SCANNER_CHECK,
     OSV_SCANNER_NOTES,
-} from '#cli/config/generation/configurations/general/dependencies.ts';
+} from '#cli/config/generation/configurations/general.ts';
 
 /**
 Build osv-scanner.toml: a note on why the file exists, and the package ignores and their reasons.

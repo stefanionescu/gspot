@@ -1,5 +1,5 @@
 import type { FileContents } from '#cli/types/system/files.ts';
-import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
+import type { Settings, TomlTable } from '#cli/types/settings/settings.ts';
 
 export type SettingsFileContents = { text: string; previous: FileContents };
 

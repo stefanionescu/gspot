@@ -5,14 +5,16 @@ import { type CheckFinding } from '#cli/types/runs/check.ts';
 import { runCopiedTool } from '#cli/checks/language/swift/build.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { prepareBuild, readRepositoryCacheFolder } from '#cli/checks/language/swift/cache.ts';
-import { UNUSED_RULE, PERIPHERY_TOOL, PERIPHERY_COMMAND } from '#cli/config/checks/language/swift/periphery.ts';
 
 import {
+    UNUSED_RULE,
+    PERIPHERY_TOOL,
+    PERIPHERY_COMMAND,
     ROOT_BUILD_FOLDER,
     SWIFT_BUILD_FOLDER,
     BUILD_SOURCE_FOLDER,
     SCOPE_FOLDER_PREFIX,
-} from '#cli/config/checks/language/swift/cache.ts';
+} from '#cli/config/checks/language/swift.ts';
 
 /**
 Runs Periphery over the project and reports every declaration nothing uses.

@@ -3,10 +3,10 @@ import { posix } from 'node:path';
 import { OCTAL_RADIX } from '#cli/config/units.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { gitFileSchema } from '#cli/schemas/parsers/git.ts';
 import { LINE_FEED, WHITESPACE_RUN } from '#cli/config/text.ts';
+import { gitFileSchema } from '#cli/schemas/parsers/parsers.ts';
 import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
-import type { GitFile, GitStream, GitIndexFile, AttributePattern } from '#cli/types/parsers/git.ts';
+import type { GitFile, GitStream, GitIndexFile, AttributePattern } from '#cli/types/parsers/parsers.ts';
 
 import {
     TREE_LINE,
@@ -28,7 +28,7 @@ import {
     ATTRIBUTE_ASSIGNMENT_SIDES,
     INVALID_GIT_STREAM_MESSAGE,
     UNSUPPORTED_GIT_FILE_MESSAGE,
-} from '#cli/config/parsers/git.ts';
+} from '#cli/config/parsers/parsers.ts';
 
 /**
 Validate the fields of an index or tree entry.

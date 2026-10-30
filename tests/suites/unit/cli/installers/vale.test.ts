@@ -16,7 +16,7 @@ import { PREVIOUS_BYTES } from '#tests/config/installers/vale.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { hasValePackages, installValePackages } from '#cli/installers/vale.ts';
-import { VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/installers/vale.ts';
+import { VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/installers/installers.ts';
 
 test.each([...LEVELS])(
     'Vale packages are ready at %s only with the generated vale.ini and the installed folders',

@@ -9,12 +9,9 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { listProjectFolders } from '#cli/repository/scopes.ts';
-import { YAML_EXTENSIONS } from '#cli/config/repository/setup.ts';
-import { TOML_EXTENSION } from '#cli/config/repository/writer.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
-import type { ManagedKeys } from '#cli/types/repository/writer.ts';
-import type { ConflictingConfigFile } from '#cli/types/repository/setup.ts';
-import { JSON_EXTENSION, INI_EXTENSIONS } from '#cli/config/repository/config-files.ts';
+import type { ManagedKeys, ConflictingConfigFile } from '#cli/types/repository/repository.ts';
+import { TOML_EXTENSION, JSON_EXTENSION, INI_EXTENSIONS, YAML_EXTENSIONS } from '#cli/config/repository/repository.ts';
 
 function listReplacementConflicts(
     root: string,

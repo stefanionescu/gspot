@@ -5,16 +5,20 @@ import { writePlans } from '#cli/repository/writer.ts';
 import { isEditedInPlace } from '#cli/repository/config-files.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { parsePrettierFile } from '#cli/commands/init/formatter-settings.ts';
-import type { WritePlan, ManagedKeys } from '#cli/types/repository/writer.ts';
 import type { InitPlan, ConflictingConfigFiles } from '#cli/types/commands/init.ts';
-import type { RepositorySetup, ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 
 import {
     VERIFY_FLAG,
     NAME_ONLY_FLAG,
     PRETTIER_SCRIPT_NOTE,
     READ_COMMITTED_MESSAGE,
-} from '#cli/config/commands/init/conflicting-config-files.ts';
+} from '#cli/config/commands/init.ts';
+import type {
+    WritePlan,
+    ManagedKeys,
+    RepositorySetup,
+    ConflictingConfigFile,
+} from '#cli/types/repository/repository.ts';
 
 function listCommittedPaths(root: string, paths: string[]): Set<string> {
     const head = runGitBlocking(root, ['rev-parse', VERIFY_FLAG, '--quiet', 'HEAD']);

@@ -7,7 +7,7 @@ import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 import { type ChildCapture, type ProcessCapture } from '#tests/types/processes.ts';
 import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/system/processes.ts';
-import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
+import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/system.ts';
 import { TEST_TIMEOUT_MILLISECONDS, UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/runner.ts';
 
 /**

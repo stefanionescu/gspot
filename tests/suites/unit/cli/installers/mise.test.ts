@@ -15,9 +15,9 @@ import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import type { MiseProject } from '#tests/types/packages.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { MISE_PROJECT_MESSAGE } from '#cli/config/installers/mise.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { MISE_PROJECT_MESSAGE } from '#cli/config/installers/installers.ts';
 import { installMiseTools, isMiseLockfileFresh } from '#cli/installers/mise.ts';
 
 test('mise lock freshness needs the tool, its version, a URL and a sha256 checksum', () => {

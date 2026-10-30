@@ -7,7 +7,6 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { listMisePins } from '#cli/manifests/tools.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
-import { TOOL_ENVIRONMENT } from '#cli/config/executables/run.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
@@ -19,13 +18,14 @@ import {
     MISE_TOOL,
     MISE_WHICH,
     NPM_BIN_FOLDER,
+    TOOL_ENVIRONMENT,
     MISE_CONFIG_NAME,
     MISE_PROJECT_FILES,
     MISE_LAUNCHER_FOLDER,
     MISE_BIN_PATHS_ARGUMENTS,
     MISE_CEILING_PATHS_VARIABLE,
     MISE_TRUSTED_PATHS_VARIABLE,
-} from '#cli/config/executables/locate.ts';
+} from '#cli/config/executables.ts';
 
 function listSearchFolders(root: string, options: ExecutableSearch): string[] {
     const { folders: searchFolders, toolFolderKind } = options;

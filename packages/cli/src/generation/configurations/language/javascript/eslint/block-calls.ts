@@ -1,10 +1,12 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { ESLINT_INDENT } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
-import { PRESET_IMPORTERS } from '#cli/config/generation/configurations/language/javascript/eslint/block-calls.ts';
-import { GSPOT_PRESET_LEVELS } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
+import { GSPOT_PRESET_LEVELS } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
+import {
+    ESLINT_INDENT,
+    PRESET_IMPORTERS,
+} from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 import {
     type BlockWriter,
     type EslintRuntime,

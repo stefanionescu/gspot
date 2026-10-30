@@ -11,11 +11,11 @@ import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
-import { PYTHON_VERSION } from '#cli/config/installers/pypi.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PYTHON_VERSION } from '#cli/config/installers/installers.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { type PythonToolProject } from '#cli/types/installers/pypi.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { type PythonToolProject } from '#cli/types/installers/installers.ts';
 
 import {
     installPythonTools,

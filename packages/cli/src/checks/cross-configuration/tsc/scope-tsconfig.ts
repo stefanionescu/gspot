@@ -5,19 +5,19 @@ import { selectScopePath } from '#cli/repository/scopes.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Level, Configuration } from '#cli/types/manifests.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { NESTJS_CONFIGURATION } from '#cli/config/manifests/names.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import { TYPESCRIPT_TAG } from '#cli/config/checks/cross-configuration/tsc/compiler.ts';
 
 import {
+    TYPESCRIPT_TAG,
     COMPILER_OPTIONS,
     TYPESCRIPT_DEFAULTS,
     DEFAULT_LEVEL_OPTIONS,
     NESTJS_COMPILER_OPTIONS,
     TYPESCRIPT_TSCONFIG_CHECK,
-} from '#cli/config/checks/cross-configuration/tsc/scope-tsconfig.ts';
+} from '#cli/config/checks/cross-configuration/tsc.ts';
 
 /**
 Builds the scope compiler configuration, extending its authored project when present.

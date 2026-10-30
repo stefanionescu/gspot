@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import type { NamingDefaults } from '#cli/types/manifests.ts';
-import { NAMING_DEFAULTS_FILE } from '#cli/config/manifests/naming.ts';
-import { namingDefaultsSchema } from '#cli/schemas/manifests/naming.ts';
+import { NAMING_DEFAULTS_FILE } from '#cli/config/manifests/manifests.ts';
+import { namingDefaultsSchema } from '#cli/schemas/manifests/manifests.ts';
 
 let namingDefaults: NamingDefaults | undefined;
 

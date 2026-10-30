@@ -3,19 +3,19 @@ import { formatCount } from '#cli/system/text.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import type { DependencyFile } from '#cli/types/parsers/projects.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
-import { EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/detect.ts';
+import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/files.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/files.ts';
+import { EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/repository.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/matchers.ts';
-import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
-import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/files/classify.ts';
 import { isInScope, joinScope, findProjectFolder } from '#cli/repository/scopes.ts';
 
 import {
     type ScopeContents,
     type DetectionEvidence,
     type ConfigurationEvidence,
-} from '#cli/types/repository/detect.ts';
+} from '#cli/types/repository/repository.ts';
 
 function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFile[], scopePath: string): ScopeContents {
     const scopeFiles = files.filter(

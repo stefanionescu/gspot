@@ -4,7 +4,6 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import type { NamingCase } from '#cli/types/settings/naming.ts';
 import { splitWords } from '#cli/checks/general/naming/settings.ts';
-import { NUMERIC_WORDS } from '#cli/config/checks/general/naming/settings.ts';
 
 import type {
     Identifier,
@@ -26,6 +25,7 @@ import {
     LOWER_WORD,
     PASCAL_WORD,
     VOWEL_SUFFIX,
+    NUMERIC_WORDS,
     LAST_EXTENSION,
     TEST_WORD_LIST,
     RUFF_CATEGORIES,
@@ -34,7 +34,7 @@ import {
     WORD_FORM_SUFFIXES,
     WORD_FORM_CONSONANT,
     SWIFTLINT_CATEGORIES,
-} from '#cli/config/checks/general/naming/validation.ts';
+} from '#cli/config/checks/general/naming/naming.ts';
 
 function isSnakeMigration(name: string): boolean {
     const stamp = name.slice(0, MIGRATION_DIGITS);

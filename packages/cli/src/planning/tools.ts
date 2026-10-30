@@ -3,24 +3,24 @@ import { getTable } from '#cli/settings/scopes.ts';
 import type { Session } from '#cli/types/session.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { selectCheckFiles } from '#cli/planning/files.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { Settings } from '#cli/types/settings/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
+import { PRETTIER_TOOL, STYLELINT_TOOL } from '#cli/config/planning.ts';
 import { getTool, findToolProjectPackage } from '#cli/manifests/tools.ts';
 import { isSettingEmpty, findSettingsSkip } from '#cli/planning/skips.ts';
 import type { PrettierPlugin } from '#cli/types/generation/formatting.ts';
 import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { PRETTIER_TOOL, STYLELINT_TOOL } from '#cli/config/planning/tools.ts';
 import { isCoverageOff, hasCoverageArguments } from '#cli/planning/checks.ts';
 import { selectScopePath, listNestedScopes } from '#cli/repository/scopes.ts';
 import type { LicenseProject, ConfiguredCheck } from '#cli/types/planning.ts';
 import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/licenses.ts';
-import { STYLELINT_COMPONENTS } from '#cli/config/generation/configurations/language/css.ts';
 import { ESLINT_MANIFEST_TOOL, LICENSES_CONFIGURATION } from '#cli/config/manifests/names.ts';
+import { STYLELINT_COMPONENTS } from '#cli/config/generation/configurations/language/language.ts';
 
 function isToolConditionMet(scope: Scope, conditions: Tool['when']): boolean {
     return (

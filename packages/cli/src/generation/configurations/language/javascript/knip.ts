@@ -12,7 +12,7 @@ import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import type { Settings, TableSettings } from '#cli/types/settings/file.ts';
+import type { Settings, TableSettings } from '#cli/types/settings/settings.ts';
 
 import {
     convertToGlobs,
@@ -29,7 +29,7 @@ import {
     COMMAND_WORD_SEPARATORS,
     KNIP_IGNORED_DEPENDENCIES,
     KNIP_JAVASCRIPT_ENTRY_FILES,
-} from '#cli/config/generation/configurations/language/javascript/knip.ts';
+} from '#cli/config/generation/configurations/language/javascript/javascript.ts';
 
 function selectEntryFiles(settings: Settings, scopes: Scope[], scopePath: string): string[] {
     const authored = listApplicableTables(settings, scopePath).flatMap(

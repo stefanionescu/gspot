@@ -8,7 +8,6 @@ import { readParsedSources } from '#cli/checks/general/structure/parsed-sources.
 import type { ParsedSource, ParsedLanguage } from '#cli/types/checks/general/structure.ts';
 
 import {
-    RULES,
     ONE_STATEMENT,
     FUNCTION_LABEL,
     BARE_NAME_NODES,
@@ -22,8 +21,9 @@ import {
     BASH_SOURCE_COMMANDS,
     SWIFT_FUNCTION_LABELS,
     SWIFT_ACCESSOR_OWNERS,
+    TRIVIAL_FUNCTION_RULES,
     COUNTED_FUNCTION_NODES,
-} from '#cli/config/checks/general/structure/trivial-functions.ts';
+} from '#cli/config/checks/general/structure.ts';
 
 function extractFunctionBody(node: Node, language: ParsedLanguage): Node[] {
     const body = node.childForFieldName('body') ?? node;
@@ -130,7 +130,7 @@ function listTrivialFunctions(planned: PlannedCheck, source: ParsedSource): Chec
                 file: source.path,
                 line: node.startPosition.row + 1,
                 column: node.startPosition.column + 1,
-                rule: RULES.trivialFunction,
+                rule: TRIVIAL_FUNCTION_RULES.trivialFunction,
                 message: message,
             },
         ];
@@ -157,7 +157,7 @@ export async function checkTrivialFunctions(session: Session, planned: PlannedCh
             return {
                 file: source.path,
                 line,
-                rule: RULES.trivialFile,
+                rule: TRIVIAL_FUNCTION_RULES.trivialFile,
                 message: TRIVIAL_FILE_MESSAGE,
             };
         });

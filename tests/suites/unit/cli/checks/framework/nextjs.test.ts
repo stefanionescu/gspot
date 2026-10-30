@@ -16,7 +16,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
-import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
+import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/system.ts';
 
 import {
     UNRELATED_FILE,

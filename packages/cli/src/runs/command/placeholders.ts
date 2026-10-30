@@ -6,11 +6,11 @@ import { type Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { ConfigFile } from '#cli/types/manifests.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { extractConfigFileName } from '#cli/manifests/tools.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { FILE_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
@@ -28,7 +28,7 @@ import {
     CONFIG_FILE_PLACEHOLDER,
     MESSAGE_FILE_PLACEHOLDER,
     SETTING_ONLY_PLACEHOLDER,
-} from '#cli/config/runs/command/placeholders.ts';
+} from '#cli/config/runs/command.ts';
 
 function assertArgumentList(value: unknown, name: string): string[] {
     if (Array.isArray(value) && value.every((element) => typeof element === 'string')) return value;

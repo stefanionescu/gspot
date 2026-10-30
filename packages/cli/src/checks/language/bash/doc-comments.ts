@@ -1,20 +1,20 @@
 import type { Session } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
+import type { ScriptFunction } from '#cli/types/parsers/code.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import { splitWords } from '#cli/checks/general/naming/settings.ts';
-import type { ScriptFunction } from '#cli/types/parsers/code/bash.ts';
-import { MAIN_FUNCTION } from '#cli/config/checks/language/bash/scripts.ts';
 
 import {
     WORD,
-    RULES,
     VAGUE_WORDS,
     DOC_SECTIONS,
+    MAIN_FUNCTION,
+    DOC_COMMENT_RULES,
     ARGUMENTS_SECTION,
     LEADING_UNDERSCORES,
     SHELLCHECK_TOOL_COMMENT,
-} from '#cli/config/checks/language/bash/doc-comments.ts';
+} from '#cli/config/checks/language/bash.ts';
 
 function findCommentBlock(lines: string[], start: number): string[] {
     const block: string[] = [];
@@ -45,24 +45,24 @@ function validateDocComment(
     const first = block[0];
     if (first === undefined)
         return {
-            rule: RULES.missingComment,
+            rule: DOC_COMMENT_RULES.missingComment,
             message: `${scriptFunction.name} has no comment above it; write "# ${scriptFunction.name}: what it does".`,
         };
     const head = `# ${scriptFunction.name}: `;
     if (!first.startsWith(head) || first.length <= head.length)
         return {
-            rule: RULES.summaryLine,
+            rule: DOC_COMMENT_RULES.summaryLine,
             message: `The comment above ${scriptFunction.name} does not open with "# ${scriptFunction.name}: ...".`,
         };
     if (!hasWordsBeyondName(scriptFunction.name, first.slice(head.length)))
         return {
-            rule: RULES.vagueSummary,
+            rule: DOC_COMMENT_RULES.vagueSummary,
             message: `The summary of ${scriptFunction.name} says nothing beyond its name.`,
         };
     const positions = DOC_SECTIONS.map((section) => block.indexOf(section)).filter((position) => position >= 0);
     if (positions.some((position, index) => index > 0 && position <= (positions[index - 1] ?? -1)))
         return {
-            rule: RULES.sectionOrder,
+            rule: DOC_COMMENT_RULES.sectionOrder,
             message: `Order the doc sections of ${scriptFunction.name} as Globals, Arguments, Outputs, Returns.`,
         };
     return undefined;
@@ -89,7 +89,7 @@ export async function checkBashDocComments(session: Session, planned: PlannedChe
                 validateDocComment(scriptFunction, block) ??
                 (isUndocumentedReader
                     ? {
-                          rule: RULES.missingArguments,
+                          rule: DOC_COMMENT_RULES.missingArguments,
                           message: `${scriptFunction.name} is public and reads arguments, but its comment has no "${ARGUMENTS_SECTION}" section that lists them.`,
                       }
                     : undefined);

@@ -2,10 +2,9 @@ import { z } from 'zod';
 import { posix } from 'node:path';
 import { FILE_KINDS } from '#cli/config/files/kinds.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { manifestToolSchema } from '#cli/schemas/manifests/tool.ts';
-import { writtenNamingOverrideSchema } from '#cli/schemas/manifests/naming.ts';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
-import { NAME_PATTERN, RULE_FILE_PATTERN } from '#cli/config/manifests/manifest.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
+import { NAME_PATTERN, RULE_FILE_PATTERN } from '#cli/config/manifests/manifests.ts';
+import { manifestToolSchema, writtenNamingOverrideSchema } from '#cli/schemas/manifests/manifests.ts';
 
 import {
     GROUPS,

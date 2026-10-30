@@ -1,7 +1,0 @@
-import { DEFAULT_PATTERN } from '#cli/config/manifests/output.ts';
-
-export const DEFAULT_OUTPUT_FORMAT = { format: 'regex', pattern: DEFAULT_PATTERN } as const;
-
-export const MAX_EXIT_CODE = 255;
-
-export const VALID_UNICODE_MESSAGE = 'Use a valid Unicode regular expression.';

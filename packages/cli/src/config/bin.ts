@@ -1,1 +1,0 @@
-export const PROCESS_ARGUMENTS_START = 2;

@@ -7,16 +7,15 @@ import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { constants, accessSync, existsSync } from 'node:fs';
-import { TRAILING_NEWLINE } from '#cli/config/system/git.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { printProgress } from '#cli/commands/check/report.ts';
-import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { readGitText, readGitPaths } from '#cli/system/git.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
+import { TRAILING_NEWLINE } from '#cli/config/system/system.ts';
+import { CHECK_HOOKS } from '#cli/config/generation/generation.ts';
+import { GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/runs/copy.ts';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
-import { GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/runs/copy/revision.ts';
-import { STAGED_FLAG, CHANGED_FLAG } from '#cli/config/commands/check/flags.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { Option, type Command, InvalidArgumentError } from '@commander-js/extra-typings';
 
@@ -28,9 +27,11 @@ import {
 } from '#cli/types/commands/check.ts';
 import {
     FIX_FLAG,
+    STAGED_FLAG,
     SETUP_PATHS,
     ONLY_OPTION,
     HOOK_OPTION,
+    CHANGED_FLAG,
     VERBOSE_FLAG,
     PROGRESS_CLEAR,
     CHANGED_OPTION,
@@ -44,7 +45,7 @@ import {
     EMPTY_CHECKS_MESSAGE,
     CHECK_STOPPED_MESSAGE,
     GIT_SETUP_FILES_ARGUMENTS,
-} from '#cli/config/commands/check/check.ts';
+} from '#cli/config/commands/check.ts';
 
 async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
     cancelSignal.throwIfAborted();

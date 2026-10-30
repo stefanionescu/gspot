@@ -12,10 +12,10 @@ import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { unlink, symlink, readFile } from 'node:fs/promises';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { listExecutablePaths } from '#cli/executables/locate.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers/projects.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { fakeNpmPackage, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 

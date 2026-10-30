@@ -4,7 +4,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { pipfileSchema, pyprojectSchema, packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies.ts';
+import { pipfileSchema, pyprojectSchema, packageJsonSchema } from '#cli/schemas/parsers/projects.ts';
 
 import type {
     Pyproject,
@@ -13,7 +13,7 @@ import type {
     DependencyFile,
     PythonDependency,
     DependencyFileParser,
-} from '#cli/types/parsers/projects/dependencies.ts';
+} from '#cli/types/parsers/projects.ts';
 import {
     PIPFILE,
     GIT_SUFFIX,
@@ -29,7 +29,7 @@ import {
     JAVASCRIPT_RUNTIMES,
     REQUIREMENT_NAME_END,
     PYTHON_NAME_SEPARATORS,
-} from '#cli/config/parsers/projects/dependencies.ts';
+} from '#cli/config/parsers/projects.ts';
 
 function parseRequirementName(requirement: string): string | undefined {
     const trimmed = requirement.trim();

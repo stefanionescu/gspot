@@ -2,11 +2,11 @@ import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
 import type { Level } from '#cli/types/manifests.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { Settings } from '#cli/types/settings/settings.ts';
 import { type SelectorBlock, type SelectorPaths } from '#cli/types/generation/eslint.ts';
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 import {
     INDEX_PATTERN,
@@ -14,7 +14,7 @@ import {
     REEXPORT_SELECTORS,
     ENVIRONMENT_SELECTOR,
     ALIAS_IMPORT_SELECTORS,
-} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/selectors.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
 function listDistinctLists(lists: string[][]): string[][] {
     const seen = new Set<string>();

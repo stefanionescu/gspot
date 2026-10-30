@@ -1,5 +1,5 @@
-import type { TableSettings } from '#cli/types/settings/file.ts';
-import { type CASE_NAMES, type NAMED_CATEGORIES } from '#cli/config/manifests/naming.ts';
+import type { TableSettings } from '#cli/types/settings/settings.ts';
+import { type CASE_NAMES, type NAMED_CATEGORIES } from '#cli/config/manifests/manifests.ts';
 import { type SETTING_LANGUAGES, type NAMING_TABLE_CATEGORIES } from '#cli/config/settings/naming.ts';
 
 export type NamedCategory = (typeof NAMED_CATEGORIES)[number];

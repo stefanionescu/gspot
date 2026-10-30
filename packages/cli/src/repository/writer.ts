@@ -12,17 +12,23 @@ import { decodeUtf8Text } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
+import { LEADING_NEWLINE } from '#cli/config/parsers/formats.ts';
+import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
-import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
-import { LEADING_NEWLINE } from '#cli/config/parsers/formats/managed-blocks.ts';
 import { GSPOT_FOLDER, INSTALLED_TOOL_FOLDERS } from '#cli/config/files/gspot.ts';
 import { openFiles, walkFiles, deleteEmptyFolders } from '#cli/system/files/open.ts';
-import type { WritePlan, ManagedKeys, ReplacementRequest } from '#cli/types/repository/writer.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
-import { TOML_BARE_KEY, TOML_EXTENSION, EMPTY_JSON_TEXT, TRAILING_BLANK_LINE } from '#cli/config/repository/writer.ts';
+import type { WritePlan, ManagedKeys, ReplacementRequest } from '#cli/types/repository/repository.ts';
+
+import {
+    TOML_BARE_KEY,
+    TOML_EXTENSION,
+    EMPTY_JSON_TEXT,
+    TRAILING_BLANK_LINE,
+} from '#cli/config/repository/repository.ts';
 
 function openManagedKeysFile(path: string, onDisk: FileContents | undefined, keys: ManagedKeys['keys']): EditableFile {
     const text = onDisk === undefined ? undefined : decodeUtf8Text(path, onDisk.bytes);

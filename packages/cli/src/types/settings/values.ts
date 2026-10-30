@@ -1,4 +1,4 @@
-import type { TableSettings } from '#cli/types/settings/file.ts';
+import type { TableSettings } from '#cli/types/settings/settings.ts';
 import type { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';
 
 export type ReasonedValue<Value> = { value: Value; reason: string };

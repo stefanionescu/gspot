@@ -2,7 +2,7 @@ import type { Session } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { readScripts, listFunctionCalls } from '#cli/checks/language/bash/scripts.ts';
-import { READS_NO_POSITIONAL, UNREAD_ARGUMENTS_RULE } from '#cli/config/checks/language/bash/unread-arguments.ts';
+import { READS_NO_POSITIONAL, UNREAD_ARGUMENTS_RULE } from '#cli/config/checks/language/bash.ts';
 
 /**
 Reports each function called with more arguments than it reads.

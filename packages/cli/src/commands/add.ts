@@ -2,10 +2,10 @@ import { isTable } from '#cli/system/tables.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { SCOPE_OPTION } from '#cli/config/commands/flags.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
+import { SCOPE_OPTION } from '#cli/config/commands/commands.ts';
+import type { TomlTable } from '#cli/types/settings/settings.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import type { ConfigurationsOptions } from '#cli/types/generation/settings-edit.ts';
+import type { ConfigurationsOptions } from '#cli/types/generation/generation.ts';
 
 import {
     writeSettingsEdit,

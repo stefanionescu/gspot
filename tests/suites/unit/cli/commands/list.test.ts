@@ -6,7 +6,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
-import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
+import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/commands.ts';
 
 import {
     OFF_BY_IGNORE,

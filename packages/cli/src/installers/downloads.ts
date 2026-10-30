@@ -1,7 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
-import type { ToolInstall } from '#cli/types/installers/install.ts';
-import type { ArchiveDownload } from '#cli/types/installers/downloads.ts';
+import type { ToolInstall, ArchiveDownload } from '#cli/types/installers/installers.ts';
 
 async function readBoundedArchive(response: Response, { url, name, limit }: ArchiveDownload): Promise<Buffer> {
     const reader: ReadableStreamDefaultReader<Uint8Array> | undefined = response.body?.getReader();

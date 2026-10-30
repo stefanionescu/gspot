@@ -5,12 +5,12 @@ import type { EslintRuntime } from '#cli/types/generation/eslint.ts';
 import { joinScope, isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { splitGlobs } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import { NEXTJS_CONFIGURATION, REACT_NATIVE_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
 import {
     COMMONJS_FILES,
+    ESLINT_SETTINGS_TABLE,
     ESLINT_BROWSER_CONFIGURATIONS,
-} from '#cli/config/generation/configurations/language/javascript/eslint/runtimes.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 function selectFrameworkRuntime(configurations: string[]): string | undefined {
     if (configurations.includes(REACT_NATIVE_CONFIGURATION)) return 'react-native';

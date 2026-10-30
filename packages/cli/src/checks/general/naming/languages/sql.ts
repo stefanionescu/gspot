@@ -1,21 +1,21 @@
 import type { Node } from '@pgsql/types';
 import { getPosition } from '#cli/system/text.ts';
-import type { RunCache } from '#cli/types/system/cache.ts';
+import type { RunCache } from '#cli/types/system/system.ts';
 import { parseSqlFile, listSqlTokens, listNodeFields } from '#cli/parsers/code/sql.ts';
-import { CATEGORY_LABELS } from '#cli/config/checks/general/naming/languages/identifier.ts';
+import type { SqlFile, SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/code.ts';
 import type { SqlName, Identifier, IdentifierRead } from '#cli/types/checks/general/naming.ts';
-import type { SqlFile, SqlStatement, SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
 
 import {
     NAME_TOKEN,
     CREATE_KIND,
     CREATE_PREFIX,
     QUALIFIED_NAME,
+    CATEGORY_LABELS,
     CREATE_MODIFIER,
     PARAMETER_DEPTH,
     PARAMETER_PREFIX,
     TABLE_PARAMETERS,
-} from '#cli/config/checks/general/naming/languages/sql.ts';
+} from '#cli/config/checks/general/naming/languages.ts';
 
 function listColumnNames(nodes: Node[] | undefined): SqlName[] {
     const names: SqlName[] = [];

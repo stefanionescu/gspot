@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
-import { UNIX_COMMAND_LIMIT, WINDOWS_COMMAND_LIMIT } from '#cli/config/runs/command/batches.ts';
+import { UNIX_COMMAND_LIMIT, WINDOWS_COMMAND_LIMIT } from '#cli/config/runs/command.ts';
 
 test('Windows batches leave room for quoted paths and the absolute executable path', () => {
     const files = Array.from({ length: 5000 }, (_, index) => `docs/café folder (draft)/page-${String(index)}.md`);

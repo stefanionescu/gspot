@@ -15,9 +15,9 @@ import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
-import type { GeneratorRun } from '#cli/types/checks/cross-configuration/generator-outputs.ts';
+import type { GeneratorRun } from '#cli/types/checks/cross-configuration/cross-configuration.ts';
 import { expandCommand, replacePlaceholders, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
-import { RULES, GENERATOR_IGNORED_FOLDERS } from '#cli/config/checks/cross-configuration/generator-outputs.ts';
+import { RULES, GENERATOR_IGNORED_FOLDERS } from '#cli/config/checks/cross-configuration/cross-configuration.ts';
 
 function listMissingOutputs(
     session: Session,

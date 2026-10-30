@@ -9,7 +9,7 @@ import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { includeFolderContents } from '#cli/system/matchers.ts';
 import { type PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { type Settings, type WrittenFormat } from '#cli/types/settings/file.ts';
+import { type Settings, type WrittenFormat } from '#cli/types/settings/settings.ts';
 import { type ScopeFormat, type FormatOverride, type PrettierPlugin } from '#cli/types/generation/formatting.ts';
 
 import {
@@ -24,7 +24,7 @@ import {
     PRETTIER_FIXED_OPTIONS,
     UNREPRESENTABLE_SELECTOR,
     EDITORCONFIG_FIXED_SECTIONS,
-} from '#cli/config/generation/configurations/general/format.ts';
+} from '#cli/config/generation/configurations/general.ts';
 
 function buildSectionPath(pattern: string, scopePath: string): string {
     if (pattern.startsWith('!') || UNREPRESENTABLE_SELECTOR.test(pattern))

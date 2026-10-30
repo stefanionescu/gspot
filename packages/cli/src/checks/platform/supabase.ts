@@ -19,12 +19,12 @@ import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { parseCheckedFile } from '#cli/checks/cross-configuration/syntax.ts';
-import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/syntax.ts';
-import type { SqlStatement, SqlNodeFields } from '#cli/types/parsers/code/sql.ts';
+import type { SqlStatement, SqlNodeFields } from '#cli/types/parsers/code.ts';
 import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { formatOutputTail, assertToolFindings } from '#cli/runs/command/output.ts';
-import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/checks/platform/supabase.ts';
-import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/checks/platform/supabase.ts';
+import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/cross-configuration.ts';
+import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/checks/platform.ts';
+import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/checks/platform.ts';
 
 import {
     RULES,
@@ -44,7 +44,7 @@ import {
     SERVICE_ROLE_KEY_MESSAGE,
     DENO_CHECK_FAILED_MESSAGE,
     SERVICE_ROLE_KEY_EXTENSIONS,
-} from '#cli/config/checks/platform/supabase.ts';
+} from '#cli/config/checks/platform.ts';
 
 function listEqualityBuckets(expression: SqlNodeFields['A_Expr']): string[] {
     for (const [column, value] of [

@@ -17,19 +17,18 @@ import { readToolBinPaths } from '#cli/executables/locate.ts';
 import { findMissingEnvironment } from '#cli/executables/uv.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
-import type { HookStatus } from '#cli/types/installers/hooks.ts';
-import { VERSION_FLAG } from '#cli/config/executables/versions.ts';
 import { buildMiseInstall } from '#cli/generation/tool-installs.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
+import type { HookStatus } from '#cli/types/installers/installers.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
-import { AVAILABLE_TOOL_STATES } from '#cli/config/executables/inspect.ts';
 import type { ToolInspection } from '#cli/types/executables/inspection.ts';
 import { findMissingBuild, listDistinctTools } from '#cli/manifests/tools.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup.ts';
+import { VERSION_FLAG, AVAILABLE_TOOL_STATES } from '#cli/config/executables.ts';
+import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/repository.ts';
 
 import {
     VERSION_GAP,

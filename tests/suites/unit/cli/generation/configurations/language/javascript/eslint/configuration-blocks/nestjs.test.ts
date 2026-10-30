@@ -5,10 +5,10 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { NESTJS_SANDBOX } from '#tests/config/nestjs.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import type { PackageJson } from '#cli/types/parsers/projects.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
 
 test('the Swagger lint rules apply only when package.json declares @nestjs/swagger', async () => {
     await using repository = await createSandbox({

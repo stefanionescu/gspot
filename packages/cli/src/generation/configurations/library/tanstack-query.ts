@@ -1,5 +1,5 @@
 import type { EslintScope, ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
+import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 /**
 Apply the TanStack Query presets to the code files.

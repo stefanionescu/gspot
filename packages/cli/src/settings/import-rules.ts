@@ -1,5 +1,5 @@
-import { OWN_FILES_ONLY } from '#cli/config/settings/import-rules.ts';
-import type { ImportRule } from '#cli/types/settings/import-rules.ts';
+import { OWN_FILES_ONLY } from '#cli/config/settings/settings.ts';
+import type { ImportRule } from '#cli/types/settings/settings.ts';
 
 /**
 List the import rules whose files the files of one rule may import: the rule itself, and either its can_import list

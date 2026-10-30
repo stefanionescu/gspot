@@ -10,7 +10,7 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { YARN_CLIENTS } from '#tests/config/installers/projects.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import type { PythonToolProject } from '#cli/types/installers/pypi.ts';
+import type { PythonToolProject } from '#cli/types/installers/installers.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
 import { STYLESHEET_CASES, LICENSE_TOOL_CASES, REACT_NATIVE_TSCONFIG } from '#tests/config/generation/tool-installs.ts';
 

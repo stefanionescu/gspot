@@ -14,7 +14,7 @@ import {
     DOCUMENTED_PARAMETER,
     MISSING_PARAMETER_RULE,
     DOCUMENTED_DECLARATIONS,
-} from '#cli/config/checks/language/swift/doc-comments.ts';
+} from '#cli/config/checks/language/swift.ts';
 
 function isPublicDeclaration(declaration: Node): boolean {
     const modifiers = declaration.namedChildren.find((child) => child.type === 'modifiers')?.namedChildren ?? [];

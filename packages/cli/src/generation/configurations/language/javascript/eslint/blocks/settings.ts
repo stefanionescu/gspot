@@ -1,14 +1,13 @@
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/system/paths.ts';
-import { type Settings } from '#cli/types/settings/file.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
+import { type Settings } from '#cli/types/settings/settings.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { joinScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { buildLimitRuleBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/limits.ts';
-import { PACKAGE_JSON_PATTERN } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
 
 import {
     splitGlobs,
@@ -19,7 +18,7 @@ import {
     ESLINT_CHECK,
     CODE_LANGUAGES,
     ESLINT_SETTINGS_TABLE,
-} from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 import {
     type EslintRuleBlock,
     type EslintBlockFields,
@@ -31,11 +30,12 @@ import {
     TYPED_LANGUAGES,
     ENVIRONMENT_RULES,
     TRIVIAL_FILES_RULE,
+    PACKAGE_JSON_PATTERN,
     ENVIRONMENT_LANGUAGES,
     TRIVIAL_FUNCTIONS_RULE,
     TRIVIAL_FUNCTION_LIMIT,
     PACKAGE_JSON_RULE_PREFIX,
-} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/settings.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
 /**
 Build the lint rule options and the path overrides in order, each for its own project.

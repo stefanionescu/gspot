@@ -4,11 +4,11 @@ import { read } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/session.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
 import type { SwiftModule } from '#cli/types/checks/general/structure.ts';
 import { PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/files/names.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
-import { NON_WORD_CHARACTERS, SWIFTPM_TARGET_FOLDERS } from '#cli/config/checks/general/structure/swift-modules.ts';
+import { NON_WORD_CHARACTERS, SWIFTPM_TARGET_FOLDERS } from '#cli/config/checks/general/structure.ts';
 
 function findStringArgument(call: Node, label: string): string | undefined {
     const argument = call

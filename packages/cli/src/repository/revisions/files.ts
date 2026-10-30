@@ -1,11 +1,11 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { INDEX_LINE } from '#cli/config/parsers/git.ts';
-import type { GitFile } from '#cli/types/parsers/git.ts';
+import { INDEX_LINE } from '#cli/config/parsers/parsers.ts';
+import type { GitFile } from '#cli/types/parsers/parsers.ts';
 import { listGitFiles } from '#cli/repository/files/tracked.ts';
-import { gitIndexFileSchema } from '#cli/schemas/parsers/git.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
+import { gitIndexFileSchema } from '#cli/schemas/parsers/parsers.ts';
 import { runGit, runGitStream, runGitForBytes } from '#cli/system/git.ts';
-import { GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files/tracked.ts';
+import { GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
 import { parseGitBlobs, parseTreeFiles, parseListingLine, stripIndexStages } from '#cli/parsers/git.ts';
 
 import {
@@ -14,7 +14,7 @@ import {
     GIT_LS_TREE_ARGUMENTS,
     UNREADABLE_HISTORY_MESSAGE,
     GIT_SYMBOLIC_HEAD_ARGUMENTS,
-} from '#cli/config/repository/revisions/files.ts';
+} from '#cli/config/repository/revisions.ts';
 
 /**
 Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.

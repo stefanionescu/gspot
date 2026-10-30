@@ -5,14 +5,18 @@ import { type Command } from '@commander-js/extra-typings';
 import { assertCheckExists } from '#cli/manifests/read.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
-import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
-import { RULE_OPTION, PATHS_OPTION } from '#cli/config/commands/flags.ts';
-import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
-import { RULE_WITHOUT_CHECK_MESSAGE } from '#cli/config/commands/ignore.ts';
+import type { TomlTable, IgnoreRecord } from '#cli/types/settings/settings.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import type { IgnoreTarget, IgnoreRemoval } from '#cli/types/commands/unignore.ts';
 import { writeSettingsEdit, readSettingsEditContext } from '#cli/generation/settings-edit.ts';
-import { NO_CHECK_IGNORE_TEXTS, ESCAPED_GLOB_CHARACTERS } from '#cli/config/commands/unignore.ts';
+import type { IgnoreTarget, IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/commands.ts';
+
+import {
+    RULE_OPTION,
+    PATHS_OPTION,
+    NO_CHECK_IGNORE_TEXTS,
+    ESCAPED_GLOB_CHARACTERS,
+    RULE_WITHOUT_CHECK_MESSAGE,
+} from '#cli/config/commands/commands.ts';
 
 function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
     const removed = new Set(options.paths?.map((path) => path.replaceAll(ESCAPED_GLOB_CHARACTERS, '$1')));

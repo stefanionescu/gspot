@@ -5,9 +5,8 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
 import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
-import { REACT_PACKAGE, REACT_DOM_PACKAGE, REACT_VERSIONS_RULE } from '#cli/config/checks/framework/react-dom.ts';
+import { PACKAGE_JSON, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects.ts';
+import { REACT_PACKAGE, REACT_DOM_PACKAGE, REACT_VERSIONS_RULE } from '#cli/config/checks/framework/framework.ts';
 
 function rangesCanMeet(react: string, reactDom: string): boolean {
     const first = validRange(react);

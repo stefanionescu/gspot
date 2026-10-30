@@ -1,24 +1,22 @@
 import which from 'which';
+import { UV_TOOL } from '#cli/config/executables.ts';
 import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { UV_TOOL } from '#cli/config/executables/uv.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { isMiseLockfileFresh } from '#cli/installers/mise.ts';
 import { listExecutablePaths } from '#cli/executables/locate.ts';
 import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import type { NpmToolInstall } from '#cli/types/installers/npm.ts';
+import type { PackageManager } from '#cli/types/repository/npm.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import type { StaleLockfile } from '#cli/types/installers/projects.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
-import type { PythonIndexSettings } from '#cli/types/installers/pypi.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
-import type { ReplacementRequest } from '#cli/types/repository/writer.ts';
 import { listMisePins, listToolProjectPins } from '#cli/manifests/tools.ts';
+import type { ReplacementRequest } from '#cli/types/repository/repository.ts';
 import { installNpmTools, planNpmLockfile } from '#cli/installers/npm/project.ts';
-import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { isLockfileFresh, selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
+import type { ToolInstall, StaleLockfile, PythonIndexSettings } from '#cli/types/installers/installers.ts';
 
 import {
     readPythonSettings,

@@ -2,15 +2,14 @@ import { z } from 'zod';
 import { compareText } from '#cli/system/text.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { commandSchema } from '#cli/schemas/manifests/fields.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
-import type { Settings, SettingsTable } from '#cli/types/settings/file.ts';
 import { SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/inheritance.ts';
+import type { Settings, SettingsTable } from '#cli/types/settings/settings.ts';
 import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/schema-lookup.ts';
 import { CATEGORY_PARENTS, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
-import { CATEGORY_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
+import { SETTINGS_FILE, CATEGORY_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/settings.ts';
 
 import type {
     Setting,

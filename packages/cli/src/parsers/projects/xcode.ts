@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
+import { pbxprojSchema } from '#cli/schemas/parsers/projects.ts';
 import { OCTAL_RADIX, HEXADECIMAL_RADIX } from '#cli/config/units.ts';
-import { pbxprojSchema } from '#cli/schemas/parsers/projects/xcode.ts';
 import { PBXPROJ_SUFFIX, SWIFT_EXTENSION } from '#cli/config/files/names.ts';
 
 import {
@@ -13,7 +13,7 @@ import {
     type ParsedPbxproj,
     type ProjectSources,
     type ProjectBuildSettings,
-} from '#cli/types/parsers/projects/xcode.ts';
+} from '#cli/types/parsers/projects.ts';
 import {
     PROJECT_TOKENS,
     PROJECT_ESCAPE,
@@ -27,7 +27,7 @@ import {
     INVALID_STRING_MESSAGE,
     MISSING_FILE_REF_MESSAGE,
     MISSING_MAIN_GROUP_MESSAGE,
-} from '#cli/config/parsers/projects/xcode.ts';
+} from '#cli/config/parsers/projects.ts';
 
 function parseProjectString(token: string | undefined): string {
     if (token === undefined || PROJECT_PUNCTUATION.has(token)) throw new Error(INVALID_STRING_MESSAGE);

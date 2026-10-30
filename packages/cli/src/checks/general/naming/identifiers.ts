@@ -4,7 +4,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
 import { validateIdentifiers } from '#cli/checks/general/naming/validation.ts';
-import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/syntax.ts';
+import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/cross-configuration.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/checks/general/naming/source-names.ts';
 
 /**

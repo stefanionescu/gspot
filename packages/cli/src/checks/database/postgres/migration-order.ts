@@ -2,8 +2,8 @@ import type { Session } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { compareMigrationVersions } from '#cli/parsers/code/sql.ts';
+import { RULES, MISSING_VERSION_MESSAGE } from '#cli/config/checks/database/postgres.ts';
 import { readMigrations, readCommittedMigrations } from '#cli/checks/database/postgres/migrations.ts';
-import { RULES, MISSING_VERSION_MESSAGE } from '#cli/config/checks/database/postgres/migration-order.ts';
 
 /**
 Reports a version that two files share, a file with no version, and a new file that sorts before a committed one.

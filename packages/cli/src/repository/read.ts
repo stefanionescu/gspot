@@ -2,27 +2,32 @@ import { statSync, realpathSync } from 'node:fs';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { INDEX_LINE } from '#cli/config/parsers/git.ts';
 import { join, posix, dirname, resolve } from 'node:path';
-import { type RunCache } from '#cli/types/system/cache.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { INDEX_LINE } from '#cli/config/parsers/parsers.ts';
+import { type RunCache } from '#cli/types/system/system.ts';
 import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
 import { detectScopeFolders } from '#cli/repository/scopes.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
-import { gitIndexFileSchema } from '#cli/schemas/parsers/git.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { gitIndexFileSchema } from '#cli/schemas/parsers/parsers.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { read, find, readCachedPrefix } from '#cli/system/files/reads.ts';
 import { runGit, isGitRepository, isNotRepository } from '#cli/system/git.ts';
 import { SWIFT_EXTENSION, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { listGitFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
-import { GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files/tracked.ts';
-import { GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
-import { type RepositoryListing, type RepositoryReadOptions } from '#cli/types/repository/read.ts';
+import { GIT_LOCALE, TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/system.ts';
 import { type Repository, type ScopeFolder, type TrackedFile } from '#cli/types/repository/files.ts';
-import { SET_VALUES, VENDORED_ATTRIBUTE, GENERATED_ATTRIBUTE } from '#cli/config/repository/files/classify.ts';
-import { ROOT_SCOPE, FILE_PREFIX_BYTES, GIT_CHECK_ATTRIBUTES_ARGUMENTS } from '#cli/config/repository/read.ts';
+import { type RepositoryListing, type RepositoryReadOptions } from '#cli/types/repository/repository.ts';
+import { ROOT_SCOPE, FILE_PREFIX_BYTES, GIT_CHECK_ATTRIBUTES_ARGUMENTS } from '#cli/config/repository/repository.ts';
 import { mergeAttributes, parseListingLine, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
+
+import {
+    SET_VALUES,
+    VENDORED_ATTRIBUTE,
+    GENERATED_ATTRIBUTE,
+    GIT_INDEX_FILES_ARGUMENTS,
+} from '#cli/config/repository/files.ts';
 
 async function readAttributes(root: string, paths: string[]): Promise<Map<string, Record<string, string>>> {
     if (paths.length === 0) return new Map();

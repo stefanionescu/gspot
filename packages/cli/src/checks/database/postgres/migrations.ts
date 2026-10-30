@@ -8,7 +8,7 @@ import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
-import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/syntax.ts';
+import { SYNTAX_RULE } from '#cli/config/checks/cross-configuration/cross-configuration.ts';
 import { readHead, readBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { type Migration, type MigrationRead } from '#cli/types/checks/database/postgres.ts';
 
@@ -23,7 +23,7 @@ import {
     MIGRATION_DOWN,
     MIGRATION_SYNTAX_SKIP,
     DOWN_MIGRATION_SUFFIX,
-} from '#cli/config/checks/database/postgres/migrations.ts';
+} from '#cli/config/checks/database/postgres.ts';
 
 const MIGRATIONS = Symbol('migrations');
 

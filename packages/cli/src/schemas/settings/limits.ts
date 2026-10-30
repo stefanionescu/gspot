@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { LimitSchemas } from '#cli/types/settings/limits.ts';
+import type { LimitSchemas } from '#cli/types/settings/settings.ts';
 import { allowReasonedValue } from '#cli/schemas/settings/fields.ts';
 import type { LanguageLimitField } from '#cli/types/settings/values.ts';
 import { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';

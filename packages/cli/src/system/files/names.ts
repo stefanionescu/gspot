@@ -1,6 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { PATH_SEPARATORS } from '#cli/config/system/processes.ts';
-import { RESERVED_SEGMENTS, UNSAFE_PATH_MESSAGE } from '#cli/config/system/files/names.ts';
+import { PATH_SEPARATORS } from '#cli/config/system/system.ts';
+import { RESERVED_SEGMENTS, UNSAFE_PATH_MESSAGE } from '#cli/config/system/files.ts';
 
 /**
 Split a path into segments, and refuse an empty, dot, parent, or null segment. Windows also splits at a backslash.

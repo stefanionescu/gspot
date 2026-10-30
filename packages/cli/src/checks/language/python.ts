@@ -8,25 +8,25 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { getTable, getLimit } from '#cli/settings/scopes.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/files/names.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { splitWords } from '#cli/checks/general/naming/settings.ts';
-import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
 import { PATH_SEPARATOR_PATTERN } from '#cli/config/files/path-patterns.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
 import { countCodeLines } from '#cli/checks/cross-configuration/code-lines.ts';
 import { type CheckResult, type CheckFinding } from '#cli/types/runs/check.ts';
 import { runCommandCheck, runCommandBatches } from '#cli/runs/command/check.ts';
 import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { RUFF_TABLE } from '#cli/config/generation/configurations/language/python.ts';
-import { deptrySchema, docstringStyleSchema } from '#cli/schemas/checks/language/python.ts';
+import { RUFF_TABLE } from '#cli/config/generation/configurations/language/language.ts';
+import { deptrySchema, docstringStyleSchema } from '#cli/schemas/checks/language/language.ts';
 import { findDocstring, readPythonFiles, parsePythonModule } from '#cli/parsers/code/python.ts';
-import { type PydoclintOptions, type PythonDocstringStyle } from '#cli/types/checks/language/python.ts';
+import { type PydoclintOptions, type PythonDocstringStyle } from '#cli/types/checks/language/language.ts';
 
 import {
-    RULES,
     PIP_INSTALL,
+    PYTHON_RULES,
     PLACEHOLDERS,
     NON_WORD_RUN,
     DEPTRY_COMMAND,
@@ -49,7 +49,7 @@ import {
     REQUIREMENTS_FOLDER_FILE,
     REQUIREMENTS_FILE_MESSAGE,
     PYDOCLINT_ALL_LEVEL_OPTIONS,
-} from '#cli/config/checks/language/python.ts';
+} from '#cli/config/checks/language/language.ts';
 
 function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
     const externals = getTable(planned.scope.settings, 'python').externals;
@@ -117,7 +117,7 @@ async function listLongFunctions(
                           {
                               file: path,
                               line: node.startPosition.row + 1,
-                              rule: RULES.functionLines,
+                              rule: PYTHON_RULES.functionLines,
                               message: `${name} has ${String(count)} code lines, over the limit of ${String(limit)}.`,
                           },
                       ];
@@ -161,7 +161,7 @@ export function checkPipInstalls(session: Session, planned: PlannedCheck): Check
         .map((file) => ({
             file: file.path,
             line: 1,
-            rule: RULES.requirementsFile,
+            rule: PYTHON_RULES.requirementsFile,
             message: REQUIREMENTS_FILE_MESSAGE,
         }));
     const installs = files
@@ -175,7 +175,7 @@ export function checkPipInstalls(session: Session, planned: PlannedCheck): Check
                               {
                                   file: file.path,
                                   line: index + 1,
-                                  rule: RULES.pipInstall,
+                                  rule: PYTHON_RULES.pipInstall,
                                   message: PIP_INSTALL_MESSAGE,
                               },
                           ]
@@ -216,7 +216,7 @@ export async function checkPlaceholderDocstrings(session: Session, planned: Plan
                 file: definition.path,
                 line: definition.node.startPosition.row + 1,
                 column: definition.node.startPosition.column + 1,
-                rule: RULES.placeholderDocstring,
+                rule: PYTHON_RULES.placeholderDocstring,
                 message: `The docstring of ${definition.name} says nothing the name does not. Describe its purpose or behavior.`,
             },
         ];
@@ -300,7 +300,7 @@ function parseVultureFinding(line: string, selected: ReadonlySet<string>): Check
         return [
             {
                 ...at,
-                rule: RULES.unreachableCode,
+                rule: PYTHON_RULES.unreachableCode,
                 message: `The code after ${String(statement)} never runs. Delete it.`,
             },
         ];

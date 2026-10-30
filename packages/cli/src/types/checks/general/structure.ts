@@ -1,5 +1,5 @@
 import type { Node, Tree } from 'web-tree-sitter';
-import type { ImportRule } from '#cli/types/settings/import-rules.ts';
+import type { ImportRule } from '#cli/types/settings/settings.ts';
 
 export type ParsedLanguage = 'python' | 'swift' | 'bash';
 

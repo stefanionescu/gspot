@@ -1,4 +1,4 @@
-import type { ScriptSyntax } from '#cli/types/parsers/code/bash.ts';
+import type { ScriptSyntax } from '#cli/types/parsers/code.ts';
 
 export type LayoutFinding = { line: number; rule: string; message: string };
 

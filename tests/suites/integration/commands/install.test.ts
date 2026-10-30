@@ -5,14 +5,13 @@ import { INIT_FILES } from '#tests/config/init.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
-import type { DryRunJson } from '#cli/types/commands/apply.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import type { InstallCommandJson } from '#cli/types/commands/install.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { spawnGspot, applyThenInstall } from '#tests/setup/cli/commands.ts';
+import type { DryRunJson, InstallCommandJson } from '#cli/types/commands/commands.ts';
 
 test('after init and install, apply has nothing to write', async () => {
     await using sandbox = await testdir(INIT_FILES);

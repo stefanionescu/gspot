@@ -6,8 +6,7 @@ import { SETTING_LANGUAGES } from '#cli/config/settings/naming.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 import type { Level, Configuration } from '#cli/types/manifests.ts';
-import { LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
-import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
+import { importRulesSchema } from '#cli/schemas/settings/settings.ts';
 import { getSettingType, unwrapSettingSchema } from '#cli/settings/schema-lookup.ts';
 import type { Setting, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { TABLE_KEY_SEGMENTS, SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/inheritance.ts';
@@ -17,8 +16,9 @@ import {
     BUILD_SCRIPT,
     OPENNEXT_PACKAGE,
     OVERRIDING_GROUPS,
+    LANGUAGE_GROUP_TABLES,
     OPENNEXT_TYPE_DEFAULTS,
-} from '#cli/config/settings/available.ts';
+} from '#cli/config/settings/settings.ts';
 
 function addDefault(availableSettings: AvailableSettings, configuration: Configuration, setting: Setting): void {
     const previous = availableSettings.defaults.get(setting.name);

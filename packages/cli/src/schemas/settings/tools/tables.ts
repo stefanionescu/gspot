@@ -3,9 +3,8 @@ import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import { buildRuleTableSchema } from '#cli/schemas/settings/tools/rules.ts';
 import { stylelintRulesSchema } from '#cli/schemas/settings/tools/stylelint.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { COMMITLINT_RULES } from '#cli/config/generation/configurations/general/commits.ts';
-import { YAMLLINT_RULES } from '#cli/config/generation/configurations/general/data-files.ts';
 import { eslintRulesSchema, eslintPluginsSchema } from '#cli/schemas/settings/tools/eslint.ts';
+import { YAMLLINT_RULES, COMMITLINT_RULES } from '#cli/config/generation/configurations/general.ts';
 
 import {
     relativePathSchema,

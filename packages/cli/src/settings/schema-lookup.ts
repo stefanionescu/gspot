@@ -1,12 +1,11 @@
 import { z } from 'zod';
-import { PATH_ROLES } from '#cli/config/settings/available.ts';
+import { PATH_ROLES } from '#cli/config/settings/settings.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
-import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
-import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
+import { namingSchema, importRulesSchema } from '#cli/schemas/settings/settings.ts';
 import { scopeSchema, ignoreSchema, settingsSchema, commandCheckSchema } from '#cli/schemas/settings/file.ts';
 
 export const RECORD_FIELDS: Readonly<Record<string, readonly string[]>> = Object.fromEntries(

@@ -2,39 +2,39 @@ import { read } from '#cli/system/files/reads.ts';
 import { type Session } from '#cli/types/session.ts';
 import { findToolName } from '#cli/manifests/tools.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
+import { INSTALL_HELP } from '#cli/config/executables.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { TOOL_LOCKFILES } from '#cli/config/files/gspot.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
-import { INSTALL_HELP } from '#cli/config/executables/inspect.ts';
+import type { SourceComment } from '#cli/types/parsers/code.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import { findSettingLine, isReasonedValue } from '#cli/settings/file.ts';
-import type { SourceComment } from '#cli/types/parsers/code/comments.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
-import type { SuppressionSyntax } from '#cli/types/checks/general/gspot.ts';
 import { listConflictingConfigFiles } from '#cli/repository/config-files.ts';
+import type { SuppressionSyntax } from '#cli/types/checks/general/general.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
 import { type CheckFinding, type FindingPlace } from '#cli/types/runs/check.ts';
 import { type Scope, type PathVisitor } from '#cli/types/settings/inheritance.ts';
 
 import {
-    RULES,
+    GSPOT_RULES,
     BRACKET_HELP,
     REASON_ABOVE,
     NEGATED_PATTERN,
     UNESCAPED_BRACKET,
     GENERATED_FILE_FINDINGS,
     SUPPRESSION_KIND_MESSAGES,
-} from '#cli/config/checks/general/gspot.ts';
+} from '#cli/config/checks/general/general.ts';
 
 /**
 Reports each settings file of a tool that gspot writes settings for, such as .commitlintrc.json while commitlint runs.
@@ -52,7 +52,7 @@ export function checkConflictingConfigFiles(session: Session, _planned: PlannedC
         .map(({ tool, path }) => ({
             file: path,
             line: 1,
-            rule: RULES.conflictingConfigFile,
+            rule: GSPOT_RULES.conflictingConfigFile,
             message: `gspot writes the settings for ${tool}, so ${path} no longer applies. Delete it, and move any rule you need into gspot.toml.`,
         }));
 }
@@ -229,7 +229,7 @@ export function checkUnmatchedPaths(session: Session, _planned: PlannedCheck): C
                 findings.push({
                     file: SETTINGS_FILE,
                     line: findSettingLine(session.settingsText, session.settings.written, [...path, ...keys]),
-                    rule: RULES.unmatchedPath,
+                    rule: GSPOT_RULES.unmatchedPath,
                     message: `${pattern} under ${where} matches no tracked file or folder.${UNESCAPED_BRACKET.test(pattern) ? BRACKET_HELP : ''}`,
                 });
             }

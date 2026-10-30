@@ -10,23 +10,23 @@ import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { runCommandBatches } from '#cli/runs/command/check.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import { DOCKERFILE_NAME } from '#cli/config/repository/files.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
-import { DOCKERFILE_NAME } from '#cli/config/repository/files/classify.ts';
 import { parseCheckedFile } from '#cli/checks/cross-configuration/syntax.ts';
 import { type CheckResult, type CheckFinding } from '#cli/types/runs/check.ts';
-import { composeSchema, trivyImageOutputSchema } from '#cli/schemas/checks/infrastructure/docker.ts';
+import { composeSchema, trivyImageOutputSchema } from '#cli/schemas/checks/infrastructure.ts';
 
 import {
     type ImageFinding,
     type ComposeFiles,
     type ComposeDocuments,
     type ComposeDeclaration,
-} from '#cli/types/checks/infrastructure/docker.ts';
+} from '#cli/types/checks/infrastructure.ts';
 import {
-    RULES,
+    DOCKER_RULES,
     DOCKERIGNORE,
     EDGE_SLASHES,
     COMPOSE_CHECK,
@@ -39,7 +39,7 @@ import {
     IGNORE_PATTERN_FORMS,
     DOCKERIGNORE_PATTERNS,
     TRIVY_FINDINGS_EXIT_CODE,
-} from '#cli/config/checks/infrastructure/docker.ts';
+} from '#cli/config/checks/infrastructure.ts';
 
 function listComposeFiles(files: TrackedFile[]): ComposeFiles[] {
     const groups = new Map<string, ComposeFiles>();
@@ -197,7 +197,7 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Chec
                         {
                             file: dockerfile,
                             line: 1,
-                            rule: RULES.missingFile,
+                            rule: DOCKER_RULES.missingFile,
                             message: `Add an ignore file at ${paths.join(' or ')} that lists ${required.join(', ')}.`,
                         },
                     ];
@@ -208,7 +208,7 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Chec
                           {
                               file: ignore.path,
                               line: 1,
-                              rule: RULES.missingEntry,
+                              rule: DOCKER_RULES.missingEntry,
                               message: `Add these entries to ${ignore.path}: ${missing.join(', ')}.`,
                           },
                       ];
@@ -233,7 +233,7 @@ async function scanImage(session: CheckSession, planned: PlannedCheck, image: st
             message: `${image}: ${vulnerability.VulnerabilityID} (${vulnerability.PkgName})`,
         })),
         ...(target.Secrets ?? []).map((secret) => ({
-            rule: RULES.secret,
+            rule: DOCKER_RULES.secret,
             message: `${image}: ${secret.RuleID}: ${secret.Title}`,
         })),
     ]);

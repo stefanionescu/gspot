@@ -1,4 +1,4 @@
-import type { GitFile } from '#cli/types/parsers/git.ts';
+import type { GitFile } from '#cli/types/parsers/parsers.ts';
 import type { GITLINK_MODE } from '#cli/config/files/modes.ts';
 import type { TemporaryFolder } from '#cli/types/system/files.ts';
 

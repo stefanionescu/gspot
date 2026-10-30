@@ -7,13 +7,11 @@ import type { Files } from '#cli/types/system/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, dirname, basename, relative } from 'node:path';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import type { SpawnResult } from '#cli/types/system/system.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
-import { TOOL_ENVIRONMENT } from '#cli/config/executables/run.ts';
-import type { SpawnResult } from '#cli/types/system/processes.ts';
-import { NPM_BIN_FOLDER } from '#cli/config/executables/locate.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { NO_VERSION, VERSION_FLAG } from '#cli/config/executables/versions.ts';
 import { readHostPackage, readToolProjectPackage } from '#cli/repository/npm/installed-packages.ts';
+import { NO_VERSION, VERSION_FLAG, NPM_BIN_FOLDER, TOOL_ENVIRONMENT } from '#cli/config/executables.ts';
 import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/executables/inspection.ts';
 
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {

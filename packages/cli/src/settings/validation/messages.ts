@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { TRAILING_PERIOD } from '#cli/config/text.ts';
-import type { SettingsError } from '#cli/types/settings/file.ts';
+import type { TomlSyntax } from '#cli/types/parsers/formats.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
-import type { TomlSyntax } from '#cli/types/parsers/formats/toml.ts';
+import type { SettingsError } from '#cli/types/settings/settings.ts';
 import { getSettingType, unwrapSettingSchema } from '#cli/settings/schema-lookup.ts';
 
 function formatValueAdvice(

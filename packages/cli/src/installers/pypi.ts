@@ -8,25 +8,29 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { type Configuration } from '#cli/types/manifests.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
-import { type SpawnResult } from '#cli/types/system/processes.ts';
+import { type SpawnResult } from '#cli/types/system/system.ts';
+import { type UvLockfile } from '#cli/types/parsers/projects.ts';
 import { formatUnavailableNote } from '#cli/executables/inspect.ts';
+import { uvLockfileSchema } from '#cli/schemas/parsers/projects.ts';
 import { type GeneratedFile } from '#cli/types/generation/files.ts';
-import type { ToolInstall } from '#cli/types/installers/install.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { getTool, listToolProjectPins } from '#cli/manifests/tools.ts';
-import type { ReplacementRequest } from '#cli/types/repository/writer.ts';
-import { type UvLockfile } from '#cli/types/parsers/projects/lockfiles.ts';
-import { uvLockfileSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
+import type { ReplacementRequest } from '#cli/types/repository/repository.ts';
 import { PRIVATE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { runInstallStep, explainReleaseAgeHold } from '#cli/installers/steps.ts';
 import { UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
-import { UV_TOOL, UV_FLAGS, UV_PROJECT_ENVIRONMENT } from '#cli/config/executables/uv.ts';
-import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/installers/pypi.ts';
-import { PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
-import { type UvCommand, type PythonToolProject, type PythonIndexSettings } from '#cli/types/installers/pypi.ts';
+import { UV_TOOL, UV_FLAGS, UV_PROJECT_ENVIRONMENT } from '#cli/config/executables.ts';
+import { PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects.ts';
+import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/installers/installers.ts';
 import { redactInstallOutput, extractUrlPasswords, assertCredentialFreeLockfile } from '#cli/installers/credentials.ts';
 
+import type {
+    UvCommand,
+    ToolInstall,
+    PythonToolProject,
+    PythonIndexSettings,
+} from '#cli/types/installers/installers.ts';
 import {
     URL_SCHEME,
     INDEX_SETTINGS,
@@ -40,7 +44,7 @@ import {
     REQUIREMENT_PACKAGE_NAME,
     PYTHON_DEFAULT_INDEX_ORIGIN,
     UV_LOCKFILE_CREDENTIAL_MESSAGE,
-} from '#cli/config/installers/pypi.ts';
+} from '#cli/config/installers/installers.ts';
 
 async function runUv(
     install: ToolInstall,

@@ -1,14 +1,14 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { COMMITLINT_CHECK } from '#cli/config/checks/general/commits.ts';
+import { COMMITLINT_CHECK } from '#cli/config/checks/general/general.ts';
 import { refuseIdleRuleOptions } from '#cli/generation/config-files/rule-options.ts';
 
 import {
     COMMITLINT_RULES,
     COMMITLINT_PARSER_PRESET,
     COMMITLINT_ERROR_SEVERITY,
-} from '#cli/config/generation/configurations/general/commits.ts';
+} from '#cli/config/generation/configurations/general.ts';
 
 /**
 Build commitlint.json: the Commitlint rules with the allowed types and scopes of the repository.

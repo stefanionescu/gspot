@@ -13,11 +13,9 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
-import type { TableSettings } from '#cli/types/settings/file.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
+import type { TableSettings } from '#cli/types/settings/settings.ts';
 import { join, resolve, relative, basename, isAbsolute } from 'node:path';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
-import { SCRATCH_PATH_FLAG } from '#cli/config/checks/language/swift/cache.ts';
-import { MACOS_PRIVATE_PATH } from '#cli/config/checks/language/swift/build.ts';
 import { prepareBuild, planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import type { CoverageOutput, SwiftBuildPlan } from '#cli/types/checks/language/swift.ts';
 import { xccovSchema, swiftCoverageSchema, packageDescriptionSchema } from '#cli/schemas/checks/language/swift.ts';
@@ -29,7 +27,9 @@ import {
     SWIFT_TEST_NAME,
     FAILED_TEST_RULE,
     TEST_TARGET_TYPE,
+    SCRATCH_PATH_FLAG,
     APP_TARGET_SUFFIX,
+    MACOS_PRIVATE_PATH,
     SWIFT_PACKAGE_NAME,
     XCTEST_FAILURE_LINE,
     SWIFT_TARGET_MODULE,
@@ -43,7 +43,7 @@ import {
     COVERAGE_VIEWER_MESSAGE,
     MISSING_COVERAGE_MESSAGE,
     SWIFT_TESTING_FAILURE_LINE,
-} from '#cli/config/checks/language/swift/coverage.ts';
+} from '#cli/config/checks/language/swift.ts';
 
 function findFailureFile(planned: PlannedCheck, file: string, cwd: string): string | undefined {
     const restored = file.replaceAll(

@@ -1,5 +1,5 @@
 import { realpathSync } from 'node:fs';
-import { type RunCache } from '#cli/types/system/cache.ts';
+import { type RunCache } from '#cli/types/system/system.ts';
 
 /**
 Calculate a value once for each key and id in a run cache. A rejected promise stays, so later calls share its failure.

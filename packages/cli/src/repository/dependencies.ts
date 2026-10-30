@@ -2,18 +2,17 @@ import { posix } from 'node:path';
 import { find, read } from '#cli/system/files/reads.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { listNpmToolNames } from '#cli/manifests/tools.ts';
-import { type RunCache } from '#cli/types/system/cache.ts';
+import { type RunCache } from '#cli/types/system/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/files/names.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
-import { HOOK_PACKAGES } from '#cli/config/repository/dependencies.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { DEPENDENCY_SECTIONS } from '#cli/config/parsers/projects/lockfiles.ts';
+import { HOOK_PACKAGES } from '#cli/config/repository/repository.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers/projects.ts';
 import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies.ts';
+import { PACKAGE_JSON, DEPENDENCY_SECTIONS } from '#cli/config/parsers/projects.ts';
+import { type PackageJson, type DependencyFile } from '#cli/types/parsers/projects.ts';
 import { parseRequirements, DEPENDENCY_FILE_PARSERS } from '#cli/parsers/projects/dependencies.ts';
-import { type PackageJson, type DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 
 async function readDependencyFile(cache: RunCache, file: TrackedFile): Promise<DependencyFile | undefined> {
     const parse = REQUIREMENTS_FILE.test(file.path)

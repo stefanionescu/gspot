@@ -1,14 +1,14 @@
 import { splitByCase } from 'scule';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { type Settings } from '#cli/types/settings/file.ts';
 import { readNamingDefaults } from '#cli/manifests/naming.ts';
 import type { NamingOverride } from '#cli/types/manifests.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
+import { type Settings } from '#cli/types/settings/settings.ts';
 import { type Scope, type ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import type { NamingCase, ParsedNamingLanguageFields } from '#cli/types/settings/naming.ts';
+import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY } from '#cli/config/checks/general/naming/naming.ts';
 import type { BannedWord, NamingSettings, CompiledOverride } from '#cli/types/checks/general/naming.ts';
-import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY } from '#cli/config/checks/general/naming/settings.ts';
 import { CATEGORY_PARENTS, SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/naming.ts';
 
 function compileOverride(override: NamingOverride): CompiledOverride {

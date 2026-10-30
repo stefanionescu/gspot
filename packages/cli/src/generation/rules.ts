@@ -16,7 +16,7 @@ import { type Repository } from '#cli/types/repository/files.ts';
 import { GROUPS, GROUP_LABELS } from '#cli/config/manifests/names.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { type Level, type Configuration } from '#cli/types/manifests.ts';
-import type { RuleFile, RuleSection, ShippedRule, AgentsBlockContent } from '#cli/types/generation/rules.ts';
+import type { RuleFile, RuleSection, ShippedRule, AgentsBlockContent } from '#cli/types/generation/generation.ts';
 
 import {
     FIRST_READ,
@@ -32,7 +32,7 @@ import {
     RULE_OPENING_PREFIX,
     GENERATED_FILES_LINE,
     GENERATED_FILES_HEADING,
-} from '#cli/config/generation/rules.ts';
+} from '#cli/config/generation/generation.ts';
 
 function listConfigurationRules(configurations: Configuration[], repository: Repository): ShippedRule[] {
     const conditions = configurations.flatMap((configuration) => Object.values(configuration.rules));

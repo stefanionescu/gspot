@@ -5,8 +5,8 @@ import { join, posix, relative } from 'node:path';
 import { decodeGitPaths } from '#cli/parsers/git.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import type { GitIndexFile } from '#cli/types/parsers/git.ts';
 import { isIgnored } from '#cli/repository/files/gitignore.ts';
+import type { GitIndexFile } from '#cli/types/parsers/parsers.ts';
 import { buildGitError, runGitForBytes } from '#cli/system/git.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { isInside, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
@@ -19,7 +19,7 @@ import {
     EXECUTABLE_BITS,
     INSTALLED_DEPENDENCY_FOLDERS,
     GIT_UNTRACKED_FILES_ARGUMENTS,
-} from '#cli/config/repository/files/tracked.ts';
+} from '#cli/config/repository/files.ts';
 
 function readSymlinkFile(root: string, path: string): ListedFile | undefined {
     const link = { path, size: 0, executable: false, isSymlink: true };

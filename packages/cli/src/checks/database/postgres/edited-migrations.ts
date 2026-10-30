@@ -1,21 +1,17 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
+import { FROZEN_NONE } from '#cli/config/parsers/code.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
-import { FROZEN_NONE } from '#cli/config/parsers/code/sql.ts';
 import { selectFrozenMigrations } from '#cli/parsers/code/sql.ts';
+import { FROZEN_RULE, FROZEN_THROUGH_NOTE, FROZEN_EDIT_MESSAGE } from '#cli/config/checks/database/postgres.ts';
 
 import {
     extractForwardText,
     readParsedMigrations,
     readCommittedMigrations,
 } from '#cli/checks/database/postgres/migrations.ts';
-import {
-    FROZEN_RULE,
-    FROZEN_THROUGH_NOTE,
-    FROZEN_EDIT_MESSAGE,
-} from '#cli/config/checks/database/postgres/edited-migrations.ts';
 
 /**
 Reports each migration at or before postgres.frozen_through whose text differs from the committed text.

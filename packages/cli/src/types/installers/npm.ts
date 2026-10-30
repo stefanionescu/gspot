@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import { type LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import type { bunPackageSchema } from '#cli/schemas/installers/npm.ts';
-import { type ToolInstall, type ToolPackageManager } from '#cli/types/installers/install.ts';
+import { type ToolInstall, type ToolPackageManager } from '#cli/types/installers/installers.ts';
 
 export type NpmToolInstall = ToolInstall & {
     packageManager: ToolPackageManager;

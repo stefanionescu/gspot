@@ -1,13 +1,12 @@
 import type { z } from 'zod';
 import { type Session } from '#cli/types/session.ts';
-import { type TomlTable } from '#cli/types/settings/file.ts';
 import { type FileContents } from '#cli/types/system/files.ts';
-import { type RepositorySetup } from '#cli/types/repository/setup.ts';
+import { type TomlTable } from '#cli/types/settings/settings.ts';
 import type { prettierSettingsSchema } from '#cli/schemas/commands.ts';
 import { type Level, type Configuration } from '#cli/types/manifests.ts';
 import { type AvailableSettings } from '#cli/types/settings/inheritance.ts';
-import { type ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { type Generation, type ApplyReport } from '#cli/types/generation/files.ts';
+import type { RepositorySetup, ConfigurationEvidence } from '#cli/types/repository/repository.ts';
 import { type Repository, type ScopeFolder, type TrackedFile } from '#cli/types/repository/files.ts';
 
 export type InitScan = {

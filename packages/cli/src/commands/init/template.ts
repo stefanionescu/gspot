@@ -5,17 +5,17 @@ import { isTable } from '#cli/system/tables.ts';
 import { statSync, readFileSync } from 'node:fs';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { findSettingSchema } from '#cli/settings/schema-lookup.ts';
 import { listUnknownConfigurations } from '#cli/manifests/select.ts';
 import { formatSettingsIssue } from '#cli/settings/validation/schema.ts';
 import { formatSettingsError } from '#cli/settings/validation/messages.ts';
 import type { Template, LeftOutSetting } from '#cli/types/commands/init.ts';
 import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
+import { LOCAL_RECORDS, LEFT_OUT_NOTES } from '#cli/config/commands/init.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
-import { LOCAL_RECORDS, LEFT_OUT_NOTES } from '#cli/config/commands/init/template.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 
 function listSettingValues(table: TomlTable, prefix: string): { key: string; value: unknown }[] {

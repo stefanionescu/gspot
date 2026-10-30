@@ -16,7 +16,7 @@ import type { ToolSearch } from '#cli/types/executables/inspection.ts';
 import { readRegistryEnvironment } from '#cli/installers/npm/registry.ts';
 import { listMisePins, listToolProjectPins } from '#cli/manifests/tools.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import type { ToolInstall, ToolPackageManager } from '#cli/types/installers/install.ts';
+import type { ToolInstall, ToolPackageManager } from '#cli/types/installers/installers.ts';
 
 /**
 Read a tool project file, its lockfile, and the lockfile mode.

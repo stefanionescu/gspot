@@ -9,10 +9,10 @@ import {
     SPLAT_NODES,
     CONSTANT_NAME,
     EXCEPTION_BASE,
-    PARAMETER_NODES,
     IMPLICIT_PARAMETERS,
     TYPE_ALIAS_ANNOTATION,
-} from '#cli/config/checks/general/naming/languages/python.ts';
+    PYTHON_PARAMETER_NODES,
+} from '#cli/config/checks/general/naming/languages.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three identifier readers in this file find the block that holds a definition through it.
 function getHolderType(node: Node): string {
@@ -38,7 +38,7 @@ function findParameterName(parameter: Node): Node | null {
 function addParameters(found: FileIdentifiers, definition: Node): void {
     const parameters = definition.childForFieldName('parameters')?.namedChildren ?? [];
     const names = parameters
-        .filter((parameter) => PARAMETER_NODES.has(parameter.type) || SPLAT_NODES.has(parameter.type))
+        .filter((parameter) => PYTHON_PARAMETER_NODES.has(parameter.type) || SPLAT_NODES.has(parameter.type))
         .map((parameter) => findParameterName(parameter));
     for (const name of names)
         if (name?.type === 'identifier' && !IMPLICIT_PARAMETERS.has(name.text))

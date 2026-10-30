@@ -2,16 +2,15 @@ import { posix } from 'node:path';
 import { parseSyml } from '@yarnpkg/parsers';
 import { isTable } from '#cli/system/tables.ts';
 import { find } from '#cli/system/files/reads.ts';
-import { type RunCache } from '#cli/types/system/cache.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
+import { type RunCache } from '#cli/types/system/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
 import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
-import { PACKAGE_JSON, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
-import { type LockfileName, type LockedPackageLockfile } from '#cli/types/parsers/projects/lockfiles.ts';
+import { type LockfileName, type LockedPackageLockfile } from '#cli/types/parsers/projects.ts';
 
 import {
     uvLockfileSchema,
@@ -21,16 +20,18 @@ import {
     pnpmLockfileSchema,
     yarnLockfileSchema,
     dependencySectionsSchema,
-} from '#cli/schemas/parsers/projects/lockfiles.ts';
+} from '#cli/schemas/parsers/projects.ts';
 import {
+    PACKAGE_JSON,
     PNPM_PEER_START,
     PNPM_ROOT_IMPORTER,
     YARN_CLASSIC_HEADER,
     LOCKFILE_URL_FIELDS,
     DEPENDENCY_SECTIONS,
     YARN_CLASSIC_PROPERTY,
+    PYTHON_NAME_SEPARATORS,
     type IMPORTER_LOCKFILES,
-} from '#cli/config/parsers/projects/lockfiles.ts';
+} from '#cli/config/parsers/projects.ts';
 
 function parseNpmPackages(path: string, text: string): string[] {
     return Object.entries(parseJsonFile(path, text, npmLockfileSchema).packages).flatMap(([folder, lockedPackage]) => {

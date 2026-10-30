@@ -3,10 +3,10 @@ import { read } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseBashScript } from '#cli/parsers/code/bash.ts';
+import { SCRIPT_TAG } from '#cli/config/repository/files.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import { type ScriptFile } from '#cli/types/checks/language/bash.ts';
-import { SCRIPT_TAG } from '#cli/config/repository/files/classify.ts';
-import { BASH_SOURCE_COMMANDS } from '#cli/config/checks/language/bash/scripts.ts';
+import { BASH_SOURCE_COMMANDS } from '#cli/config/checks/language/bash.ts';
 
 const PARSED_SCRIPTS = Symbol('parsed scripts');
 

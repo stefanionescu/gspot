@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { VALE_PACKAGE_FOLDERS } from '#cli/config/installers/vale.ts';
+import { VALE_PACKAGE_FOLDERS } from '#cli/config/installers/installers.ts';
 
 const [styles = '', version = ''] = process.argv.slice(2);
 const isColorOff = readEnvironmentVariable('NO_COLOR') === '1' && readEnvironmentVariable('FORCE_COLOR') === '0';

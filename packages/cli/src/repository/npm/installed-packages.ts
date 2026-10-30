@@ -6,10 +6,10 @@ import { hasErrorCode } from '#cli/system/errors.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies.ts';
-import type { InstalledDependency } from '#cli/types/repository/npm/installed-packages.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import type { PackageJson } from '#cli/types/parsers/projects.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers/projects.ts';
+import type { InstalledDependency } from '#cli/types/repository/npm.ts';
 
 /**
 Read and validate a package.json outside the tool project, without its boundary.

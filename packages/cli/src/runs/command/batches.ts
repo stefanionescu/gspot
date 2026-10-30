@@ -10,7 +10,7 @@ import {
     TOOL_ARGUMENTS_MESSAGE,
     WINDOWS_ESCAPE_EXPANSION,
     WINDOWS_ARGUMENT_OVERHEAD,
-} from '#cli/config/runs/command/batches.ts';
+} from '#cli/config/runs/command.ts';
 
 /**
 Splits a command into command lines that fit the system argument limit.

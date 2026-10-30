@@ -6,15 +6,15 @@ import { parse } from '@decimalturn/toml-patch';
 import { findValueAt } from '#cli/system/tables.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
+import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { type SettingsListJson } from '#cli/types/commands/list.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { rm, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { ROOT_EDITORCONFIG } from '#tests/config/commands/contents.ts';
+import { type SettingsListJson } from '#cli/types/commands/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {

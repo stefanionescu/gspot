@@ -5,9 +5,9 @@ import { join, relative, isAbsolute } from 'node:path';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { OutputPaths } from '#cli/types/runs/output.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/placeholders.ts';
-import type { SpawnResult } from '#cli/types/system/processes.ts';
-import type { OutputPaths } from '#cli/types/runs/output/formats.ts';
+import type { SpawnResult } from '#cli/types/system/system.ts';
 import { parseOutput, OUTPUT_FORMATS } from '#cli/runs/output/formats.ts';
 import type { Finding, CheckResult, CheckFinding } from '#cli/types/runs/check.ts';
 import type { CommandRun, OutputCheck, ParsedFindings, CommandLineOutput } from '#cli/types/runs/command.ts';
@@ -18,7 +18,7 @@ import {
     STACK_FRAME_LINE,
     OUT_OF_MEMORY_MESSAGE,
     NO_ERROR_OUTPUT_MESSAGE,
-} from '#cli/config/runs/command/output.ts';
+} from '#cli/config/runs/command.ts';
 
 function buildUnexplainedFailure(check: Check, tool: Tool, result: SpawnResult, file: string | undefined): Finding {
     const emptyOutputText = `${tool.name} exited ${String(result.code)}`;

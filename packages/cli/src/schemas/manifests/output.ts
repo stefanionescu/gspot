@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DEFAULT_PATTERN, DEFAULT_FILE_PATTERN, DEFAULT_GROUPED_PATTERN } from '#cli/config/manifests/output.ts';
+import { DEFAULT_PATTERN, DEFAULT_FILE_PATTERN, DEFAULT_GROUPED_PATTERN } from '#cli/config/manifests/manifests.ts';
 
 export const outputSchema = z
     .strictObject({

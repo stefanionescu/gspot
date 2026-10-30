@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import type { Finding } from '#cli/types/runs/check.ts';
+import type { ToolOutput } from '#cli/types/runs/output.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import type { ToolOutput } from '#cli/types/runs/output/formats.ts';
 import { markdownlintOutputSchema } from '#cli/schemas/runs/markdownlint.ts';
 
 /**

@@ -9,12 +9,11 @@ import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
-import { NPM_SETTING_PREFIX } from '#cli/config/installers/npm/project.ts';
-import { bunLockfileSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
-import { type Dependencies } from '#cli/types/parsers/projects/dependencies.ts';
-import { type PackageManager } from '#cli/types/repository/npm/package-manager.ts';
-import { PNPM_PEER_START, PNPM_ROOT_IMPORTER } from '#cli/config/parsers/projects/lockfiles.ts';
-import { INTEGRITY, BUN_LOCKFILE, LOCKFILE_WORKSPACE_KEYS } from '#cli/config/installers/npm/lockfiles.ts';
+import { type Dependencies } from '#cli/types/parsers/projects.ts';
+import { type PackageManager } from '#cli/types/repository/npm.ts';
+import { bunLockfileSchema } from '#cli/schemas/parsers/projects.ts';
+import { PNPM_PEER_START, PNPM_ROOT_IMPORTER } from '#cli/config/parsers/projects.ts';
+import { INTEGRITY, BUN_LOCKFILE, NPM_SETTING_PREFIX, LOCKFILE_WORKSPACE_KEYS } from '#cli/config/installers/npm.ts';
 
 import {
     type Lockfile,

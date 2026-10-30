@@ -3,11 +3,11 @@ import { isReasonedValue } from '#cli/settings/file.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { SCOPE_OPTION } from '#cli/config/commands/flags.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
-import type { UnsetOptions } from '#cli/types/commands/unset.ts';
+import { SCOPE_OPTION } from '#cli/config/commands/commands.ts';
+import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { removeKey, removeFromList } from '#cli/settings/edit.ts';
+import type { UnsetOptions } from '#cli/types/commands/commands.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/generation/settings-edit.ts';
 

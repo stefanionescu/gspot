@@ -9,6 +9,7 @@ import { CHECK_CODE } from '#cli/checks/registry.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
+import { DOCKER_TOOL } from '#cli/config/executables.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
@@ -16,12 +17,9 @@ import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { readToolBinPaths } from '#cli/executables/locate.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { buildRunReport } from '#cli/commands/check/results.ts';
-import { type IgnoreRecord } from '#cli/types/settings/file.ts';
-import { DOCKER_TOOL } from '#cli/config/executables/inspect.ts';
 import { buildMiseInstall } from '#cli/generation/tool-installs.ts';
-import { SHORT_HASH_LENGTH } from '#cli/config/commands/check/check.ts';
+import { type IgnoreRecord } from '#cli/types/settings/settings.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
-import { STAGED_FLAG, CHANGED_FLAG } from '#cli/config/commands/check/flags.ts';
 import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts';
 import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
 import { buildBaseResult, runBuiltInCheck, normalizeResultPaths } from '#cli/runs/results.ts';
@@ -36,11 +34,14 @@ import {
 } from '#cli/types/commands/check.ts';
 import {
     HOOK_FLAG,
+    STAGED_FLAG,
+    CHANGED_FLAG,
     CHECK_COMMAND,
     FAILED_STATUSES,
+    SHORT_HASH_LENGTH,
     CANCELED_CHECK_NOTE,
     DOCKER_MISSING_MESSAGE,
-} from '#cli/config/commands/check/run.ts';
+} from '#cli/config/commands/check.ts';
 
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     if ((['check', 'rule'] as const).some((key) => record[key] !== undefined && record[key] !== finding[key]))

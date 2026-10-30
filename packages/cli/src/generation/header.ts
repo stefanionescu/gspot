@@ -7,7 +7,7 @@ import {
     SLASH_COMMENT_FILES,
     GENERATED_HEADER_TEXT,
     SLASH_COMMENT_EXTENSIONS,
-} from '#cli/config/generation/header.ts';
+} from '#cli/config/generation/generation.ts';
 
 /**
 Format the header of a generated file outside .gspot.

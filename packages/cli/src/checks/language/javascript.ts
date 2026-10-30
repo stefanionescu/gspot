@@ -14,12 +14,12 @@ import { requireTypescript } from '#cli/system/typescript.ts';
 import { extractConfigFileName } from '#cli/manifests/tools.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
+import type { ParsedTsconfig } from '#cli/types/parsers/projects.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
-import type { ParsedTsconfig } from '#cli/types/parsers/projects/tsconfig.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/checks/cross-configuration/tsc/compiler.ts';
-import { JSCONFIG_TSBUILDINFO, JAVASCRIPT_TSC_COMMAND } from '#cli/config/checks/language/javascript.ts';
+import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/checks/cross-configuration/tsc.ts';
+import { JSCONFIG_TSBUILDINFO, JAVASCRIPT_TSC_COMMAND } from '#cli/config/checks/language/language.ts';
 
 import {
     listCompilerFiles,

@@ -2,7 +2,7 @@ import { SIDEBAR } from '#docs/config/navigation.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { START_RUNNERS } from '#cli/config/repository/npm.ts';
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
-import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/generation/ci.ts';
+import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/generation/generation.ts';
 import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/definitions/root.ts';
 
 import {

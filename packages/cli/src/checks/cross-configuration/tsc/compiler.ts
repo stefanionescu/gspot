@@ -6,19 +6,18 @@ import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import type { RunCache } from '#cli/types/system/cache.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
+import type { RunCache } from '#cli/types/system/system.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
 import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
 import { readTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
+import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers/projects.ts';
 import type { TypeScriptReferenceCopy } from '#cli/types/checks/cross-configuration/tsc.ts';
-import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers/projects/tsconfig.ts';
-import { TYPESCRIPT_TSCONFIG_CHECK } from '#cli/config/checks/cross-configuration/tsc/scope-tsconfig.ts';
 import { buildTsconfig, selectRequiredTsconfigOptions } from '#cli/checks/cross-configuration/tsc/scope-tsconfig.ts';
 
 import {
@@ -32,8 +31,9 @@ import {
     TSC_UNFORMATTED_OUTPUT,
     TSC_CONFIG_INPUT_PATHS,
     TSC_COMPILER_INPUT_PATHS,
+    TYPESCRIPT_TSCONFIG_CHECK,
     TSC_REFERENCE_OUTPUT_FOLDER,
-} from '#cli/config/checks/cross-configuration/tsc/compiler.ts';
+} from '#cli/config/checks/cross-configuration/tsc.ts';
 
 const CHECKED_PROJECTS = Symbol('checked projects');
 

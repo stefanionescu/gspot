@@ -14,7 +14,7 @@ import { listWorkspaceSources } from '#cli/repository/npm/workspaces.ts';
 import type { CopyFile, CopyPlan, CopyPaths } from '#cli/types/runs/copy.ts';
 import { type Files, type TemporaryFolder } from '#cli/types/system/files.ts';
 import { SYMLINK_MODE, GIT_FILE_MODES, PERMISSION_BITS } from '#cli/config/files/modes.ts';
-import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/runs/copy/files.ts';
+import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/runs/copy.ts';
 import { statSync, chmodSync, constants, mkdirSync, symlinkSync, copyFileSync, writeFileSync } from 'node:fs';
 
 function writeCopyFile(files: Files, copyRoot: string, file: CopyFile): void {

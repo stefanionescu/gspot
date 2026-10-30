@@ -1,21 +1,21 @@
+import { ROOT_RUNS } from '#cli/config/planning.ts';
 import type { Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isRootOnlyCheck } from '#cli/planning/files.ts';
-import { ROOT_RUNS } from '#cli/config/planning/checks.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { Settings } from '#cli/types/settings/settings.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import type { ListKind, SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
+import type { ListKind, SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/commands.ts';
 
 import {
     KEY_GAP,
@@ -25,7 +25,7 @@ import {
     OFF_BY_LEVEL,
     REASON_HEADER,
     NO_MATCHING_FILES,
-} from '#cli/config/commands/list.ts';
+} from '#cli/config/commands/commands.ts';
 
 function buildSettingsResult(session: Session): CommandResult {
     const settings = buildSettingRows(session.settings, session.scopes);

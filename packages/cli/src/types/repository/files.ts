@@ -2,10 +2,10 @@ import type { Ignore } from 'ignore';
 import type { Dirent } from 'node:fs';
 import type { FILE_KINDS } from '#cli/config/files/kinds.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { GitIndexFile } from '#cli/types/parsers/git.ts';
-import type { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import type { GitIndexFile } from '#cli/types/parsers/parsers.ts';
+import type { DependencyFile } from '#cli/types/parsers/projects.ts';
+import type { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
-import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 
 export type PathIgnore = { base: string; matcher: Ignore };
 

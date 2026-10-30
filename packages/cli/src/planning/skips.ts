@@ -1,10 +1,10 @@
 import { listIgnores } from '#cli/settings/scopes.ts';
 import { findMissingBuild } from '#cli/manifests/tools.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
+import { NO_HISTORY_MESSAGE } from '#cli/config/planning.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { Settings } from '#cli/types/settings/settings.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
-import { NO_HISTORY_MESSAGE } from '#cli/config/planning/skips.ts';
 import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import type { Host, Skip, PlannedCheck, PlannedScope, SettingsSkip } from '#cli/types/planning.ts';

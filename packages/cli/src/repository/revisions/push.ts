@@ -8,7 +8,6 @@ import { WHITESPACE_RUN } from '#cli/config/text.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
 import { readMergeBase, readDefaultRef } from '#cli/repository/revisions/changes.ts';
 import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
-import { GIT_SHALLOW_ARGUMENTS, GIT_DIFF_NAMES_ARGUMENTS } from '#cli/config/repository/revisions/changes.ts';
 
 import {
     type PushLine,
@@ -30,12 +29,14 @@ import {
     GIT_PEEL_ARGUMENTS,
     PEEL_FAILURE_MESSAGE,
     GIT_REMOTE_ARGUMENTS,
+    GIT_SHALLOW_ARGUMENTS,
     GIT_REV_LIST_ARGUMENTS,
+    GIT_DIFF_NAMES_ARGUMENTS,
     INVALID_PUSH_INPUT_MESSAGE,
     GIT_ROOT_COMMITS_ARGUMENTS,
     GIT_SHALLOW_FILE_ARGUMENTS,
     MISSING_PUSH_REVISION_MESSAGE,
-} from '#cli/config/repository/revisions/push.ts';
+} from '#cli/config/repository/revisions.ts';
 
 function parsePushLine(line: string): PushLine {
     const [localRef, localHash, remoteRef, remoteHash, ...verbatim] = line.trim().split(WHITESPACE_RUN);

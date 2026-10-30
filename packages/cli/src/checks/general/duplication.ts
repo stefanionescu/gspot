@@ -9,13 +9,13 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { jscpdOutputSchema } from '#cli/schemas/checks/general.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
 import { parseJsonFile, parseToolOutput } from '#cli/parsers/formats/json.ts';
-import { jscpdOutputSchema } from '#cli/schemas/checks/general/duplication.ts';
 
 import {
     CLONE_RULE,
@@ -24,7 +24,7 @@ import {
     JSCPD_ARGUMENTS,
     JSCPD_CONFIG_FILE,
     JSCPD_REPORT_FILE,
-} from '#cli/config/checks/general/duplication.ts';
+} from '#cli/config/checks/general/general.ts';
 
 /**
 Runs jscpd over the scope and reports the clones.

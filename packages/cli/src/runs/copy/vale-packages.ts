@@ -5,7 +5,7 @@ import type { Files } from '#cli/types/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { preparePath } from '#cli/system/files/bounded.ts';
 import { statSync, symlinkSync, realpathSync } from 'node:fs';
-import { INSTALLED_VALE_MESSAGE } from '#cli/config/runs/copy/vale-packages.ts';
+import { INSTALLED_VALE_MESSAGE } from '#cli/config/runs/copy.ts';
 
 function assertValeMatches(installed: Files, destination: Files, config: string): void {
     const onDisk = installed.read(config);

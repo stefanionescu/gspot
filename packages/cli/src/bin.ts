@@ -1,8 +1,7 @@
-import { JSON_FLAG } from '#cli/config/main.ts';
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { PROCESS_ARGUMENTS_START } from '#cli/config/bin.ts';
 import { validateRuntimeVersion } from '#cli/system/runtime.ts';
+import { JSON_FLAG, PROCESS_ARGUMENTS_START } from '#cli/config/main.ts';
 
 const runtimeError = validateRuntimeVersion(process.versions, cliPackage.engines);
 if (runtimeError === undefined) {

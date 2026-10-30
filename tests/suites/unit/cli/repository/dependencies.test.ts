@@ -7,9 +7,9 @@ import { openSession } from '#cli/planning/session.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
+import { SOURCE_KIND } from '#cli/config/repository/files.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { SOURCE_KIND } from '#cli/config/repository/files/classify.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { readPackageJson, readDependencyFiles, listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 

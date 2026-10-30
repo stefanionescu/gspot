@@ -14,7 +14,7 @@ import {
     COMPANION_SUFFIX,
     INDEX_BASE_NAMES,
     SHARED_PREFIX_RULE,
-} from '#cli/config/checks/general/structure/shared-prefixes.ts';
+} from '#cli/config/checks/general/structure.ts';
 
 function hasKindSuffix(name: string, kinds: Set<string>): boolean {
     const extension = extractExtension(name);

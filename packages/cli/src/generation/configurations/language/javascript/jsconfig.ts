@@ -4,14 +4,14 @@ import { findValueAt } from '#cli/system/tables.ts';
 import { join, dirname, relative } from 'node:path';
 import { JSCONFIG_FILE } from '#cli/config/files/names.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
+import type { ParsedTsconfig } from '#cli/types/parsers/projects.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import type { ParsedTsconfig } from '#cli/types/parsers/projects/tsconfig.ts';
 import { convertToGlobs, buildIgnoreSections } from '#cli/generation/config-files/ignore-files.ts';
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 import {
     STANDALONE_OPTIONS,
@@ -20,7 +20,7 @@ import {
     SOURCE_SELECTION_FIELDS,
     JAVASCRIPT_IGNORED_GLOBS,
     JAVASCRIPT_BUNDLED_IMPORTS,
-} from '#cli/config/generation/configurations/language/javascript/jsconfig.ts';
+} from '#cli/config/generation/configurations/language/javascript/javascript.ts';
 
 function buildExtendedExclude(
     planned: PlannedConfigFile,

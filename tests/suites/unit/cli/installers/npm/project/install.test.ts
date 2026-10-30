@@ -3,7 +3,6 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
 import * as processes from '#cli/system/processes.ts';
-import { CI_NODE } from '#cli/config/generation/ci.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
@@ -12,11 +11,11 @@ import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { listToolProjectPins } from '#cli/manifests/tools.ts';
 import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { NPM_TOOL_PROJECT } from '#cli/config/generation/generate.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/installers/npm/project.ts';
+import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/installers/npm.ts';
+import { CI_NODE, NPM_TOOL_PROJECT } from '#cli/config/generation/generation.ts';
 import { installNpmTools, planNpmLockfile } from '#cli/installers/npm/project.ts';
 
 import {

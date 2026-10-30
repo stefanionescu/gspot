@@ -1,7 +1,7 @@
 import { TYPESCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { SVELTE_RULES, SVELTE_FILES } from '#cli/config/generation/configurations/framework/svelte.ts';
-import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
+import { SVELTE_RULES, SVELTE_FILES } from '#cli/config/generation/configurations/framework.ts';
+import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 /**
 Apply the Svelte presets and the Svelte component parser.

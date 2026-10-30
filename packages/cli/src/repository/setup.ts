@@ -1,23 +1,22 @@
 import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import type { RunCache } from '#cli/types/system/cache.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import type { RunCache } from '#cli/types/system/system.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { type Repository } from '#cli/types/repository/files.ts';
 import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/manifests/names.ts';
 import { join, dirname, resolve, basename, relative } from 'node:path';
-import { EXECUTABLE_BITS } from '#cli/config/repository/files/tracked.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { listConflictingConfigFiles } from '#cli/repository/config-files.ts';
-import { MARKDOWN_EXTENSION } from '#cli/config/repository/files/classify.ts';
-import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository/setup.ts';
+import { EXECUTABLE_BITS, MARKDOWN_EXTENSION } from '#cli/config/repository/files.ts';
+import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository/repository.ts';
 import { statSync, lstatSync, readdirSync, realpathSync, readFileSync } from 'node:fs';
 import { readPackageJson, listToolOnlyPackages } from '#cli/repository/dependencies.ts';
-import { LFS_HOOKS, HOOK_SHEBANG, LFS_GUARD_PREFIX } from '#cli/config/generation/hooks.ts';
-import { type CiJob, type RepositoryHooks, type RepositorySetup } from '#cli/types/repository/setup.ts';
+import { LFS_HOOKS, HOOK_SHEBANG, LFS_GUARD_PREFIX } from '#cli/config/generation/generation.ts';
+import { type CiJob, type RepositoryHooks, type RepositorySetup } from '#cli/types/repository/repository.ts';
 
 import {
     RUN_WORD,
@@ -47,7 +46,7 @@ import {
     FOREIGN_HOOK_FOLDERS,
     SIMPLE_GIT_HOOKS_KEY,
     GITHUB_WORKFLOWS_FOLDER,
-} from '#cli/config/repository/setup.ts';
+} from '#cli/config/repository/repository.ts';
 
 function isLintCommand(command: string): boolean {
     const words = command.split(COMMAND_SEPARATORS).filter((word) => word !== '');

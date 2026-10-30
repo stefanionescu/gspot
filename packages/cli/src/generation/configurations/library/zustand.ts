@@ -1,8 +1,11 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
-import { CREATE_STORE_MESSAGE, ZUSTAND_STORE_IMPORTS } from '#cli/config/generation/configurations/library/zustand.ts';
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
-import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
+import { CREATE_STORE_MESSAGE, ZUSTAND_STORE_IMPORTS } from '#cli/config/generation/configurations/library.ts';
+
+import {
+    ESLINT_SETTINGS_TABLE,
+    CONFIGURATION_PLUGINS,
+} from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 /**
 Restrict the Zustand store creators to the store files, so a store lives in a factory that a provider owns.
