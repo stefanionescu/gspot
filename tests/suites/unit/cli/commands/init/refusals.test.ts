@@ -3,6 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -12,7 +13,6 @@ import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { UNCOMMITTED_FORMAT_CASES } from '#tests/config/commands/init/refusals.ts';
 import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {
     await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });

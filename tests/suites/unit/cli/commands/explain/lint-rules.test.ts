@@ -73,7 +73,9 @@ test('explain reads ESLint, plugin, and Stylelint rules from the installed tools
     for (const subject of UNKNOWN_RULES) {
         const refused = await runGspot(sandbox.path, ['explain', subject]);
         expect(refused.code, subject).toBe(2);
-        expect(refused.stderr, subject).toStartWith(`There is no check, lint rule, configuration, setting, or file called ${subject}. Give a check (python/ruff),`);
+        expect(refused.stderr, subject).toStartWith(
+            `There is no check, lint rule, configuration, setting, or file called ${subject}. Give a check (python/ruff),`,
+        );
     }
 });
 

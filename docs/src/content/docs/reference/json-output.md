@@ -149,13 +149,13 @@ it. Each item has the `reason` and the `command` that undoes it.
 `gspot doctor --json` returns the state of the setup. `exitCode` holds `1` when a tool, environment, or hook needs
 your action.
 
-| Field            | Meaning                                                                                |
-| ---------------- | -------------------------------------------------------------------------------------- |
-| `tools`          | Each tool with `name` and `state`, and `want`, `found`, `path`, and `help` when known. |
-| `environments`   | Project environments that a check needs and that are missing.                          |
-| `suggestions`    | Configurations to add, and files that no configuration checks.                         |
-| `addCommands`    | The `gspot add` commands for the detected configurations.                              |
-| `hooks`          | The state of the Git hooks, as text.                                                   |
-| `ci`             | The state of the CI workflow, as text.                                                 |
-| `ruleFiles`      | The number of rule files for coding agents.                                            |
-| `submodules`     | Submodule paths, whose contents gspot does not read.                                   |
+| Field          | Meaning                                                                                |
+| -------------- | -------------------------------------------------------------------------------------- |
+| `tools`        | Each tool with `name` and `state`, and `want`, `found`, `path`, and `help` when known. |
+| `environments` | Project environments that a check needs and that are missing.                          |
+| `suggestions`  | Configurations to add, and files that no configuration checks.                         |
+| `addCommands`  | The `gspot add` commands for the detected configurations.                              |
+| `hooks`        | The state of the Git hooks, as text.                                                   |
+| `ci`           | The state of the CI workflow, as text.                                                 |
+| `ruleFiles`    | The number of rule files for coding agents.                                            |
+| `submodules`   | Submodule paths, whose contents gspot does not read.                                   |

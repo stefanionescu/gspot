@@ -6,6 +6,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { readTree } from '#tests/setup/system/files.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { INDEX_LINE_FAILURE } from '#tests/config/parsers/git.ts';
@@ -17,7 +18,6 @@ import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { limitCommand, runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { FIX_REFUSALS, ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/commands/check/refusals.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 
 async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const fix = buildProgramCommand('fakes/tool', '--text', 'fixed\n', 'source.txt');

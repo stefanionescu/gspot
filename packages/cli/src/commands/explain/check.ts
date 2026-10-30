@@ -14,8 +14,8 @@ import { ruleDocumentationSchema } from '#cli/schemas/commands.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import type { Tool, Check, ScopeCheck, Configuration } from '#cli/types/configurations.ts';
-import type { CheckFacts, CheckIgnore, Explanation, LintRuleDocs } from '#cli/types/commands/explain.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
+import type { CheckFacts, CheckIgnore, Explanation, LintRuleDocs } from '#cli/types/commands/explain.ts';
 
 import {
     ESLINT_MANIFEST_TOOL,
@@ -58,13 +58,28 @@ function findRulePage(
     return plugin?.rule_url?.replace(RULE_PLACEHOLDER, () => rule.slice(prefix.length + 1));
 }
 
+function listCheckIgnores(session: Session | undefined, checkId: string): CheckIgnore[] {
+    return (session?.settings.ignore ?? [])
+        .filter((ignore) => ignore.check === checkId)
+        .map(({ rule, paths, reason }) => ({
+            ...stripUndefined({ rule, paths }),
+            reason,
+            command: [
+                `gspot unignore ${quoteArgument(checkId)}`,
+                ...(rule === undefined ? [] : [`--rule ${quoteArgument(rule)}`]),
+                ...(paths === undefined ? [] : ['--paths', ...paths.map((path) => quoteArgument(path))]),
+            ].join(' '),
+        }));
+}
+
 function buildCheckFacts(
     check: Check,
     configuration: ScopeCheck['configuration'],
     configurationsByName: Map<string, Configuration>,
-    installedRules: ReadonlySet<string>,
-): Omit<CheckFacts, 'ignores'> {
+    session: Session | undefined,
+): CheckFacts {
     const toolName = getToolName(check);
+    const installedRules = new Set(session === undefined ? [] : selectRuleFiles(session).map((file) => file.path));
     const settings = (configuration === undefined ? [] : (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []))
         .filter((setting) => toolName !== undefined && setting.name.startsWith(`tools.${toolName}.`))
         .map((setting) => setting.name);
@@ -81,6 +96,7 @@ function buildCheckFacts(
         settings,
         rules,
         crashPattern,
+        ignores: listCheckIgnores(session, check.id),
         minVersions: Object.fromEntries(
             [toolName, ...(check.other_tools ?? [])]
                 .filter((name) => name !== undefined)
@@ -88,20 +104,6 @@ function buildCheckFacts(
                 .flatMap((tool) => (tool.min_version === undefined ? [] : [[tool.name, tool.min_version]])),
         ),
     };
-}
-
-function listCheckIgnores(session: Session | undefined, checkId: string): CheckIgnore[] {
-    return (session?.settings.ignore ?? [])
-        .filter((ignore) => ignore.check === checkId)
-        .map(({ rule, paths, reason }) => ({
-            ...stripUndefined({ rule, paths }),
-            reason,
-            command: [
-                `gspot unignore ${quoteArgument(checkId)}`,
-                ...(rule === undefined ? [] : [`--rule ${quoteArgument(rule)}`]),
-                ...(paths === undefined ? [] : ['--paths', ...paths.map((path) => quoteArgument(path))]),
-            ].join(' '),
-        }));
 }
 
 function formatCheckIgnore(ignore: CheckIgnore): string {
@@ -175,15 +177,7 @@ export function explainCheck(session: Session | undefined, checkId: string): Exp
         (commandCheck === undefined ? undefined : { check: commandCheck, configuration: undefined });
     if (found === undefined) return undefined;
     const { check, configuration } = found;
-    const facts = {
-        ...buildCheckFacts(
-            check,
-            configuration,
-            configurationsByName,
-            new Set(session === undefined ? [] : selectRuleFiles(session).map((file) => file.path)),
-        ),
-        ignores: listCheckIgnores(session, checkId),
-    };
+    const facts = buildCheckFacts(check, configuration, configurationsByName, session);
     return {
         kind: 'check',
         subject: checkId,
