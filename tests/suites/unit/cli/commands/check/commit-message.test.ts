@@ -33,6 +33,7 @@ test('check --hook commit-msg passes a conventional message and leaves it unchan
     expect(result.stderr).toBe('');
     expect(result.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual([
         { check: 'commits/commitlint', status: 'passed', findings: [] },
+        { check: 'commits/references', status: 'passed', findings: [] },
     ]);
     expect(await readFile(join(sandbox.path, 'message.txt'), 'utf8')).toBe('fix: preserve the commit message\n');
 });

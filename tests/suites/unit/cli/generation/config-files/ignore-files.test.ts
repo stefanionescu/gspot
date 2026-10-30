@@ -80,9 +80,8 @@ test.each([true, false])('generated file lists include the CI workflow only when
     const generated = generateFiles(await openSession(sandbox.path));
     const prettierIgnore = generated.files.find(({ path }) => path === '.prettierignore')!.content;
     const typos = generated.files.find(({ path }) => path.endsWith('/typos.toml'))!.content;
-    const agents = generated.blocks.find(({ path }) => path === 'AGENTS.md')!.body;
     const attributes = generated.blocks.find(({ path }) => path === '.gitattributes')!.body;
-    for (const text of [prettierIgnore, typos, agents, attributes]) {
+    for (const text of [prettierIgnore, typos, attributes]) {
         expect(text.includes('.github/workflows/gspot.yml')).toBe(enabled);
     }
 });

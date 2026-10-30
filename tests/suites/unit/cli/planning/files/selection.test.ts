@@ -115,7 +115,6 @@ test('a project-wide TypeScript check counts its source file and tsconfig.json, 
             Array.from({ length: 20 }, (_, index) => [`notes-${String(index)}.txt`, 'Other input.\n']),
         ),
     });
-    commitAll(sandbox.path);
     const declaration = await fakeNpmTool(sandbox.path, 'tsc');
     await writeProgramCommand(
         sandbox.path,
@@ -124,6 +123,7 @@ test('a project-wide TypeScript check counts its source file and tsconfig.json, 
         '--version-line',
         String(declaration.version),
     );
+    commitAll(sandbox.path);
     const all = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
     expect(all.code, all.stdout + all.stderr).toBe(0);
     expect(all.report.checks).toMatchObject([{ check: 'typescript/tsc', fileCount: 2 }]);

@@ -40,6 +40,7 @@ export const RULES_WRITTEN_FILES = [
     '.gspot/configurations/general/prose/styles/gspot/link-text.yml',
     '.gspot/configurations/general/prose/vale.ini',
     '.gspot/configurations/general/secrets/gitleaks.toml',
+    '.gspot/configurations/general/secrets/rules/PRIVACY.md',
     '.gspot/configurations/general/secrets/rules/SECRETS.md',
     '.gspot/configurations/general/security/rules/SECURITY.md',
     '.gspot/configurations/general/spelling/typos.toml',

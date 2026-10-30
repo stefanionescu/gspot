@@ -7,7 +7,7 @@ export const START_COMMANDS = [
 ] as const;
 
 export const HOOK_LEVEL_CASES = [
-    { level: 'basic', hooks: ['pre-commit', 'pre-push'] },
+    { level: 'basic', hooks: ['commit-msg', 'pre-commit', 'pre-push'] },
     { level: 'all', hooks: ['commit-msg', 'pre-commit', 'pre-push'] },
 ] as const;
 

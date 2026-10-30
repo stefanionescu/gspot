@@ -125,7 +125,7 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
         file.path.startsWith(`${GSPOT_PATHS.hooks}/`),
     );
     expect(hooks.map((file) => file.path)).toStrictEqual(
-        ['post-checkout', 'post-commit', 'post-merge', 'pre-commit', 'pre-push'].map(
+        ['commit-msg', 'post-checkout', 'post-commit', 'post-merge', 'pre-commit', 'pre-push'].map(
             (name) => `${GSPOT_PATHS.hooks}/${name}`,
         ),
     );
