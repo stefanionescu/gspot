@@ -47,8 +47,8 @@
     --sl-text-h3: 1.1875rem;
     --sl-text-h4: 1.0625rem;
     --sl-mobile-toc-height: 2.75rem;
+    --scrollbar-thumb: color-mix(in srgb, var(--sl-color-accent) 55%, var(--sl-color-gray-6));
 
-    scrollbar-color: color-mix(in srgb, var(--sl-color-gray-3) 70%, transparent) transparent;
     scrollbar-gutter: stable;
 }
 
@@ -192,14 +192,43 @@ mobile-starlight-toc .display-current {
     }
 }
 
-.sidebar-pane {
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--sl-color-gray-3) 70%, transparent) transparent;
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
 }
 
-@media (hover: hover) {
-    .sidebar-pane:hover {
-        scrollbar-color: var(--sl-color-gray-3) transparent;
+::-webkit-scrollbar-track {
+    border-inline-start: 1px solid var(--sl-color-gray-5);
+    background: var(--sl-color-gray-6);
+}
+
+.sidebar-pane::-webkit-scrollbar-track {
+    border: 0;
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background: var(--scrollbar-thumb) padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--sl-color-accent);
+}
+
+::-webkit-scrollbar-thumb:active {
+    background-color: var(--sl-color-accent-high);
+}
+
+::-webkit-scrollbar-corner {
+    background: var(--sl-color-gray-6);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    :root {
+        scrollbar-color: var(--scrollbar-thumb) var(--sl-color-gray-6);
+        scrollbar-width: thin;
     }
 }
 
