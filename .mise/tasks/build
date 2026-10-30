@@ -4,5 +4,5 @@
 set -euo pipefail
 
 sed \
-    -e 's|](docs/|](https://raw.githubusercontent.com/stefanionescu/gspot/main/docs/|g' \
+    -e 's|"docs/public/|"https://generativespotting.com/|g' \
     README.md >packages/cli/README.md
