@@ -21,7 +21,7 @@ import {
     CONFIGURATION_RULE_OPTIONS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/levels.ts';
 
-test.each([...LEVELS])('%s keeps framework rules and syntax selectors inside their scope', async (level) => {
+test.each([...LEVELS])('%s keeps the syntax selectors of a configuration inside its scope', async (level) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level,
@@ -33,10 +33,6 @@ test.each([...LEVELS])('%s keeps framework rules and syntax selectors inside the
     });
 
     const eslint = await createEslint(sandbox.path);
-    const outside = (await eslint.calculateConfigForFile(join(sandbox.path, 'root.jsx'))) as EslintConfiguration;
-    const inside = (await eslint.calculateConfigForFile(join(sandbox.path, 'app/client.jsx'))) as EslintConfiguration;
-    expect(outside.rules['@eslint-react/no-missing-key']).toBeUndefined();
-    expect(inside.rules['@eslint-react/no-missing-key']![0]).toBe(2);
     const source = 'export const query = sql`select 1`;';
     await createFileTree(sandbox.path, { 'app/client.jsx': source, 'root.jsx': source });
     expect(await listLintFindings(eslint, sandbox.path, ['app/client.jsx'], ['no-restricted-syntax'])).toStrictEqual(

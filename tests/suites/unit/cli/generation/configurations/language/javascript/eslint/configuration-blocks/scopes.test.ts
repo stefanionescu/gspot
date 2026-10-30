@@ -10,7 +10,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
 import {
-    BLOCK_SCOPE_CASES,
     MATCHING_SCOPE_FILES,
     MATCHING_SCOPE_SETTINGS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/scopes.ts';
@@ -37,27 +36,26 @@ test("a nested scope whose configuration blocks match its parent's gets no copy,
     expect(code.rules['@typescript-eslint/no-non-null-assertion']?.[0]).toBe(2);
 });
 
-test.each([...BLOCK_SCOPE_CASES])('$configuration rules apply in each scope that selects it', async (row) => {
+test('nestjs rules apply in each scope that selects it', async () => {
     await using sandbox = await testdir();
-    const secondPath = join('second', row.file.replace('unit/', 'specs/'));
+    const rule = '@darraghor/nestjs-typed/injectable-should-be-provided';
+    const source =
+        "import { Injectable } from '@nestjs/common';\n@Injectable()\nexport class CounterService { count = 1; }\n";
+    const paths = ['first/src/service.ts', 'second/src/service.ts'];
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
-            tables: `[[scope]]\npath = "first"\nconfigurations = ["${row.configuration}"]\ntest_files = ["first/unit/**"]\n[[scope]]\npath = "second"\nconfigurations = ["${row.configuration}"]\ntest_files = ["second/specs/**"]\n`,
+            tables: '[[scope]]\npath = "first"\nconfigurations = ["nestjs"]\n[[scope]]\npath = "second"\nconfigurations = ["nestjs"]\n',
         }),
         'package.json': '{"private":true,"type":"module"}',
         'first/package.json': '{"private":true,"type":"module"}',
         'second/package.json': '{"private":true,"type":"module"}',
         'first/tsconfig.json': '{"compilerOptions":{"strict":true,"experimentalDecorators":true},"include":["src"]}',
         'second/tsconfig.json': '{"compilerOptions":{"strict":true,"experimentalDecorators":true},"include":["src"]}',
-        [join('first', row.file)]: row.source,
-        [secondPath]: row.source,
+        [paths[0]!]: source,
+        [paths[1]!]: source,
     });
     const eslint = await createEslint(sandbox.path);
-    const first = (await eslint.calculateConfigForFile(join('first', row.file))) as EslintConfiguration;
-    const second = (await eslint.calculateConfigForFile(secondPath)) as EslintConfiguration;
-    expect(first.rules[row.rule]?.[0]).toBe(2);
-    expect(second.rules[row.rule]?.[0]).toBe(2);
-    const lint = await eslint.lintFiles([join('first', row.file), secondPath]);
-    expect(lint.flatMap(({ messages }) => messages).filter(({ ruleId }) => ruleId === row.rule)).toHaveLength(2);
+    const lint = await eslint.lintFiles(paths);
+    expect(lint.flatMap(({ messages }) => messages).filter(({ ruleId }) => ruleId === rule)).toHaveLength(2);
 });

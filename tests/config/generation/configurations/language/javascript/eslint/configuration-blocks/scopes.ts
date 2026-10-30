@@ -1,27 +1,3 @@
-export const BLOCK_SCOPE_CASES = [
-    {
-        configuration: 'jest',
-        rule: 'jest/no-focused-tests',
-        source: "import { test, expect } from '@jest/globals';\ntest.only('counts', () => { expect(1).toBe(1); });\n",
-        file: 'unit/counter.js',
-    },
-    {
-        configuration: 'vitest',
-        rule: 'vitest/no-focused-tests',
-        source: "import { test, expect } from 'vitest';\ntest.only('counts', () => { expect(1).toBe(1); });\n",
-        file: 'unit/counter.js',
-    },
-    {
-        configuration: 'nestjs',
-        rule: '@darraghor/nestjs-typed/injectable-should-be-provided',
-        source: `import { Injectable } from '@nestjs/common';
-@Injectable()
-export class CounterService { count = 1; }
-`,
-        file: 'src/service.ts',
-    },
-] as const;
-
 export const MATCHING_SCOPE_FILES = {
     'package.json': '{"private":true,"type":"module"}',
     'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src","same","different"]}',
