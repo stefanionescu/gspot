@@ -88,7 +88,7 @@ function formatUnknownTableField(segments: KeyPath, key: string): string | undef
     const allowed = new Intl.ListFormat('en', { type: 'conjunction' }).format(fields);
     const path = segments.filter((segment) => typeof segment === 'string').join('.');
     const name = typeof segments.at(-1) === 'number' ? `[[${path}]]` : `[${path}]`;
-    return `${key} is not a field of ${name}. The allowed fields are ${allowed}.${formatSimilarNames(key, fields)}`;
+    return `There is no setting called ${path}.${key}. The settings of ${name} are ${allowed}.${formatSimilarNames(key, fields)}`;
 }
 
 function formatUnknownLimit(
@@ -97,7 +97,7 @@ function formatUnknownLimit(
     key: string,
 ): string | undefined {
     if (table === 'limits' && typeof language === 'string')
-        return `limits.${language}.${key} is not a limit any check reads. The limits that ${language} reads are ${formatCodeList(Object.keys(limitsSchema.shape[language as LimitLanguage].unwrap().shape))}.`;
+        return `There is no setting called limits.${language}.${key}. The limits that ${language} reads are ${formatCodeList(Object.keys(limitsSchema.shape[language as LimitLanguage].unwrap().shape))}.`;
     return undefined;
 }
 
@@ -112,7 +112,7 @@ function formatUnknownKey(segments: KeyPath, key: string): string {
         return `Write [[${recordName}]] at the root.${fields[recordName]?.includes('paths') === true ? RECORD_PATHS_MESSAGE : ''}`;
     const recordMessage = formatUnknownTableField(segments, key);
     if (recordMessage !== undefined) return recordMessage;
-    return `${key} is not a gspot.toml setting.${formatSimilarKeys(segments, key)} See ${SETTINGS_REFERENCE_URL} for every key.`;
+    return `There is no setting called ${key}.${formatSimilarKeys(segments, key)} See ${SETTINGS_REFERENCE_URL} for every setting.`;
 }
 
 function listConfigurationConflicts(settings: Settings): SettingsError[] {

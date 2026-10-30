@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
+import { CODE_MARK } from '#cli/config/main.ts';
 import type { Session } from '#cli/types/session.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -117,21 +118,21 @@ function formatCheckExplanation(
     const lines = [
         `${check.id}  (${source}, ${check.stage} stage, ${check.level} level)`,
         '',
-        `What it looks for: ${check.summary}`,
-        `Why it matters: ${check.why}`,
-        `What to do: ${check.help}`,
+        `What it looks for: ${check.summary.replaceAll(CODE_MARK, '')}`,
+        `Why it matters: ${check.why.replaceAll(CODE_MARK, '')}`,
+        `What to do: ${check.help.replaceAll(CODE_MARK, '')}`,
         ...(check.when?.setting === undefined ? [] : [`Required setting: ${check.when.setting}`]),
         ...Object.entries(minVersions).map(([name, version]) => `Needs ${name} ${version} or newer`),
         '',
         `Turn it off for some paths: gspot ignore ${quoteArgument(check.id)} --paths "<glob>" --reason "<why>"`,
         ...(hasRuleOutput(check)
-            ? [`Turn one of its rules off: gspot ignore ${quoteArgument(check.id)} --rule <rule> --reason "<why>"`]
+            ? [`Turn one of its lint rules off: gspot ignore ${quoteArgument(check.id)} --rule <rule> --reason "<why>"`]
             : []),
         ...(check.run_in_copy === true ? [RUN_IN_COPY_MESSAGE] : []),
         ...(settings.length === 0
             ? []
             : [`Settings that change it: ${settings.join(', ')} (gspot set <setting> <value>)`]),
-        ...(rules.length === 0 ? [] : [`Rules that state it: ${rules.join(', ')}`]),
+        ...(rules.length === 0 ? [] : [`Rule files that state it: ${rules.join(', ')}`]),
         ...formatRepositoryUse(session, commandCheck, configuration),
     ];
     return `${lines.join('\n')}\n`;

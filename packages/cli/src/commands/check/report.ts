@@ -1,3 +1,4 @@
+import { CODE_MARK } from '#cli/config/main.ts';
 import { LINE_BREAK } from '#cli/config/text.ts';
 import { EVERY_CHECK } from '#cli/config/ignores.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
@@ -50,7 +51,7 @@ function formatFinding(finding: Finding, next?: Finding): string[] {
             .join(' ')}`,
     ];
     if (finding.help !== undefined && finding.help !== '' && next?.help !== finding.help)
-        lines.push(`  ${getColors().dim('help:')} ${finding.help}`);
+        lines.push(`  ${getColors().dim('help:')} ${finding.help.replaceAll(CODE_MARK, '')}`);
     return lines;
 }
 

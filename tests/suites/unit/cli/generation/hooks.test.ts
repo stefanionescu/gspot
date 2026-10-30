@@ -116,7 +116,7 @@ test('a hook says how to install mise when mise is missing', async () => {
         stdin: '',
     });
     expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stderr).toBe('Install mise, then run: mise install.\n');
+    expect(result.stderr).toBe('Install mise, then run mise install.\n');
 });
 
 test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, and the other LFS hooks run git lfs', async () => {

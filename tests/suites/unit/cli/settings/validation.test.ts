@@ -54,7 +54,7 @@ test('can_import lists exact rules and names only declared rules', () => {
             BOUNDARY_IMPORT_RULES.replace('can_import = ["storage"]', 'can_import = ["missing"]'),
             sandbox.path,
         ),
-    ).toThrow('import_rule.1.can_import.0: There is no import rule named missing.');
+    ).toThrow('import_rule.1.can_import.0: There is no import rule called missing.');
 });
 
 test('an ignore without check needs paths and takes no rule', () => {
@@ -111,7 +111,7 @@ test.each(['ordinary', 'constructor', 'prototype', 'toString'])(
                 `configurations = ["commits"]\n[tools.commitlint.rules]\n"${key}" = ["invalid"]\n`,
                 sandbox.path,
             ),
-        ).toThrow(`tools.commitlint.rules.${key}: Unknown commitlint rule. Accepted rules:`);
+        ).toThrow(`tools.commitlint.rules.${key}: There is no commitlint rule called`);
     },
 );
 
@@ -127,7 +127,7 @@ test.each([...REFUSED_RULE_OPTIONS])(
 test.each(['line-length', 'foo-bar'])('yamllint refuses options for an unsupported rule: %s', (rule) => {
     using sandbox = createTemporaryFolder();
     expect(() => readSettings(`[tools.yamllint.rules]\n${rule} = { max = 100 }\n`, sandbox.path)).toThrow(
-        `tools.yamllint.rules.${rule}: Unknown yamllint rule. Accepted rules:`,
+        `tools.yamllint.rules.${rule}: There is no yamllint rule called`,
     );
 });
 

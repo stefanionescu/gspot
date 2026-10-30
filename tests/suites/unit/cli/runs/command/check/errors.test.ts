@@ -113,7 +113,7 @@ test('a command check whose config file is missing errors before it runs and nam
     });
     expect(result).toMatchObject({
         status: 'error',
-        note: 'The config file .gspot/configurations/general/format/prettier.json is missing. Run gspot apply.',
+        note: 'The generated file .gspot/configurations/general/format/prettier.json is missing. Run gspot apply.',
         findings: [],
     });
 });

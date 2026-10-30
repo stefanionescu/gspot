@@ -27,7 +27,7 @@ function formatUnknownSubject(session: Session | undefined, subject: string): st
         ) ?? []),
     ];
     const similar = formatSimilarNames(subject, [...new Set(subjects)]);
-    return `gspot cannot explain ${subject}. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).${similar}`;
+    return `There is no check, lint rule, configuration, setting, or file called ${subject}. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).${similar}`;
 }
 
 async function explainSlashed(

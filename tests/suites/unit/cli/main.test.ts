@@ -76,7 +76,7 @@ test('an unknown command exits 2 and names the closest command', async () => {
     expect(result).toStrictEqual({
         code: 2,
         stdout: '',
-        stderr: 'Unknown command checks. Did you mean check? Run gspot --help to see the commands.\n',
+        stderr: 'There is no command called checks. Did you mean check? Run gspot --help to see the commands.\n',
     });
 });
 

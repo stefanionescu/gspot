@@ -128,7 +128,7 @@ test('add without names exits 2 and writes nothing', async () => {
     expect(result).toStrictEqual({
         code: 2,
         stdout: '',
-        stderr: "Missing required argument 'configuration'\n",
+        stderr: "Missing required argument 'configuration'. Run gspot add --help to see its arguments and options.\n",
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

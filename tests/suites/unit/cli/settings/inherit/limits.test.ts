@@ -19,9 +19,9 @@ test('limits that no check reads are refused', async () => {
     );
     expect(errors).toHaveLength(2);
     expect(errors[0]).toStartWith(
-        'gspot.toml:5: limits.bash.cyclomatic_complexity: limits.bash.cyclomatic_complexity is not a limit any check reads. The limits that bash reads are ',
+        'gspot.toml:5: limits.bash.cyclomatic_complexity: There is no setting called limits.bash.cyclomatic_complexity. The limits that bash reads are ',
     );
     expect(errors[1]).toBe(
-        'gspot.toml:3: limits.sql.function_lines: limits.sql.function_lines is not a limit any check reads. The limits that sql reads are file_lines.',
+        'gspot.toml:3: limits.sql.function_lines: There is no setting called limits.sql.function_lines. The limits that sql reads are file_lines.',
     );
 });

@@ -31,7 +31,8 @@ const commitlintRuleNames = [...Object.keys(COMMITLINT_RULES), 'type-enum', 'sco
 
 const commitlintValuesSchema = z.record(
     z.string().refine((name) => commitlintRuleNames.includes(name), {
-        error: `Unknown commitlint rule. Accepted rules: ${commitlintRuleNames.join(', ')}.`,
+        error: (issue) =>
+            `There is no commitlint rule called ${String(issue.input)}. The commitlint rules are ${commitlintRuleNames.join(', ')}.`,
     }),
     z.tuple([z.enum(RULE_CONDITIONS), z.json().optional()]),
 ) satisfies z.ZodType<TableSettings<'tools.commitlint'>['rules']>;
@@ -58,7 +59,8 @@ const yamlIndentationSchema = yamlOptionsSchema.extend({
 }) satisfies z.ZodType<NonNullable<NonNullable<WrittenTools['yamllint']>['rules']>['indentation']>;
 
 const yamlRuleNameSchema = z.string().refine((name) => (YAMLLINT_RULES as readonly string[]).includes(name), {
-    error: `Unknown yamllint rule. Accepted rules: ${YAMLLINT_RULES.join(', ')}.`,
+    error: (issue) =>
+        `There is no yamllint rule called ${String(issue.input)}. The yamllint rules are ${YAMLLINT_RULES.join(', ')}.`,
 }) satisfies z.ZodType<string>;
 
 const yamlRulesSchema = buildRuleTableSchema(

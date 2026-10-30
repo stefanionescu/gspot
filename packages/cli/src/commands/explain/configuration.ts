@@ -67,7 +67,7 @@ export function explainConfiguration(session: Session | undefined, name: string)
             values: facts.checks.filter((check) => check.stage === stage).map((check) => check.check),
         })),
         { label: 'Settings', values: facts.settings },
-        { label: 'Rules', values: facts.rules },
+        { label: 'Rule files', values: facts.rules },
     ];
     const lines = [
         `${facts.title} (${facts.group} configuration)`,

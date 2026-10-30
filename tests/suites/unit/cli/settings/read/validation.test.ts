@@ -75,7 +75,7 @@ test('the release age can be written at the root and cannot be written in a scop
     expect(
         validateSettingsText('[[scope]]\npath = "api"\n[scope.dependencies]\nmin_release_age_days = 30\n'),
     ).toStrictEqual([
-        'gspot.toml:4: scope.0.dependencies.min_release_age_days: min_release_age_days is not a field of [scope.dependencies]. The allowed fields are allowed_registries and bun_scanner.',
+        'gspot.toml:4: scope.0.dependencies.min_release_age_days: There is no setting called scope.dependencies.min_release_age_days. The settings of [scope.dependencies] are allowed_registries and bun_scanner.',
     ]);
 });
 
@@ -103,7 +103,7 @@ test('a list without its required reason names the inline value and set command'
 
 test('settings of an unselected language are refused while settings of automatic general configurations stay valid', () => {
     expect(validateSettingsText('configurations = ["bash"]\n[tools.sqlfluff]\ndialect = "sqlite"\n')).toStrictEqual([
-        'gspot.toml:3: tools.sqlfluff.dialect: No selected configuration has the setting tools.sqlfluff.dialect. No setting exists under that table. Run gspot list settings to see every one.',
+        'gspot.toml:3: tools.sqlfluff.dialect: There is no setting called tools.sqlfluff.dialect in the selected configurations. No setting exists under that table. Run gspot list settings to see every one.',
     ]);
     expect(validateSettingsText('[tools.commitlint]\ntypes = ["feat", "fix"]\n')).toStrictEqual([]);
 });
@@ -156,7 +156,7 @@ test('a limit looser than the default needs a reason, and a tighter one does not
             name: 'GspotError',
             code: 'settings',
             message:
-                'gspot.toml:3: limits.file_lines: 1000 is looser than the shipped default 300, so it needs a reason. Run: gspot set limits.file_lines 1000 --reason "<why>"',
+                'gspot.toml:3: limits.file_lines: 1000 is looser than the shipped default 300, so it needs a reason. Run gspot set limits.file_lines 1000 --reason "<why>"',
         }),
     );
     expect(validateSettingsText('configurations = ["bash"]\n[limits]\nfile_lines = 100\n')).toStrictEqual([]);

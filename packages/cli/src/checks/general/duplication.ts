@@ -49,7 +49,7 @@ export async function checkDuplicationJscpd(session: CheckSession, planned: Plan
     const generatedPath = getConfigFilePath(session, planned, JSCPD_TOOL);
     const generated = files.read(generatedPath);
     if (generated === undefined)
-        throw new GspotError('tool', `The config file ${generatedPath} is missing. Run gspot apply.`);
+        throw new GspotError('tool', `The generated file ${generatedPath} is missing. Run gspot apply.`);
     const shipped = parseJsonFile(generatedPath, generated.bytes.toString('utf8'));
     const configFile = join(workFolder.path, JSCPD_CONFIG_FILE);
     writeFileSync(configFile, JSON.stringify({ ...shipped, path: [...owned].map((path) => join(session.root, path)) }));

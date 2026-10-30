@@ -3,7 +3,7 @@ export const COMMAND_HELP = {
         summary: 'Find what this repository needs, then write gspot.toml and the generated files',
         group: 'Set up a repository:',
         description:
-            'Find the configurations this repository needs and print a plan. When you accept the plan, gspot writes gspot.toml, the config files, the rules for coding agents, the Git hooks. CI starts off; turn it on with gspot set ci.enabled true.\n\ninit deletes or replaces the config files that gspot replaces. Git must hold each one unchanged at HEAD; read the old one with git show HEAD:<path>. init installs no tools and runs no checks. Run gspot install next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
+            'Find the configurations this repository needs and print a plan. When you accept the plan, gspot writes gspot.toml and the generated files: the tool settings, the rule files for coding agents, and the Git hooks. CI starts off; turn it on with gspot set ci.enabled true.\n\ninit deletes or replaces the config files that gspot replaces. Git must hold each one unchanged at HEAD; read the old one with git show HEAD:<path>. init installs no tools and runs no checks. Run gspot install next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
         arguments: {},
         options: {
             '--from <file>': "Start from another repository's gspot.toml",
@@ -24,13 +24,13 @@ export const COMMAND_HELP = {
         summary: 'Install the tools and turn on the Git hooks in this clone',
         group: 'Set up a repository:',
         description:
-            'Install the tools that gspot.toml needs, at the pinned versions:\n  - npm tools into .gspot/node_modules, from the lockfile of your package manager in .gspot/, such as .gspot/package-lock.json\n  - Python tools into .gspot/.venv, from .gspot/uv.lock\n  - programs with mise, from .gspot/mise.toml (mise reads it only for the mise commands of gspot, and only while it is the file that gspot writes)\n\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\n\ninstall also sets the Git setting core.hooksPath to .gspot/hooks, or removes it when you set hooks.enabled to false. When another hook manager runs the hooks, install prints the line to add to each hook instead. Without mise, install names the programs that you must install yourself.',
+            'Install the tools that gspot.toml needs, at the pinned versions:\n  - npm tools into .gspot/node_modules, from the lockfile of your package manager in .gspot/, such as .gspot/package-lock.json\n  - Python tools into .gspot/.venv, from .gspot/uv.lock\n  - the other tools with mise, from .gspot/mise.toml (mise reads it only for the mise commands of gspot, and only while it is the file that gspot writes)\n\ninstall writes each missing or outdated lockfile. Commit the lockfiles.\n\ninstall also sets the Git setting core.hooksPath to .gspot/hooks, or removes it when you set hooks.enabled to false. When another hook manager runs the hooks, install prints the line to add to each hook instead. Without mise, install names the tools that you must install yourself.',
         arguments: {},
         options: {
             '--json': 'Print the result as JSON',
         },
         exitCodes: [
-            ['0', 'The tools are installed, or the missing programs are named.'],
+            ['0', 'The tools are installed, or the missing tools are named.'],
             ['2', 'install could not finish. The error names the step that failed.'],
             ['130, 143', 'Installation stopped because of Ctrl-C or SIGTERM.'],
         ],
@@ -40,7 +40,7 @@ export const COMMAND_HELP = {
         summary: 'Write the generated files again from gspot.toml',
         group: 'Set up a repository:',
         description:
-            'Write the config files, the rules, the Git hooks, and the CI workflow again from gspot.toml. apply replaces the generated files that gspot owns.\n\napply does not change gspot.toml and installs no tools. Run gspot install when apply says the tools changed.',
+            'Write the generated files again from gspot.toml: the tool settings, the rule files, the Git hooks, and the CI workflow. apply replaces the generated files that gspot owns.\n\napply does not change gspot.toml and installs no tools. Run gspot install when apply says the tools changed.',
         arguments: {},
         options: {
             '--dry-run': 'Print the generated files that would change, with their differences, and write nothing',
@@ -120,7 +120,7 @@ export const COMMAND_HELP = {
         summary: 'Change a setting',
         group: 'Change gspot.toml:',
         description:
-            'Change one setting in gspot.toml, then write the generated files again. gspot checks the value first.\n\ngspot replaces the value. For a list, give every item: gspot replaces the whole list, so gspot.toml holds exactly the items you typed, and the same command always writes the same list. To delete single items, run gspot unset <setting> <items...>. For a table, give one TOML inline table, and gspot adds its keys.\n\nFor an ignore, run gspot ignore <check> --reason "<why>". Write other records, such as [[command_check]], by hand.',
+            'Change one setting in gspot.toml, then write the generated files again. gspot checks the value first.\n\ngspot replaces the value. For a list, give every item: gspot replaces the whole list, so gspot.toml holds exactly the items you typed, and the same command always writes the same list. To remove single items, run gspot unset <setting> <items...>. For a table, give one TOML inline table, and gspot adds its keys.\n\nFor an ignore, run gspot ignore <check> --reason "<why>". Write other records, such as [[command_check]], by hand.',
         arguments: {
             setting: 'The setting name, such as limits.file_lines. Run gspot list settings to see them',
             values: 'The new value: every item of a list, or the table keys to add',
@@ -137,20 +137,20 @@ export const COMMAND_HELP = {
         example: 'gspot set level all',
     },
     unset: {
-        summary: 'Delete your value, so the default applies again',
+        summary: 'Remove your value, so the default applies again',
         group: 'Change gspot.toml:',
         description:
-            'Delete your value of a setting from gspot.toml, then write the generated files again. The root value or the default applies again.\n\nWith items, delete only those list items or table keys.',
+            'Remove your value of a setting from gspot.toml, then write the generated files again. The root value or the default applies again.\n\nWith items, remove only those list items or table keys.',
         arguments: {
             setting: 'The setting name, such as naming.banned_words',
-            items: 'List items or table keys to delete (default: the whole value)',
+            items: 'List items or table keys to remove (default: the whole value)',
         },
         options: {
             '--scope <path>': 'Change it in this scope only (default: the root)',
             '--json': 'Print the result as JSON',
         },
         exitCodes: [
-            ['0', 'The value was deleted, or there was no value to delete.'],
+            ['0', 'The value was removed, or there was no value to remove.'],
             ['2', 'The setting is not valid, or unset could not finish.'],
         ],
         example: 'gspot unset level',
@@ -159,7 +159,7 @@ export const COMMAND_HELP = {
         summary: 'Turn off a check, or one lint rule, with a reason',
         group: 'Change gspot.toml:',
         description:
-            'Turn off a check, or one of its lint rules, everywhere or for some paths. Without a check, the paths stay out of every check and every config file.\n\ngspot writes the ignore and your reason to gspot.toml, then writes the generated files again. Each report counts the ignores. gspot check --verbose prints them with their reasons.',
+            'Turn off a check, or one of its lint rules, everywhere or for some paths. Without a check, the paths stay out of every check and every generated file.\n\ngspot writes the ignore and your reason to gspot.toml, then writes the generated files again. Each report counts the ignores. gspot check --verbose prints them with their reasons.',
         arguments: {
             check: 'The check, such as python/ruff. Leave it out to keep --paths out of every check',
         },
@@ -178,20 +178,20 @@ export const COMMAND_HELP = {
             'gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results."',
     },
     unignore: {
-        summary: 'Delete ignores',
+        summary: 'Remove ignores',
         group: 'Change gspot.toml:',
         description:
-            'Delete the ignores of a check from gspot.toml, then write the generated files again.\n\nWith --rule, delete only the ignores of that lint rule. With --paths, take those paths out of the ignores. An ignore without paths covers every path, so --paths cannot narrow it. unignore keeps that ignore and says so.',
+            'Remove the ignores of a check from gspot.toml, then write the generated files again.\n\nWith --rule, remove only the ignores of that lint rule. With --paths, take those paths out of the ignores. An ignore without paths covers every path, so --paths cannot narrow it. unignore keeps that ignore and says so.',
         arguments: {
             check: 'The check, such as python/ruff. Leave it out to change the ignores that cover every check',
         },
         options: {
-            '--rule <rule>': 'Delete only the ignores of this lint rule',
+            '--rule <rule>': 'Remove only the ignores of this lint rule',
             '--paths <path...>': 'Take only these paths, relative to the current folder, out of the ignores',
             '--json': 'Print the result as JSON',
         },
         exitCodes: [
-            ['0', 'The ignores were deleted or changed, or no ignore matched.'],
+            ['0', 'The ignores were removed or changed, or no ignore matched.'],
             ['2', 'An argument is not valid, or unignore could not finish.'],
         ],
         example: 'gspot unignore javascript/eslint --rule no-console',

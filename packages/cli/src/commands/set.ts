@@ -2,6 +2,7 @@ import { setKey } from '#cli/settings/edit.ts';
 import { parse } from '@decimalturn/toml-patch';
 import { GspotError } from '#cli/system/errors.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
+import { COMMAND_SUGGESTION } from '#cli/config/main.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
@@ -178,7 +179,9 @@ export function registerSet(program: Command, onResult: CommandCompletion): void
         .option(SCOPE_OPTION, COMMAND_HELP.set.options[SCOPE_OPTION], stripTrailingSlashes)
         .exitOverride((error) => {
             if (error.code !== 'commander.unknownOption') throw error;
-            throw new CommanderError(error.exitCode, error.code, `${error.message}. ${DASH_VALUE_HELP}`);
+            const suggestion = COMMAND_SUGGESTION.exec(error.message)?.[0] ?? '';
+            const message = `${error.message.replace(suggestion, '').trimEnd()}. ${DASH_VALUE_HELP} ${suggestion}`;
+            throw new CommanderError(error.exitCode, error.code, message);
         })
         .action(async (setting, values, flags) => {
             onResult(

@@ -62,7 +62,8 @@ export async function checkJavascriptTsc(session: CheckSession, planned: Planned
         return { ...buildBaseResult(planned, session), fileCount: 0 };
     const target = getConfigFilePath(session, planned, extractConfigFileName(JSCONFIG_FILE));
     const generated = readTsconfig(session.root, join(session.root, target), session.reads);
-    if (generated === undefined) throw new GspotError('tool', `The config file ${target} is missing. Run gspot apply.`);
+    if (generated === undefined)
+        throw new GspotError('tool', `The generated file ${target} is missing. Run gspot apply.`);
     const project = {
         ...generated,
         ...buildScopeCompilerProject(session, scope, generated),

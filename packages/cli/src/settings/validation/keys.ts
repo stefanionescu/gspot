@@ -21,7 +21,7 @@ function formatLooseningError(key: string, written: WrittenSetting, shipped: unk
     const scopeFlag = scopePath === '' ? '' : ` --scope ${quoteArgument(scopePath)}`;
     const value = JSON.stringify(written.value);
     const argument = typeof written.value === 'string' ? written.value : value;
-    return `${value} is looser than the shipped ${shown}, so it needs a reason. Run: gspot set ${quoteArgument(key)} ${quoteArgument(argument)}${scopeFlag} --reason "<why>"`;
+    return `${value} is looser than the shipped ${shown}, so it needs a reason. Run gspot set ${quoteArgument(key)} ${quoteArgument(argument)}${scopeFlag} --reason "<why>"`;
 }
 
 function validateWrittenReason(
@@ -96,8 +96,8 @@ function formatUnknownLimitSetting(key: string, settings: string[]): string {
     const limits = settings.filter((name) => name.startsWith('limits.'));
     const near = selectSimilarNames(key, limits);
     return near.length === 0
-        ? `${key} is not a limit any check reads. The limits that exist are ${formatCodeList(limits.map((name) => name.slice('limits.'.length)))}.`
-        : `${key} is not a limit. Did you mean ${formatCodeList(near)}?`;
+        ? `There is no setting called ${key}. The limits that exist are ${formatCodeList(limits.map((name) => name.slice('limits.'.length)))}.`
+        : `There is no setting called ${key}. Did you mean ${formatCodeList(near)}?`;
 }
 
 /**
@@ -122,7 +122,7 @@ export function formatUnknownSetting(availableSettings: AvailableSettings, key: 
     const rest = keys.filter((each) => !near.includes(each));
     const suggestions = [...near, ...rest];
     const place = prefix === '' ? AT_TOP_LEVEL : UNDER_TABLE;
-    return `No selected configuration has the setting ${key}. ${
+    return `There is no setting called ${key} in the selected configurations. ${
         suggestions.length === 0
             ? `No setting exists ${place}.`
             : `The settings that exist ${place} are ${formatCodeList(suggestions)}.`

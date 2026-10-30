@@ -16,7 +16,7 @@ extensions = [".d.ts"]
 filenames = ["wrangler.toml", "wrangler.json", "wrangler.jsonc", "_headers", "_redirects"]
 
 [[tool]]
-install_help = "Run: npm install --save-dev wrangler"
+install_help = "Run npm install --save-dev wrangler."
 min_version = "3.78.3"
 name = "wrangler"
 npm = "wrangler"

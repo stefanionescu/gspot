@@ -96,7 +96,7 @@ export async function prepareSettingsEdit(cwd: string, scopePath?: string): Prom
     if (!session.scopes.some((scope) => scope.path === path))
         throw new GspotError(
             'arguments',
-            `There is no project scope ${path}. Name a project folder or a written scope.`,
+            `There is no scope called ${path}. Name a project folder or a written scope.`,
         );
     const scopeTable = getScopeTable(input.table, path);
     return { root, edit: input, settings, reads, listing, session, scope: path, scopeTable };

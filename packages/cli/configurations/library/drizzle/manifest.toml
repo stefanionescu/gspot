@@ -19,7 +19,7 @@ rule_prefix = "drizzle"
 version = "0.2.3"
 
 [[tool]]
-install_help = "Run: npm install --save-dev drizzle-kit"
+install_help = "Run npm install --save-dev drizzle-kit."
 min_version = "0.21.0"
 name = "drizzle-kit"
 npm = "drizzle-kit"

@@ -70,7 +70,7 @@ export const SET_REFUSALS = [
     [
         'an undeclared scope',
         ['set', 'limits.file_lines', '100', '--scope', 'web'],
-        'There is no project scope web. Name a project folder or a written scope.',
+        'There is no scope called web. Name a project folder or a written scope.',
     ],
     [
         'an invalid level',
@@ -121,12 +121,12 @@ export const UNKNOWN_SETTING_KEYS = [
     {
         key: 'tools.eslint.unknown_key',
         message:
-            'No selected configuration has the setting tools.eslint.unknown_key. No setting exists under that table.',
+            'There is no setting called tools.eslint.unknown_key in the selected configurations. No setting exists under that table.',
     },
     {
         key: 'tools.v8r.unknown_key',
         message:
-            'No selected configuration has the setting tools.v8r.unknown_key. The settings that exist under that table are schema.',
+            'There is no setting called tools.v8r.unknown_key in the selected configurations. The settings that exist under that table are schema.',
     },
 ] as const;
 

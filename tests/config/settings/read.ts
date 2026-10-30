@@ -85,7 +85,7 @@ export const KEY_PATH_CASES = [
         },
         correction: ['rulez', 'rules'],
         where: [
-            'gspot.toml:4: tools.eslint.override.0.rulez: rulez is not a field of [[tools.eslint.override]]. The allowed fields are paths, rules, and runtime. Did you mean rules?',
+            'gspot.toml:4: tools.eslint.override.0.rulez: There is no setting called tools.eslint.override.rulez. The settings of [[tools.eslint.override]] are paths, rules, and runtime. Did you mean rules?',
         ],
     },
 ] as const;
@@ -99,7 +99,7 @@ path = "api"
 kitz = []
 `,
         message:
-            'gspot.toml:4: scope.0.kitz: kitz is not a field of [[scope]]. The allowed fields are path, configurations, ',
+            'gspot.toml:4: scope.0.kitz: There is no setting called scope.kitz. The settings of [[scope]] are path, configurations, ',
         correction: ['kitz', 'configurations'] as const,
     },
     {
@@ -108,7 +108,7 @@ kitz = []
 bun_scanners = "@socketsecurity/bun-security-scanner"
 `,
         message:
-            'gspot.toml:2: dependencies.bun_scanners: bun_scanners is not a field of [dependencies]. The allowed fields are min_release_age_days, allowed_registries, and bun_scanner. Did you mean bun_scanner?',
+            'gspot.toml:2: dependencies.bun_scanners: There is no setting called dependencies.bun_scanners. The settings of [dependencies] are min_release_age_days, allowed_registries, and bun_scanner. Did you mean bun_scanner?',
         correction: ['bun_scanners', 'bun_scanner'] as const,
     },
 ] as const;
@@ -157,7 +157,7 @@ export const SCOPE_CONFIGURATION_SETTINGS = [
         name: 'a sibling configuration does not expose its settings to another scope',
         text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n[scope.tools.sqlfluff]\ndialect = "sqlite"\n',
         messages: [
-            'gspot.toml:8: scope.1.tools.sqlfluff.dialect: No selected configuration has the setting tools.sqlfluff.dialect. No setting exists under that table. Run gspot list settings to see every one.',
+            'gspot.toml:8: scope.1.tools.sqlfluff.dialect: There is no setting called tools.sqlfluff.dialect in the selected configurations. No setting exists under that table. Run gspot list settings to see every one.',
         ],
     },
     {
@@ -177,18 +177,19 @@ export const UNKNOWN_TABLE_FIELDS = [
         text: '[format]\nlevel = true\n',
         path: ['format', 'level'],
         message:
-            'level is not a field of [format]. The allowed fields are indent_style, indent_width, print_width, line_ending, final_newline, quotes, trailing_commas, semicolons, and override.',
+            'There is no setting called format.level. The settings of [format] are indent_style, indent_width, print_width, line_ending, final_newline, quotes, trailing_commas, semicolons, and override.',
     },
     {
         text: '[[scope]]\npath = "app"\n[scope.format]\nlevel = true\n',
         path: ['scope', 0, 'format', 'level'],
         message:
-            'level is not a field of [scope.format]. The allowed fields are indent_style, indent_width, print_width, line_ending, final_newline, quotes, trailing_commas, and semicolons.',
+            'There is no setting called scope.format.level. The settings of [scope.format] are indent_style, indent_width, print_width, line_ending, final_newline, quotes, trailing_commas, and semicolons.',
     },
     {
         text: '[[tools.eslint.override]]\npaths = ["src/**"]\nlevel = true\n',
         path: ['tools', 'eslint', 'override', 0, 'level'],
-        message: 'level is not a field of [[tools.eslint.override]]. The allowed fields are paths, rules, and runtime.',
+        message:
+            'There is no setting called tools.eslint.override.level. The settings of [[tools.eslint.override]] are paths, rules, and runtime.',
     },
 ] as const;
 

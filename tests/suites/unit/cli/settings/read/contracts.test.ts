@@ -27,7 +27,7 @@ test('pytest refuses a function coverage limit because it supports line coverage
         {
             path: ['coverage', 'functions'],
             message:
-                'No selected configuration has the setting coverage.functions. The settings that exist under that table are lines. Run gspot list settings to see every one.',
+                'There is no setting called coverage.functions in the selected configurations. The settings that exist under that table are lines. Run gspot list settings to see every one.',
         },
     ]);
 });

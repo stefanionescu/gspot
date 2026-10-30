@@ -1,19 +1,31 @@
 export const ARGUMENT_ERRORS = [
-    { name: 'an unknown option', arguments: ['check', '--unknown'], message: "Unknown option '--unknown'" },
+    {
+        name: 'an unknown option',
+        arguments: ['check', '--unknown'],
+        message: "Unknown option '--unknown'. Run gspot check --help to see its arguments and options.",
+    },
     {
         name: 'a missing option argument',
         arguments: ['check', '--hook'],
-        message: "Option '--hook <hook>' argument missing",
+        message: "Option '--hook <hook>' argument missing. Run gspot check --help to see its arguments and options.",
     },
 ] as const;
 
 export const JSON_ARGUMENT_ERRORS = [
-    { name: 'no command', arguments: ['--json'], message: "Unknown option '--json'" },
-    { name: 'an unknown option', arguments: ['check', '--unknown', '--json'], message: "Unknown option '--unknown'" },
+    {
+        name: 'no command',
+        arguments: ['--json'],
+        message: "Unknown option '--json'. Run gspot --help to see the commands.",
+    },
+    {
+        name: 'an unknown option',
+        arguments: ['check', '--unknown', '--json'],
+        message: "Unknown option '--unknown'. Run gspot check --help to see its arguments and options.",
+    },
     {
         name: 'a missing option argument',
         arguments: ['check', '--json', '--hook'],
-        message: "Option '--hook <hook>' argument missing",
+        message: "Option '--hook <hook>' argument missing. Run gspot check --help to see its arguments and options.",
     },
 ] as const;
 

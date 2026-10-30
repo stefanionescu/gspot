@@ -95,7 +95,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
                 check: 'swift/swiftlint',
                 status: 'error',
                 findings: [],
-                note: `The config file ${prefix}.swiftlint.yml is missing. Run gspot apply.`,
+                note: `The generated file ${prefix}.swiftlint.yml is missing. Run gspot apply.`,
             },
         ]);
     },

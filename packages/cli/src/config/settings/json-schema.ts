@@ -41,7 +41,7 @@ export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     prose: 'The longest sentence, list item, and paragraph that the prose check accepts.',
     duplication: 'The smallest copy, in lines and tokens, that the duplication check reports.',
     xcode: 'The entitlements that an Xcode project may request.',
-    tools: 'Options for single tools, such as lint rule options. gspot writes them into the config files.',
+    tools: 'Options for single tools, such as lint rule options. gspot writes them into the generated files.',
     ignore: 'Checks and lint rules turned off for some paths or everywhere, each with a reason.',
     command_check: 'Your own commands, run as checks with a stage, a file list, and an output format.',
     structure:

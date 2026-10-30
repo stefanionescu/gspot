@@ -49,7 +49,7 @@ test('set names -- when a value reads as an option, and takes the values after -
     const refused = await runGspot(sandbox.path, ['set', 'ci.setup_command', 'bun', 'install', '--frozen-lockfile']);
     expect(refused.code).toBe(2);
     expect(refused.stderr).toBe(
-        "Unknown option '--frozen-lockfile'. To pass a value that starts with -, put -- before the values: gspot set ci.setup_command -- bun install --frozen-lockfile.\n",
+        "Unknown option '--frozen-lockfile'. To pass a value that starts with -, put -- before the values: gspot set ci.setup_command -- bun install --frozen-lockfile. Run gspot set --help to see its arguments and options.\n",
     );
     const set = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'bun', 'install', '--frozen-lockfile']);
     expect(set.code, set.stdout + set.stderr).toBe(0);

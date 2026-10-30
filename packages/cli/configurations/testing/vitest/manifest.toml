@@ -16,7 +16,7 @@ paths = ["**/vitest.config.*", "**/vitest.workspace.*"]
 prefixes = ["vitest"]
 
 [[tool]]
-install_help = "Run: npm install --save-dev vitest"
+install_help = "Run npm install --save-dev vitest."
 min_version = "2.0.0"
 name = "vitest"
 npm = "vitest"
@@ -30,7 +30,7 @@ rule_prefix = "vitest"
 version = "1.6.27"
 
 [[tool]]
-install_help = "Run: npm install --save-dev @vitest/coverage-v8"
+install_help = "Run npm install --save-dev @vitest/coverage-v8."
 kind = "library"
 name = "@vitest/coverage-v8"
 npm = "@vitest/coverage-v8"

@@ -104,7 +104,7 @@ function findMissingConfigFile(
             undefined,
     );
     if (missing === undefined) return undefined;
-    return { ...base, status: 'error', note: `The config file ${missing} is missing. Run gspot apply.` };
+    return { ...base, status: 'error', note: `The generated file ${missing} is missing. Run gspot apply.` };
 }
 
 async function runInFolder(run: FolderRun): Promise<CheckResult> {

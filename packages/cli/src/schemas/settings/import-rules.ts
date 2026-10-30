@@ -17,7 +17,7 @@ function validateImportRules(rules: ImportRule[]): SettingsError[] {
         (rule.can_import ?? []).flatMap((name, edge) =>
             names.has(name)
                 ? []
-                : { path: [index, 'can_import', edge], message: `There is no import rule named ${name}.` },
+                : { path: [index, 'can_import', edge], message: `There is no import rule called ${name}.` },
         ),
     );
 }

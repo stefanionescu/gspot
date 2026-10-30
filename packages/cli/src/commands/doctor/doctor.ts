@@ -16,6 +16,7 @@ import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { VERSION_FLAG } from '#cli/config/tools/versions.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
+import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { findMissingProjectEnvironment } from '#cli/tools/uv.ts';
 import type { HookStatus } from '#cli/types/installers/hooks.ts';
 import { buildMiseProject } from '#cli/generation/tool-projects.ts';
@@ -25,7 +26,6 @@ import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { listDetectedAdditions } from '#cli/repository/configurations.ts';
-import { compareText, formatCount, quoteArgument } from '#cli/system/text.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { findMissingBuild, listDistinctTools } from '#cli/configurations/tools.ts';
@@ -188,7 +188,7 @@ function formatDoctorReport(report: DoctorReport): string {
         `hooks: ${report.hooks}`,
         ...report.submodules.map((path) => `submodule  ${path} (contents are not read)`),
         `ci: ${report.ci}`,
-        `rules: ${formatCount(report.ruleFiles, 'file')}`,
+        `rule files: ${String(report.ruleFiles)}`,
         `gspot      ${cliPackage.version}`,
     ];
     return `${lines.join('\n')}\n`;

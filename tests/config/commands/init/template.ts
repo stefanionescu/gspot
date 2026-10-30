@@ -89,7 +89,7 @@ export const TEMPLATE_REFUSALS = [
         files: { 'key.toml': '[hooks]\nenable = true\n' },
         from: 'key.toml',
         message:
-            'key.toml:2: hooks.enable: enable is not a field of [hooks]. The allowed fields are enabled. Did you mean enabled?',
+            'key.toml:2: hooks.enable: There is no setting called hooks.enable. The settings of [hooks] are enabled. Did you mean enabled?',
     },
     {
         name: 'an unknown configuration',

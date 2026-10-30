@@ -83,7 +83,7 @@ test('vitest/coverage at a limit above 0 reports @vitest/coverage-v8 as missing 
     await rm(join(sandbox.path, 'node_modules/@vitest/coverage-v8'));
     const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/coverage', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(2);
-    const note = '@vitest/coverage-v8 is not installed. Run: npm install --save-dev @vitest/coverage-v8';
+    const note = '@vitest/coverage-v8 is not installed. Run npm install --save-dev @vitest/coverage-v8.';
     expect(checked.report.checks.map(({ scope, status, note }) => ({ scope, status, note }))).toStrictEqual([
         { scope: '', status: 'missing', note },
         { scope: 'app', status: 'missing', note },

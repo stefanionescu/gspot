@@ -79,11 +79,11 @@ export const SYNTAX_CHECK_TABLES =
 export const UNKNOWN_SUBJECT_CASES = [
     [
         'unknown/no-such-rule',
-        'gspot cannot explain unknown/no-such-rule. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).',
+        'There is no check, lint rule, configuration, setting, or file called unknown/no-such-rule. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).',
     ],
     ['./missing.sh', 'missing.sh is not a file in this repository.'],
     [
         'unknown-configuration',
-        'gspot cannot explain unknown-configuration. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).',
+        'There is no check, lint rule, configuration, setting, or file called unknown-configuration. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).',
     ],
 ] as const;

@@ -37,26 +37,31 @@ import {
     PROGRAM_EXIT_CODES,
     PROGRAM_HELP_FOOTER,
     UNKNOWN_COMMAND_NAME,
+    COMMANDS_HELP_MESSAGE,
     COMMANDER_ERROR_PREFIX,
 } from '#cli/config/main.ts';
 
-function formatArgumentError(error: CommanderError, programHelp: string): string {
+function formatArgumentError(error: CommanderError, program: Command, command: string | undefined): string {
     const { message } = error;
-    if (error.code === HELP_ERROR_CODE) return programHelp;
+    if (error.code === HELP_ERROR_CODE) return formatProgramHelp(program);
+    const suggestion = COMMAND_SUGGESTION.exec(message)?.[1];
+    const correction = suggestion === undefined ? '' : ` Did you mean ${suggestion}?`;
     if (error.code === 'commander.unknownCommand') {
         const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
-        const suggestion = COMMAND_SUGGESTION.exec(message)?.[1];
-        const correction = suggestion === undefined ? '' : ` Did you mean ${suggestion}?`;
-        return `Unknown command ${name}.${correction} Run gspot --help to see the commands.`;
+        return `There is no command called ${name}.${correction} ${COMMANDS_HELP_MESSAGE}`;
     }
-    const text = message.slice(COMMANDER_ERROR_PREFIX.length);
-    return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
+    const text = message.slice(COMMANDER_ERROR_PREFIX.length).replace(COMMAND_SUGGESTION, '').trim();
+    const sentence = `${text.charAt(0).toUpperCase()}${text.slice(1)}${text.endsWith('.') ? '' : '.'}`;
+    const helpLine =
+        command === undefined ? COMMANDS_HELP_MESSAGE : `Run gspot ${command} --help to see its arguments and options.`;
+    return `${sentence}${correction} ${helpLine}`;
 }
 
-function printFailure(error: unknown, programHelp: string): number {
+function printFailure(error: unknown, program: Command, commandArguments: string[]): number {
     if (error instanceof CommanderError) {
         if (error.exitCode === 0) return 0;
-        printError({ error: 'arguments', message: formatArgumentError(error, programHelp) });
+        const command = program.commands.find((each) => each.name() === commandArguments[0])?.name();
+        printError({ error: 'arguments', message: formatArgumentError(error, program, command) });
         return EXIT_ERROR;
     }
     if (error instanceof GspotError) {
@@ -185,6 +190,6 @@ export async function runProgram(commandArguments: string[]): Promise<number> {
         printResult(result);
         return result.exitCode;
     } catch (error) {
-        return printFailure(error, formatProgramHelp(program));
+        return printFailure(error, program, commandArguments);
     }
 }

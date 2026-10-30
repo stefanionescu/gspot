@@ -23,11 +23,13 @@ export const UNREAD_SUBMODULE_MESSAGE = 'submodule; init does not read it';
 
 export const LINT_FOLDER_MESSAGE = 'a folder of lint scripts; check remaining references before deleting it';
 
-export const DELETED_RULES_NOTE = '(your own rules in them do not carry over; read them with git show HEAD:<path>)';
+export const DELETED_RULES_NOTE =
+    '(your own lint rules in them do not carry over; read them with git show HEAD:<path>)';
 
 export const LINT_FOLDERS_HEADING = 'lint folders; delete when nothing calls them';
 
-export const CHANGE_LATER_MESSAGE = 'Change the hooks and rules later with gspot set hooks.enabled or rules.enabled.';
+export const CHANGE_LATER_MESSAGE =
+    'Change the hooks and rule files later with gspot set hooks.enabled or rules.enabled.';
 
 export const TOOL_PIN_NOUN = 'tool pin';
 

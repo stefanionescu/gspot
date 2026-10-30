@@ -15,7 +15,7 @@ paths = ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/conftest.py"]
 reason = "The test runner finds a test by this prefix."
 
 [[tool]]
-install_help = "Run: python -m pip install pytest"
+install_help = "Run python -m pip install pytest."
 min_version = "7.0.0"
 name = "pytest"
 suppression = { marker = "\\bpragma: ?no cover\\b", reason = "#[^#]*# ?(?<reason>\\S.*)", example = "if TYPE_CHECKING:  # pragma: no cover # reason: imports for type checkers only" }
