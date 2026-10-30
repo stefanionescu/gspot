@@ -13,6 +13,7 @@ import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 import {
     FAVICON,
     EDIT_URL,
+    SITE_TITLE,
     SOCIAL_IMAGE,
     FONT_PACKAGES,
     REPOSITORY_URL,
@@ -30,6 +31,9 @@ export default defineConfig({
             tsconfigPaths: true,
             alias: {
                 '#docs': fileURLToPath(new URL('src', import.meta.url)),
+                '#starlight-style': fileURLToPath(
+                    new URL('node_modules/@astrojs/starlight/dist/style', import.meta.url),
+                ),
             },
         },
         oxc: { target: 'es2022' },
@@ -53,7 +57,7 @@ export default defineConfig({
             },
         },
         starlight({
-            title: 'gspot',
+            title: SITE_TITLE,
             favicon: FAVICON,
             plugins: [
                 starlightLlmsTxt({
@@ -78,13 +82,11 @@ export default defineConfig({
             ],
             components: {
                 Header: './src/components/starlight/Header.astro',
-                Footer: './src/components/starlight/Footer.astro',
                 SiteTitle: './src/components/starlight/SiteTitle.astro',
                 ThemeProvider: './src/components/starlight/theme/Provider.astro',
                 ThemeSelect: './src/components/starlight/theme/Select.astro',
                 MobileMenuToggle: './src/components/starlight/MobileMenuToggle.astro',
                 Sidebar: './src/components/starlight/Sidebar.astro',
-                Hero: './src/components/starlight/Hero.astro',
             },
             expressiveCode: {
                 defaultProps: { frame: 'code', wrap: true, hangingIndent: 2 },

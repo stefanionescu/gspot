@@ -1,13 +1,32 @@
 ---
-import type { ImageMetadata } from 'astro';
-import InlineText from '#docs/components/InlineText.astro';
-import Example from '#docs/components/home/example/Example.astro';
-import { TOOLS, USE_CASES, HOME_TITLE } from '#docs/config/home.ts';
+import '#starlight-style/layers.css';
+import '#starlight-style/props.css';
+import '#starlight-style/reset.css';
+import '#starlight-style/util.css';
+import '#docs/theme.css';
 import '#docs/components/home/page.css';
+import type { ImageMetadata } from 'astro';
+import Hero from '#docs/components/home/hero/Hero.astro';
+import InlineText from '#docs/components/InlineText.astro';
+import Header from '#docs/components/starlight/Header.astro';
+import Example from '#docs/components/home/example/Example.astro';
+import SkipLink from '@astrojs/starlight/components/SkipLink.astro';
+import { TOOLS, USE_CASES, HOME_TITLE } from '#docs/config/home.ts';
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
-import { NPM_URL, DOCS_PATH, REPOSITORY_URL } from '#docs/config/site.ts';
-import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import ThemeProvider from '#docs/components/starlight/theme/Provider.astro';
 import { REFERENCE_PATH, REFERENCE_FOLDERS } from '#docs/config/reference.ts';
+
+import {
+    FAVICON,
+    NPM_URL,
+    DOCS_PATH,
+    SITE_TITLE,
+    SOCIAL_IMAGE,
+    REPOSITORY_URL,
+    APPLE_TOUCH_ICON,
+    SOCIAL_IMAGE_ALT,
+    SOCIAL_IMAGE_SIZE,
+} from '#docs/config/site.ts';
 
 const images = import.meta.glob<ImageMetadata>('../assets/tools/*', { eager: true, import: 'default' });
 const tools = TOOLS.map(({ name, icon }) => {
@@ -17,79 +36,97 @@ const tools = TOOLS.map(({ name, icon }) => {
 });
 ---
 
-<StarlightPage
-    frontmatter={{
-        title: HOME_TITLE,
-        description: cliPackage.description,
-        hero: { title: HOME_TITLE },
-        template: 'splash',
-        editUrl: false,
-        lastUpdated: false,
-        prev: false,
-        next: false,
-    }}
->
-    <div class="landing not-content">
-        <section class="tools" aria-labelledby="tools-label">
-            <p class="tools-label" id="tools-label">
-                Works with these tools
-            </p>
-            <ul>
-                {tools.map(({ name, icon }) => (
-                    <li>
-                        <span class="tool-icon" style={`--icon: url(${icon})`} aria-hidden="true"></span>
-                        {name}
-                    </li>
-                ))}
-            </ul>
-        </section>
-        <section class="section example" aria-labelledby="example-title">
-            <div class="intro">
-                <h2 id="example-title">gspot stops the commit and names each problem</h2>
-                <p class="lead">
-                    An agent added a checkout function to a TypeScript project and made three mistakes. The pre-commit
-                    hook found all three.
+<html lang="en" dir="ltr" data-theme="dark">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{`${HOME_TITLE} | ${SITE_TITLE}`}</title>
+        <meta name="description" content={cliPackage.description} />
+        <link rel="canonical" href={`${cliPackage.homepage}/`} />
+        <link rel="sitemap" href="/sitemap-index.xml" />
+        <link rel="shortcut icon" href={FAVICON} type="image/x-icon" />
+        <link rel="apple-touch-icon" href={APPLE_TOUCH_ICON} />
+        <meta property="og:title" content={HOME_TITLE} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`${cliPackage.homepage}/`} />
+        <meta property="og:locale" content="en" />
+        <meta property="og:description" content={cliPackage.description} />
+        <meta property="og:site_name" content={SITE_TITLE} />
+        <meta property="og:image" content={`${cliPackage.homepage}${SOCIAL_IMAGE}`} />
+        <meta property="og:image:width" content={String(SOCIAL_IMAGE_SIZE.width)} />
+        <meta property="og:image:height" content={String(SOCIAL_IMAGE_SIZE.height)} />
+        <meta property="og:image:alt" content={SOCIAL_IMAGE_ALT} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <ThemeProvider />
+    </head>
+    <body>
+        <SkipLink />
+        <header class="header">
+            <Header />
+        </header>
+        <main class="landing" data-pagefind-body>
+            <Hero />
+            <section class="tools" aria-labelledby="tools-label">
+                <p class="tools-label" id="tools-label">
+                    Works with these tools
                 </p>
-            </div>
-            <Example />
-        </section>
-        <section class="section handles" aria-labelledby="handles-title">
-            <div class="intro">
-                <h2 id="handles-title">What gspot does</h2>
-                <p class="lead">
-                    Run <code class="inline-code">gspot init</code> once. It looks at your repository and turns on the
-                    checks it needs. Quick checks then run on every commit, slower ones before every push, and CI runs
-                    them again on each pull request and on the default branch.
+                <ul>
+                    {tools.map(({ name, icon }) => (
+                        <li>
+                            <span class="tool-icon" style={`--icon: url(${icon})`} aria-hidden="true"></span>
+                            {name}
+                        </li>
+                    ))}
+                </ul>
+            </section>
+            <section class="section example" aria-labelledby="example-title">
+                <div class="intro">
+                    <h2 id="example-title">gspot stops the commit and names each problem</h2>
+                    <p class="lead">
+                        An agent added a checkout function to a TypeScript project and made three mistakes. The
+                        pre-commit hook found all three.
+                    </p>
+                </div>
+                <Example />
+            </section>
+            <section class="section handles" aria-labelledby="handles-title">
+                <div class="intro">
+                    <h2 id="handles-title">What gspot does</h2>
+                    <p class="lead">
+                        Run <code class="inline-code">gspot init</code> once. It looks at your repository and turns on
+                        the checks it needs. Quick checks then run on every commit, slower ones before every push, and
+                        CI runs them again on each pull request and on the default branch.
+                    </p>
+                </div>
+                <ul class="cards">
+                    {USE_CASES.map(({ title, text, icon }) => (
+                        <li class="card">
+                            <svg
+                                class="use-icon"
+                                aria-hidden="true"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.75"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                {icon.map((path) => (
+                                    <path d={path} />
+                                ))}
+                            </svg>
+                            <h3>{title}</h3>
+                            <p>
+                                <InlineText text={text} />
+                            </p>
+                        </li>
+                    ))}
+                </ul>
+                <p class="more">
+                    <a href={`${REFERENCE_PATH}${REFERENCE_FOLDERS.checks}/`}>See every check →</a>
                 </p>
-            </div>
-            <ul class="cards">
-                {USE_CASES.map(({ title, text, icon }) => (
-                    <li class="card">
-                        <svg
-                            class="use-icon"
-                            aria-hidden="true"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.75"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            {icon.map((path) => (
-                                <path d={path} />
-                            ))}
-                        </svg>
-                        <h3>{title}</h3>
-                        <p>
-                            <InlineText text={text} />
-                        </p>
-                    </li>
-                ))}
-            </ul>
-            <p class="more">
-                <a href={`${REFERENCE_PATH}${REFERENCE_FOLDERS.checks}/`}>See every check →</a>
-            </p>
-        </section>
+            </section>
+        </main>
         <footer class="home-footer">
             <div class="home-footer-content">
                 <span>gspot · {cliPackage.license}</span>
@@ -100,5 +137,5 @@ const tools = TOOLS.map(({ name, icon }) => {
                 </nav>
             </div>
         </footer>
-    </div>
-</StarlightPage>
+    </body>
+</html>

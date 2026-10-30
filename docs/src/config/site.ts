@@ -1,5 +1,7 @@
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 
+export const SITE_TITLE = 'gspot';
+
 export const REPOSITORY_URL = 'https://github.com/stefanionescu/gspot';
 
 export const DOCS_PATH = '/start/overview/';

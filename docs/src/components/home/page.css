@@ -3,17 +3,20 @@
 @import './example/layout.css';
 @import './example/report.css';
 
-.content-panel:has(.landing),
-main:has(.landing) {
-    padding-block: 0;
+.header {
+    position: sticky;
+    z-index: var(--sl-z-index-navbar);
+    inset-block-start: 0;
+    height: var(--sl-nav-height);
+    padding-inline: var(--sl-nav-pad-x);
+    border-bottom: 1px solid var(--sl-color-hairline-shade);
+    background-color: var(--sl-color-bg-nav);
 }
 
-.sl-container > .sl-markdown-content:has(.landing) {
-    margin-block-start: 0;
-}
-
-.landing {
-    min-width: 0;
+.landing,
+.home-footer {
+    width: min(100% - 2 * var(--sl-content-pad-x), var(--home-width));
+    margin-inline: auto;
 }
 
 .landing a {
@@ -199,6 +202,7 @@ main:has(.landing) {
 
 .home-footer a {
     color: var(--sl-color-gray-2);
+    text-underline-offset: 3px;
 }
 
 @media (width >= 50rem) {

@@ -290,43 +290,43 @@ mobile-starlight-toc .display-current {
     text-wrap: balance;
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) :is(h2, h3, h4) {
+.sl-markdown-content :is(h2, h3, h4) {
     line-height: 1.3;
     letter-spacing: -0.02em;
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) h2 {
+.sl-markdown-content h2 {
     font-weight: 550;
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) :is(h3, h4) {
+.sl-markdown-content :is(h3, h4) {
     font-weight: 600;
     letter-spacing: -0.01em;
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) :not(:first-child):is(.sl-heading-wrapper.level-h2, h2) {
+.sl-markdown-content :not(:first-child):is(.sl-heading-wrapper.level-h2, h2) {
     margin-top: 48px;
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) :not(:first-child):is(.sl-heading-wrapper.level-h3, h3) {
+.sl-markdown-content :not(:first-child):is(.sl-heading-wrapper.level-h3, h3) {
     margin-top: 32px;
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) .sl-heading-wrapper > :is(h2, h3) {
+.sl-markdown-content .sl-heading-wrapper > :is(h2, h3) {
     margin-top: 0;
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) :is(.sl-heading-wrapper, h2, h3) + * {
+.sl-markdown-content :is(.sl-heading-wrapper, h2, h3) + * {
     margin-top: 12px;
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) a:not(:where(.not-content *)) {
+.sl-markdown-content a:not(:where(.not-content *)) {
     text-decoration-thickness: 1px;
     text-underline-offset: 3px;
     text-decoration-color: color-mix(in srgb, currentcolor 40%, transparent);
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) :not(pre) > code {
+.sl-markdown-content :not(pre) > code {
     display: inline-block;
     max-width: 100%;
     overflow-wrap: break-word;
@@ -343,7 +343,7 @@ mobile-starlight-toc .display-current {
     min-width: 0;
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) .expressive-code:not(:where(.not-content *)) {
+.sl-markdown-content .expressive-code:not(:where(.not-content *)) {
     margin-block: 20px;
 }
 
@@ -351,7 +351,7 @@ mobile-starlight-toc .display-current {
     padding-inline-end: 3rem;
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) table {
+.sl-markdown-content table {
     width: max-content;
     max-width: 100%;
     border: 1px solid var(--sl-color-gray-5);
@@ -360,17 +360,17 @@ mobile-starlight-toc .display-current {
     line-height: 1.55;
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) :is(th, td) {
+.sl-markdown-content :is(th, td) {
     padding: 10px 14px;
     border-color: var(--sl-color-gray-5);
     vertical-align: top;
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) tr:last-child td {
+.sl-markdown-content tr:last-child td {
     border-bottom: 0;
 }
 
-.sl-markdown-content:where(:not(:has(> .landing))) th {
+.sl-markdown-content th {
     background: var(--sl-color-gray-6);
     font-size: 0.8125rem;
 }

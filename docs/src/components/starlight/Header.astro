@@ -1,26 +1,16 @@
 ---
-import { DOCS_PATH } from '#docs/config/site.ts';
 import Search from '@astrojs/starlight/components/Search.astro';
 import SiteTitle from '#docs/components/starlight/SiteTitle.astro';
 import Select from '#docs/components/starlight/theme/Select.astro';
 import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
-
-const isHome = Astro.url.pathname === '/';
 ---
 
-<div class:list={['site-header', { home: isHome }]}>
+<div class="site-header">
     <SiteTitle />
-    {!isHome && (
-        <div class="search print:hidden">
-            <Search />
-        </div>
-    )}
+    <div class="search print:hidden">
+        <Search />
+    </div>
     <div class="controls print:hidden">
-        {isHome && (
-            <a class="docs" href={DOCS_PATH}>
-                Docs
-            </a>
-        )}
         <div class="social">
             <SocialIcons />
         </div>
@@ -34,9 +24,6 @@ const isHome = Astro.url.pathname === '/';
     align-items: center;
     gap: 4px;
     height: 100%;
-}
-.site-header.home {
-    grid-template-columns: minmax(0, 1fr) auto;
 }
 .search {
     justify-self: end;
@@ -57,20 +44,8 @@ const isHome = Astro.url.pathname === '/';
 :global(html:not([data-has-sidebar])) .controls {
     margin-inline-end: -12px;
 }
-.docs {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--target-size);
-    padding-inline: 8px;
-    color: var(--sl-color-gray-2);
-    font-size: 0.9375rem;
-    text-decoration: none;
-}
 .social {
     display: none;
-}
-.site-header.home .social {
-    display: flex;
 }
 .social :global(a) {
     display: inline-grid;
@@ -84,9 +59,6 @@ const isHome = Astro.url.pathname === '/';
     font-size: 1.25rem;
 }
 @media (hover: hover) {
-    .docs:hover {
-        color: var(--sl-color-white);
-    }
     .social :global(a:hover) {
         background: var(--sl-color-gray-6);
         color: var(--sl-color-white);
@@ -104,7 +76,7 @@ const isHome = Astro.url.pathname === '/';
 }
 
 @media (width >= 50rem) {
-    .site-header:not(.home) {
+    .site-header {
         grid-template-columns: minmax(0, 1fr) minmax(0, 24rem) minmax(0, 1fr);
         gap: 24px;
     }
