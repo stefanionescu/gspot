@@ -61,7 +61,7 @@ export type ConfigFileOutput = { content: string; companions: GeneratedFile[] };
 
 export type ConfigFileBuilder = (planned: PlannedConfigFile) => string | ConfigFileOutput;
 
-export type PlannedPointerField = {
+export type PlannedLinkField = {
     scope: Scope;
     configuration: Configuration;
     tool: Tool;

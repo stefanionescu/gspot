@@ -29,10 +29,10 @@ export const KNIP_UNUSED_FILES = [
     'unused.vue',
 ] as const;
 
-export const KNIP_POINTER_FILES = {
+export const KNIP_LINK_FILES = {
     'package.json': '{"name":"pointer-project","private":true,"type":"module","workspaces":["child"]}',
-    'README.md': '# Pointer project\n',
-    'child/README.md': '# Child pointer project\n',
+    'README.md': '# Link file project\n',
+    'child/README.md': '# Child link file project\n',
     'main.js': 'export const root = 1;\n',
     'eslint.config.js': 'export default {};\n',
     'child/package.json': '{"name":"child-pointer-project","private":true,"type":"module"}',

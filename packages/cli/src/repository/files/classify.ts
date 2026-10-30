@@ -150,7 +150,7 @@ function tagTextFile(tags: Set<string>, firstLine: string): FileTags {
     return { tags: [...tags], isBinary: false };
 }
 
-function listPointers(path: string, files: ConfigFile[]): string[] {
+function listLinkFiles(path: string, files: ConfigFile[]): string[] {
     return files.flatMap((file) => {
         const pointer = file.pointer;
         if (pointer === undefined) return [];
@@ -243,7 +243,7 @@ export function listConfigurationGeneratedPaths(selected: Map<string, Configurat
         .entries()
         .flatMap(([path, configurations]) =>
             configurations.flatMap(({ generated, name, configFiles }) => {
-                const paths = [...generated.map((file) => posix.join(path, file)), ...listPointers(path, configFiles)];
+                const paths = [...generated.map((file) => posix.join(path, file)), ...listLinkFiles(path, configFiles)];
                 return paths.length === 0
                     ? []
                     : {

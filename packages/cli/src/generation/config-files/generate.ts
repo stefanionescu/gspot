@@ -6,7 +6,7 @@ import type { ConfigFile } from '#cli/types/manifests.ts';
 import { buildConfigFile } from '#cli/generation/config-files/build.ts';
 import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';
 import { CONFIG_FILE_SCOPES_FOLDER } from '#cli/config/generation/config-files/generate.ts';
-import { listPointerPaths, buildPointerFiles } from '#cli/generation/config-files/pointers.ts';
+import { buildLinkFiles, listLinkFilePaths } from '#cli/generation/config-files/link-files.ts';
 import { getConfigFileTarget, listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
 
 import type {
@@ -84,7 +84,7 @@ function addSourceFiles(configFiles: OwnedConfigFile[], generated: ConfigFileBui
     }
 }
 
-function listPointerOnlyPaths(configFiles: OwnedConfigFile[], selected: OwnedConfigFile): Set<string> {
+function listTargetLinkFiles(configFiles: OwnedConfigFile[], selected: OwnedConfigFile): Set<string> {
     return new Set(
         configFiles
             .filter(
@@ -93,11 +93,11 @@ function listPointerOnlyPaths(configFiles: OwnedConfigFile[], selected: OwnedCon
                     each.configFile.source === undefined &&
                     each.configFile.target === selected.configFile.target,
             )
-            .flatMap((each) => listPointerPaths(each.owner, each.configFile)),
+            .flatMap((each) => listLinkFilePaths(each.owner, each.configFile)),
     );
 }
 
-function listPointerTargets(
+function listLinkFileTargets(
     selected: OwnedConfigFile,
     configFiles: OwnedConfigFile[],
     generated: ConfigFileBuildState,
@@ -119,21 +119,21 @@ function listPointerTargets(
     );
 }
 
-function addPointerFiles(
+function addLinkFiles(
     selected: OwnedConfigFile,
     configFiles: OwnedConfigFile[],
     generated: ConfigFileBuildState,
 ): void {
     const { configFile, owner } = selected;
     if (isMarkdownlintShared(selected, configFiles)) return;
-    const pointerOnlyPaths = listPointerOnlyPaths(configFiles, selected);
-    for (const pointer of buildPointerFiles(owner, configFile, listPointerTargets(selected, configFiles, generated))) {
+    const targetLinkFiles = listTargetLinkFiles(configFiles, selected);
+    for (const linkFile of buildLinkFiles(owner, configFile, listLinkFileTargets(selected, configFiles, generated))) {
         if (
             configFile.source === undefined ||
             configFile.pointer?.folders !== undefined ||
-            !pointerOnlyPaths.has(pointer.path)
+            !targetLinkFiles.has(linkFile.path)
         )
-            generated.files.set(pointer.path, pointer);
+            generated.files.set(linkFile.path, linkFile);
     }
 }
 
@@ -143,7 +143,7 @@ function buildScopeConfigFiles(session: Session): ConfigFileGeneration {
     addSourceFiles(configFiles, state);
     for (const configFile of configFiles)
         if (state.failures.get(configFile.owner.scope.path)?.has(configFile.configFile.target) !== true)
-            addPointerFiles(configFile, configFiles, state);
+            addLinkFiles(configFile, configFiles, state);
     return { files: state.files.values().toArray(), targets: state.targets, failures: state.failures };
 }
 

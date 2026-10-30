@@ -8,7 +8,7 @@ import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
-import { listPointerPaths } from '#cli/generation/config-files/pointers.ts';
+import { listLinkFilePaths } from '#cli/generation/config-files/link-files.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 import { listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
 import type { IgnoreSection, PlannedConfigFile } from '#cli/types/generation/files.ts';
@@ -23,7 +23,7 @@ import {
 } from '#cli/config/generation/config-files/ignore-files.ts';
 
 /**
-List the paths outside .gspot/ that a run writes: the root targets and pointer paths of the config files it writes, and the CI workflow when CI runs.
+List the paths outside .gspot/ that a run writes: the root targets and link file paths of the config files it writes, and the CI workflow when CI runs.
 
 @param session the scopes and the settings.
 @returns the paths, each from the repository root with a leading slash.
@@ -38,7 +38,7 @@ export function listWrittenPaths(session: Session): string[] {
                 : [configFile.per_scope ? joinScope(owner.scope.path, configFile.target) : configFile.target];
         return [
             ...sourceTargets,
-            ...(isMarkdownlintShared(owned, configFiles) ? [] : listPointerPaths(owner, configFile)),
+            ...(isMarkdownlintShared(owned, configFiles) ? [] : listLinkFilePaths(owner, configFile)),
         ];
     });
     if (session.settings.ci?.enabled === true)

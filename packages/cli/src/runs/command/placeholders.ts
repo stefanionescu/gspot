@@ -23,7 +23,7 @@ import {
     SCOPE_PLACEHOLDER,
     LEVEL_PLACEHOLDER,
     INDENT_PLACEHOLDER,
-    POINTER_PLACEHOLDER,
+    LINK_FILE_PLACEHOLDER,
     WORKSPACE_PLACEHOLDER,
     CONFIG_FILE_PLACEHOLDER,
     MESSAGE_FILE_PLACEHOLDER,
@@ -56,7 +56,7 @@ function listConfigFiles(session: Session, planned: PlannedCheck): ConfigFile[] 
     return [...own, ...every];
 }
 
-function selectPointerPath(session: Session, scopePath: string, name: string): string {
+function selectLinkFilePath(session: Session, scopePath: string, name: string): string {
     const path = joinScope(scopePath, name);
     const generated = listGeneratedPaths(session.repository.files);
     return !generated.has(path) && generated.has(name) ? name : path;
@@ -136,10 +136,10 @@ export function listCommandConfigFiles(session: Session, planned: PlannedCheck, 
                     .map((name) => getConfigFilePath(session, planned, name))
                     .toArray();
                 const pointed = segment
-                    .matchAll(POINTER_PLACEHOLDER)
+                    .matchAll(LINK_FILE_PLACEHOLDER)
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
-                    .map((name) => selectPointerPath(session, scope, name))
+                    .map((name) => selectLinkFilePath(session, scope, name))
                     .toArray();
                 return [...configured, ...pointed];
             }),
@@ -208,8 +208,8 @@ export function replacePlaceholders(
                 .split('/')
                 .join(sep),
         )
-        .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) =>
-            selectPointerPath(session, substitutions.scope, name).split('/').join(sep),
+        .replaceAll(LINK_FILE_PLACEHOLDER, (_match, name: string) =>
+            selectLinkFilePath(session, substitutions.scope, name).split('/').join(sep),
         )
         .replaceAll(SCOPE_PLACEHOLDER, () => (substitutions.scope === '' ? '.' : substitutions.scope))
         .replaceAll(ROOT_PLACEHOLDER, () => substitutions.root)

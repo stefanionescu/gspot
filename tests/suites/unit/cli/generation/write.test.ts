@@ -184,7 +184,7 @@ test('at level basic, prose keeps its Vale configuration and removes installed s
     expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/general/prose/vale.ini'))).toBe(true);
 });
 
-test('apply preserves a copied header example and removes an obsolete scoped pointer', async () => {
+test('apply preserves a copied header example and removes an obsolete scoped link file', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown'], { scopes: [{ path: 'docs', configurations: [] }] }),
         'examples/.editorconfig': `${formatHeader('.editorconfig')}root = true\n`,

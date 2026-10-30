@@ -87,7 +87,7 @@ test.each([true, false])('generated file lists include the CI workflow only when
     }
 });
 
-test('shared Markdown settings leave inherited pointers out of generated path ignores', async () => {
+test('shared Markdown settings leave inherited link files out of generated path ignores', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['markdown'], {
             scopes: [
@@ -101,8 +101,10 @@ test('shared Markdown settings leave inherited pointers out of generated path ig
     });
     const session = await openSession(sandbox.path);
     const generated = generateFiles(session);
-    const pointers = generated.files.filter(({ path }) => path.endsWith('.markdownlint.jsonc')).map(({ path }) => path);
-    expect(pointers).toStrictEqual(['.markdownlint.jsonc']);
+    const linkFiles = generated.files
+        .filter(({ path }) => path.endsWith('.markdownlint.jsonc'))
+        .map(({ path }) => path);
+    expect(linkFiles).toStrictEqual(['.markdownlint.jsonc']);
     const ignored = buildIgnoreSections(session).find(({ key }) => key === 'gspot')!.patterns;
     expect(ignored.filter((path) => path.endsWith('.markdownlint.jsonc'))).toStrictEqual(['/.markdownlint.jsonc']);
 });

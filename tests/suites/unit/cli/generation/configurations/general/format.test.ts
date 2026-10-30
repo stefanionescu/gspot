@@ -31,7 +31,7 @@ test.each([...EDITORCONFIG_SELECTOR_ERRORS])(
     },
 );
 
-test('Prettier loads the selected plugin through the root pointer', async () => {
+test('Prettier loads the selected plugin through the root link file', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['svelte']),
         'source.svelte': '<h1>Example</h1>\n',
@@ -42,11 +42,11 @@ test('Prettier loads the selected plugin through the root pointer', async () => 
         generated.files.find(({ path }) => path === getManifestTarget('format', 'prettier.json'))!.content,
     ) as Options;
     expect(configFile.plugins).toStrictEqual([`./${GSPOT_PATHS.nodeModules}/prettier-plugin-svelte/plugin.js`]);
-    const pointer = await prettier.resolveConfig(join(sandbox.path, 'source.svelte'), {
+    const editorOptions = await prettier.resolveConfig(join(sandbox.path, 'source.svelte'), {
         config: join(sandbox.path, 'prettier.config.mjs'),
         useCache: false,
     });
-    expect(pointer?.plugins).toStrictEqual([
+    expect(editorOptions?.plugins).toStrictEqual([
         join(sandbox.path, GSPOT_PATHS.nodeModules, 'prettier-plugin-svelte/plugin.js'),
     ]);
 });
@@ -97,7 +97,7 @@ test('a YAML indent override gives EditorConfig and Prettier the same width', as
     expect(configuration?.tabWidth).toBe(2);
 });
 
-test('Prettier overrides agree in the root pointer and editor lookup', async () => {
+test('Prettier overrides agree in the root link file and editor lookup', async () => {
     await using sandbox = await testdir();
     const root = sandbox.path;
     await createFileTree(root, {

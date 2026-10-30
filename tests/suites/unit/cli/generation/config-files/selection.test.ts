@@ -61,7 +61,7 @@ test('a scope that selects Express gets its Semgrep rules when only the root sel
     expect(paths).toContain(getManifestTarget('express', 'semgrep.yml'));
 });
 
-test('a Ruff-only Python scope gets no type checker file or pointer', async () => {
+test('a Ruff-only Python scope gets no type checker file or link file', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], NESTED_PYTHON_SETTINGS),
         'linted/source.py': 'value = 1\n',

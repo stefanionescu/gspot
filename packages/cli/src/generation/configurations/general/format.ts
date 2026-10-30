@@ -137,7 +137,7 @@ function buildPluginsOption(plugins: PrettierPlugin[]): { plugins?: string[] } {
 }
 
 /**
-Build prettier.json, which the root pointer loads: the formatter options, plugins, and scope overrides.
+Build prettier.json, which the root link file loads: the formatter options, plugins, and scope overrides.
 
 @param planned the config file to build.
 */

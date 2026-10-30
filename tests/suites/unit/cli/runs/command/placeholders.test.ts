@@ -213,7 +213,7 @@ test.each([...SHFMT_INDENT_CASES])(
     },
 );
 
-test('scalar placeholders select generated pointers, scope, boolean settings and the chosen level', async () => {
+test('scalar placeholders select generated link files, scope, boolean settings and the chosen level', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: 'app' }] }),
         'app/main.swift': 'let value = 1\n',

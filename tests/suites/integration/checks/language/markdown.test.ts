@@ -74,7 +74,7 @@ test.each([...LEVELS])(
     },
 );
 
-test("markdownlint run by an editor reads the pointer files with each scope's options", async () => {
+test("markdownlint run by an editor reads the link files with each scope's options", async () => {
     const { root } = installedSandbox();
     await using _change = await applySandboxChanges(installedSandbox(), {
         files: {

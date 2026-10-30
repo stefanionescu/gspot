@@ -18,7 +18,7 @@ import { SWIFT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { listWrittenPaths } from '#cli/generation/config-files/ignore-files.ts';
-import { buildPointerFieldEdits } from '#cli/generation/config-files/pointers.ts';
+import { buildLinkFieldEdits } from '#cli/generation/config-files/link-files.ts';
 import { readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 import type { FrozenLockfile, CiPackageManager } from '#cli/types/generation/ci.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files/classify.ts';
@@ -149,7 +149,7 @@ export function generateFiles(session: Session): Generation {
     generated.files.push(...configFiles.files);
     generated.managedKeys.push(
         ...buildBunScannerEdits(session),
-        ...buildPointerFieldEdits(session, generated.files, configFiles),
+        ...buildLinkFieldEdits(session, generated.files, configFiles),
     );
     generated.files.push(
         ...(settings.hooks?.enabled === true

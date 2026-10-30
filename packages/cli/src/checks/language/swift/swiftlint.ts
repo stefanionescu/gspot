@@ -53,7 +53,7 @@ export async function checkSwiftSwiftlintAnalyze(
 }
 
 /**
-Lists the SwiftLint files a copy keeps: the scope pointer, the config file, and SwiftLint files in parent folders.
+Lists the SwiftLint files a copy keeps: the scope link file, the config file, and SwiftLint files in parent folders.
 
 @param session the repository and its tools.
 @param planned the scope files and config files.

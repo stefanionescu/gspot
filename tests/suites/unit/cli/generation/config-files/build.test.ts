@@ -100,13 +100,13 @@ test('each shipped config file has exactly one producer', () => {
         const key = `${configuration.name}/${file.file}`;
         const hasBuilder = file.source !== undefined && CONFIG_FILE_BUILDERS[key] !== undefined;
         const hasSemgrep = file.source !== undefined && file.file === SEMGREP_RULE_PACK_FILE;
-        const hasPointer = file.source === undefined;
+        const hasLinkFile = file.source === undefined;
         const hasShipped =
             !hasBuilder &&
             !hasSemgrep &&
             file.source !== undefined &&
             existsSync(buildAssetPath(`${configuration.folder}/${file.source}`));
-        if ([hasBuilder, hasSemgrep, hasPointer, hasShipped].filter(Boolean).length !== 1) missing.push(key);
+        if ([hasBuilder, hasSemgrep, hasLinkFile, hasShipped].filter(Boolean).length !== 1) missing.push(key);
     }
     expect(missing).toStrictEqual([]);
 });

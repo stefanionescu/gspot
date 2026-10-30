@@ -11,7 +11,7 @@ import { selectLockfileName } from '#cli/installers/npm/lockfiles.ts';
 import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { listStrayPaths, hasManagedKeys } from '#cli/repository/writer.ts';
-import { listOwnablePaths } from '#cli/generation/config-files/pointers.ts';
+import { listOwnablePaths } from '#cli/generation/config-files/link-files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { type Generation, type OutdatedFile } from '#cli/types/generation/files.ts';
 import { ON_DISK_LABEL, DIFF_CONTEXT_LINES, BLOCK_ON_DISK_LABEL } from '#cli/config/generation/outdated.ts';

@@ -7,10 +7,10 @@ path = "other"
 MD046 = { style = "indented" }
 `;
 
-export const XCTEST_POINTER_CASES = [
+export const XCTEST_LINK_FILE_CASES = [
     {
         scope: '',
-        pointers: {
+        linkFiles: {
             '.swiftlint.yml': { parent: './.gspot/configurations/language/swift/swiftlint.yml', overrides: false },
             'AppTests/.swiftlint.yml': {
                 parent: '../.gspot/configurations/language/swift/swiftlint.yml',
@@ -24,7 +24,7 @@ export const XCTEST_POINTER_CASES = [
     },
     {
         scope: 'ios # app',
-        pointers: {
+        linkFiles: {
             'ios # app/.swiftlint.yml': {
                 parent: '../.gspot/configurations/language/swift/swiftlint.yml',
                 overrides: false,
@@ -41,7 +41,7 @@ export const XCTEST_POINTER_CASES = [
     },
     {
         scope: 'AppTests',
-        pointers: {
+        linkFiles: {
             'AppTests/.swiftlint.yml': {
                 parent: '../.gspot/configurations/language/swift/swiftlint.yml',
                 overrides: true,
@@ -54,7 +54,7 @@ export const XCTEST_POINTER_CASES = [
     },
     {
         scope: 'AppTests/Helpers',
-        pointers: {
+        linkFiles: {
             'AppTests/Helpers/.swiftlint.yml': {
                 parent: '../../.gspot/configurations/language/swift/swiftlint.yml',
                 overrides: true,
