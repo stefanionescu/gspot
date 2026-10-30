@@ -40,6 +40,7 @@ test.each([...NGINX_MOUNT_CASES])(
                 ...certificates.map((target) => `${target}:ro`),
             ]);
             expect(command.slice(-2)).toStrictEqual(['nginx', '-T']);
+            expect(command.at(-3)).toMatch(/^nginx:[^@]+@sha256:[0-9a-f]{64}$/u);
             return buildProcessResult({ stdout: '# configuration file /etc/nginx/nginx.conf:\n' });
         });
         expect(await runSandboxCheck(sandbox.path, 'nginx/syntax')).toStrictEqual([]);
