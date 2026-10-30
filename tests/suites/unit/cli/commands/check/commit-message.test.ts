@@ -1,6 +1,7 @@
+import executables from 'which';
+import { join, parse } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
-import { join, parse, basename } from 'node:path';
 import * as processes from '#cli/system/processes.ts';
 import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -18,7 +19,7 @@ test('check --hook commit-msg passes a conventional message and leaves it unchan
     using _command = spyOn(processes, 'spawnProcess').mockImplementation((command, options) =>
         spawn(
             parse(command[0]!).name === 'commitlint'
-                ? [join(testModules, '.bin', basename(command[0]!)), ...command.slice(1)]
+                ? [executables.sync('commitlint', { path: join(testModules, '.bin') }), ...command.slice(1)]
                 : command,
             options,
         ),
