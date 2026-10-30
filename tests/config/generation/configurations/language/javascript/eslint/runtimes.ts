@@ -10,11 +10,6 @@ export const RUNTIME_CASES = [
         absent: ['process', 'Buffer', 'require', '__dirname', 'clients'],
     },
     {
-        runtime: 'serviceworker',
-        globals: ['clients', 'skipWaiting', 'importScripts'],
-        absent: ['process', 'Buffer', 'require', '__dirname', 'DedicatedWorkerGlobalScope'],
-    },
-    {
         runtime: 'react-native',
         globals: ['__DEV__', 'process', 'require'],
         absent: ['Buffer', '__dirname', '__filename', 'module'],

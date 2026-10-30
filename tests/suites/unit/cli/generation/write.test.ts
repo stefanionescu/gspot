@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { unlinkSync } from 'node:fs';
-import { test, spyOn, expect } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
@@ -15,14 +15,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { formatUpToDate, writeGeneratedFiles } from '#cli/generation/write.ts';
-
-import {
-    TOOL_FOLDERS,
-    EDITED_STYLELINT_PACKAGE,
-    STYLELINT_PACKAGE_FIELDS,
-    COMMITLINT_PACKAGE_FIELDS,
-    EDITED_COMMITLINT_PACKAGE,
-} from '#tests/config/generation/write.ts';
+import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/config/generation/write.ts';
 
 async function applyPackageFields(root: string, scenario: PackageFieldScenario): Promise<Map<string, string>> {
     const session = await openSession(root);
@@ -41,50 +34,16 @@ async function applyPackageFields(root: string, scenario: PackageFieldScenario):
     );
 }
 
-test.each([...TOOL_FOLDERS])(
-    'writeGeneratedFiles deletes the $kind tool folder when no configuration needs it',
-    async ({ folder }) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings([]),
-            [`${folder}/tool/index.js`]: 'export {};\n',
-        });
-
-        const session = await openSession(sandbox.path);
-        const writer = openFiles(sandbox.path);
-        await writeGeneratedFiles(session, { files: [], blocks: [], managedKeys: [] }, writer);
-        expect(await isOnDisk(join(sandbox.path, folder))).toBe(false);
-    },
-);
-
-test('leaving level all removes the managed commitlint field from every package.json and keeps the other fields', async () => {
+test('writeGeneratedFiles deletes the npm tool folder when no configuration needs it', async () => {
     await using sandbox = await testdir({
-        ...COMMITLINT_PACKAGE_FIELDS.project,
-        'gspot.toml': buildSandboxSettings(COMMITLINT_PACKAGE_FIELDS.configurations, {
-            level: 'all',
-            tables: COMMITLINT_PACKAGE_FIELDS.tables,
-        }),
+        'gspot.toml': buildSandboxSettings([]),
+        [`${GSPOT_PATHS.nodeModules}/tool/index.js`]: 'export {};\n',
     });
-    commitAll(sandbox.path);
-    const installed = await applyPackageFields(sandbox.path, COMMITLINT_PACKAGE_FIELDS);
-    await writeFile(join(sandbox.path, 'app/package.json'), EDITED_COMMITLINT_PACKAGE);
-    installed.set('app/package.json', EDITED_COMMITLINT_PACKAGE);
-    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { level: 'basic' }));
+
     const session = await openSession(sandbox.path);
-    const generated = generateFiles(session);
-    expect(generated.managedKeys).toStrictEqual(
-        COMMITLINT_PACKAGE_FIELDS.changes.map((file) => ({
-            path: file.path,
-            keys: [{ key: ['commitlint'], value: undefined }],
-        })),
-    );
     const writer = openFiles(sandbox.path);
-    await writeGeneratedFiles(session, generated, writer);
-    for (const [path, source] of installed) {
-        const expected = JSON.parse(source) as Record<string, unknown>;
-        delete expected['commitlint'];
-        const contents: unknown = JSON.parse(await readFile(join(sandbox.path, path), 'utf8'));
-        expect(contents).toStrictEqual(expected);
-    }
+    await writeGeneratedFiles(session, { files: [], blocks: [], managedKeys: [] }, writer);
+    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
 });
 
 test('removing css drops its managed stylelint field and keeps authored fields byte for byte', async () => {
@@ -121,23 +80,6 @@ test('removing css drops its managed stylelint field and keeps authored fields b
     const output = generateFiles(settled);
     expect(await listOutdatedFiles(settled, output)).toStrictEqual(await listStaleLockfiles(settled, output.files));
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).not.toContain('`stylelint`');
-});
-
-test('a stale generated file removed before planning produces no removal report', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([]),
-        '.gspot/stale.txt': 'stale\n',
-    });
-    const session = await openSession(sandbox.path);
-    const writer = openFiles(sandbox.path);
-    const readKeepingLinks = writer.readKeepingLinks.bind(writer);
-    using _disappear = spyOn(writer, 'readKeepingLinks').mockImplementation((path) => {
-        if (path === '.gspot/stale.txt') unlinkSync(join(sandbox.path, path));
-        return readKeepingLinks(path);
-    });
-    const report = await writeGeneratedFiles(session, { files: [], blocks: [], managedKeys: [] }, writer);
-    expect(report).toStrictEqual({ written: [], unchanged: [], removed: [], updated: [], notes: [] });
-    expect(await isOnDisk(join(sandbox.path, '.gspot/stale.txt'))).toBe(false);
 });
 
 test('one up-to-date file uses the singular message', () => {

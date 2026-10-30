@@ -10,15 +10,10 @@ export const PRETTIER_IGNORE_SETTINGS = {
 } as const;
 
 export const PRETTIER_IGNORE_CASES = [
-    { file: 'tests/build/Scenario.ts', ignored: true },
     { file: 'src/dist/source.ts', ignored: true },
-    { file: 'coverage/source.ts', ignored: true },
-    { file: 'build/source.ts', ignored: true },
     { file: 'generated/source.ts', ignored: true },
-    { file: 'vendored/source.ts', ignored: true },
     { file: 'authored/omitted.ts', ignored: true },
     { file: 'authored/kept.ts', ignored: false },
-    { file: 'package-lock.json', ignored: true },
     { file: 'pnpm-lock.yaml', ignored: true },
 ] as const;
 

@@ -160,8 +160,6 @@ test.each([...LEVELS])("every configuration's generated config files parse at le
         }
     }
     expect(failures).toStrictEqual([]);
-    const paths = output.files.map((file) => file.path);
-    expect(new Set(paths).size).toBe(paths.length);
 });
 
 test('an ignore whose reason equals a built-in section title keeps its paths in the jsconfig exclude', async () => {

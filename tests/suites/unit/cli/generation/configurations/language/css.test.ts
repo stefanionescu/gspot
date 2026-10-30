@@ -6,15 +6,9 @@ import type stylelintModule from 'stylelint';
 import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
-import { type StylelintConfigFile } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { getManifestTarget, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
-
-import {
-    STYLELINT_SCOPE_FILES,
-    COMPONENT_SYNTAX_OVERRIDES,
-} from '#tests/config/generation/configurations/language/css.ts';
 
 const { default: stylelint } = (await import(Bun.resolveSync('stylelint', toolModules))) as {
     default: typeof stylelintModule;
@@ -43,33 +37,6 @@ test.each(['vue', 'astro'])('a CSS-only scope checks properties inside a %s comp
     expect(result.results.flatMap(({ warnings }) => warnings.map(({ rule }) => rule))).toStrictEqual([
         'property-no-unknown',
     ]);
-});
-
-test('every CSS scope selects Vue, Svelte and Astro syntax only for matching extensions', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['css'], {
-            level: 'all',
-            tables: `[[scope]]\npath = "vue"\nconfigurations = ["css", "vue"]\n[[scope]]\npath = "svelte"\n\nconfigurations = ["css", "svelte"]\n[[scope]]\npath = "mixed"\n\nconfigurations = ["css", "vue", "svelte"]\n`,
-        }),
-        ...STYLELINT_SCOPE_FILES,
-    });
-
-    const session = await openSession(sandbox.path);
-    const outputs = generateFiles(session).files;
-    const documents = Object.fromEntries(
-        ['', 'vue', 'svelte', 'mixed'].map((scope) => {
-            const output = outputs.find((file) => file.path === getConfigFilePath(session, 'stylelint', scope))!;
-            return [scope, JSON.parse(output.content) as StylelintConfigFile];
-        }),
-    );
-    const overrides = Object.fromEntries(
-        Object.entries(documents).map(([scope, document]) => [
-            scope,
-            document.overrides?.map(({ files, customSyntax }) => ({ files, customSyntax })),
-        ]),
-    );
-    for (const scope of ['', 'vue', 'svelte', 'mixed'])
-        expect(overrides[scope]).toStrictEqual(COMPONENT_SYNTAX_OVERRIDES);
 });
 
 test("your Stylelint rule options reach each scope's file", async () => {

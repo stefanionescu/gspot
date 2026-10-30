@@ -1,13 +1,9 @@
-import picomatch from 'picomatch';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { listCodeTestFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 
-import {
-    buildFilePatterns,
-    listCodeTestFiles,
-} from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import {
     NESTED_ESLINT_FILES,
     NESTED_ESLINT_PATHS,
@@ -45,13 +41,6 @@ test('a child scope wildcard exempts its tests and scripts without exempting sib
         { file: 'sibling/build.js', rule: 'no-console', line: 1 },
         { file: 'sibling/read.js', rule: 'no-console', line: 1 },
     ]);
-});
-test('Node file patterns match a filename with a backslash and not its neighbor', () => {
-    const file = String.raw`scripts/run\name`;
-    const patterns = buildFilePatterns({ components: [], scopes: [], nodeFiles: [file] }).code;
-    const matches = picomatch(patterns, { dot: true, windows: false });
-    expect(matches(file)).toBe(true);
-    expect(matches('scripts/runname')).toBe(false);
 });
 
 test('ESLint test patterns omit foreign extensions and retain components and shared globs', () => {

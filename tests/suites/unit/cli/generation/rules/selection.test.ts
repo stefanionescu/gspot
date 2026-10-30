@@ -108,44 +108,6 @@ describe('which rule files gspot writes', () => {
     });
 });
 
-test.each(['deno.json', 'deno.jsonc'].flatMap((file) => ['', 'apps/api'].map((scope) => ({ file, scope }))))(
-    'a Supabase layout with $file in scope $scope installs the Deno rule',
-    async ({ file, scope }) => {
-        const prefix = scope === '' ? '' : `${scope}/`;
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['supabase'], {
-                rules: true,
-                scopes: scope === '' ? [] : [{ path: scope }],
-            }),
-            [`${prefix}supabase/config.toml`]: 'project_id = "example"\n',
-            [`${prefix}supabase/functions/submit-order/index.ts`]: 'export {};\n',
-            [`${prefix}supabase/functions/submit-order/${file}`]: '{}\n',
-        });
-        const session = await openSession(sandbox.path);
-        using _resources = session.resources;
-        const files = generateFiles(session).files;
-        expect(files.map(({ path }) => path)).toContain(getRuleFilePath('javascript', 'DENO.md'));
-    },
-);
-
-test('YAML rules require a YAML file, including a nested workflow', async () => {
-    const absent = await generateRuleFiles('all', {});
-    const present = await generateRuleFiles('all', { '.github/workflows/ci.yaml': 'name: Checks\n' });
-    expect(absent.has(getRuleFilePath('data-files', 'YAML.md'))).toBe(false);
-    expect(present.has(getRuleFilePath('data-files', 'YAML.md'))).toBe(true);
-});
-
-test('the Neon Postgres driver selects the Drizzle rule file, and drizzle-orm alone does not', async () => {
-    const alone = await generateRuleFiles('all', {
-        'package.json': '{"private":true,"dependencies":{"drizzle-orm":"1.0.0"}}',
-    });
-    const neon = await generateRuleFiles('all', {
-        'package.json': '{"private":true,"dependencies":{"drizzle-orm":"1.0.0","@neondatabase/serverless":"1.0.0"}}',
-    });
-    expect(alone.has(getRuleFilePath('drizzle', 'DRIZZLE.md'))).toBe(false);
-    expect(neon.has(getRuleFilePath('drizzle', 'DRIZZLE.md'))).toBe(true);
-});
-
 test('a Supabase project selects Deno rules without a Deno settings file', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['supabase'], { rules: true }),

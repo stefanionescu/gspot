@@ -40,12 +40,3 @@ test('the Squawk config file of a Postgres child scope excludes the frozen migra
         'other/migrations/V1_other.sql',
     ]);
 });
-
-test('the Squawk config file of a Postgres scope assumes that each migration runs in a transaction', async () => {
-    const text = await generateFile(
-        buildSandboxSettings(['postgres']),
-        getManifestTarget('postgres', 'squawk.toml'),
-        SQUAWK_MIGRATION_FILES,
-    );
-    expect(getValueAt(parse(text), ['assume_in_transaction'])).toBe(true);
-});

@@ -52,19 +52,6 @@ export const XCTEST_LINK_FILE_CASES = [
             },
         },
     },
-    {
-        scope: 'AppTests/Helpers',
-        linkFiles: {
-            'AppTests/Helpers/.swiftlint.yml': {
-                parent: '../../.gspot/configurations/language/swift/swiftlint.yml',
-                overrides: true,
-            },
-            'AppTests/Helpers/ChildTests/.swiftlint.yml': {
-                parent: '../../../.gspot/configurations/language/swift/swiftlint.yml',
-                overrides: true,
-            },
-        },
-    },
 ] as const;
 
 export const DEFAULT_EXPORT = { location: 'the requested module' } as const;

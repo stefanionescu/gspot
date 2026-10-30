@@ -1,5 +1,4 @@
 import type { Linter } from 'eslint';
-import type { Config } from 'stylelint';
 
 export type LintFinding = { rule: Linter.LintMessage['ruleId']; file: string; line: Linter.LintMessage['line'] };
 
@@ -43,7 +42,5 @@ export type RuffConfigFile = {
 };
 
 export type KnipConfigFile = { ignore: string[]; workspaces: Record<string, { entry: string[] }> };
-
-export type StylelintConfigFile = Required<Pick<Config, 'rules'>> & Pick<Config, 'overrides'>;
 
 export type SemgrepRuleFile = { rules: { id: string; paths?: { include?: string[]; exclude?: string[] } }[] };

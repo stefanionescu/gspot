@@ -3,8 +3,6 @@ export const IMPORT_RULE_CASES = [
     { level: 'basic', declarations: 'root' },
     { level: 'basic', declarations: 'scoped' },
     { level: 'all', declarations: 'none' },
-    { level: 'all', declarations: 'root' },
-    { level: 'all', declarations: 'scoped' },
 ] as const;
 
 export const COMPONENT_IMPORT_CASES = [

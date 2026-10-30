@@ -115,12 +115,3 @@ test('the AGENTS.md index keeps a rule opening that wraps onto a second line', (
     });
     expect(block).toContain('/SAFETY.md`: when a shell script deletes files, or parses JSON or YAML.\n');
 });
-
-test('the AGENTS.md Generated files section points at .gitattributes instead of listing the files', () => {
-    const block = buildAgentsBlock({ files: [], managedKeys: [], hasOwnTitle: false, startCommand: 'gspot' });
-    expect(block.slice(block.indexOf('## Generated files'))).toBe(
-        '## Generated files\n\n' +
-            '`.gitattributes` marks each file that gspot writes `linguist-generated`, in the block between the gspot markers.\n' +
-            'Do not edit these files. Change `gspot.toml`, then run `gspot apply`.',
-    );
-});

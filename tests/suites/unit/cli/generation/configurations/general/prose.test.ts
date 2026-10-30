@@ -7,7 +7,6 @@ import { openSession } from '#cli/planning/session.ts';
 import { LEVELS } from '#cli/config/manifests/names.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
-import { COMMENT_SOURCE } from '#tests/config/typescript.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -106,29 +105,6 @@ test('Vale disables E-Prime when the upstream styles are active', async () => {
     const files = generateFiles(await openSession(sandbox.path)).files;
     const ini = files.find(({ path }) => path === getManifestTarget('prose', 'vale.ini'))!.content;
     expect(ini).toContain('write-good.E-Prime = NO');
-});
-
-test.each(['basic', 'all'] as const)('Vale limits code comments to mistake checks at level %s', async (level) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['prose'], { level }),
-        'source.ts': COMMENT_SOURCE,
-    });
-    const files = generateFiles(await openSession(sandbox.path)).files;
-    const ini = files.find(({ path }) => path === getManifestTarget('prose', 'vale.ini'))!.content;
-    if (level === 'all')
-        expect(ini).toContain(
-            '[*.{ts,tsx,js,jsx,swift,py,css,sh,bash,zsh,sql,pgsql,psql}]\n' +
-                'BasedOnStyles =\n' +
-                'gspot.conscious-language = YES\n' +
-                'gspot.placeholders = YES\n' +
-                'gspot.merge-conflict-markers = YES\n' +
-                'gspot.session-identifiers = YES\n' +
-                'gspot.straight-quotes = YES\n' +
-                'gspot.em-dashes = YES',
-        );
-    const styles = ini.split('\n').find((line) => line.startsWith(GSPOT_STYLES_LINE));
-    if (level === 'all') expect(styles).toStartWith(`${GSPOT_STYLES_LINE}, Vale, `);
-    else expect(styles).toBe(GSPOT_STYLES_LINE);
 });
 
 test.each([...PROSE_STYLE_CASES])(

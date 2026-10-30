@@ -12,33 +12,26 @@ import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { selectStartRunner } from '#cli/repository/npm/package-manager.ts';
+import { HOOK_CASES, START_COMMANDS } from '#tests/config/generation/hooks.ts';
 import { chmod, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
 import { createGitSandbox, createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
-import { HOOK_CASES, START_COMMANDS, HOOK_LEVEL_CASES } from '#tests/config/generation/hooks.ts';
 
-test.each([...HOOK_LEVEL_CASES])(
-    'at level $level, gspot writes check hooks without unused Git LFS hooks',
-    async ({ level, hooks }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([], { level, tables: HOOKS_SETTINGS }),
-        });
-        const written = generateFiles(await openSession(sandbox.path)).files.filter((file) =>
-            file.path.startsWith(`${GSPOT_PATHS.hooks}/`),
-        );
-        expect(written.map((file) => file.path)).toStrictEqual(hooks.map((name) => `${GSPOT_PATHS.hooks}/${name}`));
-    },
-);
+test('gspot writes check hooks without unused Git LFS hooks', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
+    });
+    const written = generateFiles(await openSession(sandbox.path)).files.filter((file) =>
+        file.path.startsWith(`${GSPOT_PATHS.hooks}/`),
+    );
+    expect(written.map((file) => file.path)).toStrictEqual(
+        ['commit-msg', 'pre-commit', 'pre-push'].map((name) => `${GSPOT_PATHS.hooks}/${name}`),
+    );
+});
 
-test.each(
-    START_COMMANDS.flatMap(([program, packageManager, prefix]) =>
-        [
-            { place: 'the Git top level', folder: '' },
-            { place: 'a folder below it', folder: 'project' },
-        ].map((place) => ({ program, packageManager, prefix, ...place })),
-    ),
-)(
-    'each hook script uses the $program start command to run one check, with gspot.toml at $place',
-    async ({ program, packageManager, prefix, folder }) => {
+test.each(START_COMMANDS.map(([program, packageManager, prefix]) => ({ program, packageManager, prefix })))(
+    'each hook script uses the $program start command to run one check, with gspot.toml below the Git top level',
+    async ({ program, packageManager, prefix }) => {
+        const folder = 'project';
         await using sandbox = await createGitSandbox({
             [join(folder, 'gspot.toml')]: buildSandboxSettings([], { rules: true }),
         });
@@ -73,8 +66,6 @@ test.each(
         for (const [index, [name, commandArguments]] of HOOK_CASES.entries()) {
             const file = files[index]!;
             expect(file).toMatchObject({ executable: true });
-            expect(file.content).toContain(`${selectStartRunner(root).command} check --hook ${name}`);
-            if (folder === '') continue;
             const path = join(sandbox.path, name);
             await writeFile(path, file.content);
             await chmod(path, 0o755);

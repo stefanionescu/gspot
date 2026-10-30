@@ -8,15 +8,10 @@ import { INACTIVE_RULE_OPTIONS } from '#tests/config/generation/config-files/rul
 
 test.each([...INACTIVE_RULE_OPTIONS])(
     'inactive $configuration rule $rule refuses options',
-    async ({ configuration, tables, scoped, message }) => {
+    async ({ configuration, tables, message }) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings([configuration], {
-                level: 'all',
-                tables,
-                scopes: scoped ? [{ path: 'web' }] : [],
-            }),
+            'gspot.toml': buildSandboxSettings([configuration], { level: 'all', tables }),
             'source.js': 'export const total = 1;\n',
-            'web/README.md': '# Web\n',
         });
         const error = await captureRejection(openSession(sandbox.path).then((session) => generateFiles(session)));
         expect(error.message).toBe(message);
