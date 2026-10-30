@@ -169,6 +169,13 @@ repository.
   `generation/`. No folder outside `commands/` takes a command's name.
 - `system/` holds the code every layer may import: access to files, processes, Git, the environment, and the terminal,
   and the pure text and value helpers that `parsers/` needs.
+- The layers of `packages/cli/src/` run from the base up: `system/`, `parsers/`, `configurations/`, `repository/`,
+  `settings/`, `planning/`, `tools/`, `installers/`, `generation/`, `runs/`, `checks/`, `commands/`, then `main.ts`
+  and `bin.ts`.
+- A layer imports only the layers before it. Every layer may import `config/` and `types/`, and the `schemas/` files
+  of a layer belong to that layer.
+- The `[[import_rule]]` records in `gspot.toml` list the layers in this order, and `gspot check` reports an import
+  that breaks it.
 - A unit test file mirrors the source file it tests, with the same name. `tests/suites/unit/<package>/<path>.test.ts` tests
   `packages/<package>/src/<path>.ts`. A test of a whole source folder takes the folder name.
 - When the tests of one source file or folder pass 300 lines, they become a folder of that name with one file per
