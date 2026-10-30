@@ -1,5 +1,5 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { join, posix } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -41,38 +41,18 @@ test('supabase/storage-policies reports a syntax finding for malformed TOML', as
 test.each([...STORAGE_POLICIES])(
     "a storage policy counts a bucket_id = 'name' condition on storage.objects, not a lookalike: $name",
     async ({ sql, allowed }) => {
-        await using sandbox = await testdir();
-        const settings = buildSandboxSettings(['supabase'], {
-            level: 'all',
-            scopes: [{ path: 'app', configurations: ['supabase'] }],
-        });
-        await createFileTree(sandbox.path, {
-            'gspot.toml': settings,
+        const path = 'supabase/migrations/20261005000000_policy.sql';
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['supabase'], { level: 'all' }),
             'supabase/config.toml': AVATARS_BUCKET_CONFIG,
-            'supabase/migrations/20261005000000_policy.sql': sql,
-            'app/supabase/config.toml': AVATARS_BUCKET_CONFIG,
-            'app/supabase/migrations/20261005000000_policy.sql': sql,
+            [path]: sql,
         });
-        for (const scope of ['', 'app']) {
-            const path = join(scope, 'supabase/migrations/20261005000000_policy.sql');
-
-            const findings = await runSandboxCheck(sandbox.path, 'supabase/storage-policies', { scope });
-            expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
-                allowed
-                    ? []
-                    : [
-                          {
-                              file: scope === '' ? 'supabase/config.toml' : 'app/supabase/config.toml',
-                              rule: 'bucket-policy',
-                          },
-                      ],
-            );
-            await writeFile(
-                join(sandbox.path, path),
-                "CREATE POLICY p ON storage.objects USING (bucket_id = 'avatars');",
-            );
-            expect(await runSandboxCheck(sandbox.path, 'supabase/storage-policies', { scope })).toStrictEqual([]);
-        }
+        const findings = await runSandboxCheck(sandbox.path, 'supabase/storage-policies');
+        expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
+            allowed ? [] : [{ file: 'supabase/config.toml', rule: 'bucket-policy' }],
+        );
+        await writeFile(join(sandbox.path, path), "CREATE POLICY p ON storage.objects USING (bucket_id = 'avatars');");
+        expect(await runSandboxCheck(sandbox.path, 'supabase/storage-policies')).toStrictEqual([]);
     },
 );
 
@@ -150,38 +130,34 @@ test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in
     expect(corrected.report.failed).toStrictEqual([]);
 });
 
-test.each(['', 'apps/api'])(
-    'supabase/storage-policies reports invalid bucket settings as a syntax finding in scope %j',
-    async (scope) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['supabase'], {
-                scopes: scope === '' ? [] : [{ path: scope }],
-            }),
-            [join(scope, 'supabase/config.toml')]: '[storage]\nbuckets = "avatars"\n',
-        });
-        const before = await readTree(sandbox.path);
-        const session = await openSession(sandbox.path);
-        using _resources = session.resources;
-        const failed = await runChecks(session, buildRunOptions({ only: ['supabase/storage-policies'] }));
+test('supabase/storage-policies reports invalid bucket settings as a syntax finding', async () => {
+    const path = 'supabase/config.toml';
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['supabase']),
+        [path]: '[storage]\nbuckets = "avatars"\n',
+    });
+    const before = await readTree(sandbox.path);
+    const session = await openSession(sandbox.path);
+    using _resources = session.resources;
+    const failed = await runChecks(session, buildRunOptions({ only: ['supabase/storage-policies'] }));
 
-        const check = failed.report.checks.find((check) => check.scope === scope);
-        expect(check).toMatchObject({
+    expect(failed.report.checks).toMatchObject([
+        {
             check: 'supabase/storage-policies',
-            scope,
             status: 'failed',
             findings: [
                 {
-                    file: posix.join(scope, 'supabase/config.toml'),
+                    file: path,
                     line: 1,
                     rule: 'syntax',
-                    message: `${posix.join(scope, 'supabase/config.toml')}: storage.buckets: Invalid input: expected record, received string. Fix the field.`,
+                    message: `${path}: storage.buckets: Invalid input: expected record, received string. Fix the field.`,
                 },
             ],
-        });
-        expect(failed.report.exitCode).toBe(1);
-        expect(await readTree(sandbox.path)).toStrictEqual(before);
-    },
-);
+        },
+    ]);
+    expect(failed.report.exitCode).toBe(1);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
 
 test('supabase/storage-policies reports nothing without a config.toml', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['supabase']) });

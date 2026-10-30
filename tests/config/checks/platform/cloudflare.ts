@@ -25,8 +25,6 @@ assets/*
   X-Robots-Tag: noindex
 `;
 
-export const CLOUDFLARE_SCOPE_SETTINGS = [{ path: 'app', configurations: ['cloudflare'] }];
-
 export const SECURITY_HEADER_CASES = [
     {
         name: 'missing content type protection',

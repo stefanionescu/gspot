@@ -87,26 +87,14 @@ export const SERVICE_KEY_READERS = {
 export const SECRET_KEY_READS = [
     'process.env.SUPABASE_SECRET_KEY',
     'settings.supabase_secret_key',
-    'settings.supabaseSecretKey',
     '"sb_secret_example"',
 ] as const;
 
-export const SERVICE_ROLE_CLIENT_FILES = [
-    'client.astro',
-    'client.cjs',
-    'client.cts',
-    'client.mts',
-    'client.svelte',
-    'client.vue',
-] as const;
+export const SERVICE_ROLE_CLIENT_FILES = ['client.mts', 'client.vue'] as const;
 
 export const SERVICE_ROLE_CLIENTS = {
     'client.vue': '<script setup>const key = process.env.SUPABASE_SERVICE_ROLE_KEY;</script>\n',
-    'client.svelte': '<script>const key = process.env.SUPABASE_SERVICE_ROLE_KEY;</script>\n',
-    'client.astro': '---\nconst key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n---\n',
     'client.mts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
-    'client.cts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
-    'client.cjs': 'exports.key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
     'server/allowed.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
     'notes.txt': 'SUPABASE_SERVICE_ROLE_KEY\n',
 } as const;

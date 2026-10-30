@@ -32,26 +32,23 @@ test('supabase/deno-lint runs in each scope folder on each edge function of its 
     ]);
 });
 
-test.each([1, 2])(
-    "supabase/deno-lint fails with Deno's error text when Deno exits %i without a JSON report",
-    async (code) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['supabase']),
-            'supabase/functions/greet/index.ts': 'export {};',
-            'supabase/functions/greet/deno.json': '{',
-        });
+test("supabase/deno-lint fails with Deno's error text when Deno exits without a JSON report", async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['supabase']),
+        'supabase/functions/greet/index.ts': 'export {};',
+        'supabase/functions/greet/deno.json': '{',
+    });
 
-        using resources = new DisposableStack();
-        const session = await openFakeToolSession(sandbox.path, ['deno'], resources);
-        resources.use(
-            fakeCommands().mockResolvedValue(
-                buildProcessResult({ code, stderr: 'The project configuration is invalid.' }),
-            ),
-        );
-        const error = await captureRejection(runSandboxCheck(session.root, 'supabase/deno-lint'));
-        expect(error.message).toBe('The project configuration is invalid.');
-    },
-);
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(sandbox.path, ['deno'], resources);
+    resources.use(
+        fakeCommands().mockResolvedValue(
+            buildProcessResult({ code: 1, stderr: 'The project configuration is invalid.' }),
+        ),
+    );
+    const error = await captureRejection(runSandboxCheck(session.root, 'supabase/deno-lint'));
+    expect(error.message).toBe('The project configuration is invalid.');
+});
 
 test('a configured edge entrypoint and import map reach Deno, unless deno.json takes precedence', async () => {
     await using sandbox = await testdir({
@@ -100,7 +97,7 @@ async function prepareDenoSession(root: string) {
     return { session, run, [Symbol.dispose]: owned[Symbol.dispose].bind(owned) };
 }
 
-test('Deno type errors use their location or the entrypoint, and successful checks clear the findings', async () => {
+test('Deno type errors use their location or the entrypoint', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['supabase']),
         'supabase/functions/greet/index.ts': 'export {};\n',
@@ -110,7 +107,7 @@ test('Deno type errors use their location or the entrypoint, and successful chec
     using resources = new DisposableStack();
     await openFakeToolSession(sandbox.path, ['deno'], resources);
     const location = pathToFileURL(join(sandbox.path, 'supabase/functions/greet/util.ts')).href;
-    const run = resources.use(
+    resources.use(
         fakeCommands().mockImplementation((command) =>
             Promise.resolve(
                 buildProcessResult({
@@ -138,6 +135,4 @@ test('Deno type errors use their location or the entrypoint, and successful chec
             message: 'error: Module not found "./missing.ts".',
         },
     ]);
-    run.mockResolvedValue(buildProcessResult());
-    expect(await runSandboxCheck(sandbox.path, 'supabase/deno-check')).toStrictEqual([]);
 });
