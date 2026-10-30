@@ -28,6 +28,7 @@ import { checkBashDocComments } from '#cli/checks/language/bash/doc-comments.ts'
 import { checkNamingIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 import { checkBashFunctionSize } from '#cli/checks/language/bash/function-size.ts';
 import { checkBashScriptLayout } from '#cli/checks/language/bash/script-layout.ts';
+import { checkSwiftDocComments } from '#cli/checks/language/swift/doc-comments.ts';
 import { checkSwiftSkipReasons } from '#cli/checks/language/swift/skip-reasons.ts';
 import { checkSiteUnusedAssets } from '#cli/checks/framework/site/unused-assets.ts';
 import { checkBashInlineScripts } from '#cli/checks/language/bash/inline-scripts.ts';
@@ -187,6 +188,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'svelte/svelte-check': { check: checkSvelteCheck },
     'swift/build': { check: checkSwiftBuild },
     'swift/coverage': { check: checkSwiftCoverage },
+    'swift/doc-comments': { check: checkSwiftDocComments },
     'swift/periphery': { check: checkSwiftPeriphery },
     'swift/skip-reasons': { check: checkSwiftSkipReasons },
     'swift/swiftlint': { listConfigFiles: listSwiftlintConfigFiles },

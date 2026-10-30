@@ -87,6 +87,9 @@ a view model. Prefer Foundation `URLSession` with async/await rather than a thir
 `- Parameters:`, `- Returns`, and `- Throws`. Backticks name parameters and types. `// MARK:`, implementation notes, and
 tool directives use ordinary `//` comments.
 
+The doc comment of a `public` or `open` function or initializer documents each parameter with `- Parameter name:` or
+an item of a `- Parameters:` list.
+
 ## Concurrency and errors
 
 Structured `async`/`await` with `async throws` APIs replaces callback pyramids and unmanaged task trees. UI state

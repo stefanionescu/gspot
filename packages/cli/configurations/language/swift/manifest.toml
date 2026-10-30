@@ -145,6 +145,16 @@ tool = "periphery"
 why = "People read, maintain, and migrate dead code without knowing that nothing uses it."
 
 [[check]]
+example = "`public func move(to point: CGPoint)` with the doc comment `/// Moves the view.` reports `missing-parameter`. Add `/// - Parameter point: Where the view goes.` to the doc comment."
+files = { extensions = [".swift"] }
+help = "Add a `- Parameter <name>:` line for each parameter, or a `- Parameters:` list, to the doc comment of the declaration."
+level = "all"
+name = "doc-comments"
+stage = "commit"
+summary = "Checks that the doc comment of each `public` or `open` function and initializer documents every parameter with `- Parameter name:` or a `- Parameters:` list. Overrides keep the doc comment that they inherit."
+why = "A caller of a public API reads its doc comment, not its body, and a parameter without a line leaves the caller to guess."
+
+[[check]]
 example = "`throw XCTSkip()` in a Swift test reports a missing reason. Restore the test, or give a reason such as `throw XCTSkip(\"Requires the hardware test device\")`."
 files = { tags = ["swift-test"] }
 help = "Write why the test stays off and what turns it on again, or delete it."
