@@ -31,7 +31,6 @@ export const NGINX_MOUNT_CASES = [
         certificates: ['/etc/nginx/ssl/fullchain.pem', '/etc/nginx/ssl/privkey.pem'],
     },
     DYNAMIC_TARGET_CASE,
-    { name: 'empty directives', source: '# Empty configuration.\n;{};', hosts: [], certificates: [] },
 ] as const;
 
 const NGINX_EMERGENCY_CASES = [

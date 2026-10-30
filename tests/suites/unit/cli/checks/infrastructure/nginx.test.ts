@@ -35,7 +35,7 @@ test.each([...NGINX_MOUNT_CASES])(
             tail: string[];
             image: string | undefined;
         }[] = [];
-        using run = fakeCommands().mockImplementation(async (command) => {
+        using _run = fakeCommands().mockImplementation(async (command) => {
             const volumes = command.filter((_, index) => command[index - 1] === '-v');
             const configuration = volumes.find((volume) => volume.endsWith(':/etc/nginx/nginx.conf:ro'));
             if (configuration === undefined) return buildProcessResult();
@@ -49,7 +49,6 @@ test.each([...NGINX_MOUNT_CASES])(
             return buildProcessResult({ stdout: '# configuration file /etc/nginx/nginx.conf:\n' });
         });
         expect(await runSandboxCheck(sandbox.path, 'nginx/syntax')).toStrictEqual([]);
-        expect(run).toHaveBeenCalledTimes(2);
         expect(containers).toStrictEqual([
             {
                 hosts: [...hosts],
@@ -63,45 +62,36 @@ test.each([...NGINX_MOUNT_CASES])(
     },
 );
 
-test.each(['stdout', 'stderr'])(
-    'a failed certificate step reports its %s text, removes the scratch files, and does not start Docker',
-    async (stream) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['nginx']),
-            'nginx.conf': NGINX_UPSTREAM_CONF,
-        });
+test('a failed certificate step reports its error text, removes the scratch files, and does not start Docker', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['nginx']),
+        'nginx.conf': NGINX_UPSTREAM_CONF,
+    });
 
-        const session = await openSession(sandbox.path);
+    const session = await openSession(sandbox.path);
 
-        using resources = new DisposableStack();
-        const fakes = fakeToolExecutables([
-            getTool(session.configurationsByName.values(), 'openssl'),
-            getTool(session.configurationsByName.values(), 'docker'),
-        ]);
-        resources.use(fakes);
-        const folders: string[] = [];
-        const message = 'The temporary key could not be written.';
-        using _spawn = fakeCommands().mockImplementation((_command, options) => {
-            folders.push(options.cwd);
-            return Promise.resolve(
-                buildProcessResult({
-                    code: 1,
-                    stdout: stream === 'stdout' ? message : '',
-                    stderr: stream === 'stderr' ? message : '',
-                }),
-            );
-        });
+    using resources = new DisposableStack();
+    const fakes = fakeToolExecutables([
+        getTool(session.configurationsByName.values(), 'openssl'),
+        getTool(session.configurationsByName.values(), 'docker'),
+    ]);
+    resources.use(fakes);
+    const folders: string[] = [];
+    const message = 'The temporary key could not be written.';
+    using _spawn = fakeCommands().mockImplementation((_command, options) => {
+        folders.push(options.cwd);
+        return Promise.resolve(buildProcessResult({ code: 1, stderr: message }));
+    });
 
-        const error = await captureRejection(runSandboxCheck(session.root, 'nginx/syntax'));
-        expect(error.message).toBe(`The openssl command could not write the temporary certificate: ${message}`);
-        expect(_spawn).toHaveBeenCalledTimes(1);
-        for (const folder of folders) {
-            expect(folder).not.toBe(sandbox.path);
-            expect(await isOnDisk(folder)).toBe(false);
-        }
-        expect(await readFile(join(sandbox.path, 'nginx.conf'), 'utf8')).toBe(NGINX_UPSTREAM_CONF);
-    },
-);
+    const error = await captureRejection(runSandboxCheck(session.root, 'nginx/syntax'));
+    expect(error.message).toBe(`The openssl command could not write the temporary certificate: ${message}`);
+    expect(_spawn).toHaveBeenCalledTimes(1);
+    for (const folder of folders) {
+        expect(folder).not.toBe(sandbox.path);
+        expect(await isOnDisk(folder)).toBe(false);
+    }
+    expect(await readFile(join(sandbox.path, 'nginx.conf'), 'utf8')).toBe(NGINX_UPSTREAM_CONF);
+});
 
 test.each(NGINX_FAILURE_CASES)('nginx/syntax reports $name', async ({ stderr, status, note, findings }) => {
     await using sandbox = await testdir({

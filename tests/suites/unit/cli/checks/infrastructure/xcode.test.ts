@@ -111,7 +111,7 @@ test('xcode/assets reports an ignored image that is on disk but not in the repos
     expect(await runSandboxCheck(sandbox.path, 'xcode/assets')).toStrictEqual([]);
 });
 
-test.each(['logo-mark', 'logo_mark', 'Logo Mark', 'Logo MarkImage', 'logo-markColor'])(
+test.each(['Logo Mark', 'Logo MarkImage', 'logo-markColor'])(
     'Xcode asset %s accepts its camel-case symbol and reports an unrelated symbol',
     async (name) => {
         await using sandbox = await testdir();

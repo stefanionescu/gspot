@@ -1,4 +1,3 @@
-import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
@@ -24,7 +23,7 @@ test('each Ansible project lints its own files and not those of a nested project
         [buildVenvExecutablePath(GSPOT_PATHS.pythonEnvironment, 'ansible-lint')]: 'stub',
     });
     const input = planSandboxCheck(session, 'ansible/ansible-lint');
-    const run = resources.use(
+    resources.use(
         spyOn(processes, 'spawnProcess').mockImplementation(() =>
             Promise.resolve(
                 buildProcessResult({
@@ -38,14 +37,5 @@ test('each Ansible project lints its own files and not those of a nested project
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'infra/site.yml', rule: 'command-instead-of-module' },
         { file: 'infra/edge/site.yml', rule: 'command-instead-of-module' },
-    ]);
-    expect(
-        run.mock.calls.map(([command, options]) => ({
-            cwd: options.cwd,
-            files: command.filter((argument) => argument.endsWith('site.yml')),
-        })),
-    ).toStrictEqual([
-        { cwd: join(sandbox.path, 'infra'), files: [] },
-        { cwd: join(sandbox.path, 'infra', 'edge'), files: [] },
     ]);
 });

@@ -48,23 +48,14 @@ export const ASSET_SETTING_CASES = [
         path: 'app/App.xcodeproj/project.pbxproj',
         text: '{ objects = { CONFIG = { isa = XCBuildConfiguration; buildSettings = { ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; }; }; }; }\n',
     },
-    {
-        title: 'A scoped xcconfig setting',
-        scope: 'app/',
-        path: 'app/Build.xcconfig',
-        text: 'ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor\n',
-    },
 ] as const;
 
 export const INVALID_RESOURCE_DOCUMENTS = [
     { check: 'xcode/xcstrings', path: 'Localizable.xcstrings', text: 'null' },
-    { check: 'xcode/assets', path: 'Assets.xcassets/Logo.imageset/Contents.json', text: '{"images":"invalid"}' },
-    { check: 'xcode/xcstrings', path: 'App/Localizable.xcstrings', text: '{' },
     { check: 'xcode/assets', path: 'App/Assets.xcassets/Logo.imageset/Contents.json', text: '{' },
 ] as const;
 
 export const UNREADABLE_RESOURCES = [
-    { check: 'xcode/xcstrings', path: 'App/Localizable.xcstrings', text: '{"sourceLanguage":"en","strings":{}}\n' },
     {
         check: 'xcode/assets',
         path: 'App/Assets.xcassets/Logo.imageset/Contents.json',

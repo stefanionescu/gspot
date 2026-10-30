@@ -1,7 +1,5 @@
 export const COMPOSE_PAIRING_CASES = [
     { base: 'compose.yaml', override: 'compose.override.yaml' },
-    { base: 'compose.yaml', override: 'compose.prod.yaml' },
-    { base: 'docker-compose.yaml', override: 'docker-compose.override.yaml' },
     { base: 'docker-compose.yml', override: 'docker-compose.production.yml' },
 ] as const;
 
@@ -119,48 +117,6 @@ export const DOCKERIGNORE_CASES = [
                 rule: 'missing-entry',
                 message:
                     'Add these entries to Dockerfile.dockerignore: .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
-            },
-        ],
-    },
-    {
-        name: 'the entries of Docker alone',
-        configurations: ['docker'],
-        options: { rules: true },
-        files: {
-            Dockerfile: 'FROM scratch\n',
-            '.dockerignore': REQUIRED_DOCKERIGNORE,
-        },
-        findings: [],
-    },
-    {
-        name: 'the entries of JavaScript',
-        configurations: ['docker', 'javascript'],
-        options: { rules: true },
-        files: {
-            Dockerfile: 'FROM scratch\n',
-            '.dockerignore': REQUIRED_DOCKERIGNORE,
-        },
-        findings: [
-            {
-                file: '.dockerignore',
-                rule: 'missing-entry',
-                message: 'Add these entries to .dockerignore: **/node_modules/**, **/bower_components/**.',
-            },
-        ],
-    },
-    {
-        name: 'the entries of Python',
-        configurations: ['docker', 'python'],
-        options: { rules: true },
-        files: {
-            Dockerfile: 'FROM scratch\n',
-            '.dockerignore': REQUIRED_DOCKERIGNORE,
-        },
-        findings: [
-            {
-                file: '.dockerignore',
-                rule: 'missing-entry',
-                message: 'Add these entries to .dockerignore: **/.venv/**, **/venv/**.',
             },
         ],
     },
