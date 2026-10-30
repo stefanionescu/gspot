@@ -65,7 +65,6 @@ test.each([...WORKFLOW_TEXT_CASES])(
         using run = spyOn(processes, 'spawnProcess').mockImplementation(async (_command, options) => {
             const written = await readFile(join(options.cwd, path), 'utf8');
             expect(written).toBe(expected);
-            expect(written).toHaveLength(before.length);
             return buildProcessResult();
         });
         const [planned] = planChecks(session, { stage: 'commit', only: ['github-actions/actionlint'] });

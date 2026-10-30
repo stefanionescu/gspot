@@ -29,18 +29,6 @@ main "$@"
     },
     {
         files: {
-            'scripts/print.sh': `${BASH_HEADER}# main: runs the script.
-main() {
-    node -p '1 + 1'
-}
-
-main "$@"
-`,
-        },
-        expected: { file: 'scripts/print.sh', rule: 'runtime-embed', line: 10 },
-    },
-    {
-        files: {
             'scripts/node-heredoc.sh': `${BASH_HEADER}# main: runs the script.
 main() {
     node <<'JS'

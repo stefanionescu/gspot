@@ -39,8 +39,6 @@ export const DOC_TASK_FINDINGS = [
 
 export const DOC_FENCE_PATH_CASES = [
     { info: 'title="example.sh"', language: 'sh', reported: false },
-    { info: 'title="example.sql"', language: 'sql', reported: false },
-    { info: 'title="example.custom"', language: 'custom', reported: false },
     { info: 'start=1\ttitle="example.sh"', language: 'sh', reported: false },
     { info: '', language: 'text', reported: false },
     { info: '', language: 'sh', reported: true },

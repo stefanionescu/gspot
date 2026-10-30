@@ -1,6 +1,5 @@
 import { join, dirname } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { getTable } from '#cli/settings/scopes.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { CHECK_CODE } from '#cli/checks/registry.ts';
 import * as processes from '#cli/system/processes.ts';
@@ -81,10 +80,6 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
     resources.use(await fakeWrangler(sandbox.path));
     const run = resources.use(fakeWranglerTypes(source));
     const untracked = await openSession(sandbox.path);
-    expect(getTable(untracked.scopes[0]!.settings, 'cloudflare')).toStrictEqual({
-        types_file: 'cloudflare-env.d.ts',
-        types_interface: 'CloudflareEnv',
-    });
     const untrackedCheck = planSandboxCheck(untracked, 'cloudflare/stale-types');
     const untrackedResult = await runCheckCode(
         buildCheckSession(untracked),

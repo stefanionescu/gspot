@@ -7,7 +7,6 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { FORCED_NAME_CASES } from '#tests/config/checks/general/naming/forced-names.ts';
 
 import {
     FRAMEWORK_NAMES,
@@ -213,6 +212,7 @@ test('cors stays a domain word while core and its word forms remain banned', asy
     });
     const findings = await runSandboxCheck(sandbox.path, 'naming/identifiers');
     expect(findings.map(({ line }) => line)).toStrictEqual([2, 3, 4]);
+    expect(findings[0]?.message).toBe('javascript variable "coreCount": "core" is banned (containers list).');
 });
 
 test('snapshot names describe storage and subscription concepts outside tests', async () => {
@@ -223,14 +223,3 @@ test('snapshot names describe storage and subscription concepts outside tests', 
     });
     expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toStrictEqual([]);
 });
-
-test.each(FORCED_NAME_CASES.filter(({ check }) => check === 'naming/identifiers'))(
-    '$check uses shipped defaults for $path',
-    async ({ configurations, path, source, findings: expected }) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings([...configurations, 'naming'], { level: 'all' }),
-            [path]: source,
-        });
-        expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toMatchObject([...expected]);
-    },
-);

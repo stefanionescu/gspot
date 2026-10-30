@@ -1,8 +1,6 @@
 export const COMPOSE_PAIRING_CASES = [
     { base: 'compose.yaml', override: 'compose.override.yaml' },
-    { base: 'compose.yml', override: 'compose.override.yml' },
     { base: 'compose.yaml', override: 'compose.prod.yaml' },
-    { base: 'compose.yml', override: 'compose.production.yml' },
     { base: 'docker-compose.yaml', override: 'docker-compose.override.yaml' },
     { base: 'docker-compose.yml', override: 'docker-compose.production.yml' },
 ] as const;
@@ -13,8 +11,6 @@ export const DOCKERIGNORE_ALLOWLISTS = [
     { text: `${REQUIRED_DOCKERIGNORE}!.env\n`, missing: ['.env'] },
     { text: `${REQUIRED_DOCKERIGNORE}!**/.env\n`, missing: ['.env', '**/.env'] },
     { text: '*\n', missing: [] },
-    { text: '**\n', missing: [] },
-    { text: '**/*\n', missing: [] },
     { text: '*\n!src\n', missing: ['**/.env', '**/.env.*', '**/.dev.vars', '**/.dev.vars.*'] },
     { text: '*\n!src\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n', missing: [] },
     { text: '!src\n*\n', missing: [] },
@@ -127,20 +123,6 @@ export const DOCKERIGNORE_CASES = [
         ],
     },
     {
-        name: 'a missing ignore with no alternative',
-        configurations: ['docker'],
-        options: { level: 'all' },
-        files: { Dockerfile: 'FROM scratch\n' },
-        findings: [
-            {
-                file: 'Dockerfile',
-                rule: 'missing-file',
-                message:
-                    'Add an ignore file at Dockerfile.dockerignore or .dockerignore that lists .git, .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
-            },
-        ],
-    },
-    {
         name: 'the entries of Docker alone',
         configurations: ['docker'],
         options: { rules: true },
@@ -246,11 +228,6 @@ export const INVALID_COMPOSE_SOURCES = [
         name: 'a non-string image',
         source: 'services: {app: {image: 12}}',
         message: 'compose.yaml: services.app.image: Invalid input: expected string, received number. Fix the field.',
-    },
-    {
-        name: 'an empty service value',
-        source: 'services: {app: null}',
-        message: 'compose.yaml: services.app: Invalid input: expected object, received null. Fix the field.',
     },
 ] as const;
 

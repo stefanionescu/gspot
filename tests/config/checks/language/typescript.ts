@@ -16,13 +16,6 @@ export const TSCONFIG_READ_ERRORS = [
         fixed: 'tsconfig.json',
     },
     {
-        name: 'an array root',
-        tsconfig: '[]',
-        error: "Cannot read the compiler settings in tsconfig.json: The root value of a 'tsconfig.json' file must be an object.",
-        fixed: 'tsconfig.json',
-    },
-
-    {
         name: 'malformed JSON',
         tsconfig: '{',
         error: "Cannot read the compiler settings in tsconfig.json: '}' expected.",

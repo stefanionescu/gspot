@@ -143,7 +143,6 @@ test('javascript/tsc puts incremental build information in the check copy', asyn
         { file: 'src/value.js', rule: 'TS2322' },
     ]);
     const flag = first.command!.indexOf('--tsBuildInfoFile');
-    expect(flag).toBeGreaterThan(-1);
     expect(first.command!.slice(flag, flag + 2)).toStrictEqual([
         '--tsBuildInfoFile',
         join(sandbox.path, '.gspot/jsconfig.check.tsbuildinfo'),

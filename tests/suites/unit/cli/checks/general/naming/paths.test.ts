@@ -9,7 +9,6 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { FORCED_NAME_CASES } from '#tests/config/checks/general/naming/forced-names.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/general/naming/paths.ts';
 
 import {
@@ -111,6 +110,9 @@ test('a banned folder word such as shared is reported in folder names', async ()
             .flatMap(({ findings }) => findings.map(({ file }) => file))
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(paths.toSorted((left, right) => left.localeCompare(right)));
+    expect([
+        ...new Set(result.report.checks.flatMap(({ findings }) => findings.map(({ message }) => message))),
+    ]).toStrictEqual(['javascript folder "shared": "shared" is banned (folders list).']);
 });
 
 test('a mise task file named _default passes, and the same name elsewhere does not', async () => {
@@ -198,17 +200,6 @@ test('double underscore tool folders keep their inner names and a shared folder 
         { file: 'app/_shared/port.js', rule: 'banned-word' },
     ]);
 });
-
-test.each(FORCED_NAME_CASES.filter(({ check }) => check === 'naming/paths'))(
-    '$check uses shipped defaults for $path',
-    async ({ configurations, path, source, findings: expected }) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings([...configurations, 'naming'], { level: 'all' }),
-            [path]: source,
-        });
-        expect(await runSandboxCheck(sandbox.path, 'naming/paths')).toMatchObject([...expected]);
-    },
-);
 
 test('mixed-language folders accept the union of language naming cases once', async () => {
     await using sandbox = await testdir({

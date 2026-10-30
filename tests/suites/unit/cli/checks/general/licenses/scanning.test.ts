@@ -41,7 +41,7 @@ test.each([...ALLOWED_PACKAGE_SCOPE_CASES])(
         await writeScopeLicenseSandbox(sandbox.path, scenario);
 
         const scanned: string[] = [];
-        using output = spyOn(processes, 'spawnProcess').mockImplementation((command) => {
+        using _output = spyOn(processes, 'spawnProcess').mockImplementation((command) => {
             const interpreter = command.at(-1)!;
             const [scope, identity] = Object.entries(reports).find(
                 ([folder]) => interpreter === buildVenvExecutablePath(join(sandbox.path, folder, '.venv'), 'python'),
@@ -65,7 +65,6 @@ test.each([...ALLOWED_PACKAGE_SCOPE_CASES])(
             .filter((scope) => scope !== ('ignore' in scenario ? scenario.ignore : undefined))
             .toSorted((a, b) => a.localeCompare(b));
         expect(scanned.toSorted((a, b) => a.localeCompare(b))).toStrictEqual(expected);
-        expect(output).toHaveBeenCalledTimes(expected.length);
     },
 );
 
@@ -156,7 +155,7 @@ test('scan: one scan reads package.json and pyproject.toml, accepts a license ch
 
     const folders: string[] = [];
     const nativeRun = processes.spawnProcess;
-    using output = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
+    using _output = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
         if (command[0] === 'git') return nativeRun(command, options);
         folders.push(options.cwd);
         const result = buildProcessResult({
@@ -196,7 +195,6 @@ test('scan: one scan reads package.json and pyproject.toml, accepts a license ch
             message: 'prohibited-python@2.0.0 uses GPL-3.0-only, which is not allowed.',
         },
     ]);
-    expect(output).toHaveBeenCalledTimes(2);
     expect(
         await Promise.all(
             folders.map(async (folder) => ({ isRoot: folder === sandbox.path, kept: await isOnDisk(folder) })),

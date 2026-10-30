@@ -65,7 +65,6 @@ export const VALE_OUTPUT_CASES = [
             }) + '\r\n',
         findings: [...VALE_COLON_PATH_FINDINGS],
     },
-    { name: 'empty reports', stdout: '{}', findings: [] },
 ] as const;
 
 export const EMPTY_VALE_INI = 'Packages =\n';

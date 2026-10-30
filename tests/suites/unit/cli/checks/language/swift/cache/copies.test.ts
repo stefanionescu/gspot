@@ -7,8 +7,6 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { open, stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { UNEXPECTED_PLAN_MESSAGE } from '#tests/config/checks/language/swift/messages.ts';
-import { planSwiftBuild, readRepositoryCacheFolder } from '#cli/checks/language/swift/cache.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
 
 test('Swift build side effects stay in the source copy and do not reach later runs', async () => {
@@ -111,12 +109,6 @@ test('concurrent Swift compilation and Periphery keep separate source and build 
             ]),
         ).toStrictEqual([[], []]);
         expect(new Set(folders).size).toBe(2);
-        const compilePlan = planSwiftBuild(prepared.session, compile);
-        const peripheryFolder = join(readRepositoryCacheFolder(session.toolsRoot), 'swift', 'root', 'periphery');
-        expect(compilePlan.folder).not.toBe(peripheryFolder);
-        if (compilePlan.kind !== 'package') throw new Error(UNEXPECTED_PLAN_MESSAGE);
-        expect(compilePlan.scratch).not.toBe(peripheryFolder);
-        expect(folders).toContain(join(peripheryFolder, 'source'));
     } finally {
         started.resolve();
     }

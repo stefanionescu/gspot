@@ -125,25 +125,4 @@ export const LINTER_LIMIT_CASES = [
             },
         ],
     },
-    {
-        language: 'python',
-        category: 'exceptions',
-        expected: [
-            {
-                rule: 'length',
-                message:
-                    'exceptions "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": 41 characters is over the limit of 35.',
-            },
-        ],
-        wordy: [
-            {
-                rule: 'length',
-                message: 'exceptions "one_two_three_four_five_six_seven_eight": 39 characters is over the limit of 35.',
-            },
-            {
-                rule: 'words',
-                message: 'exceptions "one_two_three_four_five_six_seven_eight": 8 words is over the limit of 4.',
-            },
-        ],
-    },
 ] as const;

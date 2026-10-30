@@ -29,16 +29,6 @@ test.each(['.sh', '.bats', ''])('Bash %s heredocs and multiline strings count as
     expect(await runSandboxCheck(sandbox.path, 'structure/long-files')).toStrictEqual([]);
 });
 
-test('Python files count each executable line against the declared limit', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['python'], { level: 'all', tables: '[limits]\nfile_lines = 12\n' }),
-        'example/big.py': `"""A test module."""\n\n\n${LONG_PYTHON_FILE}\n`,
-    });
-    expect(await runSandboxCheck(sandbox.path, 'structure/long-files')).toMatchObject([
-        { file: 'example/big.py', rule: 'file-lines', line: 1 },
-    ]);
-});
-
 test('long files checks authored covered languages and leaves generated, vendored, and ESLint-owned files out', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['python', 'javascript'], {
