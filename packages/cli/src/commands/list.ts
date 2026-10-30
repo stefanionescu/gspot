@@ -12,6 +12,7 @@ import { isActive, planChecks } from '#cli/planning/checks.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
@@ -89,11 +90,15 @@ function buildConfigurationsResult(session: Session): CommandResult {
             lines.push(`    ${name}  ${states.join(', ')}`);
         }
     }
+    const removed = listRemovedConfigurations(session.settings);
+    if (removed.length > 0) lines.push('', 'removed');
+    for (const { name, scope, reason } of removed)
+        lines.push(['', name, ...(scope === '' ? [] : [`[scope ${scope}]`]), reason].join('  '));
     lines.push('', 'available');
     for (const configuration of available) lines.push(`  ${configuration.name}  ${configuration.description}`);
     return {
         text: `${lines.join('\n')}\n`,
-        json: { selected, available } satisfies ConfigurationsListJson,
+        json: { selected, removed, available } satisfies ConfigurationsListJson,
         exitCode: 0,
     };
 }

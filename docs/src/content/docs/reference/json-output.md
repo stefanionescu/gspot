@@ -123,22 +123,24 @@ files.
 
 ## `gspot list`
 
-`gspot list --json` and `gspot list configurations --json` return `selected` and `available`. Each `selected` item has
-`name` and `checks`, and each check has `name`, `scope`, and `state`. Each `available` item has `name` and
-`description`.
+`gspot list --json` and `gspot list configurations --json` return `selected`, `removed`, and `available`. Each
+`selected` item has `name` and `checks`, and each check has `name`, `scope`, and `state`. Each `removed` item has
+`name`, `scope`, and the `reason` that `gspot.toml` records. Each `available` item has `name` and `description`.
 
 `gspot list settings --json` returns `settings`. Each item has `key`, `value`, `source`, `origin`, `reason_when`, and
 `scope`, and `originScope` when a scope inherits the value from another scope.
 
 ## `gspot explain`
 
-`gspot explain <subject> --json` returns `kind` and `subject`, and the facts that the text shows.
+`gspot explain <subject> --json` returns `kind` and `subject`, and the facts that the text shows. For a check,
+`ignores` lists the ignores of `gspot.toml` that name it. For a configuration, `removed` lists each scope that removes
+it. Each item has the `reason` and the `command` that undoes it.
 
 | `kind`          | Main fields                                                                                  |
 | --------------- | -------------------------------------------------------------------------------------------- |
-| `check`         | `check`, `configuration` or `command`, `stage`, `level`, `summary`, `why`, `help`, `rules`.  |
+| `check`         | `check`, `configuration` or `command`, `stage`, `level`, `summary`, `help`, and `ignores`.   |
 | `lint-rule`     | `tool`, `rule`, `check`, and `page`, the rule's documentation link or `null`.                |
-| `configuration` | `name`, `group`, `title`, `description`, `requires`, `tools`, `checks`, `settings`, `rules`. |
+| `configuration` | `name`, `group`, `title`, `description`, `requires`, `tools`, `checks`, and `removed`.       |
 | `setting`       | `key`, `description`, `type`, and `scopes`, each with `scope`, `default`, `value`, `source`. |
 | `path`          | `path`, `scope`, `fileKind`, `tags`, `configurations`, `checks`, and `ignores`.              |
 

@@ -1,4 +1,4 @@
-import { getValueAt, createTable } from '#cli/system/tables.ts';
+import { isReasonedValue } from '#cli/settings/file.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { findSettingSchema } from '#cli/settings/schema-lookup.ts';
@@ -7,6 +7,7 @@ import { selectConfigurations } from '#cli/configurations/select.ts';
 import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/scopes.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
+import { isTable, getValueAt, createTable } from '#cli/system/tables.ts';
 import { getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
 import type { Settings, TableValues, TableSettings } from '#cli/types/settings/file.ts';
 import { isInScope, isScopeCovered, compareScopeDepth } from '#cli/repository/scopes.ts';
@@ -17,6 +18,7 @@ import type {
     ScopeSettings,
     InheritedSetting,
     AvailableSettings,
+    RemovedConfiguration,
     SelectedConfigurations,
 } from '#cli/types/settings/inheritance.ts';
 
@@ -60,6 +62,27 @@ export function selectForScope(
         for (const removed of table.removed_configurations) choices.delete(removed);
     }
     return selectConfigurations([...choices], configurationsByName);
+}
+
+/**
+List the configurations that gspot.toml removes, in the root and in each scope, with the reason of each.
+
+@param settings the parsed gspot.toml.
+*/
+export function listRemovedConfigurations(settings: Settings): RemovedConfiguration[] {
+    return [['', settings] as const, ...settings.scopes].flatMap(([scope, table]) =>
+        table.removed_configurations.map((name) => ({
+            name,
+            scope,
+            reason: readRemovalReason(table.written['removed_configurations'], name),
+        })),
+    );
+}
+
+function readRemovalReason(written: unknown, name: string): string {
+    if (isReasonedValue(written)) return written.reason;
+    const reason = isTable(written) ? written[name] : undefined;
+    return typeof reason === 'string' ? reason : '';
 }
 
 function listNamingVariants(

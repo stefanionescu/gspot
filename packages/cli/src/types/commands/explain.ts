@@ -9,6 +9,8 @@ export type Explanation = {
     facts: Record<string, unknown>;
 };
 
+export type CheckIgnore = { rule?: string; paths?: string[]; reason: string; command: string };
+
 export type PathExplanation = {
     path: string;
     scope: string;
@@ -40,6 +42,7 @@ export type ConfigurationExplanation = {
     settings: string[];
     rules: string[];
     alwaysSelected: boolean;
+    removed: { scope: string; reason: string; command: string }[];
 };
 
 export type RuleDocumentation = { docs?: { description?: string; url?: string }; url?: string };
@@ -51,5 +54,6 @@ export type CheckFacts = {
     settings: string[];
     rules: string[];
     crashPattern: string | undefined;
+    ignores: CheckIgnore[];
     minVersions: Record<string, string>;
 };

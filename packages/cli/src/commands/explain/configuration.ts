@@ -1,5 +1,7 @@
+import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { checkStageSchema } from '#cli/schemas/configurations/fields.ts';
 import { listRuleFiles, readConfigurations } from '#cli/configurations/manifests.ts';
@@ -12,6 +14,23 @@ import {
     LANGUAGE_FILES_MESSAGE,
     PRETTIER_FILES_MESSAGE,
 } from '#cli/config/commands/explain.ts';
+
+function listConfigurationRemovals(session: Session | undefined, name: string): ConfigurationExplanation['removed'] {
+    return (session === undefined ? [] : listRemovedConfigurations(session.settings))
+        .filter((removal) => removal.name === name)
+        .map(({ scope, reason }) => ({
+            scope,
+            reason,
+            command: ['gspot add', name, ...(scope === '' ? [] : ['--scope', quoteArgument(scope)])].join(' '),
+        }));
+}
+
+function formatRemovals(removed: ConfigurationExplanation['removed']): string[] {
+    return removed.map(({ scope, reason, command }) => {
+        const where = scope === '' ? 'in this repository' : `in scope ${scope}`;
+        return `Removed ${where}: ${reason}  (undo: ${command})`;
+    });
+}
 
 /**
 Describe a configuration's detection, checks, rules, and settings.
@@ -38,6 +57,7 @@ export function explainConfiguration(session: Session | undefined, name: string)
             .filter((file) => listRuleFiles(configuration).some((rule) => rule.path === file.path))
             .map((file) => file.path),
         alwaysSelected: configuration.always_selected,
+        removed: listConfigurationRemovals(session, name),
     };
     const { detect, files } = configuration;
     const lists = [
@@ -75,6 +95,7 @@ export function explainConfiguration(session: Session | undefined, name: string)
         facts.description,
         '',
         ...lists.filter(({ values }) => values.length > 0).map(({ label, values }) => `${label}: ${values.join(', ')}`),
+        ...formatRemovals(facts.removed),
     ];
     return { kind: 'configuration', subject: name, text: `${lines.join('\n')}\n`, facts };
 }

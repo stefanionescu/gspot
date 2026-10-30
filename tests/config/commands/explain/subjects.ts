@@ -67,6 +67,7 @@ export const SYNTAX_CHECK_EXPLANATION = {
     help: 'Read the command output; this repository declares the check.',
     settings: [],
     rules: [],
+    ignores: [],
     check: 'project/syntax',
     stage: 'manual',
     command: ['bash', '-n', '{files}'],

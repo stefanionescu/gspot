@@ -226,7 +226,58 @@ test('explain --json reports every field of a configuration', async () => {
         settings: [],
         rules: [],
         alwaysSelected: true,
+        removed: [],
         kind: 'configuration',
         subject: 'engineering',
     });
+});
+
+test('explain names the ignores of a check and the removals of a configuration, with the command that undoes each', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash'], {
+            tables: [
+                '[removed_configurations]',
+                'markdown = "The project keeps no Markdown files."',
+                '[[ignore]]',
+                'check = "bash/shellcheck"',
+                'rule = "SC2086"',
+                'paths = ["entry.sh"]',
+                'reason = "The script splits words on purpose."',
+                '[[ignore]]',
+                'check = "bash/shellcheck"',
+                'reason = "Upstream checks these scripts."',
+                '',
+            ].join('\n'),
+        }),
+        'entry.sh': CLEAN_BASH_SCRIPT,
+    });
+    const check = await runGspot(sandbox.path, ['explain', 'bash/shellcheck']);
+    expect(check.code, check.stdout + check.stderr).toBe(0);
+    expect(check.stdout).toEndWith(
+        [
+            'Ignored in this repository:',
+            '  rule SC2086 in entry.sh: The script splits words on purpose.  (undo: gspot unignore bash/shellcheck --rule SC2086 --paths entry.sh)',
+            '  everywhere: Upstream checks these scripts.  (undo: gspot unignore bash/shellcheck)',
+            '',
+        ].join('\n'),
+    );
+    const checkJson = await runGspot(sandbox.path, ['explain', 'bash/shellcheck', '--json']);
+    expect((JSON.parse(checkJson.stdout) as { ignores: unknown }).ignores).toStrictEqual([
+        {
+            rule: 'SC2086',
+            paths: ['entry.sh'],
+            reason: 'The script splits words on purpose.',
+            command: 'gspot unignore bash/shellcheck --rule SC2086 --paths entry.sh',
+        },
+        { reason: 'Upstream checks these scripts.', command: 'gspot unignore bash/shellcheck' },
+    ]);
+    const configuration = await runGspot(sandbox.path, ['explain', 'markdown']);
+    expect(configuration.code, configuration.stdout + configuration.stderr).toBe(0);
+    expect(configuration.stdout).toEndWith(
+        'Removed in this repository: The project keeps no Markdown files.  (undo: gspot add markdown)\n',
+    );
+    const configurationJson = await runGspot(sandbox.path, ['explain', 'markdown', '--json']);
+    expect((JSON.parse(configurationJson.stdout) as { removed: unknown }).removed).toStrictEqual([
+        { scope: '', reason: 'The project keeps no Markdown files.', command: 'gspot add markdown' },
+    ]);
 });

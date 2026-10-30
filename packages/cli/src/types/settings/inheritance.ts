@@ -6,6 +6,8 @@ import type { SETTING_TYPES } from '#cli/config/settings/inheritance.ts';
 import type { ReasonRequirement } from '#cli/types/settings/definitions.ts';
 import type { Settings, TableValues, IgnoreRecord, SettingsTable } from '#cli/types/settings/file.ts';
 
+export type RemovedConfiguration = { name: string; scope: string; reason: string };
+
 export type SelectedConfigurations = {
     configurations: string[];
     scopes: Map<string, { configurations: string[]; removed_configurations: string[] }>;

@@ -201,3 +201,33 @@ test('list without gspot.toml refuses the command and writes nothing', async () 
         message: 'There is no gspot.toml here. Run gspot init to create one.',
     });
 });
+
+test('list shows each removed configuration with its scope and reason', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': [
+            'configurations = ["bash"]',
+            '[rules]',
+            'enabled = false',
+            '[removed_configurations]',
+            'markdown = "The project keeps no Markdown files."',
+            '[[scope]]',
+            'path = "api"',
+            '[scope.removed_configurations]',
+            'bash = "The API keeps its scripts elsewhere."',
+            '',
+        ].join('\n'),
+        'entry.sh': 'echo root\n',
+        'api/entry.sh': 'echo api\n',
+    });
+    const structured = await runGspot(sandbox.path, ['list', '--json']);
+    expect(structured.code, structured.stdout + structured.stderr).toBe(0);
+    expect((JSON.parse(structured.stdout) as ConfigurationsListJson).removed).toStrictEqual([
+        { name: 'markdown', scope: '', reason: 'The project keeps no Markdown files.' },
+        { name: 'bash', scope: 'api', reason: 'The API keeps its scripts elsewhere.' },
+    ]);
+    const human = await runGspot(sandbox.path, ['list']);
+    expect(human.code, human.stdout + human.stderr).toBe(0);
+    expect(human.stdout).toContain(
+        '\nremoved\n  markdown  The project keeps no Markdown files.\n  bash  [scope api]  The API keeps its scripts elsewhere.\n\navailable\n',
+    );
+});

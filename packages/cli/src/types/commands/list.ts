@@ -1,5 +1,5 @@
 import type { LIST_KINDS } from '#cli/config/commands/list.ts';
-import { type Setting, type InheritedSetting } from '#cli/types/settings/inheritance.ts';
+import { type Setting, type InheritedSetting, type RemovedConfiguration } from '#cli/types/settings/inheritance.ts';
 
 type SettingRow = {
     key: string;
@@ -13,6 +13,7 @@ type SettingRow = {
 
 export type ConfigurationsListJson = {
     selected: { name: string; checks: { name: string; scope: string; state: string }[] }[];
+    removed: RemovedConfiguration[];
     available: { name: string; description: string }[];
 };
 
