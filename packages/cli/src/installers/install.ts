@@ -35,6 +35,7 @@ export async function installTools(session: Session, writer: Files, generated: G
         await assertPackageManagerVersion(context);
         const mise = await installMiseTools(context);
         const installed = [
+            mise.installed,
             ...(await installToolProjects(context, mise.binPaths)),
             await installValePackages(context, mise.binPaths),
         ];

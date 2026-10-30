@@ -26,23 +26,23 @@ paths, and `summary` always holds a string.
 When a command fails, its object also has `error` and `message`, and no command fields. `message` describes the failure
 and the action to take. `error` holds one of these codes:
 
-| Code            | What failed                                                                       |
-| --------------- | --------------------------------------------------------------------------------- |
-| `arguments`     | Command arguments or flags.                                                       |
-| `git`           | A Git operation.                                                                  |
-| `copy`          | Copying the files of a check into a temporary folder.                             |
-| `writing`       | Writing `gspot.toml` or a generated file.                                         |
-| `filesystem`    | A repository file is missing, unreadable, or at a path gspot refuses.             |
-| `parse`         | A file has invalid syntax or structure, including malformed TOML in `gspot.toml`. |
-| `settings`      | A parsed setting has an invalid key, value, or combination.                       |
-| `configuration` | A shipped configuration.                                                          |
-| `install`       | Installing tools.                                                                 |
-| `tool`          | Finding or running a tool.                                                        |
-| `output`        | Reading a tool's output.                                                          |
-| `runtime`       | The running Node.js or Bun version does not meet the package minimum.             |
-| `prompt`        | A question that asks you to accept a plan.                                        |
-| `unexpected`    | An unexpected error; the message names it.                                        |
-| `canceled`      | A signal stopped the command. `exitCode` holds the signal's exit code.            |
+| Code            | What failed                                                                                                |
+| --------------- | ---------------------------------------------------------------------------------------------------------- |
+| `arguments`     | Command arguments or flags, or a command that does not fit the repository, such as `init` in a set-up one. |
+| `git`           | A Git operation.                                                                                           |
+| `copy`          | Copying the files of a check into a temporary folder.                                                      |
+| `writing`       | Writing `gspot.toml` or a generated file.                                                                  |
+| `filesystem`    | A repository file is missing, unreadable, or at a path gspot refuses.                                      |
+| `parse`         | A file has invalid syntax or structure, including malformed TOML in `gspot.toml`.                          |
+| `settings`      | A parsed setting has an invalid key, value, or combination.                                                |
+| `configuration` | A shipped configuration.                                                                                   |
+| `install`       | Installing tools.                                                                                          |
+| `tool`          | Finding or running a tool.                                                                                 |
+| `output`        | Reading a tool's output.                                                                                   |
+| `runtime`       | The running Node.js or Bun version does not meet the package minimum.                                      |
+| `prompt`        | A question that asks you to accept a plan.                                                                 |
+| `unexpected`    | An unexpected error; the message names it.                                                                 |
+| `canceled`      | A signal stopped the command. `exitCode` holds the signal's exit code.                                     |
 
 ## Generated files
 

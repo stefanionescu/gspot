@@ -61,7 +61,7 @@ import {
 
 async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJson>> {
     const root = readRepositoryRoot(options.cwd);
-    if (findText(root, SETTINGS_FILE) !== undefined) throw new GspotError('settings', SETTINGS_EXIST_MESSAGE);
+    if (findText(root, SETTINGS_FILE) !== undefined) throw new GspotError('arguments', SETTINGS_EXIST_MESSAGE);
     const initPlan = await planInit(root, options);
     const { plan, settingsText } = initPlan;
     print(formatDetection(initPlan.detection));

@@ -50,7 +50,7 @@ command = ["prettier", "--check", "--config", "{pointer:prettier.config.mjs}", "
 example = "A JavaScript file with `const value={enabled:true};` differs from the Prettier output. Run `gspot check --fix` to format it."
 exit_codes = [1, 2]
 fix = ["prettier", "--write", "--config", "{pointer:prettier.config.mjs}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
-help = "Run `gspot check --fix` to format every file, or `prettier --write` on one file."
+help = "Run `gspot check --fix <file>` to format the file."
 name = "prettier"
 output = { format = "regex", pattern = "^\\[(?:warn|error)\\] (?<file>[^\\s].*?)(?:: SyntaxError: (?<message>.+) \\((?<line>\\d+):(?<column>\\d+)\\)|(?<![\\s.]))$", fixable = "^\\[warn\\] ", message = "Not formatted the way Prettier formats it." }
 stage = "commit"

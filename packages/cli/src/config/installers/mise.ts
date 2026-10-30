@@ -23,3 +23,5 @@ export const GITHUB_RATE_LIMIT = /rate limit/iu;
 
 export const GITHUB_TOKEN_MESSAGE =
     'GitHub limits the release lookups of mise without a token. Set GITHUB_TOKEN to a GitHub token, then run gspot install again.';
+
+export const MISE_TOOL_NOUN = 'mise tool';

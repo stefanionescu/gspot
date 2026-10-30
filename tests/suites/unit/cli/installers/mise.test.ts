@@ -121,7 +121,7 @@ test.each(['commit', 'manual'] as const)(
     },
 );
 
-test('mise fills missing release checksums from the audited pins without fetching archives', async () => {
+test('mise fills missing release checksums from the audited pins without fetching archives, and counts the tools', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['spelling']) });
     const session = await openSession(sandbox.path);
     const writer = openFiles(sandbox.path);
@@ -150,7 +150,10 @@ test('mise fills missing release checksums from the audited pins without fetchin
         }
         return buildProcessResult();
     });
-    await installMiseTools(install);
+    const installed = await installMiseTools(install);
+    expect(installed.installed).toBe(
+        `installed ${String(listMisePins(session.toolConfigurations).length)} mise tools with mise`,
+    );
     const lockfile = await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8');
     expect(request).not.toHaveBeenCalled();
     expect(lockfile).toContain(audited.checksums!['linux-x64']!);

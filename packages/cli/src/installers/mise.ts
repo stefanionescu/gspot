@@ -2,6 +2,7 @@ import which from 'which';
 import { join, dirname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { UV_TOOL } from '#cli/config/tools/uv.ts';
+import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -31,6 +32,7 @@ import {
     MISE_TRUSTED_PATHS_VARIABLE,
 } from '#cli/config/tools/locate.ts';
 import {
+    MISE_TOOL_NOUN,
     GITHUB_RATE_LIMIT,
     MISE_RELEASE_HOSTS,
     MISE_LOCK_ARGUMENTS,
@@ -177,7 +179,7 @@ async function prepareMiseLockfile(install: ToolInstall, project: GeneratedFile)
 Install the mise tools, and read their executable folders.
 
 @param install what install needs for this step.
-@returns the note about missing programs, and the folders of the programs that mise installed.
+@returns the line about the tools that mise installed, the note about missing tools, and the folders of the tools.
 */
 export async function installMiseTools(install: ToolInstall): Promise<MiseInstall> {
     const { session, tools, misePath, steps } = install;
@@ -191,11 +193,11 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
             return which.sync(name, { nothrow: true }) === null ? [`${name} ${pin.version}`] : [];
         });
         const note = missing.length === 0 ? '' : `Install mise, or install these tools yourself: ${missing.join(', ')}`;
-        return { note, binPaths: [] };
+        return { installed: '', note, binPaths: [] };
     }
     const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
     if (listMisePins(session.toolConfigurations).length > 0) await prepareMiseLockfile(install, project);
-    if (pins.length === 0) return { note: '', binPaths: readToolBinPaths(session, project.content) };
+    if (pins.length === 0) return { installed: '', note: '', binPaths: readToolBinPaths(session, project.content) };
     const trust = buildMiseTrust(session.root, project.content);
     if (trust === undefined) throw new GspotError('install', MISE_PROJECT_MESSAGE);
     const command = [...MISE_INSTALL_ARGUMENTS, ...pins.map((pin) => pin.name)];
@@ -207,6 +209,7 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
     const names = pins.map((pin) => pin.name);
     steps.push([...MISE_BIN_PATHS_ARGUMENTS, ...names]);
     return {
+        installed: `installed ${formatCount(names.length, MISE_TOOL_NOUN)} with mise`,
         note: '',
         binPaths: readMiseBinPaths(session.root, names, {
             timeoutSeconds: session.timeoutSeconds,

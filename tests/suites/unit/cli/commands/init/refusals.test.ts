@@ -44,7 +44,7 @@ test('init in a repository that already has gspot.toml exits 2 and changes nothi
 
     commitAll(sandbox.path);
     await assertRefusalWithoutWrites(sandbox.path, ['init', '--yes'], {
-        error: 'settings',
+        error: 'arguments',
         message:
             'This repository already has a gspot.toml. Run gspot doctor to inspect its setup; it prints the gspot add line for newly detected configurations.',
     });

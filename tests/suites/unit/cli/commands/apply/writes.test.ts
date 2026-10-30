@@ -219,3 +219,21 @@ test('repeated apply names a missing lockfile without reporting changed tools', 
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     expect((JSON.parse(repeated.stdout) as ApplyReport).notes).toStrictEqual([STALE_LOCKFILE_NOTE]);
 });
+
+test('apply restores a committed .gitattributes that was deleted, as it restores AGENTS.md', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash'], { rules: true }),
+        'entry.sh': 'echo example\n',
+    });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    commitAll(sandbox.path);
+    const attributes = await readFile(join(sandbox.path, '.gitattributes'), 'utf8');
+    const agents = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
+    await rm(join(sandbox.path, '.gitattributes'));
+    await rm(join(sandbox.path, 'AGENTS.md'));
+    const restored = await runGspot(sandbox.path, ['apply']);
+    expect(restored.code, restored.stdout + restored.stderr).toBe(0);
+    expect(await readFile(join(sandbox.path, '.gitattributes'), 'utf8')).toBe(attributes);
+    expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(agents);
+});
