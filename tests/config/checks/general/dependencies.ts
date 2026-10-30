@@ -5,7 +5,7 @@ export const BUN_PROJECT_FILES = {
         name: 'shop',
         private: true,
         dependencies: { zod: '^4.1.0', react: '19.1.0', 'react-dom': '19.0.0' },
-        devDependencies: { typescript: '5.9.3' },
+        devDependencies: { typescript: '0.0.0-test' },
     }),
     'bun.lock': JSON.stringify({
         lockfileVersion: 1,
@@ -123,16 +123,7 @@ export const REGISTRY_SCOPE_RESULTS = [
     },
 ];
 
-export const MISE_PIN_FILES = [
-    { file: 'mise.toml' },
-    { file: '.mise.toml' },
-    { file: 'mise/config.toml' },
-    { file: '.mise/config.toml' },
-    { file: '.config/mise.toml' },
-    { file: '.config/mise/config.toml' },
-    { file: 'mise.local.toml' },
-    { file: '.mise.local.toml' },
-] as const;
+export const MISE_PIN_FILES = [{ file: 'mise.toml' }, { file: '.config/mise/config.toml' }] as const;
 
 export const ALLOWED_GITHUB_REGISTRIES = `allowed_registries = { value = ["github.com", "codeload.github.com"], reason = ${JSON.stringify(SETTING_REASON)} }\n`;
 

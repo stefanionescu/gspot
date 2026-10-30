@@ -121,7 +121,7 @@ test('import rules exempt a local ESLint plugin named by settings', async () => 
 });
 
 test.each([...SWIFTPM_DEFAULT_FOLDERS])(
-    'a SwiftPM target without a path reads its files from the first default folder that exists: %s',
+    'a SwiftPM target without a path reads its files from the default folder %s',
     async (folder) => {
         await using sandbox = await testdir({
             'Package.swift': SWIFT_IMPORT_FILES['Package.swift'].replace('Sources/FeatureKit', 'FeatureKit'),

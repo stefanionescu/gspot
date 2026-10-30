@@ -4,15 +4,14 @@ import { rm } from 'node:fs/promises';
 import { test, expect } from 'bun:test';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { LOCKED_SCOPE_SETTINGS, REQUIREMENTS_FILE_FINDING } from '#tests/config/checks/language/python/pip-installs.ts';
 
-test.each(LOCKFILES.filter(({ packageManager }) => ['uv', 'poetry', 'pdm'].includes(packageManager)))(
-    'a requirements file is reported only in a scope with a $file lockfile and passes once removed',
-    async ({ file }) => {
+test.each(['uv.lock', 'poetry.lock', 'pdm.lock'])(
+    'a requirements file is reported only in a scope with a %s lockfile and passes once removed',
+    async (file) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['python'], LOCKED_SCOPE_SETTINGS),
             'requirements.txt': 'root-dependency\n',

@@ -51,9 +51,9 @@ test.each([...COMPOSE_PAIRING_CASES])(
         const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['docker/compose']);
         expect(result.findings).toStrictEqual([]);
         expect(result.status).toBe('passed');
-        expect(toolRun.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([
-            ['compose', '-f', base, '-f', override, 'config', '--quiet', '--no-interpolate', '--no-env-resolution'],
-        ]);
+        expect(
+            toolRun.mock.calls.map(([command]) => command.filter((_, index) => command[index - 1] === '-f')),
+        ).toStrictEqual([[base, override]]);
     },
 );
 

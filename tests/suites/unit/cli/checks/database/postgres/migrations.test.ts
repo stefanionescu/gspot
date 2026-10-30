@@ -8,7 +8,6 @@ import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { buildDatabaseSchema } from '#cli/checks/database/postgres/schema.ts';
 import { ROW_SECURITY_SQL } from '#tests/config/checks/database/postgres/statements.ts';
@@ -43,7 +42,7 @@ test('postgres/migration-order reports a migration that does not parse at its li
             rule: 'syntax',
             message: 'syntax error at or near ";"',
             fixable: false,
-            help: getShippedCheck('postgres/migration-order').help,
+            help: 'Rename the new migration with a version later than the newest committed one.',
         },
     ]);
     expect(

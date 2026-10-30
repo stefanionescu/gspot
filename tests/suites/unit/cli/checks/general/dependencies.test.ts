@@ -196,7 +196,7 @@ test('stale-lockfile reports each dependency that package.json and bun.lock disa
     const findings = await runSandboxCheck(sandbox.path, 'dependencies/stale-lockfile');
     expect(findings.map(({ message }) => message)).toStrictEqual([
         'package.json asks for zod ^4.1.0, but bun.lock records ^4.0.0. Run bun install and commit the lockfile.',
-        'package.json declares typescript 5.9.3, which bun.lock does not record. Run bun install and commit the lockfile.',
+        'package.json declares typescript 0.0.0-test, which bun.lock does not record. Run bun install and commit the lockfile.',
         'bun.lock records left-pad, which package.json no longer declares. Run bun install and commit the lockfile.',
     ]);
 });

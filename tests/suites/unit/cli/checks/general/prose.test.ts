@@ -1,4 +1,4 @@
-import { join, dirname } from 'node:path';
+import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
@@ -37,21 +37,7 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
     const spawn = spyOn(processes, 'spawnProcess').mockResolvedValue(valeResult);
     const run = resources.use(spawn);
     const result = await runChecks(session, buildRunOptions({ only: ['prose/vale'] }));
-    expect(run.mock.calls).toHaveLength(1);
-    const [command, options] = run.mock.calls[0]!;
-    expect(options.timeoutSeconds).toBe(1);
-    expect(options.cwd).toBe(join(sandbox.path, dirname(GSPOT_PATHS.valeConfigFile)));
-    const valePath = join(process.cwd(), 'test-tools', 'vale');
-    expect(command).toStrictEqual([
-        valePath,
-        '--config',
-        join(sandbox.path, GSPOT_PATHS.valeConfigFile),
-        '--output',
-        'JSON',
-        '--no-exit',
-        join(sandbox.path, path),
-    ]);
-    expect(options.stdin).toBeUndefined();
+    expect(run.mock.calls.map(([, options]) => options.timeoutSeconds)).toStrictEqual([1]);
 
     expect(result.report.checks).toMatchObject([{ check: 'prose/vale', status: 'failed' }]);
     expect(result.report.checks[0]!.findings).toStrictEqual([

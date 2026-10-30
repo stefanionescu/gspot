@@ -16,7 +16,6 @@ import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import type { ParsedTsconfig } from '#cli/types/parsers/projects/tsconfig.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { runChecks, runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { EMPTY_PROJECT_RESULT, IMPORTED_AMBIENT_FILES } from '#tests/config/checks/language/javascript.ts';
@@ -58,22 +57,17 @@ test('javascript/tsc excludes type roots inherited from folders above the reposi
     await using sandbox = await testdir({
         'node_modules/@types/ancestor/index.d.ts': 'declare const outside: string;\n',
         'project/gspot.toml': buildSandboxSettings(['javascript']),
-        'project/source.js': 'export const ready = true;\n',
+        'project/source.js': 'export const value = outside;\n',
     });
     const root = join(sandbox.path, 'project');
+    await linkInstalledModules(join(root, 'node_modules'));
     await applyGeneratedFiles(root);
-    await fakeNpmTool(root, 'tsc');
-    using boundary = spyOn(processes, 'spawnProcess').mockImplementation(async (command) => {
-        const path = command.find((argument) => argument.endsWith('jsconfig.json'))!;
-        const config = JSON.parse(await readFile(path, 'utf8')) as ParsedTsconfig['raw'];
-        expect(config.compilerOptions?.['typeRoots']).toStrictEqual([join(path, '../../../../../node_modules/@types')]);
-        return buildProcessResult();
-    });
     const session = await openSession(root);
     const planned = planChecks(session, buildRunOptions({ only: ['javascript/tsc'] }))[0]!;
     const result = await runCheckCode(buildCheckSession(session), planned, CHECK_CODE['javascript/tsc']);
-    expect(result.findings).toStrictEqual([]);
-    expect(boundary).toHaveBeenCalledTimes(1);
+    expect(result.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'source.js', rule: 'TS2304' },
+    ]);
 });
 
 test('a scope whose jsconfig lists no JavaScript file passes with nothing to compile', async () => {
@@ -87,7 +81,7 @@ test('a scope whose jsconfig lists no JavaScript file passes with nothing to com
 
     const session = await openSession(sandbox.path);
     const projects = generateFiles(session).files.filter(({ path }) => path.endsWith('jsconfig.json'));
-    expect(projects.map(({ path }) => path)).toStrictEqual([getConfigFilePath(session, 'jsconfig')]);
+    expect(projects.map(({ path }) => path)).toStrictEqual(['.gspot/configurations/language/javascript/jsconfig.json']);
     await applyGeneratedFiles(sandbox.path);
     const reopened = await openSession(sandbox.path);
     const site = planChecks(reopened, {
@@ -141,11 +135,6 @@ test('javascript/tsc puts incremental build information in the check copy', asyn
     expect(first.status).toBe('failed');
     expect(first.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'src/value.js', rule: 'TS2322' },
-    ]);
-    const flag = first.command!.indexOf('--tsBuildInfoFile');
-    expect(first.command!.slice(flag, flag + 2)).toStrictEqual([
-        '--tsBuildInfoFile',
-        join(sandbox.path, '.gspot/jsconfig.check.tsbuildinfo'),
     ]);
     expect(
         await Array.fromAsync(

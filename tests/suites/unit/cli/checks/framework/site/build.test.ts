@@ -9,7 +9,6 @@ import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { runChecks, buildCheckSession } from '#cli/commands/check/run.ts';
@@ -152,7 +151,7 @@ test('build: a failed site build skips every check that reads the build, and a n
             line: 1,
             rule: 'build',
             fixable: false,
-            help: getShippedCheck('site/build').help,
+            help: 'Run the build command by hand and fix what it prints. Name the command under site.build_command.',
             message: `${failing.map((argument) => quoteArgument(argument)).join(' ')} did not build the site.\nTest build failure`,
         },
     ]);

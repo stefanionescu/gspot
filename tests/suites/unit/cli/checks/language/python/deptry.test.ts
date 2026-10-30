@@ -11,7 +11,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { DEPTRY_SCOPE_EXCLUSIONS } from '#tests/config/checks/language/python/deptry.ts';
+import { DEPTRY_SCOPE_PATHS } from '#tests/config/checks/language/python/deptry.ts';
 
 test('deptry skips a scope without pyproject.toml', async () => {
     await using sandbox = await testdir({
@@ -28,7 +28,7 @@ test('deptry skips a scope without pyproject.toml', async () => {
 
 test('deptry excludes nested scopes and keeps your own exclude patterns', async () => {
     await using sandbox = await testdir();
-    const scopes = Object.keys(DEPTRY_SCOPE_EXCLUSIONS) as (keyof typeof DEPTRY_SCOPE_EXCLUSIONS)[];
+    const scopes = Object.keys(DEPTRY_SCOPE_PATHS) as (keyof typeof DEPTRY_SCOPE_PATHS)[];
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
@@ -54,7 +54,11 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
         const command = commands.find((commandArguments) => commandArguments.includes(join(sandbox.path, scope)))!;
         expect(command.slice(1, 5)).toStrictEqual(['run', '--no-sync', '--project', join(sandbox.path, scope)]);
         const patterns = command.flatMap((value, index) => (value === '--extend-exclude' ? command[index + 1]! : []));
-        expect(patterns).toStrictEqual([...DEPTRY_SCOPE_EXCLUSIONS[scope]]);
+        expect(patterns).toContain('authored');
+        const { excluded, kept } = DEPTRY_SCOPE_PATHS[scope];
+        expect(
+            [...excluded, ...kept].filter((path) => patterns.some((pattern) => new RegExp(pattern, 'u').test(path))),
+        ).toStrictEqual([...excluded]);
     }
 });
 

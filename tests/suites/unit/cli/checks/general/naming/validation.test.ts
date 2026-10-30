@@ -18,7 +18,12 @@ import {
 test.each([...NAMING_LIMIT_CASES])(
     '$language accepts its exact limits and reports the next character or word',
     async ({ language, category, characters, words }) => {
-        const naming = await buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
+        const naming = await buildScopeNamingSettings(
+            buildSandboxSettings(['naming'], {
+                rules: true,
+                tables: `[naming.${language}]\nmax_characters = ${String(characters)}\nmax_words = ${String(words)}\n`,
+            }),
+        );
         const context = buildFileNaming(naming);
         const declaration = buildIdentifier({
             file: 'source',

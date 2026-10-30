@@ -112,7 +112,7 @@ test('the wrangler types of tests/node_modules write a cloudflare-env.d.ts that 
         'gspot.toml': buildSandboxSettings(['cloudflare'], {
             tables: '[cloudflare]\ntypes_file = "cloudflare-env.d.ts"\n',
         }),
-        'package.json': '{"private":true,"type":"module","devDependencies":{"wrangler":"4.151.1"}}',
+        'package.json': '{"private":true,"type":"module","devDependencies":{"wrangler":"0.0.0-test"}}',
         'wrangler.jsonc':
             '{"name":"offline-types","main":"worker.ts","compatibility_date":"2026-01-01","vars":{"GREETING":"hello"}}',
         'worker.ts': 'export default { fetch() { return new Response("Ready"); } };',

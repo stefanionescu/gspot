@@ -5,7 +5,6 @@ import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { BUN_PROJECT_FILES } from '#tests/config/checks/general/dependencies.ts';
 
 test('react-versions reports react and react-dom that lock different versions, and nothing when they match', async () => {
@@ -17,7 +16,7 @@ test('react-versions reports react and react-dom that lock different versions, a
         {
             check: 'react-dom/react-versions',
             fixable: false,
-            help: getShippedCheck('react-dom/react-versions').help,
+            help: 'Install the same version of react and react-dom.',
             file: 'package.json',
             line: 1,
             rule: 'react-versions',

@@ -5,7 +5,6 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { NO_FILES_MESSAGE } from '#cli/config/commands/check/results.ts';
 
 import {
     ENV_ACCESSOR_FILES,
@@ -109,7 +108,7 @@ test('a scope with env reads and no example env file is skipped with a note', as
     );
 
     expect(checked.report.checks).toMatchObject([
-        { check: 'secrets/env-examples', scope: '', status: 'skipped', findings: [], note: NO_FILES_MESSAGE },
+        { check: 'secrets/env-examples', scope: '', status: 'skipped', findings: [], note: 'No matching files.' },
         {
             check: 'secrets/env-examples',
             scope: 'app',

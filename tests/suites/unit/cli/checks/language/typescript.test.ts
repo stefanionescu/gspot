@@ -13,10 +13,10 @@ import {
     ROOT_PORT_SOURCE,
     CHILD_PORT_SOURCE,
     COUNT_NUMBER_SOURCE,
+    STRICT_OFF_FINDINGS,
     TSCONFIG_READ_ERRORS,
     DEFAULT_LEVEL_TSCONFIG,
     MISSING_TSCONFIG_MESSAGE,
-    MISSING_TSCONFIG_FINDINGS,
     ALL_LEVEL_OPTION_FINDINGS,
 } from '#tests/config/checks/language/typescript.ts';
 
@@ -43,7 +43,7 @@ test('a scope needs no tsconfig of its own but still checks one that is added', 
         join(sandbox.path, 'tsconfig.json'),
         STRICT_TSCONFIG_TEXT.replace('"strict":true', '"strict":false'),
     );
-    expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([...MISSING_TSCONFIG_FINDINGS]);
+    expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([...STRICT_OFF_FINDINGS]);
     await writeFile(join(sandbox.path, 'tsconfig.json'), STRICT_TSCONFIG_TEXT);
     expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
 });

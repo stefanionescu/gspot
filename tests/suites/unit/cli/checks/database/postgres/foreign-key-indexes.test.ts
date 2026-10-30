@@ -4,7 +4,6 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { COMPOSITE_INDEX_CASES } from '#tests/config/checks/database/postgres/foreign-key-indexes.ts';
 
 test.each([...COMPOSITE_INDEX_CASES])(
@@ -37,7 +36,7 @@ test('foreign-key-indexes reports a foreign key column that no index leads with 
         {
             check: 'postgres/foreign-key-indexes',
             fixable: false,
-            help: getShippedCheck('postgres/foreign-key-indexes').help,
+            help: 'Create an index that starts with all columns of the foreign key.',
             column: 1,
             file: 'migrations/1_members.sql',
             line: 2,

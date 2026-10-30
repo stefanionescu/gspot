@@ -39,7 +39,7 @@ export const DEFAULT_LEVEL_TSCONFIG = {
     },
 } as const;
 
-export const MISSING_TSCONFIG_FINDINGS = [
+export const STRICT_OFF_FINDINGS = [
     {
         check: 'typescript/tsconfig',
         file: 'tsconfig.json',

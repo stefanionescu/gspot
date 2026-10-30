@@ -6,7 +6,6 @@ import { openSession } from '#cli/planning/session.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { runSandboxCheck, getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
@@ -40,7 +39,7 @@ test("an asset in a scope's assets folder counts as used when a file outside the
             check: 'site/unused-assets',
             rule: 'unused-asset',
             fixable: false,
-            help: getShippedCheck('site/unused-assets').help,
+            help: 'Delete the file.',
             message: 'No page, stylesheet or script names this file.',
         },
     ]);

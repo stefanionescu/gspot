@@ -83,8 +83,10 @@ test('Deno checks skip a scope with no edge functions', async () => {
     const session = await openFakeToolSession(sandbox.path, ['deno'], resources);
     for (const name of ['supabase/deno-lint', 'supabase/deno-check']) {
         const result = await runChecks(session, buildRunOptions({ only: [name] }));
-        expect(result.report.checks[0]).toMatchObject({ status: 'skipped' });
-        expect(JSON.stringify(result.report.checks[0])).toContain('No edge function under supabase/functions.');
+        expect(result.report.checks[0]).toMatchObject({
+            status: 'skipped',
+            note: 'No edge function under supabase/functions.',
+        });
     }
 });
 

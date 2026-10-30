@@ -1,7 +1,6 @@
 export const SVELTE_PROJECTS = [
     {
         name: 'root JavaScript',
-        typeRoots: ['node_modules/@types'],
         scope: '',
         configurations: ['svelte'],
         files: {},
@@ -10,7 +9,6 @@ export const SVELTE_PROJECTS = [
     },
     {
         name: 'scoped TypeScript',
-        typeRoots: ['app/node_modules/@types', 'node_modules/@types'],
         scope: 'app',
         configurations: ['svelte', 'typescript'],
         files: {

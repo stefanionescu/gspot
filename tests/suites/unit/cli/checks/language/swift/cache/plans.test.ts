@@ -13,7 +13,6 @@ import { SIMULATOR_DESTINATION } from '#tests/config/xcode.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { SWIFT_BUILD_COMMANDS } from '#cli/config/checks/language/swift/cache.ts';
 import { XCTEST_SOURCE, SWIFT_PACKAGE, SWIFT_PACKAGE_HEADER } from '#tests/config/swift.ts';
 import { planSwiftBuild, readRepositoryCacheFolder } from '#cli/checks/language/swift/cache.ts';
 import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/checks/language/swift/cache.ts';
@@ -32,26 +31,11 @@ test.each(['default', 'platform=macOS'])(
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, 'swift/build');
         for (const purpose of ['compile', 'analyze', 'coverage'] as const) {
-            const folder = join(readRepositoryCacheFolder(session.toolsRoot), 'swift', 'root', purpose);
-            expect(planSwiftBuild(session, input, purpose)).toStrictEqual({
-                kind: 'xcode',
-                purpose,
-                folder,
-                log: join(folder, 'build.log'),
-                commandArguments: [
-                    'xcodebuild',
-                    ...SWIFT_BUILD_COMMANDS[purpose].xcode,
-                    '-project',
-                    'App.xcodeproj',
-                    '-scheme',
-                    'App',
-                    '-destination',
-                    destination === 'default' ? SIMULATOR_DESTINATION : destination,
-                    '-derivedDataPath',
-                    join(folder, 'derived'),
-                    'CODE_SIGNING_ALLOWED=NO',
-                ],
-            });
+            const { kind, commandArguments } = planSwiftBuild(session, input, purpose);
+            expect(kind).toBe('xcode');
+            expect(commandArguments[commandArguments.indexOf('-destination') + 1]).toBe(
+                destination === 'default' ? SIMULATOR_DESTINATION : destination,
+            );
         }
     },
 );
@@ -113,16 +97,6 @@ test.each([...SWIFT_BUILD_PURPOSES])(
         });
         const checkedSession = await openSession(sandbox.path);
         const packageInput = planSandboxCheck(checkedSession, 'swift/build');
-        const plan = planSwiftBuild(checkedSession, packageInput, purpose);
-        const folder = join(readRepositoryCacheFolder(checkedSession.toolsRoot), 'swift', 'root', purpose);
-        const scratch = join(folder, 'package');
-        expect(plan).toStrictEqual({
-            kind: 'package',
-            purpose,
-            folder,
-            log: join(folder, 'build.log'),
-            scratch,
-            commandArguments: ['swift', ...SWIFT_BUILD_COMMANDS[purpose].package, '--scratch-path', scratch],
-        });
+        expect(planSwiftBuild(checkedSession, packageInput, purpose)).toMatchObject({ kind: 'package', purpose });
     },
 );

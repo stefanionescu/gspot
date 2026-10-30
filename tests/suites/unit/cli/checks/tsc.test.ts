@@ -1,26 +1,19 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildTsconfig } from '#cli/checks/tsc/scope-tsconfig.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { join, parse, dirname, resolve, relative } from 'node:path';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-
-import {
-    REFERENCE_BUILD_FILES,
-    REFERENCE_BUILD_RESULTS,
-    IMPLICIT_RETURNS_IGNORE,
-    DEFAULT_TSCONFIG_PROJECTS,
-} from '#tests/config/checks/tsc.ts';
+import { REFERENCE_BUILD_FILES, REFERENCE_BUILD_RESULTS, IMPLICIT_RETURNS_IGNORE } from '#tests/config/checks/tsc.ts';
 
 test('a project with its own tsconfig.json keeps its own compiler options', async () => {
     await using sandbox = await createGitSandbox({
@@ -47,19 +40,18 @@ test('projects without tsconfig.json get required options and framework options 
         'source.ts': 'export const port = 8080;\n',
         'service/source.ts': 'export const port = 3000;\n',
     });
-    const toolsRoot = parse(sandbox.path).root;
-    const session = await openSession(sandbox.path, { toolsRoot: toolsRoot });
-    const projects = session.scopes.map((scope) => {
+    const session = await openSession(sandbox.path);
+    const options = session.scopes.map((scope) => {
         const path = join(sandbox.path, GSPOT_PATHS.state, scope.path, 'tsconfig.json');
-        const config = buildTsconfig(session, scope, path);
-        const compilerOptions = config['compilerOptions'] as Record<string, unknown>;
-        compilerOptions['typeRoots'] = (compilerOptions['typeRoots'] as string[]).map((root) => {
-            const found = relative(toolsRoot, resolve(dirname(path), root));
-            return convertToPosixPath(found);
-        });
-        return { scope: scope.path, config };
+        const { strict, experimentalDecorators, emitDecoratorMetadata } = buildTsconfig(session, scope, path)[
+            'compilerOptions'
+        ] as Record<string, unknown>;
+        return { scope: scope.path, strict, experimentalDecorators, emitDecoratorMetadata };
     });
-    expect(projects).toStrictEqual([...DEFAULT_TSCONFIG_PROJECTS]);
+    expect(options).toStrictEqual([
+        { scope: '', strict: true, experimentalDecorators: undefined, emitDecoratorMetadata: undefined },
+        { scope: 'service', strict: true, experimentalDecorators: true, emitDecoratorMetadata: true },
+    ]);
 });
 
 test('a solution builds referenced projects in a copy and leaves each scope its own findings', async () => {

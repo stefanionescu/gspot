@@ -54,7 +54,10 @@ test.each(buildSizeCases())(
     async ({ source, corrected: fixedSource, file, rule, line, message }) => {
         const options = buildRunOptions({ only: ['bash/function-size'] });
         await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
+            'gspot.toml': buildSandboxSettings(['bash'], {
+                level: 'all',
+                tables: '[limits.bash]\nfunction_lines = 12\nfunction_branches = 4\nblock_nesting = 2\nfunction_assignments = 3\n',
+            }),
             [file]: source,
         });
 

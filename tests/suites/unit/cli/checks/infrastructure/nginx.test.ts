@@ -29,22 +29,37 @@ test.each([...NGINX_MOUNT_CASES])(
             getTool(session.configurationsByName.values(), 'openssl'),
             getTool(session.configurationsByName.values(), 'docker'),
         ]);
+        const containers: {
+            hosts: string[];
+            targets: string[];
+            configuration: string;
+            tail: string[];
+            image: string | undefined;
+        }[] = [];
         using run = spyOn(processes, 'spawnProcess').mockImplementation(async (command) => {
-            if (!command.includes('--rm')) return buildProcessResult();
-            expect(command.filter((_, index) => command[index - 1] === '--add-host')).toStrictEqual([...hosts]);
             const volumes = command.filter((_, index) => command[index - 1] === '-v');
-            const configuration = volumes.find((volume) => volume.endsWith(':/etc/nginx/nginx.conf:ro'))!;
-            expect(await readFile(configuration.slice(0, -':/etc/nginx/nginx.conf:ro'.length), 'utf8')).toBe(source);
-            expect(volumes.map((volume) => volume.split(':').slice(-2).join(':'))).toStrictEqual([
-                '/etc/nginx/nginx.conf:ro',
-                ...certificates.map((target) => `${target}:ro`),
-            ]);
-            expect(command.slice(-2)).toStrictEqual(['nginx', '-T']);
-            expect(command.at(-3)).toMatch(/^nginx:[^@]+@sha256:[0-9a-f]{64}$/u);
+            const configuration = volumes.find((volume) => volume.endsWith(':/etc/nginx/nginx.conf:ro'));
+            if (configuration === undefined) return buildProcessResult();
+            containers.push({
+                hosts: command.filter((_, index) => command[index - 1] === '--add-host'),
+                targets: volumes.map((volume) => volume.split(':').slice(-2).join(':')),
+                configuration: await readFile(configuration.slice(0, -':/etc/nginx/nginx.conf:ro'.length), 'utf8'),
+                tail: command.slice(-2),
+                image: command.at(-3),
+            });
             return buildProcessResult({ stdout: '# configuration file /etc/nginx/nginx.conf:\n' });
         });
         expect(await runSandboxCheck(sandbox.path, 'nginx/syntax')).toStrictEqual([]);
         expect(run).toHaveBeenCalledTimes(2);
+        expect(containers).toStrictEqual([
+            {
+                hosts: [...hosts],
+                targets: ['/etc/nginx/nginx.conf:ro', ...certificates.map((target) => `${target}:ro`)],
+                configuration: source,
+                tail: ['nginx', '-T'],
+                image: expect.stringMatching(/^nginx:[^@]+@sha256:[0-9a-f]{64}$/u) as string,
+            },
+        ]);
         expect(await readFile(join(sandbox.path, 'nginx.conf'), 'utf8')).toBe(source);
     },
 );

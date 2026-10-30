@@ -10,7 +10,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { getBuiltInCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
 import { listSwiftlintConfigFiles } from '#cli/checks/language/swift/swiftlint.ts';
 import { UNEXPECTED_PLAN_MESSAGE } from '#tests/config/checks/language/swift/messages.ts';
@@ -80,7 +79,7 @@ test('the SwiftLint config files of a nested scope stop at the scope folder and 
     const session = await openSession(sandbox.path);
     const plans = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
     const planned = plans.find((plan) => plan.scope.path === 'app')!;
-    const shipped = getConfigFilePath(session, 'swiftlint');
+    const shipped = '.gspot/configurations/language/swift/swiftlint.yml';
     expect(listSwiftlintConfigFiles(session, planned)).toStrictEqual([shipped, ...NESTED_SWIFTLINT_FILES.slice(0, -1)]);
     await symlink('../.swiftlint.yml', join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
     expect(listSwiftlintConfigFiles(session, planned)).toStrictEqual([shipped, ...NESTED_SWIFTLINT_FILES]);
