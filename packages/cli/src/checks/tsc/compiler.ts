@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import type ts from 'typescript';
 import { compareText } from '#cli/system/text.ts';
 import { remember } from '#cli/system/files/cache.ts';
 import { buildBaseResult } from '#cli/runs/results.ts';
@@ -9,6 +9,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
+import { requireTypescript } from '#cli/system/typescript.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
@@ -46,6 +47,7 @@ function convertToCopyPath(value: unknown, copy: TypeScriptReferenceCopy): unkno
 function buildReferenceTsconfig(
     copy: TypeScriptReferenceCopy & { path: string; config: ParsedTsconfig },
 ): Record<string, unknown> {
+    const ts = requireTypescript();
     const { root, copyRoot, path, config } = copy;
     const output = join(copyRoot, GSPOT_FOLDER, TSC_REFERENCE_OUTPUT_FOLDER, relative(root, path));
     const base = (config.options.baseUrl ?? config.options['pathsBasePath']) as string;

@@ -1,12 +1,10 @@
 import which from 'which';
-import Config from '@npmcli/config';
 import { join, dirname, resolve } from 'node:path';
 import { realpathSync, writeFileSync } from 'node:fs';
 import { NPM_TOOL } from '#cli/config/repository/npm.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
-import npmDefinitions from '@npmcli/config/lib/definitions/index.js';
 import { extractUrlPasswords } from '#cli/installers/credentials.ts';
 import { NPMRC_FILE, NPM_SETTING_PREFIX } from '#cli/config/installers/npm/project.ts';
 
@@ -25,9 +23,13 @@ import {
 } from '#cli/config/installers/npm/registry.ts';
 
 async function readRegistrySettings(root: string): Promise<Record<string, unknown>> {
+    const [npmConfig, { default: npmDefinitions }] = await Promise.all([
+        import('@npmcli/config'),
+        import('@npmcli/config/lib/definitions/index.js'),
+    ]);
     const inherited = buildSpawnEnvironment();
     const npmPath = readNpmPath();
-    const config = new Config({
+    const config = new npmConfig.default({
         npmPath,
         execPath: realpathSync(which.sync('node', { nothrow: true }) ?? process.execPath),
         definitions: npmDefinitions.definitions,

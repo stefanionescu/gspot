@@ -1,8 +1,8 @@
-import ts from 'typescript';
 import { join, dirname, relative } from 'node:path';
 import type { Session } from '#cli/types/session.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
+import { requireTypescript } from '#cli/system/typescript.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { TYPESCRIPT_TAG } from '#cli/config/checks/tsc/compiler.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
@@ -28,6 +28,7 @@ Builds the scope compiler configuration, extending its authored project when pre
 @returns the compiler configuration.
 */
 export function buildTsconfig(session: Session, scope: Scope, file: string): Record<string, unknown> {
+    const ts = requireTypescript();
     const { root, toolsRoot, reads } = session;
     const ownFiles =
         Map.groupBy(session.repository.files, (file) =>

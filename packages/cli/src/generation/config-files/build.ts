@@ -1,8 +1,8 @@
-import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { join, dirname, relative } from 'node:path/posix';
+import { requireTypescript } from '#cli/system/typescript.ts';
 import { buildSemgrepFile } from '#cli/generation/config-files/semgrep.ts';
 import { buildSquawkFile } from '#cli/generation/configurations/postgres.ts';
 import { buildCoverageFile } from '#cli/generation/configurations/pytest.ts';
@@ -34,7 +34,6 @@ import { buildV8rFile, buildTaploFile, buildYamllintFile } from '#cli/generation
 
 import {
     TS_EXTENSION,
-    TRANSPILE_OPTIONS,
     CONFIG_FILE_REFERENCE,
     SEMGREP_RULE_PACK_FILE,
 } from '#cli/config/generation/config-files/build.ts';
@@ -129,9 +128,13 @@ export function buildConfigFile(
     if (builder === undefined) {
         const source = configFile.source;
         const shipped = readFileSync(buildAssetPath(`${planned.configuration.folder}/${source}`), 'utf8');
-        built = source.endsWith(TS_EXTENSION)
-            ? ts.transpileModule(shipped, { compilerOptions: TRANSPILE_OPTIONS }).outputText
-            : shipped;
+        const ts = source.endsWith(TS_EXTENSION) ? requireTypescript() : undefined;
+        built =
+            ts === undefined
+                ? shipped
+                : ts.transpileModule(shipped, {
+                      compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+                  }).outputText;
     } else built = builder(planned);
     const { content, companions } = typeof built === 'string' ? { content: built, companions: [] } : built;
     const source = content.replaceAll(CONFIG_FILE_REFERENCE, (match: string, path: string) => {

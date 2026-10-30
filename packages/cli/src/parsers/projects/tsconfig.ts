@@ -1,9 +1,10 @@
-import ts from 'typescript';
+import type ts from 'typescript';
 import { readFileSync, realpathSync } from 'node:fs';
 import { remember } from '#cli/system/files/cache.ts';
 import { NODE_MODULES } from '#cli/config/files/names.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
+import { requireTypescript } from '#cli/system/typescript.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { find, readContainedPath } from '#cli/system/files/reads.ts';
 import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
@@ -21,6 +22,7 @@ import {
 const PARSED_TSCONFIGS = Symbol('parsed tsconfigs');
 
 function readReferencedProjects(root: string, path: string, reads: ReadCache): Map<string, ParsedTsconfig> {
+    const ts = requireTypescript();
     const projects = new Map<string, ParsedTsconfig>();
     const pending = [resolve(path)];
     const owners = new Map<string, string>();
@@ -45,6 +47,7 @@ function readReferencedProjects(root: string, path: string, reads: ReadCache): M
 }
 
 function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): ParsedTsconfig {
+    const ts = requireTypescript();
     const fileName = convertToPosixPath(path);
     const source = ts.parseConfigFileTextToJson(fileName, text);
     if (source.error !== undefined) throw new Error(ts.flattenDiagnosticMessageText(source.error.messageText, '\n'));
@@ -85,6 +88,7 @@ function buildCompilerHost(
     reads: ReadCache,
     options: ts.CompilerOptions,
 ): ts.CompilerHost {
+    const ts = requireTypescript();
     const host = ts.createCompilerHost(options);
     const libraryFile = ts.getDefaultLibFilePath(options);
     const libraries = new Set([dirname(dirname(libraryFile))]);
@@ -155,6 +159,7 @@ Resolve compiler options and inherited paths with the TypeScript compiler.
 @returns undefined when the file does not exist.
 */
 export function readTsconfig(root: string, path: string, reads: ReadCache): ParsedTsconfig | undefined {
+    const ts = requireTypescript();
     try {
         return remember(
             reads,
@@ -220,6 +225,7 @@ export function listSourceFiles(
     reads: ReadCache,
     config: ParsedTsconfig,
 ): ts.SourceFile[] {
+    const ts = requireTypescript();
     const program = ts.createProgram({
         rootNames: config.fileNames,
         options: config.options,

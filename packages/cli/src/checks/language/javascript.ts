@@ -1,4 +1,3 @@
-import ts from 'typescript';
 import { GspotError } from '#cli/system/errors.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
@@ -11,6 +10,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
+import { requireTypescript } from '#cli/system/typescript.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
@@ -27,6 +27,7 @@ function buildScopeCompilerProject(
     scopePath: string,
     config: ParsedTsconfig,
 ): Pick<ParsedTsconfig, 'fileNames' | 'options'> {
+    const ts = requireTypescript();
     const { root, repository } = session;
     const sources = repository.files.filter((file) => file.kind === 'source');
     const files = new Set(

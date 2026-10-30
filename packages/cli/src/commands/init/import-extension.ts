@@ -1,10 +1,10 @@
-import ts from 'typescript';
 import { join } from 'node:path';
 import { setKey } from '#cli/settings/edit.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import { requireTypescript } from '#cli/system/typescript.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import type { ScopeConfigurations } from '#cli/types/commands/init.ts';
@@ -19,6 +19,7 @@ function detectImportExtension(
     scopePath: string,
     reads: ReadCache,
 ): ImportExtensionStyle | undefined {
+    const ts = requireTypescript();
     const path = join(repository.root, joinScope(scopePath, TSCONFIG_FILE));
     const options = readTsconfig(repository.root, path, reads)?.options;
     if (

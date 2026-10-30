@@ -1,8 +1,9 @@
-import ts from 'typescript';
+import type ts from 'typescript';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { requireTypescript } from '#cli/system/typescript.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
 import { assertRuleOptionsRun } from '#cli/generation/config-files/rule-options.ts';
@@ -159,6 +160,7 @@ function serializeExport(blockTexts: string[], blockWriter: BlockWriter): string
 }
 
 function listReadNames(text: string): Set<string> {
+    const ts = requireTypescript();
     const names = new Set<string>();
     const visit = (node: ts.Node): void => {
         const isKey =

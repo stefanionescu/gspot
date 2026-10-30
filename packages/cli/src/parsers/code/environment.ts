@@ -1,6 +1,7 @@
-import ts from 'typescript';
+import type ts from 'typescript';
 import type { Node } from 'web-tree-sitter';
 import { WHITESPACE_RUN } from '#cli/config/text.ts';
+import { requireTypescript } from '#cli/system/typescript.ts';
 import { EXPANSION_NODES } from '#cli/config/parsers/code/bash.ts';
 import { ASTRO_EXTENSION, ASTRO_FRONT_MATTER } from '#cli/config/parsers/code/comments.ts';
 
@@ -60,12 +61,14 @@ export function listSwiftEnvironmentReads(syntaxRoot: Node): EnvironmentRead[] {
 }
 
 function findGetterKey(node: ts.CallExpression, source: ts.SourceFile, getters: Set<string>): string | undefined {
+    const ts = requireTypescript();
     if (!getters.has(node.expression.getText(source).replaceAll(WHITESPACE_RUN, ''))) return undefined;
     const argument = node.arguments[0];
     return argument !== undefined && ts.isStringLiteralLike(argument) ? argument.text : undefined;
 }
 
 function findEnvironmentKey(node: ts.Node, source: ts.SourceFile, getters: Set<string>): string | undefined {
+    const ts = requireTypescript();
     if (ts.isCallExpression(node)) return findGetterKey(node, source, getters);
     if (!ts.isPropertyAccessExpression(node) && !ts.isElementAccessExpression(node)) return undefined;
     if (!JAVASCRIPT_ENVIRONMENT_FIELDS.has(node.expression.getText(source).replaceAll(WHITESPACE_RUN, '')))
@@ -86,6 +89,7 @@ export function listJavascriptEnvironmentReads(
     text: string,
     environmentFunctions: readonly string[],
 ): EnvironmentRead[] {
+    const ts = requireTypescript();
     if (COMPONENT_EXTENSION.test(path)) {
         const front = path.endsWith(ASTRO_EXTENSION) ? ASTRO_FRONT_MATTER.exec(text)?.[1] : undefined;
         const frontReads =
@@ -297,6 +301,7 @@ function decodePythonKey(literal: Node): string | undefined {
 }
 
 function listDeclarationReads(node: ts.Node, source: ts.SourceFile): EnvironmentRead[] {
+    const ts = requireTypescript();
     if (!ts.isVariableDeclaration(node) || !ts.isObjectBindingPattern(node.name) || node.initializer === undefined)
         return [];
     if (!JAVASCRIPT_ENVIRONMENT_FIELDS.has(node.initializer.getText(source).replaceAll(WHITESPACE_RUN, ''))) return [];

@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import type ts from 'typescript';
 import { posix } from 'node:path';
 import { find } from '#cli/system/files/reads.ts';
 import type { Session } from '#cli/types/session.ts';
@@ -6,6 +6,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
+import { requireTypescript } from '#cli/system/typescript.ts';
 import { FILENAME_TAGS } from '#cli/config/repository/files/classify.ts';
 import { SYMLINK_MODE, GIT_FILE_MODES } from '#cli/config/files/modes.ts';
 import type { AssetSource, AssetGlobImport } from '#cli/types/checks/framework/site.ts';
@@ -23,6 +24,7 @@ import {
 } from '#cli/config/checks/framework/site/unused-assets.ts';
 
 function readGlobPatterns(node: ts.Node): string[] | undefined {
+    const ts = requireTypescript();
     if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression)) return undefined;
     const expression = node.expression;
     if (expression.name.text !== 'glob' || !ts.isMetaProperty(expression.expression)) return undefined;
@@ -35,6 +37,7 @@ function readGlobPatterns(node: ts.Node): string[] | undefined {
 }
 
 function readGlobArguments(argument: ts.Expression | undefined): string[] | undefined {
+    const ts = requireTypescript();
     if (argument === undefined) return undefined;
     if (ts.isStringLiteralLike(argument)) return [argument.text];
     if (!ts.isArrayLiteralExpression(argument)) return undefined;
@@ -43,6 +46,7 @@ function readGlobArguments(argument: ts.Expression | undefined): string[] | unde
 }
 
 function readGlobImports(path: string, script: string): AssetGlobImport[] {
+    const ts = requireTypescript();
     const source = ts.createSourceFile(path, script, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     const imports: AssetGlobImport[] = [];
     const visit = (node: ts.Node): void => {
