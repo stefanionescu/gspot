@@ -21,4 +21,9 @@ export const GIT_ISOLATION_ENVIRONMENT = {
     GIT_AUTHOR_EMAIL: 't@t',
     GIT_COMMITTER_NAME: 't',
     GIT_COMMITTER_EMAIL: 't@t',
+    GIT_CONFIG_COUNT: '2',
+    GIT_CONFIG_KEY_0: 'maintenance.auto',
+    GIT_CONFIG_VALUE_0: 'false',
+    GIT_CONFIG_KEY_1: 'gc.auto',
+    GIT_CONFIG_VALUE_1: '0',
 } as const;
