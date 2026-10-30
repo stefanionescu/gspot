@@ -1,6 +1,7 @@
 import * as files from 'node:fs';
 import { join, dirname } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { PACKAGE_JSON_ERROR } from '#tests/config/paths.ts';
@@ -154,7 +155,7 @@ test('hook discovery reports other hook folders and leaves gspot and task script
     await using sandbox = await testdir(HOOK_FOLDER_FILES);
 
     const hooks = readHooks({ root: sandbox.path, hasGit: false }).hooks;
-    expect(hooks.toSorted((left, right) => left.path.localeCompare(right.path))).toStrictEqual([
+    expect(hooks.toSorted((left, right) => compareText(left.path, right.path))).toStrictEqual([
         { kind: 'githooks', path: '.git-hooks', files: ['pre-commit'] },
         { kind: 'githooks', path: '.githooks', files: ['pre-commit'] },
         { kind: 'husky', path: '.husky', files: ['pre-commit'] },

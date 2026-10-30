@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import type { LinkFailure } from '#tests/types/reports.ts';
@@ -61,7 +62,7 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
     await assertLinkFailures(sandbox.path, 'docs/lychee', []);
     expect(requests).toStrictEqual([]);
     await assertLinkFailures(sandbox.path, 'docs/lychee-external', [{ scope: '', file: 'root.md', rule: '404' }]);
-    expect(requests.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(['/missing', '/page']);
+    expect(requests.toSorted(compareText)).toStrictEqual(['/missing', '/page']);
     await writeFile(join(sandbox.path, 'root.md'), `# Links\n\nRead [the page](${url}child-only).\n`);
     await assertLinkFailures(sandbox.path, 'docs/lychee-external', [{ scope: '', file: 'root.md', rule: '404' }]);
     await writeFile(join(sandbox.path, 'root.md'), `# Links\n\nRead [the page](${url}page#setup).\n`);

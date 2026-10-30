@@ -1,5 +1,6 @@
 import { ESLint } from 'eslint';
 import { join, relative } from 'node:path';
+import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -31,9 +32,9 @@ export async function listLintFindings(
         )
         .toSorted(
             (left, right) =>
-                left.file.localeCompare(right.file) ||
+                compareText(left.file, right.file) ||
                 left.line - right.line ||
-                (left.rule ?? '').localeCompare(right.rule ?? ''),
+                compareText(left.rule ?? '', right.rule ?? ''),
         );
 }
 
@@ -81,6 +82,6 @@ List each rule name once, sorted.
 */
 export function listFindingRules(findings: readonly LintFinding[]): (string | null)[] {
     return [...new Set(findings.map(({ rule }) => rule))].toSorted((left, right) =>
-        String(left).localeCompare(String(right)),
+        compareText(String(left), String(right)),
     );
 }

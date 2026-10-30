@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { compareText } from '#cli/system/text.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -54,7 +55,7 @@ test('ShellCheck reports dialect findings by shebang and an unchecked cd, bash/s
     expect(
         checked.report.checks
             .flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule })))
-            .toSorted((left, right) => left.file.localeCompare(right.file)),
+            .toSorted((left, right) => compareText(left.file, right.file)),
     ).toStrictEqual([...SHELLCHECK_DIALECT_FINDINGS]);
     for (const [path, source] of Object.entries(DIALECT_SOURCES))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);

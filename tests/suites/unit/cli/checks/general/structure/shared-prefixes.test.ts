@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
 import { writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -52,8 +53,8 @@ test.skipIf(isWindows)('prefix groups stay apart when folder and file names cont
     });
     commitAll(sandbox.path);
     const initial = await runSandboxCheck(sandbox.path, 'structure/shared-prefixes');
-    expect(initial.map((finding) => finding.file).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
-        [paths[0]!, paths[2]!].toSorted((left, right) => left.localeCompare(right)),
+    expect(initial.map((finding) => finding.file).toSorted(compareText)).toStrictEqual(
+        [paths[0]!, paths[2]!].toSorted(compareText),
     );
 });
 
@@ -89,16 +90,14 @@ test('hook scripts under .husky do not count; other files beside them still do',
     );
 
     expect(
-        result.report.checks
-            .flatMap((check) => check.findings.map(({ file }) => file))
-            .toSorted((left, right) => left.localeCompare(right)),
+        result.report.checks.flatMap((check) => check.findings.map(({ file }) => file)).toSorted(compareText),
     ).toStrictEqual(
         [
             `${folder}-other/hook-first.ts`,
             `app/${folder}-other/hook-first.ts`,
             'app/src/action-one.ts',
             'src/action-one.ts',
-        ].toSorted((left, right) => left.localeCompare(right)),
+        ].toSorted(compareText),
     );
 });
 

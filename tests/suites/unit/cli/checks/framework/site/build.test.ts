@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
-import { quoteArgument } from '#cli/system/text.ts';
 import * as processes from '#cli/system/processes.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -164,7 +164,7 @@ test('build: a failed site build skips every check that reads the build, and a n
                 note: result.note,
                 message: result.findings[0]?.message,
             }))
-            .toSorted((left, right) => left.check.localeCompare(right.check)),
+            .toSorted((left, right) => compareText(left.check, right.check)),
     ).toMatchObject(
         [
             {
@@ -177,7 +177,7 @@ test('build: a failed site build skips every check that reads the build, and a n
                 status: 'skipped',
                 note: 'The site did not build.',
             })),
-        ].toSorted((left, right) => left.check.localeCompare(right.check)),
+        ].toSorted((left, right) => compareText(left.check, right.check)),
     );
     const built = buildProgramCommand('fakes/tool', '--write', 'dist/index.html=built');
     await writeFile(

@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { unlink, symlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runGitStep } from '#tests/setup/system/git.ts';
@@ -81,7 +82,7 @@ test.each(
                 'linked.ts',
                 'sibling/local.ts',
                 'source.ts',
-            ].toSorted((left, right) => left.localeCompare(right)),
+            ].toSorted(compareText),
         );
         expect(files.find(({ path }) => path === 'linked.ts')).toStrictEqual({
             path: 'linked.ts',

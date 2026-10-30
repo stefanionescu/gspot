@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { type CheckResult } from '#cli/types/runs/check.ts';
@@ -48,7 +49,7 @@ function assertSecretFindings(result: CheckResult | undefined, output: string, p
     expect(
         result?.findings
             .map(({ file, rule, line, column }) => ({ file, rule, line, column }))
-            .toSorted((left, right) => left.file.localeCompare(right.file)),
+            .toSorted((left, right) => compareText(left.file, right.file)),
     ).toStrictEqual([
         { file: 'credential,é.py', rule: `${prefix}credential,é.py:generic-api-key:1`, line: 1, column: 1 },
         { file: 'identity.py', rule: `${prefix}identity.py:aws-access-token:1`, line: 1, column: 22 },

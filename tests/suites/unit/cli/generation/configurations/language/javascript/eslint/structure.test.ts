@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import type { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/git.ts';
@@ -32,7 +33,7 @@ async function listTrivialFindings(root: string, settings: string): Promise<Pick
 
 function listTrivialFiles(findings: Pick<LintFinding, 'file' | 'rule'>[]): string[] {
     const files = findings.filter(({ rule }) => rule === 'gspot/no-trivial-files').map(({ file }) => file);
-    return [...new Set(files)].toSorted((left, right) => left.localeCompare(right));
+    return [...new Set(files)].toSorted(compareText);
 }
 
 async function assertSourceRules(
@@ -121,9 +122,7 @@ test.each([...LEVELS])('size limits apply to test files only at level all (%s)',
     const source = `export function count() {\n${declarations}\n    return value0;\n}\n`;
     await createFileTree(sandbox.path, { 'sample.test.js': source });
     const findings = await listLintFindings(eslint, sandbox.path, ['sample.test.js'], rules);
-    expect(listFindingRules(findings)).toStrictEqual(
-        level === 'all' ? rules.toSorted((left, right) => left.localeCompare(right)) : [],
-    );
+    expect(listFindingRules(findings)).toStrictEqual(level === 'all' ? rules.toSorted(compareText) : []);
 });
 
 test.each([...LEVELS])(

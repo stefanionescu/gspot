@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -39,17 +40,15 @@ test.each(['javascript', 'typescript'])(
         );
 
         expect(missing.report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
-            paths
-                .toSorted((left, right) => left.localeCompare(right))
-                .map((file) => ({
-                    check: 'gspot/suppressions',
-                    file,
-                    line: 1,
-                    rule: 'tsc-no-reason',
-                    message: 'This tsc suppression has no reason of two or more words.',
-                    fixable: false,
-                    help: SUPPRESSION_HELP,
-                })),
+            paths.toSorted(compareText).map((file) => ({
+                check: 'gspot/suppressions',
+                file,
+                line: 1,
+                rule: 'tsc-no-reason',
+                message: 'This tsc suppression has no reason of two or more words.',
+                fixable: false,
+                help: SUPPRESSION_HELP,
+            })),
         );
         for (const [index, directive] of TYPESCRIPT_SUPPRESSIONS.entries())
             await writeFile(

@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { JSON_INDENT } from '#cli/config/text.ts';
+import { compareText } from '#cli/system/text.ts';
 import { type Sandbox } from '#tests/types/sandbox.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
@@ -37,7 +38,7 @@ const dependencies = Object.fromEntries(
         typescript: testsPackage.devDependencies.typescript,
         '@types/react': SANDBOX_PACKAGES['@types/react'],
         '@types/node': workspacePackage.devDependencies['@types/node'],
-    }).toSorted(([left], [right]) => left.localeCompare(right)),
+    }).toSorted(([left], [right]) => compareText(left, right)),
 );
 
 const installedSandbox = shareInstalledSandbox({

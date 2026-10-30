@@ -1,3 +1,4 @@
+import { compareText } from '#cli/system/text.ts';
 import { test, expect, describe } from 'bun:test';
 import { join, dirname, basename } from 'node:path';
 import { isOnDisk } from '#tests/setup/system/files.ts';
@@ -70,9 +71,10 @@ xcode_destination = "platform=macOS"
         const first = await runGspot(sandbox.path, command);
         expect(first.code, first.stdout + first.stderr).toBe(0);
         const compiledFiles = await Array.fromAsync(new Bun.Glob('**/main.o').scan({ cwd: readCacheFolder() }));
-        expect(
-            compiledFiles.map((file) => basename(dirname(file))).toSorted((left, right) => left.localeCompare(right)),
-        ).toStrictEqual(['arm64', 'x86_64']);
+        expect(compiledFiles.map((file) => basename(dirname(file))).toSorted(compareText)).toStrictEqual([
+            'arm64',
+            'x86_64',
+        ]);
         const times = await Promise.all(
             compiledFiles.map(async (file) => {
                 const { mtimeMs } = await stat(join(readCacheFolder(), file));

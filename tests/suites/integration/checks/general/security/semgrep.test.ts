@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { test, expect, describe } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import type { Sandbox } from '#tests/types/sandbox.ts';
@@ -137,8 +138,8 @@ async function assertPlatformRules(sandbox: Sandbox, level: Level): Promise<void
               ]
             : []),
     ];
-    expect(listFindingRows(failed.report).toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
-        expected.toSorted((left, right) => left.file.localeCompare(right.file)),
+    expect(listFindingRows(failed.report).toSorted((left, right) => compareText(left.file, right.file))).toStrictEqual(
+        expected.toSorted((left, right) => compareText(left.file, right.file)),
     );
     const corrections = { ...PLATFORM_SOURCE_FIXES };
     if (level === 'all')

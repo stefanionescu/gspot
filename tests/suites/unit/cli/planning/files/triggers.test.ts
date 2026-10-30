@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { type Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
@@ -170,7 +171,7 @@ test.each(['gspot.toml', getManifestTarget('docs', 'lychee.toml')])(
         expect(
             planned.map((plannedCheck) => ({
                 scope: plannedCheck.scope.path,
-                files: plannedCheck.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right)),
+                files: plannedCheck.files.map((file) => file.path).toSorted(compareText),
             })),
         ).toStrictEqual([
             { scope: '', files: ['README.md'] },

@@ -1,5 +1,6 @@
 import { buildProgram } from '#cli/main.ts';
 import { isDeepStrictEqual } from 'node:util';
+import { compareText } from '#cli/system/text.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildJsonSchema } from '#cli/settings/json-schema.ts';
 import { listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
@@ -35,7 +36,7 @@ function groupSettingVariants(configurations: CliReference['configurations']): S
         .values()
         .toArray()
         .flat()
-        .toSorted((first, second) => first.setting.name.localeCompare(second.setting.name));
+        .toSorted((first, second) => compareText(first.setting.name, second.setting.name));
 }
 
 function buildCommandReference(command: ReturnType<typeof buildProgram>['commands'][number]): CommandReference {
@@ -70,7 +71,7 @@ function readCliReference(): CliReference {
     const configurations = readConfigurations()
         .values()
         .toArray()
-        .toSorted((first, second) => first.name.localeCompare(second.name));
+        .toSorted((first, second) => compareText(first.name, second.name));
     return {
         commands: buildProgram(() => {}).commands.map((command) => buildCommandReference(command)),
         configurations,

@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -33,18 +34,16 @@ test(`local-files reports each tracked path that a scope's configurations leave 
         ...indexOnly.map((path) => ({ ...session.repository.index[0]!, path })),
     ];
     const found = await getBuiltInCheck('repository/local-files')(session, input);
-    expect(found.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
-        [...refused, ...indexOnly]
-            .toSorted((left, right) => left.localeCompare(right))
-            .map((file) => ({
-                check: 'repository/local-files',
-                file,
-                line: 1,
-                rule: 'tracked-file',
-                fixable: false,
-                help: 'Add the reported file or folder to .gitignore and remove it from the index with `git rm --cached`.',
-                message: `${file} is tracked; its selected configuration declares it untracked. Remove it from the Git index and add it to .gitignore.`,
-            })),
+    expect(found.toSorted((left, right) => compareText(left.file, right.file))).toStrictEqual(
+        [...refused, ...indexOnly].toSorted(compareText).map((file) => ({
+            check: 'repository/local-files',
+            file,
+            line: 1,
+            rule: 'tracked-file',
+            fixable: false,
+            help: 'Add the reported file or folder to .gitignore and remove it from the index with `git rm --cached`.',
+            message: `${file} is tracked; its selected configuration declares it untracked. Remove it from the Git index and add it to .gitignore.`,
+        })),
     );
 });
 

@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { compareText } from '#cli/system/text.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
@@ -42,10 +43,8 @@ test('Prettier writes each file with the tab width, quotes, semicolons, and line
     const before = parseCheckReport(await spawnGspot(root, [...commandArguments, '--', ...files]));
     expect(before.code, before.stdout + before.stderr).toBe(1);
     expect(
-        before.report.checks
-            .flatMap(({ findings }) => findings.map(({ file }) => file))
-            .toSorted((left, right) => left.localeCompare(right)),
-    ).toStrictEqual(files.toSorted((left, right) => left.localeCompare(right)));
+        before.report.checks.flatMap(({ findings }) => findings.map(({ file }) => file)).toSorted(compareText),
+    ).toStrictEqual(files.toSorted(compareText));
     const corrected = await spawnGspot(root, [...commandArguments, '--fix', '--', ...files]);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     for (const { file, tabWidth, singleQuote, semi, endOfLine } of PRETTIER_OPTIONS_BY_FILE) {

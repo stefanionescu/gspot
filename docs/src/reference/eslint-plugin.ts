@@ -1,4 +1,5 @@
 import plugin from '#eslint-plugin/plugin.ts';
+import { compareText } from '#cli/system/text.ts';
 import type { ReferencePage } from '#docs/types/reference.ts';
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
 import { formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
@@ -74,7 +75,7 @@ Build the plugin page: how to install and use the plugin, then a section per rul
 that turn the rule on, why, what to do, an example, and its options. The rule name gives its heading and anchor.
 */
 export function buildPluginPage(): ReferencePage {
-    const rules = Object.entries(plugin.rules).toSorted(([left], [right]) => left.localeCompare(right));
+    const rules = Object.entries(plugin.rules).toSorted(([left], [right]) => compareText(left, right));
     return buildReferencePage(
         PLUGIN_TITLE,
         PLUGIN_DESCRIPTION,

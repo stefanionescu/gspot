@@ -3,6 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import type { Config } from 'stylelint';
 import type stylelintModule from 'stylelint';
+import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
 import { type StylelintConfigFile } from '#tests/types/tools.ts';
@@ -139,7 +140,7 @@ test('a scope with CSS Modules files accepts composes, :global, and @value in th
     }
     expect(await listReportedRules(`${sandbox.path}/button.module.css`)).toStrictEqual([]);
     const defaultFindings = await listReportedRules(`${sandbox.path}/plain.css`);
-    expect(defaultFindings.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+    expect(defaultFindings.toSorted(compareText)).toStrictEqual([
         'at-rule-no-unknown',
         'property-no-unknown',
         'selector-pseudo-class-no-unknown',

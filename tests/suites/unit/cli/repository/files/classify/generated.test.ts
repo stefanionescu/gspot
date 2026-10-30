@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
@@ -80,13 +81,11 @@ test('every generated header format marks a file generated outside .gspot', asyn
     await createFileTree(sandbox.path, files);
     const repository = await readTestRepository(sandbox.path);
     expect(repository.files.map(({ path, kind, kindOrigin }) => ({ path, kind, kindOrigin }))).toStrictEqual(
-        paths
-            .toSorted((left, right) => left.localeCompare(right))
-            .map((path) => ({
-                path,
-                kind: 'generated',
-                kindOrigin: 'banner',
-            })),
+        paths.toSorted(compareText).map((path) => ({
+            path,
+            kind: 'generated',
+            kindOrigin: 'banner',
+        })),
     );
 });
 
@@ -103,8 +102,8 @@ test.each([...GENERATED_PATH_CASES])(
             classified
                 .filter(({ kind }) => kind === 'generated')
                 .map(({ path }) => path)
-                .toSorted((left, right) => left.localeCompare(right)),
-        ).toStrictEqual(generated.toSorted((left, right) => left.localeCompare(right)));
+                .toSorted(compareText),
+        ).toStrictEqual(generated.toSorted(compareText));
         expect(
             classified.filter(({ path }) => path.endsWith('handwritten.d.ts')).map(({ kind }) => kind),
         ).toStrictEqual(['source', 'source']);

@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { compareText } from '#cli/system/text.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -33,15 +34,8 @@ test('list shows selected settings and available configurations', async () => {
         { name: 'bash/shfmt', scope: '', state: OFF_BY_IGNORE },
         { name: 'structure/shared-prefixes', scope: '', state: 'off (level)' },
     ]);
-    expect(
-        [...result.selected, ...result.available]
-            .map(({ name }) => name)
-            .toSorted((left, right) => left.localeCompare(right)),
-    ).toStrictEqual(
-        readConfigurations()
-            .keys()
-            .toArray()
-            .toSorted((left, right) => left.localeCompare(right)),
+    expect([...result.selected, ...result.available].map(({ name }) => name).toSorted(compareText)).toStrictEqual(
+        readConfigurations().keys().toArray().toSorted(compareText),
     );
     const defaults = await runGspot(sandbox.path, ['list', '--json']);
     expect(defaults.code, defaults.stdout + defaults.stderr).toBe(0);

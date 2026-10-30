@@ -262,10 +262,7 @@ USAGE = "mise uses USAGE in task argument directives."
 [tools.eslint]
 import_extension = "ts"
 
-[[tools.eslint.override]]
-paths = ["packages/cli/src/**"]
-
-[tools.eslint.override.rules]
+[tools.eslint.rules]
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 
 [tools.knip]

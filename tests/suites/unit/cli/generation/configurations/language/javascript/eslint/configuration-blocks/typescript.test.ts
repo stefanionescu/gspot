@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -39,9 +40,7 @@ test.each([...LEVELS])('%s type import and export rules apply at their declared 
     const eslint = await createEslint(sandbox.path);
     const rules = ['@typescript-eslint/consistent-type-imports', '@typescript-eslint/consistent-type-exports'];
     const findings = await listLintFindings(eslint, sandbox.path, ['index.ts'], rules);
-    expect(listFindingRules(findings)).toStrictEqual(
-        level === 'all' ? rules.toSorted((left, right) => left.localeCompare(right)) : [],
-    );
+    expect(listFindingRules(findings)).toStrictEqual(level === 'all' ? rules.toSorted(compareText) : []);
 });
 
 test('a default import with an inline type merges with a type-only import into code that parses', async () => {

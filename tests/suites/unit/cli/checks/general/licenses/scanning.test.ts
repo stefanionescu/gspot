@@ -1,6 +1,7 @@
 import { join, relative } from 'node:path';
 import { realpath } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { APP_PYPROJECT } from '#tests/config/toml.ts';
@@ -63,8 +64,8 @@ test.each([...ALLOWED_PACKAGE_SCOPE_CASES])(
         expect(await runSandboxCheck(sandbox.path, 'licenses/allowed')).toStrictEqual([...findings]);
         const expected = scopes
             .filter((scope) => scope !== ('ignore' in scenario ? scenario.ignore : undefined))
-            .toSorted((a, b) => a.localeCompare(b));
-        expect(scanned.toSorted((a, b) => a.localeCompare(b))).toStrictEqual(expected);
+            .toSorted(compareText);
+        expect(scanned.toSorted(compareText)).toStrictEqual(expected);
     },
 );
 

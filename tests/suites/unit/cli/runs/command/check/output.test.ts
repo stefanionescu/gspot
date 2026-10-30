@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { compareText } from '#cli/system/text.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/bash.ts';
@@ -48,7 +49,7 @@ test.skipIf(isWindows)('a command check reports files whose folder names hold a 
     expect(broken.report.exitCode).toBe(1);
     expect(
         [...new Set(broken.report.checks[0]!.findings.map((finding) => finding.file))].toSorted((left, right) =>
-            left.localeCompare(right),
+            compareText(left, right),
         ),
     ).toStrictEqual(paths);
 });

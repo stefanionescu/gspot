@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { OS_SOURCE } from '#tests/config/python.ts';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -37,8 +38,5 @@ test('vulture reads every Python file of the scope and reports unused definition
     const command = spawn.mock.calls
         .map(([commandArguments]) => commandArguments)
         .find((commandArguments) => commandArguments.some((argument) => argument.endsWith('vulture')))!;
-    expect(command.slice(1).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        'app/main.py',
-        'app/nodes.py',
-    ]);
+    expect(command.slice(1).toSorted(compareText)).toStrictEqual(['app/main.py', 'app/nodes.py']);
 });

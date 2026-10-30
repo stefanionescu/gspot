@@ -1,8 +1,8 @@
 export const DEFAULT_LEVEL_STYLE_FILES = [
+    'styles/LICENSES.md',
     'styles/gspot/alt-text.yml',
     'styles/gspot/dates.yml',
     'styles/gspot/link-text.yml',
-    'styles/LICENSES.md',
 ] as const;
 
 export const PRODUCT_WORD_SETTINGS = {

@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { compareText } from '#cli/system/text.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
@@ -105,7 +106,7 @@ test('javascript/tsc at level all also checks the build and dist folders', async
     const broken = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(broken.report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toStrictEqual(
-        paths.toSorted((left, right) => left.localeCompare(right)),
+        paths.toSorted(compareText),
     );
     for (const path of paths) await writeFile(join(sandbox.path, path), 'export const value = 1;\n');
     const corrected = await spawnGspot(sandbox.path, command);
@@ -172,7 +173,7 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
             content: await readFile(join(sandbox.path, path), 'utf8'),
         })),
     );
-    expect(outputs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+    expect(outputs.map(({ path }) => path).toSorted(compareText)).toStrictEqual([
         getManifestTarget('javascript', 'jsconfig.json'),
 
         `${GSPOT_PATHS.configurations}/language/javascript/scopes/app/child/jsconfig.json`,

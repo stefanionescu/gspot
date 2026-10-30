@@ -1,4 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
+import { compareText } from '#cli/system/text.ts';
 import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import { SCHEMA_FILE } from '#cli/config/files/names.ts';
 import type { CliReference, ReferencePage, SettingsSchema } from '#docs/types/reference.ts';
@@ -42,10 +43,7 @@ function isReasonedSchema(node: SettingsSchema): boolean {
     return (
         node.type === 'object' &&
         node.properties !== undefined &&
-        isDeepStrictEqual(
-            Object.keys(node.properties).toSorted((first, second) => first.localeCompare(second)),
-            ['reason', 'value'],
-        )
+        isDeepStrictEqual(Object.keys(node.properties).toSorted(compareText), ['reason', 'value'])
     );
 }
 

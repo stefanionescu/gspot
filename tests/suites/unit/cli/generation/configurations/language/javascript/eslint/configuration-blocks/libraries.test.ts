@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -140,7 +141,7 @@ path = "flat"
     expect(await listLintFindings(eslint, sandbox.path, paths, ['boundaries/dependencies'])).toStrictEqual(
         [...expected]
             .map(([file, line]) => ({ file, rule: 'boundaries/dependencies', line }))
-            .toSorted((left, right) => left.file.localeCompare(right.file) || left.line - right.line),
+            .toSorted((left, right) => compareText(left.file, right.file) || left.line - right.line),
     );
     for (const index of TRPC_IMPORTS.keys()) {
         const file = `form${String(index)}.ts`;

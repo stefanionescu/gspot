@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
@@ -44,7 +45,7 @@ test.skipIf(!isLinux || Bun.which('docker') === null)(
             { check: 'nginx/syntax', scope: '', status: 'skipped', fileCount: 0 },
             { check: 'nginx/syntax', scope: 'proxy', status: 'passed', fileCount: 3 },
         ]);
-        expect(report.checks[1]!.files?.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+        expect(report.checks[1]!.files?.toSorted(compareText)).toStrictEqual([
             'proxy/conf.d/server.conf',
             'proxy/nginx.conf',
             'proxy/tls#local.conf',

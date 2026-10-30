@@ -2,6 +2,7 @@ import prettier from 'prettier';
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { getValueAt } from '#cli/system/tables.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -205,9 +206,7 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
     const listed = buildIgnoreSections(session)
         .find(({ key }) => key === 'gspot')!
         .patterns.filter((pattern) => !pattern.startsWith(`${GSPOT_FOLDER}/`));
-    expect(listed.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
-        written.toSorted((left, right) => left.localeCompare(right)),
-    );
+    expect(listed.toSorted(compareText)).toStrictEqual(written.toSorted(compareText));
     const ruff = files.find(({ path }) => path.startsWith(`${GSPOT_FOLDER}/`) && path.endsWith('ruff.toml'))!;
     const excluded = (parse(ruff.content) as { 'extend-exclude': string[] })['extend-exclude'];
     expect(excluded).toContain('../../../../.gspot/**');

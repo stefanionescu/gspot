@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
@@ -100,8 +101,8 @@ test('EditorConfig checks source files beyond the Prettier extensions and skips 
 
     const session = await openSession(sandbox.path);
     const [planned] = planChecks(session, { stage: 'commit', only: ['format/editorconfig-checker'] });
-    expect(planned!.files.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
-        [...Object.keys(EDITORCONFIG_FILES), 'gspot.toml'].toSorted((left, right) => left.localeCompare(right)),
+    expect(planned!.files.map(({ path }) => path).toSorted(compareText)).toStrictEqual(
+        [...Object.keys(EDITORCONFIG_FILES), 'gspot.toml'].toSorted(compareText),
     );
     expect(planned!.skip).toBeUndefined();
 });
@@ -151,7 +152,7 @@ test(`a scope's per-scope check plans every file of its scope and covers only it
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'all', only: ['jest/coverage'] });
     const project = planned.find((each) => each.scope.path === 'apps/web')!;
-    expect(project.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+    expect(project.files.map((file) => file.path).toSorted(compareText)).toStrictEqual([
         'apps/web/image.bin',
         'apps/web/jest.config.json',
         'apps/web/value.test.js',

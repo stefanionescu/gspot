@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
 import { rm, writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -48,7 +49,7 @@ test('Knip finds unused framework component files and uses the entry points of e
     const result = await runCommand([...knipArguments, 'files'], { cwd: sandbox.path });
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const findings = parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path });
-    expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
+    expect(findings.toSorted((left, right) => compareText(left.file, right.file))).toStrictEqual(
         KNIP_UNUSED_FILES.map((file) => ({
             check: 'javascript/knip',
             file,
@@ -86,7 +87,7 @@ test("Knip ignores gspot's tool packages and reports your unused dependencies", 
     const result = await runCommand([...knipArguments, 'dependencies'], { cwd: sandbox.path });
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const findings = parseOutput(check, result.stdout, result.stderr, { root: sandbox.path, cwd: sandbox.path });
-    expect(findings.toSorted((left, right) => left.message.localeCompare(right.message))).toStrictEqual([
+    expect(findings.toSorted((left, right) => compareText(left.message, right.message))).toStrictEqual([
         {
             check: 'javascript/knip',
             file: 'package.json',

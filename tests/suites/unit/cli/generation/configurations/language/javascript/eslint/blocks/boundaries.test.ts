@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { APP_SCOPE_SETTINGS } from '#tests/config/toml.ts';
@@ -129,7 +130,7 @@ test('import rules skip your test files in each scope and check other files', as
     ).toStrictEqual(
         TEST_IMPORT_RULE_CASES.flatMap(({ path, count }) =>
             Array.from({ length: count }, () => ({ file: path, rule: 'boundaries/dependencies', line: 1 })),
-        ).toSorted((left, right) => left.file.localeCompare(right.file)),
+        ).toSorted((left, right) => compareText(left.file, right.file)),
     );
 });
 

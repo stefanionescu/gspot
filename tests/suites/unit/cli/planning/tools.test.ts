@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { type Session } from '#cli/types/session.ts';
@@ -150,6 +151,6 @@ test('Prettier plugins join the selected tools even though checks do not name th
     expect(
         session.toolConfigurations
             .flatMap(({ tools }) => tools.filter(({ prettier }) => prettier !== undefined).map(({ name }) => name))
-            .toSorted((left, right) => left.localeCompare(right)),
+            .toSorted(compareText),
     ).toStrictEqual(['prettier-plugin-astro', 'prettier-plugin-svelte']);
 });

@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -48,9 +49,7 @@ test.each(['{file}', '{files}'])(
         expect(result.report.exitCode).toBe(1);
         expect(result.report.checks).toMatchObject([{ status: 'failed', fileCount: 2 }]);
         expect(
-            result.report.checks
-                .flatMap(({ findings }) => findings.map(({ file }) => file))
-                .toSorted((left, right) => left.localeCompare(right)),
+            result.report.checks.flatMap(({ findings }) => findings.map(({ file }) => file)).toSorted(compareText),
         ).toStrictEqual(['--config=x.mjs', '-f.sh']);
     },
 );

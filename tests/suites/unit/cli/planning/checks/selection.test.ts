@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { TWO_WORDS } from '#tests/config/ignores.ts';
@@ -115,8 +116,8 @@ test.each([...LEVELS])(
         const selected = new Set(
             session.scopes.flatMap((scope) => scope.configurations.map((configuration) => configuration.name)),
         );
-        expect([...selected].toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
-            [...listAlwaysSelected(), 'licenses'].toSorted((left, right) => left.localeCompare(right)),
+        expect([...selected].toSorted(compareText)).toStrictEqual(
+            [...listAlwaysSelected(), 'licenses'].toSorted(compareText),
         );
         const checks = planChecks(session, {
             stage: 'all',

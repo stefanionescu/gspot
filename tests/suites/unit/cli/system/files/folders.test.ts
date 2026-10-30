@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { mkdir, unlink, symlink } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -34,17 +35,19 @@ test.skipIf(isWindows).each(LINKED_GLOBS)(
 test('a glob includes dot files and honors exclusions and brace patterns', async () => {
     await using sandbox = await testdir(GLOB_FILES);
 
-    expect(
-        listMatchingPaths(sandbox.path, ['src/**/*.ts']).toSorted((left, right) => left.localeCompare(right)),
-    ).toStrictEqual(['src/.leaf.ts', 'src/a.ts', 'src/nested/.inner/b.ts']);
+    expect(listMatchingPaths(sandbox.path, ['src/**/*.ts']).toSorted(compareText)).toStrictEqual([
+        'src/.leaf.ts',
+        'src/a.ts',
+        'src/nested/.inner/b.ts',
+    ]);
     expect(
         listMatchingPaths(sandbox.path, ['**/*.ts', '!node_modules/**']).toSorted((left, right) =>
-            left.localeCompare(right),
+            compareText(left, right),
         ),
     ).toStrictEqual(['.hidden/nested/c.ts', 'src/.leaf.ts', 'src/a.ts', 'src/nested/.inner/b.ts']);
     expect(
         listMatchingPaths(sandbox.path, ['src/{a.ts,nested/.inner/b.ts}', 'src/a.ts']).toSorted((left, right) =>
-            left.localeCompare(right),
+            compareText(left, right),
         ),
     ).toStrictEqual(['src/a.ts', 'src/nested/.inner/b.ts']);
 });
@@ -56,8 +59,6 @@ test.skipIf(isWindows)('a glob excludes file, folder, broken, and cyclic links',
     await symlink('missing', join(sandbox.path, 'broken.ts'));
     await symlink('src/a.ts', join(sandbox.path, 'link.ts'));
     await symlink('..', join(sandbox.path, 'src/.loop'), 'dir');
-    expect(
-        listMatchingPaths(sandbox.path, ['*/*.ts']).toSorted((left, right) => left.localeCompare(right)),
-    ).toStrictEqual(['src/a.ts']);
+    expect(listMatchingPaths(sandbox.path, ['*/*.ts']).toSorted(compareText)).toStrictEqual(['src/a.ts']);
     expect(listMatchingPaths(sandbox.path, ['*'])).toStrictEqual([]);
 });

@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
@@ -53,7 +54,7 @@ test('--changed compares with the merge base, names its base, and a folder argum
     expect(
         explicit.report.checks
             .flatMap((check) => check.findings.map((finding) => finding.message))
-            .toSorted((a, b) => a.localeCompare(b)),
+            .toSorted(compareText),
     ).toStrictEqual(['api/source.txt', 'web/source.txt']);
 });
 
@@ -92,7 +93,7 @@ test.each([...ALL_FILES_BASES])(
         expect(
             result.report.checks
                 .flatMap((check) => check.findings.map((finding) => finding.message))
-                .toSorted((a, b) => a.localeCompare(b)),
+                .toSorted(compareText),
         ).toStrictEqual(['api/source.txt', 'web/source.txt']);
         const text = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', reference]);
         expect(text.stdout).toStartWith(`${message}\n`);

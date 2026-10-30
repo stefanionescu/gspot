@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -37,7 +38,7 @@ test.each([...WORKSPACE_FILE_CASES])(
         });
 
         const repository = await readTestRepository(sandbox.path);
-        expect(listWorkspaceFolders(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+        expect(listWorkspaceFolders(sandbox.path).toSorted(compareText)).toStrictEqual([
             'packages/api',
             'packages/lint',
         ]);
@@ -81,7 +82,7 @@ test('scope detection leaves out packages that hold only gspot npm tools or a ho
         ...TOOL_ONLY_PACKAGES,
     });
     const repository = await readTestRepository(sandbox.path);
-    expect(listWorkspaceFolders(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+    expect(listWorkspaceFolders(sandbox.path).toSorted(compareText)).toStrictEqual([
         'packages/custom',
         'packages/hooks',
         'packages/next',

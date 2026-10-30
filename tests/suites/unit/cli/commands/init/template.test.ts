@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
@@ -34,8 +35,8 @@ test('init --from copies the settings that fit any repository and lists each one
         plan: { template: { file: string; leftOut: { key: string; note: string }[] }; configurations: unknown[] };
     };
     expect(json.plan.template.file).toBe(join(team.path, 'gspot.toml'));
-    expect(json.plan.template.leftOut.toSorted((a, b) => a.key.localeCompare(b.key))).toStrictEqual(
-        TEAM_LEFT_OUT.toSorted((a, b) => a.key.localeCompare(b.key)),
+    expect(json.plan.template.leftOut.toSorted((a, b) => compareText(a.key, b.key))).toStrictEqual(
+        TEAM_LEFT_OUT.toSorted((a, b) => compareText(a.key, b.key)),
     );
     expect(json.plan.configurations).toContainEqual({
         configuration: 'typescript',

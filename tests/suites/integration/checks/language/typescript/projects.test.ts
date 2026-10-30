@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { GSPOT_FOLDER } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
@@ -139,5 +140,5 @@ test.each([...OUTDIR_CASES])('$name', async ({ kind }) => {
     expect(await readFile(join(outside.path, 'value.js'), 'utf8')).toBe('authored output\n');
     expect(await readdir(outside.path)).toStrictEqual(outsideFiles);
     const files = await readdir(join(sandbox.path, 'app'));
-    expect(files.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(['tsconfig.json', 'value.ts']);
+    expect(files.toSorted(compareText)).toStrictEqual(['tsconfig.json', 'value.ts']);
 });

@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { TYPO } from '#tests/config/spelling.ts';
+import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -101,7 +102,7 @@ async function runTyposCheck(files: Record<string, string>) {
         files: checked.report.checks
             .flatMap(({ findings }) => findings)
             .map(({ file }) => file)
-            .toSorted((left, right) => left.localeCompare(right)),
+            .toSorted(compareText),
     };
 }
 

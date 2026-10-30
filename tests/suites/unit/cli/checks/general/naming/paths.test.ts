@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rename, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -106,10 +107,8 @@ test('a banned folder word such as shared is reported in folder names', async ()
     const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/paths'] }));
 
     expect(
-        result.report.checks
-            .flatMap(({ findings }) => findings.map(({ file }) => file))
-            .toSorted((left, right) => left.localeCompare(right)),
-    ).toStrictEqual(paths.toSorted((left, right) => left.localeCompare(right)));
+        result.report.checks.flatMap(({ findings }) => findings.map(({ file }) => file)).toSorted(compareText),
+    ).toStrictEqual(paths.toSorted(compareText));
     expect([
         ...new Set(result.report.checks.flatMap(({ findings }) => findings.map(({ message }) => message))),
     ]).toStrictEqual(['javascript folder "shared": "shared" is banned (folders list).']);

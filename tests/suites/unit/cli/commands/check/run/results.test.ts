@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -115,7 +116,7 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
     for (const log of ['checked.txt', 'fixed.txt']) {
         const logText = await readFile(join(sandbox.path, log), 'utf8');
         for (const line of logText.trim().split('\n'))
-            expect((JSON.parse(line) as string[]).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+            expect((JSON.parse(line) as string[]).toSorted(compareText)).toStrictEqual([
                 'inputs/regular.txt',
                 'inputs/skip-keep.txt',
             ]);

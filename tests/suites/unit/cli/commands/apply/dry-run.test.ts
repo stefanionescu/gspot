@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -128,15 +129,13 @@ test('turning rules off lists the same rule files as stray in apply --dry-run as
     const strays = outdated
         .filter(({ kind }) => kind === 'stray')
         .map(({ path }) => path)
-        .toSorted((first, second) => first.localeCompare(second));
-    const ownedPaths = owned.map(({ path }) => path).toSorted((first, second) => first.localeCompare(second));
-    expect(strays).toStrictEqual([...ownedPaths, 'AGENTS.md'].toSorted((first, second) => first.localeCompare(second)));
+        .toSorted(compareText);
+    const ownedPaths = owned.map(({ path }) => path).toSorted(compareText);
+    expect(strays).toStrictEqual([...ownedPaths, 'AGENTS.md'].toSorted(compareText));
     for (const path of ownedPaths) expect(await isOnDisk(join(sandbox.path, path))).toBe(true);
     const written = await runGspot(sandbox.path, ['apply', '--json']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
-    expect(
-        (JSON.parse(written.stdout) as ApplyReport).removed.toSorted((first, second) => first.localeCompare(second)),
-    ).toStrictEqual(strays);
+    expect((JSON.parse(written.stdout) as ApplyReport).removed.toSorted(compareText)).toStrictEqual(strays);
     for (const path of ownedPaths) expect(await isOnDisk(join(sandbox.path, path))).toBe(false);
 });
 

@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import type { GspotError } from '#cli/system/errors.ts';
@@ -161,9 +162,10 @@ test.each([...PYTHON_DEPENDENCY_CASES])(
         await using sandbox = await testdir({ [`api/${path}`]: source });
         const repository = await readTestRepository(sandbox.path);
         const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
-        expect(
-            Object.keys(dependencyFiles[0]!.dependencies).toSorted((left, right) => left.localeCompare(right)),
-        ).toStrictEqual(['fastapi', 'friendly-bard']);
+        expect(Object.keys(dependencyFiles[0]!.dependencies).toSorted(compareText)).toStrictEqual([
+            'fastapi',
+            'friendly-bard',
+        ]);
     },
 );
 

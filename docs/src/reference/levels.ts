@@ -1,3 +1,4 @@
+import { compareText } from '#cli/system/text.ts';
 import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import { LEVEL_ADVICE } from '#docs/config/reference.ts';
 import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/definitions/root.ts';
@@ -13,7 +14,7 @@ export function buildLevelRows(): { level: string; description: string; count: n
     );
     const allLevelTools = [...new Set(checks.flatMap(({ check }) => (check.tool === undefined ? [] : check.tool)))]
         .filter((tool) => !defaultLevelTools.has(tool))
-        .toSorted((first, second) => first.localeCompare(second));
+        .toSorted(compareText);
     return [
         {
             level: 'basic',

@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
@@ -73,10 +74,10 @@ test('lone-files and shared-prefixes check build, dist and coverage folders and 
         buildRunOptions({ stage: 'commit', only: ['structure/lone-files', 'structure/shared-prefixes'] }),
     );
     const findings = result.report.checks.flatMap((check) => check.findings);
-    expect(findings.map(({ file }) => file).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
+    expect(findings.map(({ file }) => file).toSorted(compareText)).toStrictEqual(
         ['build', 'dist', 'coverage']
             .flatMap((folder) => [`${folder}/lone/only.ts`, `${folder}/cards/asset-one.ts`])
-            .toSorted((left, right) => left.localeCompare(right)),
+            .toSorted(compareText),
     );
 });
 

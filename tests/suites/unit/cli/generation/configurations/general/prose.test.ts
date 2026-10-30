@@ -2,6 +2,7 @@ import { parse } from 'yaml';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { dirname } from 'node:path/posix';
+import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { generateFiles } from '#cli/generation/generate.ts';
@@ -47,7 +48,7 @@ test('at level basic, gspot writes only the Vale styles that run', async () => {
     const paths = output.files
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${dirname(GSPOT_PATHS.valeConfigFile)}/`));
-    expect(paths.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+    expect(paths.toSorted(compareText)).toStrictEqual([
         ...DEFAULT_LEVEL_STYLE_FILES.map((file) => getManifestTarget('prose', file)),
         GSPOT_PATHS.valeConfigFile,
     ]);

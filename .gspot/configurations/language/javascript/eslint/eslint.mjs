@@ -5206,14 +5206,14 @@ export default [
                 "**/*",
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}",
                 "**/*",
-                "packages/cli/src/**"
+                "**/*"
             ],
             [
                 "**/*.astro",
                 "**/*",
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}",
                 "**/*",
-                "packages/cli/src/**"
+                "**/*"
             ]
         ]
     },

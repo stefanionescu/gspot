@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { type Level } from '#cli/types/configurations.ts';
@@ -57,8 +58,8 @@ test.each([...ENGINE_PHASES])(
             ENGINE_PATHS,
             ENGINE_FINDINGS.map(({ ruleId }) => ruleId),
         );
-        expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
-            ENGINE_PATHS.toSorted((left, right) => left.localeCompare(right)).flatMap((file) =>
+        expect(findings.toSorted((left, right) => compareText(left.file, right.file))).toStrictEqual(
+            ENGINE_PATHS.toSorted(compareText).flatMap((file) =>
                 new Set<string>(phase.reported).has(file)
                     ? ENGINE_FINDINGS.map(({ ruleId, line }) => ({ file, rule: ruleId, line }))
                     : [],
@@ -193,8 +194,8 @@ function buildExpectedFindings(cases: readonly ScriptFindingCase[], level: Level
             })),
         )
         .toSorted((left, right) => {
-            if (left.file !== right.file) return left.file.localeCompare(right.file);
+            if (left.file !== right.file) return compareText(left.file, right.file);
             if (left.line !== right.line) return left.line - right.line;
-            return (left.rule ?? '').localeCompare(right.rule ?? '');
+            return compareText(left.rule ?? '', right.rule ?? '');
         });
 }

@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { compareText } from '#cli/system/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -160,13 +161,11 @@ test('markdownlint reports line, column, and fixable for findings in files whose
             findings.map(({ file, line, column, rule, fixable }) => ({ file, line, column, rule, fixable })),
         ),
     ).toStrictEqual(
-        paths
-            .toSorted((left, right) => left.localeCompare(right))
-            .flatMap((file) => [
-                { file, line: 1, column: 30, rule: 'MD034', fixable: true },
-                { file, line: 1, column: undefined, rule: 'MD041', fixable: false },
-                { file, line: 1, column: 6, rule: 'MD045', fixable: false },
-            ]),
+        paths.toSorted(compareText).flatMap((file) => [
+            { file, line: 1, column: 30, rule: 'MD034', fixable: true },
+            { file, line: 1, column: undefined, rule: 'MD041', fixable: false },
+            { file, line: 1, column: 6, rule: 'MD045', fixable: false },
+        ]),
     );
     for (const path of paths) await writeFile(join(root, path), '# Title\n');
     const corrected = parseCheckReport(await spawnGspot(root, command));

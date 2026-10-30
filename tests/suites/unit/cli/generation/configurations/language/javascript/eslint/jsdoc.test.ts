@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
@@ -55,7 +56,7 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
             findings.map(({ ruleId, line }) => ({ file, rule: ruleId, line })),
         ).toSorted(
             (left, right) =>
-                left.file.localeCompare(right.file) || left.line - right.line || left.rule.localeCompare(right.rule),
+                compareText(left.file, right.file) || left.line - right.line || compareText(left.rule, right.rule),
         ),
     );
     const tscArguments = [
@@ -74,7 +75,7 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
             .split(/\r?\n/u)
             .filter((line) => line.indexOf('(') > 0)
             .map((line) => line.slice(0, line.indexOf('(')))
-            .toSorted((left, right) => left.localeCompare(right)),
+            .toSorted(compareText),
     ).toStrictEqual(['malformed.js', 'missing.js', 'undefined.js']);
     for (const { file } of JSDOC_FINDINGS) {
         if (!file.endsWith('.js')) continue;

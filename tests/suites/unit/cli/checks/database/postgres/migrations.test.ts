@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
 import { writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
@@ -106,7 +107,7 @@ test.each(['', 'app'])('the default migration folders are read and a set folder 
         planChecks(session, { stage: 'commit', only: ['postgres/squawk'] })
             .find((plan) => plan.scope.path === scope)!
             .files.map(({ path }) => basename(path))
-            .toSorted((left, right) => left.localeCompare(right)),
+            .toSorted(compareText),
     ).toStrictEqual(['1_first.sql', '2_second.sql', '3_third.sql', '4_rollback.down.sql']);
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
