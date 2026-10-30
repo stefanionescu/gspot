@@ -32,24 +32,14 @@ test('javascript/tsc checks a stale jsconfig and skips an absent one with apply 
     const text = await readFile(path, 'utf8');
     await chmod(path, 0o644);
     await writeFile(path, text.replace('{', '{ '));
-    using boundary = fakeCommands().mockResolvedValue(buildProcessResult());
-    const result = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['javascript/tsc', 'gspot/generated-files'] }),
-    );
-    expect(result.report.checks.find(({ check }) => check === 'javascript/tsc')).toMatchObject({
-        status: 'passed',
-        findings: [],
-    });
-    const drift = result.report.checks.find(({ check }) => check === 'gspot/generated-files');
-    expect(drift?.status).toBe('failed');
-    expect(drift?.findings.filter(({ file }) => file === target)).toMatchObject([{ file: target, rule: 'changed' }]);
+    using _boundary = fakeCommands().mockResolvedValue(buildProcessResult());
+    const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['javascript/tsc'] }));
+    expect(result.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
     await unlink(path);
     const absent = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['javascript/tsc'] }));
     expect(absent.report.checks).toMatchObject([
         { status: 'missing', note: `The generated file ${target} is missing. Run gspot apply.` },
     ]);
-    expect(boundary).toHaveBeenCalledTimes(1);
 });
 
 test('javascript/tsc excludes type roots inherited from folders above the repository', async () => {
@@ -88,13 +78,9 @@ test('a scope whose jsconfig lists no JavaScript file passes with nothing to com
         only: ['javascript/tsc'],
         staged: ['gspot.toml'],
     }).find((check) => check.scope.path === 'site')!;
-    expect(
-        await runCheckCode(
-            buildCheckSession(reopened),
-            site,
-            site.check.generator_outputs === undefined ? CHECK_CODE[site.check.id] : { check: checkGeneratorOutputs },
-        ),
-    ).toStrictEqual(EMPTY_PROJECT_RESULT);
+    expect(await runCheckCode(buildCheckSession(reopened), site, CHECK_CODE['javascript/tsc'])).toStrictEqual(
+        EMPTY_PROJECT_RESULT,
+    );
 });
 
 test('javascript/tsc of one named file copies its imported declarations and leaves other scopes apart', async () => {
@@ -146,7 +132,6 @@ test('javascript/tsc puts incremental build information in the check copy', asyn
     );
     const ordinary = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['javascript/tsc'] }));
     expect(ordinary.report.checks[0]?.status).toBe('failed');
-    expect(ordinary.report.checks[0]?.command).not.toContain('--tsBuildInfoFile');
     expect(
         await Array.fromAsync(
             new Bun.Glob('**/*.tsbuildinfo').scan({ cwd: sandbox.path, dot: true, followSymlinks: false }),

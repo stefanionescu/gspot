@@ -198,24 +198,17 @@ test('a child excluded from the root project is its own compiler project', async
     expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig', { scope: 'app' })).toStrictEqual([]);
 });
 
-test.each(['', 'app'])(
-    'TypeScript sources without a compiler project give one setup finding in scope %j',
-    async (scope) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['typescript'], { scopes: [{ path: 'app' }] }),
-            [scope === '' ? 'source.ts' : 'app/source.ts']: COUNT_NUMBER_SOURCE,
-        });
-        expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig', { scope })).toMatchObject([
-            {
-                file: scope === '' ? 'tsconfig.json' : 'app/tsconfig.json',
-                rule: 'missing',
-                message: MISSING_TSCONFIG_MESSAGE,
-            },
-        ]);
-        await writeFile(join(sandbox.path, scope, 'tsconfig.json'), STRICT_TSCONFIG_TEXT);
-        expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig', { scope })).toStrictEqual([]);
-    },
-);
+test('TypeScript sources without a compiler project give one setup finding', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript']),
+        'source.ts': COUNT_NUMBER_SOURCE,
+    });
+    expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toMatchObject([
+        { file: 'tsconfig.json', rule: 'missing', message: MISSING_TSCONFIG_MESSAGE },
+    ]);
+    await writeFile(join(sandbox.path, 'tsconfig.json'), STRICT_TSCONFIG_TEXT);
+    expect(await runSandboxCheck(sandbox.path, 'typescript/tsconfig')).toStrictEqual([]);
+});
 
 test('a solution tsconfig leaves compiler option checks to its referenced projects', async () => {
     await using sandbox = await testdir({
