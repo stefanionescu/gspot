@@ -5,8 +5,8 @@ import { replaceBounded } from '#cli/system/files/bounded.ts';
 
 test('a failed staged write removes its temporary file and preserves the destination', async () => {
     await using sandbox = await testdir({ 'source.txt': 'before' });
-    const failure = new Error('The disk write failed.');
-    using _sync = spyOn(fs, 'fsyncSync').mockImplementation(() => {
+    const failure = new Error('The mode change failed.');
+    using _chmod = spyOn(fs, 'fchmodSync').mockImplementation(() => {
         throw failure;
     });
     expect(() => {

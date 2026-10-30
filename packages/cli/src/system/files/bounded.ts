@@ -18,7 +18,6 @@ import {
     lstatSync,
     mkdirSync,
     closeSync,
-    fsyncSync,
     type Stats,
     unlinkSync,
     fchmodSync,
@@ -69,7 +68,6 @@ function writeStagedFile(path: string, contents: FileContents): void {
     try {
         writeFileSync(file, contents.bytes);
         fchmodSync(file, contents.mode);
-        fsyncSync(file);
     } catch (error) {
         closeSync(file);
         unlinkSync(path);
