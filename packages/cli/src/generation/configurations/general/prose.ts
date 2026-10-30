@@ -14,9 +14,7 @@ import {
     LENGTH_STYLES,
     ACRONYM_MESSAGE,
     ACRONYM_PATTERN,
-    ALT_TEXT_TOKENS,
     BANNED_HEADINGS,
-    ALT_TEXT_MESSAGE,
     VALE_STYLES_PATH,
     VALE_REGEX_SYMBOLS,
     CAPITALIZATION_STYLES,
@@ -76,25 +74,6 @@ export function buildValeIniFile(planned: PlannedConfigFile): string {
         level: planned.level,
         stylesPaths: folders.map((path) => relative(dirname(planned.targetPath), path)),
         packages: VALE_PACKAGES.map((name) => VALE_PACKAGE_URLS[name]),
-    });
-}
-
-/**
-Build the `alt-text` style of Vale: the Vale alternative-text rule.
-
-@param planned the config file to build.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
-export function buildAltTextStyle(planned: PlannedConfigFile): string {
-    const isAll = planned.level === 'all';
-
-    return stringify({
-        extends: 'existence',
-        message: ALT_TEXT_MESSAGE,
-        level: 'error',
-        scope: 'raw',
-        nonword: true,
-        tokens: [ALT_TEXT_TOKENS[0], ...(isAll ? [ALT_TEXT_TOKENS[1]] : [])],
     });
 }
 
