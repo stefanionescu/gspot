@@ -11,6 +11,7 @@ import {
     VAGUE_WORDS,
     DOC_SECTIONS,
     CAMEL_CASE_SPLIT,
+    ARGUMENTS_SECTION,
     LEADING_UNDERSCORES,
     SHELLCHECK_TOOL_COMMENT,
 } from '#cli/config/checks/language/bash/doc-comments.ts';
@@ -70,7 +71,8 @@ function validateDocComment(
 }
 
 /**
-Reports each function without a summary line, with a vague summary, or with doc sections out of order.
+Reports each function without a summary line, with a vague summary, or with doc sections out of order, and each
+public function that reads arguments without an Arguments section.
 
 @param session the repository and its tools.
 @param planned the scope scripts to read.
@@ -80,7 +82,19 @@ export async function checkBashDocComments(session: Session, planned: PlannedChe
     return scripts.flatMap((file) => {
         return file.functions.flatMap((scriptFunction) => {
             if (scriptFunction.name === MAIN_FUNCTION) return [];
-            const found = validateDocComment(scriptFunction, findCommentBlock(file.lines, scriptFunction.start));
+            const block = findCommentBlock(file.lines, scriptFunction.start);
+            const isUndocumentedReader =
+                scriptFunction.highestRead > 0 &&
+                !LEADING_UNDERSCORES.test(scriptFunction.name) &&
+                !block.includes(ARGUMENTS_SECTION);
+            const found =
+                validateDocComment(scriptFunction, block) ??
+                (isUndocumentedReader
+                    ? {
+                          rule: RULES.missingArguments,
+                          message: `${scriptFunction.name} is public and reads arguments, but its comment has no "${ARGUMENTS_SECTION}" section that lists them.`,
+                      }
+                    : undefined);
             return found === undefined
                 ? []
                 : [

@@ -23,11 +23,14 @@ export const VAGUE_WORDS: ReadonlySet<string> = new Set([
 
 export const DOC_SECTIONS = ['# Globals:', '# Arguments:', '# Outputs:', '# Returns:'] as const;
 
+export const ARGUMENTS_SECTION = '# Arguments:';
+
 export const RULES = {
     missingComment: 'missing-comment',
     summaryLine: 'summary-line',
     vagueSummary: 'vague-summary',
     sectionOrder: 'section-order',
+    missingArguments: 'missing-arguments',
 } as const;
 
 export const CAMEL_CASE_SPLIT = /(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])/gu;

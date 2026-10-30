@@ -95,11 +95,11 @@ why = "A script that skips strict mode or hides its runtime fails silently on th
 
 [[check]]
 example = "`_quiet() { printf \"%s\\n\" \"Hello\"; }` with no comment above it reports a finding. Add `# _quiet: prints a greeting.` on the line above."
-help = "Write \"# name: what it does\" above the function; when it carries doc sections, keep Globals, Arguments, Outputs, and Returns in that order."
+help = "Write \"# name: what it does\" above the function, and an \"# Arguments:\" section when a public function reads arguments; keep Globals, Arguments, Outputs, and Returns in that order."
 level = "all"
 name = "doc-comments"
 stage = "commit"
-summary = "Checks that each shell function has a comment above it that says more than its name."
+summary = "Checks that each shell function has a comment above it that says more than its name, and that a public function that reads arguments lists them in an `Arguments` section."
 why = "Without a summary, the reader must trace the function in their head, and nobody trusts a vague one."
 
 [[check]]

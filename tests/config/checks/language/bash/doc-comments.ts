@@ -2,6 +2,8 @@ import { BASH_HEADER } from '#tests/config/bash.ts';
 
 export const SHEBANG_DOC_SCRIPT = String.raw`#!/usr/bin/env bash
 # log_line: print a timestamped message to standard error.
+# Arguments:
+#   Message text.
 log_line() {
     printf '%s\n' "$1" >&2
 }

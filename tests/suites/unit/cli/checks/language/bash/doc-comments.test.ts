@@ -34,3 +34,31 @@ test('camelCase and uppercase names cannot serve as their own summaries', async 
     expect(findings.map(({ line }) => line)).toStrictEqual([2, 4]);
     expect(findings.every(({ rule }) => rule === 'vague-summary')).toBe(true);
 });
+
+test('a public function that reads arguments needs an Arguments section, and a private one does not', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
+        'source.sh': [
+            '# greet_user: prints a greeting for one user.',
+            String.raw`greet_user() { printf "%s\n" "$1"; }`,
+            '# _greet_quietly: prints a greeting for one user.',
+            String.raw`_greet_quietly() { printf "%s\n" "$1"; }`,
+            '# greet_all: prints a greeting for each user.',
+            '# Arguments:',
+            '#   User names.',
+            String.raw`greet_all() { printf "%s\n" "$@"; }`,
+            '# greet_world: prints a greeting for everyone.',
+            String.raw`greet_world() { printf "hello\n"; }`,
+            '',
+        ].join('\n'),
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'bash/doc-comments');
+    expect(findings.map(({ line, rule, message }) => ({ line, rule, message }))).toStrictEqual([
+        {
+            line: 2,
+            rule: 'missing-arguments',
+            message:
+                'greet_user is public and reads arguments, but its comment has no "# Arguments:" section that lists them.',
+        },
+    ]);
+});

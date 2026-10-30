@@ -185,6 +185,8 @@ with `IFS=, read`.
 
 ```bash
 # join_path_parts: Joins the arguments with slashes.
+# Arguments:
+#   Path parts to join.
 join_path_parts() {
     local IFS='/'
     printf '%s\n' "$*"
@@ -269,7 +271,8 @@ Do not hide a failure with `|| true` or `|| :`. Handle it, or let it stop the sc
 
 Put a comment above every function other than `main`. Its first line reads `# name: what it does`, with at least one
 word that the name does not already say. A public, sourced, complex, or risky function adds the `Globals`,
-`Arguments`, `Outputs`, and `Returns` sections, in that order.
+`Arguments`, `Outputs`, and `Returns` sections, in that order. A public function that reads arguments always lists
+them under `Arguments`.
 
 ## Naming
 
