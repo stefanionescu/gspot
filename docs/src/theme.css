@@ -1,6 +1,27 @@
 @import '@fontsource-variable/geist/index.css';
 @import '@fontsource-variable/geist-mono/index.css';
 
+/* Arial scaled to the widths and line metrics of Geist, so text keeps its place when Geist arrives and replaces it. */
+@font-face {
+    font-family: 'Geist Fallback';
+    font-weight: 100 500;
+    src: local('Arial');
+    size-adjust: 103%;
+    ascent-override: 97.57%;
+    descent-override: 28.64%;
+    line-gap-override: 0%;
+}
+
+@font-face {
+    font-family: 'Geist Fallback';
+    font-weight: 550 900;
+    src: local('Arial Bold');
+    size-adjust: 98.9%;
+    ascent-override: 101.62%;
+    descent-override: 29.83%;
+    line-gap-override: 0%;
+}
+
 :root {
     --target-size: 44px;
     --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 14%, transparent);
@@ -39,7 +60,7 @@
     --sl-color-bg-sidebar: var(--sl-color-black);
     --sl-color-bg-inline-code: var(--sl-color-gray-6);
     --sl-color-hairline-shade: var(--sl-color-gray-5);
-    --sl-font: 'Geist Variable', sans-serif;
+    --sl-font: 'Geist Variable', 'Geist Fallback', sans-serif;
     --sl-font-mono: 'Geist Mono Variable', monospace;
     --sl-line-height: 1.7;
     --sl-text-h1: 2rem;
