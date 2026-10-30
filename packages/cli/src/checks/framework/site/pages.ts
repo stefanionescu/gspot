@@ -154,18 +154,14 @@ async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Pr
             styles.push(text);
             continue;
         }
-        const tree = await parseSource('html', text, session);
-        try {
-            styles.push(
-                ...tree.rootNode
-                    .descendantsOfType('style_element')
-                    .flatMap((node) =>
-                        node.namedChildren.filter((child) => child.type === 'raw_text').map((child) => child.text),
-                    ),
-            );
-        } finally {
-            tree.delete();
-        }
+        using tree = await parseSource('html', text, session);
+        styles.push(
+            ...tree.rootNode
+                .descendantsOfType('style_element')
+                .flatMap((node) =>
+                    node.namedChildren.filter((child) => child.type === 'raw_text').map((child) => child.text),
+                ),
+        );
     }
     return styles.join('\n').replaceAll(STYLE_WHITESPACE, '');
 }

@@ -52,34 +52,28 @@ export function parseIdentifiers(
         if (language === 'sql') return extractSqlIdentifiers(file, text, session.reads);
         const grammar = selectGrammar(file, language);
         if (grammar === undefined) return { identifiers: [], error: undefined };
-        const tree = await parseSource(grammar, text, session);
-        try {
-            let identifiers: Identifier[];
-            switch (grammar) {
-                case 'bash': {
-                    identifiers = extractBashIdentifiers(tree.rootNode, file);
-                    break;
-                }
-                case 'swift': {
-                    identifiers = extractSwiftIdentifiers(tree.rootNode, file);
-                    break;
-                }
-                case 'python': {
-                    identifiers = extractPythonIdentifiers(tree.rootNode, file);
-                    break;
-                }
-                default: {
-                    identifiers = extractTypescriptIdentifiers(tree.rootNode, file, language);
-                }
+        using tree = await parseSource(grammar, text, session);
+        let identifiers: Identifier[];
+        switch (grammar) {
+            case 'bash': {
+                identifiers = extractBashIdentifiers(tree.rootNode, file);
+                break;
             }
-            return {
-                identifiers: identifiers.toSorted(
-                    (left, right) => left.line - right.line || left.column - right.column,
-                ),
-                error: undefined,
-            };
-        } finally {
-            tree.delete();
+            case 'swift': {
+                identifiers = extractSwiftIdentifiers(tree.rootNode, file);
+                break;
+            }
+            case 'python': {
+                identifiers = extractPythonIdentifiers(tree.rootNode, file);
+                break;
+            }
+            default: {
+                identifiers = extractTypescriptIdentifiers(tree.rootNode, file, language);
+            }
         }
+        return {
+            identifiers: identifiers.toSorted((left, right) => left.line - right.line || left.column - right.column),
+            error: undefined,
+        };
     });
 }

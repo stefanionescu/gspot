@@ -103,25 +103,21 @@ async function validateFileImports(
 ): Promise<CheckFinding[]> {
     const from = lookup.findOwner(source.path);
     if (from === undefined) return [];
-    const tree = await parseSource(source.grammar, read(session.reads, source.path));
-    try {
-        return listImports(tree.rootNode).flatMap(({ node, module, owners }) => {
-            const owner = findRefusedOwner(lookup, from, owners);
-            if (owner === undefined) return [];
-            const message = formatRefusedImport(lookup.allowed[from] ?? [], module, owner);
-            return [
-                {
-                    file: source.path,
-                    line: node.startPosition.row + 1,
-                    column: node.startPosition.column + 1,
-                    rule: RULES.refusedImport,
-                    message: message,
-                },
-            ];
-        });
-    } finally {
-        tree.delete();
-    }
+    using tree = await parseSource(source.grammar, read(session.reads, source.path));
+    return listImports(tree.rootNode).flatMap(({ node, module, owners }) => {
+        const owner = findRefusedOwner(lookup, from, owners);
+        if (owner === undefined) return [];
+        const message = formatRefusedImport(lookup.allowed[from] ?? [], module, owner);
+        return [
+            {
+                file: source.path,
+                line: node.startPosition.row + 1,
+                column: node.startPosition.column + 1,
+                rule: RULES.refusedImport,
+                message: message,
+            },
+        ];
+    });
 }
 
 function buildPythonSearch(session: Session, planned: PlannedCheck): PythonSearch {

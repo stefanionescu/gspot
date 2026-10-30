@@ -86,20 +86,17 @@ Copies source files and dependency trees into a new copy.
 @returns the new folder, deleted on dispose.
 */
 export async function createCopy(source: CopyPaths): Promise<TemporaryFolder> {
-    const folder = createTemporaryFolder();
-    try {
-        const plan = {
-            ...source,
-            target: folder.path,
-            files: new Set(source.paths),
-        };
-        await writeCopyFiles(plan);
-        await copyDependencies(plan);
-        return folder;
-    } catch (error) {
-        folder[Symbol.dispose]();
-        throw error;
-    }
+    using cleanup = new DisposableStack();
+    const folder = cleanup.use(createTemporaryFolder());
+    const plan = {
+        ...source,
+        target: folder.path,
+        files: new Set(source.paths),
+    };
+    await writeCopyFiles(plan);
+    await copyDependencies(plan);
+    cleanup.move();
+    return folder;
 }
 
 /**

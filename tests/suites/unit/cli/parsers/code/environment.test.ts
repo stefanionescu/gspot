@@ -21,13 +21,9 @@ test('component JSX script blocks preserve their environment read locations', ()
 });
 
 test('Python reads use the preceding import binding and decode literal escapes', async () => {
-    const tree = await parseSource(
+    using tree = await parseSource(
         'python',
         'import os\nfirst = os.getenv("API\\x5fKEY")\nos = object()\nsecond = os.getenv("IGNORED")\n',
     );
-    try {
-        expect(listPythonEnvironmentReads(tree.rootNode, []).map(({ key }) => key)).toStrictEqual(['API_KEY']);
-    } finally {
-        tree.delete();
-    }
+    expect(listPythonEnvironmentReads(tree.rootNode, []).map(({ key }) => key)).toStrictEqual(['API_KEY']);
 });

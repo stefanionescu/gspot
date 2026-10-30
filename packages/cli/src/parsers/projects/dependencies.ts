@@ -144,28 +144,21 @@ function parsePyproject(path: string, text: string): DependencyFile {
 
 async function parseSwiftPackage(path: string, text: string): Promise<DependencyFile> {
     const dependencies: Dependencies = {};
-    const tree = await parseSource('swift', text);
-    try {
-        const calls = tree.rootNode
-            .descendantsOfType('call_expression')
-            .filter((call) => call.namedChild(0)?.text === '.package');
-        for (const call of calls) {
-            const argumentsNode = call.namedChildren
-                .find((node) => node.type === 'call_suffix')
-                ?.namedChildren.find((node) => node.type === 'value_arguments');
-            const value = argumentsNode?.namedChildren
-                .find((argument) => argument.childForFieldName('name')?.text === 'url')
-                ?.childForFieldName('value');
-            if (
-                value?.type !== 'line_string_literal' ||
-                value.namedChildren.some((node) => node.type !== 'line_str_text')
-            )
-                continue;
-            const url = value.namedChildren.map((node) => node.text).join('');
-            dependencies[posix.basename(url, GIT_SUFFIX)] = url;
-        }
-    } finally {
-        tree.delete();
+    using tree = await parseSource('swift', text);
+    const calls = tree.rootNode
+        .descendantsOfType('call_expression')
+        .filter((call) => call.namedChild(0)?.text === '.package');
+    for (const call of calls) {
+        const argumentsNode = call.namedChildren
+            .find((node) => node.type === 'call_suffix')
+            ?.namedChildren.find((node) => node.type === 'value_arguments');
+        const value = argumentsNode?.namedChildren
+            .find((argument) => argument.childForFieldName('name')?.text === 'url')
+            ?.childForFieldName('value');
+        if (value?.type !== 'line_string_literal' || value.namedChildren.some((node) => node.type !== 'line_str_text'))
+            continue;
+        const url = value.namedChildren.map((node) => node.text).join('');
+        dependencies[posix.basename(url, GIT_SUFFIX)] = url;
     }
     return {
         path,

@@ -26,26 +26,22 @@ function selectDefaultFolder(folders: readonly string[], packageFolder: string, 
 }
 
 async function listPackageModules(session: Session, path: string, swiftFiles: string[]): Promise<SwiftModule[]> {
-    const tree = await parseSource('swift', read(session.reads, path));
-    try {
-        const packageFolder = extractParentFolder(path);
-        return tree.rootNode.descendantsOfType('call_expression').flatMap((call) => {
-            const callee = call.namedChildren[0];
-            const kind = callee?.type === 'prefix_expression' ? callee.childForFieldName('target')?.text : undefined;
-            const folders = SWIFTPM_TARGET_FOLDERS[kind ?? ''];
-            if (folders === undefined) return [];
-            const name = findStringArgument(call, 'name');
-            if (name === undefined) return [];
-            const folder = posix.join(
-                packageFolder,
-                findStringArgument(call, 'path') ??
-                    posix.join(selectDefaultFolder(folders, packageFolder, swiftFiles), name),
-            );
-            return [{ name, files: swiftFiles.filter((file) => file.startsWith(`${folder}/`)) }];
-        });
-    } finally {
-        tree.delete();
-    }
+    using tree = await parseSource('swift', read(session.reads, path));
+    const packageFolder = extractParentFolder(path);
+    return tree.rootNode.descendantsOfType('call_expression').flatMap((call) => {
+        const callee = call.namedChildren[0];
+        const kind = callee?.type === 'prefix_expression' ? callee.childForFieldName('target')?.text : undefined;
+        const folders = SWIFTPM_TARGET_FOLDERS[kind ?? ''];
+        if (folders === undefined) return [];
+        const name = findStringArgument(call, 'name');
+        if (name === undefined) return [];
+        const folder = posix.join(
+            packageFolder,
+            findStringArgument(call, 'path') ??
+                posix.join(selectDefaultFolder(folders, packageFolder, swiftFiles), name),
+        );
+        return [{ name, files: swiftFiles.filter((file) => file.startsWith(`${folder}/`)) }];
+    });
 }
 
 function listXcodeModules(session: Session, path: string, swiftFiles: string[]): SwiftModule[] {

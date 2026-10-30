@@ -24,30 +24,26 @@ Identify Swift imports, test declarations, and package targets without matching 
 @param text the Swift source.
 */
 export async function detectSwiftTags(path: string, text: string): Promise<string[]> {
-    const tree = await parseSource('swift', text);
-    try {
-        const imports = tree.rootNode
-            .descendantsOfType(SWIFT_IMPORT_NODE)
-            .map((node) => getImportedModule(node))
-            .filter((name) => name !== undefined);
-        const attributes = tree.rootNode.descendantsOfType(SWIFT_ATTRIBUTE_NODE);
-        const isTest =
-            imports.some((name) => SWIFT_TEST_MODULES.has(name)) ||
-            attributes.some((node) => {
-                const name = node.namedChildren.find((child) => child.type === SWIFT_TYPE_NODE)?.text;
-                return name !== undefined && SWIFT_TEST_ATTRIBUTES.has(name);
-            });
-        const hasTarget = tree.rootNode
-            .descendantsOfType(SWIFT_CALL_NODE)
-            .some((node) => SWIFT_TEST_TARGET_CALLS.has(node.firstNamedChild?.text ?? ''));
-        return [
-            ...new Set(imports.map((name) => `${SWIFT_IMPORT_TAG}${name}`)),
-            ...(isTest ? [SWIFT_TEST_TAG] : []),
-            ...(hasTarget && posix.basename(path) === PACKAGE_SWIFT ? [SWIFT_TEST_TARGET_TAG] : []),
-        ];
-    } finally {
-        tree.delete();
-    }
+    using tree = await parseSource('swift', text);
+    const imports = tree.rootNode
+        .descendantsOfType(SWIFT_IMPORT_NODE)
+        .map((node) => getImportedModule(node))
+        .filter((name) => name !== undefined);
+    const attributes = tree.rootNode.descendantsOfType(SWIFT_ATTRIBUTE_NODE);
+    const isTest =
+        imports.some((name) => SWIFT_TEST_MODULES.has(name)) ||
+        attributes.some((node) => {
+            const name = node.namedChildren.find((child) => child.type === SWIFT_TYPE_NODE)?.text;
+            return name !== undefined && SWIFT_TEST_ATTRIBUTES.has(name);
+        });
+    const hasTarget = tree.rootNode
+        .descendantsOfType(SWIFT_CALL_NODE)
+        .some((node) => SWIFT_TEST_TARGET_CALLS.has(node.firstNamedChild?.text ?? ''));
+    return [
+        ...new Set(imports.map((name) => `${SWIFT_IMPORT_TAG}${name}`)),
+        ...(isTest ? [SWIFT_TEST_TAG] : []),
+        ...(hasTarget && posix.basename(path) === PACKAGE_SWIFT ? [SWIFT_TEST_TARGET_TAG] : []),
+    ];
 }
 
 /**

@@ -47,10 +47,7 @@ export function readParsedSources(
             if (file.kind !== 'source') continue;
             const language = detectLanguage(file);
             if (language === undefined || !planned.scope.settings.configurations.includes(language)) continue;
-            const tree = await parseSource(language, read(session.reads, file.path), session);
-            session.resources.defer(() => {
-                tree.delete();
-            });
+            const tree = session.resources.use(await parseSource(language, read(session.reads, file.path), session));
             const source = { path: file.path, language, tree, captures: new Map<string, Node[]>() };
             sources.push(source);
             captureSource(source);

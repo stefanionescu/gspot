@@ -14,7 +14,6 @@ import { type CheckRunOptions } from '#cli/types/runs/check.ts';
 import { type CommandLaunch } from '#cli/types/runs/command.ts';
 import { listCopyFiles } from '#cli/runs/command/placeholders.ts';
 import { type SpawnResult } from '#cli/types/system/processes.ts';
-import { type GrammarName } from '#cli/types/parsers/code/grammars.ts';
 import { type Session, type CheckSession } from '#cli/types/session.ts';
 import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
@@ -195,15 +194,6 @@ async function runFixerRounds(session: CheckSession, checks: PlannedCheck[], pat
     return { results: results.values().toArray(), before: firstBefore ?? after, after };
 }
 
-async function hasSyntaxError(grammar: GrammarName, bytes: Buffer): Promise<boolean> {
-    const tree = await parseSource(grammar, bytes.toString('utf8'));
-    try {
-        return tree.rootNode.hasError;
-    } finally {
-        tree.delete();
-    }
-}
-
 async function listBrokenFiles(changed: string[], before: PathBytes, after: PathBytes): Promise<string[]> {
     const checked = await Promise.all(
         changed.map(async (path) => {
@@ -212,8 +202,10 @@ async function listBrokenFiles(changed: string[], before: PathBytes, after: Path
             const was = before.get(path);
             const now = after.get(path);
             if (was === undefined || now === undefined) return [];
-            const isBroken = !(await hasSyntaxError(grammar, was)) && (await hasSyntaxError(grammar, now));
-            return isBroken ? [path] : [];
+            using wasTree = await parseSource(grammar, was.toString('utf8'));
+            if (wasTree.rootNode.hasError) return [];
+            using nowTree = await parseSource(grammar, now.toString('utf8'));
+            return nowTree.rootNode.hasError ? [path] : [];
         }),
     );
     return checked.flat();

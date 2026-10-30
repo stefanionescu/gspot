@@ -10,7 +10,6 @@ import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { ESCAPED_SCOPE_CONFIGURATIONS } from '#tests/config/generation/configurations/language/javascript/eslint/escaping.ts';
 
 async function parseScopeShape(scopePath: string): Promise<string> {
-    let shape: string;
     await using sandbox = await testdir();
     const child = `${scopePath}/child`;
     await createFileTree(sandbox.path, {
@@ -29,20 +28,16 @@ async function parseScopeShape(scopePath: string): Promise<string> {
     const session = await openSession(sandbox.path);
     const output = generateFiles(session);
     const file = output.files.find((each) => each.path === getManifestTarget('javascript', 'eslint/eslint.mjs'))!;
-    const tree = await parseSource('javascript', file.content);
-    try {
-        expect(tree.rootNode.hasError).toBe(false);
-        shape = tree.rootNode.toString();
-        const literals = tree.rootNode
-            .descendantsOfType('string')
-            .filter((node) => node.text.includes(scopePath === 'example' ? scopePath : 'throw 1'))
-            .map((node): unknown => JSON.parse(node.text));
-        expect(literals).toContain(`${scopePath}/**/*`);
-        expect(literals).toContain(`${child}/**/*`);
-        expect(literals).toContain(`${child}/**`);
-    } finally {
-        tree.delete();
-    }
+    using tree = await parseSource('javascript', file.content);
+    expect(tree.rootNode.hasError).toBe(false);
+    const shape = tree.rootNode.toString();
+    const literals = tree.rootNode
+        .descendantsOfType('string')
+        .filter((node) => node.text.includes(scopePath === 'example' ? scopePath : 'throw 1'))
+        .map((node): unknown => JSON.parse(node.text));
+    expect(literals).toContain(`${scopePath}/**/*`);
+    expect(literals).toContain(`${child}/**/*`);
+    expect(literals).toContain(`${child}/**`);
     const eslint = await createEslint(sandbox.path);
     const filePath = `${child}/source.js`;
     await createFileTree(sandbox.path, { [filePath]: 'missing();' });

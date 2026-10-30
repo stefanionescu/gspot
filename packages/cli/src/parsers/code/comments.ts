@@ -124,23 +124,19 @@ async function parseComponentComments(text: string, path: string): Promise<Sourc
     const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
     const front = path.endsWith(ASTRO_EXTENSION) ? ASTRO_FRONT_MATTER.exec(text) : null;
     const markup = front === null ? text : masked.slice(0, front[0].length) + text.slice(front[0].length);
-    const tree = await parseSource('html', markup);
+    using tree = await parseSource('html', markup);
     const comments: SourceComment[] = [];
-    try {
-        for (const element of tree.rootNode.descendantsOfType('script_element')) {
-            comments.push(...parseComponentScript(element, text, path, masked));
-        }
-        if (front !== null) {
-            const start = text.indexOf('\n') + 1;
-            comments.push(
-                ...parseJavascriptComments(
-                    spliceRanges(masked, text, [{ start, end: start + (front[1] as string).length }]),
-                    `${path}.ts`,
-                ),
-            );
-        }
-    } finally {
-        tree.delete();
+    for (const element of tree.rootNode.descendantsOfType('script_element')) {
+        comments.push(...parseComponentScript(element, text, path, masked));
+    }
+    if (front !== null) {
+        const start = text.indexOf('\n') + 1;
+        comments.push(
+            ...parseJavascriptComments(
+                spliceRanges(masked, text, [{ start, end: start + (front[1] as string).length }]),
+                `${path}.ts`,
+            ),
+        );
     }
     return [...comments, ...(await parseGrammarComments('html', markup))].toSorted(
         (left, right) => left.line - right.line,
@@ -169,14 +165,10 @@ const COMMENT_PARSERS = new Map<string, CommentParser>([
 
 async function parseGrammarComments(grammar: GrammarName, text: string, source = text): Promise<SourceComment[]> {
     const parsed = grammar === 'html' ? source.replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->') : source;
-    const tree = await parseSource(grammar, parsed);
-    try {
-        return tree.rootNode
-            .descendantsOfType([...COMMENT_NODES])
-            .map((node) => buildComment(text, node.startIndex, node.endIndex, node.startPosition.row + 1));
-    } finally {
-        tree.delete();
-    }
+    using tree = await parseSource(grammar, parsed);
+    return tree.rootNode
+        .descendantsOfType([...COMMENT_NODES])
+        .map((node) => buildComment(text, node.startIndex, node.endIndex, node.startPosition.row + 1));
 }
 
 /**
@@ -229,13 +221,9 @@ export async function maskGrammarComments(grammar: GrammarName | 'sql', text: st
             ...[...listSqlTokens(text)].filter((token) => ['line-comment', 'block-comment'].includes(token.kind)),
         );
     } else {
-        const tree = await parseSource(grammar, text);
-        try {
-            for (const node of tree.rootNode.descendantsOfType([...COMMENT_NODES]))
-                ranges.push({ start: node.startIndex, end: node.endIndex });
-        } finally {
-            tree.delete();
-        }
+        using tree = await parseSource(grammar, text);
+        for (const node of tree.rootNode.descendantsOfType([...COMMENT_NODES]))
+            ranges.push({ start: node.startIndex, end: node.endIndex });
     }
     return maskCommentRanges(text, ranges);
 }

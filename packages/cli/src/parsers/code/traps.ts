@@ -59,10 +59,7 @@ export async function parseTrapScripts(
     const scripts: TrapScript[] = [];
     for (const { trap, body } of bodies) {
         const { text, sourceRows } = readTrapBody(body);
-        const tree = await parseSource('bash', text, cache);
-        resources.defer(() => {
-            tree.delete();
-        });
+        const tree = resources.use(await parseSource('bash', text, cache));
         scripts.push({ trap, body, syntaxRoot: tree.rootNode, sourceRows });
     }
     return scripts;

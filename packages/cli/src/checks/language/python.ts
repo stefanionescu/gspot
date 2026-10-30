@@ -228,17 +228,14 @@ export async function checkPythonPlaceholderDocstrings(
 
 async function detectDocstringStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
     const module = await parsePythonModule(path, read(session.reads, path), session);
-    try {
-        for (const node of module.tree.rootNode.descendantsOfType(['function_definition', 'class_definition'])) {
-            const docstring = findDocstring(node);
-            if (docstring === undefined) continue;
-            if (GOOGLE_DOCSTRING.test(docstring)) return 'google';
-            if (NUMPY_DOCSTRING.test(docstring)) return 'numpy';
-        }
-        return undefined;
-    } finally {
-        module.tree.delete();
+    using tree = module.tree;
+    for (const node of tree.rootNode.descendantsOfType(['function_definition', 'class_definition'])) {
+        const docstring = findDocstring(node);
+        if (docstring === undefined) continue;
+        if (GOOGLE_DOCSTRING.test(docstring)) return 'google';
+        if (NUMPY_DOCSTRING.test(docstring)) return 'numpy';
     }
+    return undefined;
 }
 
 async function groupByDocstringStyle(

@@ -247,37 +247,34 @@ export async function copyRevision(root: string, source: Revision, cancelSignal?
     const unreadablePaths: string[] = [];
     const indexFiles = await listRevisionFiles(toplevel, source, cancelSignal, unreadablePaths);
     const index = indexFiles.map((indexFile) => `${indexFile.mode} ${indexFile.hash} 0\t${indexFile.path}\0`).join('');
-    const copy = createTemporaryFolder();
-    try {
-        await initializeRevisionCopy(toplevel, copy.path, source, cancelSignal);
-        await readGitText(copy.path, GIT_EMPTY_INDEX_ARGUMENTS, { cancelSignal });
-        await readGitText(copy.path, GIT_UPDATE_INDEX_ARGUMENTS, { cancelSignal, stdin: index });
-        const treeLine = await readGitText(copy.path, GIT_WRITE_TREE_ARGUMENTS, { cancelSignal });
-        const tree = treeLine.replace(TRAILING_NEWLINE, '');
-        await writeRevisionFiles(toplevel, copy.path, indexFiles, cancelSignal);
-        copyValePackages(
-            toplevel,
-            copy.path,
-            indexFiles.map((indexFile) => indexFile.path),
-        );
-        const selected = await selectRevisionDependencies(toplevel, copy.path, indexFiles, cancelSignal);
-        await copyDependencies({
-            root: toplevel,
-            target: copy.path,
-            dependencies: selected.dependencies,
-            cancelSignal,
-        });
-        await setImmediate();
-        cancelSignal?.throwIfAborted();
-        return {
-            ...copy,
-            unreadablePaths,
-            root: join(copy.path, folder),
-            tree,
-            ...(selected.dependencyNote !== undefined && { dependencyNote: selected.dependencyNote }),
-        };
-    } catch (error) {
-        copy[Symbol.dispose]();
-        throw error;
-    }
+    using cleanup = new DisposableStack();
+    const copy = cleanup.use(createTemporaryFolder());
+    await initializeRevisionCopy(toplevel, copy.path, source, cancelSignal);
+    await readGitText(copy.path, GIT_EMPTY_INDEX_ARGUMENTS, { cancelSignal });
+    await readGitText(copy.path, GIT_UPDATE_INDEX_ARGUMENTS, { cancelSignal, stdin: index });
+    const treeLine = await readGitText(copy.path, GIT_WRITE_TREE_ARGUMENTS, { cancelSignal });
+    const tree = treeLine.replace(TRAILING_NEWLINE, '');
+    await writeRevisionFiles(toplevel, copy.path, indexFiles, cancelSignal);
+    copyValePackages(
+        toplevel,
+        copy.path,
+        indexFiles.map((indexFile) => indexFile.path),
+    );
+    const selected = await selectRevisionDependencies(toplevel, copy.path, indexFiles, cancelSignal);
+    await copyDependencies({
+        root: toplevel,
+        target: copy.path,
+        dependencies: selected.dependencies,
+        cancelSignal,
+    });
+    await setImmediate();
+    cancelSignal?.throwIfAborted();
+    cleanup.move();
+    return {
+        ...copy,
+        unreadablePaths,
+        root: join(copy.path, folder),
+        tree,
+        ...(selected.dependencyNote !== undefined && { dependencyNote: selected.dependencyNote }),
+    };
 }

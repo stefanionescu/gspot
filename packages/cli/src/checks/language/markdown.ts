@@ -67,14 +67,10 @@ async function findTreeSyntaxError(
     body: string,
     cache: ParseCache,
 ): Promise<FenceSyntaxError | undefined> {
-    const tree = await parseSource(grammar, body, cache);
-    try {
-        if (!tree.rootNode.hasError) return undefined;
-        const error = tree.rootNode.descendantsOfType('ERROR')[0] ?? tree.rootNode;
-        return { line: error.startPosition.row + 1, message: SYNTAX_ERROR_MESSAGE };
-    } finally {
-        tree.delete();
-    }
+    using tree = await parseSource(grammar, body, cache);
+    if (!tree.rootNode.hasError) return undefined;
+    const error = tree.rootNode.descendantsOfType('ERROR')[0] ?? tree.rootNode;
+    return { line: error.startPosition.row + 1, message: SYNTAX_ERROR_MESSAGE };
 }
 
 const FORMAT_FENCE_READERS: Record<FormatFenceParser, (body: string) => FenceSyntaxError | undefined> = {

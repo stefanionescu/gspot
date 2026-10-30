@@ -4,7 +4,7 @@ import type { ParseCache } from '#cli/types/parsers/code/grammars.ts';
 export type PythonModule = {
     path: string;
     lines: string[];
-    tree: Tree;
+    tree: Tree & Disposable;
     statements: Node[];
 };
 

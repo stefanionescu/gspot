@@ -33,12 +33,8 @@ async function readEnvironmentReferences(
 ): Promise<EnvironmentRead[]> {
     const text = read(session.reads, path);
     if (!path.endsWith(PYTHON_EXTENSION)) return listJavascriptEnvironmentReads(path, text, environmentFunctions);
-    const tree = await parseSource('python', text, session);
-    try {
-        return listPythonEnvironmentReads(tree.rootNode, environmentFunctions);
-    } finally {
-        tree.delete();
-    }
+    using tree = await parseSource('python', text, session);
+    return listPythonEnvironmentReads(tree.rootNode, environmentFunctions);
 }
 
 function listMissingEnvironmentKeys(

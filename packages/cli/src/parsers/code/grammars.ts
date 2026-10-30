@@ -67,20 +67,26 @@ Share one parse per run, and give each reader its own tree handle to dispose.
 @param grammar the language syntax to parse.
 @param text the exact source to parse.
 @param cache source reads and tree cleanup for this run.
-@returns the caller owns the tree.
+@returns the caller owns the tree, which frees itself on dispose.
 */
-export async function parseSource(grammar: GrammarName, text: string, cache?: ParseCache): Promise<Tree> {
+export async function parseSource(grammar: GrammarName, text: string, cache?: ParseCache): Promise<Tree & Disposable> {
     const parser = await getParser(grammar);
     const resources = cache?.resources;
-    if (cache === undefined || resources === undefined) return parser.parse(text) as Tree;
-    const tree = remember(cache.reads, PARSED_TREES, `${grammar}\0${text}`, () => {
-        const parsed = parser.parse(text) as Tree;
-        resources.defer(() => {
-            parsed.delete();
-        });
-        return parsed;
+    const tree =
+        cache === undefined || resources === undefined
+            ? (parser.parse(text) as Tree)
+            : remember(cache.reads, PARSED_TREES, `${grammar}\0${text}`, () => {
+                  const parsed = parser.parse(text) as Tree;
+                  resources.defer(() => {
+                      parsed.delete();
+                  });
+                  return parsed;
+              }).copy();
+    return Object.assign(tree, {
+        [Symbol.dispose]: () => {
+            tree.delete();
+        },
     });
-    return tree.copy();
 }
 
 /**
@@ -95,12 +101,8 @@ export async function visitParsedSources(
 ): Promise<void> {
     for (const file of sources.files) {
         const text = read(sources.reads, file.path);
-        const tree = await parseSource(file.grammar, text, sources);
-        try {
-            visit({ path: file.path, text, rootNode: tree.rootNode });
-        } finally {
-            tree.delete();
-        }
+        using tree = await parseSource(file.grammar, text, sources);
+        visit({ path: file.path, text, rootNode: tree.rootNode });
     }
 }
 
