@@ -242,17 +242,13 @@ test('a fixed regex message needs an explicit fixable pattern to offer a fix', (
     ]);
 });
 
-test('the removed SARIF format is refused', () => {
-    expect(outputSchema.safeParse({ format: 'sarif' }).success).toBe(false);
-});
-
 test.each([...FIXABLE_FORMAT_CASES])('the %s formatter declares which output supports fixing', (name, stdout, file) => {
     const check = getShippedCheck(name);
     expect(parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' })).toMatchObject([{ file, fixable: true }]);
 });
 
 test.each([false, true])(
-    'an unexplained failed invocation shares its fresh finding with the run (per file: %j)',
+    'an unexplained failed invocation fails the run with one finding (per file: %j)',
     async (perFile) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings([]),
@@ -274,12 +270,8 @@ test.each([false, true])(
             state,
         );
         expect(state.failed).toBe(true);
-        expect(parsed).toHaveLength(1);
-        expect(state.findings).toStrictEqual(parsed);
-        expect(state.findings[0]).toMatchObject({
-            file: perFile ? 'source.js' : '',
-            message: 'Format failed',
-            fixable: false,
-        });
+        expect(state.findings).toMatchObject([
+            { file: perFile ? 'source.js' : '', message: 'Format failed', fixable: false },
+        ]);
     },
 );

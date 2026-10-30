@@ -14,7 +14,7 @@ url = "packages"
 export const PYTHON_TOOL_PROJECT = `[project]
 name = "tools"
 version = "0.0.0"
-requires-python = "=={python-version}"
+requires-python = "==${PYTHON_VERSION}"
 dependencies = ["Example.Package==1.2.3", "second-package==4.0.0"]
 
 [tool.uv]
@@ -23,7 +23,7 @@ constraint-dependencies = ["transitive.package>=2.0.0"]
 `;
 
 export const PYTHON_TOOL_LOCKFILE = `version = 1
-requires-python = "=={python-version}"
+requires-python = "==${PYTHON_VERSION}"
 
 [manifest]
 constraints = [{ name = "transitive-package", specifier = ">=2.0.0" }]
@@ -111,7 +111,7 @@ export const PYTHON_RELEASE_AGE = {
 
 export const PYTHON_INSTALL_FILES = {
     'gspot.toml': 'configurations = []\n[rules]\nenabled = false\n',
-    [GSPOT_PATHS.pythonProject]: PYTHON_TOOL_PROJECT.replaceAll('{python-version}', () => PYTHON_VERSION),
-    [GSPOT_PATHS.uvLockfile]: PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', () => PYTHON_VERSION),
+    [GSPOT_PATHS.pythonProject]: PYTHON_TOOL_PROJECT,
+    [GSPOT_PATHS.uvLockfile]: PYTHON_TOOL_LOCKFILE,
     'uv.toml': UV_TOML,
 };

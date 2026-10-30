@@ -1,20 +1,21 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
+import * as processes from '#cli/system/processes.ts';
 import { PYVENV_HOME } from '#tests/config/python.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { listCopyPythonArguments } from '#cli/tools/uv.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { buildCheckSession } from '#cli/commands/check/run.ts';
 import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/uv.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runCommandCheck, buildCommandSetup } from '#cli/runs/command/check.ts';
-import { writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { fakeNpmTool, writeProgramCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 test('a Python check that runs in a copy uses the environment that the working tree installed', async () => {
     await using working = await createGitSandbox({});
@@ -26,27 +27,31 @@ test('a Python check that runs in a copy uses the environment that the working t
         'app/main.py': 'import requests\n',
     };
     await createFileTree(working.path, { ...files, '.venv/pyvenv.cfg': PYVENV_HOME });
+    await fakeNpmTool(working.path, 'basedpyright');
     await createFileTree(sandbox.path, files);
-    const session = await openSession(sandbox.path, { toolsRoot: working.path });
-    const planned = planChecks(session, buildRunOptions({ only: ['python/basedpyright'] })).find(
-        ({ check }) => check.id === 'python/basedpyright',
-    )!;
-    expect(buildCommandSetup(session, planned, { options: {}, root: session.root }).env[UV_PROJECT_ENVIRONMENT]).toBe(
-        join(working.path, '.venv'),
-    );
-    expect(
-        listCopyPythonArguments(
-            planned.tool!,
-            buildCommandSetup(session, planned, { options: {}, root: session.root }).env,
-        ),
-    ).toStrictEqual(['--pythonpath', join(working.path, isWindows ? '.venv/Scripts/python.exe' : '.venv/bin/python')]);
-    const inPlace = await openSession(working.path);
-    const local = planChecks(inPlace, buildRunOptions({ only: ['python/basedpyright'] })).find(
-        ({ check }) => check.id === 'python/basedpyright',
-    )!;
-    const setup = buildCommandSetup(inPlace, local, { options: {}, root: inPlace.root });
-    expect(listCopyPythonArguments(local.tool!, setup.env)).toStrictEqual([]);
-    expect(setup.env).not.toHaveProperty('UV_PROJECT_ENVIRONMENT');
+    const copy = await openSession(sandbox.path, { toolsRoot: working.path });
+    const calls: { pythonPath: string | undefined; environment: string | undefined }[] = [];
+    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
+        const flag = command.indexOf('--pythonpath');
+        calls.push({
+            pythonPath: flag === -1 ? undefined : command[flag + 1],
+            environment: options.env?.[UV_PROJECT_ENVIRONMENT],
+        });
+        return Promise.resolve(buildProcessResult({ stdout: '{"generalDiagnostics":[]}' }));
+    });
+    for (const session of [copy, await openSession(working.path)]) {
+        const planned = planChecks(session, buildRunOptions({ only: ['python/basedpyright'] })).find(
+            ({ check }) => check.id === 'python/basedpyright',
+        )!;
+        expect(await runCommandCheck(buildCheckSession(session), planned)).toMatchObject({ status: 'passed' });
+    }
+    expect(calls).toStrictEqual([
+        {
+            pythonPath: join(working.path, isWindows ? '.venv/Scripts/python.exe' : '.venv/bin/python'),
+            environment: join(working.path, '.venv'),
+        },
+        { pythonPath: undefined, environment: undefined },
+    ]);
 });
 
 test('a command run in a copy finds the other tools beside its program before a PATH folder', async () => {

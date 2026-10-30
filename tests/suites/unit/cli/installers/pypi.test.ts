@@ -37,11 +37,7 @@ import {
     LOCKFILE_PASSWORD_ERROR,
 } from '#tests/config/installers/pypi.ts';
 
-const projectText = PYTHON_TOOL_PROJECT.replaceAll('{python-version}', () => PYTHON_VERSION);
-
-const pythonProject = (parse(projectText) as { project: PythonToolProject }).project;
-
-const lockfileText = PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', () => PYTHON_VERSION);
+const pythonProject = (parse(PYTHON_TOOL_PROJECT) as { project: PythonToolProject }).project;
 
 test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hides index passwords', async (step) => {
     await using sandbox = await testdir(PYTHON_INSTALL_FILES);
@@ -66,7 +62,7 @@ test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hid
         message: `uv ${step} failed (exit 7).\nindex password [redacted] [redacted]\ninterpreter unavailable`,
     });
     expect(calls).toHaveLength(step === 'venv' ? 1 : 2);
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(lockfileText);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(PYTHON_TOOL_LOCKFILE);
     expect(await readFile(join(sandbox.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
     expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.pythonEnvironment))).toBe(false);
 });
@@ -75,7 +71,7 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     await using sandbox = await testdir(PYTHON_INSTALL_FILES);
 
     using boundary = fakeCommand('synthetic-uv', async (_command, options) => {
-        await writeFile(join(options.cwd, 'uv.lock'), `${lockfileText}\n# test+password\n`);
+        await writeFile(join(options.cwd, 'uv.lock'), `${PYTHON_TOOL_LOCKFILE}\n# test+password\n`);
         return buildProcessResult();
     });
     using writer = openWriter(sandbox.path);
@@ -87,12 +83,12 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     const lockfileError = await captureRejection(
         preparePythonLockfile(
             buildToolInstall(session, writer),
-            { path: GSPOT_PATHS.pythonProject, content: projectText },
+            { path: GSPOT_PATHS.pythonProject, content: PYTHON_TOOL_PROJECT },
             'synthetic-uv',
         ),
     );
     expect(lockfileError).toMatchObject(LOCKFILE_PASSWORD_ERROR);
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(lockfileText);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(PYTHON_TOOL_LOCKFILE);
     expect(await readFile(join(sandbox.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
     expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.pythonEnvironment))).toBe(false);
     expect(boundary).toHaveBeenCalledTimes(1);
@@ -120,10 +116,11 @@ test('uv installs the tool project with its own Python, whatever UV_PYTHON and .
 });
 
 test('the uv lockfile check ignores name spelling and requirement order and refuses invalid TOML and a range', () => {
-    expect(isPythonLockfileFresh(pythonProject, lockfileText, {})).toBe(true);
+    expect(isPythonLockfileFresh(pythonProject, PYTHON_TOOL_LOCKFILE, {})).toBe(true);
     expect(isPythonLockfileFresh(pythonProject, 'not valid =', {})).toBe(false);
-    const rangedProject = (parse(projectText.replace('==1.2.3', '>=1.2.3')) as { project: PythonToolProject }).project;
-    const exists = isPythonLockfileFresh(rangedProject, lockfileText, {});
+    const rangedProject = (parse(PYTHON_TOOL_PROJECT.replace('==1.2.3', '>=1.2.3')) as { project: PythonToolProject })
+        .project;
+    const exists = isPythonLockfileFresh(rangedProject, PYTHON_TOOL_LOCKFILE, {});
     expect(exists).toBe(false);
 });
 
@@ -131,7 +128,7 @@ test.each([...UV_LOCKFILE_MISMATCHES])('a changed %s makes the uv lockfile stale
     expect(
         isPythonLockfileFresh(
             pythonProject,
-            lockfileText.replace(before, () => after),
+            PYTHON_TOOL_LOCKFILE.replace(before, () => after),
             {},
         ),
     ).toBe(false);
@@ -140,7 +137,7 @@ test.each([...UV_LOCKFILE_MISMATCHES])('a changed %s makes the uv lockfile stale
 test.each([...UV_LOCKFILE_ORIGINS])(
     'uv lockfile index %s and artifact %s with the settings %j have allowed origins: %p',
     (registry, url, expected, indexes) => {
-        const lockfile = `${lockfileText}\n[[package]]\nname = "example-package"\nversion = "1.2.3"\nsource = { registry = "${registry}" }\nsdist = { url = "${url}" }\nwheels = [{ url = "${url}" }]\n`;
+        const lockfile = `${PYTHON_TOOL_LOCKFILE}\n[[package]]\nname = "example-package"\nversion = "1.2.3"\nsource = { registry = "${registry}" }\nsdist = { url = "${url}" }\nwheels = [{ url = "${url}" }]\n`;
         expect(isPythonLockfileFresh(pythonProject, lockfile, indexes)).toBe(expected);
     },
 );
@@ -232,7 +229,7 @@ test('Python resolution excludes releases newer than the minimum release age', a
         'exclude-newer-package': { ruff: false, semgrep: false },
         'exclude-newer': '14 days',
     });
-    const saved = `${lockfileText}\n[options]\nexclude-newer-span = "P7D"\n`;
+    const saved = `${PYTHON_TOOL_LOCKFILE}\n[options]\nexclude-newer-span = "P7D"\n`;
     expect(isPythonLockfileFresh(pythonProject, saved, {}, 7)).toBe(true);
     expect(isPythonLockfileFresh(pythonProject, saved, {}, 14)).toBe(false);
 });

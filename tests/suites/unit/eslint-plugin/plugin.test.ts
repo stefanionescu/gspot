@@ -1,11 +1,20 @@
 import { Linter } from 'eslint';
 import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
-import { ALL_RULES } from '#tests/config/eslint-plugin/plugin.ts';
 
-test('presets enable every rule assigned to their level', () => {
-    expect(plugin.configs.recommended.rules).toStrictEqual({ 'gspot/no-client-env': 'error' });
-    expect(plugin.configs.all.rules).toStrictEqual(ALL_RULES);
+test('the recommended preset reports the rules of its level, and the all preset adds the others', () => {
+    const linter = new Linter({ configType: 'flat', cwd: '/repo' });
+    const source = "'use client';\nexport function readKey() {\n    return process.env.SECRET_KEY;\n}\n";
+    const options = { filename: '/repo/app/page.js' };
+    const recommended: object[] = [plugin.configs.recommended];
+    expect(linter.verify(source, recommended, options).map(({ ruleId }) => ruleId)).toStrictEqual([
+        'gspot/no-client-env',
+    ]);
+    const all: object[] = [plugin.configs.all];
+    expect(linter.verify(source, all, options).map(({ ruleId }) => ruleId)).toStrictEqual([
+        'gspot/no-trivial-functions',
+        'gspot/no-client-env',
+    ]);
 });
 
 test('configs.all lints beside a config that registers the plugin again', () => {

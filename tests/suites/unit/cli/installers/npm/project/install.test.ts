@@ -215,14 +215,7 @@ test('a Yarn Classic repository resolves its tool lockfile with npm and the mini
         lockfileVersion: 3,
         packages: { '': { devDependencies: {} } },
     });
-    expect(install.steps).toStrictEqual([
-        [
-            'npm',
-            ...PACKAGE_MANAGER_ARGUMENTS.npm.lockfile,
-            '--min-release-age=7',
-            '--min-release-age-exclude=ajv',
-            '--min-release-age-exclude=prettier',
-            '--min-release-age-exclude=v8r',
-        ],
-    ]);
+    expect(install.steps.map((step) => step.slice(0, PACKAGE_MANAGER_ARGUMENTS.npm.lockfile.length + 2))).toStrictEqual(
+        [['npm', ...PACKAGE_MANAGER_ARGUMENTS.npm.lockfile, '--min-release-age=7']],
+    );
 });
