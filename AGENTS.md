@@ -126,15 +126,25 @@ You can edit the other keys of that file.
 These folder rules apply to `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/` in this
 repository.
 
+### Values, types, and schemas
+
 - Each package keeps fixed values in `config/`, TypeScript types in `types/`, and runtime schemas in `schemas/`.
 - Other files take their constants from `config/` and their types from `types/`. They declare no module-level
   literal constants or types. Declare schemas only in `schemas/`, including schemas used by one file.
   A value computed at import time stays with the behavior that uses it.
-- Give each `config/`, `types/`, and `schemas/` file the path of the folder whose files read it.
-  For example, `packages/cli/src/config/generation/generation.ts` holds the values of `packages/cli/src/generation/`.
-- A value that code in other folders also reads stays with the behavior it belongs to, and the others import it.
-- Values that no one file owns go in a topic file of their folder, or at the top of `config/` when several top-level
-  folders read them. Topic files that share a word sit in a folder of that word, such as `config/files/`.
+- Each folder of code reads one file in `config/`, one in `types/`, and one in `schemas/`. That file takes the path
+  of the folder, such as `packages/cli/src/config/runs/copy.ts` for the files in `packages/cli/src/runs/copy/`.
+- When the folder of that path also holds files of subfolders, the file sits inside it under the folder name, such as
+  `packages/cli/src/config/generation/generation.ts` for the files in `packages/cli/src/generation/`.
+- The files at the top of a package read `packages/cli/src/config/main.ts`, or
+  `packages/eslint-plugin/src/config/plugin.ts` in the ESLint plugin.
+- A value that code in other folders also reads stays in the file of the folder it belongs to. The others import it.
+- Values that several folders read and no folder owns go in a topic file, such as
+  `packages/cli/src/config/files/names.ts`.
+- When a folder's file passes the file length limit, move its largest topic to a file named for that topic, such as
+  `packages/cli/src/schemas/settings/tables.ts`.
+- When two files of one folder need values of the same kind, prefix each name with its check, rule, or language, such
+  as `DOCS_RULES` and `GSPOT_RULES`.
 - Infer each type that a schema describes from that schema: `z.infer<typeof schema>`, or `z.input` for the value
   before its defaults and transforms. The type stays in `types/` and imports the schema with `import type`. Write a
   type in plain TypeScript only when no schema describes it.
@@ -142,18 +152,25 @@ repository.
   `(typeof LIST)[number]` in `types/`, and its schema as `z.enum(LIST)`. A list whose values each carry a description
   keeps its schema literals as the one list.
 - When only types read a list of names, write it as a union type in `types/`, with no array.
+
+### Checks and generators
+
 - `packages/cli/src/checks/` has one file per configuration, `checks/<group>/<configuration>.ts`, under the group of
   its folder in `packages/cli/configurations/`.
-- When the checks of a configuration pass the file length limit, they move to a folder `checks/<group>/<configuration>/`. That
-  folder has one file per check, named after it, or per input that several checks read.
-- Code that several configurations share sits in `checks/cross-configuration/` or `generation/config-files/`. Code
-  that belongs to one configuration stays in its folder when another configuration reuses it, such as the Postgres
-  migrations reader that supabase reads.
+- When the checks of a configuration pass the file length limit, they move to a folder
+  `checks/<group>/<configuration>/`. That folder has one file per check, named after it, or per input that several
+  checks read.
+- Code that several configurations share sits in `checks/cross-configuration/` or `generation/config-files/`.
+- Code that belongs to one configuration stays in its folder when another configuration reuses it, such as the
+  Postgres migrations reader that supabase reads.
 - The code of one configuration sits at `<group>/<configuration>` in every tree: its shipped files in
-  `packages/cli/configurations/`, its checks, its generators, their `config/`, `types/`, and `schemas/` files, and its
-  tests. One code file sits at `<group>/<configuration>.ts`, and more files make the folder `<group>/<configuration>/`.
+  `packages/cli/configurations/`, its checks, its generators, and its tests. One code file sits at
+  `<group>/<configuration>.ts`, and more files make the folder `<group>/<configuration>/`.
 - The code that writes a config file sits in `packages/cli/src/generation/configurations/<group>/<configuration>/`,
   named for the file it writes. gspot writes that file to `.gspot/configurations/<group>/<configuration>/`.
+
+### Commands and layers
+
 - `packages/cli/src/commands/` has one file per command, `commands/<command>.ts`. A command that needs more files gets
   a folder `commands/<command>/` with the entry file `<command>.ts`.
 - A command's folder holds the code that only that command uses. Code on the subject of another layer, such as Git
@@ -169,30 +186,29 @@ repository.
   of a layer belong to that layer. `types/` imports the schemas of any layer, to infer types from them.
 - The `[[import_rule]]` records in `gspot.toml` list the layers in this order, and `gspot check` reports an import
   that breaks it.
-- A unit test file mirrors the source file it tests, with the same name. `tests/suites/unit/<package>/<path>.test.ts` tests
-  `packages/<package>/src/<path>.ts`. A test of a whole source folder takes the folder name.
+
+### Tests
+
+- `tests/suites/` holds the `unit/`, `integration/`, and `e2e/` suites. `tests/setup/` holds the code that tests share,
+  in one subfolder per job; a job of one file, such as `matchers.ts`, sits at the top of `tests/setup/`.
+- A unit test file mirrors the source file it tests, with the same name. `tests/suites/unit/<package>/<path>.test.ts`
+  tests `packages/<package>/src/<path>.ts`. A test of a whole source folder takes the folder name.
 - When the tests of one source file or folder pass 300 lines, they become a folder of that name with one file per
   scenario.
 - An integration test mirrors what it runs: `tests/suites/integration/checks/<group>/<configuration>.test.ts`,
-  `commands/<command>.test.ts`, or `installers/<module>.test.ts`. Past 300 lines, the tests of one configuration become a
-  folder with one file per tool.
-- `tests/config/` mirrors the tests. `tests/config/<path>.ts` holds the values of `tests/suites/<suite>/<path>.test.ts`, and the
-  test files of one folder may share a topic file inside `tests/config/<folder>/`, such as `messages.ts`.
-- `suites/` and `unit/cli/` drop out of a `tests/config/` path. Values that only the integration suites read live under
-  `tests/config/integration/`.
-- In `config/`, `types/`, `schemas/` and `tests/`, move a file up until it has a neighbor, as
-  `structure/lone-files` asks. Keep the test name.
+  `commands/<command>.test.ts`, or `installers/<module>.test.ts`. Past 300 lines, the tests of one configuration become
+  a folder with one file per tool.
 - `tests/suites/integration/ci.test.ts` tests `packages/cli/src/generation/ci.ts`.
-- A file of `config/`, `types/` and `schemas/` takes the name of the folder whose files read it.
-  For example, `packages/cli/src/schemas/installers/npm.ts` holds the schemas of `packages/cli/src/installers/npm/`.
-  `tests/types/` and `tests/schemas/` stay flat for that reason.
-- A value goes to `tests/config/` when two tests share it.
-- A value that one test reads stays in that test, even when it reads it twice. File text that only makes a file exist,
-  and that no assertion compares, stays at each call that writes it.
+- `tests/config/` holds the values of each folder of tests, by the rules of `config/`. The values of the tests in
+  `tests/suites/unit/cli/<folder>/` sit at `tests/config/<folder>`.
+- The values of the other suites sit under `tests/config/integration/`, `tests/config/eslint-plugin/`, and
+  `tests/config/setup/`. The values of the e2e suite sit in `tests/config/e2e.ts`.
+- A value goes to `tests/config/` when two tests share it. A value that one test reads stays in that test, even when
+  it reads it twice. File text that only makes a file exist, and that no assertion compares, stays at each call that
+  writes it.
 - RuleTester cases, command arguments, and sandbox file names stay beside their call.
-- `tests/suites/` holds the `unit/`, `integration/`, and `e2e/` suites. `tests/setup/` holds the code that tests share,
-  in one subfolder per job; a job of one file, such as `matchers.ts`, sits at the top of `tests/setup/`.
-- `tests/types/` holds the types of the tests, and `tests/schemas/` the schemas that read tool output in tests.
+- `tests/types/` holds the types of the tests, and `tests/schemas/` the schemas that read tool output in tests. Each
+  stays one flat folder of topic files.
 
 ## Dependency overrides
 
