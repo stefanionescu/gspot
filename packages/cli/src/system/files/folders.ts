@@ -2,12 +2,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import picomatch from 'picomatch';
 import { globSync } from 'tinyglobby';
-import { PARENT_SEGMENT } from '#cli/config/system/files.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import type { TemporaryFolder } from '#cli/types/system/files.ts';
 import { WRITE_FAILURE_CODES } from '#cli/config/system/system.ts';
 import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
 import { DRIVE_LETTER, GLOB_EXCLUDE } from '#cli/config/files/path-patterns.ts';
+import { PARENT_SEGMENT, TEMPORARY_FILE_PREFIX } from '#cli/config/system/files.ts';
 
 function hasSymlinkPrefix(folder: string, pattern: string): boolean {
     const { base } = picomatch.scan(pattern);
@@ -35,7 +35,7 @@ Use the real system path, which on Windows expands short folder names, as the pa
 export function createTemporaryFolder(parent = tmpdir()): TemporaryFolder {
     let folder: string;
     try {
-        folder = mkdtempSync(join(parent, 'gspot-'));
+        folder = mkdtempSync(join(parent, TEMPORARY_FILE_PREFIX));
     } catch (error) {
         if (parent === tmpdir() || !WRITE_FAILURE_CODES.some((code) => hasErrorCode(error, code))) throw error;
         return createTemporaryFolder();
