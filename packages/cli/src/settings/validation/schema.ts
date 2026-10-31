@@ -18,7 +18,7 @@ import { formatFileValueError } from '#cli/settings/validation/messages.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
 import type { Settings, SettingsError } from '#cli/types/settings/settings.ts';
 import { RECORD_PATHS_MESSAGE, SETTINGS_REFERENCE_URL } from '#cli/config/settings/validation.ts';
-import { RECORD_FIELDS, findChildSchema, unwrapSettingSchema } from '#cli/settings/schema-lookup.ts';
+import { RECORD_FIELDS, findChildSchema, unwrapSettingSchema } from '#cli/settings/schema/lookup.ts';
 
 import {
     validateScopePaths,

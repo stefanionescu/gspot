@@ -10,9 +10,9 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import type { SourcedConfigFile } from '#cli/types/manifests.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildLinkFiles } from '#cli/generation/config-files/links.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
-import { buildLinkFiles } from '#cli/generation/config-files/link-files.ts';
 
 import {
     DEFAULT_EXPORT,

@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { buildJsonSchema } from '#cli/settings/json-schema.ts';
+import { buildJsonSchema } from '#cli/settings/schema/editor.ts';
 import { isPublishedSettings } from '#tests/schemas/settings.ts';
 import { validateSettingsText } from '#tests/setup/cli/settings.ts';
 import { PUBLISHED_SCHEMA_CASES } from '#tests/config/settings/settings.ts';

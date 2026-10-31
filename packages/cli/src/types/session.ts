@@ -7,7 +7,7 @@ import type { Repository } from '#cli/types/repository/files.ts';
 import type { ToolInspection } from '#cli/types/executables/inspection.ts';
 import type { RepositoryListing } from '#cli/types/repository/repository.ts';
 import type { Settings, SettingsFile } from '#cli/types/settings/settings.ts';
-import { type StartRunner, type PackageManagerPin } from '#cli/types/repository/npm.ts';
+import { type StartRunner, type PackageManagerPin } from '#cli/types/repository/javascript.ts';
 
 export type Session = {
     configuredChecks: ConfiguredCheck[];

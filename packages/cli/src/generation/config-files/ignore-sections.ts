@@ -9,7 +9,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import type { IgnoreSection } from '#cli/types/generation/files.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
-import { listLinkFilePaths } from '#cli/generation/config-files/link-files.ts';
+import { listLinkFilePaths } from '#cli/generation/config-files/links.ts';
 import { listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/generation.ts';
 import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';

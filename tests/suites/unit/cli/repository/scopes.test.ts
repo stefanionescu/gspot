@@ -10,7 +10,7 @@ import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
-import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
+import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { joinScope, buildArgumentPath, findProjectFolder, detectScopeFolders } from '#cli/repository/scopes.ts';
 
 import {

@@ -10,7 +10,7 @@ import { join, dirname, basename, relative } from 'node:path';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import type { SpawnResult } from '#cli/types/system/system.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
-import { readHostPackage, readToolProjectPackage } from '#cli/repository/npm/installed-packages.ts';
+import { readHostPackage, readToolProjectPackage } from '#cli/executables/packages.ts';
 import { NO_VERSION, VERSION_FLAG, NPM_BIN_FOLDER, TOOL_ENVIRONMENT } from '#cli/config/executables.ts';
 import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/executables/inspection.ts';
 

@@ -8,7 +8,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
-import { findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
+import { findInstalledDependency } from '#cli/executables/packages.ts';
 
 import {
     EXPO_PACKAGE,

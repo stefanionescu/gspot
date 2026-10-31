@@ -1,8 +1,8 @@
 import which from 'which';
 import { join, dirname, resolve } from 'node:path';
 import { realpathSync, writeFileSync } from 'node:fs';
-import { NPM_TOOL } from '#cli/config/repository/npm.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
+import { NPM_TOOL } from '#cli/config/repository/javascript.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { extractUrlPasswords } from '#cli/installers/credentials.ts';

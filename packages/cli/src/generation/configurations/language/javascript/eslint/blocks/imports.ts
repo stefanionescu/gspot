@@ -4,8 +4,8 @@ import { findParentScope } from '#cli/settings/scopes.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { readScopeAliases, readPackageAliases } from '#cli/repository/npm/aliases.ts';
 import { FOLDER_CONTENTS, PATH_SEPARATOR_PATTERN } from '#cli/config/files/path-patterns.ts';
+import { readScopeAliases, readPackageAliases } from '#cli/repository/javascript/aliases.ts';
 import { buildNodePatterns } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 
 import {

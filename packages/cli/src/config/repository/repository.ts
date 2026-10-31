@@ -1,5 +1,5 @@
 import { ALL_FILES_GLOB } from '#cli/config/system/system.ts';
-import { PACKAGE_MANAGERS } from '#cli/config/repository/npm.ts';
+import { PACKAGE_MANAGERS } from '#cli/config/repository/javascript.ts';
 
 import {
     TEXT_ATTRIBUTE,

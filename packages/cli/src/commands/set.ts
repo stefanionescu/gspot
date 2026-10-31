@@ -9,7 +9,7 @@ import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
-import { findSettingSchema } from '#cli/settings/schema-lookup.ts';
+import { findSettingSchema } from '#cli/settings/schema/lookup.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';

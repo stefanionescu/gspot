@@ -11,16 +11,16 @@ import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/manifests/names.ts';
-import { PACKAGE_MANAGERS, YARN_BERRY_MAJOR } from '#cli/config/repository/npm.ts';
-import type { PackageManager, PackageManagerPin } from '#cli/types/repository/npm.ts';
+import { PACKAGE_MANAGERS, YARN_BERRY_MAJOR } from '#cli/config/repository/javascript.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
+import type { PackageManager, PackageManagerPin } from '#cli/types/repository/javascript.ts';
 import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation/generation.ts';
 
 import {
     findPackageManagerPin,
     readPackageManagerVersion,
     buildPackageManagerCommand,
-} from '#cli/repository/npm/package-manager.ts';
+} from '#cli/repository/javascript/package-manager.ts';
 import {
     CI_PINS,
     CI_NODE,

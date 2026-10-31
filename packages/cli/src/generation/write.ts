@@ -8,7 +8,7 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { listExpectedPaths } from '#cli/generation/outdated.ts';
 import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
-import { listOwnablePaths } from '#cli/generation/config-files/link-files.ts';
+import { listOwnablePaths } from '#cli/generation/config-files/links.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { type Generation, type ApplyReport } from '#cli/types/generation/files.ts';
 import { SCANNER_KEY, BUNFIG_FILE } from '#cli/config/generation/configurations/general.ts';

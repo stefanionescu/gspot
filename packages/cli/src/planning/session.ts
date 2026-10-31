@@ -11,15 +11,15 @@ import type { Settings } from '#cli/types/settings/settings.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import { selectToolConfigurations } from '#cli/planning/tools.ts';
 import type { Session, SessionOptions } from '#cli/types/session.ts';
-import type { PackageManagerPin } from '#cli/types/repository/npm.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
+import type { PackageManagerPin } from '#cli/types/repository/javascript.ts';
 import type { RepositoryListing } from '#cli/types/repository/repository.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { mergeDetectedDefaults, buildAvailableSettings } from '#cli/settings/available.ts';
-import { selectStartRunner, detectPackageManager } from '#cli/repository/npm/package-manager.ts';
+import { selectStartRunner, detectPackageManager } from '#cli/repository/javascript/package-manager.ts';
 
 function buildScopes(
     settings: Settings,

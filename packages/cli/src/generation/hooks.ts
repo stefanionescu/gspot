@@ -1,5 +1,5 @@
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import type { StartRunner } from '#cli/types/repository/npm.ts';
+import type { StartRunner } from '#cli/types/repository/javascript.ts';
 import type { HookName, GeneratedFile } from '#cli/types/generation/files.ts';
 
 import {

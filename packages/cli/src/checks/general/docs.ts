@@ -18,10 +18,10 @@ import { TRAILING_SLASH } from '#cli/config/files/path-patterns.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { readCachedPackageJson } from '#cli/repository/dependencies.ts';
-import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { MISE_FILES, MISE_TASK_FOLDERS } from '#cli/config/files/names.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 import { replaceSettingPlaceholders } from '#cli/runs/command/placeholders.ts';
+import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import type { PathIndex, TaskNames, ProseLine } from '#cli/types/checks/general/general.ts';
 import { listExecutableNames, includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
 

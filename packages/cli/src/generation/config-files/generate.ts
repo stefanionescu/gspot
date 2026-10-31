@@ -5,8 +5,8 @@ import type { Session } from '#cli/types/session.ts';
 import type { ConfigFile } from '#cli/types/manifests.ts';
 import { buildConfigFile } from '#cli/generation/config-files/build.ts';
 import { CONFIG_FILE_SCOPES_FOLDER } from '#cli/config/generation/config-files.ts';
+import { buildLinkFiles, listLinkFilePaths } from '#cli/generation/config-files/links.ts';
 import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';
-import { buildLinkFiles, listLinkFilePaths } from '#cli/generation/config-files/link-files.ts';
 import { getConfigFileTarget, listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
 
 import type {

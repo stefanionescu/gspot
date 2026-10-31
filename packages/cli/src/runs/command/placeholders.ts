@@ -10,9 +10,9 @@ import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { extractConfigFileName } from '#cli/manifests/tools.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
-import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
+import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { FILE_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { CommandLine, Substitutions, CommandArgument } from '#cli/types/runs/command.ts';
 

@@ -14,16 +14,21 @@ import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { PackageJson } from '#cli/types/parsers/projects.ts';
-import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository/npm.ts';
-import { NPM_TOOL, START_RUNNERS, PACKAGE_MANAGERS, PACKAGE_MANAGER_HASH_SUFFIX } from '#cli/config/repository/npm.ts';
+import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository/javascript.ts';
 
+import {
+    NPM_TOOL,
+    START_RUNNERS,
+    PACKAGE_MANAGERS,
+    PACKAGE_MANAGER_HASH_SUFFIX,
+} from '#cli/config/repository/javascript.ts';
 import type {
     StartRunner,
     PackageManager,
     PackageManagerPin,
     PackageManagerField,
     PackageManagerCommand,
-} from '#cli/types/repository/npm.ts';
+} from '#cli/types/repository/javascript.ts';
 
 const PACKAGE_MANAGER_VERSIONS = Symbol('package manager versions');
 

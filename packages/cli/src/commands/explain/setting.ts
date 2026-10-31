@@ -10,7 +10,7 @@ import type { Setting } from '#cli/types/settings/inheritance.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
-import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/schema-lookup.ts';
+import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/schema/lookup.ts';
 import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 
 function formatSettingScope(key: string, setting: Setting, scopeSetting: SettingScope): string[] {

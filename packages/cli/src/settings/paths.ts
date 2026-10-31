@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
-import { findSettingSchema } from '#cli/settings/schema-lookup.ts';
+import { findSettingSchema } from '#cli/settings/schema/lookup.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { PathVisitor } from '#cli/types/settings/inheritance.ts';
 

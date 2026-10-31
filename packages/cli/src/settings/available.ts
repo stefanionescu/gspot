@@ -7,7 +7,7 @@ import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 import type { Level, Configuration } from '#cli/types/manifests.ts';
 import { importRulesSchema } from '#cli/schemas/settings/settings.ts';
-import { getSettingType, unwrapSettingSchema } from '#cli/settings/schema-lookup.ts';
+import { getSettingType, unwrapSettingSchema } from '#cli/settings/schema/lookup.ts';
 import type { Setting, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { TABLE_KEY_SEGMENTS, SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/inheritance.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';

@@ -11,7 +11,7 @@ import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { FOLDER_CONTENTS } from '#cli/config/files/path-patterns.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool, type Package } from '@manypkg/tools';
 import { listSourceFiles, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { RUSH_FILE, LERNA_FILE, PNPM_WORKSPACE_FILE } from '#cli/config/repository/npm.ts';
+import { RUSH_FILE, LERNA_FILE, PNPM_WORKSPACE_FILE } from '#cli/config/repository/javascript.ts';
 import { isInside, convertToPosixPath, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 
 function listWorkspacePackages(root: string): Package[] {

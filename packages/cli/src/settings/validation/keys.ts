@@ -1,4 +1,4 @@
-import { RECORD_FIELDS } from '#cli/settings/schema-lookup.ts';
+import { RECORD_FIELDS } from '#cli/settings/schema/lookup.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/inheritance.ts';

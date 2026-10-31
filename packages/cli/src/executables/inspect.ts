@@ -6,12 +6,12 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { findToolProjectPackage } from '#cli/manifests/tools.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import type { InstalledDependency } from '#cli/types/repository/npm.ts';
 import type { ToolAvailability } from '#cli/types/executables/executables.ts';
+import type { InstalledDependency } from '#cli/types/repository/javascript.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/executables/versions.ts';
+import { readToolProjectPackage, findInstalledDependency } from '#cli/executables/packages.ts';
 import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/executables/locate.ts';
 import type { ToolSearch, InspectedTool, ToolInspection } from '#cli/types/executables/inspection.ts';
-import { readToolProjectPackage, findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
 import { MISE_TOOL, INSTALL_HELP, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/executables.ts';
 
 function buildInstallHelp(tool: Tool): string {

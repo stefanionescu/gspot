@@ -16,7 +16,7 @@ import {
     keepFirstPatterns,
     buildIgnoreSections,
     listCheckIgnoreSections,
-} from '#cli/generation/config-files/ignore-files.ts';
+} from '#cli/generation/config-files/ignore-sections.ts';
 import {
     PRETTIER_CHECK,
     DEFAULT_QUOTES,

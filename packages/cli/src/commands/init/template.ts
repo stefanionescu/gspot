@@ -8,7 +8,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
-import { findSettingSchema } from '#cli/settings/schema-lookup.ts';
+import { findSettingSchema } from '#cli/settings/schema/lookup.ts';
 import { listUnknownConfigurations } from '#cli/manifests/select.ts';
 import { formatSettingsIssue } from '#cli/settings/validation/schema.ts';
 import { formatSettingsError } from '#cli/settings/validation/messages.ts';

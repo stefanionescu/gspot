@@ -11,8 +11,8 @@ import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { miseToolsSchema } from '#cli/schemas/checks/general.ts';
-import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { parseCheckedFile } from '#cli/checks/cross-configuration/syntax.ts';
+import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 import { readCachedPackageJson, readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 
 import {

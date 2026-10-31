@@ -9,16 +9,16 @@ import { listApplicableTables } from '#cli/settings/inherit.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import type { Settings, TableSettings } from '#cli/types/settings/settings.ts';
+import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
 
 import {
     convertToGlobs,
     buildIgnoreSections,
     listCheckIgnoreSections,
-} from '#cli/generation/config-files/ignore-files.ts';
+} from '#cli/generation/config-files/ignore-sections.ts';
 import {
     KNIP_TABLE,
     KNIP_CHECK,

@@ -1,5 +1,5 @@
 import { Ajv2020 } from 'ajv/dist/2020.js';
-import { buildJsonSchema } from '#cli/settings/json-schema.ts';
+import { buildJsonSchema } from '#cli/settings/schema/editor.ts';
 
 const schemaText = JSON.stringify(buildJsonSchema());
 

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
+import { findInstalledDependency } from '#cli/executables/packages.ts';
 
 test('an installed dependency version is found when exports hide its package manifest', async () => {
     await using sandbox = await testdir({

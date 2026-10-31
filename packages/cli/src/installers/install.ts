@@ -11,7 +11,7 @@ import { getTable, getRootScope } from '#cli/settings/scopes.ts';
 import type { Generation } from '#cli/types/generation/files.ts';
 import { installToolProjects } from '#cli/installers/projects.ts';
 import { assertPackageManagerVersion } from '#cli/installers/npm/project.ts';
-import { readToolPackageManager } from '#cli/repository/npm/package-manager.ts';
+import { readToolPackageManager } from '#cli/repository/javascript/package-manager.ts';
 import type { ToolInstall, InstallResult, ToolPackageManager } from '#cli/types/installers/installers.ts';
 
 function readInstallPackageManager(session: Session): ToolPackageManager | undefined {

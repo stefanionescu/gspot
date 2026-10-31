@@ -20,7 +20,7 @@ import {
     convertToGlobs,
     buildIgnoreSections,
     listCheckIgnoreSections,
-} from '#cli/generation/config-files/ignore-files.ts';
+} from '#cli/generation/config-files/ignore-sections.ts';
 import {
     listLocalPlugins,
     buildLocalPluginBlocks,

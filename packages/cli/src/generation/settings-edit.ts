@@ -10,7 +10,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
-import { RECORD_FIELDS } from '#cli/settings/schema-lookup.ts';
+import { RECORD_FIELDS } from '#cli/settings/schema/lookup.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';

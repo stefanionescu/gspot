@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { compareText } from '#cli/system/text.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { RECORD_FIELDS } from '#cli/settings/schema-lookup.ts';
+import { RECORD_FIELDS } from '#cli/settings/schema/lookup.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
 import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
 import type { TomlTable, TaploLayout } from '#cli/types/settings/settings.ts';

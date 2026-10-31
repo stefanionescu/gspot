@@ -6,7 +6,7 @@ import { join, dirname, resolve, relative } from 'node:path';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { PACKAGE_JSON, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
-import { IMPORT_CONDITIONS, PATHS_BASE_OPTION, LOCAL_PATH_PREFIX } from '#cli/config/repository/npm.ts';
+import { IMPORT_CONDITIONS, PATHS_BASE_OPTION, LOCAL_PATH_PREFIX } from '#cli/config/repository/javascript.ts';
 
 function findImportTarget(target: unknown): string | undefined {
     if (typeof target === 'string') return target;
