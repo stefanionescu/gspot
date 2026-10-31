@@ -1,4 +1,4 @@
-# <picture><source media="(prefers-color-scheme: light)" srcset="docs/public/banner/light.svg"><img src="docs/public/banner/dark.svg" alt="gspot"></picture>
+# ![gspot](docs/public/banner.svg)
 
 gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.
 
