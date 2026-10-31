@@ -1,6 +1,6 @@
 import { basename } from 'node:path';
 import { isAlias } from '../syntax.ts';
-import { createRule } from '../create-rule.ts';
+import { createRule } from '../rule-creator.ts';
 import type { TrivialFilesOptions } from '../types/rules.ts';
 import { INDEX_BASENAMES, TRIVIAL_FILE_OPTIONS_SCHEMA } from '../config/rules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

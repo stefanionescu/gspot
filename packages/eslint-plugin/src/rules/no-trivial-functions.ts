@@ -1,4 +1,4 @@
-import { createRule } from '../create-rule.ts';
+import { createRule } from '../rule-creator.ts';
 import { FUNCTION_NODES } from '../config/plugin.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { type FunctionNode, type TrivialFunctionsOptions } from '../types/rules.ts';
