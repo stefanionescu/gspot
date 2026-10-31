@@ -91,10 +91,7 @@ function formatSelection(configuration: Configuration): string {
             : `gspot selects it in a scope with ${conditions.join(CONDITION_SEPARATOR)}${formatAbsentDependencies(configuration.detect)}.`;
     const requiredBy = CLI_REFERENCE.configurations
         .filter((owner) => owner.requires.includes(configuration.name))
-        .map(
-            (owner) =>
-                `[\`${owner.name}\`](${REFERENCE_PATH}${REFERENCE_FOLDERS['configurations']}/${owner.name === '' ? '' : owner.name + '/'})`,
-        )
+        .map((owner) => `[\`${owner.name}\`](${REFERENCE_PATH}${REFERENCE_FOLDERS.configurations}/${owner.name}/)`)
         .join(', ');
     return (
         [selected, requiredBy === '' ? '' : `A configuration that requires it selects it too: ${requiredBy}.`]
@@ -153,10 +150,7 @@ function buildConfigurationPage(
         ...listInstalledSections(configuration),
     ];
     const required = configuration.requires
-        .map(
-            (name) =>
-                `[\`${name}\`](${REFERENCE_PATH}${REFERENCE_FOLDERS['configurations']}/${name === '' ? '' : name + '/'})`,
-        )
+        .map((name) => `[\`${name}\`](${REFERENCE_PATH}${REFERENCE_FOLDERS.configurations}/${name}/)`)
         .join(', ');
     const opening = [
         configuration.description,
@@ -188,7 +182,7 @@ export function buildConfigurationPages(guideTitles: Record<GuideSlug, string>):
                             const rows = CLI_REFERENCE.configurations
                                 .filter((configuration) => configuration.group === group)
                                 .map((configuration) => [
-                                    `[\`${configuration.name}\`](${REFERENCE_PATH}${REFERENCE_FOLDERS['configurations']}/${configuration.name === '' ? '' : configuration.name + '/'})`,
+                                    `[\`${configuration.name}\`](${REFERENCE_PATH}${REFERENCE_FOLDERS.configurations}/${configuration.name}/)`,
                                     configuration.description,
                                 ]);
                             return formatSection(title, formatTable(['Configuration', CHECKS_HEADING], rows));
