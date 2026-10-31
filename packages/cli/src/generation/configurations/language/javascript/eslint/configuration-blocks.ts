@@ -20,16 +20,16 @@ import { buildTanstackQueryBlocks } from '#cli/generation/configurations/library
 import { buildTestingLibraryBlocks } from '#cli/generation/configurations/library/testing-library.ts';
 import { joinScope, isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { PLUGIN_RULE_BLOCKS } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
-import { buildPluginRuleBlocks } from '#cli/generation/configurations/language/javascript/eslint/plugin-rules.ts';
 import { buildTestFiles, listCodeTestFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 
-import type {
-    EslintPlugins,
-    PlannedEslintFile,
-    PlannedEslintBlock,
-    ConfigurationBlocks,
-    ConfigurationBuilder,
-    ConfigurationScopeBlocks,
+import {
+    type EslintScope,
+    type EslintPlugins,
+    type PlannedEslintFile,
+    type PlannedEslintBlock,
+    type ConfigurationBlocks,
+    type ConfigurationBuilder,
+    type ConfigurationScopeBlocks,
 } from '#cli/types/generation/eslint.ts';
 
 const CONFIGURATION_BUILDERS: Readonly<Record<string, ConfigurationBuilder | undefined>> = {
@@ -169,5 +169,37 @@ export function listConfigurationBlocks(planned: PlannedEslintFile): {
                 .map(([configuration, groups]) => [configuration, groups.flatMap(({ blocks }) => blocks)]),
         ),
         configurationImports: Object.fromEntries(selected.flatMap((blocks) => Object.entries(blocks.imports))),
+    };
+}
+
+/**
+Build the declared plugin imports and lint rule blocks.
+
+@param scope the planned ESLint file of the scope.
+@param configuration the name with the pinned lint rule list.
+*/
+function buildPluginRuleBlocks(scope: EslintScope, configuration: string): ConfigurationBlocks {
+    const declaration = PLUGIN_RULE_BLOCKS[configuration] as (typeof PLUGIN_RULE_BLOCKS)[string];
+    const selectors = { code: scope.eslintFiles.code, tests: scope.eslintFiles.tests };
+    const files = typeof declaration.files === 'string' ? selectors[declaration.files] : declaration.files;
+    return {
+        imports: declaration.imports,
+        blocks: [
+            {
+                fields: {
+                    ...declaration.fields,
+                    files,
+                    ...(declaration.ignoresTests === true && {
+                        ignores: [
+                            ...new Set(
+                                scope.eslintFiles.tests.map(([test]) => test).filter((test) => test !== undefined),
+                            ),
+                        ],
+                    }),
+                    rules: declaration.rules,
+                },
+                calls: declaration.calls,
+            },
+        ],
     };
 }
