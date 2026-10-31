@@ -6,7 +6,7 @@ import type { Files } from '#cli/types/system/files.ts';
 import { writeCopyFiles } from '#cli/runs/copy/files.ts';
 import { runGit, readGitText } from '#cli/system/git.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
-import { splitSystemPath } from '#cli/system/files/names.ts';
+import { splitSystemPath } from '#cli/system/files/reads.ts';
 import type { GitFile } from '#cli/types/parsers/parsers.ts';
 import { copyValePackages } from '#cli/runs/copy/vale-packages.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';

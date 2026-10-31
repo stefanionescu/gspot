@@ -1,7 +1,7 @@
 import { splitByCase } from 'scule';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { readNamingDefaults } from '#cli/manifests/naming.ts';
+import { readNamingDefaults } from '#cli/manifests/read.ts';
 import type { NamingOverride } from '#cli/types/manifests.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { type Settings } from '#cli/types/settings/settings.ts';

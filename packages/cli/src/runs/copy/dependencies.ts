@@ -3,7 +3,7 @@ import { runGit } from '#cli/system/git.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { RunCache } from '#cli/types/system/system.ts';
-import { splitSystemPath } from '#cli/system/files/names.ts';
+import { splitSystemPath } from '#cli/system/files/reads.ts';
 import type { GitFile } from '#cli/types/parsers/parsers.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';

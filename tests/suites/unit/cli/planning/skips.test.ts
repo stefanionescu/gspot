@@ -1,15 +1,25 @@
+import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { planChecks } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { openSession } from '#cli/planning/session.ts';
-import { isSettingEmpty } from '#cli/planning/skips.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listToolProjectPins } from '#cli/manifests/tools.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { VUE_TSC_SKIP, NEXT_INTL_PROJECTS } from '#tests/config/planning/planning.ts';
+import { isSettingEmpty, listSettingReaders } from '#cli/planning/skips.ts';
+
+import {
+    VUE_TSC_SKIP,
+    GENERATOR_LIMITS,
+    NEXT_INTL_PROJECTS,
+    BUILT_IN_LIMIT_CASES,
+} from '#tests/config/planning/planning.ts';
 
 test('a check whose required setting is missing is skipped with a note naming the setting', async () => {
     const settings = buildSandboxSettings(['xcode'], { level: 'all' });
@@ -187,4 +197,90 @@ test('a check for other systems names the host in its skip note', async () => {
     expect(planned.map(({ skip }) => skip)).toStrictEqual([
         { cause: 'system', note: 'runs on macos only; this is linux' },
     ]);
+});
+
+test('limit readers belong to the requested language', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'python', 'swift'], { level: 'all' }),
+    });
+    const session = await openSession(sandbox.path);
+    expect(listSettingReaders(session.settings, session.scopes[0]!, 'limits.python.file_lines')).toStrictEqual([
+        { check: 'structure/long-files', enabled: true },
+    ]);
+    expect(listSettingReaders(session.settings, session.scopes[0]!, 'limits.swift.file_lines')).toStrictEqual([
+        { check: 'swift/swiftlint', enabled: true },
+    ]);
+});
+
+test('limit readers report their enabled state and exact level note', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['python'], { level: 'basic' }) });
+    const session = await openSession(sandbox.path);
+    expect(listSettingReaders(session.settings, session.scopes[0]!, 'limits.python.function_lines')).toStrictEqual([
+        { check: 'python/function-size', enabled: false, note: 'off at level basic' },
+    ]);
+    expect(
+        listSettingReaders({ ...session.settings, level: 'all' }, session.scopes[0]!, 'limits.python.function_lines'),
+    ).toStrictEqual([{ check: 'python/function-size', enabled: true }]);
+});
+
+test.each(
+    GENERATOR_LIMITS.flatMap(({ check, file, languages, limits }) =>
+        languages.flatMap((language) => limits.map((limit) => ({ check, file, language, limit }))),
+    ),
+)(
+    '$check writes the configured $limit limit of $language into its generated file',
+    async ({ check, file, language, limit }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([language], {
+                level: 'all',
+                tables: `[structure]\nreexports = { value = "index-only", reason = "The index export limit needs an enabled index module." }\n[limits.${language}]\n${limit} = ${limit === 'trivial_function_statements' ? '1001' : '{ value = 1001, reason = "The generated limit must retain this distinctive value." }'}\n`,
+            }),
+        });
+        const session = await openSession(sandbox.path);
+        const generated = buildGeneratedFiles(session).files.find(({ path }) => path.endsWith(file));
+        expect(generated, `${check} generates ${file}`).toBeDefined();
+        expect(generated!.content).toMatch(/\b1001\b/u);
+    },
+);
+
+test.each([...BUILT_IN_LIMIT_CASES])('$check reads the $limit limit of $language', async (sample) => {
+    const configuration = sample.language === 'sql' ? 'postgres' : sample.language;
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([configuration], {
+            level: 'all',
+            tables: `[limits.${sample.language}]\n${sample.limit} = 3\n`,
+        }),
+        [sample.file]: sample.source,
+    });
+    const findings = await runSandboxCheck(sandbox.path, sample.check);
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toContainEqual({ file: sample.file, rule: sample.rule });
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings([configuration], {
+            level: 'all',
+            tables: `[limits.${sample.language}]\n${sample.limit} = ${sample.limit === 'trivial_function_statements' ? '2' : '{ value = 1001, reason = "The sample falls below this configured threshold." }'}\n`,
+        }),
+    );
+    expect(await runSandboxCheck(sandbox.path, sample.check)).toStrictEqual([]);
+});
+
+test('shared-prefixes reads its configured sibling limit', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            level: 'all',
+            tables: '[limits]\nshared_prefix_files = { value = 3, reason = "Three related files form the configured group." }\n',
+        }),
+        'order-first.js': 'export const first = 1;\n',
+        'order-second.js': 'export const second = 2;\n',
+        'order-third.js': 'export const third = 3;\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'structure/shared-prefixes')).toHaveLength(1);
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['javascript'], {
+            level: 'all',
+            tables: '[limits]\nshared_prefix_files = { value = 5, reason = "Five related files form the configured group." }\n',
+        }),
+    );
+    expect(await runSandboxCheck(sandbox.path, 'structure/shared-prefixes')).toStrictEqual([]);
 });

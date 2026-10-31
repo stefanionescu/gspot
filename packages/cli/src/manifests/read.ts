@@ -9,8 +9,17 @@ import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
 import { compareText, formatSimilarNames } from '#cli/system/text.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/manifests/names.ts';
 import type { ShippedRule } from '#cli/types/generation/generation.ts';
-import { RULES_FOLDER, MANIFEST_FILE } from '#cli/config/manifests/manifests.ts';
-import type { Tool, Check, Configuration, ParsedManifest, ConfigurationCheck } from '#cli/types/manifests.ts';
+import { namingDefaultsSchema } from '#cli/schemas/manifests/manifests.ts';
+import { RULES_FOLDER, MANIFEST_FILE, NAMING_DEFAULTS_FILE } from '#cli/config/manifests/manifests.ts';
+
+import type {
+    Tool,
+    Check,
+    Configuration,
+    NamingDefaults,
+    ParsedManifest,
+    ConfigurationCheck,
+} from '#cli/types/manifests.ts';
 
 let shippedConfigurations: Map<string, Configuration> | undefined;
 
@@ -153,4 +162,16 @@ export function assertCheckExists(checkId: string, settings: Pick<Settings, 'com
             'arguments',
             `There is no check called ${checkId}.${formatSimilarNames(checkId, checkIds)}`,
         );
+}
+
+let namingDefaults: NamingDefaults | undefined;
+
+/**
+Read the shipped naming choices once per process.
+*/
+export function readNamingDefaults(): NamingDefaults {
+    if (namingDefaults !== undefined) return namingDefaults;
+    const contents = readFileSync(buildAssetPath(NAMING_DEFAULTS_FILE), 'utf8');
+    namingDefaults = namingDefaultsSchema.parse(JSON.parse(contents));
+    return namingDefaults;
 }

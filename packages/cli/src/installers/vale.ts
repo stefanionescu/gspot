@@ -7,15 +7,15 @@ import type { Level } from '#cli/types/manifests.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { join, posix, dirname, resolve } from 'node:path';
-import { downloadArchive } from '#cli/installers/downloads.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';
 import { VALE_TOOL, PROSE_GRAMMARS } from '#cli/config/prose.ts';
 import { runRequiredInstallStep } from '#cli/installers/steps.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import type { ToolInstall } from '#cli/types/installers/installers.ts';
 import { inspectTool, buildToolAvailability } from '#cli/executables/inspect.ts';
 import { VALE_STYLES_PATH } from '#cli/config/generation/configurations/general.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
+import type { ToolInstall, ArchiveDownload } from '#cli/types/installers/installers.ts';
 
 import {
     VOCAB_LINE,
@@ -175,4 +175,53 @@ export function buildValeIni({
         ...markupRules.map((rule) => `${rule} = YES`),
     ];
     return lines.join('\n');
+}
+
+async function readBoundedArchive(response: Response, { url, name, limit }: ArchiveDownload): Promise<Buffer> {
+    const reader: ReadableStreamDefaultReader<Uint8Array> | undefined = response.body?.getReader();
+    if (reader === undefined) throw new GspotError('install', `${url} sent no content for ${name}.`);
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    try {
+        for (;;) {
+            const { done, value } = await reader.read();
+            if (done) return Buffer.concat(chunks);
+            size += value.length;
+            if (size > limit) {
+                await reader.cancel();
+                throw new GspotError('install', `${url} exceeds the size limit for ${name}.`);
+            }
+            chunks.push(value);
+        }
+    } finally {
+        reader.releaseLock();
+    }
+}
+
+/**
+Download a release archive within the install timeout and a size limit.
+
+@param install what install needs for this step.
+@param download the archive to fetch.
+*/
+export async function downloadArchive(install: ToolInstall, download: ArchiveDownload): Promise<Buffer> {
+    try {
+        const signals = [AbortSignal.timeout(install.session.timeoutSeconds * MILLISECONDS_PER_SECOND)];
+        if (install.session.cancelSignal !== undefined) signals.push(install.session.cancelSignal);
+        const response = await fetch(download.url, { signal: AbortSignal.any(signals) });
+        if (!response.ok)
+            throw new GspotError(
+                'install',
+                `Cannot download ${download.name} ${download.url} (HTTP ${String(response.status)}).`,
+            );
+        return await readBoundedArchive(response, download);
+    } catch (error) {
+        install.session.cancelSignal?.throwIfAborted();
+        if (error instanceof GspotError) throw error;
+        throw new GspotError(
+            'install',
+            `Cannot download ${download.name} ${download.url}. Check the network or proxy, then run again.`,
+            { cause: error },
+        );
+    }
 }

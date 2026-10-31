@@ -6,7 +6,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { NODE_MODULES } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { splitSystemPath } from '#cli/system/files/names.ts';
+import { splitSystemPath } from '#cli/system/files/reads.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { copyDependencies } from '#cli/runs/copy/dependencies.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';

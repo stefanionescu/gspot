@@ -6,8 +6,8 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { GRAMMAR_NAMES } from '#cli/config/parsers/code.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import type { GrammarName } from '#cli/types/parsers/code.ts';
+import { countCodeLines } from '#cli/parsers/code/comments.ts';
 import { FILE_LINES_RULE } from '#cli/config/checks/general/structure.ts';
-import { countCodeLines } from '#cli/checks/cross-configuration/code-lines.ts';
 
 /**
 Reports source files over the code-line limit of their language.

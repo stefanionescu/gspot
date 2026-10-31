@@ -2,10 +2,10 @@ import { isUtf8 } from 'node:buffer';
 import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
 import type { RunCache } from '#cli/types/system/system.ts';
-import { splitSystemPath } from '#cli/system/files/names.ts';
+import { PATH_SEPARATORS } from '#cli/config/system/system.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { MISSING_TRACKED_FILE_MESSAGE } from '#cli/config/system/files.ts';
 import { openSync, readSync, closeSync, readFileSync, realpathSync } from 'node:fs';
+import { RESERVED_SEGMENTS, UNSAFE_PATH_MESSAGE, MISSING_TRACKED_FILE_MESSAGE } from '#cli/config/system/files.ts';
 
 function readFilePrefix(path: string, limit: number): Buffer {
     const buffer = Buffer.alloc(limit);
@@ -128,4 +128,20 @@ export function decodeUtf8Text(path: string, bytes: Buffer): string {
     if (text === undefined)
         throw new GspotError('filesystem', `${path} is not UTF-8 text. Save it as UTF-8, then run the command again.`);
     return text;
+}
+
+/**
+Split a path into segments, and refuse an empty, dot, parent, or null segment. Windows also splits at a backslash.
+
+@param path a repository-relative file with forward slashes.
+*/
+export function splitSystemPath(path: string): string[] {
+    const segments = path.split('/');
+    const systemSegments = process.platform === 'win32' ? path.split(PATH_SEPARATORS) : segments;
+    if (systemSegments.some((segment) => RESERVED_SEGMENTS.has(segment) || segment.includes('\0')))
+        throw new GspotError(
+            'filesystem',
+            UNSAFE_PATH_MESSAGE.replace('{path}', () => JSON.stringify(path)),
+        );
+    return segments;
 }

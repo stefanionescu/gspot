@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { splitSystemPath } from '#cli/system/files/names.ts';
+import { splitSystemPath } from '#cli/system/files/reads.ts';
 import { type FileBounds, type FileContents } from '#cli/types/system/files.ts';
 import { GspotError, hasErrorCode, buildWriteError } from '#cli/system/errors.ts';
 import { MODE_BITS, PRIVATE_FILE, PERMISSION_BITS } from '#cli/config/files/modes.ts';

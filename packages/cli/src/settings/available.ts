@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { mergeValue } from '#cli/settings/inherit.ts';
-import { readNamingDefaults } from '#cli/manifests/naming.ts';
+import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { SETTING_LANGUAGES } from '#cli/config/settings/naming.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';

@@ -1,13 +1,13 @@
 import { listIgnores } from '#cli/settings/scopes.ts';
 import { findMissingBuild } from '#cli/manifests/tools.ts';
 import type { Tool, Check } from '#cli/types/manifests.ts';
-import { NO_HISTORY_MESSAGE } from '#cli/config/planning.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
+import { LIMIT_READERS, NO_HISTORY_MESSAGE } from '#cli/config/planning.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import type { Host, Skip, PlannedCheck, PlannedScope, SettingsSkip } from '#cli/types/planning.ts';
+import type { Host, Skip, PlannedCheck, PlannedScope, SettingsSkip, SettingReader } from '#cli/types/planning.ts';
 
 function findDependencySkip(
     dependencies: string[] | undefined,
@@ -142,4 +142,28 @@ export function findFirstSkip(check: PlannedCheck, planned: PlannedScope): Skip 
     const condition = findConditionSkip(check, session.repository);
     if (condition !== undefined) return condition;
     return findSystemSkip(check.check, check.tool, host);
+}
+
+/**
+List the selected checks that read a limit and whether its rules run at this level.
+
+@param settings the repository level and ignores.
+@param scope the selected configurations and settings of one folder.
+@param key the setting whose consumers to find.
+*/
+export function listSettingReaders(settings: Settings, scope: Scope, key: string): SettingReader[] {
+    if (!key.startsWith('limits.')) return [];
+    const names = key.slice('limits.'.length).split('.');
+    const limit = names.at(-1) as string;
+    const language = names.length === 1 ? undefined : names[0];
+    const checks = scope.configurations.flatMap((configuration) => configuration.checks);
+    return LIMIT_READERS.filter(
+        (reader) => reader.limits.includes(limit) && (language === undefined || reader.languages.includes(language)),
+    ).flatMap((reader) => {
+        const check = checks.find((check) => check.id === reader.check);
+        if (check === undefined) return [];
+        const skip = findSettingsSkip(settings, scope, check);
+        const note = settings.level === 'all' ? skip?.note : `off at level ${settings.level}`;
+        return [{ check: check.id, enabled: note === undefined, ...(note !== undefined && { note }) }];
+    });
 }
