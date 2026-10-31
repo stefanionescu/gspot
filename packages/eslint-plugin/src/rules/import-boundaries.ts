@@ -1,18 +1,38 @@
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
 import { createRule } from '../create-rule.ts';
-import { findPathInFolder } from '../paths.ts';
 import { buildSourceVisitors } from '../syntax.ts';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { RelativeImport, ImportBoundariesOptions } from '../types/rules.ts';
 
 import {
+    DRIVE_LETTER,
     RESOURCE_QUERY,
+    TRAILING_SLASH,
     RELATIVE_SPECIFIER,
     DEFAULT_BOUNDARY_FOLDERS,
     IMPORT_BOUNDARY_OPTIONS_SCHEMA,
 } from '../config/rules.ts';
+
+/**
+Find where a path sits inside a folder. Both take either separator and any drive letter case.
+The folder `.` holds every relative path that does not climb out of it.
+
+@param folder the folder, absolute or relative
+@param path the file or folder to place
+@returns the POSIX path below the folder, empty for the folder itself, or undefined outside it
+*/
+function findPathInFolder(folder: string, path: string): string | undefined {
+    const root = folder
+        .replaceAll('\\', '/')
+        .replace(DRIVE_LETTER, (drive) => drive.toUpperCase())
+        .replace(TRAILING_SLASH, '');
+    const file = path.replaceAll('\\', '/').replace(DRIVE_LETTER, (drive) => drive.toUpperCase());
+    if (file === root) return '';
+    if (root === '.') return file === '..' || file.startsWith('../') ? undefined : file;
+    return file.startsWith(`${root}/`) ? file.slice(root.length + 1) : undefined;
+}
 
 function matchAlias(importedPath: string, pattern: string, target: string): string | undefined {
     const keyStar = pattern.indexOf('*');

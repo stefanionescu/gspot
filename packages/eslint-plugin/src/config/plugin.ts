@@ -1,7 +1,3 @@
-export const DRIVE_LETTER = /^[a-z]:/u;
-
-export const TRAILING_SLASH = /\/$/u;
-
 export const PLUGIN_PREFIX = 'gspot';
 
 export const TYPE_ASSERTION_NODES = [

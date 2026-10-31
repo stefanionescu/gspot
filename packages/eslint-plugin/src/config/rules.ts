@@ -25,6 +25,10 @@ export const IMPORT_BOUNDARY_OPTIONS_SCHEMA = {
     additionalProperties: false,
 } satisfies JSONSchema4;
 
+export const DRIVE_LETTER = /^[a-z]:/u;
+
+export const TRAILING_SLASH = /\/$/u;
+
 export const DEFAULT_BOUNDARY_FOLDERS = ['*/*'] as const;
 
 export const RELATIVE_SPECIFIER = /^\.\.?(?:\/|$)/u;
