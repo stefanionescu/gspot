@@ -2,9 +2,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import picomatch from 'picomatch';
 import { globSync } from 'tinyglobby';
-import { GspotError } from '#cli/system/errors.ts';
 import { PARENT_SEGMENT } from '#cli/config/system/files.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import type { TemporaryFolder } from '#cli/types/system/files.ts';
+import { WRITE_FAILURE_CODES } from '#cli/config/system/system.ts';
 import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
 import { DRIVE_LETTER, GLOB_EXCLUDE } from '#cli/config/files/path-patterns.ts';
 
@@ -25,11 +26,20 @@ function assertInsideFolder(pattern: string): void {
 }
 
 /**
-Makes an empty folder under the system temporary folder that removes itself, with everything in it, when disposed.
+Makes an empty folder in a parent folder that removes itself, with everything in it, when disposed. When the parent
+refuses writes, the folder goes under the system temporary folder.
 Use the real system path, which on Windows expands short folder names, as the paths tools report do.
+
+@param parent the folder to make it in.
 */
-export function createTemporaryFolder(): TemporaryFolder {
-    const folder = mkdtempSync(join(tmpdir(), 'gspot-'));
+export function createTemporaryFolder(parent = tmpdir()): TemporaryFolder {
+    let folder: string;
+    try {
+        folder = mkdtempSync(join(parent, 'gspot-'));
+    } catch (error) {
+        if (parent === tmpdir() || !WRITE_FAILURE_CODES.some((code) => hasErrorCode(error, code))) throw error;
+        return createTemporaryFolder();
+    }
     const path = realpathSync.native(folder);
     return {
         path,

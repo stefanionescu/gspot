@@ -234,7 +234,8 @@ async function initializeRevisionCopy(
 }
 
 /**
-Writes a Git revision into a copy without checkout filters, stashing, or working-tree writes.
+Writes a Git revision into a copy without checkout filters, stashing, or working-tree writes. The copy sits beside the
+repository, as createCopy explains, and outside it, so Git in the copy never finds the repository.
 
 @param root the checkout with the Git objects and installed dependencies.
 @param source the revision to copy.
@@ -248,7 +249,7 @@ export async function copyRevision(root: string, source: Revision, cancelSignal?
     const indexFiles = await listRevisionFiles(toplevel, source, cancelSignal, unreadablePaths);
     const index = indexFiles.map((indexFile) => `${indexFile.mode} ${indexFile.hash} 0\t${indexFile.path}\0`).join('');
     using cleanup = new DisposableStack();
-    const copy = cleanup.use(createTemporaryFolder());
+    const copy = cleanup.use(createTemporaryFolder(dirname(toplevel)));
     await initializeRevisionCopy(toplevel, copy.path, source, cancelSignal);
     await readGitText(copy.path, GIT_EMPTY_INDEX_ARGUMENTS, { cancelSignal });
     await readGitText(copy.path, GIT_UPDATE_INDEX_ARGUMENTS, { cancelSignal, stdin: index });

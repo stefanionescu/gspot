@@ -1,5 +1,5 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
@@ -83,6 +83,22 @@ test('a link into another linked tree points at the copy of that tree, whatever 
     const exists = copied.startsWith(await realpath(join(scratch, 'node_modules/z-store')));
     expect(exists).toBe(true);
     expect(await isOnDisk(join(copied, '../helpers/package.json'))).toBe(true);
+});
+
+test('a copy sits beside the repository, so it shares a parent folder with the store package it links', async () => {
+    await using sandbox = await testdir({
+        'project/package.json': '{"private":true}',
+        'project/node_modules/.bun/tool@1/node_modules/tool/index.js': 'export {};',
+    });
+
+    const root = join(sandbox.path, 'project');
+    await symlink('.bun/tool@1/node_modules/tool', join(root, 'node_modules/tool'), 'dir');
+    using copy = await createCopy(selectCopyPaths(root, ['package.json'], ['']));
+    const parent = await realpath(sandbox.path);
+    expect(dirname(copy.path)).toBe(parent);
+    expect(await realpath(join(copy.path, 'node_modules/tool/index.js'))).toBe(
+        join(parent, 'project/node_modules/.bun/tool@1/node_modules/tool/index.js'),
+    );
 });
 
 test('a dependency link that points at nothing is left out of the copy', async () => {

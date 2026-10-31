@@ -80,14 +80,16 @@ export async function createCheckCopy(
 }
 
 /**
-Copies source files and dependency trees into a new copy.
+Copies source files and dependency trees into a new copy beside the repository. The copy links installed packages to
+their files in the repository. Tools such as Astro read a package path that shares no parent folder with the project
+as a path inside the project.
 
 @param source the paths and dependency trees to copy.
 @returns the new folder, deleted on dispose.
 */
 export async function createCopy(source: CopyPaths): Promise<TemporaryFolder> {
     using cleanup = new DisposableStack();
-    const folder = cleanup.use(createTemporaryFolder());
+    const folder = cleanup.use(createTemporaryFolder(dirname(source.root)));
     const plan = {
         ...source,
         target: folder.path,
