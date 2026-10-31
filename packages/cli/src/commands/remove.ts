@@ -7,23 +7,20 @@ import { selectForScope } from '#cli/settings/scopes.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { writeSettingsEdit } from '#cli/generation/write.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { removeKey, getScopeTable } from '#cli/settings/edit.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
+import type { ConfigurationsOptions } from '#cli/types/planning.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation/generation.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import type { ConfigurationsOptions } from '#cli/types/generation/generation.ts';
 import { selectForInit, listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
+import { formatConfigurationChange, readConfigurationEditContext } from '#cli/planning/edits.ts';
 
-import {
-    writeSettingsEdit,
-    formatConfigurationChange,
-    readConfigurationEditContext,
-} from '#cli/generation/settings-edit.ts';
 import {
     SCOPE_OPTION,
     GSPOT_REMOVE,

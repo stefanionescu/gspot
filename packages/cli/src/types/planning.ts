@@ -1,7 +1,11 @@
 import type { Session } from '#cli/types/session.ts';
+import type { RunCache } from '#cli/types/system/system.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { ConfigurationTables } from '#cli/types/settings/tables.ts';
+import type { Settings, TomlTable } from '#cli/types/settings/settings.ts';
+import type { RepositoryListing } from '#cli/types/repository/repository.ts';
 import type { Tool, Stage, Check, Configuration } from '#cli/types/manifests.ts';
 
 export type SkipCause = 'level' | 'system' | 'replaced' | 'setting' | 'condition' | 'ignore';
@@ -63,3 +67,24 @@ export type LicenseProject = {
 export type LimitCheck = { check: string; languages: readonly string[]; limits: readonly string[] };
 
 export type SettingReader = { check: string; enabled: boolean; note?: string };
+
+export type ConfigurationsOptions = { cwd: string; configurations: string[]; scope?: string | undefined };
+
+export type ConfigurationChange = {
+    action: string;
+    changed: string[];
+    where: string;
+    unchanged: string[];
+    state: string;
+};
+
+export type SettingsEditContext = {
+    root: string;
+    edit: SettingsEdit;
+    settings: Settings;
+    cache: RunCache;
+    session: Session;
+    listing: RepositoryListing;
+    scope: string;
+    scopeTable: TomlTable;
+};

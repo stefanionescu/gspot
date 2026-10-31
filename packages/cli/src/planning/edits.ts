@@ -1,82 +1,23 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { readSettings } from '#cli/settings/read.ts';
-import { writeSettings } from '#cli/settings/file.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { CommandResult } from '#cli/types/terminal.ts';
+import { ADD_REMOVE_MESSAGE } from '#cli/config/planning.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { RECORD_FIELDS } from '#cli/settings/schema/lookup.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import type { ApplyReport } from '#cli/types/generation/files.ts';
+import { getScopeTable, readSettingsEdit } from '#cli/settings/edit.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import type { Settings, TomlTable } from '#cli/types/settings/settings.ts';
-import { formatApplyReport, writeGeneratedFiles } from '#cli/generation/write.ts';
 import { readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts';
-import { FIX_APPLY_MESSAGE, ADD_REMOVE_MESSAGE } from '#cli/config/generation/generation.ts';
-import { getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import type { Scope, SettingMatch, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
-
-import type {
-    SettingsEditOptions,
-    ConfigurationChange,
-    SettingsEditContext,
-    ConfigurationsOptions,
-} from '#cli/types/generation/generation.ts';
-
-/**
-Edit settings, check them, and write them and their generated files. Installs nothing.
-
-@param root the folder where gspot writes settings and generated files.
-@param options the edit and the text the report adds.
-*/
-export async function writeSettingsEdit(
-    root: string,
-    options: SettingsEditOptions,
-): Promise<CommandResult<ApplyReport & { changed: boolean; summary: string }>> {
-    const { edit, summary } = options;
-    const writer = openFiles(root);
-    const result = buildEditedSettings(root, edit);
-    options.cache?.sources.set(SETTINGS_FILE, Buffer.from(result.text));
-    const session = await openSession(root, {
-        cache: options.cache,
-        listing: options.listing,
-        settingsFile: { settings: result.settings, text: result.text },
-    });
-    const generated = buildGeneratedFiles(session);
-    writeSettings(writer, result.text, edit.previous);
-    let report: ApplyReport;
-    try {
-        report = await writeGeneratedFiles(session, generated, writer);
-    } catch (error) {
-        if (!(error instanceof GspotError)) throw error;
-        throw new GspotError(
-            'writing',
-            [
-                summary,
-                `gspot.toml keeps this change, and applying it stopped: ${error.message}`,
-                FIX_APPLY_MESSAGE,
-            ].join('\n'),
-            { cause: error },
-        );
-    }
-    report.notes.push(...(options.notes ?? []));
-    const written = report.written.length + report.updated.length + report.removed.length;
-    const unchanged = written === 0 ? 'No change: gspot.toml already says this.' : 'gspot.toml already says this.';
-    const shown = result.changed ? summary : unchanged;
-    return {
-        text: `${shown}\n${formatApplyReport(report)}`,
-        json: { ...report, summary: shown, changed: result.changed },
-        exitCode: 0,
-    };
-}
+import type { ConfigurationChange, SettingsEditContext, ConfigurationsOptions } from '#cli/types/planning.ts';
 
 /**
 Read and validate the settings once before a command edits them, and find the table of the scope that the command

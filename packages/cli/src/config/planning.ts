@@ -72,3 +72,5 @@ export const NO_HISTORY_MESSAGE = 'This folder is not a Git repository, so the c
 export const STYLELINT_TOOL = 'stylelint';
 
 export const PRETTIER_TOOL = 'prettier';
+
+export const ADD_REMOVE_MESSAGE = 'Use gspot add or gspot remove to change configurations.';

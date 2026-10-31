@@ -5,9 +5,10 @@ import { type Command } from '@commander-js/extra-typings';
 import { assertCheckExists } from '#cli/manifests/read.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
+import { writeSettingsEdit } from '#cli/generation/write.ts';
+import { readSettingsEditContext } from '#cli/planning/edits.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings/settings.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { writeSettingsEdit, readSettingsEditContext } from '#cli/generation/settings-edit.ts';
 import type { IgnoreTarget, IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/commands.ts';
 
 import {

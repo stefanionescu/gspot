@@ -1,14 +1,23 @@
 import { formatCount } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { readHooks } from '#cli/repository/setup.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { writeSettings } from '#cli/settings/file.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { openSession } from '#cli/planning/session.ts';
+import { buildEditedSettings } from '#cli/settings/edit.ts';
+import type { CommandResult } from '#cli/types/terminal.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { listExpectedPaths } from '#cli/generation/outdated.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { listStaleLockfiles } from '#cli/installers/projects.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { listOwnablePaths } from '#cli/generation/config-files/links.ts';
+import type { SettingsEditOptions } from '#cli/types/generation/generation.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { type Generation, type ApplyReport } from '#cli/types/generation/files.ts';
 import { SCANNER_KEY, BUNFIG_FILE } from '#cli/config/generation/configurations/general.ts';
@@ -23,6 +32,7 @@ import {
     planReplacements,
 } from '#cli/repository/writer.ts';
 import {
+    FIX_APPLY_MESSAGE,
     MANAGED_KEYS_NOTE,
     CHANGE_LABEL_WIDTH,
     TOOL_PROJECT_FILES,
@@ -162,4 +172,51 @@ function formatGeneratedChanges(action: string, paths: string[]): string[] {
         ...(gspotCount === 0 ? [] : [`${label}${formatCount(gspotCount, GENERATED_FILE_NOUN)} in ${GSPOT_FOLDER}/`]),
         ...outside.map((path) => `${label}${path}`),
     ];
+}
+
+/**
+Edit settings, check them, and write them and their generated files. Installs nothing.
+
+@param root the folder where gspot writes settings and generated files.
+@param options the edit and the text the report adds.
+*/
+export async function writeSettingsEdit(
+    root: string,
+    options: SettingsEditOptions,
+): Promise<CommandResult<ApplyReport & { changed: boolean; summary: string }>> {
+    const { edit, summary } = options;
+    const writer = openFiles(root);
+    const result = buildEditedSettings(root, edit);
+    options.cache?.sources.set(SETTINGS_FILE, Buffer.from(result.text));
+    const session = await openSession(root, {
+        cache: options.cache,
+        listing: options.listing,
+        settingsFile: { settings: result.settings, text: result.text },
+    });
+    const generated = buildGeneratedFiles(session);
+    writeSettings(writer, result.text, edit.previous);
+    let report: ApplyReport;
+    try {
+        report = await writeGeneratedFiles(session, generated, writer);
+    } catch (error) {
+        if (!(error instanceof GspotError)) throw error;
+        throw new GspotError(
+            'writing',
+            [
+                summary,
+                `gspot.toml keeps this change, and applying it stopped: ${error.message}`,
+                FIX_APPLY_MESSAGE,
+            ].join('\n'),
+            { cause: error },
+        );
+    }
+    report.notes.push(...(options.notes ?? []));
+    const written = report.written.length + report.updated.length + report.removed.length;
+    const unchanged = written === 0 ? 'No change: gspot.toml already says this.' : 'gspot.toml already says this.';
+    const shown = result.changed ? summary : unchanged;
+    return {
+        text: `${shown}\n${formatApplyReport(report)}`,
+        json: { ...report, summary: shown, changed: result.changed },
+        exitCode: 0,
+    };
 }

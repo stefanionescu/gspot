@@ -3,13 +3,14 @@ import { isReasonedValue } from '#cli/settings/file.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { writeSettingsEdit } from '#cli/generation/write.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { SCOPE_OPTION } from '#cli/config/commands/commands.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { removeKey, removeFromList } from '#cli/settings/edit.ts';
 import type { UnsetOptions } from '#cli/types/commands/commands.ts';
+import { readSetting, readSettingsEditContext } from '#cli/planning/edits.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/generation/settings-edit.ts';
 
 function removeTableKeys(scopeTable: TomlTable, key: string, names: string[]): void {
     const written = findValueAt(scopeTable, key.split('.'));

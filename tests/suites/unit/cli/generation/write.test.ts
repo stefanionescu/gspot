@@ -4,12 +4,16 @@ import { test, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { formatHeader } from '#cli/generation/header.ts';
+import { BUN_SCANNER_SETTINGS } from '#tests/config/toml.ts';
+import { MANAGED_KEYS_NOTE } from '#tests/config/messages.ts';
 import { listOutdatedFiles } from '#cli/generation/outdated.ts';
 import { listStaleLockfiles } from '#cli/installers/projects.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import type { ApplyReport } from '#cli/types/generation/files.ts';
 import type { PackageFieldScenario } from '#tests/types/write.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -142,4 +146,27 @@ test('apply preserves a copied header example and removes an obsolete scoped lin
     expect(await readFile(join(sandbox.path, 'examples/.editorconfig'))).toStrictEqual(before);
     expect(report.removed).toContain('docs/.markdownlint.jsonc');
     expect(await isOnDisk(join(sandbox.path, 'docs/.markdownlint.jsonc'))).toBe(false);
+});
+
+test('apply prints no managed-key warning while it still manages the Bun scanner', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            tables: BUN_SCANNER_SETTINGS,
+        }),
+        'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
+    });
+    for (const pass of [1, 2]) {
+        const result = await runGspot(sandbox.path, ['apply', '--json']);
+        expect(result.code, `pass ${String(pass)}: ${result.stdout}${result.stderr}`).toBe(0);
+        expect((JSON.parse(result.stdout) as ApplyReport).notes).not.toContain(MANAGED_KEYS_NOTE);
+    }
+});
+
+test('an unchanged settings edit that writes generated files does not say No change', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': 'level = "basic"\n' + buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['set', 'level', 'basic']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toStartWith('gspot.toml already says this.\n');
+    expect(result.stdout).toContain('wrote ');
+    expect(result.stdout).not.toContain('No change:');
 });

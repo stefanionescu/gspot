@@ -238,8 +238,6 @@ export const RULE_INDEX_LINES = [
     'A more specific rule wins over a general one.',
 ] as const;
 
-export const ADD_REMOVE_MESSAGE = 'Use gspot add or gspot remove to change configurations.';
-
 export const FIX_APPLY_MESSAGE = 'Fix that, then run gspot apply.';
 
 export const MANAGED_KEYS_NOTE =

@@ -5,18 +5,19 @@ import { isReasonedValue } from '#cli/settings/file.ts';
 import { COMMAND_SUGGESTION } from '#cli/config/main.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { writeSettingsEdit } from '#cli/generation/write.ts';
 import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { listSettingReaders } from '#cli/planning/readers.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
+import type { SettingsEditContext } from '#cli/types/planning.ts';
 import { findSettingSchema } from '#cli/settings/schema/lookup.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
+import { readSetting, readSettingsEditContext } from '#cli/planning/edits.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
-import type { SettingsEditContext } from '#cli/types/generation/generation.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import type { Setting, InheritedSetting } from '#cli/types/settings/inheritance.ts';
-import { readSetting, writeSettingsEdit, readSettingsEditContext } from '#cli/generation/settings-edit.ts';
 import type { SetOptions, ParsedSettingValue, SettingReasonContext } from '#cli/types/commands/commands.ts';
 
 import {
