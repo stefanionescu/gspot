@@ -52,23 +52,6 @@ function isStandardBunTarball(bunPackage: BunPackage, environment: Record<string
     return isStandardTarball({ name, version, address, integrity }, environment);
 }
 
-/**
-Remove registry addresses from the portable lockfile of Bun.
-
-@param lockfile the lockfile contents.
-@param environment the configured registry addresses.
-*/
-export function stripBunRegistryUrls(lockfile: string, environment: Record<string, string>): string {
-    const parsed = parseJsonFile(BUN_LOCKFILE, lockfile, bunLockfileSchema);
-    let edited = lockfile;
-    for (const [key, bunPackage] of Object.entries(parsed.packages)) {
-        const npm = bunPackageSchema.safeParse(bunPackage);
-        if (!npm.success || !isStandardBunTarball(npm.data, environment)) continue;
-        edited = applyEdits(edited, modify(edited, ['packages', key, 1], '', {}));
-    }
-    return edited;
-}
-
 function parseDevelopmentDependencies(
     packageManager: Exclude<PackageManager['name'], 'yarn'>,
     workspace: unknown,
@@ -198,6 +181,23 @@ function isInvalidLockfile(error: unknown): boolean {
         (['SyntaxError', 'YAMLParseError', 'YAMLException'].includes(error.name) ||
             error.message.startsWith('Expected an indexed object, got '))
     );
+}
+
+/**
+Remove registry addresses from the portable lockfile of Bun.
+
+@param lockfile the lockfile contents.
+@param environment the configured registry addresses.
+*/
+export function stripBunRegistryUrls(lockfile: string, environment: Record<string, string>): string {
+    const parsed = parseJsonFile(BUN_LOCKFILE, lockfile, bunLockfileSchema);
+    let edited = lockfile;
+    for (const [key, bunPackage] of Object.entries(parsed.packages)) {
+        const npm = bunPackageSchema.safeParse(bunPackage);
+        if (!npm.success || !isStandardBunTarball(npm.data, environment)) continue;
+        edited = applyEdits(edited, modify(edited, ['packages', key, 1], '', {}));
+    }
+    return edited;
 }
 
 /**

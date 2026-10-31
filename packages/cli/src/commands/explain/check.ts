@@ -156,64 +156,6 @@ function formatCheckExplanation(
     return `${lines.join('\n')}\n`;
 }
 
-/**
-Explain a shipped check or a command check.
-
-@param session the repository, or undefined outside one.
-@param checkId the check ID to explain.
-@returns undefined when no check has the ID.
-*/
-export function explainCheck(session: Session | undefined, checkId: string): Explanation | undefined {
-    const configurationsByName = readConfigurations();
-    const commandCheck = session?.settings.commandChecks[checkId];
-    const found: ScopeCheck | undefined =
-        listChecksById(configurationsByName.values()).get(checkId) ??
-        (commandCheck === undefined ? undefined : { check: commandCheck, configuration: undefined });
-    if (found === undefined) return undefined;
-    const { check, configuration } = found;
-    const facts = buildCheckFacts(check, configuration, configurationsByName, session);
-    return {
-        kind: 'check',
-        subject: checkId,
-        text: formatCheckExplanation(session, found, commandCheck, facts),
-        facts: {
-            check: checkId,
-            ...(configuration === undefined
-                ? { command: check.command, paths: check.files?.paths }
-                : { configuration: configuration.name }),
-            stage: check.stage,
-            level: check.level,
-            summary: check.summary,
-            why: check.why,
-            help: check.help,
-            when: check.when,
-            crash_pattern: facts.crashPattern,
-            run_in_copy: check.run_in_copy,
-            settings: facts.settings,
-            rules: facts.rules,
-            ignores: facts.ignores,
-        },
-    };
-}
-
-/**
-Import a tool from the npm tool project of the repository.
-
-@param root the repository root.
-@param specifier the package or its export, such as eslint/use-at-your-own-risk.
-@returns undefined when the tool project does not hold it.
-*/
-export async function importInstalledTool(root: string, specifier: string): Promise<unknown> {
-    let path: string;
-    try {
-        path = createRequire(join(root, GSPOT_PATHS.npmProject)).resolve(specifier);
-    } catch (error) {
-        if (!hasErrorCode(error, 'MODULE_NOT_FOUND')) throw error;
-        return undefined;
-    }
-    return import(pathToFileURL(path).href);
-}
-
 async function readEslintPluginRule(root: string, identifier: string): Promise<unknown> {
     const config = readConfigurations()
         .get(JAVASCRIPT_CONFIGURATION)
@@ -279,6 +221,64 @@ function formatLintRuleLines(
         `Turn it off for some paths: gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(identifier)} --paths "<glob>" --reason "<why>"`,
         ...optionLines,
     ];
+}
+
+/**
+Explain a shipped check or a command check.
+
+@param session the repository, or undefined outside one.
+@param checkId the check ID to explain.
+@returns undefined when no check has the ID.
+*/
+export function explainCheck(session: Session | undefined, checkId: string): Explanation | undefined {
+    const configurationsByName = readConfigurations();
+    const commandCheck = session?.settings.commandChecks[checkId];
+    const found: ScopeCheck | undefined =
+        listChecksById(configurationsByName.values()).get(checkId) ??
+        (commandCheck === undefined ? undefined : { check: commandCheck, configuration: undefined });
+    if (found === undefined) return undefined;
+    const { check, configuration } = found;
+    const facts = buildCheckFacts(check, configuration, configurationsByName, session);
+    return {
+        kind: 'check',
+        subject: checkId,
+        text: formatCheckExplanation(session, found, commandCheck, facts),
+        facts: {
+            check: checkId,
+            ...(configuration === undefined
+                ? { command: check.command, paths: check.files?.paths }
+                : { configuration: configuration.name }),
+            stage: check.stage,
+            level: check.level,
+            summary: check.summary,
+            why: check.why,
+            help: check.help,
+            when: check.when,
+            crash_pattern: facts.crashPattern,
+            run_in_copy: check.run_in_copy,
+            settings: facts.settings,
+            rules: facts.rules,
+            ignores: facts.ignores,
+        },
+    };
+}
+
+/**
+Import a tool from the npm tool project of the repository.
+
+@param root the repository root.
+@param specifier the package or its export, such as eslint/use-at-your-own-risk.
+@returns undefined when the tool project does not hold it.
+*/
+export async function importInstalledTool(root: string, specifier: string): Promise<unknown> {
+    let path: string;
+    try {
+        path = createRequire(join(root, GSPOT_PATHS.npmProject)).resolve(specifier);
+    } catch (error) {
+        if (!hasErrorCode(error, 'MODULE_NOT_FOUND')) throw error;
+        return undefined;
+    }
+    return import(pathToFileURL(path).href);
 }
 
 /**

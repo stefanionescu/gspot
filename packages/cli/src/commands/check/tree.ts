@@ -148,6 +148,18 @@ function formatAllFilesHeader(options: CheckOptions, revision: RevisionSource | 
     return `Checked every file: ${cause}.\n`;
 }
 
+function addRevisionPaths(session: Session, revision: RevisionSource | undefined): void {
+    const paths = revision?.unreadablePaths;
+    if (paths === undefined) return;
+    session.repository.unreadablePaths.push(...paths);
+}
+
+function addRevisionNotes(report: RunReport, revision: RevisionSource | undefined): void {
+    const note = revision?.dependencyNote;
+    if (note === undefined) return;
+    report.notes.push(note);
+}
+
 /**
 Check the files of one working tree: the repository, or a copy of the staged index or of a pushed commit.
 
@@ -184,16 +196,4 @@ export async function runTreeCheck(
         json: { ...result.report, fixes: result.fixes },
         exitCode: result.report.exitCode,
     };
-}
-
-function addRevisionPaths(session: Session, revision: RevisionSource | undefined): void {
-    const paths = revision?.unreadablePaths;
-    if (paths === undefined) return;
-    session.repository.unreadablePaths.push(...paths);
-}
-
-function addRevisionNotes(report: RunReport, revision: RevisionSource | undefined): void {
-    const note = revision?.dependencyNote;
-    if (note === undefined) return;
-    report.notes.push(note);
 }

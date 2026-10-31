@@ -91,25 +91,6 @@ function listForeignLockfiles(planned: PlannedCheck): CheckFinding[] {
         .toArray();
 }
 
-/**
-Reports lockfile downloads from other hosts or over plain HTTP, and lockfiles of a second package manager in the
-scope.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
-export function checkLockfiles(session: Session, planned: PlannedCheck): CheckFinding[] {
-    const hosts = new Set(getTable(planned.scope.settings, 'dependencies')['allowed_registries']);
-    return [
-        ...listForeignLockfiles(planned),
-        ...planned.files.flatMap(({ path }) => {
-            return (JAVASCRIPT_LOCKFILES as readonly string[]).includes(posix.basename(path))
-                ? validateLockfileHosts(session, path, hosts)
-                : [];
-        }),
-    ];
-}
-
 function getExactVersion(value: unknown): string | undefined {
     const first: unknown = Array.isArray(value) ? value[0] : value;
     if (typeof first === 'string') return first;
@@ -147,6 +128,47 @@ function splitPackageManager(field: string | undefined): { tool: string; version
     return separator <= 0 ? undefined : { tool: pin.slice(0, separator), version: pin.slice(separator + 1) };
 }
 
+function compareSpecifiers(
+    specifiers: Map<string, string>,
+    locked: Map<string, string>,
+    lockfilePath: string,
+): string[] {
+    const changed = [...specifiers].flatMap(([name, specifier]) => {
+        const version = locked.get(name);
+        if (version === specifier) return [];
+        return [
+            version === undefined
+                ? `package.json declares ${name} ${specifier}, which ${lockfilePath} does not record.`
+                : `package.json asks for ${name} ${specifier}, but ${lockfilePath} records ${version}.`,
+        ];
+    });
+    const removed = locked
+        .keys()
+        .filter((name) => !specifiers.has(name))
+        .map((name) => `${lockfilePath} records ${name}, which package.json no longer declares.`)
+        .toArray();
+    return [...changed, ...removed];
+}
+
+/**
+Reports lockfile downloads from other hosts or over plain HTTP, and lockfiles of a second package manager in the
+scope.
+
+@param session the repository and its tools.
+@param planned the configured check and selected scope files.
+*/
+export function checkLockfiles(session: Session, planned: PlannedCheck): CheckFinding[] {
+    const hosts = new Set(getTable(planned.scope.settings, 'dependencies')['allowed_registries']);
+    return [
+        ...listForeignLockfiles(planned),
+        ...planned.files.flatMap(({ path }) => {
+            return (JAVASCRIPT_LOCKFILES as readonly string[]).includes(posix.basename(path))
+                ? validateLockfileHosts(session, path, hosts)
+                : [];
+        }),
+    ];
+}
+
 /**
 Reports a packageManager field that names another version than the mise pin of the same package manager.
 
@@ -170,28 +192,6 @@ export function checkPackageManagerPin(session: Session, planned: PlannedCheck):
             message: `packageManager names ${tool} ${version}, but ${pin.path} pins ${tool} ${pin.version}. Write one version in both.`,
         },
     ];
-}
-
-function compareSpecifiers(
-    specifiers: Map<string, string>,
-    locked: Map<string, string>,
-    lockfilePath: string,
-): string[] {
-    const changed = [...specifiers].flatMap(([name, specifier]) => {
-        const version = locked.get(name);
-        if (version === specifier) return [];
-        return [
-            version === undefined
-                ? `package.json declares ${name} ${specifier}, which ${lockfilePath} does not record.`
-                : `package.json asks for ${name} ${specifier}, but ${lockfilePath} records ${version}.`,
-        ];
-    });
-    const removed = locked
-        .keys()
-        .filter((name) => !specifiers.has(name))
-        .map((name) => `${lockfilePath} records ${name}, which package.json no longer declares.`)
-        .toArray();
-    return [...changed, ...removed];
 }
 
 /**

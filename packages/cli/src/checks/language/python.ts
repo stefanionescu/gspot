@@ -58,6 +58,98 @@ function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
         : [...new Set([...written, ...externals])].flatMap((module) => [DEPTRY_FIRST_PARTY_FLAG, module]);
 }
 
+async function listLongFunctions(
+    session: Session,
+    files: PlannedCheck['files'],
+    path: string,
+    limit: number,
+): Promise<CheckFinding[]> {
+    const { functions } = await readPythonFiles({ cache: session.cache, resources: session.resources, files });
+    const findings = await Promise.all(
+        functions
+            .filter((definition) => definition.path === path)
+            .map(async ({ node, name }) => {
+                const lines = node.text.split('\n');
+                const first = node.childForFieldName('body')?.namedChildren.find((child) => child.type !== 'comment');
+                if (first !== undefined && findDocstring(node) !== undefined) {
+                    for (let row = first.startPosition.row; row <= first.endPosition.row; row += 1)
+                        lines[row - node.startPosition.row] = '';
+                }
+                const count = await countCodeLines(lines.join('\n'), 'python');
+                return count <= limit
+                    ? []
+                    : [
+                          {
+                              file: path,
+                              line: node.startPosition.row + 1,
+                              rule: PYTHON_RULES.functionLines,
+                              message: `${name} has ${String(count)} code lines, over the limit of ${String(limit)}.`,
+                          },
+                      ];
+            }),
+    );
+    return findings.flat();
+}
+
+async function detectDocstringStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
+    const module = await parsePythonModule(path, read(session.cache, path), session);
+    using tree = module.tree;
+    for (const node of tree.rootNode.descendantsOfType(['function_definition', 'class_definition'])) {
+        const docstring = findDocstring(node);
+        if (docstring === undefined) continue;
+        if (GOOGLE_DOCSTRING.test(docstring)) return 'google';
+        if (NUMPY_DOCSTRING.test(docstring)) return 'numpy';
+    }
+    return undefined;
+}
+
+async function groupByDocstringStyle(
+    session: Session,
+    files: TrackedFile[],
+    configured: PythonDocstringStyle | undefined,
+) {
+    const styled: { file: TrackedFile; style: PythonDocstringStyle | undefined }[] = [];
+    for (const file of files) {
+        const style = configured ?? (await detectDocstringStyle(session, file.path));
+        styled.push({ file, style });
+    }
+    return new Map(
+        Map.groupBy(styled, ({ style }) => style)
+            .entries()
+            .map(([style, group]) => [style, group.map(({ file }) => file)]),
+    );
+}
+
+function parsePydoclintOptions(path: string, text: string, convention: unknown, level: Level): PydoclintOptions {
+    const { tool } = parseTomlFile(path, text, docstringStyleSchema);
+    const inherited = tool.ruff.lint.pydocstyle.convention ?? convention;
+    const style = tool.pydoclint.style ?? (inherited === 'google' || inherited === 'numpy' ? inherited : undefined);
+    const written = new Set(Object.keys(tool.pydoclint).map((name) => name.replaceAll('_', '-')));
+    const options =
+        level === 'all' ? [...PYDOCLINT_TYPE_OPTIONS, ...PYDOCLINT_ALL_LEVEL_OPTIONS] : PYDOCLINT_TYPE_OPTIONS;
+    const defaults = options.flatMap((name) => (written.has(name) ? [] : [`--${name}`, 'false']));
+    return { command: [...PYDOCLINT_COMMAND, ...defaults], style };
+}
+
+function parseVultureFinding(line: string, selected: ReadonlySet<string>): CheckFinding[] {
+    const groups = VULTURE_FINDING.exec(line)?.groups;
+    if (groups === undefined) return [];
+    const file = groups['file'] ?? '';
+    if (!selected.has(file)) return [];
+    const at = { file, line: Number(groups['line']) };
+    const { kind, name, statement } = groups;
+    if (kind === undefined || name === undefined)
+        return [
+            {
+                ...at,
+                rule: PYTHON_RULES.unreachableCode,
+                message: `The code after ${String(statement)} never runs. Delete it.`,
+            },
+        ];
+    const message = `No code uses the ${kind} ${name}. Delete it, or, when code that vulture cannot see uses it by name, record that with gspot ignore python/vulture --paths ${file} and a reason.`;
+    return [{ ...at, rule: `unused-${kind}`, message: message }];
+}
+
 /**
 Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot and child scopes added, because the command-line flag replaces it.
 
@@ -91,39 +183,6 @@ export async function checkDeptry(session: CheckSession, planned: PlannedCheck):
             ...listFirstParty(planned, firstParty),
         ]),
     });
-}
-
-async function listLongFunctions(
-    session: Session,
-    files: PlannedCheck['files'],
-    path: string,
-    limit: number,
-): Promise<CheckFinding[]> {
-    const { functions } = await readPythonFiles({ cache: session.cache, resources: session.resources, files });
-    const findings = await Promise.all(
-        functions
-            .filter((definition) => definition.path === path)
-            .map(async ({ node, name }) => {
-                const lines = node.text.split('\n');
-                const first = node.childForFieldName('body')?.namedChildren.find((child) => child.type !== 'comment');
-                if (first !== undefined && findDocstring(node) !== undefined) {
-                    for (let row = first.startPosition.row; row <= first.endPosition.row; row += 1)
-                        lines[row - node.startPosition.row] = '';
-                }
-                const count = await countCodeLines(lines.join('\n'), 'python');
-                return count <= limit
-                    ? []
-                    : [
-                          {
-                              file: path,
-                              line: node.startPosition.row + 1,
-                              rule: PYTHON_RULES.functionLines,
-                              message: `${name} has ${String(count)} code lines, over the limit of ${String(limit)}.`,
-                          },
-                      ];
-            }),
-    );
-    return findings.flat();
 }
 
 /**
@@ -223,46 +282,6 @@ export async function checkPlaceholderDocstrings(session: Session, planned: Plan
     });
 }
 
-async function detectDocstringStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
-    const module = await parsePythonModule(path, read(session.cache, path), session);
-    using tree = module.tree;
-    for (const node of tree.rootNode.descendantsOfType(['function_definition', 'class_definition'])) {
-        const docstring = findDocstring(node);
-        if (docstring === undefined) continue;
-        if (GOOGLE_DOCSTRING.test(docstring)) return 'google';
-        if (NUMPY_DOCSTRING.test(docstring)) return 'numpy';
-    }
-    return undefined;
-}
-
-async function groupByDocstringStyle(
-    session: Session,
-    files: TrackedFile[],
-    configured: PythonDocstringStyle | undefined,
-) {
-    const styled: { file: TrackedFile; style: PythonDocstringStyle | undefined }[] = [];
-    for (const file of files) {
-        const style = configured ?? (await detectDocstringStyle(session, file.path));
-        styled.push({ file, style });
-    }
-    return new Map(
-        Map.groupBy(styled, ({ style }) => style)
-            .entries()
-            .map(([style, group]) => [style, group.map(({ file }) => file)]),
-    );
-}
-
-function parsePydoclintOptions(path: string, text: string, convention: unknown, level: Level): PydoclintOptions {
-    const { tool } = parseTomlFile(path, text, docstringStyleSchema);
-    const inherited = tool.ruff.lint.pydocstyle.convention ?? convention;
-    const style = tool.pydoclint.style ?? (inherited === 'google' || inherited === 'numpy' ? inherited : undefined);
-    const written = new Set(Object.keys(tool.pydoclint).map((name) => name.replaceAll('_', '-')));
-    const options =
-        level === 'all' ? [...PYDOCLINT_TYPE_OPTIONS, ...PYDOCLINT_ALL_LEVEL_OPTIONS] : PYDOCLINT_TYPE_OPTIONS;
-    const defaults = options.flatMap((name) => (written.has(name) ? [] : [`--${name}`, 'false']));
-    return { command: [...PYDOCLINT_COMMAND, ...defaults], style };
-}
-
 /**
 Runs pydoclint with the declared docstring style, or with the style each file uses.
 
@@ -287,25 +306,6 @@ export async function checkPydoclint(session: CheckSession, planned: PlannedChec
             command: [...configured.command, PYDOCLINT_STYLE_FLAG, style ?? PYDOCLINT_DEFAULT_STYLE],
         })),
     );
-}
-
-function parseVultureFinding(line: string, selected: ReadonlySet<string>): CheckFinding[] {
-    const groups = VULTURE_FINDING.exec(line)?.groups;
-    if (groups === undefined) return [];
-    const file = groups['file'] ?? '';
-    if (!selected.has(file)) return [];
-    const at = { file, line: Number(groups['line']) };
-    const { kind, name, statement } = groups;
-    if (kind === undefined || name === undefined)
-        return [
-            {
-                ...at,
-                rule: PYTHON_RULES.unreachableCode,
-                message: `The code after ${String(statement)} never runs. Delete it.`,
-            },
-        ];
-    const message = `No code uses the ${kind} ${name}. Delete it, or, when code that vulture cannot see uses it by name, record that with gspot ignore python/vulture --paths ${file} and a reason.`;
-    return [{ ...at, rule: `unused-${kind}`, message: message }];
 }
 
 /**

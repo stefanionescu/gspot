@@ -129,27 +129,6 @@ function readEditorconfig(folder: string): PrettierOptions | null {
     };
 }
 
-/**
-Read static Prettier options without running JavaScript.
-
-@param path the config file.
-@param text its contents.
-@returns the options, or undefined when the file needs another parser.
-*/
-export function parsePrettierFile(path: string, text: string): PrettierOptions | undefined {
-    if (PRETTIER_SCRIPT_FILE.test(path)) return undefined;
-    const format = PRETTIER_FILE_FORMATS[posix.basename(path)];
-    const parsers = { yaml: parseYamlFile, json: parseJsonFile, toml: parseTomlFile };
-    let options: unknown;
-    try {
-        options = format === undefined ? {} : parsers[format](path, text);
-    } catch (error) {
-        if (path.endsWith('.json5') && error instanceof GspotError) return undefined;
-        throw error;
-    }
-    return parseFileFields(path, options, prettierSettingsSchema);
-}
-
 function readFormatOptions(
     root: string,
     scopePath: string,
@@ -174,6 +153,27 @@ function readFormatOptions(
             ? parseFileFields(packagePath, packageFields, prettierSettingsSchema)
             : parsePrettierFile(posix.join(scopePath, prettierFile.path), prettierFile.text);
     return { ...PRETTIER_DEFAULTS, ...editorconfig, ...options };
+}
+
+/**
+Read static Prettier options without running JavaScript.
+
+@param path the config file.
+@param text its contents.
+@returns the options, or undefined when the file needs another parser.
+*/
+export function parsePrettierFile(path: string, text: string): PrettierOptions | undefined {
+    if (PRETTIER_SCRIPT_FILE.test(path)) return undefined;
+    const format = PRETTIER_FILE_FORMATS[posix.basename(path)];
+    const parsers = { yaml: parseYamlFile, json: parseJsonFile, toml: parseTomlFile };
+    let options: unknown;
+    try {
+        options = format === undefined ? {} : parsers[format](path, text);
+    } catch (error) {
+        if (path.endsWith('.json5') && error instanceof GspotError) return undefined;
+        throw error;
+    }
+    return parseFileFields(path, options, prettierSettingsSchema);
 }
 
 /**

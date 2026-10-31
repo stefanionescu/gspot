@@ -10,6 +10,12 @@ import { type ChildCapture, type ProcessCapture } from '#tests/types/processes.t
 import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/system.ts';
 import { TEST_TIMEOUT_MILLISECONDS, UNIT_TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/runner.ts';
 
+function readCommandResult(result: SpawnResult, limited: ReturnType<typeof limitCommand>): SpawnResult {
+    if (!result.timedOut) return result;
+    const message = `The test command timed out after ${String(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND)} ms.\n${limited.context}\n${result.stdout}${result.stderr}`;
+    throw new Error(message);
+}
+
 /**
 Limit a child command and build the text a timeout error shows.
 */
@@ -41,12 +47,6 @@ export function runCommandBlocking(command: readonly string[], options: AsyncSpa
     const limited = limitCommand(command, options);
     const result = spawnProcessBlocking(command, limited.options);
     return readCommandResult(result, limited);
-}
-
-function readCommandResult(result: SpawnResult, limited: ReturnType<typeof limitCommand>): SpawnResult {
-    if (!result.timedOut) return result;
-    const message = `The test command timed out after ${String(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND)} ms.\n${limited.context}\n${result.stdout}${result.stderr}`;
-    throw new Error(message);
 }
 
 /**

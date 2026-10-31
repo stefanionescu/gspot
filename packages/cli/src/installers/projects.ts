@@ -66,6 +66,19 @@ function readPythonLockfileState(
     return matches ? undefined : { path, kind: 'changed' };
 }
 
+async function planLockfiles(
+    install: ToolInstall,
+    { npm, uvPath }: { npm: NpmToolInstall | undefined; uvPath: string | undefined },
+): Promise<ReplacementRequest[]> {
+    const { files } = install.generated;
+    const packages = files.find((file) => file.path === GSPOT_PATHS.npmProject);
+    const python = files.find((file) => file.path === GSPOT_PATHS.pythonProject);
+    return [
+        ...(packages === undefined || npm === undefined ? [] : [await planNpmLockfile(npm, packages)]),
+        ...(python === undefined || uvPath === undefined ? [] : [await planPythonLockfile(install, python, uvPath)]),
+    ];
+}
+
 /**
 List the state of each tool project lockfile. It resolves and writes nothing.
 
@@ -98,19 +111,6 @@ export async function listStaleLockfiles(
             ),
         );
     return lockfiles.filter((lockfile): lockfile is StaleLockfile => lockfile !== undefined);
-}
-
-async function planLockfiles(
-    install: ToolInstall,
-    { npm, uvPath }: { npm: NpmToolInstall | undefined; uvPath: string | undefined },
-): Promise<ReplacementRequest[]> {
-    const { files } = install.generated;
-    const packages = files.find((file) => file.path === GSPOT_PATHS.npmProject);
-    const python = files.find((file) => file.path === GSPOT_PATHS.pythonProject);
-    return [
-        ...(packages === undefined || npm === undefined ? [] : [await planNpmLockfile(npm, packages)]),
-        ...(python === undefined || uvPath === undefined ? [] : [await planPythonLockfile(install, python, uvPath)]),
-    ];
 }
 
 /**

@@ -37,6 +37,56 @@ function buildSectionPath(pattern: string, scopePath: string): string {
     return `${escapeGlob(scopePath)}/${pattern}`;
 }
 
+function listScopeFormats(settings: Settings): ScopeFormat[] {
+    const orderedTables = listSettingsTables(settings).toSorted((first, second) =>
+        compareScopeDepth(first.scope, second.scope),
+    );
+    const tables: { scope: string; format: WrittenFormat }[] = [];
+    for (const { scope = '', table } of orderedTables) {
+        const authored = table.written['format'];
+        if (table.format === undefined || !isTable(authored)) continue;
+        const format = Object.fromEntries(
+            Object.entries(table.format).filter(([key]) => Object.hasOwn(authored, key)),
+        ) as WrittenFormat;
+        tables.push({ scope, format });
+    }
+    const base = tables.flatMap(({ scope, format: { override: _overrides, ...format } }) =>
+        scope === '' || Object.keys(format).length === 0 ? [] : { scope, paths: ['**/*'], format },
+    );
+    const overrides = tables.flatMap(({ scope, format }) =>
+        (format.override ?? []).map(({ paths, ...format }) => ({ scope, paths, format })),
+    );
+    return [...base, ...overrides];
+}
+
+function listFormatOverrides(settings: Settings): FormatOverride[] {
+    return listScopeFormats(settings).map(({ scope, paths, format }) => {
+        const included = includeFolderContents(paths);
+        const files = included.filter((path) => !path.startsWith('!'));
+        const excludeFiles = included.filter((path) => path.startsWith('!')).map((path) => path.slice(1));
+        if (scope !== '') excludeFiles.push(`!${escapeGlob(scope)}/**`);
+        return {
+            files,
+            excludeFiles,
+            options: {
+                tabWidth: format.indent_width,
+                useTabs: format.indent_style === undefined ? undefined : format.indent_style === 'tab',
+                printWidth: format.print_width,
+                singleQuote: format.quotes === undefined ? undefined : format.quotes === 'single',
+                trailingComma: format.trailing_commas,
+                semi: format.semicolons,
+                endOfLine: format.line_ending,
+            },
+        };
+    });
+}
+
+function buildPluginsOption(plugins: PrettierPlugin[]): { plugins?: string[] } {
+    if (plugins.length === 0) return {};
+    const shipped = plugins.map((plugin) => `./${GSPOT_PATHS.nodeModules}/${plugin.name}/${plugin.module}`);
+    return { plugins: shipped };
+}
+
 /**
 Build .editorconfig: the EditorConfig sections of this repository.
 
@@ -87,56 +137,6 @@ export function buildEditorconfigFile(planned: PlannedConfig): string {
             .join('\n\n') +
         '\n'
     );
-}
-
-function listScopeFormats(settings: Settings): ScopeFormat[] {
-    const orderedTables = listSettingsTables(settings).toSorted((first, second) =>
-        compareScopeDepth(first.scope, second.scope),
-    );
-    const tables: { scope: string; format: WrittenFormat }[] = [];
-    for (const { scope = '', table } of orderedTables) {
-        const authored = table.written['format'];
-        if (table.format === undefined || !isTable(authored)) continue;
-        const format = Object.fromEntries(
-            Object.entries(table.format).filter(([key]) => Object.hasOwn(authored, key)),
-        ) as WrittenFormat;
-        tables.push({ scope, format });
-    }
-    const base = tables.flatMap(({ scope, format: { override: _overrides, ...format } }) =>
-        scope === '' || Object.keys(format).length === 0 ? [] : { scope, paths: ['**/*'], format },
-    );
-    const overrides = tables.flatMap(({ scope, format }) =>
-        (format.override ?? []).map(({ paths, ...format }) => ({ scope, paths, format })),
-    );
-    return [...base, ...overrides];
-}
-
-function listFormatOverrides(settings: Settings): FormatOverride[] {
-    return listScopeFormats(settings).map(({ scope, paths, format }) => {
-        const included = includeFolderContents(paths);
-        const files = included.filter((path) => !path.startsWith('!'));
-        const excludeFiles = included.filter((path) => path.startsWith('!')).map((path) => path.slice(1));
-        if (scope !== '') excludeFiles.push(`!${escapeGlob(scope)}/**`);
-        return {
-            files,
-            excludeFiles,
-            options: {
-                tabWidth: format.indent_width,
-                useTabs: format.indent_style === undefined ? undefined : format.indent_style === 'tab',
-                printWidth: format.print_width,
-                singleQuote: format.quotes === undefined ? undefined : format.quotes === 'single',
-                trailingComma: format.trailing_commas,
-                semi: format.semicolons,
-                endOfLine: format.line_ending,
-            },
-        };
-    });
-}
-
-function buildPluginsOption(plugins: PrettierPlugin[]): { plugins?: string[] } {
-    if (plugins.length === 0) return {};
-    const shipped = plugins.map((plugin) => `./${GSPOT_PATHS.nodeModules}/${plugin.name}/${plugin.module}`);
-    return { plugins: shipped };
 }
 
 /**

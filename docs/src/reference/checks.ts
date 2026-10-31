@@ -65,6 +65,17 @@ function formatTurnOff(check: Check, suppressions: Map<string, Suppression>): st
     return `Turn it off for some files${hasRuleOutput(check) ? LINT_RULES_MESSAGE : ''}, with a reason:\n\n\`\`\`shell\n${commands.join('\n')}\n\`\`\`${comment}`;
 }
 
+function listToolSystems(check: Check): string[] | undefined {
+    const program = findToolName(check);
+    const builds = program === undefined ? undefined : getTool(CLI_REFERENCE.configurations, program).builds;
+    if (builds === undefined && check.operating_systems === undefined) return undefined;
+    return OPERATING_SYSTEMS.filter(
+        ({ name }) =>
+            (check.operating_systems?.includes(name) ?? true) &&
+            (builds?.some((build) => build === name || build.startsWith(`${name}-`)) ?? true),
+    ).map(({ label }) => label);
+}
+
 /**
 Format the section of one check on the page of its configuration: where it runs, why it matters, what to do, and how
 to turn it off. The check name without the configuration gives its heading and anchor.
@@ -165,15 +176,4 @@ export function listGuideChecks(configurations: string[]): GuideCheck[] {
             stage: check.stage,
             summary: check.summary,
         }));
-}
-
-function listToolSystems(check: Check): string[] | undefined {
-    const program = findToolName(check);
-    const builds = program === undefined ? undefined : getTool(CLI_REFERENCE.configurations, program).builds;
-    if (builds === undefined && check.operating_systems === undefined) return undefined;
-    return OPERATING_SYSTEMS.filter(
-        ({ name }) =>
-            (check.operating_systems?.includes(name) ?? true) &&
-            (builds?.some((build) => build === name || build.startsWith(`${name}-`)) ?? true),
-    ).map(({ label }) => label);
 }

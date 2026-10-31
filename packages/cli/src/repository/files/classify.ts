@@ -159,16 +159,6 @@ function listLinkFiles(path: string, files: Config[]): string[] {
     });
 }
 
-/**
-Check whether the first lines of a file hold the gspot header.
-
-@param text the start of a file.
-*/
-export function hasGeneratedHeader(text: string): boolean {
-    const lines = text.split('\n', HEADER_LINES_CHECKED);
-    return lines.some((line) => GENERATED_HEADER_LINE.test(line));
-}
-
 function parseShebang(firstLine: string): string | undefined {
     if (!firstLine.startsWith(SHEBANG_PREFIX)) return undefined;
     const tokens = firstLine.slice(SHEBANG_PREFIX.length).trim().split(WHITESPACE_RUN);
@@ -177,27 +167,6 @@ function parseShebang(firstLine: string): string | undefined {
     if (tokens[index] === ENV_SPLIT_FLAG) index += 1;
     const word = tokens[index];
     return word === undefined || word === '' ? undefined : posix.basename(word);
-}
-
-/**
-Build the inventory entry of a tracked file: its kind, where the kind comes from, and its tags.
-
-@param root the base folder for resolving tracked entries.
-@param file the tracked listing item.
-@param prefix the first bytes of the file.
-@param rules the generated and vendored paths to match.
-*/
-export function classifyFile(root: string, file: ListedFile, prefix: Buffer, rules: FileKindRules): TrackedFile {
-    const tagged = tagFile(file, prefix);
-    const kind = classifyKind({ root: root, listed: file, prefix, isBinary: tagged.isBinary }, rules);
-    return {
-        path: file.path,
-        kind: kind.kind,
-        kindOrigin: kind.origin,
-        tags: tagged.tags,
-        executable: file.executable,
-        size: file.size,
-    };
 }
 
 function tagFile(file: ListedFile, prefix: Buffer): FileTags {
@@ -219,6 +188,37 @@ function tagFile(file: ListedFile, prefix: Buffer): FileTags {
     const text = prefix.toString('utf8');
     const newline = text.indexOf('\n');
     return tagTextFile(tags, newline === -1 ? text : text.slice(0, newline));
+}
+
+/**
+Check whether the first lines of a file hold the gspot header.
+
+@param text the start of a file.
+*/
+export function hasGeneratedHeader(text: string): boolean {
+    const lines = text.split('\n', HEADER_LINES_CHECKED);
+    return lines.some((line) => GENERATED_HEADER_LINE.test(line));
+}
+
+/**
+Build the inventory entry of a tracked file: its kind, where the kind comes from, and its tags.
+
+@param root the base folder for resolving tracked entries.
+@param file the tracked listing item.
+@param prefix the first bytes of the file.
+@param rules the generated and vendored paths to match.
+*/
+export function classifyFile(root: string, file: ListedFile, prefix: Buffer, rules: FileKindRules): TrackedFile {
+    const tagged = tagFile(file, prefix);
+    const kind = classifyKind({ root: root, listed: file, prefix, isBinary: tagged.isBinary }, rules);
+    return {
+        path: file.path,
+        kind: kind.kind,
+        kindOrigin: kind.origin,
+        tags: tagged.tags,
+        executable: file.executable,
+        size: file.size,
+    };
 }
 
 /**

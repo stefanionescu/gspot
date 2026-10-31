@@ -75,31 +75,6 @@ export const PACKAGE_PARSERS: Readonly<Record<LockedPackageLockfile, (path: stri
         ),
 };
 
-/**
-Read the declared package requirements from the selected dependency tables.
-
-@param workspace the package or importer record to inspect.
-@param sections the dependency tables to read in order.
-*/
-export function listSpecifiers(
-    workspace: unknown,
-    sections: readonly ((typeof DEPENDENCY_SECTIONS)[number] | 'peerDependencies')[] = DEPENDENCY_SECTIONS,
-): Map<string, string> {
-    const parsed = dependencySectionsSchema.safeParse(workspace);
-    if (!parsed.success) return new Map();
-    return new Map(
-        sections.flatMap((section) => {
-            const dependencies = parsed.data[section];
-            if (dependencies === undefined) return [];
-            return Object.entries(dependencies).flatMap(([name, value]): [string, string][] => {
-                if (typeof value === 'string') return [[name, value]];
-                const specifier = isTable(value) ? value['specifier'] : undefined;
-                return typeof specifier === 'string' ? [[name, specifier]] : [];
-            });
-        }),
-    );
-}
-
 function parseNpmVersions(path: string, text: string, folder: string): Map<string, string> {
     const { packages } = parseJsonFile(path, text, npmLockfileSchema);
     const specifiers = listSpecifiers(packages[folder]);
@@ -153,6 +128,87 @@ function parseYarnVersions(path: string, text: string, specifiers: Map<string, s
         return parsed.success && parsed.data.version !== undefined ? [[name, parsed.data.version]] : [];
     });
     return new Map(versions);
+}
+
+/**
+Parse a yarn.lock file and reject other formats.
+
+@param path the file, for the error.
+@param text the saved dependency records to decode.
+@returns the packages of the lockfile, by key.
+*/
+function parseYarnLockfile(path: string, text: string): Record<string, unknown> {
+    let parsed: unknown;
+    try {
+        parsed = parseSyml(YARN_CLASSIC_PROPERTY.test(text) ? YARN_CLASSIC_HEADER + text : text);
+    } catch (error) {
+        throw new GspotError('parse', `${path} is not valid Yarn lock syntax. Fix the lockfile.`, { cause: error });
+    }
+    return parseFileFields(path, parsed, yarnLockfileSchema);
+}
+
+function parseLockfileDocument(path: string, text: string): unknown {
+    const name = posix.basename(path);
+    if (name === 'yarn.lock') return parseYarnLockfile(path, text);
+    if (name.endsWith('.yaml')) return parseYamlFile(path, text);
+    if (name === 'uv.lock') return parseTomlFile(path, text);
+    return parseJsonFile(path, text);
+}
+
+function listUrlChildren(value: unknown): [string, unknown][] {
+    if (Array.isArray(value)) return (value as unknown[]).map((field) => ['', field]);
+    if (isTable(value)) return Object.entries(value);
+    return [];
+}
+
+function listBunUrls(document: unknown): string[] {
+    const packages = isTable(document) ? document['packages'] : undefined;
+    if (!isTable(packages)) return [];
+    return Object.values(packages).flatMap((record): string[] => {
+        if (!Array.isArray(record)) return [];
+        const identity = typeof record[0] === 'string' ? splitIdentity(record[0])?.[1] : undefined;
+        return [identity, record[1]].filter(
+            (value): value is string => typeof value === 'string' && URL.canParse(value),
+        );
+    });
+}
+
+function listDownloadFields(value: unknown) {
+    const urls: string[] = [];
+    const children: unknown[] = [];
+    for (const [key, field] of listUrlChildren(value)) {
+        if (typeof field === 'string' && LOCKFILE_URL_FIELDS.includes(key)) {
+            const identity = splitIdentity(field)?.[1];
+            urls.push(identity !== undefined && URL.canParse(identity) ? identity : field);
+        }
+        children.push(field);
+    }
+    return { urls, children };
+}
+
+/**
+Read the declared package requirements from the selected dependency tables.
+
+@param workspace the package or importer record to inspect.
+@param sections the dependency tables to read in order.
+*/
+export function listSpecifiers(
+    workspace: unknown,
+    sections: readonly ((typeof DEPENDENCY_SECTIONS)[number] | 'peerDependencies')[] = DEPENDENCY_SECTIONS,
+): Map<string, string> {
+    const parsed = dependencySectionsSchema.safeParse(workspace);
+    if (!parsed.success) return new Map();
+    return new Map(
+        sections.flatMap((section) => {
+            const dependencies = parsed.data[section];
+            if (dependencies === undefined) return [];
+            return Object.entries(dependencies).flatMap(([name, value]): [string, string][] => {
+                if (typeof value === 'string') return [[name, value]];
+                const specifier = isTable(value) ? value['specifier'] : undefined;
+                return typeof specifier === 'string' ? [[name, specifier]] : [];
+            });
+        }),
+    );
 }
 
 export const SPECIFIER_PARSERS: Readonly<
@@ -236,23 +292,6 @@ export function readLockedVersions(
 }
 
 /**
-Parse a yarn.lock file and reject other formats.
-
-@param path the file, for the error.
-@param text the saved dependency records to decode.
-@returns the packages of the lockfile, by key.
-*/
-function parseYarnLockfile(path: string, text: string): Record<string, unknown> {
-    let parsed: unknown;
-    try {
-        parsed = parseSyml(YARN_CLASSIC_PROPERTY.test(text) ? YARN_CLASSIC_HEADER + text : text);
-    } catch (error) {
-        throw new GspotError('parse', `${path} is not valid Yarn lock syntax. Fix the lockfile.`, { cause: error });
-    }
-    return parseFileFields(path, parsed, yarnLockfileSchema);
-}
-
-/**
 List package download URLs from a JavaScript lockfile. Read resolved fields for npm and Yarn, tarball and repo fields for pnpm, and package identities and tuple values for Bun.
 
 @param path the lockfile path, whose file name gives the format.
@@ -269,43 +308,4 @@ export function listLockfileUrls(path: string, text: string): string[] {
         pending.push(...fields.children.toReversed());
     }
     return urls;
-}
-
-function parseLockfileDocument(path: string, text: string): unknown {
-    const name = posix.basename(path);
-    if (name === 'yarn.lock') return parseYarnLockfile(path, text);
-    if (name.endsWith('.yaml')) return parseYamlFile(path, text);
-    if (name === 'uv.lock') return parseTomlFile(path, text);
-    return parseJsonFile(path, text);
-}
-
-function listUrlChildren(value: unknown): [string, unknown][] {
-    if (Array.isArray(value)) return (value as unknown[]).map((field) => ['', field]);
-    if (isTable(value)) return Object.entries(value);
-    return [];
-}
-
-function listBunUrls(document: unknown): string[] {
-    const packages = isTable(document) ? document['packages'] : undefined;
-    if (!isTable(packages)) return [];
-    return Object.values(packages).flatMap((record): string[] => {
-        if (!Array.isArray(record)) return [];
-        const identity = typeof record[0] === 'string' ? splitIdentity(record[0])?.[1] : undefined;
-        return [identity, record[1]].filter(
-            (value): value is string => typeof value === 'string' && URL.canParse(value),
-        );
-    });
-}
-
-function listDownloadFields(value: unknown) {
-    const urls: string[] = [];
-    const children: unknown[] = [];
-    for (const [key, field] of listUrlChildren(value)) {
-        if (typeof field === 'string' && LOCKFILE_URL_FIELDS.includes(key)) {
-            const identity = splitIdentity(field)?.[1];
-            urls.push(identity !== undefined && URL.canParse(identity) ? identity : field);
-        }
-        children.push(field);
-    }
-    return { urls, children };
 }

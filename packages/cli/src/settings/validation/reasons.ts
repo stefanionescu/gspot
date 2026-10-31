@@ -19,6 +19,16 @@ function isLimitLoosening(direction: Exclude<ReasonRequirement, 'adding'>, value
     return direction === 'raising' ? value > shipped : value < shipped;
 }
 
+function validateRemovedConfigurations(value: unknown, keys: KeyPath): SettingsError[] {
+    const where = keys.map(String).join('.');
+    if (!isTable(value)) return [];
+    return Object.entries(value).flatMap(([name, reason]) => {
+        const written = typeof reason === 'string' ? reason : undefined;
+        const message = validateReason(`${where}.${name}`, written, REMOVAL_REASON_SUGGESTION);
+        return message === undefined ? [] : [{ path: [...keys, name], message }];
+    });
+}
+
 /**
 Describe a missing or invalid reason for commands and saved settings.
 
@@ -36,16 +46,6 @@ export function validateReason(
     if (isReasonAccepted(reason)) return undefined;
     const refused = reason.trim() === '' ? EMPTY_REASON : `"${reason}"`;
     return `${where} needs a reason of two or more words that says why: ${refused} is refused.`;
-}
-
-function validateRemovedConfigurations(value: unknown, keys: KeyPath): SettingsError[] {
-    const where = keys.map(String).join('.');
-    if (!isTable(value)) return [];
-    return Object.entries(value).flatMap(([name, reason]) => {
-        const written = typeof reason === 'string' ? reason : undefined;
-        const message = validateReason(`${where}.${name}`, written, REMOVAL_REASON_SUGGESTION);
-        return message === undefined ? [] : [{ path: [...keys, name], message }];
-    });
 }
 
 /**

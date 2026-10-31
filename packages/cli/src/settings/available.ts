@@ -106,30 +106,6 @@ function addToolSettings(availableSettings: AvailableSettings, configurations: C
     }
 }
 
-/**
-Build the known settings in the order of the selected configurations. Framework, platform, library, and database
-configurations override single-value defaults.
-
-@param configurations the manifests of the selection, in order.
-@param level picks the defaults of the configured level.
-*/
-export function buildAvailableSettings(configurations: Configuration[], level: Level): AvailableSettings {
-    const availableSettings: AvailableSettings = { settings: new Map(), defaults: new Map(), errors: [] };
-    for (const setting of ROOT_SETTINGS) {
-        availableSettings.settings.set(setting.name, setting);
-        availableSettings.defaults.set(setting.name, { value: setting.default, configuration: SHIPPED_DEFAULT_ORIGIN });
-    }
-    for (const [language, { categories }] of Object.entries(readNamingDefaults().languages))
-        for (const [category, { cases }] of Object.entries(categories))
-            availableSettings.defaults.set(`naming.${language}.${category}.cases`, {
-                value: cases,
-                configuration: SHIPPED_DEFAULT_ORIGIN,
-            });
-    for (const configuration of configurations) addConfigurationSettings(availableSettings, configuration, level);
-    addToolSettings(availableSettings, configurations);
-    return availableSettings;
-}
-
 function addSchemaSettings(settingsByConfiguration: Map<string, Setting[]>, schema: z.ZodType, name: string): void {
     const definition = schema.meta();
     const owners = definition?.['configurations'] as readonly string[] | undefined;
@@ -167,6 +143,30 @@ function buildSettingsByConfiguration(): Map<string, Setting[]> {
     addSettings(importRulesSchema, 'import_rule');
     for (const [tool, schema] of Object.entries(toolsSchema.shape)) addSettings(schema, `tools.${tool}`);
     return settings;
+}
+
+/**
+Build the known settings in the order of the selected configurations. Framework, platform, library, and database
+configurations override single-value defaults.
+
+@param configurations the manifests of the selection, in order.
+@param level picks the defaults of the configured level.
+*/
+export function buildAvailableSettings(configurations: Configuration[], level: Level): AvailableSettings {
+    const availableSettings: AvailableSettings = { settings: new Map(), defaults: new Map(), errors: [] };
+    for (const setting of ROOT_SETTINGS) {
+        availableSettings.settings.set(setting.name, setting);
+        availableSettings.defaults.set(setting.name, { value: setting.default, configuration: SHIPPED_DEFAULT_ORIGIN });
+    }
+    for (const [language, { categories }] of Object.entries(readNamingDefaults().languages))
+        for (const [category, { cases }] of Object.entries(categories))
+            availableSettings.defaults.set(`naming.${language}.${category}.cases`, {
+                value: cases,
+                configuration: SHIPPED_DEFAULT_ORIGIN,
+            });
+    for (const configuration of configurations) addConfigurationSettings(availableSettings, configuration, level);
+    addToolSettings(availableSettings, configurations);
+    return availableSettings;
 }
 
 export const SETTINGS_BY_CONFIGURATION = buildSettingsByConfiguration();

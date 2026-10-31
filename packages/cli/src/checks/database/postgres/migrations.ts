@@ -45,6 +45,13 @@ async function parseMigrations(session: Session, paths: Pick<Migration, 'path' |
     return migrations;
 }
 
+function listMigrationPaths(planned: PlannedCheck): string[] {
+    const migrations = listCheckFiles(planned, SQUAWK_CHECK);
+    return migrations
+        .filter((file) => file.path.endsWith(SQL_EXTENSION) && !file.path.endsWith(DOWN_MIGRATION_SUFFIX))
+        .map((file) => file.path);
+}
+
 /**
 Reads and parses the forward migrations of the scope in version order, once for each set of paths.
 
@@ -85,13 +92,6 @@ export async function readMigrations(session: Session, planned: PlannedCheck): P
                   ],
         ),
     };
-}
-
-function listMigrationPaths(planned: PlannedCheck): string[] {
-    const migrations = listCheckFiles(planned, SQUAWK_CHECK);
-    return migrations
-        .filter((file) => file.path.endsWith(SQL_EXTENSION) && !file.path.endsWith(DOWN_MIGRATION_SUFFIX))
-        .map((file) => file.path);
 }
 
 /**

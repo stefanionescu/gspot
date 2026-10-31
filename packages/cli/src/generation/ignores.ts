@@ -22,6 +22,17 @@ import {
     GSPOT_FOLDER_PATTERNS,
 } from '#cli/config/generation/generation.ts';
 
+function convertToGlob(pattern: string): string {
+    const negative = pattern.startsWith('!') ? '!' : '';
+    let path = negative === '' ? pattern : pattern.slice(1);
+    const isAnchored = path.startsWith('/');
+    if (isAnchored) path = path.slice(1);
+    const isFolder = path.endsWith('/');
+    const bare = isFolder ? path.slice(0, -1) : path;
+    const prefix = isAnchored || bare.includes('/') ? '' : '**/';
+    return `${negative}${prefix}${bare}${isFolder ? '/**' : ''}`;
+}
+
 /**
 List the paths outside .gspot/ that a run writes: the root targets and link file paths of the config files it writes, and the CI workflow when CI runs.
 
@@ -128,17 +139,6 @@ export function keepFirstPatterns(sections: IgnoreSection[]): IgnoreSection[] {
             return true;
         }),
     }));
-}
-
-function convertToGlob(pattern: string): string {
-    const negative = pattern.startsWith('!') ? '!' : '';
-    let path = negative === '' ? pattern : pattern.slice(1);
-    const isAnchored = path.startsWith('/');
-    if (isAnchored) path = path.slice(1);
-    const isFolder = path.endsWith('/');
-    const bare = isFolder ? path.slice(0, -1) : path;
-    const prefix = isAnchored || bare.includes('/') ? '' : '**/';
-    return `${negative}${prefix}${bare}${isFolder ? '/**' : ''}`;
 }
 
 /**

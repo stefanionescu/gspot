@@ -30,19 +30,6 @@ import {
     UNSUPPORTED_GIT_FILE_MESSAGE,
 } from '#cli/config/parsers/parsers.ts';
 
-/**
-Validate the fields of an index or tree entry.
-
-@param match the entry matched against its listing format.
-@param schema the expected fields and supported file modes.
-@returns the validated entry.
-*/
-export function parseListingLine<T>(match: RegExpExecArray | null, schema: z.ZodType<T>): T {
-    const parsed = schema.safeParse(match?.groups);
-    if (!parsed.success) throw new GspotError('git', UNSUPPORTED_GIT_FILE_MESSAGE);
-    return parsed.data;
-}
-
 async function readNextChunk(stream: GitStream): Promise<Buffer | undefined> {
     while (stream.cursor === stream.chunk.length) {
         const next = await stream.chunks.next();
@@ -105,6 +92,33 @@ function decodeQuotedPattern(pattern: string): string | undefined {
     return Buffer.concat(bytes).toString('utf8');
 }
 
+function formatUnreadablePath(record: string): string {
+    const path = INDEX_LINE.exec(record)?.groups?.['path'] ?? TREE_LINE.exec(record)?.groups?.['path'] ?? record;
+    const quoted = [...Buffer.from(path, 'latin1')]
+        .map((byte) => {
+            const character = String.fromCodePoint(byte);
+            if (character === '\\' || character === '"') return `\\${character}`;
+            return byte >= FIRST_PRINTABLE_BYTE && byte < FIRST_NON_PRINTABLE_BYTE
+                ? character
+                : `\\${byte.toString(OCTAL_RADIX).padStart(OCTAL_BYTE_WIDTH, '0')}`;
+        })
+        .join('');
+    return `"${quoted}"`;
+}
+
+/**
+Validate the fields of an index or tree entry.
+
+@param match the entry matched against its listing format.
+@param schema the expected fields and supported file modes.
+@returns the validated entry.
+*/
+export function parseListingLine<T>(match: RegExpExecArray | null, schema: z.ZodType<T>): T {
+    const parsed = schema.safeParse(match?.groups);
+    if (!parsed.success) throw new GspotError('git', UNSUPPORTED_GIT_FILE_MESSAGE);
+    return parsed.data;
+}
+
 /**
 Read the attribute lines in their file order, and keep quoted paths.
 
@@ -162,20 +176,6 @@ export function parsePathAttributes(text: string): Map<string, Record<string, st
         attributes.set(path, table);
     }
     return attributes;
-}
-
-function formatUnreadablePath(record: string): string {
-    const path = INDEX_LINE.exec(record)?.groups?.['path'] ?? TREE_LINE.exec(record)?.groups?.['path'] ?? record;
-    const quoted = [...Buffer.from(path, 'latin1')]
-        .map((byte) => {
-            const character = String.fromCodePoint(byte);
-            if (character === '\\' || character === '"') return `\\${character}`;
-            return byte >= FIRST_PRINTABLE_BYTE && byte < FIRST_NON_PRINTABLE_BYTE
-                ? character
-                : `\\${byte.toString(OCTAL_RADIX).padStart(OCTAL_BYTE_WIDTH, '0')}`;
-        })
-        .join('');
-    return `"${quoted}"`;
 }
 
 /**

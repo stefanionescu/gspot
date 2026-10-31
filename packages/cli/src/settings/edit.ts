@@ -16,6 +16,12 @@ function splitKey(key: string): SettingKey {
     return { path: boundary === -1 ? [] : key.slice(0, boundary).split('.'), name: key.slice(boundary + 1) };
 }
 
+function removeRecordPaths(listed: unknown, gone: Set<string | undefined>): unknown[] {
+    if (!isTable(listed) || !Array.isArray(listed['paths'])) return [listed];
+    const paths = listed['paths'].filter((path) => !gone.has(JSON.stringify(path)));
+    return paths.length === 0 ? [] : [{ ...listed, paths }];
+}
+
 /**
 Apply a settings change to edit.table, check the result, and patch it into the previous gspot.toml text.
 
@@ -77,12 +83,6 @@ export function removeKey(table: TomlTable, key: string): void {
             break;
         Reflect.deleteProperty(parent, segment);
     }
-}
-
-function removeRecordPaths(listed: unknown, gone: Set<string | undefined>): unknown[] {
-    if (!isTable(listed) || !Array.isArray(listed['paths'])) return [listed];
-    const paths = listed['paths'].filter((path) => !gone.has(JSON.stringify(path)));
-    return paths.length === 0 ? [] : [{ ...listed, paths }];
 }
 
 /**

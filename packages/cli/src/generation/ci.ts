@@ -134,6 +134,28 @@ function spaceWorkflowGroups(workflow: Document): void {
     }
 }
 
+function readProjectPackageManager(
+    session: Session,
+    scopePath: string,
+    name: PackageManagerPin['name'],
+): PackageManager {
+    const packageJson = readPackageJson(session.root, joinScope(scopePath, PACKAGE_JSON));
+    const written = packageJson === undefined ? undefined : findPackageManagerPin(packageJson);
+    const pin = [written, session.packageManager].find((each) => each?.name === name) ?? { name };
+    return readPackageManagerVersion(session.toolsRoot, pin, session.timeoutSeconds, session.cache);
+}
+
+function buildFrozenInstall(session: Session, scopePath: string, lockfile: FrozenLockfile): readonly string[] {
+    const command = FROZEN_INSTALLS[lockfile];
+    const name = PACKAGE_MANAGERS.find((tool) => tool === command[0]);
+    const runner = name === undefined ? getUvPin() : readProjectPackageManager(session, scopePath, name);
+    const args =
+        runner.name === 'yarn' && semver.major(runner.version) >= YARN_BERRY_MAJOR
+            ? YARN_BERRY_INSTALL.slice(1)
+            : command.slice(1);
+    return buildPackageManagerCommand(runner, args);
+}
+
 /**
 Build one lint job for each system, each with one mise setup. Refuse a command from the repository that holds a
 GitHub expression: GitHub expands it before the shell runs.
@@ -189,28 +211,6 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
         },
     });
     return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}`, kind: 'workflow' };
-}
-
-function readProjectPackageManager(
-    session: Session,
-    scopePath: string,
-    name: PackageManagerPin['name'],
-): PackageManager {
-    const packageJson = readPackageJson(session.root, joinScope(scopePath, PACKAGE_JSON));
-    const written = packageJson === undefined ? undefined : findPackageManagerPin(packageJson);
-    const pin = [written, session.packageManager].find((each) => each?.name === name) ?? { name };
-    return readPackageManagerVersion(session.toolsRoot, pin, session.timeoutSeconds, session.cache);
-}
-
-function buildFrozenInstall(session: Session, scopePath: string, lockfile: FrozenLockfile): readonly string[] {
-    const command = FROZEN_INSTALLS[lockfile];
-    const name = PACKAGE_MANAGERS.find((tool) => tool === command[0]);
-    const runner = name === undefined ? getUvPin() : readProjectPackageManager(session, scopePath, name);
-    const args =
-        runner.name === 'yarn' && semver.major(runner.version) >= YARN_BERRY_MAJOR
-            ? YARN_BERRY_INSTALL.slice(1)
-            : command.slice(1);
-    return buildPackageManagerCommand(runner, args);
 }
 
 /**

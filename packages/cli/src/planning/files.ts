@@ -114,6 +114,22 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
     ).files.map((file) => file.path);
 }
 
+function listReadableFiles(planned: PlannedScope, check: Check, files: TrackedFile[]): TrackedFile[] {
+    if (check.id === LARGE_FILES_CHECK) return files;
+    const scopes = planned.session.scopes;
+    return files.filter((file) => {
+        const owner = selectScopePath(file.path, scopes);
+        const scope = scopes.find((scope) => scope.path === owner) as Scope;
+        if (file.size > getTable(scope.settings, 'repository').max_file_kilobytes * BYTES_PER_KILOBYTE) return false;
+        return (
+            check.id === ENCODING_CHECK ||
+            !file.tags.includes('text') ||
+            file.tags.includes('symlink') ||
+            isUtf8(readBytes(planned.session.cache, file.path))
+        );
+    });
+}
+
 /**
 List the files that the configurations of a check own, apart from the files of a project-wide run.
 
@@ -158,22 +174,6 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
             (config.check.includes(check.id) ||
                 command.some((argument) => argument.includes(`{config_file:${extractConfigName(config.file)}}`))),
     );
-}
-
-function listReadableFiles(planned: PlannedScope, check: Check, files: TrackedFile[]): TrackedFile[] {
-    if (check.id === LARGE_FILES_CHECK) return files;
-    const scopes = planned.session.scopes;
-    return files.filter((file) => {
-        const owner = selectScopePath(file.path, scopes);
-        const scope = scopes.find((scope) => scope.path === owner) as Scope;
-        if (file.size > getTable(scope.settings, 'repository').max_file_kilobytes * BYTES_PER_KILOBYTE) return false;
-        return (
-            check.id === ENCODING_CHECK ||
-            !file.tags.includes('text') ||
-            file.tags.includes('symlink') ||
-            isUtf8(readBytes(planned.session.cache, file.path))
-        );
-    });
 }
 
 /**

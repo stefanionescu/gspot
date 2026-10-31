@@ -71,70 +71,6 @@ function buildConfigurationFiles(
     });
 }
 
-/**
-Build the eslint.mjs of a configuration: its imports, and the calls of the shipped functions that build
-its blocks.
-
-@param planned the config file to build.
-*/
-export function buildEslintFile(planned: PlannedConfig): ConfigOutput {
-    const { session } = planned;
-    const eslintFile = buildPlannedEslintFile(planned);
-    const { blockWriter } = eslintFile;
-    const runtimes = buildRuntimes(session.scopes);
-    blockWriter.runtimes = runtimes;
-    const boundaryBlocks = buildBoundaryBlocks(eslintFile);
-    const ignoredGlobs = convertToGlobs([
-        ...buildIgnoreSections(planned.session),
-        ...listCheckIgnoreSections(planned.scope.settings, ESLINT_CHECK),
-    ]);
-    const { configurationBlocks, configurationImports } = listConfigurationBlocks(eslintFile);
-    const shipped = selectPlugins(eslintFile, boundaryBlocks);
-    const plugins = { ...shipped, ...listLocalPlugins(session.scopes, planned.targetPath, shipped) };
-    const imports = [
-        GLOBALS_IMPORT,
-        ...[...PRESETS_BEFORE_CONFIGURATIONS, ...PRESETS_AFTER_CONFIGURATIONS].map(
-            (preset) => [preset.importName, preset.package] as const,
-        ),
-        ...Object.values(plugins),
-        ...Object.values(configurationImports),
-    ];
-    const configurationFiles = buildConfigurationFiles(planned, configurationBlocks, imports, blockWriter);
-    const blockTexts = [
-        `${ESLINT_INDENT}buildBlock(${JSON.stringify({ ignores: ignoredGlobs }, null, JSON_INDENT)})`,
-        ...buildOpeningBlocks(eslintFile, plugins, boundaryBlocks, ignoredGlobs).map((block) =>
-            buildBlockCalls(blockWriter, { ...block, label: ESLINT_BASE_LABEL }),
-        ),
-        ...configurationFiles.map(({ importName }) => `${ESLINT_INDENT}...${importName}`),
-        ...[
-            ...buildClosingBlocks(eslintFile, runtimes),
-            ...[
-                ...splitSettingsBlocks(eslintFile),
-                ...buildLocalPluginBlocks(session.scopes, eslintFile.eslintFiles.code),
-            ].map((fields) => ({ fields })),
-            ...(blockWriter.level === 'all'
-                ? []
-                : [
-                      {
-                          fields: {
-                              rules: Object.fromEntries([...blockWriter.allLevelRules].map((rule) => [rule, 'off'])),
-                          },
-                      },
-                  ]),
-        ].map((block) => buildBlockCalls(blockWriter, { ...block, label: ESLINT_BASE_LABEL })),
-    ];
-    const body = serializeExport(blockTexts, blockWriter);
-    return {
-        content:
-            serializeImports(
-                body,
-                [...imports, ...configurationFiles.map(({ importName, module }) => [importName, module] as const)],
-                `./${ESLINT_FUNCTIONS_FILE}`,
-            ) + body,
-        companions: configurationFiles.map(({ file }) => file),
-    };
-}
-
 function serializeExport(blockTexts: string[], blockWriter: BlockWriter): string {
     const configured = blockWriter.ruleOptions.flatMap((options) => Object.keys(options.rules));
     refuseIdleRuleOptions({
@@ -199,4 +135,68 @@ function serializeImports(
         if (!ESLINT_PLUGIN_IMPORTERS.has(source)) lines.push(`import ${importName} from ${JSON.stringify(source)};`);
     }
     return lines.join('\n') + '\n';
+}
+
+/**
+Build the eslint.mjs of a configuration: its imports, and the calls of the shipped functions that build
+its blocks.
+
+@param planned the config file to build.
+*/
+export function buildEslintFile(planned: PlannedConfig): ConfigOutput {
+    const { session } = planned;
+    const eslintFile = buildPlannedEslintFile(planned);
+    const { blockWriter } = eslintFile;
+    const runtimes = buildRuntimes(session.scopes);
+    blockWriter.runtimes = runtimes;
+    const boundaryBlocks = buildBoundaryBlocks(eslintFile);
+    const ignoredGlobs = convertToGlobs([
+        ...buildIgnoreSections(planned.session),
+        ...listCheckIgnoreSections(planned.scope.settings, ESLINT_CHECK),
+    ]);
+    const { configurationBlocks, configurationImports } = listConfigurationBlocks(eslintFile);
+    const shipped = selectPlugins(eslintFile, boundaryBlocks);
+    const plugins = { ...shipped, ...listLocalPlugins(session.scopes, planned.targetPath, shipped) };
+    const imports = [
+        GLOBALS_IMPORT,
+        ...[...PRESETS_BEFORE_CONFIGURATIONS, ...PRESETS_AFTER_CONFIGURATIONS].map(
+            (preset) => [preset.importName, preset.package] as const,
+        ),
+        ...Object.values(plugins),
+        ...Object.values(configurationImports),
+    ];
+    const configurationFiles = buildConfigurationFiles(planned, configurationBlocks, imports, blockWriter);
+    const blockTexts = [
+        `${ESLINT_INDENT}buildBlock(${JSON.stringify({ ignores: ignoredGlobs }, null, JSON_INDENT)})`,
+        ...buildOpeningBlocks(eslintFile, plugins, boundaryBlocks, ignoredGlobs).map((block) =>
+            buildBlockCalls(blockWriter, { ...block, label: ESLINT_BASE_LABEL }),
+        ),
+        ...configurationFiles.map(({ importName }) => `${ESLINT_INDENT}...${importName}`),
+        ...[
+            ...buildClosingBlocks(eslintFile, runtimes),
+            ...[
+                ...splitSettingsBlocks(eslintFile),
+                ...buildLocalPluginBlocks(session.scopes, eslintFile.eslintFiles.code),
+            ].map((fields) => ({ fields })),
+            ...(blockWriter.level === 'all'
+                ? []
+                : [
+                      {
+                          fields: {
+                              rules: Object.fromEntries([...blockWriter.allLevelRules].map((rule) => [rule, 'off'])),
+                          },
+                      },
+                  ]),
+        ].map((block) => buildBlockCalls(blockWriter, { ...block, label: ESLINT_BASE_LABEL })),
+    ];
+    const body = serializeExport(blockTexts, blockWriter);
+    return {
+        content:
+            serializeImports(
+                body,
+                [...imports, ...configurationFiles.map(({ importName, module }) => [importName, module] as const)],
+                `./${ESLINT_FUNCTIONS_FILE}`,
+            ) + body,
+        companions: configurationFiles.map(({ file }) => file),
+    };
 }

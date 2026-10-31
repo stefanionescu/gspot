@@ -16,35 +16,6 @@ import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
 import { join, posix, dirname, resolve, relative, isAbsolute } from 'node:path';
 import { REPOSITORY_RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/checks/general/general.ts';
 
-/**
-Reports each tracked file over `repository.max_file_kilobytes`, except generated, vendored, and Git Large File Storage (LFS) files.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
-export function checkLargeFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
-    return planned.files.flatMap((file) => {
-        const scopePath = selectScopePath(file.path, session.scopes);
-        const scope = session.scopes.find((scope) => scope.path === scopePath) as Scope;
-        const limitKilobytes = getTable(scope.settings, 'repository').max_file_kilobytes;
-        if (
-            file.kind === 'generated' ||
-            file.kind === 'vendored' ||
-            file.size <= limitKilobytes * BYTES_PER_KILOBYTE ||
-            session.repository.attributes.get(file.path)?.[FILTER_ATTRIBUTE] === LFS_FILTER
-        )
-            return [];
-        return [
-            {
-                file: file.path,
-                line: 1,
-                rule: REPOSITORY_RULES.size,
-                message: `${String(Math.round(file.size / BYTES_PER_KILOBYTE))} kB is over the ${String(limitKilobytes)} kB limit; mark it as generated or vendored in .gitattributes, move it to LFS, or ignore this finding with a reason.`,
-            },
-        ];
-    });
-}
-
 function listInvalidLinks(session: Session): CheckFinding[] {
     return session.repository.index
         .filter((file) => file.mode === SYMLINK_MODE)
@@ -82,6 +53,35 @@ function listInvalidLinks(session: Session): CheckFinding[] {
                       },
                   ];
         });
+}
+
+/**
+Reports each tracked file over `repository.max_file_kilobytes`, except generated, vendored, and Git Large File Storage (LFS) files.
+
+@param session the repository and its tools.
+@param planned the configured check and selected scope files.
+*/
+export function checkLargeFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
+    return planned.files.flatMap((file) => {
+        const scopePath = selectScopePath(file.path, session.scopes);
+        const scope = session.scopes.find((scope) => scope.path === scopePath) as Scope;
+        const limitKilobytes = getTable(scope.settings, 'repository').max_file_kilobytes;
+        if (
+            file.kind === 'generated' ||
+            file.kind === 'vendored' ||
+            file.size <= limitKilobytes * BYTES_PER_KILOBYTE ||
+            session.repository.attributes.get(file.path)?.[FILTER_ATTRIBUTE] === LFS_FILTER
+        )
+            return [];
+        return [
+            {
+                file: file.path,
+                line: 1,
+                rule: REPOSITORY_RULES.size,
+                message: `${String(Math.round(file.size / BYTES_PER_KILOBYTE))} kB is over the ${String(limitKilobytes)} kB limit; mark it as generated or vendored in .gitattributes, move it to LFS, or ignore this finding with a reason.`,
+            },
+        ];
+    });
 }
 
 /**

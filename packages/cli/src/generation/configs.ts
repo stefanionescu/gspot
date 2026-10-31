@@ -19,17 +19,6 @@ import type {
 
 const CONFIGS = Symbol('config files');
 
-/**
-Reuse generated settings only while the session keeps the same run cache.
-
-@param session the current settings, scopes, and repository files.
-*/
-export function buildConfigs(session: Session): ConfigGeneration {
-    const repositorySession =
-        session.root === session.repository.root ? session : { ...session, root: session.repository.root };
-    return remember(session.cache, CONFIGS, session.repository, () => buildScopeConfigs(repositorySession));
-}
-
 function buildOwnedOutput(
     owned: OwnedSourceFile,
     ownedFiles: OwnedSourceFile[],
@@ -140,4 +129,15 @@ function buildPerScopeTarget(config: Pick<Config, 'target' | 'file' | 'root'>, s
     if (config.root) return join(scopePath, config.target);
     const folder = config.target.slice(0, config.target.length - config.file.length);
     return join(folder, CONFIG_SCOPES_FOLDER, scopePath, config.file);
+}
+
+/**
+Reuse generated settings only while the session keeps the same run cache.
+
+@param session the current settings, scopes, and repository files.
+*/
+export function buildConfigs(session: Session): ConfigGeneration {
+    const repositorySession =
+        session.root === session.repository.root ? session : { ...session, root: session.repository.root };
+    return remember(session.cache, CONFIGS, session.repository, () => buildScopeConfigs(repositorySession));
 }

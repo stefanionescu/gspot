@@ -59,6 +59,17 @@ function buildSwiftlintOptions(planned: PlannedConfig, offSet: Set<string>) {
     return Object.fromEntries(enabled);
 }
 
+function buildDisabledRuleLines(off: string[]): string[] {
+    const disabled = off.filter((name) => !SWIFTLINT_OPT_IN.has(name) && !SWIFTLINT_ANALYZER.has(name));
+    const levelLines = disabled.map((name) => `  - ${name}`);
+    return [
+        'disabled_rules:',
+        `  ${SWIFTLINT_COMMENTS.disabled_rules}`,
+        ...SWIFTLINT_ALWAYS_OFF.map((name) => `  - ${name}`),
+        ...(disabled.length === 0 ? [] : [`  ${SWIFTLINT_LEVEL_NOTE}`, ...levelLines]),
+    ];
+}
+
 /**
 Build swiftlint.yml: the SwiftLint rules with the source limits of the repository.
 
@@ -87,15 +98,4 @@ export function buildSwiftlintFile(planned: PlannedConfig): string {
             return [...note, stringify({ [rule]: value }).trimEnd()];
         })
         .join('\n');
-}
-
-function buildDisabledRuleLines(off: string[]): string[] {
-    const disabled = off.filter((name) => !SWIFTLINT_OPT_IN.has(name) && !SWIFTLINT_ANALYZER.has(name));
-    const levelLines = disabled.map((name) => `  - ${name}`);
-    return [
-        'disabled_rules:',
-        `  ${SWIFTLINT_COMMENTS.disabled_rules}`,
-        ...SWIFTLINT_ALWAYS_OFF.map((name) => `  - ${name}`),
-        ...(disabled.length === 0 ? [] : [`  ${SWIFTLINT_LEVEL_NOTE}`, ...levelLines]),
-    ];
 }

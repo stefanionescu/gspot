@@ -9,28 +9,6 @@ import {
 } from '#cli/config/system/system.ts';
 
 /**
-Select up to SIMILAR_NAME_LIMIT names close enough to look like a typo, closest first.
-
-@param name the text as typed.
-@param names the names that exist.
-*/
-export function selectSimilarNames(name: string, names: string[]): string[] {
-    const lower = name.toLowerCase();
-    const limit = Math.max(TYPO_MIN, Math.floor(name.length / TYPO_FRACTION));
-    return names
-        .map((other) => ({ name: other, score: measureEditDistance(lower, other.toLowerCase()) }))
-        .filter(
-            (similar) =>
-                similar.score <= limit ||
-                similar.name.toLowerCase().includes(lower) ||
-                lower.includes(similar.name.toLowerCase()),
-        )
-        .toSorted((a, b) => a.score - b.score)
-        .slice(0, SIMILAR_NAME_LIMIT)
-        .map((similar) => similar.name);
-}
-
-/**
 Count the fewest inserted, deleted, or replaced characters that turn one text into the other.
 
 @param from the first text.
@@ -52,6 +30,28 @@ function measureEditDistance(from: string, to: string): number {
         above = costs;
     }
     return distance;
+}
+
+/**
+Select up to SIMILAR_NAME_LIMIT names close enough to look like a typo, closest first.
+
+@param name the text as typed.
+@param names the names that exist.
+*/
+export function selectSimilarNames(name: string, names: string[]): string[] {
+    const lower = name.toLowerCase();
+    const limit = Math.max(TYPO_MIN, Math.floor(name.length / TYPO_FRACTION));
+    return names
+        .map((other) => ({ name: other, score: measureEditDistance(lower, other.toLowerCase()) }))
+        .filter(
+            (similar) =>
+                similar.score <= limit ||
+                similar.name.toLowerCase().includes(lower) ||
+                lower.includes(similar.name.toLowerCase()),
+        )
+        .toSorted((a, b) => a.score - b.score)
+        .slice(0, SIMILAR_NAME_LIMIT)
+        .map((similar) => similar.name);
 }
 
 /**

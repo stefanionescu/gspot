@@ -51,6 +51,43 @@ function openManagedKeysFile(path: string, onDisk: FileContents | undefined, key
     return openJsonFile(path, text ?? EMPTY_JSON_TEXT);
 }
 
+function removeBlock(path: string, onDisk: FileContents): FileContents | undefined {
+    const text = decodeUtf8Text(path, onDisk.bytes);
+    const span = findBlockSpan(text, { path });
+    if (span === undefined) return onDisk;
+    const before = text.slice(0, span.start).replace(TRAILING_BLANK_LINE, '$1');
+    const after = text.slice(span.end);
+    const next = before === '' ? after.replace(LEADING_NEWLINE, '') : before + after;
+    return next === '' ? undefined : { bytes: Buffer.from(next), mode: onDisk.mode };
+}
+
+function readGeneratedPatterns(files: Files): string[] {
+    const attributesFile = files.read(GITATTRIBUTES_FILE);
+    if (attributesFile === undefined) return [];
+    const block = findBlockBody(attributesFile.bytes.toString('utf8'), { path: GITATTRIBUTES_FILE }) ?? '';
+    return parseAttributePatterns(block, '.')
+        .filter(({ attributes }) => attributes.includes('linguist-generated'))
+        .map(({ pattern }) => pattern);
+}
+
+function isOwned(path: string, files: Files, generatedPatterns: string[], ownablePaths: ReadonlySet<string>): boolean {
+    if (!isInside(path)) return false;
+    if (path.startsWith(`${GSPOT_FOLDER}/`)) return true;
+    if (!ownablePaths.has(path)) return false;
+    const file = files.readKeepingLinks(path);
+    if (file !== undefined && file.isSymlink !== true && hasGeneratedHeader(file.bytes.toString('utf8'))) return true;
+    return generatedPatterns.some((pattern) => buildPathMatcher([pattern])(path));
+}
+
+function writeBatch(writer: Files, plans: WritePlan[]): void {
+    for (const { path, after } of plans) {
+        if (after === undefined) {
+            writer.deleteFile(path);
+            deleteEmptyFolders(writer, path);
+        } else writer.write(path, after);
+    }
+}
+
 /**
 Merge the requested keys and leave every other value in place.
 
@@ -81,34 +118,6 @@ Check that each key holds its value, read with the parser that the write plans u
 export function hasManagedKeys(output: ManagedKeys, onDisk: FileContents): boolean {
     const document = openManagedKeysFile(output.path, onDisk, output.keys);
     return output.keys.every((field) => isDeepStrictEqual(document.getValue(field.key), normalizeTables(field.value)));
-}
-
-function removeBlock(path: string, onDisk: FileContents): FileContents | undefined {
-    const text = decodeUtf8Text(path, onDisk.bytes);
-    const span = findBlockSpan(text, { path });
-    if (span === undefined) return onDisk;
-    const before = text.slice(0, span.start).replace(TRAILING_BLANK_LINE, '$1');
-    const after = text.slice(span.end);
-    const next = before === '' ? after.replace(LEADING_NEWLINE, '') : before + after;
-    return next === '' ? undefined : { bytes: Buffer.from(next), mode: onDisk.mode };
-}
-
-function readGeneratedPatterns(files: Files): string[] {
-    const attributesFile = files.read(GITATTRIBUTES_FILE);
-    if (attributesFile === undefined) return [];
-    const block = findBlockBody(attributesFile.bytes.toString('utf8'), { path: GITATTRIBUTES_FILE }) ?? '';
-    return parseAttributePatterns(block, '.')
-        .filter(({ attributes }) => attributes.includes('linguist-generated'))
-        .map(({ pattern }) => pattern);
-}
-
-function isOwned(path: string, files: Files, generatedPatterns: string[], ownablePaths: ReadonlySet<string>): boolean {
-    if (!isInside(path)) return false;
-    if (path.startsWith(`${GSPOT_FOLDER}/`)) return true;
-    if (!ownablePaths.has(path)) return false;
-    const file = files.readKeepingLinks(path);
-    if (file !== undefined && file.isSymlink !== true && hasGeneratedHeader(file.bytes.toString('utf8'))) return true;
-    return generatedPatterns.some((pattern) => buildPathMatcher([pattern])(path));
 }
 
 /**
@@ -217,15 +226,6 @@ export function planRemovals(writer: Files, paths: string[]): WritePlan[] {
             status: isSameContents(onDisk, next) ? 'unchanged' : 'changed',
         };
     });
-}
-
-function writeBatch(writer: Files, plans: WritePlan[]): void {
-    for (const { path, after } of plans) {
-        if (after === undefined) {
-            writer.deleteFile(path);
-            deleteEmptyFolders(writer, path);
-        } else writer.write(path, after);
-    }
 }
 
 /**

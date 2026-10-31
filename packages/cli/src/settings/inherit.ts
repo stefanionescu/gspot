@@ -93,6 +93,30 @@ function mergeTable(
     return result;
 }
 
+function listPossibleKeys(match: SettingMatch, key: string): string[] {
+    const { language, category } = match;
+    if (language === undefined) return [key];
+    const field = key.slice(key.lastIndexOf('.') + 1);
+    const keys = [match.setting.name];
+    if (category !== undefined) {
+        const parent = CATEGORY_PARENTS[category] ?? category;
+        keys.push(`naming.${language}.${field}`, `naming.${language}.${parent}.${field}`);
+    }
+    keys.push(key);
+    return keys;
+}
+
+function isKeyGroup(
+    availableSettings: AvailableSettings,
+    key: string,
+    value: unknown,
+): value is Record<string, unknown> {
+    if (availableSettings.settings.has(key) || !isTable(value)) return false;
+    let schema = findSettingSchema(key);
+    if (schema !== undefined) schema = unwrapSettingSchema(schema);
+    return schema instanceof z.ZodObject;
+}
+
 /**
 Merge two values: lists of plain values append without repeats, tables merge their keys, and command arguments, lists
 of tables, and single values replace.
@@ -181,19 +205,6 @@ export function findWrittenSetting(settings: Pick<Settings, 'written'>, key: str
         : { value };
 }
 
-function listPossibleKeys(match: SettingMatch, key: string): string[] {
-    const { language, category } = match;
-    if (language === undefined) return [key];
-    const field = key.slice(key.lastIndexOf('.') + 1);
-    const keys = [match.setting.name];
-    if (category !== undefined) {
-        const parent = CATEGORY_PARENTS[category] ?? category;
-        keys.push(`naming.${language}.${field}`, `naming.${language}.${parent}.${field}`);
-    }
-    keys.push(key);
-    return keys;
-}
-
 /**
 Resolve one default against its language, scope, and site build folder.
 
@@ -270,17 +281,6 @@ export function getSettingValue(
         scope: scopePath,
         originScope,
     };
-}
-
-function isKeyGroup(
-    availableSettings: AvailableSettings,
-    key: string,
-    value: unknown,
-): value is Record<string, unknown> {
-    if (availableSettings.settings.has(key) || !isTable(value)) return false;
-    let schema = findSettingSchema(key);
-    if (schema !== undefined) schema = unwrapSettingSchema(schema);
-    return schema instanceof z.ZodObject;
 }
 
 /**

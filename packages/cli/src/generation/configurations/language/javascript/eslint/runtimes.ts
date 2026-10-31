@@ -33,6 +33,21 @@ function isRuntimeRoot(scopePath: string, scopes: Scope[]): boolean {
     );
 }
 
+function buildFrameworkRuntime(scope: Scope, escaped: string): EslintRuntime | undefined {
+    const runtime = selectFrameworkRuntime(scope.settings.configurations);
+    if (runtime === undefined) return undefined;
+    const scripts = [...(scope.settings.tables.javascript?.script_files ?? []), joinScope(escaped, MISE_TASKS_GLOB)];
+    return {
+        scope: scope.path,
+        runtime,
+        ...splitGlobs([
+            joinScope(escaped, '**/*'),
+            `!${joinScope(escaped, COMMONJS_FILES)}`,
+            ...scripts.map((path) => `!${path}`),
+        ]),
+    };
+}
+
 /**
 Resolve one runtime per file from scoped framework defaults and your own runtime settings. More specific scopes and
 your later selectors win. Build scripts keep Node.js unless your own runtime names them.
@@ -62,19 +77,4 @@ export function buildRuntimes(scopes: Scope[]): EslintRuntime[] {
         );
     }
     return blocks;
-}
-
-function buildFrameworkRuntime(scope: Scope, escaped: string): EslintRuntime | undefined {
-    const runtime = selectFrameworkRuntime(scope.settings.configurations);
-    if (runtime === undefined) return undefined;
-    const scripts = [...(scope.settings.tables.javascript?.script_files ?? []), joinScope(escaped, MISE_TASKS_GLOB)];
-    return {
-        scope: scope.path,
-        runtime,
-        ...splitGlobs([
-            joinScope(escaped, '**/*'),
-            `!${joinScope(escaped, COMMONJS_FILES)}`,
-            ...scripts.map((path) => `!${path}`),
-        ]),
-    };
 }

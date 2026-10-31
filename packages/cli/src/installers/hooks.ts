@@ -44,6 +44,14 @@ async function planHooks(session: Session): Promise<HookPlan> {
     };
 }
 
+function hasHookCommand(root: string, hook: RepositorySetup['hooks'][number], name: HookName): boolean {
+    const paths = HOOK_FOLDER_KINDS.has(hook.kind)
+        ? hook.files.filter((file) => file === name).map((file) => resolve(root, hook.path, file))
+        : [resolve(root, hook.path)];
+    const lines = paths.flatMap((path) => readFileSync(path, 'utf8').split(LINE_BREAK));
+    return lines.some((line) => !HOOK_COMMENT_LINE.test(line) && line.includes(`check --hook ${name}`));
+}
+
 /**
 Set the planned Git setting, or report the instructions for existing hooks.
 
@@ -59,14 +67,6 @@ export async function installHooks(session: Session, steps: (readonly string[])[
         if (result.code !== 0) throw new GspotError('install', `Cannot set core.hooksPath: ${result.stderr.trim()}`);
     }
     return plan;
-}
-
-function hasHookCommand(root: string, hook: RepositorySetup['hooks'][number], name: HookName): boolean {
-    const paths = HOOK_FOLDER_KINDS.has(hook.kind)
-        ? hook.files.filter((file) => file === name).map((file) => resolve(root, hook.path, file))
-        : [resolve(root, hook.path)];
-    const lines = paths.flatMap((path) => readFileSync(path, 'utf8').split(LINE_BREAK));
-    return lines.some((line) => !HOOK_COMMENT_LINE.test(line) && line.includes(`check --hook ${name}`));
 }
 
 /**

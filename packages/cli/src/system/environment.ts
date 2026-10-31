@@ -4,6 +4,15 @@ import { GspotError } from '#cli/system/errors.ts';
 import { CACHE_FOLDER_NAME, OPERATING_SYSTEMS, CACHE_FOLDER_MESSAGE } from '#cli/config/system/system.ts';
 
 /**
+Read the cache folder of this system: LOCALAPPDATA on Windows, ~/Library/Caches on macOS, and ~/.cache elsewhere.
+*/
+function readSystemCacheFolder(): string | undefined {
+    if (process.platform === 'win32') return readEnvironmentVariable('LOCALAPPDATA');
+    if (process.platform === 'darwin') return join(homedir(), 'Library', 'Caches');
+    return join(homedir(), '.cache');
+}
+
+/**
 Build the environment for tool processes. Merge Windows names that differ only in case, and keep their spelling.
 
 @param overrides tool variables that replace or remove inherited values.
@@ -38,15 +47,6 @@ export function readCacheFolder(): string {
     const cache = readEnvironmentVariable('XDG_CACHE_HOME') ?? readSystemCacheFolder();
     if (cache === undefined || !isAbsolute(cache)) throw new GspotError('filesystem', CACHE_FOLDER_MESSAGE);
     return join(cache, CACHE_FOLDER_NAME);
-}
-
-/**
-Read the cache folder of this system: LOCALAPPDATA on Windows, ~/Library/Caches on macOS, and ~/.cache elsewhere.
-*/
-function readSystemCacheFolder(): string | undefined {
-    if (process.platform === 'win32') return readEnvironmentVariable('LOCALAPPDATA');
-    if (process.platform === 'darwin') return join(homedir(), 'Library', 'Caches');
-    return join(homedir(), '.cache');
 }
 
 /**

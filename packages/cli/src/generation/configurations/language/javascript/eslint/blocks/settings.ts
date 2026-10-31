@@ -37,49 +37,6 @@ import {
     PACKAGE_JSON_RULE_PREFIX,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
-/**
-Build the lint rule options and the path overrides in order, each for its own project.
-
-@param settings the parsed gspot.toml.
-@param scopes every project, that owns its configured rule options.
-
-@returns one option block per scope and path override, in the order they apply.
-*/
-export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRuleOptions[] {
-    const scopesByPath = new Map(scopes.map((scope) => [scope.path, scope]));
-    const tables = listSettingsTables(settings).toSorted((first, second) =>
-        compareScopeDepth(first.scope, second.scope),
-    );
-    const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scope = '', table }) => {
-        const owner = scopesByPath.get(scope);
-        const options = table.tools?.['eslint'];
-        return owner === undefined || options === undefined ? [] : { scope: owner, settings: options };
-    });
-    const scopeOptions = scopeSettings.flatMap(({ scope, settings }): EslintRuleOptions[] =>
-        settings.rules === undefined
-            ? []
-            : [
-                  {
-                      scope: scope.path,
-                      ...splitGlobs(['**/*']),
-                      rules: settings.rules,
-                  },
-              ],
-    );
-    const overrides = scopeSettings.flatMap(({ scope, settings }) =>
-        (settings.override ?? []).flatMap(({ paths, rules }) =>
-            rules === undefined
-                ? []
-                : {
-                      scope: scope.path,
-                      ...splitGlobs(paths),
-                      rules: rules,
-                  },
-        ),
-    );
-    return [...scopeOptions, ...overrides];
-}
-
 function buildRulesOffBlocks(scopes: Scope[]): EslintRuleBlock[] {
     return scopes.flatMap((scope) => {
         const scopePath = scope.path;
@@ -97,40 +54,6 @@ function buildRulesOffBlocks(scopes: Scope[]): EslintRuleBlock[] {
                 rules: Object.fromEntries(rules.map((rule) => [rule, 'off'])),
             }));
     });
-}
-
-/**
-Build import restrictions where a scope changes the list inherited from its parent.
-
-@param planned the planned ESLint file.
-@returns one block per changed list, excluding scopes with their own lists.
-*/
-export function buildRestrictedImportBlocks(
-    planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>,
-): EslintBlockFields[] {
-    const scopes = planned.session.scopes.filter(({ settings }) =>
-        settings.configurations.includes(JAVASCRIPT_CONFIGURATION),
-    );
-    const restrictedScopes = scopes.filter((scope) => {
-        const parent = findParentScope(scopes, scope.path);
-        return !isDeepStrictEqual(
-            getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports,
-            parent === undefined ? [] : getTable(parent.settings, ESLINT_SETTINGS_TABLE).restricted_imports,
-        );
-    });
-    return restrictedScopes.map((scope) => ({
-        files: buildScopeFiles(planned.eslintFiles.code, scope.path, ['**/*']),
-        ignores: listNestedScopes(
-            restrictedScopes.map(({ path }) => path),
-            scope.path,
-        ).map((path) => joinScope(escapeGlob(path), '**')),
-        rules: {
-            'no-restricted-imports': [
-                'error',
-                { paths: getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports },
-            ],
-        },
-    }));
 }
 
 function buildEnvironmentRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
@@ -235,6 +158,83 @@ function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'scope
         ...buildRulesOffBlocks(session.scopes),
         ...ignored,
     ];
+}
+
+/**
+Build the lint rule options and the path overrides in order, each for its own project.
+
+@param settings the parsed gspot.toml.
+@param scopes every project, that owns its configured rule options.
+
+@returns one option block per scope and path override, in the order they apply.
+*/
+export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRuleOptions[] {
+    const scopesByPath = new Map(scopes.map((scope) => [scope.path, scope]));
+    const tables = listSettingsTables(settings).toSorted((first, second) =>
+        compareScopeDepth(first.scope, second.scope),
+    );
+    const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scope = '', table }) => {
+        const owner = scopesByPath.get(scope);
+        const options = table.tools?.['eslint'];
+        return owner === undefined || options === undefined ? [] : { scope: owner, settings: options };
+    });
+    const scopeOptions = scopeSettings.flatMap(({ scope, settings }): EslintRuleOptions[] =>
+        settings.rules === undefined
+            ? []
+            : [
+                  {
+                      scope: scope.path,
+                      ...splitGlobs(['**/*']),
+                      rules: settings.rules,
+                  },
+              ],
+    );
+    const overrides = scopeSettings.flatMap(({ scope, settings }) =>
+        (settings.override ?? []).flatMap(({ paths, rules }) =>
+            rules === undefined
+                ? []
+                : {
+                      scope: scope.path,
+                      ...splitGlobs(paths),
+                      rules: rules,
+                  },
+        ),
+    );
+    return [...scopeOptions, ...overrides];
+}
+
+/**
+Build import restrictions where a scope changes the list inherited from its parent.
+
+@param planned the planned ESLint file.
+@returns one block per changed list, excluding scopes with their own lists.
+*/
+export function buildRestrictedImportBlocks(
+    planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>,
+): EslintBlockFields[] {
+    const scopes = planned.session.scopes.filter(({ settings }) =>
+        settings.configurations.includes(JAVASCRIPT_CONFIGURATION),
+    );
+    const restrictedScopes = scopes.filter((scope) => {
+        const parent = findParentScope(scopes, scope.path);
+        return !isDeepStrictEqual(
+            getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports,
+            parent === undefined ? [] : getTable(parent.settings, ESLINT_SETTINGS_TABLE).restricted_imports,
+        );
+    });
+    return restrictedScopes.map((scope) => ({
+        files: buildScopeFiles(planned.eslintFiles.code, scope.path, ['**/*']),
+        ignores: listNestedScopes(
+            restrictedScopes.map(({ path }) => path),
+            scope.path,
+        ).map((path) => joinScope(escapeGlob(path), '**')),
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                { paths: getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports },
+            ],
+        },
+    }));
 }
 
 /**

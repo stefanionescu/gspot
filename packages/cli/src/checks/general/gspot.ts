@@ -36,44 +36,6 @@ import {
     SUPPRESSION_KIND_MESSAGES,
 } from '#cli/config/checks/general/general.ts';
 
-/**
-Reports each settings file of a tool that gspot writes settings for, such as .commitlintrc.json while commitlint runs.
-
-@param session the repository and the tools that the selected checks run.
-@param _planned the configured check and selected scope files.
-*/
-export function checkConflictingConfigs(session: Session, _planned: PlannedCheck): CheckFinding[] {
-    const tools = new Set(
-        session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
-    );
-    const generated = listGeneratedPaths(session.repository.files);
-    return listConflictingConfigs(session.root, session.repository.files, session.configurationsByName.values())
-        .filter(({ tool, path, shared }) => !shared && tools.has(tool) && !generated.has(path))
-        .map(({ tool, path }) => ({
-            file: path,
-            line: 1,
-            rule: GSPOT_RULES.conflictingConfig,
-            message: `gspot writes the settings for ${tool}, so ${path} no longer applies. Delete it, and move any rule you need into gspot.toml.`,
-        }));
-}
-
-/**
-Reports each generated file on disk that does not match what the settings generate.
-
-@param session the settings and repository.
-@param _planned the configured check and selected scope files.
-*/
-export async function checkGeneratedFiles(session: Session, _planned: PlannedCheck): Promise<CheckFinding[]> {
-    const outdated = await listOutdatedFiles(session, buildGeneratedFiles(session));
-    return outdated.map((outdatedFile) => ({
-        file: outdatedFile.path,
-        rule: outdatedFile.kind,
-        message: GENERATED_FILE_FINDINGS[outdatedFile.kind].message,
-
-        help: TOOL_LOCKFILES.has(outdatedFile.path) ? INSTALL_HELP : GENERATED_FILE_FINDINGS[outdatedFile.kind].help,
-    }));
-}
-
 function findReasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
     if (
         previous === undefined ||
@@ -165,6 +127,44 @@ function validateSuppressionComment(
             ? `This ${syntax.tool} suppression has no reason of two or more words.`
             : SUPPRESSION_KIND_MESSAGES[kind];
     return [{ ...at, rule: `${syntax.tool}-${kind}`, message: message }];
+}
+
+/**
+Reports each settings file of a tool that gspot writes settings for, such as .commitlintrc.json while commitlint runs.
+
+@param session the repository and the tools that the selected checks run.
+@param _planned the configured check and selected scope files.
+*/
+export function checkConflictingConfigs(session: Session, _planned: PlannedCheck): CheckFinding[] {
+    const tools = new Set(
+        session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
+    );
+    const generated = listGeneratedPaths(session.repository.files);
+    return listConflictingConfigs(session.root, session.repository.files, session.configurationsByName.values())
+        .filter(({ tool, path, shared }) => !shared && tools.has(tool) && !generated.has(path))
+        .map(({ tool, path }) => ({
+            file: path,
+            line: 1,
+            rule: GSPOT_RULES.conflictingConfig,
+            message: `gspot writes the settings for ${tool}, so ${path} no longer applies. Delete it, and move any rule you need into gspot.toml.`,
+        }));
+}
+
+/**
+Reports each generated file on disk that does not match what the settings generate.
+
+@param session the settings and repository.
+@param _planned the configured check and selected scope files.
+*/
+export async function checkGeneratedFiles(session: Session, _planned: PlannedCheck): Promise<CheckFinding[]> {
+    const outdated = await listOutdatedFiles(session, buildGeneratedFiles(session));
+    return outdated.map((outdatedFile) => ({
+        file: outdatedFile.path,
+        rule: outdatedFile.kind,
+        message: GENERATED_FILE_FINDINGS[outdatedFile.kind].message,
+
+        help: TOOL_LOCKFILES.has(outdatedFile.path) ? INSTALL_HELP : GENERATED_FILE_FINDINGS[outdatedFile.kind].help,
+    }));
 }
 
 /**

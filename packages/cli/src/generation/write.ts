@@ -42,33 +42,6 @@ import {
     STALE_LOCKFILE_NOTE,
 } from '#cli/config/generation/generation.ts';
 
-/**
-Say that the generated files need no change.
-
-@param count how many files gspot generates.
-@returns the sentence, with the verb agreeing with the count.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The apply command and its dry run print this one sentence.
-export function formatUpToDate(count: number): string {
-    return `No change: the ${formatCount(count, GENERATED_FILE_NOUN)} ${count === 1 ? 'is' : 'are'} up to date.`;
-}
-
-/**
-Format generated file changes and notes for command output.
-
-@param report the applied file changes and notes.
-*/
-export function formatApplyReport(report: ApplyReport): string {
-    const lines = [
-        ...formatGeneratedChanges('wrote', report.written),
-        ...formatGeneratedChanges('updated', report.updated),
-        ...formatGeneratedChanges('removed', report.removed),
-    ];
-    if (lines.length === 0 && report.notes.length === 0) lines.push(formatUpToDate(report.unchanged.length));
-    lines.push(...report.notes.map((note) => `note     ${note}`));
-    return `${lines.join('\n')}\n`;
-}
-
 function deleteUnusedToolFolders(writer: Files, paths: ReadonlySet<string>, generated: Generation): void {
     for (const [path, keep] of [
         [INSTALLED_TOOL_FOLDERS.npm, paths.has(GSPOT_PATHS.npmProject)],
@@ -103,6 +76,43 @@ function hasUnmanagedScanner(session: Session, writer: Files): boolean {
             return true;
     }
     return false;
+}
+
+function formatGeneratedChanges(action: string, paths: string[]): string[] {
+    const gspotCount = action === 'removed' ? 0 : paths.filter((path) => path.startsWith(`${GSPOT_FOLDER}/`)).length;
+    const outside = action === 'removed' ? paths : paths.filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
+    const label = action.padEnd(CHANGE_LABEL_WIDTH);
+    return [
+        ...(gspotCount === 0 ? [] : [`${label}${formatCount(gspotCount, GENERATED_FILE_NOUN)} in ${GSPOT_FOLDER}/`]),
+        ...outside.map((path) => `${label}${path}`),
+    ];
+}
+
+/**
+Say that the generated files need no change.
+
+@param count how many files gspot generates.
+@returns the sentence, with the verb agreeing with the count.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The apply command and its dry run print this one sentence.
+export function formatUpToDate(count: number): string {
+    return `No change: the ${formatCount(count, GENERATED_FILE_NOUN)} ${count === 1 ? 'is' : 'are'} up to date.`;
+}
+
+/**
+Format generated file changes and notes for command output.
+
+@param report the applied file changes and notes.
+*/
+export function formatApplyReport(report: ApplyReport): string {
+    const lines = [
+        ...formatGeneratedChanges('wrote', report.written),
+        ...formatGeneratedChanges('updated', report.updated),
+        ...formatGeneratedChanges('removed', report.removed),
+    ];
+    if (lines.length === 0 && report.notes.length === 0) lines.push(formatUpToDate(report.unchanged.length));
+    lines.push(...report.notes.map((note) => `note     ${note}`));
+    return `${lines.join('\n')}\n`;
 }
 
 /**
@@ -162,16 +172,6 @@ export async function writeGeneratedFiles(
     if (hasUnmanagedScanner(session, writer)) report.notes.push(MANAGED_KEYS_NOTE);
     await addInstallationNote(session, generated, report);
     return report;
-}
-
-function formatGeneratedChanges(action: string, paths: string[]): string[] {
-    const gspotCount = action === 'removed' ? 0 : paths.filter((path) => path.startsWith(`${GSPOT_FOLDER}/`)).length;
-    const outside = action === 'removed' ? paths : paths.filter((path) => !path.startsWith(`${GSPOT_FOLDER}/`));
-    const label = action.padEnd(CHANGE_LABEL_WIDTH);
-    return [
-        ...(gspotCount === 0 ? [] : [`${label}${formatCount(gspotCount, GENERATED_FILE_NOUN)} in ${GSPOT_FOLDER}/`]),
-        ...outside.map((path) => `${label}${path}`),
-    ];
 }
 
 /**

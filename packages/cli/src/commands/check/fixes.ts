@@ -219,6 +219,17 @@ function restoreBrokenFiles(root: string, broken: string[], rounds: FixRounds): 
     }
 }
 
+function buildFixResult(
+    check: string,
+    changed: string[],
+    note: string | undefined,
+    signal: AbortSignal | undefined,
+): FixResult {
+    if (signal?.aborted === true) return { check, changed, status: 'canceled', note: note ?? 'Canceled.' };
+    if (note !== undefined) return { check, changed, status: 'failed', note };
+    return { check, changed, status: changed.length === 0 ? 'unchanged' : 'changed' };
+}
+
 /**
 Runs fixes in passes and collects their results.
 
@@ -238,15 +249,4 @@ export async function runFixers(session: CheckSession, planned: PlannedCheck[]):
     const broken = await listBrokenFiles(changed, before, after);
     restoreBrokenFiles(session.root, broken, rounds);
     return { results, changed: changed.filter((path) => !broken.includes(path)), broken };
-}
-
-function buildFixResult(
-    check: string,
-    changed: string[],
-    note: string | undefined,
-    signal: AbortSignal | undefined,
-): FixResult {
-    if (signal?.aborted === true) return { check, changed, status: 'canceled', note: note ?? 'Canceled.' };
-    if (note !== undefined) return { check, changed, status: 'failed', note };
-    return { check, changed, status: changed.length === 0 ? 'unchanged' : 'changed' };
 }

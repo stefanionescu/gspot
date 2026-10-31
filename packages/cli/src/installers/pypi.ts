@@ -108,6 +108,45 @@ function parsePythonToolLockfile(lockfile: string, minimumReleaseAge?: number): 
     return parsed;
 }
 
+function hasAllowedPythonOrigins(lockfile: UvLockfile, indexes: PythonIndexSettings['settings']): boolean {
+    const configured = Object.entries(indexes).flatMap(([key, value]) => {
+        if (key === 'index' && Array.isArray(value))
+            return value.flatMap((index) => (isTable(index) && typeof index['url'] === 'string' ? [index['url']] : []));
+        if (['index-url', 'extra-index-url', 'find-links'].includes(key)) {
+            if (Array.isArray(value)) return value.filter((url): url is string => typeof url === 'string');
+            if (typeof value === 'string') return [value];
+        }
+        return [];
+    });
+    const hasDefaultIndexOverride =
+        indexes['index-url'] !== undefined || indexes.index?.some((index) => index['default'] === true) === true;
+    const origins = new Set(
+        [...PYTHON_PACKAGE_ORIGINS, ...(hasDefaultIndexOverride ? [] : [PYTHON_DEFAULT_INDEX_ORIGIN]), ...configured]
+            .filter((url) => URL.canParse(url))
+            .map((url) => new URL(url).origin),
+    );
+    return lockfile.package.every((lockedPackage) => {
+        const addresses = [
+            lockedPackage.source?.['registry'],
+            ...(isTable(lockedPackage['sdist']) ? [lockedPackage['sdist']['url']] : []),
+            ...(Array.isArray(lockedPackage['wheels'])
+                ? lockedPackage['wheels'].map((wheel: unknown) => (isTable(wheel) ? wheel['url'] : undefined))
+                : []),
+        ];
+        return addresses.every(
+            (address) =>
+                address === undefined ||
+                (typeof address === 'string' &&
+                    (URL.canParse(address) ? origins.has(new URL(address).origin) : configured.includes(address))),
+        );
+    });
+}
+
+function normalizeIndexLocation(root: string, location: string): string {
+    if (URL_SCHEME.test(location)) return location;
+    return resolve(root, location);
+}
+
 /**
 Resolve the Python tool lockfile outside the repository before writing it.
 
@@ -225,45 +264,6 @@ export function isPythonLockfileFresh(
         pins.toSorted((left, right) => compareText(left, right)),
         expected,
     );
-}
-
-function hasAllowedPythonOrigins(lockfile: UvLockfile, indexes: PythonIndexSettings['settings']): boolean {
-    const configured = Object.entries(indexes).flatMap(([key, value]) => {
-        if (key === 'index' && Array.isArray(value))
-            return value.flatMap((index) => (isTable(index) && typeof index['url'] === 'string' ? [index['url']] : []));
-        if (['index-url', 'extra-index-url', 'find-links'].includes(key)) {
-            if (Array.isArray(value)) return value.filter((url): url is string => typeof url === 'string');
-            if (typeof value === 'string') return [value];
-        }
-        return [];
-    });
-    const hasDefaultIndexOverride =
-        indexes['index-url'] !== undefined || indexes.index?.some((index) => index['default'] === true) === true;
-    const origins = new Set(
-        [...PYTHON_PACKAGE_ORIGINS, ...(hasDefaultIndexOverride ? [] : [PYTHON_DEFAULT_INDEX_ORIGIN]), ...configured]
-            .filter((url) => URL.canParse(url))
-            .map((url) => new URL(url).origin),
-    );
-    return lockfile.package.every((lockedPackage) => {
-        const addresses = [
-            lockedPackage.source?.['registry'],
-            ...(isTable(lockedPackage['sdist']) ? [lockedPackage['sdist']['url']] : []),
-            ...(Array.isArray(lockedPackage['wheels'])
-                ? lockedPackage['wheels'].map((wheel: unknown) => (isTable(wheel) ? wheel['url'] : undefined))
-                : []),
-        ];
-        return addresses.every(
-            (address) =>
-                address === undefined ||
-                (typeof address === 'string' &&
-                    (URL.canParse(address) ? origins.has(new URL(address).origin) : configured.includes(address))),
-        );
-    });
-}
-
-function normalizeIndexLocation(root: string, location: string): string {
-    if (URL_SCHEME.test(location)) return location;
-    return resolve(root, location);
 }
 
 /**

@@ -72,38 +72,6 @@ function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBl
     }));
 }
 
-/**
-Build the blocks before the configuration blocks: default lint rules, pinned presets, and project settings.
-
-@param planned the ESLint context of the scope.
-@param plugins the import names and packages to load.
-@param boundaryBlocks the project classifications and dependency policies.
-@param ignoredGlobs the shared ignored paths.
-*/
-export function buildOpeningBlocks(
-    planned: PlannedEslintFile,
-    plugins: EslintPlugins,
-    boundaryBlocks: EslintBlock[],
-    ignoredGlobs: string[],
-): ConfigurationBlocks['blocks'] {
-    const { eslintFiles } = planned;
-    return [
-        ...PRESETS_BEFORE_CONFIGURATIONS.map(({ importName, path }) => ({
-            fields: { files: eslintFiles.code },
-            presets: [{ importName, path, merge: 'fields' as const }],
-        })),
-        buildRootBlock(planned, plugins, boundaryBlocks, ignoredGlobs),
-        {
-            fields: { files: eslintFiles.javascript, rules: JAVASCRIPT_RULES },
-        },
-        { fields: { files: eslintFiles.tests, rules: TEST_CHECK_RULES } },
-        ...buildProjectBlocks(planned, boundaryBlocks),
-        ...buildRestrictedImportBlocks(planned).map((block): ConfigurationBlocks['blocks'][number] => ({
-            fields: block,
-        })),
-    ];
-}
-
 function buildRootCalls(
     plugins: EslintPlugins,
     hasBoundaries: boolean,
@@ -187,6 +155,58 @@ function buildRuntimeBlocks(eslintFiles: EslintFiles, runtimeBlocks: EslintRunti
     ];
 }
 
+function buildConsoleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>): EslintBlockFields[] {
+    const scopes = planned.session.scopes.filter(({ settings }) =>
+        settings.configurations.includes(JAVASCRIPT_CONFIGURATION),
+    );
+    return scopes.map((scope) => ({
+        files: buildScopeFiles(planned.eslintFiles.code, scope.path, ['**/*']),
+        ignores: [
+            ...listNestedScopes(
+                scopes.map(({ path }) => path),
+                scope.path,
+            ).map((path) => joinScope(escapeGlob(path), '**')),
+            ...listCodeTestFiles(scope.settings.test_files),
+
+            ...(scope.settings.tables.javascript?.script_files ?? []),
+            joinScope(escapeGlob(scope.path), MISE_TASKS_GLOB),
+        ],
+        rules: CONSOLE_RULES,
+    }));
+}
+
+/**
+Build the blocks before the configuration blocks: default lint rules, pinned presets, and project settings.
+
+@param planned the ESLint context of the scope.
+@param plugins the import names and packages to load.
+@param boundaryBlocks the project classifications and dependency policies.
+@param ignoredGlobs the shared ignored paths.
+*/
+export function buildOpeningBlocks(
+    planned: PlannedEslintFile,
+    plugins: EslintPlugins,
+    boundaryBlocks: EslintBlock[],
+    ignoredGlobs: string[],
+): ConfigurationBlocks['blocks'] {
+    const { eslintFiles } = planned;
+    return [
+        ...PRESETS_BEFORE_CONFIGURATIONS.map(({ importName, path }) => ({
+            fields: { files: eslintFiles.code },
+            presets: [{ importName, path, merge: 'fields' as const }],
+        })),
+        buildRootBlock(planned, plugins, boundaryBlocks, ignoredGlobs),
+        {
+            fields: { files: eslintFiles.javascript, rules: JAVASCRIPT_RULES },
+        },
+        { fields: { files: eslintFiles.tests, rules: TEST_CHECK_RULES } },
+        ...buildProjectBlocks(planned, boundaryBlocks),
+        ...buildRestrictedImportBlocks(planned).map((block): ConfigurationBlocks['blocks'][number] => ({
+            fields: block,
+        })),
+    ];
+}
+
 /**
 Build the blocks after the configuration blocks: runtime, selector, test, script, and final pinned rules.
 
@@ -244,26 +264,6 @@ export function buildClosingBlocks(
             },
         },
     ];
-}
-
-function buildConsoleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>): EslintBlockFields[] {
-    const scopes = planned.session.scopes.filter(({ settings }) =>
-        settings.configurations.includes(JAVASCRIPT_CONFIGURATION),
-    );
-    return scopes.map((scope) => ({
-        files: buildScopeFiles(planned.eslintFiles.code, scope.path, ['**/*']),
-        ignores: [
-            ...listNestedScopes(
-                scopes.map(({ path }) => path),
-                scope.path,
-            ).map((path) => joinScope(escapeGlob(path), '**')),
-            ...listCodeTestFiles(scope.settings.test_files),
-
-            ...(scope.settings.tables.javascript?.script_files ?? []),
-            joinScope(escapeGlob(scope.path), MISE_TASKS_GLOB),
-        ],
-        rules: CONSOLE_RULES,
-    }));
 }
 
 /**

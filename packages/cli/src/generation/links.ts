@@ -42,6 +42,49 @@ function fillTarget(body: string, linkFilePath: string, targetPath: string): str
     });
 }
 
+function listLinkFieldTargets({ scope, configuration, tool, consumed, paths, configs, scopePaths }: PlannedLinkField) {
+    return (tool.replace_key ?? [])
+        .filter((replacement) => replacement.pointer === true)
+        .flatMap((replacement) =>
+            configuration.configs
+                .map((file) => ({ file, target: getConfigTarget(scope.path, file, configs) }))
+                .filter(
+                    ({ file, target }) =>
+                        file.tool.includes(tool.name) && (!file.per_scope || consumed || !paths.has(target)),
+                )
+                .map(({ file, target }) => {
+                    const scopePath = file.per_scope ? scope.path : '';
+                    const children = file.per_scope ? listNestedScopes(scopePaths, scopePath) : [];
+                    const linkFilePath =
+                        file.pointer === undefined || (file.pointer.overrides === true && scopePath !== '')
+                            ? target
+                            : joinScope(scopePath, file.pointer.path);
+                    return {
+                        key: replacement.key,
+                        scope: scopePath,
+                        children,
+                        target: linkFilePath,
+                    };
+                }),
+        );
+}
+
+function listLinkFieldTools(session: Session) {
+    return session.scopes.flatMap((scope) => {
+        const required = new Set(
+            session.configuredChecks
+                .filter((planned) => planned.scope.path === scope.path || planned.check.runs === 'once')
+                .flatMap((check) => listCheckTools(check)),
+        );
+        return readConfigurations()
+            .values()
+            .flatMap((configuration) =>
+                configuration.tools.map((tool) => ({ scope, configuration, tool, consumed: required.has(tool.name) })),
+            )
+            .toArray();
+    });
+}
+
 /**
 List the paths where a config file puts its link file. Every scope shares one link file with overrides, at the root.
 Another link file sits at one path, or in each folder that holds files of the configuration and matches pointer.folders.
@@ -105,49 +148,6 @@ export function listOwnablePaths(session: Session): Set<string> {
         ...listLinkFilePaths(owner, config),
     ]);
     return new Set([GITHUB_WORKFLOW, GITLAB_WORKFLOW, ...paths]);
-}
-
-function listLinkFieldTargets({ scope, configuration, tool, consumed, paths, configs, scopePaths }: PlannedLinkField) {
-    return (tool.replace_key ?? [])
-        .filter((replacement) => replacement.pointer === true)
-        .flatMap((replacement) =>
-            configuration.configs
-                .map((file) => ({ file, target: getConfigTarget(scope.path, file, configs) }))
-                .filter(
-                    ({ file, target }) =>
-                        file.tool.includes(tool.name) && (!file.per_scope || consumed || !paths.has(target)),
-                )
-                .map(({ file, target }) => {
-                    const scopePath = file.per_scope ? scope.path : '';
-                    const children = file.per_scope ? listNestedScopes(scopePaths, scopePath) : [];
-                    const linkFilePath =
-                        file.pointer === undefined || (file.pointer.overrides === true && scopePath !== '')
-                            ? target
-                            : joinScope(scopePath, file.pointer.path);
-                    return {
-                        key: replacement.key,
-                        scope: scopePath,
-                        children,
-                        target: linkFilePath,
-                    };
-                }),
-        );
-}
-
-function listLinkFieldTools(session: Session) {
-    return session.scopes.flatMap((scope) => {
-        const required = new Set(
-            session.configuredChecks
-                .filter((planned) => planned.scope.path === scope.path || planned.check.runs === 'once')
-                .flatMap((check) => listCheckTools(check)),
-        );
-        return readConfigurations()
-            .values()
-            .flatMap((configuration) =>
-                configuration.tools.map((tool) => ({ scope, configuration, tool, consumed: required.has(tool.name) })),
-            )
-            .toArray();
-    });
 }
 
 /**

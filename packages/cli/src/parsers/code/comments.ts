@@ -140,38 +140,6 @@ async function parseGrammarComments(grammar: GrammarName, text: string, source =
 }
 
 /**
-Remove only the closing delimiter that matches the comment syntax.
-
-@param text the original comment.
-@returns comment text with its opener and without its terminator or trailing whitespace.
-*/
-export function stripCommentEnd(text: string): string {
-    if (text.startsWith('/*')) return text.replace(BLOCK_COMMENT_END, '').trimEnd();
-    return text.startsWith('<!--') ? text.replace(HTML_COMMENT_END, '').trimEnd() : text.trimEnd();
-}
-
-/**
-Read the text and line of each comment.
-
-@param path the file, whose name selects the syntax.
-@param text the source contents.
-@param tags the file tags, which identify scripts without a known extension.
-@returns comments in source order.
-*/
-export async function parseComments(path: string, text: string, tags: readonly string[]): Promise<SourceComment[]> {
-    const lowerPath = path.toLowerCase();
-    if (DECLARATION_EXTENSIONS.some((extension) => lowerPath.endsWith(extension)))
-        return parseGrammarComments('typescript', text);
-    let scriptGrammar: GrammarName | undefined;
-    if (tags.includes(SCRIPT_TAG)) scriptGrammar = 'bash';
-    else if (tags.includes('python')) scriptGrammar = 'python';
-    const grammar = findGrammarByExtension(lowerPath) ?? scriptGrammar;
-    if (grammar !== undefined) return parseGrammarComments(grammar, text);
-    const parser = COMMENT_PARSERS.get(extractExtension(path));
-    return parser === undefined ? [] : parser(text, path);
-}
-
-/**
 Replace comments with spaces while preserving source offsets and line breaks.
 
 @param grammar the grammar of the source.
@@ -238,6 +206,38 @@ function listComponentScripts(element: Node, text: string, masked: string): Comp
             grammar,
             source: replaceRanges(masked, text, [{ start: node.startIndex, end: node.endIndex }]),
         }));
+}
+
+/**
+Remove only the closing delimiter that matches the comment syntax.
+
+@param text the original comment.
+@returns comment text with its opener and without its terminator or trailing whitespace.
+*/
+export function stripCommentEnd(text: string): string {
+    if (text.startsWith('/*')) return text.replace(BLOCK_COMMENT_END, '').trimEnd();
+    return text.startsWith('<!--') ? text.replace(HTML_COMMENT_END, '').trimEnd() : text.trimEnd();
+}
+
+/**
+Read the text and line of each comment.
+
+@param path the file, whose name selects the syntax.
+@param text the source contents.
+@param tags the file tags, which identify scripts without a known extension.
+@returns comments in source order.
+*/
+export async function parseComments(path: string, text: string, tags: readonly string[]): Promise<SourceComment[]> {
+    const lowerPath = path.toLowerCase();
+    if (DECLARATION_EXTENSIONS.some((extension) => lowerPath.endsWith(extension)))
+        return parseGrammarComments('typescript', text);
+    let scriptGrammar: GrammarName | undefined;
+    if (tags.includes(SCRIPT_TAG)) scriptGrammar = 'bash';
+    else if (tags.includes('python')) scriptGrammar = 'python';
+    const grammar = findGrammarByExtension(lowerPath) ?? scriptGrammar;
+    if (grammar !== undefined) return parseGrammarComments(grammar, text);
+    const parser = COMMENT_PARSERS.get(extractExtension(path));
+    return parser === undefined ? [] : parser(text, path);
 }
 
 /**

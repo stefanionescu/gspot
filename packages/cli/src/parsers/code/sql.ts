@@ -24,6 +24,122 @@ import {
     PRISMA_MIGRATION_FILE,
 } from '#cli/config/parsers/code.ts';
 
+async function parsePostgres(text: string): Promise<Parsed<ParseResult, { text: string; offset: number }>> {
+    const { SqlError, parse: parseSql } = await import('libpg-query');
+    try {
+        return { value: await parseSql(text) };
+    } catch (error) {
+        if (!(error instanceof SqlError) || error.sqlDetails === undefined) throw error;
+        return { error: { text: error.message, offset: error.sqlDetails.cursorPosition } };
+    }
+}
+
+function findLineEnd(text: string, offset: number, stops: string): number {
+    for (let at = offset; at < text.length; at += 1) if (stops.includes(text[at] ?? '')) return at;
+    return text.length;
+}
+
+function findDoubledQuoteEnd(text: string, offset: number, quote: string): number {
+    for (let at = offset; at < text.length; at += 1) {
+        if (text[at] !== quote) continue;
+        if (text[at + 1] === quote) at += 1;
+        else return at + 1;
+    }
+    return text.length;
+}
+
+function findEscapedStringEnd(text: string, offset: number): number {
+    for (let at = offset; at < text.length; at += 1) {
+        const char = text[at];
+        if (char === '\\' || (char === "'" && text[at + 1] === "'")) at += 1;
+        else if (char === "'") return at + 1;
+    }
+    return text.length;
+}
+
+function findIdentifierEnd(text: string, offset: number): number {
+    if (!IDENTIFIER_START.test(text[offset] ?? '')) return offset;
+    let end = offset + 1;
+    while (WORD_CHARACTER.test(text[end] ?? '')) end += 1;
+    return end;
+}
+
+function findVariableEnd(text: string, offset: number): number {
+    const quote = text[offset + 1];
+    const isQuoted = quote === "'" || quote === '"';
+    const start = offset + (isQuoted ? ":'".length : 1);
+    const end = findIdentifierEnd(text, start);
+    if (end === start) return -1;
+    if (!isQuoted) return end;
+    return text[end] === quote ? end + 1 : -1;
+}
+
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The E and e entries of TOKEN_MATCHERS share its body.
+function matchEscapedString(text: string, offset: number): MatchedToken | undefined {
+    return text[offset + 1] !== "'" || WORD_CHARACTER.test(text[offset - 1] ?? '')
+        ? undefined
+        : { end: findEscapedStringEnd(text, offset + "E'".length), kind: 'other' };
+}
+
+function matchDollarTag(text: string, offset: number): MatchedToken | undefined {
+    if (DOLLAR_TAG_BLOCKER.test(text[offset - 1] ?? '')) return undefined;
+    const end = findIdentifierEnd(text, offset + 1);
+    return text[end] === '$' ? { end: end + 1, kind: 'dollar' } : undefined;
+}
+
+function matchColonToken(text: string, offset: number): MatchedToken | undefined {
+    if (text[offset + 1] === ':') return { end: offset + '::'.length, kind: 'other' };
+    const end = findVariableEnd(text, offset);
+    return end === -1 ? undefined : { end, kind: 'variable' };
+}
+
+function findBlockCommentEnd(text: string, offset: number): number {
+    let depth = 1;
+    for (let at = offset; at < text.length; at += 1) {
+        const pair = text.slice(at, at + '/*'.length);
+        if (pair === '/*') {
+            depth += 1;
+            at += 1;
+        } else if (pair === '*/') {
+            depth -= 1;
+            at += 1;
+            if (depth === 0) return at + 1;
+        }
+    }
+    return text.length;
+}
+
+function findTokenEnd(text: string, offset: number, token: MatchedToken): number {
+    if (token.kind === 'block-comment') return findBlockCommentEnd(text, token.end);
+    if (token.kind !== 'dollar') return token.end;
+    const tag = text.slice(offset, token.end);
+    const close = text.indexOf(tag, token.end);
+    return close === -1 ? text.length : close + tag.length;
+}
+
+function buildReplacement(kind: SqlToken['kind'], text: string): string {
+    if (kind === 'command') return ' '.repeat(text.length);
+    if (text[1] === "'") return `''${' '.repeat(text.length - "''".length)}`;
+    return text[1] === '"' ? ` ${text.slice(1)}` : `_${text.slice(1)}`;
+}
+
+function replacePsqlSyntax(text: string): BlankedSql {
+    const variables: TextRange[] = [];
+    const pieces: string[] = [];
+    let offset = 0;
+    for (const { start, end, kind } of listSqlTokens(text)) {
+        if (!(kind === 'command' || kind === 'variable')) {
+            continue;
+        }
+
+        pieces.push(text.slice(offset, start), buildReplacement(kind, text.slice(start, end)));
+        if (kind === 'variable') variables.push({ start, end });
+        offset = end;
+    }
+    pieces.push(text.slice(offset));
+    return { text: pieces.join(''), variables };
+}
+
 /**
 Select migration paths at or below the written version.
 
@@ -75,16 +191,6 @@ export function compareMigrationVersions(left: string, right: string): number {
 }
 
 const PARSED_SQL_FILES = Symbol('parsed sql files');
-
-async function parsePostgres(text: string): Promise<Parsed<ParseResult, { text: string; offset: number }>> {
-    const { SqlError, parse: parseSql } = await import('libpg-query');
-    try {
-        return { value: await parseSql(text) };
-    } catch (error) {
-        if (!(error instanceof SqlError) || error.sqlDetails === undefined) throw error;
-        return { error: { text: error.message, offset: error.sqlDetails.cursorPosition } };
-    }
-}
 
 /**
 Get the fields of a PostgreSQL parse tree node when the node has the given kind.
@@ -164,65 +270,6 @@ export function parseSqlFile(text: string, cache: RunCache): Promise<SqlFile> {
     });
 }
 
-function findLineEnd(text: string, offset: number, stops: string): number {
-    for (let at = offset; at < text.length; at += 1) if (stops.includes(text[at] ?? '')) return at;
-    return text.length;
-}
-
-function findDoubledQuoteEnd(text: string, offset: number, quote: string): number {
-    for (let at = offset; at < text.length; at += 1) {
-        if (text[at] !== quote) continue;
-        if (text[at + 1] === quote) at += 1;
-        else return at + 1;
-    }
-    return text.length;
-}
-
-function findEscapedStringEnd(text: string, offset: number): number {
-    for (let at = offset; at < text.length; at += 1) {
-        const char = text[at];
-        if (char === '\\' || (char === "'" && text[at + 1] === "'")) at += 1;
-        else if (char === "'") return at + 1;
-    }
-    return text.length;
-}
-
-function findIdentifierEnd(text: string, offset: number): number {
-    if (!IDENTIFIER_START.test(text[offset] ?? '')) return offset;
-    let end = offset + 1;
-    while (WORD_CHARACTER.test(text[end] ?? '')) end += 1;
-    return end;
-}
-
-function findVariableEnd(text: string, offset: number): number {
-    const quote = text[offset + 1];
-    const isQuoted = quote === "'" || quote === '"';
-    const start = offset + (isQuoted ? ":'".length : 1);
-    const end = findIdentifierEnd(text, start);
-    if (end === start) return -1;
-    if (!isQuoted) return end;
-    return text[end] === quote ? end + 1 : -1;
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The E and e entries of TOKEN_MATCHERS share its body.
-function matchEscapedString(text: string, offset: number): MatchedToken | undefined {
-    return text[offset + 1] !== "'" || WORD_CHARACTER.test(text[offset - 1] ?? '')
-        ? undefined
-        : { end: findEscapedStringEnd(text, offset + "E'".length), kind: 'other' };
-}
-
-function matchDollarTag(text: string, offset: number): MatchedToken | undefined {
-    if (DOLLAR_TAG_BLOCKER.test(text[offset - 1] ?? '')) return undefined;
-    const end = findIdentifierEnd(text, offset + 1);
-    return text[end] === '$' ? { end: end + 1, kind: 'dollar' } : undefined;
-}
-
-function matchColonToken(text: string, offset: number): MatchedToken | undefined {
-    if (text[offset + 1] === ':') return { end: offset + '::'.length, kind: 'other' };
-    const end = findVariableEnd(text, offset);
-    return end === -1 ? undefined : { end, kind: 'variable' };
-}
-
 const TOKEN_MATCHERS: Record<string, (text: string, at: number) => MatchedToken | undefined> = {
     '-': (text, at) => {
         return text[at + 1] === '-' ? { end: findLineEnd(text, at, '\n'), kind: 'line-comment' } : undefined;
@@ -240,36 +287,6 @@ const TOKEN_MATCHERS: Record<string, (text: string, at: number) => MatchedToken 
     },
     ':': matchColonToken,
 };
-
-function findBlockCommentEnd(text: string, offset: number): number {
-    let depth = 1;
-    for (let at = offset; at < text.length; at += 1) {
-        const pair = text.slice(at, at + '/*'.length);
-        if (pair === '/*') {
-            depth += 1;
-            at += 1;
-        } else if (pair === '*/') {
-            depth -= 1;
-            at += 1;
-            if (depth === 0) return at + 1;
-        }
-    }
-    return text.length;
-}
-
-function findTokenEnd(text: string, offset: number, token: MatchedToken): number {
-    if (token.kind === 'block-comment') return findBlockCommentEnd(text, token.end);
-    if (token.kind !== 'dollar') return token.end;
-    const tag = text.slice(offset, token.end);
-    const close = text.indexOf(tag, token.end);
-    return close === -1 ? text.length : close + tag.length;
-}
-
-function buildReplacement(kind: SqlToken['kind'], text: string): string {
-    if (kind === 'command') return ' '.repeat(text.length);
-    if (text[1] === "'") return `''${' '.repeat(text.length - "''".length)}`;
-    return text[1] === '"' ? ` ${text.slice(1)}` : `_${text.slice(1)}`;
-}
 
 /**
 Read SQL strings, comments, and client syntax without interpreting quoted bodies as source.
@@ -289,21 +306,4 @@ export function* listSqlTokens(text: string): Generator<SqlToken> {
         yield { start: at, end, kind: matched.kind };
         at = end;
     }
-}
-
-function replacePsqlSyntax(text: string): BlankedSql {
-    const variables: TextRange[] = [];
-    const pieces: string[] = [];
-    let offset = 0;
-    for (const { start, end, kind } of listSqlTokens(text)) {
-        if (!(kind === 'command' || kind === 'variable')) {
-            continue;
-        }
-
-        pieces.push(text.slice(offset, start), buildReplacement(kind, text.slice(start, end)));
-        if (kind === 'variable') variables.push({ start, end });
-        offset = end;
-    }
-    pieces.push(text.slice(offset));
-    return { text: pieces.join(''), variables };
 }

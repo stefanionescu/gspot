@@ -28,6 +28,17 @@ function listExceptions(words: string[]): string[] {
         .map((word) => word.replaceAll(VALE_REGEX_SYMBOLS, (symbol) => '\\' + symbol));
 }
 
+function listAllowedWords(session: Session): string[] {
+    const products = session.scopes.flatMap(({ configurations }) =>
+        configurations.flatMap((configuration) => [
+            ...configuration.tools.map((tool) => tool.name),
+            ...configuration.allowed_words,
+        ]),
+    );
+    const words = session.scopes.flatMap((scope) => Object.keys(getTable(scope.settings, 'spelling').allowed_words));
+    return [...new Set([...products, ...words])];
+}
+
 /**
 Build the title or heading capitalization rule with the accepted vocabulary.
 
@@ -119,15 +130,4 @@ export function buildAcceptedWordsFile(planned: PlannedConfig): string {
     const words = listAllowedWords(planned.session);
 
     return words.toSorted((left, right) => compareText(left, right)).join('\n');
-}
-
-function listAllowedWords(session: Session): string[] {
-    const products = session.scopes.flatMap(({ configurations }) =>
-        configurations.flatMap((configuration) => [
-            ...configuration.tools.map((tool) => tool.name),
-            ...configuration.allowed_words,
-        ]),
-    );
-    const words = session.scopes.flatMap((scope) => Object.keys(getTable(scope.settings, 'spelling').allowed_words));
-    return [...new Set([...products, ...words])];
 }

@@ -202,6 +202,20 @@ function listFunctionEntrypoints(
     return entrypoints.values().toArray();
 }
 
+async function runDenoFunction(
+    session: CheckSession,
+    planned: PlannedCheck,
+    run: { command: readonly string[]; entrypoint: FunctionEntrypoint; target: string },
+) {
+    const folder = posix.dirname(run.entrypoint.path);
+    const command = [
+        ...run.command,
+        ...buildDenoJsonArguments(session.root, folder, run.entrypoint.importMap),
+        join(session.root, run.target),
+    ];
+    return runCheckTool(session, planned, command, { cwd: join(session.root, planned.scope.path) });
+}
+
 /**
 Reports each storage bucket that no migration policy on storage.objects names.
 
@@ -222,20 +236,6 @@ export async function checkStoragePolicies(session: Session, planned: PlannedChe
             rule: RULES.bucketPolicy,
             message: `The bucket ${bucket} has no policy on storage.objects in any migration.`,
         }));
-}
-
-async function runDenoFunction(
-    session: CheckSession,
-    planned: PlannedCheck,
-    run: { command: readonly string[]; entrypoint: FunctionEntrypoint; target: string },
-) {
-    const folder = posix.dirname(run.entrypoint.path);
-    const command = [
-        ...run.command,
-        ...buildDenoJsonArguments(session.root, folder, run.entrypoint.importMap),
-        join(session.root, run.target),
-    ];
-    return runCheckTool(session, planned, command, { cwd: join(session.root, planned.scope.path) });
 }
 
 /**

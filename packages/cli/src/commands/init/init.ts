@@ -89,39 +89,6 @@ function assertTemplateFlags(from: string | undefined, configurations: string[] 
     throw new GspotError('arguments', `--from ${FROM_CONFLICT_MESSAGE} ${flag}, or edit a copy of the file.`);
 }
 
-/**
-Register the init command.
-
-@param program the gspot program that gets the command.
-@param onResult receives the result of the command.
-*/
-export function registerInit(program: Command, onResult: CommandCompletion): void {
-    program
-        .command('init')
-        .summary(COMMAND_HELP.init.summary)
-        .description(COMMAND_HELP.init.description)
-        .option(FROM_OPTION, COMMAND_HELP.init.options[FROM_OPTION])
-        .option(YES_FLAG, COMMAND_HELP.init.options[YES_FLAG])
-        .option(CONFIGURATIONS_OPTION, COMMAND_HELP.init.options[CONFIGURATIONS_OPTION])
-        .option(NO_CONFIGURATIONS_FLAG, COMMAND_HELP.init.options[NO_CONFIGURATIONS_FLAG])
-        .addOption(new Option(LEVEL_OPTION, COMMAND_HELP.init.options[LEVEL_OPTION]).choices(LEVELS))
-        .action(async (flags, command) => {
-            assertTemplateFlags(flags.from, flags.configurations);
-            const template = flags.from === undefined ? undefined : readTemplate(flags.from, process.cwd());
-            if (command.getOptionValue('json') === true && flags.yes !== true)
-                throw new GspotError('arguments', JSON_NEEDS_YES_MESSAGE);
-            onResult(
-                await runInitCommand({
-                    cwd: process.cwd(),
-                    yes: flags.yes === true,
-                    level: flags.level,
-                    template,
-                    configurations: flags.configurations === false ? [] : flags.configurations,
-                }),
-            );
-        });
-}
-
 async function openPlannedSession(
     root: string,
     { cache, listing, settingsFile }: { cache: RunCache; listing: RepositoryListing; settingsFile: SettingsFile },
@@ -204,4 +171,37 @@ async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<App
     const kept = deleteConflictingConfigs(writer, initPlan.plan.delete, initPlan.reviewed);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
     return applied;
+}
+
+/**
+Register the init command.
+
+@param program the gspot program that gets the command.
+@param onResult receives the result of the command.
+*/
+export function registerInit(program: Command, onResult: CommandCompletion): void {
+    program
+        .command('init')
+        .summary(COMMAND_HELP.init.summary)
+        .description(COMMAND_HELP.init.description)
+        .option(FROM_OPTION, COMMAND_HELP.init.options[FROM_OPTION])
+        .option(YES_FLAG, COMMAND_HELP.init.options[YES_FLAG])
+        .option(CONFIGURATIONS_OPTION, COMMAND_HELP.init.options[CONFIGURATIONS_OPTION])
+        .option(NO_CONFIGURATIONS_FLAG, COMMAND_HELP.init.options[NO_CONFIGURATIONS_FLAG])
+        .addOption(new Option(LEVEL_OPTION, COMMAND_HELP.init.options[LEVEL_OPTION]).choices(LEVELS))
+        .action(async (flags, command) => {
+            assertTemplateFlags(flags.from, flags.configurations);
+            const template = flags.from === undefined ? undefined : readTemplate(flags.from, process.cwd());
+            if (command.getOptionValue('json') === true && flags.yes !== true)
+                throw new GspotError('arguments', JSON_NEEDS_YES_MESSAGE);
+            onResult(
+                await runInitCommand({
+                    cwd: process.cwd(),
+                    yes: flags.yes === true,
+                    level: flags.level,
+                    template,
+                    configurations: flags.configurations === false ? [] : flags.configurations,
+                }),
+            );
+        });
 }

@@ -63,6 +63,27 @@ async function downloadValePackages(install: ToolInstall, folder: string): Promi
     return packages;
 }
 
+async function readBoundedArchive(response: Response, { url, name, limit }: ArchiveDownload): Promise<Buffer> {
+    const reader: ReadableStreamDefaultReader<Uint8Array> | undefined = response.body?.getReader();
+    if (reader === undefined) throw new GspotError('install', `${url} sent no content for ${name}.`);
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    try {
+        for (;;) {
+            const { done, value } = await reader.read();
+            if (done) return Buffer.concat(chunks);
+            size += value.length;
+            if (size > limit) {
+                await reader.cancel();
+                throw new GspotError('install', `${url} exceeds the size limit for ${name}.`);
+            }
+            chunks.push(value);
+        }
+    } finally {
+        reader.releaseLock();
+    }
+}
+
 /**
 Check that the Vale packages exist before prose checks run.
 
@@ -175,27 +196,6 @@ export function buildValeIni({
         ...markupRules.map((rule) => `${rule} = YES`),
     ];
     return lines.join('\n');
-}
-
-async function readBoundedArchive(response: Response, { url, name, limit }: ArchiveDownload): Promise<Buffer> {
-    const reader: ReadableStreamDefaultReader<Uint8Array> | undefined = response.body?.getReader();
-    if (reader === undefined) throw new GspotError('install', `${url} sent no content for ${name}.`);
-    const chunks: Uint8Array[] = [];
-    let size = 0;
-    try {
-        for (;;) {
-            const { done, value } = await reader.read();
-            if (done) return Buffer.concat(chunks);
-            size += value.length;
-            if (size > limit) {
-                await reader.cancel();
-                throw new GspotError('install', `${url} exceeds the size limit for ${name}.`);
-            }
-            chunks.push(value);
-        }
-    } finally {
-        reader.releaseLock();
-    }
 }
 
 /**

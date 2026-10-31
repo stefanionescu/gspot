@@ -122,6 +122,26 @@ function formatComparison(comparison: RunReport['comparison']): string {
         : `Checked ${formatCheckedContent(comparison)}.\n`;
 }
 
+function formatMissingChecks(checks: readonly CheckResult[], { selectedOnly }: { selectedOnly: boolean }): string[] {
+    const grouped = new Map<string, CheckResult[]>();
+    for (const check of checks) {
+        if (check.status !== 'missing') continue;
+        const note = check.note ?? '';
+        grouped.set(note, [...(grouped.get(note) ?? []), check]);
+    }
+    return [...grouped].flatMap(([note, missing]) => [
+        `missing  ${missing.map((check) => [check.check, check.scope].filter(Boolean).join(' ')).join(', ')}`,
+        `  ${!selectedOnly && note.endsWith(STANDARD_INSTALL_HELP) ? note.slice(0, -STANDARD_INSTALL_HELP.length) : note}`,
+        '',
+    ]);
+}
+
+function formatNotChecked(notChecked: RunReport['notChecked']): string[] {
+    if (notChecked === undefined) return [];
+    const choices = notChecked.map(({ configuration, evidence }) => `${configuration} (${evidence})`).join(', ');
+    return [`note     Not checked: ${choices}. Run gspot add <name>, or gspot remove <name> --reason "<why>".`];
+}
+
 /**
 Print failed fixer warnings, with the full diagnostics when requested.
 
@@ -152,26 +172,6 @@ export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: bool
                     .join('\n') + '\n',
             );
     }
-}
-
-function formatMissingChecks(checks: readonly CheckResult[], { selectedOnly }: { selectedOnly: boolean }): string[] {
-    const grouped = new Map<string, CheckResult[]>();
-    for (const check of checks) {
-        if (check.status !== 'missing') continue;
-        const note = check.note ?? '';
-        grouped.set(note, [...(grouped.get(note) ?? []), check]);
-    }
-    return [...grouped].flatMap(([note, missing]) => [
-        `missing  ${missing.map((check) => [check.check, check.scope].filter(Boolean).join(' ')).join(', ')}`,
-        `  ${!selectedOnly && note.endsWith(STANDARD_INSTALL_HELP) ? note.slice(0, -STANDARD_INSTALL_HELP.length) : note}`,
-        '',
-    ]);
-}
-
-function formatNotChecked(notChecked: RunReport['notChecked']): string[] {
-    if (notChecked === undefined) return [];
-    const choices = notChecked.map(({ configuration, evidence }) => `${configuration} (${evidence})`).join(', ');
-    return [`note     Not checked: ${choices}. Run gspot add <name>, or gspot remove <name> --reason "<why>".`];
 }
 
 /**

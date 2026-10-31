@@ -63,6 +63,32 @@ function addBuildFindings(findings: CheckFinding[], parsed: CheckFinding[], fold
     }
 }
 
+async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Promise<string> {
+    const files = session.repository.files.filter(
+        (file) =>
+            file.kind === 'source' &&
+            selectScopePath(file.path, session.scopes) === planned.scope.path &&
+            (STYLE_EXTENSIONS.has(extname(file.path)) || STYLE_COMPONENTS.has(extname(file.path))),
+    );
+    const styles: string[] = [];
+    for (const file of files) {
+        const text = read(session.cache, file.path);
+        if (STYLE_EXTENSIONS.has(extname(file.path))) {
+            styles.push(text);
+            continue;
+        }
+        using tree = await parseSource('html', text, session);
+        styles.push(
+            ...tree.rootNode
+                .descendantsOfType('style_element')
+                .flatMap((node) =>
+                    node.namedChildren.filter((child) => child.type === 'raw_text').map((child) => child.text),
+                ),
+        );
+    }
+    return styles.join('\n').replaceAll(STYLE_WHITESPACE, '');
+}
+
 /**
 Reports broken links between built pages, stylesheets, and fragments.
 
@@ -139,32 +165,6 @@ export async function checkHtmlValidate(session: CheckSession, planned: PlannedC
         addBuildFindings(findings, parsed, getTable(planned.scope.settings, 'site').build_folder);
     }
     return findings;
-}
-
-async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Promise<string> {
-    const files = session.repository.files.filter(
-        (file) =>
-            file.kind === 'source' &&
-            selectScopePath(file.path, session.scopes) === planned.scope.path &&
-            (STYLE_EXTENSIONS.has(extname(file.path)) || STYLE_COMPONENTS.has(extname(file.path))),
-    );
-    const styles: string[] = [];
-    for (const file of files) {
-        const text = read(session.cache, file.path);
-        if (STYLE_EXTENSIONS.has(extname(file.path))) {
-            styles.push(text);
-            continue;
-        }
-        using tree = await parseSource('html', text, session);
-        styles.push(
-            ...tree.rootNode
-                .descendantsOfType('style_element')
-                .flatMap((node) =>
-                    node.namedChildren.filter((child) => child.type === 'raw_text').map((child) => child.text),
-                ),
-        );
-    }
-    return styles.join('\n').replaceAll(STYLE_WHITESPACE, '');
 }
 
 /**

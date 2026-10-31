@@ -107,6 +107,56 @@ function readComposeDocuments(session: Session, planned: PlannedCheck): ComposeD
     return documents;
 }
 
+function listMissingPatterns(required: string[], text: string): string[] {
+    const lines = text.split('\n').map((line) => {
+        const value = line.trim().replaceAll(EDGE_SLASHES, '');
+        const negated = value.startsWith('!');
+        const spelling = negated ? value.slice(1) : value;
+        return { negated, entry: spelling.endsWith('/**') ? spelling.slice(0, -'/**'.length) : spelling };
+    });
+    const patterns = required.map((pattern) => (pattern.endsWith('/**') ? pattern.slice(0, -'/**'.length) : pattern));
+    const absent = new Set(
+        patterns.filter((pattern) => {
+            let excluded = false;
+            let broad = false;
+            for (const { negated, entry } of lines) {
+                if (EXCLUDE_ALL_LINES.has(entry)) {
+                    excluded = !negated;
+                    broad = !negated;
+                } else if (IGNORE_PATTERN_FORMS.some(([prefix, suffix]) => entry === `${prefix}${pattern}${suffix}`)) {
+                    excluded = !negated;
+                    broad = false;
+                } else if (negated && broad && pattern.startsWith('**/')) excluded = false;
+            }
+            return !excluded;
+        }),
+    );
+    return required.filter((_, index) => absent.has(patterns[index] ?? ''));
+}
+
+async function scanImage(session: CheckSession, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
+    const config = join(session.root, getConfigPath(session, planned, TRIVY_CONFIG_FILE));
+    const result = await runCheckTool(session, planned, [...TRIVY_IMAGE_COMMAND, config, image], {
+        cwd: session.root,
+    });
+    if (result.code !== 0 && result.code !== TRIVY_FINDINGS_EXIT_CODE) {
+        const output = result.stderr.trim() === '' ? result : { stdout: '', stderr: result.stderr };
+        const detail = formatOutputTail(output, `exit ${String(result.code)}`);
+        throw new GspotError('check', `Trivy could not scan ${image}: ${detail}`);
+    }
+    const report = parseToolOutput('Trivy', result.stdout, trivyImageOutputSchema);
+    return (report.Results ?? []).flatMap((target) => [
+        ...(target.Vulnerabilities ?? []).map((vulnerability) => ({
+            rule: vulnerability.VulnerabilityID,
+            message: `${image}: ${vulnerability.VulnerabilityID} (${vulnerability.PkgName})`,
+        })),
+        ...(target.Secrets ?? []).map((secret) => ({
+            rule: DOCKER_RULES.secret,
+            message: `${image}: ${secret.RuleID}: ${secret.Title}`,
+        })),
+    ]);
+}
+
 /**
 Validates each Compose project with its overrides.
 
@@ -133,33 +183,6 @@ export async function checkCompose(session: CheckSession, planned: PlannedCheck)
             return { files: [last], command };
         }),
     );
-}
-
-function listMissingPatterns(required: string[], text: string): string[] {
-    const lines = text.split('\n').map((line) => {
-        const value = line.trim().replaceAll(EDGE_SLASHES, '');
-        const negated = value.startsWith('!');
-        const spelling = negated ? value.slice(1) : value;
-        return { negated, entry: spelling.endsWith('/**') ? spelling.slice(0, -'/**'.length) : spelling };
-    });
-    const patterns = required.map((pattern) => (pattern.endsWith('/**') ? pattern.slice(0, -'/**'.length) : pattern));
-    const absent = new Set(
-        patterns.filter((pattern) => {
-            let excluded = false;
-            let broad = false;
-            for (const { negated, entry } of lines) {
-                if (EXCLUDE_ALL_LINES.has(entry)) {
-                    excluded = !negated;
-                    broad = !negated;
-                } else if (IGNORE_PATTERN_FORMS.some(([prefix, suffix]) => entry === `${prefix}${pattern}${suffix}`)) {
-                    excluded = !negated;
-                    broad = false;
-                } else if (negated && broad && pattern.startsWith('**/')) excluded = false;
-            }
-            return !excluded;
-        }),
-    );
-    return required.filter((_, index) => absent.has(patterns[index] ?? ''));
 }
 
 /**
@@ -214,29 +237,6 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Chec
                       ];
             }),
     ];
-}
-
-async function scanImage(session: CheckSession, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
-    const config = join(session.root, getConfigPath(session, planned, TRIVY_CONFIG_FILE));
-    const result = await runCheckTool(session, planned, [...TRIVY_IMAGE_COMMAND, config, image], {
-        cwd: session.root,
-    });
-    if (result.code !== 0 && result.code !== TRIVY_FINDINGS_EXIT_CODE) {
-        const output = result.stderr.trim() === '' ? result : { stdout: '', stderr: result.stderr };
-        const detail = formatOutputTail(output, `exit ${String(result.code)}`);
-        throw new GspotError('check', `Trivy could not scan ${image}: ${detail}`);
-    }
-    const report = parseToolOutput('Trivy', result.stdout, trivyImageOutputSchema);
-    return (report.Results ?? []).flatMap((target) => [
-        ...(target.Vulnerabilities ?? []).map((vulnerability) => ({
-            rule: vulnerability.VulnerabilityID,
-            message: `${image}: ${vulnerability.VulnerabilityID} (${vulnerability.PkgName})`,
-        })),
-        ...(target.Secrets ?? []).map((secret) => ({
-            rule: DOCKER_RULES.secret,
-            message: `${image}: ${secret.RuleID}: ${secret.Title}`,
-        })),
-    ]);
 }
 
 /**

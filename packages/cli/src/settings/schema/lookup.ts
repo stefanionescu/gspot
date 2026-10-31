@@ -30,6 +30,24 @@ export const RECORD_FIELDS: Readonly<Record<string, readonly string[]>> = Object
     }).map(([name, fields]) => [name, Object.keys(fields)]),
 );
 
+function settingValueType(schema: z.ZodType, path: boolean): Setting['type'] {
+    if (schema instanceof z.ZodArray) return 'list';
+    if (schema instanceof z.ZodNumber) return 'number';
+    if (schema instanceof z.ZodBoolean) return 'boolean';
+    if (schema instanceof z.ZodObject || schema instanceof z.ZodRecord) return 'table';
+    return path ? 'path' : 'string';
+}
+
+function settingInputSchema(schema: z.ZodType): z.ZodType {
+    let inner = unwrapSettingSchema(schema);
+    while (inner instanceof z.ZodPipe || inner instanceof z.ZodUnion) {
+        let next = inner instanceof z.ZodUnion ? inner.options[0] : inner.out;
+        if (inner instanceof z.ZodPipe && next instanceof z.ZodTransform) next = inner.in;
+        inner = unwrapSettingSchema(next as z.ZodType);
+    }
+    return inner;
+}
+
 /**
 Remove optional and default wrappers to inspect the shape of a setting.
 
@@ -90,22 +108,4 @@ export function getSettingType(schema: z.ZodType): Pick<Setting, 'type' | 'path_
         type: settingValueType(inner, pathRole !== undefined),
         ...(pathRole === undefined ? {} : { path_role: pathRole }),
     };
-}
-
-function settingValueType(schema: z.ZodType, path: boolean): Setting['type'] {
-    if (schema instanceof z.ZodArray) return 'list';
-    if (schema instanceof z.ZodNumber) return 'number';
-    if (schema instanceof z.ZodBoolean) return 'boolean';
-    if (schema instanceof z.ZodObject || schema instanceof z.ZodRecord) return 'table';
-    return path ? 'path' : 'string';
-}
-
-function settingInputSchema(schema: z.ZodType): z.ZodType {
-    let inner = unwrapSettingSchema(schema);
-    while (inner instanceof z.ZodPipe || inner instanceof z.ZodUnion) {
-        let next = inner instanceof z.ZodUnion ? inner.options[0] : inner.out;
-        if (inner instanceof z.ZodPipe && next instanceof z.ZodTransform) next = inner.in;
-        inner = unwrapSettingSchema(next as z.ZodType);
-    }
-    return inner;
 }

@@ -185,24 +185,6 @@ async function validateSwiftImports(
     return findings.flat();
 }
 
-/**
-Applies [[import_rule]] to Python and Swift imports, and reports the code files of every language that no rule covers.
-ESLint applies the rules to JavaScript and TypeScript imports.
-
-@param session the repository and its tools.
-@param planned the configured check and selected scope files.
-*/
-export async function checkImportRules(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const rules = session.settings.import_rule;
-    if (rules.length === 0) throw new GspotError('skip', IMPORT_RULES_SKIP);
-    const lookup = buildRuleLookup(rules);
-    return [
-        ...listUncoveredFiles(planned, lookup),
-        ...(await validatePythonImports(session, planned, lookup)),
-        ...(await validateSwiftImports(session, planned, lookup)),
-    ];
-}
-
 function findModuleFile(folder: string, dotted: string, files: ReadonlySet<string>): string | undefined {
     const base = posix.join(folder, ...dotted.split('.').filter((segment) => segment !== ''));
     return PYTHON_MODULE_SUFFIXES.map((suffix) => `${base}${suffix}`).find((path) => files.has(path));
@@ -267,4 +249,22 @@ function listPythonImports(syntaxRoot: Node, file: string, search: PythonSearch)
             ? []
             : listAbsoluteImports(node, source.text, search);
     });
+}
+
+/**
+Applies [[import_rule]] to Python and Swift imports, and reports the code files of every language that no rule covers.
+ESLint applies the rules to JavaScript and TypeScript imports.
+
+@param session the repository and its tools.
+@param planned the configured check and selected scope files.
+*/
+export async function checkImportRules(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+    const rules = session.settings.import_rule;
+    if (rules.length === 0) throw new GspotError('skip', IMPORT_RULES_SKIP);
+    const lookup = buildRuleLookup(rules);
+    return [
+        ...listUncoveredFiles(planned, lookup),
+        ...(await validatePythonImports(session, planned, lookup)),
+        ...(await validateSwiftImports(session, planned, lookup)),
+    ];
 }

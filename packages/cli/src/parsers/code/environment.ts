@@ -26,36 +26,6 @@ import {
     JAVASCRIPT_ENVIRONMENT_GETTERS,
 } from '#cli/config/parsers/code.ts';
 
-/**
-Read expansions of the environment names that the environment readers declare.
-
-@param syntaxRoot the parsed Bash source.
-@param readerVariables the variables that environment readers declare.
-*/
-export function listBashEnvironmentReads(syntaxRoot: Node, readerVariables: ReadonlySet<string>): EnvironmentRead[] {
-    return syntaxRoot.descendantsOfType([...EXPANSION_NODES]).flatMap((expansion) =>
-        expansion.namedChildren
-            .filter((node) => node.type === 'variable_name' && readerVariables.has(node.text))
-            .map((node) => ({
-                key: node.text,
-                line: node.startPosition.row + 1,
-                column: node.startPosition.column + 1,
-            })),
-    );
-}
-
-/**
-Read Swift process environment access from navigation expressions.
-
-@param syntaxRoot the parsed Swift source.
-*/
-export function listSwiftEnvironmentReads(syntaxRoot: Node): EnvironmentRead[] {
-    return syntaxRoot
-        .descendantsOfType('navigation_expression')
-        .filter((node) => node.text.replaceAll(WHITESPACE_RUN, '') === SWIFT_ENVIRONMENT)
-        .map((node) => ({ key: undefined, line: node.startPosition.row + 1, column: node.startPosition.column + 1 }));
-}
-
 function findGetterKey(node: ts.CallExpression, source: ts.SourceFile, getters: Set<string>): string | undefined {
     const ts = requireTypescript();
     if (!getters.has(node.expression.getText(source).replaceAll(WHITESPACE_RUN, ''))) return undefined;
@@ -71,57 +41,6 @@ function findEnvironmentKey(node: ts.Node, source: ts.SourceFile, getters: Set<s
         return undefined;
     if (ts.isPropertyAccessExpression(node)) return node.name.text;
     return ts.isStringLiteralLike(node.argumentExpression) ? node.argumentExpression.text : undefined;
-}
-
-/**
-Read environment members and calls to the environment functions in JavaScript or TypeScript.
-
-@param path the original source path.
-@param text the JavaScript or TypeScript source.
-@param environmentFunctions the configured names that read process variables.
-*/
-export function listJavascriptEnvironmentReads(
-    path: string,
-    text: string,
-    environmentFunctions: readonly string[],
-): EnvironmentRead[] {
-    const ts = requireTypescript();
-    if (COMPONENT_EXTENSION.test(path)) {
-        const front = path.endsWith(ASTRO_EXTENSION) ? ASTRO_FRONT_MATTER.exec(text)?.[1] : undefined;
-        const frontReads =
-            front === undefined ? [] : listJavascriptEnvironmentReads(`${path}.ts`, `\n${front}`, environmentFunctions);
-        return [
-            ...frontReads,
-            ...[...text.matchAll(COMPONENT_SCRIPT)].flatMap((script) => {
-                const body = script.groups?.['body'] ?? '';
-                const language =
-                    SCRIPT_LANGUAGE.exec(script.groups?.['attributes'] ?? '')?.groups?.['language'] ?? 'ts';
-                const start = script.index + script[0].indexOf('>') + 1;
-                const prefix = text.slice(0, start).replaceAll(/[^\r\n]/gu, ' ');
-                return listJavascriptEnvironmentReads(`${path}.${language}`, prefix + body, environmentFunctions);
-            }),
-        ];
-    }
-    const source = ts.createSourceFile(
-        path,
-        text,
-        ts.ScriptTarget.Latest,
-        true,
-        /\.[cm]?[jt]sx$/u.test(path) ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-    );
-    const getters = new Set([...JAVASCRIPT_ENVIRONMENT_GETTERS, ...environmentFunctions]);
-    const reads: EnvironmentRead[] = [];
-    const visit = (node: ts.Node): void => {
-        reads.push(...listDeclarationReads(node, source));
-        const key = findEnvironmentKey(node, source, getters);
-        if (key !== undefined && VARIABLE_NAME.test(key)) {
-            const position = source.getLineAndCharacterOfPosition(node.getStart(source));
-            reads.push({ key, line: position.line + 1, column: position.character + 1 });
-        }
-        ts.forEachChild(node, visit);
-    };
-    visit(source);
-    return reads;
 }
 
 function findDeclarationScope(node: Node): Node {
@@ -233,46 +152,6 @@ function findEnvironmentKeyNode(node: Node): Node | null | undefined {
     return expression.type === 'call' ? expression.childForFieldName('arguments')?.namedChildren[0] : undefined;
 }
 
-/**
-Read Python environment access and calls to the environment functions, through import aliases.
-
-@param syntaxRoot the parsed Python source.
-@param environmentFunctions the configured names that read process variables.
-*/
-export function listPythonEnvironmentReads(
-    syntaxRoot: Node,
-    environmentFunctions: readonly string[],
-): EnvironmentRead[] {
-    const pythonNames = listPythonNames(syntaxRoot);
-    const nodes = syntaxRoot.descendantsOfType(['attribute', 'call', 'identifier']);
-    const accessIds = new Set(
-        nodes
-            .filter((node) =>
-                node.type === 'attribute'
-                    ? node.childForFieldName('attribute')?.text === 'environ'
-                    : node.type === 'call' &&
-                      node.childForFieldName('function')?.childForFieldName('attribute')?.text === 'getenv',
-            )
-            .map((node) => node.id),
-    );
-    return nodes
-        .filter(
-            (node) =>
-                (node.type === 'call' &&
-                    environmentFunctions.includes(node.childForFieldName('function')?.text ?? '')) ||
-                ((node.type !== 'identifier' || node.parent?.type === 'subscript') &&
-                    isPythonEnvironmentRead(node, pythonNames, accessIds)),
-        )
-        .map((node) => {
-            const literal = findEnvironmentKeyNode(node);
-            const key =
-                literal?.type === 'string' && literal.descendantsOfType('interpolation').length === 0
-                    ? decodePythonKey(literal)
-                    : undefined;
-            return { key, line: node.startPosition.row + 1, column: node.startPosition.column + 1 };
-        });
-}
-
 function decodePythonKey(literal: Node): string | undefined {
     const value = literal.namedChildren.find((child) => child.type === 'string_content')?.text;
     if (value === undefined || /^[BFTU]*R[BFRTU]*["']/iu.test(literal.text)) return value;
@@ -313,4 +192,125 @@ function listDeclarationReads(node: ts.Node, source: ts.SourceFile): Environment
         const position = source.getLineAndCharacterOfPosition(property.getStart(source));
         return [{ key, line: position.line + 1, column: position.character + 1 }];
     });
+}
+
+/**
+Read expansions of the environment names that the environment readers declare.
+
+@param syntaxRoot the parsed Bash source.
+@param readerVariables the variables that environment readers declare.
+*/
+export function listBashEnvironmentReads(syntaxRoot: Node, readerVariables: ReadonlySet<string>): EnvironmentRead[] {
+    return syntaxRoot.descendantsOfType([...EXPANSION_NODES]).flatMap((expansion) =>
+        expansion.namedChildren
+            .filter((node) => node.type === 'variable_name' && readerVariables.has(node.text))
+            .map((node) => ({
+                key: node.text,
+                line: node.startPosition.row + 1,
+                column: node.startPosition.column + 1,
+            })),
+    );
+}
+
+/**
+Read Swift process environment access from navigation expressions.
+
+@param syntaxRoot the parsed Swift source.
+*/
+export function listSwiftEnvironmentReads(syntaxRoot: Node): EnvironmentRead[] {
+    return syntaxRoot
+        .descendantsOfType('navigation_expression')
+        .filter((node) => node.text.replaceAll(WHITESPACE_RUN, '') === SWIFT_ENVIRONMENT)
+        .map((node) => ({ key: undefined, line: node.startPosition.row + 1, column: node.startPosition.column + 1 }));
+}
+
+/**
+Read environment members and calls to the environment functions in JavaScript or TypeScript.
+
+@param path the original source path.
+@param text the JavaScript or TypeScript source.
+@param environmentFunctions the configured names that read process variables.
+*/
+export function listJavascriptEnvironmentReads(
+    path: string,
+    text: string,
+    environmentFunctions: readonly string[],
+): EnvironmentRead[] {
+    const ts = requireTypescript();
+    if (COMPONENT_EXTENSION.test(path)) {
+        const front = path.endsWith(ASTRO_EXTENSION) ? ASTRO_FRONT_MATTER.exec(text)?.[1] : undefined;
+        const frontReads =
+            front === undefined ? [] : listJavascriptEnvironmentReads(`${path}.ts`, `\n${front}`, environmentFunctions);
+        return [
+            ...frontReads,
+            ...[...text.matchAll(COMPONENT_SCRIPT)].flatMap((script) => {
+                const body = script.groups?.['body'] ?? '';
+                const language =
+                    SCRIPT_LANGUAGE.exec(script.groups?.['attributes'] ?? '')?.groups?.['language'] ?? 'ts';
+                const start = script.index + script[0].indexOf('>') + 1;
+                const prefix = text.slice(0, start).replaceAll(/[^\r\n]/gu, ' ');
+                return listJavascriptEnvironmentReads(`${path}.${language}`, prefix + body, environmentFunctions);
+            }),
+        ];
+    }
+    const source = ts.createSourceFile(
+        path,
+        text,
+        ts.ScriptTarget.Latest,
+        true,
+        /\.[cm]?[jt]sx$/u.test(path) ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+    );
+    const getters = new Set([...JAVASCRIPT_ENVIRONMENT_GETTERS, ...environmentFunctions]);
+    const reads: EnvironmentRead[] = [];
+    const visit = (node: ts.Node): void => {
+        reads.push(...listDeclarationReads(node, source));
+        const key = findEnvironmentKey(node, source, getters);
+        if (key !== undefined && VARIABLE_NAME.test(key)) {
+            const position = source.getLineAndCharacterOfPosition(node.getStart(source));
+            reads.push({ key, line: position.line + 1, column: position.character + 1 });
+        }
+        ts.forEachChild(node, visit);
+    };
+    visit(source);
+    return reads;
+}
+
+/**
+Read Python environment access and calls to the environment functions, through import aliases.
+
+@param syntaxRoot the parsed Python source.
+@param environmentFunctions the configured names that read process variables.
+*/
+export function listPythonEnvironmentReads(
+    syntaxRoot: Node,
+    environmentFunctions: readonly string[],
+): EnvironmentRead[] {
+    const pythonNames = listPythonNames(syntaxRoot);
+    const nodes = syntaxRoot.descendantsOfType(['attribute', 'call', 'identifier']);
+    const accessIds = new Set(
+        nodes
+            .filter((node) =>
+                node.type === 'attribute'
+                    ? node.childForFieldName('attribute')?.text === 'environ'
+                    : node.type === 'call' &&
+                      node.childForFieldName('function')?.childForFieldName('attribute')?.text === 'getenv',
+            )
+            .map((node) => node.id),
+    );
+    return nodes
+        .filter(
+            (node) =>
+                (node.type === 'call' &&
+                    environmentFunctions.includes(node.childForFieldName('function')?.text ?? '')) ||
+                ((node.type !== 'identifier' || node.parent?.type === 'subscript') &&
+                    isPythonEnvironmentRead(node, pythonNames, accessIds)),
+        )
+        .map((node) => {
+            const literal = findEnvironmentKeyNode(node);
+            const key =
+                literal?.type === 'string' && literal.descendantsOfType('interpolation').length === 0
+                    ? decodePythonKey(literal)
+                    : undefined;
+            return { key, line: node.startPosition.row + 1, column: node.startPosition.column + 1 };
+        });
 }

@@ -35,6 +35,12 @@ import {
     INSECURE_TRANSPORT_SETTING,
 } from '#cli/config/checks/infrastructure.ts';
 
+function extractAssetSetName(path: string): string {
+    const folder = extractParentFolder(path);
+    const name = posix.basename(folder);
+    return name.slice(0, name.lastIndexOf('.'));
+}
+
 /**
 Reports Swift sources that no Xcode target holds.
 
@@ -63,12 +69,6 @@ export function checkFilesWithoutTarget(session: Session, planned: PlannedCheck)
             rule: XCODE_RULES.untargeted,
             message: UNTARGETED_FILE_MESSAGE,
         }));
-}
-
-function extractAssetSetName(path: string): string {
-    const folder = extractParentFolder(path);
-    const name = posix.basename(folder);
-    return name.slice(0, name.lastIndexOf('.'));
 }
 
 /**

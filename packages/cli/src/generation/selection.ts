@@ -6,21 +6,6 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { UsedNames, OwnedConfig, ConfigTargets } from '#cli/types/generation/files.ts';
 
-/**
-Find the repository-relative path of the config file for a scope.
-
-@param scopePath the folder, empty for the root.
-@param config the config file from the manifest.
-@param configs the generated paths by scope and file name, and the scopes whose file failed to build.
-@returns the file of the scope, or the root file as a fallback.
-@throws the build failure of the file in this scope.
-*/
-export function getConfigTarget(scopePath: string, config: Config, configs: ConfigTargets): string {
-    const failure = configs.failures.get(scopePath)?.get(config.target);
-    if (failure !== undefined) throw failure;
-    return config.per_scope ? (configs.targets.get(scopePath)?.get(config.target) ?? config.target) : config.target;
-}
-
 function isConfigWritten(session: Session, file: Config, usedNames: UsedNames): boolean {
     if (file.level === 'all' && session.settings.level !== 'all') return false;
     const constraints = [
@@ -75,6 +60,21 @@ function listScopeConfigs(session: Session, scope: Scope, usedNames: UsedNames):
                 owner: { session, scope, configuration },
             })),
     );
+}
+
+/**
+Find the repository-relative path of the config file for a scope.
+
+@param scopePath the folder, empty for the root.
+@param config the config file from the manifest.
+@param configs the generated paths by scope and file name, and the scopes whose file failed to build.
+@returns the file of the scope, or the root file as a fallback.
+@throws the build failure of the file in this scope.
+*/
+export function getConfigTarget(scopePath: string, config: Config, configs: ConfigTargets): string {
+    const failure = configs.failures.get(scopePath)?.get(config.target);
+    if (failure !== undefined) throw failure;
+    return config.per_scope ? (configs.targets.get(scopePath)?.get(config.target) ?? config.target) : config.target;
 }
 
 /**

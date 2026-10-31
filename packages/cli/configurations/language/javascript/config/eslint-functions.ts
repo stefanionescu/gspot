@@ -16,6 +16,34 @@ export const root = fileURLToPath(new URL('../../../../..', import.meta.url)).re
 
 const componentParserOptions = { tsconfigRootDir: root, ecmaVersion: 'latest', sourceType: 'module' };
 
+function pickRuleOptions(
+    block: JavascriptBlock,
+    options: EslintRuleOptionBlock,
+): (JavascriptBlock & { rules: Record<string, unknown> })[] {
+    const rules = block.rules === undefined ? [] : Object.entries(block.rules);
+    const picked = rules.flatMap(([name, value]): [string, unknown][] => {
+        const override = options.rules[name];
+        const severity: unknown = Array.isArray(value) ? value[0] : value;
+        return override === undefined || severity === 'off' || severity === 0 ? [] : [[name, [severity, ...override]]];
+    });
+    if (picked.length === 0) return [];
+    const files = block.files?.flatMap((file) => options.paths.map((path) => [...[file].flat(), ...path]));
+    return [
+        {
+            files: files ?? options.paths,
+            ignores: [...(block.ignores ?? []), ...options.ignores],
+            rules: Object.fromEntries(picked),
+        },
+    ];
+}
+
+function setRuleLevel(value: unknown, level: unknown): unknown {
+    const configured: unknown[] = Array.isArray(value) ? value : [value];
+    const [severity, ...options] = configured;
+    if (severity === 'off' || severity === 0) return value;
+    return Array.isArray(value) ? [level, ...options] : level;
+}
+
 /**
 Remove host runtime globals and keep framework compiler and test names. Runtime APIs get their globals from blocks with
 their own file selectors.
@@ -280,27 +308,6 @@ export function setRuleOptions(blocks: JavascriptBlock[], ruleOptions: EslintRul
     return pairs.flatMap(({ block, picked }) => [block, ...picked]);
 }
 
-function pickRuleOptions(
-    block: JavascriptBlock,
-    options: EslintRuleOptionBlock,
-): (JavascriptBlock & { rules: Record<string, unknown> })[] {
-    const rules = block.rules === undefined ? [] : Object.entries(block.rules);
-    const picked = rules.flatMap(([name, value]): [string, unknown][] => {
-        const override = options.rules[name];
-        const severity: unknown = Array.isArray(value) ? value[0] : value;
-        return override === undefined || severity === 'off' || severity === 0 ? [] : [[name, [severity, ...override]]];
-    });
-    if (picked.length === 0) return [];
-    const files = block.files?.flatMap((file) => options.paths.map((path) => [...[file].flat(), ...path]));
-    return [
-        {
-            files: files ?? options.paths,
-            ignores: [...(block.ignores ?? []), ...options.ignores],
-            rules: Object.fromEntries(picked),
-        },
-    ];
-}
-
 /**
 Give each enabled gspot rule the severity from the plugin config. Disable rules absent from that config. Keep each rule's options.
 
@@ -323,13 +330,6 @@ export function setLevelRules(
         rules[name] = setRuleLevel(value, level);
     }
     return { ...block, rules };
-}
-
-function setRuleLevel(value: unknown, level: unknown): unknown {
-    const configured: unknown[] = Array.isArray(value) ? value : [value];
-    const [severity, ...options] = configured;
-    if (severity === 'off' || severity === 0) return value;
-    return Array.isArray(value) ? [level, ...options] : level;
 }
 
 /**

@@ -18,6 +18,23 @@ import {
     writeReferenceProjects,
 } from '#cli/checks/cross-configuration/tsc/compiler.ts';
 
+function removeChildScopeFindings(session: Session, planned: PlannedCheck, result: CheckResult): CheckResult {
+    const checked = new Set(
+        session.configuredChecks.filter(({ check }) => check.id === planned.check.id).map(({ scope }) => scope.path),
+    );
+    const own = planned.scope.path;
+    const findings = result.findings.filter(({ file }) => {
+        const owner = file === '' ? own : selectScopePath(file, session.repository.scopeFolders);
+        return owner === own || !checked.has(owner);
+    });
+    if (findings.length === result.findings.length) return result;
+    return {
+        ...result,
+        findings,
+        status: findings.length === 0 && result.status === 'failed' ? 'passed' : result.status,
+    };
+}
+
 /**
 Runs tsc on a project, or on every project that a solution tsconfig names.
 
@@ -64,21 +81,4 @@ export async function checkTsc(session: CheckSession, planned: PlannedCheck): Pr
         session.root,
     );
     return references === undefined ? result : removeChildScopeFindings(session, planned, result);
-}
-
-function removeChildScopeFindings(session: Session, planned: PlannedCheck, result: CheckResult): CheckResult {
-    const checked = new Set(
-        session.configuredChecks.filter(({ check }) => check.id === planned.check.id).map(({ scope }) => scope.path),
-    );
-    const own = planned.scope.path;
-    const findings = result.findings.filter(({ file }) => {
-        const owner = file === '' ? own : selectScopePath(file, session.repository.scopeFolders);
-        return owner === own || !checked.has(owner);
-    });
-    if (findings.length === result.findings.length) return result;
-    return {
-        ...result,
-        findings,
-        status: findings.length === 0 && result.status === 'failed' ? 'passed' : result.status,
-    };
 }

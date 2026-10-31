@@ -46,6 +46,124 @@ function findTomlTable(
     return table;
 }
 
+function buildTablePath(
+    node: Exclude<TomlBlock, TomlKeyValue | TomlCommentNode>,
+    positions: TomlTablePositions,
+): KeyPath {
+    const path: KeyPath[number][] = [];
+    for (const [index, key] of node.key.item.value.entries()) {
+        path.push(key);
+        if (!Array.isArray(findValueAt(positions.value, path))) continue;
+        const name = JSON.stringify(node.key.item.value.slice(0, index + 1));
+        let position = positions.active.get(name) ?? 0;
+        if (isTomlKind(node, 'TableArray') && index === node.key.item.value.length - 1) {
+            position = positions.counts.get(name) ?? 0;
+            positions.counts.set(name, position + 1);
+            positions.active.set(name, position);
+        }
+        path.push(position);
+    }
+    return path;
+}
+
+function listNestedNodes(node: TomlValue, keys: KeyPath): TomlSyntax['pathNodes'] {
+    if (isTomlKind(node, 'InlineArray'))
+        return node.items.flatMap(({ item }, index): TomlSyntax['pathNodes'] => {
+            const value = item as TomlValue;
+            const child = [...keys, index];
+            return [{ kind: 'item', path: child, node: value }, ...listNestedNodes(value, child)];
+        });
+    if (isTomlKind(node, 'InlineTable'))
+        return node.items.flatMap(({ item }): TomlSyntax['pathNodes'] => {
+            const child = [...keys, ...item.key.value];
+            return [{ kind: 'key', path: child, node: item }, ...listNestedNodes(item.value, child)];
+        });
+    return [];
+}
+
+function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlPathNode | undefined {
+    const inline = syntax.pathNodes
+        .filter(
+            ({ node }) =>
+                node.loc.end.line === comment.loc.start.line && node.loc.end.column <= comment.loc.start.column,
+        )
+        .toSorted((left, right) => getTomlRange(left.node)[1] - getTomlRange(right.node)[1])
+        .at(-1);
+    if (inline !== undefined) return inline;
+    const next = syntax.pathNodes.find(({ node }) => getTomlRange(node)[0] > getTomlRange(comment)[1]);
+    let end = comment.loc.end.line;
+    while (
+        syntax.comments.some(({ loc }) => loc.start.line === end + 1 && loc.start.column === comment.loc.start.column)
+    )
+        end++;
+    return next?.node.loc.start.line === end + 1 ? next : undefined;
+}
+
+function insertTomlComments(comments: TomlComments, kind: string, keys: KeyPath, text: string): string {
+    const id = JSON.stringify([kind, ...keys]);
+    const block = comments.get(id);
+    if (block === undefined) return text;
+    comments.delete(id);
+    const free = block.free
+        .toSorted((left, right) => left.start - right.start)
+        .map(
+            (comment, index, list) =>
+                (index > 0 && comment.line > (list[index - 1]?.line ?? 0) + 1 ? '\n' : '') + comment.raw,
+        )
+        .join('\n');
+    const owned = block.owned.toSorted((left, right) => left.start - right.start).map(({ raw }) => raw);
+    return [
+        ...(free === '' ? [] : [free, ...(text === '' && owned.length === 0 ? [] : [''])]),
+        ...owned,
+        ...(text === '' ? [] : [text]),
+    ].join('\n');
+}
+
+function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] {
+    return syntax.comments.map((comment) => {
+        const anchor = findCommentAnchor(syntax, comment);
+        const identity = anchor === undefined ? 'free' : JSON.stringify([anchor.kind, ...anchor.path]);
+        return { comment, anchor, identity };
+    });
+}
+
+function addTomlComment(comments: TomlComments, commentPlacement: TomlCommentPlacement): void {
+    const { kind, path, comment, placement } = commentPlacement;
+    if (path === undefined) return;
+    const id = JSON.stringify([kind, ...path]);
+    const block = comments.get(id) ?? { path, owned: [], free: [] };
+    block[placement].push({
+        raw: comment.raw,
+        start: getTomlRange(comment)[0],
+        line: comment.loc.start.line,
+    });
+    comments.set(id, block);
+}
+
+function replaceTomlValues(previous: TomlSyntax, values: Record<string, unknown>, format: Parameters<typeof patch>[2]) {
+    const appended: Record<string, unknown> = {};
+    const assigned: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(values)) {
+        if (!Object.hasOwn(previous.value, key) && Array.isArray(value) && value.length > 0 && value.every(isTable))
+            appended[key] = value;
+        else assigned[key] = value;
+    }
+    const patched = patch(previous.document.toTomlString, assigned, format);
+    const suffix = Object.keys(appended).length === 0 ? '' : `\n\n${stringify(appended, format)}`;
+    return { patched, suffix };
+}
+
+function pairChangedComments(previous: TomlSyntax, reparsed: TomlSyntax): TomlCommentMove[] {
+    const unmatched = new Set(listAnchoredComments(reparsed));
+    return listAnchoredComments(previous)
+        .map((source) => {
+            const found = unmatched.values().find((comment) => comment.comment.raw === source.comment.raw);
+            if (found !== undefined) unmatched.delete(found);
+            return { source, found };
+        })
+        .filter(({ source, found }) => found?.identity !== source.identity);
+}
+
 /**
 Write the values over the TOML text, and keep its order, its layout, and its comments. A top-level array of tables that the text lacks goes at its end.
 
@@ -170,59 +288,6 @@ export function openTomlFile(path: string, text: string): EditableFile {
     };
 }
 
-function buildTablePath(
-    node: Exclude<TomlBlock, TomlKeyValue | TomlCommentNode>,
-    positions: TomlTablePositions,
-): KeyPath {
-    const path: KeyPath[number][] = [];
-    for (const [index, key] of node.key.item.value.entries()) {
-        path.push(key);
-        if (!Array.isArray(findValueAt(positions.value, path))) continue;
-        const name = JSON.stringify(node.key.item.value.slice(0, index + 1));
-        let position = positions.active.get(name) ?? 0;
-        if (isTomlKind(node, 'TableArray') && index === node.key.item.value.length - 1) {
-            position = positions.counts.get(name) ?? 0;
-            positions.counts.set(name, position + 1);
-            positions.active.set(name, position);
-        }
-        path.push(position);
-    }
-    return path;
-}
-
-function listNestedNodes(node: TomlValue, keys: KeyPath): TomlSyntax['pathNodes'] {
-    if (isTomlKind(node, 'InlineArray'))
-        return node.items.flatMap(({ item }, index): TomlSyntax['pathNodes'] => {
-            const value = item as TomlValue;
-            const child = [...keys, index];
-            return [{ kind: 'item', path: child, node: value }, ...listNestedNodes(value, child)];
-        });
-    if (isTomlKind(node, 'InlineTable'))
-        return node.items.flatMap(({ item }): TomlSyntax['pathNodes'] => {
-            const child = [...keys, ...item.key.value];
-            return [{ kind: 'key', path: child, node: item }, ...listNestedNodes(item.value, child)];
-        });
-    return [];
-}
-
-function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlPathNode | undefined {
-    const inline = syntax.pathNodes
-        .filter(
-            ({ node }) =>
-                node.loc.end.line === comment.loc.start.line && node.loc.end.column <= comment.loc.start.column,
-        )
-        .toSorted((left, right) => getTomlRange(left.node)[1] - getTomlRange(right.node)[1])
-        .at(-1);
-    if (inline !== undefined) return inline;
-    const next = syntax.pathNodes.find(({ node }) => getTomlRange(node)[0] > getTomlRange(comment)[1]);
-    let end = comment.loc.end.line;
-    while (
-        syntax.comments.some(({ loc }) => loc.start.line === end + 1 && loc.start.column === comment.loc.start.column)
-    )
-        end++;
-    return next?.node.loc.start.line === end + 1 ? next : undefined;
-}
-
 /**
 Check the kind of a TOML syntax node, and narrow its type.
 
@@ -281,34 +346,6 @@ export function parseTomlSyntax(source: string, parsed: Record<string, unknown>)
     };
 }
 
-function insertTomlComments(comments: TomlComments, kind: string, keys: KeyPath, text: string): string {
-    const id = JSON.stringify([kind, ...keys]);
-    const block = comments.get(id);
-    if (block === undefined) return text;
-    comments.delete(id);
-    const free = block.free
-        .toSorted((left, right) => left.start - right.start)
-        .map(
-            (comment, index, list) =>
-                (index > 0 && comment.line > (list[index - 1]?.line ?? 0) + 1 ? '\n' : '') + comment.raw,
-        )
-        .join('\n');
-    const owned = block.owned.toSorted((left, right) => left.start - right.start).map(({ raw }) => raw);
-    return [
-        ...(free === '' ? [] : [free, ...(text === '' && owned.length === 0 ? [] : [''])]),
-        ...owned,
-        ...(text === '' ? [] : [text]),
-    ].join('\n');
-}
-
-function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] {
-    return syntax.comments.map((comment) => {
-        const anchor = findCommentAnchor(syntax, comment);
-        const identity = anchor === undefined ? 'free' : JSON.stringify([anchor.kind, ...anchor.path]);
-        return { comment, anchor, identity };
-    });
-}
-
 /**
 Read the extent of a parsed syntax token.
 
@@ -317,41 +354,4 @@ Read the extent of a parsed syntax token.
 export function getTomlRange(node: SourceRange): readonly [number, number] {
     if (node.range === undefined) throw new Error(MISSING_RANGE_MESSAGE);
     return node.range;
-}
-
-function addTomlComment(comments: TomlComments, commentPlacement: TomlCommentPlacement): void {
-    const { kind, path, comment, placement } = commentPlacement;
-    if (path === undefined) return;
-    const id = JSON.stringify([kind, ...path]);
-    const block = comments.get(id) ?? { path, owned: [], free: [] };
-    block[placement].push({
-        raw: comment.raw,
-        start: getTomlRange(comment)[0],
-        line: comment.loc.start.line,
-    });
-    comments.set(id, block);
-}
-
-function replaceTomlValues(previous: TomlSyntax, values: Record<string, unknown>, format: Parameters<typeof patch>[2]) {
-    const appended: Record<string, unknown> = {};
-    const assigned: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(values)) {
-        if (!Object.hasOwn(previous.value, key) && Array.isArray(value) && value.length > 0 && value.every(isTable))
-            appended[key] = value;
-        else assigned[key] = value;
-    }
-    const patched = patch(previous.document.toTomlString, assigned, format);
-    const suffix = Object.keys(appended).length === 0 ? '' : `\n\n${stringify(appended, format)}`;
-    return { patched, suffix };
-}
-
-function pairChangedComments(previous: TomlSyntax, reparsed: TomlSyntax): TomlCommentMove[] {
-    const unmatched = new Set(listAnchoredComments(reparsed));
-    return listAnchoredComments(previous)
-        .map((source) => {
-            const found = unmatched.values().find((comment) => comment.comment.raw === source.comment.raw);
-            if (found !== undefined) unmatched.delete(found);
-            return { source, found };
-        })
-        .filter(({ source, found }) => found?.identity !== source.identity);
 }

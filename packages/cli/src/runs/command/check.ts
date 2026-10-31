@@ -164,6 +164,25 @@ function selectCommandFolder(root: string, planned: PlannedCheck): string {
     return usesScopeFolder ? join(root, scope.path) : root;
 }
 
+function buildToolCommand(
+    session: Session,
+    planned: PlannedCheck,
+    options: CheckRunOptions,
+    environment: Record<string, string>,
+): string[] {
+    const command = [
+        ...(stripCoverageArguments(planned, options) as string[]),
+        ...listCopyPythonArguments(planned.tool as Tool, environment),
+    ];
+    if (
+        planned.check.id === 'pytest/coverage' &&
+        options.command === undefined &&
+        hasProjectCoverage(session, planned.scope.path)
+    )
+        return command.filter((argument) => !argument.startsWith('--cov-config='));
+    return command;
+}
+
 /**
 Resolves the working folder and expands the tool environment values.
 
@@ -315,23 +334,4 @@ export async function runCommandBatches(
         if (!RAN_STATUSES.has(merged.status)) break;
     }
     return merged;
-}
-
-function buildToolCommand(
-    session: Session,
-    planned: PlannedCheck,
-    options: CheckRunOptions,
-    environment: Record<string, string>,
-): string[] {
-    const command = [
-        ...(stripCoverageArguments(planned, options) as string[]),
-        ...listCopyPythonArguments(planned.tool as Tool, environment),
-    ];
-    if (
-        planned.check.id === 'pytest/coverage' &&
-        options.command === undefined &&
-        hasProjectCoverage(session, planned.scope.path)
-    )
-        return command.filter((argument) => !argument.startsWith('--cov-config='));
-    return command;
 }

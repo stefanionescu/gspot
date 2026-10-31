@@ -39,36 +39,6 @@ function formatEmptyIgnorePaths(issue: z.core.$ZodIssue, path: KeyPath, syntax: 
     return { path, message };
 }
 
-/**
-Name the invalid setting, and keep the message of the validator.
-
-@param issue the schema validation message.
-@param syntax the parsed source keys and their locations.
-*/
-export function formatSettingsIssue(issue: z.core.$ZodIssue, syntax: TomlSyntax): SettingsError[] {
-    const branches = issue.code === 'invalid_union' ? issue.errors : [];
-    const reasonedValueErrors = branches.find((errors) =>
-        errors.some((child) => child.path[0] === 'value' || child.path[0] === 'reason'),
-    );
-    if (reasonedValueErrors !== undefined)
-        return reasonedValueErrors.flatMap((child) =>
-            formatSettingsIssue({ ...child, path: [...issue.path, ...child.path] }, syntax),
-        );
-    if (issue.code === 'invalid_key')
-        return issue.issues.flatMap((child) =>
-            formatSettingsIssue({ ...child, path: [...issue.path, ...child.path] }, syntax),
-        );
-    const segments = issue.path.filter((segment): segment is KeyPath[number] => typeof segment !== 'symbol');
-    const emptyPaths = formatEmptyIgnorePaths(issue, segments, syntax);
-    if (emptyPaths !== undefined) return [emptyPaths];
-    if (issue.code === 'unrecognized_keys')
-        return issue.keys.map((key) => ({ path: [...segments, key], message: formatUnknownKey(segments, key) }));
-    let schema: z.ZodType | undefined = settingsSchema;
-    for (const segment of segments) schema = findChildSchema(schema, segment);
-    const message = formatFileValueError(schema, issue, findValueAt(syntax.value, segments));
-    return [{ path: segments, message }];
-}
-
 function formatSimilarKeys(segments: KeyPath, key: string): string {
     const [record, , ...scopeFields] = segments;
     let schema: z.ZodType | undefined = record === 'scope' ? scopeSchema : settingsSchema;
@@ -126,6 +96,36 @@ function listRemovedSelections(settings: Settings): SettingsError[] {
                     message: `${name} is both selected and removed. Keep it in only one list.`,
                 });
     return errors;
+}
+
+/**
+Name the invalid setting, and keep the message of the validator.
+
+@param issue the schema validation message.
+@param syntax the parsed source keys and their locations.
+*/
+export function formatSettingsIssue(issue: z.core.$ZodIssue, syntax: TomlSyntax): SettingsError[] {
+    const branches = issue.code === 'invalid_union' ? issue.errors : [];
+    const reasonedValueErrors = branches.find((errors) =>
+        errors.some((child) => child.path[0] === 'value' || child.path[0] === 'reason'),
+    );
+    if (reasonedValueErrors !== undefined)
+        return reasonedValueErrors.flatMap((child) =>
+            formatSettingsIssue({ ...child, path: [...issue.path, ...child.path] }, syntax),
+        );
+    if (issue.code === 'invalid_key')
+        return issue.issues.flatMap((child) =>
+            formatSettingsIssue({ ...child, path: [...issue.path, ...child.path] }, syntax),
+        );
+    const segments = issue.path.filter((segment): segment is KeyPath[number] => typeof segment !== 'symbol');
+    const emptyPaths = formatEmptyIgnorePaths(issue, segments, syntax);
+    if (emptyPaths !== undefined) return [emptyPaths];
+    if (issue.code === 'unrecognized_keys')
+        return issue.keys.map((key) => ({ path: [...segments, key], message: formatUnknownKey(segments, key) }));
+    let schema: z.ZodType | undefined = settingsSchema;
+    for (const segment of segments) schema = findChildSchema(schema, segment);
+    const message = formatFileValueError(schema, issue, findValueAt(syntax.value, segments));
+    return [{ path: segments, message }];
 }
 
 /**

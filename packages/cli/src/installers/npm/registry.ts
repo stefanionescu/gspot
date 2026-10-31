@@ -76,6 +76,14 @@ function addEnvironmentReference(environment: Record<string, string>, prefix: st
     return `\${${name}}`;
 }
 
+function readNpmPath(): string {
+    const npm = which.sync(NPM_TOOL, { nothrow: true });
+    if (npm === null) return dirname(process.execPath);
+    return process.platform === 'win32'
+        ? join(dirname(npm), 'node_modules', 'npm')
+        : dirname(dirname(realpathSync(npm)));
+}
+
 /**
 Collect the raw, decoded, and URL-encoded secrets.
 
@@ -138,12 +146,4 @@ export async function readRegistryEnvironment(root: string): Promise<Record<stri
     const registry = env[`${NPM_SETTING_PREFIX}registry`];
     if (registry !== undefined) env['BUN_CONFIG_REGISTRY'] = registry;
     return env;
-}
-
-function readNpmPath(): string {
-    const npm = which.sync(NPM_TOOL, { nothrow: true });
-    if (npm === null) return dirname(process.execPath);
-    return process.platform === 'win32'
-        ? join(dirname(npm), 'node_modules', 'npm')
-        : dirname(dirname(realpathSync(npm)));
 }

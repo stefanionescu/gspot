@@ -68,6 +68,23 @@ function parseManifest(text: string, folder: string): ParsedManifest {
     return result.data;
 }
 
+function listManifestTools(manifests: Iterable<ParsedManifest>): Map<string, Tool> {
+    const tools = new Map<string, Tool>();
+    for (const manifest of manifests) {
+        const declarations = manifest.tools.values().filter((tool) => typeof tool !== 'string');
+        for (const tool of declarations) {
+            const previous = tools.get(tool.name);
+            if (previous !== undefined)
+                throw new GspotError(
+                    'configuration',
+                    `The configuration manifest for ${manifest.configuration.name} is not valid:\ntool ${tool.name} is already declared.`,
+                );
+            tools.set(tool.name, tool);
+        }
+    }
+    return tools;
+}
+
 /**
 Read every configuration once per process.
 */
@@ -130,23 +147,6 @@ export function listChecksById(configurations: Iterable<Configuration>): Map<str
         }
     }
     return checks;
-}
-
-function listManifestTools(manifests: Iterable<ParsedManifest>): Map<string, Tool> {
-    const tools = new Map<string, Tool>();
-    for (const manifest of manifests) {
-        const declarations = manifest.tools.values().filter((tool) => typeof tool !== 'string');
-        for (const tool of declarations) {
-            const previous = tools.get(tool.name);
-            if (previous !== undefined)
-                throw new GspotError(
-                    'configuration',
-                    `The configuration manifest for ${manifest.configuration.name} is not valid:\ntool ${tool.name} is already declared.`,
-                );
-            tools.set(tool.name, tool);
-        }
-    }
-    return tools;
 }
 
 /**

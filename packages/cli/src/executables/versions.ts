@@ -66,6 +66,23 @@ function findRunFailure(result: SpawnResult, tool: Tool, text: string): ParsedTo
     return { state: 'error', note: text === '' ? `${exited}.` : `${exited}: ${text}` };
 }
 
+function isBelowMinimum(found: string | undefined, minimum: string | undefined): boolean {
+    const version = semver.coerce(found);
+    const lowest = semver.coerce(minimum);
+    return version !== null && lowest !== null && semver.lt(version, lowest);
+}
+
+function parseVersionOutput(tool: Tool, result: SpawnResult, installedVersion: string | undefined): ParsedToolVersion {
+    const npm = tool.installers['npm'];
+    const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
+    const version = (npm?.version === tool.version ? installedVersion : undefined) ?? extractVersion(text, tool);
+    const failure = findVersionFailure(result, tool, text, version);
+    if (failure !== undefined) return failure;
+    return version === undefined || semver.coerce(version) === null
+        ? { state: 'error', note: `${tool.name} did not report a valid version: ${text}` }
+        : { version };
+}
+
 /**
 Classify a reported version against its pin and minimum version.
 
@@ -103,21 +120,4 @@ export function readToolVersion(inspected: InspectedTool, path: string): ParsedT
         env: TOOL_ENVIRONMENT,
     });
     return parseVersionOutput(tool, result, installedVersion);
-}
-
-function isBelowMinimum(found: string | undefined, minimum: string | undefined): boolean {
-    const version = semver.coerce(found);
-    const lowest = semver.coerce(minimum);
-    return version !== null && lowest !== null && semver.lt(version, lowest);
-}
-
-function parseVersionOutput(tool: Tool, result: SpawnResult, installedVersion: string | undefined): ParsedToolVersion {
-    const npm = tool.installers['npm'];
-    const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
-    const version = (npm?.version === tool.version ? installedVersion : undefined) ?? extractVersion(text, tool);
-    const failure = findVersionFailure(result, tool, text, version);
-    if (failure !== undefined) return failure;
-    return version === undefined || semver.coerce(version) === null
-        ? { state: 'error', note: `${tool.name} did not report a valid version: ${text}` }
-        : { version };
 }

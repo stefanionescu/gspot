@@ -63,6 +63,21 @@ function findEmptySetting(scope: Scope, check: Check): string | undefined {
     return isSettingEmpty(scope.settings.valuesByKey[setting]) ? setting : undefined;
 }
 
+function findConfigSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
+    const tool = check.when?.config_file;
+    if (tool === undefined) return undefined;
+    const selected = scope.configurations.some((configuration) =>
+        configuration.configs.some(
+            (file) =>
+                file.tool.includes(tool) &&
+                file.target.endsWith('.yml') &&
+                (file.level !== 'all' || settings.level === 'all'),
+        ),
+    );
+    if (selected || !isSettingEmpty(scope.settings.valuesByKey[`tools.${tool}.rule_files`])) return undefined;
+    return { cause: 'setting', note: `No selected configuration or tools.${tool}.rule_files supplies local rules.` };
+}
+
 /**
 Check whether a setting holds no value: unset, false, an empty string, or a table of empty lists.
 
@@ -92,21 +107,6 @@ export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host)
     const missing = findMissingBuild(tool, host);
     if (missing !== undefined) return { cause: 'system', note: `${tool.name} has no ${missing} build` };
     return undefined;
-}
-
-function findConfigSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
-    const tool = check.when?.config_file;
-    if (tool === undefined) return undefined;
-    const selected = scope.configurations.some((configuration) =>
-        configuration.configs.some(
-            (file) =>
-                file.tool.includes(tool) &&
-                file.target.endsWith('.yml') &&
-                (file.level !== 'all' || settings.level === 'all'),
-        ),
-    );
-    if (selected || !isSettingEmpty(scope.settings.valuesByKey[`tools.${tool}.rule_files`])) return undefined;
-    return { cause: 'setting', note: `No selected configuration or tools.${tool}.rule_files supplies local rules.` };
 }
 
 /**

@@ -89,32 +89,6 @@ function isLockedRelease(pin: MiseToolPin, locked: object): boolean {
     );
 }
 
-/**
-Compare the mise pins with the versions recorded in the mise lockfile. Each locked download must come from a release
-host over HTTPS, and each locked checksum must equal the audited checksum of the pin where it has one.
-
-@param pins the mise pins of the configurations in use.
-@param lockfile the recorded lockfile, if present.
-*/
-export function isMiseLockfileFresh(pins: MiseToolPin[], lockfile: string | undefined): boolean {
-    if (pins.length === 0) return true;
-    if (lockfile === undefined) return false;
-    let parsed;
-    try {
-        parsed = miseLockfileSchema.safeParse(parseTomlFile(GSPOT_PATHS.miseLockfile, lockfile));
-    } catch (error) {
-        if (!(error instanceof GspotError) || error.code !== 'parse') throw error;
-        return false;
-    }
-    if (!parsed.success) return false;
-    return pins.every(
-        (pin) =>
-            parsed.data.tools[pin.name]?.some(
-                (locked) => locked.version === pin.version && isLockedRelease(pin, locked),
-            ) === true,
-    );
-}
-
 function writeChecksums(lockfile: string, pins: MiseToolPin[]): string {
     const document = parse(lockfile) as Record<string, unknown>;
     const tools = document['tools'];
@@ -175,6 +149,46 @@ async function writeMiseLockfile(install: ToolInstall, project: GeneratedFile): 
     );
 }
 
+function fillVersionChecksums(version: Record<string, unknown>, pin: MiseToolPin): void {
+    for (const [name, platform] of Object.entries(version)) {
+        if (!name.startsWith(MISE_PLATFORM_PREFIX) || !isTable(platform)) continue;
+        if (typeof platform['checksum'] === 'string' && MISE_CHECKSUM_PATTERN.test(platform['checksum'])) continue;
+        const checksum = pin.checksums?.[name.slice(MISE_PLATFORM_PREFIX.length)];
+        if (checksum === undefined)
+            throw new GspotError(
+                'install',
+                `mise lock omitted a checksum for ${pin.name} on ${name.slice(MISE_PLATFORM_PREFIX.length)}. Add an audited installer checksum before retrying.`,
+            );
+        platform['checksum'] = checksum;
+    }
+}
+
+/**
+Compare the mise pins with the versions recorded in the mise lockfile. Each locked download must come from a release
+host over HTTPS, and each locked checksum must equal the audited checksum of the pin where it has one.
+
+@param pins the mise pins of the configurations in use.
+@param lockfile the recorded lockfile, if present.
+*/
+export function isMiseLockfileFresh(pins: MiseToolPin[], lockfile: string | undefined): boolean {
+    if (pins.length === 0) return true;
+    if (lockfile === undefined) return false;
+    let parsed;
+    try {
+        parsed = miseLockfileSchema.safeParse(parseTomlFile(GSPOT_PATHS.miseLockfile, lockfile));
+    } catch (error) {
+        if (!(error instanceof GspotError) || error.code !== 'parse') throw error;
+        return false;
+    }
+    if (!parsed.success) return false;
+    return pins.every(
+        (pin) =>
+            parsed.data.tools[pin.name]?.some(
+                (locked) => locked.version === pin.version && isLockedRelease(pin, locked),
+            ) === true,
+    );
+}
+
 /**
 Install the mise tools, and read their executable folders.
 
@@ -216,20 +230,6 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
             project: project.content,
         }),
     };
-}
-
-function fillVersionChecksums(version: Record<string, unknown>, pin: MiseToolPin): void {
-    for (const [name, platform] of Object.entries(version)) {
-        if (!name.startsWith(MISE_PLATFORM_PREFIX) || !isTable(platform)) continue;
-        if (typeof platform['checksum'] === 'string' && MISE_CHECKSUM_PATTERN.test(platform['checksum'])) continue;
-        const checksum = pin.checksums?.[name.slice(MISE_PLATFORM_PREFIX.length)];
-        if (checksum === undefined)
-            throw new GspotError(
-                'install',
-                `mise lock omitted a checksum for ${pin.name} on ${name.slice(MISE_PLATFORM_PREFIX.length)}. Add an audited installer checksum before retrying.`,
-            );
-        platform['checksum'] = checksum;
-    }
 }
 
 /**

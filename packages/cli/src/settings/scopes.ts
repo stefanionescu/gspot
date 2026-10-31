@@ -21,6 +21,66 @@ import type {
     SelectedConfigurations,
 } from '#cli/types/settings/inheritance.ts';
 
+function listNamingVariants(
+    availableSettings: AvailableSettings,
+    settings: Settings,
+    scopePath: string,
+): InheritedSetting[] {
+    return SETTING_LANGUAGES.flatMap((language) =>
+        Object.keys(namingCategorySchema.shape).flatMap((field) => [
+            `naming.${language}.${field}`,
+            ...NAMING_LANGUAGE_CATEGORIES[language].map((category) => `naming.${language}.${category}.${field}`),
+        ]),
+    )
+        .filter((key) => !availableSettings.settings.has(key))
+        .map((key) => getSettingValue(availableSettings, settings, key, scopePath))
+        .filter((row) => row !== undefined);
+}
+
+function listLimitVariants(
+    availableSettings: AvailableSettings,
+    settings: Settings,
+    scopePath: string,
+): InheritedSetting[] {
+    return availableSettings.settings
+        .values()
+        .filter((setting) => setting.name.startsWith('limits.') && setting.type === 'number')
+        .flatMap((setting) =>
+            (setting.languages ?? []).map(
+                (language) => `limits.${language}.${setting.name.slice(setting.name.lastIndexOf('.') + 1)}`,
+            ),
+        )
+        .filter((key) => !availableSettings.settings.has(key))
+        .map((key) => getSettingValue(availableSettings, settings, key, scopePath))
+        .filter((row) => row !== undefined)
+        .toArray();
+}
+
+function fillTableValues(tables: Record<string, unknown>, rows: InheritedSetting[]): void {
+    const valueRows = rows
+        .map((row) => {
+            const segments = row.key.split('.');
+            const [table, tool] = segments;
+            const name = table === 'tools' && tool !== undefined ? `${table}.${tool}` : (table as string);
+            const path = segments.slice(name.split('.').length);
+            return { row, name, path: path.slice(0, -1), field: path.at(-1) ?? '' };
+        })
+        .filter(
+            ({ row, name }) => Object.hasOwn(tableValuesSchema.shape, name) && findSettingSchema(row.key) !== undefined,
+        );
+    const empty = valueRows.filter(({ row }) => row.value === undefined);
+    for (const { row, name } of empty) {
+        if (addTable(tables, [name]) === undefined)
+            throw new Error(`The setting ${row.key} runs through a non-table value.`);
+    }
+    const written = valueRows.filter(({ row }) => row.value !== undefined);
+    for (const { row, name, path, field } of written) {
+        const table = addTable(tables, [name, ...path]);
+        if (table === undefined) throw new Error(`The setting ${row.key} runs through a non-table value.`);
+        table[field] = row.reason === undefined ? row.value : { value: row.value, reason: row.reason };
+    }
+}
+
 /**
 Find the nearest scope that holds a path.
 
@@ -73,41 +133,6 @@ export function listRemovedConfigurations(settings: Settings): RemovedConfigurat
         const reasons = table.written['removed_configurations'] as Record<string, string>;
         return table.removed_configurations.map((name) => ({ name, scope, reason: reasons[name] as string }));
     });
-}
-
-function listNamingVariants(
-    availableSettings: AvailableSettings,
-    settings: Settings,
-    scopePath: string,
-): InheritedSetting[] {
-    return SETTING_LANGUAGES.flatMap((language) =>
-        Object.keys(namingCategorySchema.shape).flatMap((field) => [
-            `naming.${language}.${field}`,
-            ...NAMING_LANGUAGE_CATEGORIES[language].map((category) => `naming.${language}.${category}.${field}`),
-        ]),
-    )
-        .filter((key) => !availableSettings.settings.has(key))
-        .map((key) => getSettingValue(availableSettings, settings, key, scopePath))
-        .filter((row) => row !== undefined);
-}
-
-function listLimitVariants(
-    availableSettings: AvailableSettings,
-    settings: Settings,
-    scopePath: string,
-): InheritedSetting[] {
-    return availableSettings.settings
-        .values()
-        .filter((setting) => setting.name.startsWith('limits.') && setting.type === 'number')
-        .flatMap((setting) =>
-            (setting.languages ?? []).map(
-                (language) => `limits.${language}.${setting.name.slice(setting.name.lastIndexOf('.') + 1)}`,
-            ),
-        )
-        .filter((key) => !availableSettings.settings.has(key))
-        .map((key) => getSettingValue(availableSettings, settings, key, scopePath))
-        .filter((row) => row !== undefined)
-        .toArray();
 }
 
 /**
@@ -197,31 +222,6 @@ export function listIgnoredRules(scope: Scope, checkId: string): string[] {
         .filter((ignore) => ignore.paths.length === 0 || isScopeCovered(ignore.paths, scope.path))
         .map((ignore) => ignore.rule)
         .filter((rule) => rule !== undefined);
-}
-
-function fillTableValues(tables: Record<string, unknown>, rows: InheritedSetting[]): void {
-    const valueRows = rows
-        .map((row) => {
-            const segments = row.key.split('.');
-            const [table, tool] = segments;
-            const name = table === 'tools' && tool !== undefined ? `${table}.${tool}` : (table as string);
-            const path = segments.slice(name.split('.').length);
-            return { row, name, path: path.slice(0, -1), field: path.at(-1) ?? '' };
-        })
-        .filter(
-            ({ row, name }) => Object.hasOwn(tableValuesSchema.shape, name) && findSettingSchema(row.key) !== undefined,
-        );
-    const empty = valueRows.filter(({ row }) => row.value === undefined);
-    for (const { row, name } of empty) {
-        if (addTable(tables, [name]) === undefined)
-            throw new Error(`The setting ${row.key} runs through a non-table value.`);
-    }
-    const written = valueRows.filter(({ row }) => row.value !== undefined);
-    for (const { row, name, path, field } of written) {
-        const table = addTable(tables, [name, ...path]);
-        if (table === undefined) throw new Error(`The setting ${row.key} runs through a non-table value.`);
-        table[field] = row.reason === undefined ? row.value : { value: row.value, reason: row.reason };
-    }
 }
 
 /**

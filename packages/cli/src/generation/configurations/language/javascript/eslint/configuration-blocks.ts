@@ -148,31 +148,6 @@ function buildScopeConfigurationBlocks(
 }
 
 /**
-Collect imported bindings and the scoped blocks of each configuration.
-
-@param planned the source facts and resolved scopes.
-@returns the blocks of each configuration in plan order.
-*/
-export function listConfigurationBlocks(planned: PlannedEslintFile): {
-    configurationBlocks: Map<Configuration, PlannedEslintBlock[]>;
-    configurationImports: EslintPlugins;
-} {
-    const configurations = planned.configurations.flatMap((configuration) => {
-        const builder = CONFIGURATION_BUILDERS[configuration.name];
-        return builder === undefined ? [] : { configuration, builder };
-    });
-    const selected = buildScopeConfigurationBlocks(configurations, planned);
-    return {
-        configurationBlocks: new Map(
-            Map.groupBy(selected, ({ configuration }) => configuration)
-                .entries()
-                .map(([configuration, groups]) => [configuration, groups.flatMap(({ blocks }) => blocks)]),
-        ),
-        configurationImports: Object.fromEntries(selected.flatMap((blocks) => Object.entries(blocks.imports))),
-    };
-}
-
-/**
 Build the declared plugin imports and lint rule blocks.
 
 @param scope the planned ESLint file of the scope.
@@ -201,5 +176,30 @@ function buildPluginRuleBlocks(scope: EslintScope, configuration: string): Confi
                 calls: declaration.calls,
             },
         ],
+    };
+}
+
+/**
+Collect imported bindings and the scoped blocks of each configuration.
+
+@param planned the source facts and resolved scopes.
+@returns the blocks of each configuration in plan order.
+*/
+export function listConfigurationBlocks(planned: PlannedEslintFile): {
+    configurationBlocks: Map<Configuration, PlannedEslintBlock[]>;
+    configurationImports: EslintPlugins;
+} {
+    const configurations = planned.configurations.flatMap((configuration) => {
+        const builder = CONFIGURATION_BUILDERS[configuration.name];
+        return builder === undefined ? [] : { configuration, builder };
+    });
+    const selected = buildScopeConfigurationBlocks(configurations, planned);
+    return {
+        configurationBlocks: new Map(
+            Map.groupBy(selected, ({ configuration }) => configuration)
+                .entries()
+                .map(([configuration, groups]) => [configuration, groups.flatMap(({ blocks }) => blocks)]),
+        ),
+        configurationImports: Object.fromEntries(selected.flatMap((blocks) => Object.entries(blocks.imports))),
     };
 }

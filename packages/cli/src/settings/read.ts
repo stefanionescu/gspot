@@ -13,6 +13,30 @@ import {
     COMMAND_CHECK_DEFAULTS,
 } from '#cli/config/settings/settings.ts';
 
+function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {
+    return Object.fromEntries(
+        (checks ?? []).map((commandCheck) => {
+            const id = commandCheck.id;
+            const { paths, outputs, ...definition } = commandCheck;
+            return [
+                id,
+                {
+                    ...definition,
+                    ...(outputs !== undefined && {
+                        generator_outputs: outputs.map((path) => ({ kind: 'path' as const, path })),
+                    }),
+                    id,
+                    ...COMMAND_CHECK_DEFAULTS,
+                    summary: commandCheck.summary ?? `Runs the repository's own check ${id}.`,
+                    why: COMMAND_CHECK_WHY,
+                    help: commandCheck.help ?? COMMAND_CHECK_HELP,
+                    files: { ...structuredClone(COMMAND_CHECK_DEFAULTS.files), paths },
+                },
+            ];
+        }),
+    );
+}
+
 /**
 Parse gspot.toml and return its validated settings or field errors.
 
@@ -46,30 +70,6 @@ export function readSettings(text: string, root: string): Settings {
     throw new GspotError(
         'settings',
         result.map((error) => formatSettingsError(error, syntax, SETTINGS_FILE)).join('\n'),
-    );
-}
-
-function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {
-    return Object.fromEntries(
-        (checks ?? []).map((commandCheck) => {
-            const id = commandCheck.id;
-            const { paths, outputs, ...definition } = commandCheck;
-            return [
-                id,
-                {
-                    ...definition,
-                    ...(outputs !== undefined && {
-                        generator_outputs: outputs.map((path) => ({ kind: 'path' as const, path })),
-                    }),
-                    id,
-                    ...COMMAND_CHECK_DEFAULTS,
-                    summary: commandCheck.summary ?? `Runs the repository's own check ${id}.`,
-                    why: COMMAND_CHECK_WHY,
-                    help: commandCheck.help ?? COMMAND_CHECK_HELP,
-                    files: { ...structuredClone(COMMAND_CHECK_DEFAULTS.files), paths },
-                },
-            ];
-        }),
     );
 }
 

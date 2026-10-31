@@ -33,6 +33,23 @@ function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string)
     return [...shared, ...own].map((path) => `${root}/${path}`);
 }
 
+function selectPythonFormat(
+    scopeSettings: PlannedConfig['scope']['settings'],
+): Pick<FormatSettings, 'indent_style' | 'indent_width' | 'print_width' | 'line_ending' | 'quotes'> {
+    const format = scopeSettings.tables.format;
+    const override = format.override.find(({ paths }) =>
+        paths.every((path) => (PYTHON_FILES as readonly string[]).includes(path)),
+    );
+    if (override === undefined) return format;
+    return {
+        indent_style: override.indent_style ?? format.indent_style,
+        indent_width: override.indent_width ?? format.indent_width,
+        print_width: override.print_width ?? format.print_width,
+        line_ending: override.line_ending ?? format.line_ending,
+        quotes: override.quotes ?? format.quotes,
+    };
+}
+
 /**
 Build basedpyright.json: the Python environment and source paths used by Basedpyright.
 
@@ -60,23 +77,6 @@ export function buildBasedpyrightFile(planned: PlannedConfig): string {
         null,
         JSON_INDENT,
     );
-}
-
-function selectPythonFormat(
-    scopeSettings: PlannedConfig['scope']['settings'],
-): Pick<FormatSettings, 'indent_style' | 'indent_width' | 'print_width' | 'line_ending' | 'quotes'> {
-    const format = scopeSettings.tables.format;
-    const override = format.override.find(({ paths }) =>
-        paths.every((path) => (PYTHON_FILES as readonly string[]).includes(path)),
-    );
-    if (override === undefined) return format;
-    return {
-        indent_style: override.indent_style ?? format.indent_style,
-        indent_width: override.indent_width ?? format.indent_width,
-        print_width: override.print_width ?? format.print_width,
-        line_ending: override.line_ending ?? format.line_ending,
-        quotes: override.quotes ?? format.quotes,
-    };
 }
 
 /**

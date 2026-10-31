@@ -15,29 +15,6 @@ import {
     AUTHENTICATION_REQUIRED_MESSAGE,
 } from '#tests/config/setup/runner.ts';
 
-/**
-Pack these npm packages into the folder and write the list the registry serves.
-*/
-export async function runNpmPack(workFolder: string, declarations: readonly RegistryPackage[]): Promise<string> {
-    const packages: PackedPackage[] = [];
-    for (const { source, ...declaration } of declarations) {
-        const result = await runCommand(['npm', 'pack', source, ...NPM_PACK_FLAGS, '--pack-destination', workFolder], {
-            cwd: workFolder,
-        });
-        if (result.code !== 0) throw new Error(`Package packing failed: ${result.stdout}${result.stderr}`);
-        const { filename } = (JSON.parse(result.stdout) as [{ filename: string }])[0];
-        const archive = await readFile(join(workFolder, filename));
-        packages.push({
-            ...declaration,
-            filename: join(workFolder, filename),
-            integrity: `sha512-${createHash('sha512').update(archive).digest('base64')}`,
-        });
-    }
-    const packagesFile = join(workFolder, PACKED_PACKAGES_FILE);
-    await writeFile(packagesFile, JSON.stringify(packages));
-    return packagesFile;
-}
-
 async function answerRegistryRequest(
     request: Request,
     registry: { packages: Map<string, PackedPackage>; token: string | undefined },
@@ -69,6 +46,29 @@ function buildPackageDocument(packed: PackedPackage, tarball: string): Record<st
         time: { [packed.version]: publishedAt },
         versions: { [packed.version]: { ...packageFields, dist: { tarball, integrity } } },
     };
+}
+
+/**
+Pack these npm packages into the folder and write the list the registry serves.
+*/
+export async function runNpmPack(workFolder: string, declarations: readonly RegistryPackage[]): Promise<string> {
+    const packages: PackedPackage[] = [];
+    for (const { source, ...declaration } of declarations) {
+        const result = await runCommand(['npm', 'pack', source, ...NPM_PACK_FLAGS, '--pack-destination', workFolder], {
+            cwd: workFolder,
+        });
+        if (result.code !== 0) throw new Error(`Package packing failed: ${result.stdout}${result.stderr}`);
+        const { filename } = (JSON.parse(result.stdout) as [{ filename: string }])[0];
+        const archive = await readFile(join(workFolder, filename));
+        packages.push({
+            ...declaration,
+            filename: join(workFolder, filename),
+            integrity: `sha512-${createHash('sha512').update(archive).digest('base64')}`,
+        });
+    }
+    const packagesFile = join(workFolder, PACKED_PACKAGES_FILE);
+    await writeFile(packagesFile, JSON.stringify(packages));
+    return packagesFile;
 }
 
 /**

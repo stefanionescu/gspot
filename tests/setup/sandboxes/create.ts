@@ -47,6 +47,25 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
     if (plan.dependencies !== undefined) await pinSandboxNpm(root);
 }
 
+async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan): Promise<void> {
+    await writeSandbox(root, plan);
+    if (plan.dependencies !== undefined) await linkPackages(join(root, 'node_modules'), Object.keys(plan.dependencies));
+    for (const command of plan.commands ?? []) {
+        const result = await runCommand([...command], { cwd: root });
+        if (result.code !== 0) throw new Error(`${command.join(' ')} failed: ${result.stdout}${result.stderr}`);
+    }
+    commitAll(root);
+    await initSandbox(
+        { root, run: spawnGspot },
+        {
+            configurations: plan.configurations,
+            without: [...(plan.without ?? [])],
+            level: plan.level ?? 'all',
+            ...(plan.install === false && { install: false }),
+        },
+    );
+}
+
 /**
 Build one isolated sandbox whose commands run in the current process.
 */
@@ -66,25 +85,6 @@ export async function createSandbox(plan: SandboxPlan): Promise<Sandbox & AsyncD
         run: runGspot,
         [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned),
     };
-}
-
-async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan): Promise<void> {
-    await writeSandbox(root, plan);
-    if (plan.dependencies !== undefined) await linkPackages(join(root, 'node_modules'), Object.keys(plan.dependencies));
-    for (const command of plan.commands ?? []) {
-        const result = await runCommand([...command], { cwd: root });
-        if (result.code !== 0) throw new Error(`${command.join(' ')} failed: ${result.stdout}${result.stderr}`);
-    }
-    commitAll(root);
-    await initSandbox(
-        { root, run: spawnGspot },
-        {
-            configurations: plan.configurations,
-            without: [...(plan.without ?? [])],
-            level: plan.level ?? 'all',
-            ...(plan.install === false && { install: false }),
-        },
-    );
 }
 
 /**
