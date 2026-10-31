@@ -1,10 +1,10 @@
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
+import { isReasonedValue } from '#cli/settings/file.ts';
 import { buildSettingsToml } from '#cli/settings/text.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import type { TomlTable } from '#cli/types/settings/settings.ts';
-import { isReasonedValue, readSettingsFile } from '#cli/settings/file.ts';
 import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { SETTINGS_FILE, SETTINGS_PREFACE } from '#cli/config/settings/settings.ts';
 import { isTable, addTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
@@ -138,23 +138,4 @@ export function getScopeTable(table: TomlTable, scopePath: string): TomlTable {
         return created;
     }
     return scopeTable;
-}
-
-/**
-Read the bytes and mode of gspot.toml before an edit.
-
-@param root the folder that holds gspot.toml.
-*/
-export function readSettingsEdit(root: string): SettingsEdit {
-    const { text, previous } = readSettingsFile(root);
-    const table = parseTomlFile(SETTINGS_FILE, text);
-    const scopes = Array.isArray(table['scope']) ? table['scope'].filter((scope) => isTable(scope)) : [];
-    for (const written of [table, ...scopes]) {
-        const removed = written['removed_configurations'];
-        if (isReasonedValue(removed) && Array.isArray(removed.value))
-            written['removed_configurations'] = Object.fromEntries(
-                removed.value.map((name: unknown) => [name, removed.reason]),
-            );
-    }
-    return { text, table, previous };
 }

@@ -27,7 +27,7 @@ export const EXCLUDED_CONFIGURATION_SETTINGS = `configurations = ["typescript"]
 enabled = false
 [[scope]]
 path = "api"
-removed_configurations = { value = ["typescript"], reason = "The API scope uses Bash without the inherited TypeScript tools." }
+removed_configurations = { typescript = "The API scope uses Bash without the inherited TypeScript tools." }
 `;
 
 export const SCOPE_REMOVALS = [

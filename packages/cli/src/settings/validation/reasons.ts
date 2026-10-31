@@ -1,7 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
 import { WHITESPACE_RUN } from '#cli/config/text.ts';
-import { isReasonedValue } from '#cli/settings/file.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
@@ -12,7 +11,6 @@ import {
     EMPTY_REASON,
     REASON_WORDS_MIN,
     ADD_REASON_MESSAGE,
-    REMOVAL_NEEDS_REASON,
     REMOVAL_REASON_SUGGESTION,
 } from '#cli/config/settings/validation.ts';
 
@@ -42,9 +40,7 @@ export function validateReason(
 
 function validateRemovedConfigurations(value: unknown, keys: KeyPath): SettingsError[] {
     const where = keys.map(String).join('.');
-    if (Array.isArray(value))
-        return value.length === 0 ? [] : [{ path: [...keys, 'reason'], message: `${where} ${REMOVAL_NEEDS_REASON}` }];
-    if (!isTable(value) || isReasonedValue(value)) return [];
+    if (!isTable(value)) return [];
     return Object.entries(value).flatMap(([name, reason]) => {
         const written = typeof reason === 'string' ? reason : undefined;
         const message = validateReason(`${where}.${name}`, written, REMOVAL_REASON_SUGGESTION);

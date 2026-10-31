@@ -102,9 +102,10 @@ function settingValueType(schema: z.ZodType, path: boolean): Setting['type'] {
 
 function settingInputSchema(schema: z.ZodType): z.ZodType {
     let inner = unwrapSettingSchema(schema);
-    while (inner instanceof z.ZodPipe || inner instanceof z.ZodUnion)
-        inner = unwrapSettingSchema(
-            inner instanceof z.ZodPipe ? (inner.out as z.ZodType) : (inner.options[0] as z.ZodType),
-        );
+    while (inner instanceof z.ZodPipe || inner instanceof z.ZodUnion) {
+        let next = inner instanceof z.ZodUnion ? inner.options[0] : inner.out;
+        if (inner instanceof z.ZodPipe && next instanceof z.ZodTransform) next = inner.in;
+        inner = unwrapSettingSchema(next as z.ZodType);
+    }
     return inner;
 }

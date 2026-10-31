@@ -14,7 +14,7 @@ export const ROOT_SETTING_DEFINITIONS = {
             'The configurations this repository uses besides the always-selected ones. `gspot init` writes the detected ones here; `gspot add` and `gspot remove` change the list.',
     },
     removed_configurations: {
-        default: [] as [],
+        default: {},
         reason_when: 'adding',
         description:
             'Configurations you removed, each with the reason why, which detection does not add back; only `gspot add` and `gspot remove` write this table.',

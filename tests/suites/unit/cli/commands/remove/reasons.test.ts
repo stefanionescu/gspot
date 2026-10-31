@@ -66,32 +66,6 @@ test('removing automatically selected licenses records the choice for the next s
     ).not.toContain('licenses');
 });
 
-test('the next remove rewrites a shared reason of earlier removals into one reason per configuration', async () => {
-    const shared = 'Both languages moved to another repository.';
-    const scopeReason = 'The API scope builds no Swift code.';
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': `configurations = ["markdown"]
-removed_configurations = { value = ["bash", "python"], reason = "${shared}" }
-
-[[scope]]
-path = "api"
-removed_configurations = { value = ["swift"], reason = "${scopeReason}" }
-
-[rules]
-enabled = false
-`,
-        'api/notes.txt': 'API notes\n',
-        'notes.md': '# Notes\n',
-    });
-    const reason = 'Another repository checks the Markdown files.';
-    const result = await runGspot(sandbox.path, ['remove', 'markdown', '--reason', reason]);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'))).toMatchObject({
-        removed_configurations: { bash: shared, python: shared, markdown: reason },
-        scope: [{ path: 'api', removed_configurations: { swift: scopeReason } }],
-    });
-});
-
 test('remove records no removal of a configuration that detection does not select', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash']) });
     const result = await runGspot(sandbox.path, ['remove', 'bash', '--reason', 'The scripts moved elsewhere.']);

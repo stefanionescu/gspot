@@ -79,13 +79,7 @@ test('the release age can be written at the root and cannot be written in a scop
     ]);
 });
 
-test('a removed configuration without a reason names the remove command', () => {
-    expect(validateSettingsText('removed_configurations = ["docs"]\n')).toStrictEqual([
-        'gspot.toml:1: removed_configurations.reason: removed_configurations needs a reason. Run gspot remove <configuration> --reason "<why>".',
-    ]);
-    expect(validateSettingsText('[[scope]]\npath = "app"\nremoved_configurations = ["docs"]\n')).toStrictEqual([
-        'gspot.toml:3: scope.0.removed_configurations.reason: scope.0.removed_configurations needs a reason. Run gspot remove <configuration> --reason "<why>".',
-    ]);
+test('a removed configuration needs a reason of two or more words', () => {
     expect(
         validateSettingsText('[removed_configurations]\ndocs = "The docs live elsewhere."\nbash = "none"\n'),
     ).toStrictEqual([

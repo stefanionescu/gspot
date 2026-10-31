@@ -1,11 +1,10 @@
-import { isReasonedValue } from '#cli/settings/file.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import { addTable, findValueAt } from '#cli/system/tables.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { findSettingSchema } from '#cli/settings/schema/lookup.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
-import { isTable, addTable, findValueAt } from '#cli/system/tables.ts';
 import { listAutomaticConfigurations } from '#cli/repository/detect.ts';
 import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/settings.ts';
 import { getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
@@ -70,19 +69,10 @@ List the configurations that gspot.toml removes, in the root and in each scope, 
 @param settings the parsed gspot.toml.
 */
 export function listRemovedConfigurations(settings: Settings): RemovedConfiguration[] {
-    return [['', settings] as const, ...settings.scopes].flatMap(([scope, table]) =>
-        table.removed_configurations.map((name) => ({
-            name,
-            scope,
-            reason: readRemovalReason(table.written['removed_configurations'], name),
-        })),
-    );
-}
-
-function readRemovalReason(written: unknown, name: string): string {
-    if (isReasonedValue(written)) return written.reason;
-    const reason = isTable(written) ? written[name] : undefined;
-    return typeof reason === 'string' ? reason : '';
+    return [['', settings] as const, ...settings.scopes].flatMap(([scope, table]) => {
+        const reasons = table.written['removed_configurations'] as Record<string, string>;
+        return table.removed_configurations.map((name) => ({ name, scope, reason: reasons[name] as string }));
+    });
 }
 
 function listNamingVariants(

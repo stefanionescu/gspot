@@ -2,14 +2,15 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { readSettingsFile } from '#cli/settings/file.ts';
+import { setKey, removeKey, getScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { SEMGREP_IGNORE, INITIAL_SETTINGS, SCOPE_SETTING_WRITES } from '#tests/config/settings/settings.ts';
-import { setKey, removeKey, getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 
 test('an edit writes the new ignore as a table and keeps the authored comment', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, '# Authored selection.\nconfigurations = ["security",]\n');
-    const edit = readSettingsEdit(sandbox.path);
+    const edit = readSettingsFile(sandbox.path);
     setKey(edit.table, 'ignore', [SEMGREP_IGNORE]);
     const proposed = buildEditedSettings(sandbox.path, edit);
     expect(proposed.text).toBe(
@@ -17,7 +18,7 @@ test('an edit writes the new ignore as a table and keeps the authored comment', 
     );
     expect(proposed.settings.ignore).toStrictEqual([SEMGREP_IGNORE]);
     await writeFile(path, proposed.text);
-    const unchanged = readSettingsEdit(sandbox.path);
+    const unchanged = readSettingsFile(sandbox.path);
     setKey(unchanged.table, 'ignore', [SEMGREP_IGNORE]);
     expect(buildEditedSettings(sandbox.path, unchanged).changed).toBe(false);
 });
@@ -26,12 +27,12 @@ test('setting a nested key, then deleting it, removes the empty table', async ()
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, INITIAL_SETTINGS);
-    const addedEdit = readSettingsEdit(sandbox.path);
+    const addedEdit = readSettingsFile(sandbox.path);
     setKey(addedEdit.table, 'limits.bash.file_lines', 100);
     const written = buildEditedSettings(sandbox.path, addedEdit).text;
     expect(written).toBe(`${INITIAL_SETTINGS}\n[limits]\nbash = { file_lines = 100 }\n`);
     await writeFile(path, written);
-    const removedEdit = readSettingsEdit(sandbox.path);
+    const removedEdit = readSettingsFile(sandbox.path);
     removeKey(removedEdit.table, 'limits.bash.file_lines');
     const removed = buildEditedSettings(sandbox.path, removedEdit).text;
     expect(removed).toBe(INITIAL_SETTINGS);
@@ -42,12 +43,12 @@ test.each([...SCOPE_SETTING_WRITES])(
     async (_form, scope) => {
         await using sandbox = await testdir();
         await writeFile(join(sandbox.path, 'gspot.toml'), `${INITIAL_SETTINGS}[[scope]]\npath = "api"\n${scope}\n`);
-        const edit = readSettingsEdit(sandbox.path);
+        const edit = readSettingsFile(sandbox.path);
         setKey(getScopeTable(edit.table, 'api'), 'limits.function_lines', 20);
         const result = buildEditedSettings(sandbox.path, edit);
         expect(result.settings.scopes.get('api')?.limits).toMatchObject({ file_lines: 100, function_lines: 20 });
         await writeFile(join(sandbox.path, 'gspot.toml'), result.text);
-        expect(readSettingsEdit(sandbox.path).table['scope']).toMatchObject([
+        expect(readSettingsFile(sandbox.path).table['scope']).toMatchObject([
             { path: 'api', limits: { file_lines: 100, function_lines: 20 } },
         ]);
     },
@@ -59,7 +60,7 @@ test('an invalid edit reports the setting without inventing a saved line', async
         join(sandbox.path, 'gspot.toml'),
         `${INITIAL_SETTINGS}# Authored limits.\n[limits]\nfile_lines = 100\n`,
     );
-    const invalid = readSettingsEdit(sandbox.path);
+    const invalid = readSettingsFile(sandbox.path);
     setKey(invalid.table, 'limits.function_lines', 'long');
     expect(() => buildEditedSettings(sandbox.path, invalid)).toThrow('limits.function_lines:');
 });
@@ -68,7 +69,7 @@ test('reordering keys does not change the file', async () => {
     await using sandbox = await testdir();
     const source = `${INITIAL_SETTINGS}level = "all"\n`;
     await writeFile(join(sandbox.path, 'gspot.toml'), source);
-    const edit = readSettingsEdit(sandbox.path);
+    const edit = readSettingsFile(sandbox.path);
     const configurations = edit.table['configurations'];
     delete edit.table['configurations'];
     edit.table['configurations'] = configurations;
@@ -81,7 +82,7 @@ test('an edit writes a new list longer than format.print_width one item per line
     await using sandbox = await testdir({
         'gspot.toml': `${INITIAL_SETTINGS}\n[format]\nprint_width = 40\nindent_width = 2\n`,
     });
-    const edit = readSettingsEdit(sandbox.path);
+    const edit = readSettingsFile(sandbox.path);
     setKey(edit.table, 'naming.banned_words', ['alpha', 'beta']);
     setKey(edit.table, 'test_files', ['generated/first/**', 'generated/second/**']);
     const result = buildEditedSettings(sandbox.path, edit);

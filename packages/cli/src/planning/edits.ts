@@ -1,9 +1,11 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { readSettings } from '#cli/settings/read.ts';
+import { getScopeTable } from '#cli/settings/edit.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
+import { readSettingsFile } from '#cli/settings/file.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { ADD_REMOVE_MESSAGE } from '#cli/config/planning.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
@@ -11,7 +13,6 @@ import { buildArgumentPath } from '#cli/repository/scopes.ts';
 import { RECORD_FIELDS } from '#cli/settings/schema/lookup.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
-import { getScopeTable, readSettingsEdit } from '#cli/settings/edit.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import type { Settings, TomlTable } from '#cli/types/settings/settings.ts';
 import { readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts';
@@ -28,7 +29,7 @@ writes into.
 */
 export async function readSettingsEditContext(cwd: string, scopePath?: string): Promise<SettingsEditContext> {
     const root = await readRepositoryRoot(cwd);
-    const input = readSettingsEdit(root);
+    const input = readSettingsFile(root);
     const cache = createRunCache(root);
     cache.sources.set(SETTINGS_FILE, Buffer.from(input.text));
     const settings = readSettings(input.text, root);

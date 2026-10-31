@@ -43,7 +43,7 @@ test.each([...TESTING_LIBRARY_CASES])(
             'gspot.toml': buildSandboxSettings(['javascript', framework, 'testing-library'], {
                 level: 'all',
                 scopes: [{ path: 'child' }, { path: 'neighbor' }],
-                tables: 'removed_configurations = { value = [ "testing-library" ], reason = "This scope does not use Testing Library." }\n',
+                tables: 'removed_configurations = { testing-library = "This scope does not use Testing Library." }\n',
             }),
             'package.json': JSON.stringify({ private: true, dependencies: { [library]: '1.0.0' } }),
             'child/package.json': '{"private":true,"dependencies":{}}\n',

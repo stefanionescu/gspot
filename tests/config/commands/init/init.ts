@@ -2,7 +2,6 @@ export const DEFAULT_CASES = [
     {
         name: `defaults are omitted`,
         source: `level="basic"
-removed_configurations=[]
 tool_timeout_seconds=600
 [hooks]
 enabled=false

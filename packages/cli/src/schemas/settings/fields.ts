@@ -18,21 +18,13 @@ import {
     RELATIVE_PATH_PATTERN,
     REMOVAL_REASON_DESCRIPTION,
     FORMAT_OVERRIDE_MIN_FIELDS,
-    SHARED_REMOVALS_DESCRIPTION,
 } from '#cli/config/settings/fields.ts';
 
 export const nonemptyStringsSchema = nonemptyStringSchema.array();
 
-export const removedConfigurationsSchema = z.union([
-    z.string().array(),
-    z
-        .strictObject({
-            value: z.string().array().describe(SHARED_REMOVALS_DESCRIPTION),
-            reason: z.string().describe(REMOVAL_REASON_DESCRIPTION),
-        })
-        .transform((reasoned) => reasoned.value),
-    z.record(z.string(), z.string().describe(REMOVAL_REASON_DESCRIPTION)).transform((reasons) => Object.keys(reasons)),
-]);
+export const removedConfigurationsSchema = z
+    .record(z.string(), z.string().describe(REMOVAL_REASON_DESCRIPTION))
+    .transform((reasons) => Object.keys(reasons));
 
 export const nonnegativeIntegerSchema = z.number().int().nonnegative();
 

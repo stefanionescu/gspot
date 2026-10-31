@@ -10,8 +10,6 @@ export const EMPTY_REASON = 'an empty reason';
 
 export const REMOVAL_REASON_SUGGESTION = 'Run gspot remove <configuration> --reason "<why>".';
 
-export const REMOVAL_NEEDS_REASON = `needs a reason. ${REMOVAL_REASON_SUGGESTION}`;
-
 export const SETTINGS_REFERENCE_URL = 'generativespotting.com/reference/gspot-toml/';
 
 export const RECORD_PATHS_MESSAGE = ' Its paths say where it applies.';

@@ -104,7 +104,7 @@ export const OPENAPI_SCOPE_SETTINGS = {
     level: 'basic',
     rules: true,
     scopes: [{ path: 'api' }],
-    tables: 'removed_configurations = { value = ["openapi"], reason = "This scope does not publish an OpenAPI document." }\n',
+    tables: 'removed_configurations = { openapi = "This scope does not publish an OpenAPI document." }\n',
 } as const;
 
 export const SCOPE_LIMIT_VALUES = {

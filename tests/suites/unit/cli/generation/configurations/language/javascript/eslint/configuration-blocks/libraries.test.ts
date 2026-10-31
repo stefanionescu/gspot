@@ -45,7 +45,7 @@ test.each([...LEVELS])(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['translations', 'react'], {
                 level,
-                tables: 'test_files = [ "**/qa/**" ]\n\n[[scope]]\npath = "app"\ntest_files = [ "app/verification/**" ]\n\n[[scope]]\npath = "app/deep"\n\n[[scope]]\npath = "sibling"\nremoved_configurations = { value = [ "translations" ], reason = "This scope does not translate its UI text." }\n',
+                tables: 'test_files = [ "**/qa/**" ]\n\n[[scope]]\npath = "app"\ntest_files = [ "app/verification/**" ]\n\n[[scope]]\npath = "app/deep"\n\n[[scope]]\npath = "sibling"\nremoved_configurations = { translations = "This scope does not translate its UI text." }\n',
             }),
             'package.json': '{"private":true,"type":"module"}\n',
             ...Object.fromEntries(
@@ -163,7 +163,7 @@ test.each([...LEVELS])(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['trpc', 'typescript'], {
                 level,
-                tables: '[trpc]\nrouter_files = [ "custom/**", "child/handlers/**" ]\n\n[[scope]]\npath = "child"\n\n[[scope]]\npath = "inherited"\n\n[[scope]]\npath = "plain"\nremoved_configurations = { value = [ "trpc" ], reason = "This scope does not expose a tRPC router." }\n',
+                tables: '[trpc]\nrouter_files = [ "custom/**", "child/handlers/**" ]\n\n[[scope]]\npath = "child"\n\n[[scope]]\npath = "inherited"\n\n[[scope]]\npath = "plain"\nremoved_configurations = { trpc = "This scope does not expose a tRPC router." }\n',
             }),
             'package.json': '{"private":true,"type":"module"}',
             'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}',

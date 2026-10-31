@@ -16,7 +16,7 @@ path = "app/deep"
 configurations = []
 [[scope]]
 path = "sibling"
-removed_configurations = { value = ["site"], reason = "This scope does not use the inherited site checks." }
+removed_configurations = { site = "This scope does not use the inherited site checks." }
 `;
 
 export const CSS_HTML_NAMING_SETTINGS = `configurations = ["css", "html"]

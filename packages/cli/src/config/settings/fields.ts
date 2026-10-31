@@ -10,9 +10,6 @@ export const FORMAT_INDENT_STYLES = ['space', 'tab'] as const;
 
 export const REMOVAL_REASON_DESCRIPTION = 'Why you removed this configuration, in two or more words.';
 
-export const SHARED_REMOVALS_DESCRIPTION =
-    'Configurations removed with one shared reason by an earlier gspot. The next gspot edit writes one reason for each.';
-
 export const REASON_DESCRIPTIONS = {
     raising: 'Why this code needs more than the default; required when you raise the value.',
     lowering: 'Why this code needs less than the default; required when you lower the value.',

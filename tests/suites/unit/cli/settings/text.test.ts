@@ -1,14 +1,15 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { createRunCache } from '#cli/system/cache.ts';
+import { readSettingsFile } from '#cli/settings/file.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { setKey, buildEditedSettings } from '#cli/settings/edit.ts';
 import { buildInitSettings } from '#cli/commands/init/settings-text.ts';
 import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 import { ARRAY_COMMENT_CASES } from '#tests/config/settings/text/array-comments.ts';
 import { FIELD_COMMENT_CASES } from '#tests/config/settings/text/field-comments.ts';
-import { setKey, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import { IGNORE_COMMENT_CASES } from '#tests/config/settings/text/ignore-comments.ts';
 
 test.each([...IGNORE_COMMENT_CASES, ...ARRAY_COMMENT_CASES, ...FIELD_COMMENT_CASES])(
@@ -38,7 +39,7 @@ test('setting level keeps the opening init comment first', async () => {
     });
     const text = buildInitSettings({ configurations: [], scopes: [], base: '' }, repository, configurationsByName);
     await createFileTree(sandbox.path, { 'gspot.toml': text });
-    const edit = readSettingsEdit(sandbox.path);
+    const edit = readSettingsFile(sandbox.path);
     setKey(edit.table, 'level', 'all');
     const result = buildEditedSettings(sandbox.path, edit);
     const [opening] = result.text.split('\n', 1);
@@ -50,7 +51,7 @@ test('setting level keeps a written value equal to its default', async () => {
     await using sandbox = await testdir({
         'gspot.toml': `configurations = ["bash"]\n\n# Keep the chosen format.\n[format]\nprint_width = 120\nindent_width = 4\n`,
     });
-    const edit = readSettingsEdit(sandbox.path);
+    const edit = readSettingsFile(sandbox.path);
     setKey(edit.table, 'level', 'all');
     const result = buildEditedSettings(sandbox.path, edit);
     expect(result.text).toBe(

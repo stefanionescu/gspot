@@ -20,7 +20,7 @@ export const GENERATED_PATH_CASES = [
     },
     {
         configurations: ['nextjs', 'cloudflare'],
-        tables: '[[scope]]\npath = "app"\nremoved_configurations = { value = ["nextjs", "cloudflare"], reason = "This scope does not generate framework declaration files." }',
+        tables: '[[scope]]\npath = "app"\nremoved_configurations = { nextjs = "This scope does not generate framework declaration files.", cloudflare = "This scope does not generate framework declaration files." }',
         generated: ['next-env.d.ts', 'worker-configuration.d.ts'],
     },
 ] as const;

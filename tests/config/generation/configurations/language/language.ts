@@ -4,7 +4,7 @@ path = "nested"
 swift = {xcode_project = "nested/Chosen.xcodeproj"}
 [[scope]]
 path = "disabled"
-removed_configurations = { value = ["swift"], reason = "This scope does not build Swift projects." }
+removed_configurations = { swift = "This scope does not build Swift projects." }
 
 [swift]
 xcode_project = "Chosen.xcodeproj"

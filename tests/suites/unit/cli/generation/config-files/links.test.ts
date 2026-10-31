@@ -34,7 +34,7 @@ test.each([...XCTEST_LINK_FILE_CASES])(
                     ...(scope === '' ? [] : [{ path: scope, configurations: ['swift'] }]),
                     { path: child, configurations: ['swift'] },
                 ],
-                tables: '[[scope]]\npath = "omitted"\nremoved_configurations = { value = ["swift"], reason = "This scope does not use Swift or its generated link files." }\n',
+                tables: '[[scope]]\npath = "omitted"\nremoved_configurations = { swift = "This scope does not use Swift or its generated link files." }\n',
             }),
             [`${folder}/Value.swift`]: XCTEST_SOURCE,
             [`${folder}/Deep/Value.swift`]: XCTEST_SOURCE,

@@ -2,7 +2,7 @@ export const REMOVED_CONFIGURATION_CASES = [
     {
         name: 'removed at the root',
         options: {
-            tables: 'removed_configurations = { value = ["bash"], reason = "Bash is deliberately excluded from this selection." }\n',
+            tables: 'removed_configurations = { bash = "Bash is deliberately excluded from this selection." }\n',
         },
         files: {
             'entry.sh': 'echo ready\n',
@@ -14,7 +14,7 @@ export const REMOVED_CONFIGURATION_CASES = [
         name: 'all Bash evidence is in a scope that removed Bash',
         options: {
             scopes: [{ path: 'api' }],
-            tables: 'removed_configurations = { value = ["bash"], reason = "Bash is deliberately excluded from this selection." }\n',
+            tables: 'removed_configurations = { bash = "Bash is deliberately excluded from this selection." }\n',
         },
         files: {
             'api/entry.sh': 'echo ready\n',
@@ -25,7 +25,7 @@ export const REMOVED_CONFIGURATION_CASES = [
     {
         name: 'an unaffected sibling supplies Bash evidence',
         options: {
-            tables: '[[scope]]\npath = "api"\nremoved_configurations = { value = ["bash"], reason = "Bash is deliberately excluded from this selection." }\n[[scope]]\npath = "worker"\n',
+            tables: '[[scope]]\npath = "api"\nremoved_configurations = { bash = "Bash is deliberately excluded from this selection." }\n[[scope]]\npath = "worker"\n',
         },
         files: {
             'api/entry.sh': 'echo ready\n',

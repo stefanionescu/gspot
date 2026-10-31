@@ -3,14 +3,14 @@ import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import type { Settings } from '#cli/types/settings/settings.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
+import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { ReasonedValue } from '#cli/types/settings/values.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
-import type { SettingsFileContents } from '#cli/types/settings/edits.ts';
+import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { SETTINGS_FILE, NO_SETTINGS_MESSAGE, SETTINGS_ENCODING_MESSAGE } from '#cli/config/settings/settings.ts';
 
 /**
@@ -24,17 +24,17 @@ export function isReasonedValue(value: unknown): value is ReasonedValue<unknown>
 }
 
 /**
-Read gspot.toml without following a link out of the repository.
+Read the bytes, mode, and table of gspot.toml without following a link out of the repository.
 
 @param root the folder that contains gspot.toml.
 */
-export function readSettingsFile(root: string): SettingsFileContents {
+export function readSettingsFile(root: string): SettingsEdit {
     const files = openFiles(root);
     const previous = files.read(SETTINGS_FILE);
     if (previous === undefined) throw new GspotError('settings', NO_SETTINGS_MESSAGE);
     const text = decodeUtf8(previous.bytes);
     if (text === undefined) throw new GspotError('settings', SETTINGS_ENCODING_MESSAGE);
-    return { text, previous };
+    return { text, table: parseTomlFile(SETTINGS_FILE, text), previous };
 }
 
 /**

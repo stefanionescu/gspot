@@ -195,11 +195,11 @@ export const UNKNOWN_TABLE_FIELDS = [
 
 export const CONFIGURATION_CONFLICTS = [
     {
-        text: 'configurations = ["bash"]\nremoved_configurations = { value = ["bash"], reason = "External checks cover Bash." }\n',
+        text: 'configurations = ["bash"]\nremoved_configurations = { bash = "External checks cover Bash." }\n',
         path: ['configurations'],
     },
     {
-        text: '[[scope]]\npath = "app"\nconfigurations = ["bash"]\nremoved_configurations = { value = ["bash"], reason = "External checks cover Bash." }\n',
+        text: '[[scope]]\npath = "app"\nconfigurations = ["bash"]\nremoved_configurations = { bash = "External checks cover Bash." }\n',
         path: ['scope', 0, 'configurations'],
     },
 ] as const;

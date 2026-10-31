@@ -22,7 +22,7 @@ test('Vue, Svelte and Astro files parse in their scopes, and a scope without the
         'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'vue', 'svelte', 'astro'], {
             level: 'all',
             scopes: [{ path: 'app' }, { path: 'plain' }],
-            tables: 'removed_configurations = { value = [ "vue", "svelte", "astro" ], reason = "This scope contains plain JavaScript rather than framework components." }\n',
+            tables: 'removed_configurations = { vue = "This scope contains plain JavaScript rather than framework components.", svelte = "This scope contains plain JavaScript rather than framework components.", astro = "This scope contains plain JavaScript rather than framework components." }\n',
         }),
         'package.json': '{"private":true,"type":"module"}',
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*"]}',
