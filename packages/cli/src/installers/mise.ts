@@ -1,7 +1,6 @@
 import which from 'which';
 import { join, dirname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
-import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -9,16 +8,18 @@ import { findSystemSkip } from '#cli/planning/skips.ts';
 import { listCheckTools } from '#cli/planning/tools.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { formatCount, compareText } from '#cli/system/text.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
-import type { Tool, MiseToolPin } from '#cli/types/manifests.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { redactInstallOutput } from '#cli/installers/credentials.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
+import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import { miseLockfileSchema } from '#cli/schemas/installers/installers.ts';
 import { MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/files/names.ts';
+import type { Tool, MiseToolPin, Configuration } from '#cli/types/manifests.ts';
 import { runInstallStep, runRequiredInstallStep } from '#cli/installers/steps.ts';
 import type { MiseInstall, ToolInstall } from '#cli/types/installers/installers.ts';
 import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/executables/locate.ts';
@@ -229,4 +230,27 @@ function fillVersionChecksums(version: Record<string, unknown>, pin: MiseToolPin
             );
         platform['checksum'] = checksum;
     }
+}
+
+/**
+Build the mise install of the tools, without the runtime pins of the repository.
+
+@param configurations the configurations in use.
+*/
+export function buildMiseInstall(configurations: Configuration[]): GeneratedFile {
+    const tools = Object.fromEntries(
+        listMisePins(configurations)
+            .toSorted((left, right) => compareText(left.name, right.name))
+            .map((pin) => [
+                pin.name,
+                pin.options === undefined ? pin.version : { version: pin.version, ...pin.options },
+            ]),
+    );
+    return {
+        path: GSPOT_PATHS.miseProject,
+        content: stringify(
+            { tools, settings: { lockfile: true } },
+            { ...CONFIG_FILE_TOML_FORMAT, inlineTableStart: 1 },
+        ),
+    };
 }

@@ -16,6 +16,7 @@ import { type GeneratedFile } from '#cli/types/generation/files.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { getTool, listToolProjectPins } from '#cli/manifests/tools.ts';
+import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import type { ReplacementRequest } from '#cli/types/repository/repository.ts';
 import { PRIVATE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { runInstallStep, explainReleaseAgeHold } from '#cli/installers/steps.ts';
@@ -305,4 +306,21 @@ Build the project table of the Python tool project: its name, its Python version
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The written pyproject.toml and the lockfile state of the installers build the same table through it.
 export function buildPythonProjectTable(configurations: Configuration[]): PythonToolProject {
     return { ...PYTHON_TOOL_PROJECT, dependencies: listToolProjectPins(configurations).python };
+}
+
+/**
+Build the Python install that holds the Python lint tools.
+
+@param configurations the configurations in use.
+@returns an empty list without Python tools.
+*/
+export function buildPythonInstall(configurations: Configuration[]): GeneratedFile[] {
+    const project = buildPythonProjectTable(configurations);
+    if (project.dependencies.length === 0) return [];
+    return [
+        {
+            path: GSPOT_PATHS.pythonProject,
+            content: stringify({ project }, CONFIG_FILE_TOML_FORMAT),
+        },
+    ];
 }

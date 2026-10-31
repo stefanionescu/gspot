@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { buildMiseInstall } from '#cli/installers/mise.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { runNpmPack } from '#tests/setup/runner/npm-registry.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { buildMiseInstall } from '#cli/generation/tool-installs.ts';
 import { MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/executables.ts';
 import { findMisePin, listDistinctTools } from '#cli/manifests/tools.ts';
 import { MISE_INSTALL_ARGUMENTS } from '#cli/config/installers/installers.ts';
