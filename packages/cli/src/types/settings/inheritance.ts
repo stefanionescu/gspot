@@ -1,6 +1,6 @@
 import type { Configuration } from '#cli/types/manifests.ts';
+import type { PATH_ROLES } from '#cli/config/settings/schema.ts';
 import type { ScopeFolder } from '#cli/types/repository/files.ts';
-import type { PATH_ROLES } from '#cli/config/settings/settings.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { ReasonRequirement } from '#cli/types/settings/definitions.ts';
 import type { Settings, TableValues, IgnoreRecord, SettingsTable } from '#cli/types/settings/settings.ts';

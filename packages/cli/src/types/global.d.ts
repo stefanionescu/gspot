@@ -1,5 +1,5 @@
 import 'zod/v4/core';
-import type { PATH_ROLES } from '#cli/config/settings/settings.ts';
+import type { PATH_ROLES } from '#cli/config/settings/schema.ts';
 
 declare global {
     // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- reason: TypeScript extends the built-in RegExp constructor through an interface.

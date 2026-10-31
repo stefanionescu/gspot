@@ -6,9 +6,11 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type ConfigData, StaticConfigLoader } from 'html-validate';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { HTML_VALIDATION_LEVELS } from '#tests/config/generation/config-files.ts';
 
-test.each([...HTML_VALIDATION_LEVELS])(
+test.each([
+    { level: 'basic', override: 'off', severity: 0 },
+    { level: 'all', override: undefined, severity: 2 },
+] as const)(
     'the root and child scopes share one source and one built html-validate file, and no-inline-style is on only at level all ($level)',
     async ({ level, override, severity }) => {
         await using sandbox = await testdir({

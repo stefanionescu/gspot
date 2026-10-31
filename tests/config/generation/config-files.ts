@@ -23,11 +23,6 @@ export const SPECIAL_CHARACTER_SETTINGS = {
     },
 } as const;
 
-export const HTML_VALIDATION_LEVELS = [
-    { level: 'basic', override: 'off', severity: 0 },
-    { level: 'all', override: undefined, severity: 2 },
-] as const;
-
 export const PRETTIER_IGNORE_SETTINGS = {
     configurations: ['format', 'javascript'],
     ignore: [

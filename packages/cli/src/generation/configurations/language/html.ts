@@ -7,7 +7,7 @@ import {
     HTML_VALIDATE_EXTENDS,
     HTML_DEFAULT_LEVEL_OFF,
     HTML_VALIDATE_OVERRIDES,
-} from '#cli/config/generation/config-files.ts';
+} from '#cli/config/generation/configurations/language/language.ts';
 
 /**
 Build html-validate.json: the HTML validation rules for source files or built site pages.

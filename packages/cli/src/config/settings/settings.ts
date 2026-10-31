@@ -10,8 +10,6 @@ export const OPENNEXT_TYPE_DEFAULTS = {
     'cloudflare.types_interface': 'CloudflareEnv',
 } as const;
 
-export const PATH_ROLES = ['source', 'destination', 'build'] as const;
-
 export const BUILD_SCRIPT = ['run', 'build'] as const;
 
 export const CI_PROVIDERS = ['github', 'gitlab'] as const;
@@ -104,19 +102,6 @@ export const CATEGORY_KEY_SEGMENTS = 2;
 
 export const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 
-export const SCHEMA_URL = 'https://generativespotting.com/gspot.schema.json';
-
-export const HIDDEN_FACT_KEYS = [
-    'configurations',
-    'languages',
-    'reason_when',
-    'reason_values',
-    'language_defaults',
-    'path_role',
-    'template',
-    'default_all',
-] as const;
-
 export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     scope: 'Settings for one folder: its configurations and the tables that differ from the root.',
     import_rule:
@@ -156,10 +141,6 @@ export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     ci: 'Whether gspot writes a CI workflow, for which provider, and on which systems it runs.',
     rules: 'Whether gspot writes rules for coding agents, and which rule files it leaves out.',
 };
-
-export const JSON_SCHEMA_DIALECT = 'https://json-schema.org/draft/2020-12/schema';
-
-export const SCHEMA_DESCRIPTION = 'The settings of gspot for one repository.';
 
 export const COMMAND_CHECK_DEFAULTS = {
     level: 'basic',

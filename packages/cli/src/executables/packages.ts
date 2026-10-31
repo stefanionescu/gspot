@@ -9,7 +9,7 @@ import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import type { PackageJson } from '#cli/types/parsers/projects.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/projects.ts';
-import type { InstalledDependency } from '#cli/types/repository/javascript.ts';
+import type { InstalledDependency } from '#cli/types/executables/executables.ts';
 
 /**
 Read and validate a package.json outside the tool project, without its boundary.

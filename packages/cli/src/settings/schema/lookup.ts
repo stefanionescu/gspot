@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PATH_ROLES } from '#cli/config/settings/settings.ts';
+import { PATH_ROLES } from '#cli/config/settings/schema.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
