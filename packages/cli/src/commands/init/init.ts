@@ -27,7 +27,7 @@ import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { planInitFiles, formatInitPlan } from '#cli/commands/init/plan.ts';
 import type { RepositoryListing } from '#cli/types/repository/repository.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings-text.ts';
+import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings.ts';
 import { readRepository, readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts';
 import type { InitJson, InitScan, InitOptions, InitPlanning, DetectionSummary } from '#cli/types/commands/init.ts';
 

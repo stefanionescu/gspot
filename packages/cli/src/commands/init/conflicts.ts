@@ -3,8 +3,8 @@ import { runGitBlocking } from '#cli/system/git.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { writePlans } from '#cli/repository/writer.ts';
 import { isEditedInPlace } from '#cli/repository/conflicts.ts';
+import { parsePrettierFile } from '#cli/commands/init/format.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
-import { parsePrettierFile } from '#cli/commands/init/formatter-settings.ts';
 import type { InitPlan, ConflictingConfigs } from '#cli/types/commands/init.ts';
 import type { WritePlan, ManagedKeys, RepositorySetup, ConflictingConfig } from '#cli/types/repository/repository.ts';
 
