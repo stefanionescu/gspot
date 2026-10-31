@@ -1,8 +1,8 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/planning/session.ts';
+import { buildConfigFiles } from '#cli/generation/configs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
 
 test('a check copy builds the config files of the repository, not of the copy folder', async () => {
     await using sandbox = await testdir({

@@ -1,4 +1,4 @@
-import { createRule } from '../rule-creator.ts';
+import { createRule } from '../rule.ts';
 import { type RuleContext, type ImportBlock } from '../types/rules.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 

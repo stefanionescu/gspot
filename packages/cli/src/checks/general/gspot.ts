@@ -19,12 +19,12 @@ import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import { findSettingLine, isReasonedValue } from '#cli/settings/file.ts';
+import { listConflictingConfigFiles } from '#cli/repository/conflicts.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { SuppressionSyntax } from '#cli/types/checks/general/general.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
 import { type CheckFinding, type FindingPlace } from '#cli/types/runs/check.ts';
 import { type Scope, type PathVisitor } from '#cli/types/settings/inheritance.ts';
-import { listConflictingConfigFiles } from '#cli/repository/conflicting-config-files.ts';
 
 import {
     GSPOT_RULES,

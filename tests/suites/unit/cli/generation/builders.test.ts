@@ -8,9 +8,9 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { CONFIG_FILE_BUILDERS } from '#cli/generation/builders.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { CONFIG_FILE_BUILDERS } from '#cli/generation/config-files/build.ts';
 import { SEMGREP_RULE_PACK_FILE } from '#cli/config/generation/config-files.ts';
 import { SPECIAL_CHARACTER_FILES, SPECIAL_CHARACTER_SETTINGS } from '#tests/config/generation/config-files.ts';
 

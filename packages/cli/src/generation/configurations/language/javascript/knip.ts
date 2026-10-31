@@ -13,12 +13,8 @@ import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import type { Settings, TableSettings } from '#cli/types/settings/settings.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
+import { convertToGlobs, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 
-import {
-    convertToGlobs,
-    buildIgnoreSections,
-    listCheckIgnoreSections,
-} from '#cli/generation/config-files/ignore-sections.ts';
 import {
     KNIP_TABLE,
     KNIP_CHECK,

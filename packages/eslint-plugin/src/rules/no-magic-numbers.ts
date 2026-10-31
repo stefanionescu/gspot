@@ -1,5 +1,5 @@
+import { createRule } from '../rule.ts';
 import { createRequire } from 'node:module';
-import { createRule } from '../rule-creator.ts';
 import type { MagicNumbersOptions } from '../types/rules.ts';
 import { UPSTREAM_RULE, FUNCTION_NODES, MAGIC_NUMBER_OPTIONS_SCHEMA } from '../config/rules.ts';
 import { ESLintUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

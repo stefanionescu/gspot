@@ -1,4 +1,4 @@
-import { createRule } from '../rule-creator.ts';
+import { createRule } from '../rule.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { SERVER_DIRECTIVE, SERVER_ONLY_MODULE } from '../config/rules.ts';
 

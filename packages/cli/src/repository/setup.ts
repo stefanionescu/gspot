@@ -10,11 +10,11 @@ import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/manifests/names.ts';
 import { join, dirname, resolve, basename, relative } from 'node:path';
+import { listConflictingConfigFiles } from '#cli/repository/conflicts.ts';
 import { EXECUTABLE_BITS, MARKDOWN_EXTENSION } from '#cli/config/repository/files.ts';
 import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository/repository.ts';
 import { statSync, lstatSync, readdirSync, realpathSync, readFileSync } from 'node:fs';
 import { readPackageJson, listToolOnlyPackages } from '#cli/repository/dependencies.ts';
-import { listConflictingConfigFiles } from '#cli/repository/conflicting-config-files.ts';
 import { LFS_HOOKS, HOOK_SHEBANG, LFS_GUARD_PREFIX } from '#cli/config/generation/generation.ts';
 import { type CiJob, type RepositoryHooks, type RepositorySetup } from '#cli/types/repository/repository.ts';
 

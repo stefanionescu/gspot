@@ -4,11 +4,11 @@ import type { Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { ROOT_LABEL } from '#tests/config/messages.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
+import { buildConfigFiles } from '#cli/generation/configs.ts';
 import { extractConfigFileName } from '#cli/manifests/tools.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { getConfigFileTarget } from '#cli/generation/selection.ts';
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
-import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 
 /**
 Find the generated config file for a tool and scope.

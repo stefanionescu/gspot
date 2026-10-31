@@ -10,7 +10,7 @@ import type { ParsedTsconfig } from '#cli/types/parsers/projects.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import { convertToGlobs, buildIgnoreSections } from '#cli/generation/config-files/ignore-sections.ts';
+import { convertToGlobs, buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 import {

@@ -5,12 +5,12 @@ import { pathToFileURL } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import { XCTEST_SOURCE } from '#tests/config/swift.ts';
+import { buildLinkFiles } from '#cli/generation/links.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { SourcedConfigFile } from '#cli/types/manifests.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildLinkFiles } from '#cli/generation/config-files/links.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildProgramArguments } from '#tests/setup/system/programs.ts';
 

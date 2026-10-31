@@ -6,11 +6,11 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
+import { buildConfigFiles } from '#cli/generation/configs.ts';
+import { getConfigFileTarget } from '#cli/generation/selection.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
 import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
-import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { runSwiftBuild, runCopiedTool } from '#cli/checks/language/swift/build.ts';
 
 import {

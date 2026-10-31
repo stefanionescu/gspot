@@ -12,10 +12,10 @@ import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/swift.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import { buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildIgnoreSections } from '#cli/generation/config-files/ignore-sections.ts';
 import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 import {

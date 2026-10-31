@@ -4,9 +4,9 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
+import { buildConfigFiles } from '#cli/generation/configs.ts';
+import { getConfigFileTarget } from '#cli/generation/selection.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
-import { buildConfigFiles } from '#cli/generation/config-files/generate.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { SEMGREP_TOOL, SEMGREP_RULE_EXTENSION } from '#cli/config/checks/general/general.ts';
 
 function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {

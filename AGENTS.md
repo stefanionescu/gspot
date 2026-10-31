@@ -160,7 +160,7 @@ repository.
 - When the checks of a configuration pass the file length limit, they move to a folder
   `checks/<group>/<configuration>/`. That folder has one file per check, named after it, or per input that several
   checks read.
-- Code that several configurations share sits in `checks/cross-configuration/` or `generation/config-files/`.
+- Code that several configurations share sits in `checks/cross-configuration/` or at the top of `generation/`.
 - Code that belongs to one configuration stays in its folder when another configuration reuses it, such as the
   Postgres migrations reader that supabase reads.
 - The code of one configuration sits at `<group>/<configuration>` in every tree: its shipped files in

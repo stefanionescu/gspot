@@ -9,7 +9,7 @@ import {
     keepFirstPatterns,
     buildIgnoreSections,
     listCheckIgnoreSections,
-} from '#cli/generation/config-files/ignore-sections.ts';
+} from '#cli/generation/ignores.ts';
 import {
     TYPOS_CHECK,
     LOCKFILE_GLOB,

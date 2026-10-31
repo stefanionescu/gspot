@@ -1,6 +1,6 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
-import { refuseIdleRuleOptions } from '#cli/generation/config-files/rule-options.ts';
+import { refuseIdleRuleOptions } from '#cli/generation/rule-options.ts';
 import type { OwnedConfigFile, PlannedConfigFile } from '#cli/types/generation/files.ts';
 
 import {

@@ -1,8 +1,8 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
+import { refuseIdleRuleOptions } from '#cli/generation/rule-options.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { COMMITLINT_CHECK } from '#cli/config/checks/general/general.ts';
-import { refuseIdleRuleOptions } from '#cli/generation/config-files/rule-options.ts';
 
 import {
     COMMITLINT_RULES,

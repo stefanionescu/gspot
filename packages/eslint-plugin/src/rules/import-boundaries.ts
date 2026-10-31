@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
-import { createRule } from '../rule-creator.ts';
+import { createRule } from '../rule.ts';
 import { buildSourceVisitors } from '../syntax.ts';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';

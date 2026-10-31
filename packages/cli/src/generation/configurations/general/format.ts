@@ -10,13 +10,9 @@ import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { includeFolderContents } from '#cli/system/matchers.ts';
 import { type PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { type Settings, type WrittenFormat } from '#cli/types/settings/settings.ts';
+import { keepFirstPatterns, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 import { type ScopeFormat, type FormatOverride, type PrettierPlugin } from '#cli/types/generation/formatting.ts';
 
-import {
-    keepFirstPatterns,
-    buildIgnoreSections,
-    listCheckIgnoreSections,
-} from '#cli/generation/config-files/ignore-sections.ts';
 import {
     PRETTIER_CHECK,
     DEFAULT_QUOTES,

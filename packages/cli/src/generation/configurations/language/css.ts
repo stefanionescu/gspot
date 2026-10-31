@@ -1,9 +1,9 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
+import { refuseIdleRuleOptions } from '#cli/generation/rule-options.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { refuseIdleRuleOptions } from '#cli/generation/config-files/rule-options.ts';
 
 import {
     STYLELINT_CHECK,

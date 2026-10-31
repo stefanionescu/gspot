@@ -6,21 +6,17 @@ import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
-import { refuseIdleRuleOptions } from '#cli/generation/config-files/rule-options.ts';
+import { refuseIdleRuleOptions } from '#cli/generation/rule-options.ts';
 import type { BlockWriter, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
 import { buildRuntimes } from '#cli/generation/configurations/language/javascript/eslint/runtimes.ts';
 import type { GeneratedFile, ConfigFileOutput, PlannedConfigFile } from '#cli/types/generation/files.ts';
+import { convertToGlobs, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 import { buildBlockCalls } from '#cli/generation/configurations/language/javascript/eslint/block-calls.ts';
 import { buildPlannedEslintFile } from '#cli/generation/configurations/language/javascript/eslint/plan.ts';
 import { splitSettingsBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 import { buildBoundaryBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/boundaries.ts';
 import { listConfigurationBlocks } from '#cli/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
-import {
-    convertToGlobs,
-    buildIgnoreSections,
-    listCheckIgnoreSections,
-} from '#cli/generation/config-files/ignore-sections.ts';
 import {
     listLocalPlugins,
     buildLocalPluginBlocks,

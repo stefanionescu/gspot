@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import { createRule } from '../rule-creator.ts';
+import { createRule } from '../rule.ts';
 import { buildSourceVisitors } from '../syntax.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { RESOURCE_QUERY, LOCAL_PREFIXES, INDEX_BASENAMES, MODULE_MOCK_METHODS } from '../config/rules.ts';

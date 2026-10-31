@@ -28,9 +28,9 @@ import { buildPeripheryFile } from '#cli/generation/configurations/language/swif
 import { buildSwiftlintFile } from '#cli/generation/configurations/language/swift/swiftlint.ts';
 import { buildJsconfigFile } from '#cli/generation/configurations/language/javascript/jsconfig.ts';
 import { buildSwiftformatFile } from '#cli/generation/configurations/language/swift/swiftformat.ts';
+import { buildEslintFile } from '#cli/generation/configurations/language/javascript/eslint/config.ts';
 import { buildV8rFile, buildYamllintFile } from '#cli/generation/configurations/general/data-files.ts';
 import { buildRuffFile, buildBasedpyrightFile } from '#cli/generation/configurations/language/python.ts';
-import { buildEslintFile } from '#cli/generation/configurations/language/javascript/eslint/config-file.ts';
 import { TRIVY_TABLE, TRIVY_SKIPPED_FOLDERS } from '#cli/config/generation/configurations/infrastructure.ts';
 import { ALT_TEXT_TOKENS, TAPLO_FORMATTING, ALT_TEXT_MESSAGE } from '#cli/config/generation/configurations/general.ts';
 

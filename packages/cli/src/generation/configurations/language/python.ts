@@ -9,12 +9,8 @@ import { type FormatSettings } from '#cli/types/generation/formatting.ts';
 import { DEFAULT_QUOTES } from '#cli/config/generation/configurations/general.ts';
 import { UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { getTable, getLimit, listIgnores, listIgnoredRules } from '#cli/settings/scopes.ts';
+import { convertToGlobs, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 
-import {
-    convertToGlobs,
-    buildIgnoreSections,
-    listCheckIgnoreSections,
-} from '#cli/generation/config-files/ignore-sections.ts';
 import {
     RUFF_TABLE,
     RUFF_CHECK,

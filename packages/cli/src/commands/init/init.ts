@@ -35,7 +35,7 @@ import {
     assertFilesCommitted,
     readConflictingConfigFiles,
     deleteConflictingConfigFiles,
-} from '#cli/commands/init/conflicting-config-files.ts';
+} from '#cli/commands/init/conflicts.ts';
 import {
     YES_FLAG,
     FROM_OPTION,
