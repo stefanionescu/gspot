@@ -1,10 +1,10 @@
 import { fileURLToPath } from 'node:url';
 import starlight from '@astrojs/starlight';
 import starlightLlmsTxt from 'starlight-llms-txt';
-import { pruneUnusedStyles } from '#docs/styles.ts';
 import { SIDEBAR } from '#docs/config/navigation.ts';
 import { CLI_REFERENCE } from '#docs/reference/cli.ts';
 import { SCHEMA_FILE } from '#cli/config/files/names.ts';
+import { pruneUnusedStyles } from '#docs/unused-styles.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
 import { LLMS_PAGES, AGENT_STEPS } from '#docs/config/setup.ts';
 import { defineConfig, passthroughImageService } from 'astro/config';
