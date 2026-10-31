@@ -11,7 +11,7 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { CONFIG_FILE_BUILDERS } from '#cli/generation/builders.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { SEMGREP_RULE_PACK_FILE } from '#cli/config/generation/config-files.ts';
+import { SEMGREP_RULE_PACK_FILE } from '#cli/config/generation/generation.ts';
 import { SPECIAL_CHARACTER_FILES, SPECIAL_CHARACTER_SETTINGS } from '#tests/config/generation/config-files.ts';
 
 test('keys and values with quotes, backslashes, newlines, and accented letters stay literal in JSON and YAML config files', async () => {

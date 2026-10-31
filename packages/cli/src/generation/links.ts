@@ -15,15 +15,16 @@ import { getConfigFileTarget } from '#cli/generation/selection.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { ManagedKeys } from '#cli/types/repository/repository.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/generation.ts';
 import type { GeneratedFile, ConfigFileOwner, PlannedLinkField } from '#cli/types/generation/files.ts';
 import { escapeGlob, convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
 
 import {
+    GITHUB_WORKFLOW,
+    GITLAB_WORKFLOW,
     TARGET_PLACEHOLDER,
     OVERRIDES_PLACEHOLDER,
     TARGET_MODULE_PLACEHOLDER,
-} from '#cli/config/generation/config-files.ts';
+} from '#cli/config/generation/generation.ts';
 
 function fillTarget(body: string, linkFilePath: string, targetPath: string): string {
     const relativePath = convertToPosixPath(relative(dirname(linkFilePath), targetPath));

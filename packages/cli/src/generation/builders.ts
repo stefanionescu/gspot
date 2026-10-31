@@ -53,7 +53,7 @@ import {
     CONFIG_FILE_REFERENCE,
     SEMGREP_RULE_PACK_FILE,
     ANSIBLE_LINT_ALWAYS_OFF,
-} from '#cli/config/generation/config-files.ts';
+} from '#cli/config/generation/generation.ts';
 import {
     buildValeIniFile,
     buildLengthStyle,

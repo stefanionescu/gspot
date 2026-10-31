@@ -11,15 +11,16 @@ import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { listOwnedConfigFiles } from '#cli/generation/selection.ts';
 import type { IgnoreSection } from '#cli/types/generation/files.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/generation.ts';
 import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';
 
 import {
+    GITHUB_WORKFLOW,
+    GITLAB_WORKFLOW,
     BUILD_OUTPUT_FOLDERS,
     IGNORE_SECTION_TITLES,
     BUILD_OUTPUT_PATTERNS,
     GSPOT_FOLDER_PATTERNS,
-} from '#cli/config/generation/config-files.ts';
+} from '#cli/config/generation/generation.ts';
 
 /**
 List the paths outside .gspot/ that a run writes: the root targets and link file paths of the config files it writes, and the CI workflow when CI runs.
