@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildScopeNamingSettings } from '#tests/setup/cli/naming.ts';
+import { buildScopeNamingSettings } from '#tests/setup/cli/checks.ts';
 import { validateIdentifiers } from '#cli/checks/general/naming/validation.ts';
 import { type FileNaming, type Identifier, type NamingSettings } from '#cli/types/checks/general/naming.ts';
 

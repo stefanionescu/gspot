@@ -14,6 +14,8 @@ import { getTool, findToolName } from '#cli/manifests/tools.ts';
 import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import type { NamingSettings } from '#cli/types/checks/general/naming.ts';
+import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
 import { runCheckCode, buildCheckSession } from '#cli/commands/check/run.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 import { checkGeneratorOutputs } from '#cli/checks/cross-configuration/generator-outputs.ts';
@@ -131,4 +133,18 @@ export function getBuiltInCheck(checkId: string): (session: Session, planned: Pl
         const result = await runBuiltInCheck(check, buildCheckSession(session), planned);
         return [...result.findings];
     };
+}
+
+/**
+Read the naming settings that apply in one scope of this settings text.
+*/
+export async function buildScopeNamingSettings(text: string, scopePath = ''): Promise<NamingSettings> {
+    await using sandbox = await testdir({
+        'gspot.toml': text,
+        ...(scopePath !== '' && { [`${scopePath}/.keep`]: '' }),
+    });
+    const session = await openSession(sandbox.path);
+    const scope = session.scopes.find(({ path }) => path === scopePath);
+    if (scope === undefined) throw new Error(`The settings declare no scope at ${scopePath}.`);
+    return readNamingSettings(session.settings, scope);
 }
