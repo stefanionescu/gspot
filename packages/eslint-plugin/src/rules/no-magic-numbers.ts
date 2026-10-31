@@ -1,8 +1,7 @@
 import { createRequire } from 'node:module';
 import { createRule } from '../rule-creator.ts';
-import { FUNCTION_NODES } from '../config/plugin.ts';
 import type { MagicNumbersOptions } from '../types/rules.ts';
-import { UPSTREAM_RULE, MAGIC_NUMBER_OPTIONS_SCHEMA } from '../config/rules.ts';
+import { UPSTREAM_RULE, FUNCTION_NODES, MAGIC_NUMBER_OPTIONS_SCHEMA } from '../config/rules.ts';
 import { ESLintUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const require = createRequire(import.meta.url);

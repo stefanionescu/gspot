@@ -1,13 +1,5 @@
 import { type TSESTree, type TSESLint } from '@typescript-eslint/utils';
 
-export type RuleDocs = {
-    level: 'recommended' | 'all' | 'none';
-    description: string;
-    why: string;
-    fix: string;
-    example: string;
-};
-
 export type ClientEnvOptions = [
     { client: boolean; publicPrefixes: readonly string[]; allowedNames: readonly string[] },
 ];

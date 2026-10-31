@@ -1,4 +1,4 @@
-import type { RuleDocs } from './types/rules.ts';
+import type { RuleDocs } from './types/plugin.ts';
 import { PLUGIN_PREFIX } from './config/plugin.ts';
 import { noClientEnv } from './rules/no-client-env.ts';
 import { noIndexImports } from './rules/no-index-imports.ts';

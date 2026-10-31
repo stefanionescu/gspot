@@ -165,6 +165,8 @@ export const TRIVIAL_FUNCTION_OPTIONS_SCHEMA = {
 
 export const TRIVIAL_FUNCTION_STATEMENTS = 2;
 
+export const FUNCTION_NODES = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression']);
+
 export const INLINE_VALUE_PARENTS = new Set<string>([
     'ArrayExpression',
     'ReturnStatement',
