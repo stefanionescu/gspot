@@ -1,5 +1,13 @@
 # This file stops OSV-Scanner from reading an osv-scanner.toml next to a lockfile.
 # Accept a vulnerability with gspot ignore dependencies/osv-scanner --rule <ID> and a reason.
 [[IgnoredVulns]]
+id = "GHSA-3g3m-2fjr-6pw4"
+reason = "As checked on 2026-10-31, only glob 14.0.2 fixes the AbortSignal bypass, and @npmcli/map-workspaces and @npmcli/package-json require glob ^13. Neither passes an AbortSignal to glob, so the bypass does not apply."
+
+[[IgnoredVulns]]
 id = "GHSA-ch52-4w7c-c8xp"
 reason = "As checked on 2026-10-20, no release fixes the max-stale flaw: bun.lock holds 4.2.0, and 4.3.0 changes only Vary handling. Astro and make-fetch-happen use it in the docs and tests workspaces, which share no cached responses between users."
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+reason = "As checked on 2026-10-31, only minimatch 11.0.1 fixes the globparts denial of service, and ESLint, typescript-estree, and @npmcli/map-workspaces require minimatch ^10. Their patterns come from the repository's own config and package.json workspaces."
