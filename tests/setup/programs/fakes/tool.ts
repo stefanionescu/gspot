@@ -1,7 +1,7 @@
 import { parseArgs } from 'node:util';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { rmSync, existsSync, renameSync, appendFileSync } from 'node:fs';
 import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/system.ts';
-import { rmSync, mkdirSync, existsSync, renameSync, appendFileSync } from 'node:fs';
 import { FAKE_TOOL_OPTIONS, WAIT_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
 
 const { values, positionals } = parseArgs({ options: FAKE_TOOL_OPTIONS, allowPositionals: true, strict: false });
@@ -39,14 +39,6 @@ const steps: Partial<Record<keyof typeof FAKE_TOOL_OPTIONS, (value: string) => u
     append: (pair) => {
         appendFileSync(...([pair.slice(0, pair.indexOf('=')), pair.slice(pair.indexOf('=') + 1)] as const));
     },
-    'copy-environment-file': async (pair) => {
-        const [path, name] = [pair.slice(0, pair.indexOf('=')), pair.slice(pair.indexOf('=') + 1)] as const;
-        await Bun.write(path, await Bun.file(readEnvironmentVariable(name) ?? '').text());
-    },
-    'replace-with-folder': (folder) => {
-        rmSync(folder);
-        mkdirSync(folder);
-    },
     'log-arguments': (log) => {
         appendFileSync(log, `${JSON.stringify(positionals)}\n`);
     },
@@ -69,7 +61,6 @@ if (stopCode === undefined) {
         for (const value of option[name as keyof typeof FAKE_TOOL_OPTIONS]) await step(value);
     if (values['copy-stdin'] === true) process.stdout.write(await Bun.stdin.bytes());
     if (values['print-arguments'] === true) process.stdout.write(positionals.map((each) => `${each}\n`).join(''));
-    if (values['print-cwd'] === true) process.stdout.write(process.cwd());
     if (values['print-pid'] === true) process.stdout.write(String(process.pid));
     for (const signal of option.signal) process.kill(process.pid, signal);
     for (const awaited of option.until) while (!existsSync(awaited)) await Bun.sleep(POLL_INTERVAL_MILLISECONDS);
