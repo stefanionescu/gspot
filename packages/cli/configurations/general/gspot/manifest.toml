@@ -15,7 +15,7 @@ version_command = ["--version"]
 [[check]]
 example = "A `.commitlintrc.json` while gspot runs commitlint reports a conflicting config file. Delete it, and write the rule you need in `gspot.toml`, such as `tools.commitlint.types`."
 help = "Delete the file. gspot writes the settings this tool reads; move a rule you need into gspot.toml."
-name = "conflicting-config-files"
+name = "conflicting-configs"
 runs = "once"
 stage = "commit"
 summary = "Finds the settings file of a tool that gspot writes settings for, such as `.commitlintrc.json` while commitlint runs."

@@ -5,7 +5,7 @@ export const CONFLICTING_CONFIG_CASES = [
         [
             {
                 file: '.commitlintrc.json',
-                rule: 'conflicting-config-file',
+                rule: 'conflicting-config',
                 message:
                     'gspot writes the settings for commitlint, so .commitlintrc.json no longer applies. Delete it, and move any rule you need into gspot.toml.',
             },

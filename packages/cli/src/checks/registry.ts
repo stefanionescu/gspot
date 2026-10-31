@@ -122,7 +122,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'expo/expo-doctor': { check: checkExpoDoctor },
     'github-actions/actionlint': { run: checkActionlint },
     'gspot/generated-files': { check: checkGeneratedFiles },
-    'gspot/conflicting-config-files': { check: checkConflictingConfigs },
+    'gspot/conflicting-configs': { check: checkConflictingConfigs },
     'gspot/suppressions': { check: checkSuppressions },
     'gspot/unmatched-paths': { check: checkUnmatchedPaths },
     'html/inline-scripts': { check: checkHtmlInlineScripts },

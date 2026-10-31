@@ -36,7 +36,7 @@ files under `format/prettier`, and `gspot check --fix` rewrites them. To keep yo
 ## Old settings files after init
 
 When you raise the level or add a configuration later, a tool that starts to run can find its old settings file.
-`gspot/conflicting-config-files` reports such a file, such as `.commitlintrc.json` while commitlint runs. Delete it, and move
+`gspot/conflicting-configs` reports such a file, such as `.commitlintrc.json` while commitlint runs. Delete it, and move
 any rule you need into `gspot.toml`.
 
 If Husky, Lefthook, or your own hooks folder runs your Git hooks, gspot keeps it and prints one line to add to each
