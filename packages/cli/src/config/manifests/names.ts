@@ -47,7 +47,7 @@ export const TOOL_BUILDS = OPERATING_SYSTEMS.flatMap(
     (system) => [system.name, `${system.name}-x64`, `${system.name}-arm64`] as const,
 );
 
-export const SHIPPED_CONFIG_FILES_FOLDER = 'config-files';
+export const SHIPPED_CONFIG_FILES_FOLDER = 'config';
 
 export const SWIFT_CONFIGURATION = 'swift';
 

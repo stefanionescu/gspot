@@ -25,7 +25,7 @@ import {
     IGNORE_LIST_SETTINGS,
     PRETTIER_IGNORE_CASES,
     PRETTIER_IGNORE_SETTINGS,
-} from '#tests/config/generation/config-files.ts';
+} from '#tests/config/generation/configs.ts';
 
 test('negative ignores follow positives for ordered tools and stay out of tools without negation', async () => {
     await using sandbox = await testdir({

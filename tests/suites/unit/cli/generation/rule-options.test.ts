@@ -4,7 +4,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { INACTIVE_RULE_OPTIONS } from '#tests/config/generation/config-files.ts';
+import { INACTIVE_RULE_OPTIONS } from '#tests/config/generation/configs.ts';
 
 test.each([...INACTIVE_RULE_OPTIONS])(
     'inactive $configuration rule $rule refuses options',

@@ -8,7 +8,7 @@ import type { GspotError } from '#cli/system/errors.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
+import { STYLELINT_PACKAGE_JSON } from '#tests/config/authored-configs.ts';
 import { INVALID_PACKAGE_JSON_TEXTS } from '#tests/config/repository/writer.ts';
 import { writePlans, hasManagedKeys, planManagedKeys } from '#cli/repository/writer.ts';
 

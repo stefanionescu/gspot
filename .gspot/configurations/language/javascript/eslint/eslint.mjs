@@ -1152,9 +1152,9 @@ export default [
                         ]
                     },
                     {
-                        "category": "import-rule:config-files",
+                        "category": "import-rule:shipped-config",
                         "pattern": [
-                            "packages/cli/configurations/**/config-files/**"
+                            "packages/cli/configurations/**/config/**"
                         ]
                     },
                     {
@@ -2234,7 +2234,7 @@ export default [
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:config-files"
+                                    "categories": "import-rule:shipped-config"
                                 }
                             },
                             "disallow": {
@@ -2244,12 +2244,12 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"config-files\" may import its own files and \"cli-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"shipped-config\" may import its own files and \"cli-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:config-files"
+                                    "categories": "import-rule:shipped-config"
                                 }
                             },
                             "allow": {
@@ -2257,7 +2257,7 @@ export default [
                                     "file": {
                                         "categories": {
                                             "anyOf": [
-                                                "import-rule:config-files",
+                                                "import-rule:shipped-config",
                                                 "import-rule:cli-types"
                                             ]
                                         }
@@ -2443,7 +2443,7 @@ export default [
                                             "import-rule:tests-types",
                                             "import-rule:tests-setup",
                                             "import-rule:tests",
-                                            "import-rule:config-files"
+                                            "import-rule:shipped-config"
                                         ]
                                     }
                                 }
@@ -2487,7 +2487,7 @@ export default [
                                                 "import-rule:tests-types",
                                                 "import-rule:tests-setup",
                                                 "import-rule:tests",
-                                                "import-rule:config-files"
+                                                "import-rule:shipped-config"
                                             ]
                                         }
                                     }

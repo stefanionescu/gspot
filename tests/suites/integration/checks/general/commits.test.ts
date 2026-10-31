@@ -10,11 +10,11 @@ import type { PushReport } from '#cli/types/commands/check.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { COMMITLINT_PACKAGE } from '#tests/config/authored-configs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { test, expect, describe, beforeAll, beforeEach } from 'bun:test';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { COMMITLINT_PACKAGE } from '#tests/config/authored-config-files.ts';
 import { runGspot, spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {

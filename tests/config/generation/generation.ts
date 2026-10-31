@@ -1,5 +1,5 @@
+import { STYLELINT_FILES } from '#tests/config/authored-configs.ts';
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/typescript.ts';
-import { STYLELINT_FILES } from '#tests/config/authored-config-files.ts';
 
 export const SETUP_CASES = [
     ['github', 0],

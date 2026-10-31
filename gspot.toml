@@ -83,7 +83,7 @@ allowed_names = ["objects"]
 reason = "Xcode project files name the object table objects."
 
 [[naming.override]]
-paths = ["packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/types/generation/markdownlint-cli2.ts"]
+paths = ["packages/cli/configurations/language/markdown/config/markdownlint-cli2.ts", "packages/cli/src/types/generation/markdownlint-cli2.ts"]
 allowed_names = ["markdownlint-cli2"]
 reason = "The manifest names the source after its markdownlint-cli2 target, and the placeholder uses that name."
 
@@ -177,7 +177,7 @@ import_extension = "ts"
 no-restricted-properties = [{ object = "Bun", property = "env" }, { object = "Deno", property = "env" }, { property = "localeCompare", message = "Use compareText for stable ordering." }]
 
 [tools.knip]
-entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/tool-project.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config-files/purgecss.ts"]
+entry = ["tests/setup/runner/unit.ts", "tests/setup/programs/**/*.ts", "packages/eslint-plugin/src/plugin.ts", "tests/setup/runner/prepare.ts", "tests/setup/sandboxes/tool-project.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config/eslint-functions.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config/markdownlint-cli2.ts", "packages/cli/configurations/framework/site/config/purgecss.ts"]
 
 [[scope]]
 path = "docs"
@@ -303,8 +303,8 @@ name = "tests"
 paths = ["tests/suites/**"]
 
 [[import_rule]]
-name = "config-files"
-paths = ["packages/cli/configurations/**/config-files/**"]
+name = "shipped-config"
+paths = ["packages/cli/configurations/**/config/**"]
 can_import = ["cli-types"]
 
 [[ignore]]
@@ -325,7 +325,7 @@ reason = "A published library uses ranges for dependencies and peers."
 
 [[ignore]]
 check = "prose/vale"
-paths = ["packages/cli/configurations/general/prose/config-files/styles/LICENSES.md"]
+paths = ["packages/cli/configurations/general/prose/config/styles/LICENSES.md"]
 reason = "This file reproduces upstream license notices and terms whose wording must remain unchanged."
 
 [[ignore]]
@@ -384,8 +384,8 @@ reason = "Astro builds the routes of the site only from files in src/pages/."
 [[ignore]]
 check = "structure/lone-files"
 rule = "lone-file"
-paths = ["packages/cli/configurations/framework/site/config-files/purgecss.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts"]
-reason = "The manifest loader discovers config files in config-files/ and names each of these modules as the source of its config file target."
+paths = ["packages/cli/configurations/framework/site/config/purgecss.ts", "packages/cli/configurations/language/markdown/config/markdownlint-cli2.ts"]
+reason = "The manifest loader discovers config files in config/ and names each of these modules as the source of its config file target."
 
 [[ignore]]
 check = "structure/pass-through-folders"

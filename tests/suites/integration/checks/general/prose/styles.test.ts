@@ -63,7 +63,7 @@ test("Vale's version-range rule accepts a minimum version and reports vague rang
         'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
         [GSPOT_PATHS.valeConfigFile]: VALE_INI,
         [`${EXAMPLE_STYLE_FOLDER}/Versions.yml`]: readFileSync(
-            buildAssetPath('configurations/general/prose/config-files/styles/gspot/version-range.yml'),
+            buildAssetPath('configurations/general/prose/config/styles/gspot/version-range.yml'),
             'utf8',
         ),
         'versions.md': VERSION_RANGE_SOURCE,

@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { setRuntime } from '#cli-configurations/language/javascript/config-files/eslint-functions.ts';
+import { setRuntime } from '#cli-configurations/language/javascript/config/eslint-functions.ts';
 
 test('a runtime that the globals package does not name stops the config', () => {
     expect(() => setRuntime({}, { node: {}, browser: {} }, 'nodejs', 'module')).toThrow(

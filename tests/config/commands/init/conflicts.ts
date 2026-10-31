@@ -1,5 +1,5 @@
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { COMMITLINT_PACKAGE, STYLELINT_PACKAGE_JSON } from '#tests/config/authored-config-files.ts';
+import { COMMITLINT_PACKAGE, STYLELINT_PACKAGE_JSON } from '#tests/config/authored-configs.ts';
 
 export const REPLACED_PYPROJECT_TABLES = [
     {
