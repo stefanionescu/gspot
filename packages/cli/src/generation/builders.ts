@@ -5,9 +5,9 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { join, dirname, relative } from 'node:path/posix';
 import { requireTypescript } from '#cli/system/typescript.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
-import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { buildLycheeFile } from '#cli/generation/configurations/general/docs.ts';
 import { buildSqlfluffFile } from '#cli/generation/configurations/language/sql.ts';
 import { buildTyposFile } from '#cli/generation/configurations/general/spelling.ts';
@@ -40,17 +40,17 @@ import {
     buildPrettierignoreFile,
 } from '#cli/generation/configurations/general/format.ts';
 import {
-    type BuiltConfigFile,
+    type BuiltConfig,
+    type PlannedConfig,
+    type ConfigBuilder,
     type OwnedSourceFile,
-    type PlannedConfigFile,
-    type ConfigFileBuilder,
-    type ConfigFileGeneration,
+    type ConfigGeneration,
 } from '#cli/types/generation/files.ts';
 import {
     GIXY_CHECK,
     TS_EXTENSION,
+    CONFIG_REFERENCE,
     ANSIBLE_LINT_CHECK,
-    CONFIG_FILE_REFERENCE,
     SEMGREP_RULE_PACK_FILE,
     ANSIBLE_LINT_ALWAYS_OFF,
 } from '#cli/config/generation/generation.ts';
@@ -63,7 +63,7 @@ import {
     buildBannedHeadingsStyle,
 } from '#cli/generation/configurations/general/prose.ts';
 
-export const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefined>> = {
+export const CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder | undefined>> = {
     'pytest/coveragerc': buildCoverageFile,
     'ansible/ansible-lint.yml': (planned) => {
         const ignored = listIgnoredRules(planned.scope, ANSIBLE_LINT_CHECK);
@@ -96,7 +96,7 @@ export const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | u
                     ...TAPLO_FORMATTING,
                 },
             },
-            CONFIG_FILE_TOML_FORMAT,
+            CONFIG_TOML_FORMAT,
         );
     },
     'docs/lychee.toml': buildLycheeFile,
@@ -150,25 +150,25 @@ Build the text of one config file, and of the files that it imports.
 @param targets the config file path for each scope.
 @returns the generated file, with paths relative to where it sits, and its companion files.
 */
-export function buildConfigFile(
+export function buildConfig(
     owned: OwnedSourceFile,
     targetPath: string,
-    targets: ConfigFileGeneration['targets'],
-): Pick<BuiltConfigFile, 'file' | 'companions'> {
-    const { configFile, owner } = owned;
-    const planned: PlannedConfigFile = {
+    targets: ConfigGeneration['targets'],
+): Pick<BuiltConfig, 'file' | 'companions'> {
+    const { config, owner } = owned;
+    const planned: PlannedConfig = {
         ...owner,
-        configFile,
+        config,
         targetPath,
         level: owner.session.settings.level,
     };
     const builder =
-        configFile.file === SEMGREP_RULE_PACK_FILE
+        config.file === SEMGREP_RULE_PACK_FILE
             ? buildSemgrepFile
-            : CONFIG_FILE_BUILDERS[`${planned.configuration.name}/${configFile.file}`];
-    let built: ReturnType<ConfigFileBuilder>;
+            : CONFIG_BUILDERS[`${planned.configuration.name}/${config.file}`];
+    let built: ReturnType<ConfigBuilder>;
     if (builder === undefined) {
-        const source = configFile.source;
+        const source = config.source;
         const shipped = readFileSync(buildAssetPath(`${planned.configuration.folder}/${source}`), 'utf8');
         const ts = source.endsWith(TS_EXTENSION) ? requireTypescript() : undefined;
         built =
@@ -179,8 +179,8 @@ export function buildConfigFile(
                   }).outputText;
     } else built = builder(planned);
     const { content, companions } = typeof built === 'string' ? { content: built, companions: [] } : built;
-    const source = content.replaceAll(CONFIG_FILE_REFERENCE, (match: string, path: string) => {
-        const referenced = join(dirname(configFile.target), path);
+    const source = content.replaceAll(CONFIG_REFERENCE, (match: string, path: string) => {
+        const referenced = join(dirname(config.target), path);
         const mapped = targets.get(planned.scope.path)?.get(referenced);
         return mapped === undefined ? match : match.replace(path, () => relative(dirname(targetPath), mapped));
     });

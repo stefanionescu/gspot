@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { PYVENV_HOME } from '#tests/config/python.ts';
-import { type RuffConfigFile } from '#tests/types/tools.ts';
+import { type RuffConfig } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
@@ -56,14 +56,14 @@ test('Ruff selects the pytest and FastAPI families only when selected, and adds 
         await buildGeneratedFile(buildSandboxSettings(['python']), getManifestTarget('python', 'ruff.toml'), {
             'example.py': 'value = 1\n',
         }),
-    ) as RuffConfigFile;
+    ) as RuffConfig;
     expect(defaults.lint.select.filter((code) => /^(?:AIR|DJ|FAST|NPY|PT)/u.test(code))).toStrictEqual([]);
     expect(defaults.lint['per-file-ignores']).toBeUndefined();
     const tested = parse(
         await buildGeneratedFile(buildSandboxSettings(['python', 'pytest']), getManifestTarget('python', 'ruff.toml'), {
             'example.py': 'value = 1\n',
         }),
-    ) as RuffConfigFile;
+    ) as RuffConfig;
     const added = tested.lint.select.filter((code) => !defaults.lint.select.includes(code));
     expect(added).toContain('PT011');
     expect(added.filter((code) => !code.startsWith('PT'))).toStrictEqual([]);
@@ -76,7 +76,7 @@ test('Ruff selects the pytest and FastAPI families only when selected, and adds 
                 'example.py': 'value = 1\n',
             },
         ),
-    ) as RuffConfigFile;
+    ) as RuffConfig;
     expect(served.lint.select).toContain('FAST003');
     expect(served.lint['per-file-ignores']).toBeUndefined();
 });
@@ -90,14 +90,14 @@ test('ignores of one test path share one Ruff per-file-ignores list', async () =
             getManifestTarget('python', 'ruff.toml'),
             { 'example.py': 'value = 1\n' },
         ),
-    ) as RuffConfigFile;
+    ) as RuffConfig;
     expect(ignored.lint['per-file-ignores']?.['../../../../**/test_*.py']).toStrictEqual(['S101', 'D103']);
 });
 
 test('Ruff formats with double quotes unless format.quotes is written, while Prettier keeps single quotes', async () => {
     const files = { 'example.py': 'value = 1\n', 'entry.js': 'export const value = 1;\n' };
     const ruffPath = getManifestTarget('python', 'ruff.toml');
-    const unset = parse(await buildGeneratedFile(buildSandboxSettings(['python']), ruffPath, files)) as RuffConfigFile;
+    const unset = parse(await buildGeneratedFile(buildSandboxSettings(['python']), ruffPath, files)) as RuffConfig;
     expect(unset.format['quote-style']).toBe('double');
     const prettier = JSON.parse(
         await buildGeneratedFile(
@@ -113,7 +113,7 @@ test('Ruff formats with double quotes unless format.quotes is written, while Pre
             ruffPath,
             files,
         ),
-    ) as RuffConfigFile;
+    ) as RuffConfig;
     expect(written.format['quote-style']).toBe('single');
 });
 
@@ -128,7 +128,7 @@ test('Ruff takes its style from a format override that names every Python file',
                 'example.py': 'value = 1\n',
             },
         ),
-    ) as RuffConfigFile & { 'line-length': number };
+    ) as RuffConfig & { 'line-length': number };
     expect(ruff.format['quote-style']).toBe('single');
     expect(ruff['line-length']).toBe(88);
 });
@@ -142,7 +142,7 @@ test('Ruff takes its pylint and mccabe limits from [limits.python]', async () =>
             getManifestTarget('python', 'ruff.toml'),
             { 'example.py': 'value = 1\n' },
         ),
-    ) as RuffConfigFile;
+    ) as RuffConfig;
     expect(ruff.lint.pylint).toStrictEqual({
         'max-statements': 12,
         'max-args': 4,

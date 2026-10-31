@@ -202,7 +202,7 @@ export const NESTED_PYTHON_SETTINGS = {
     tables: '[[ignore]]\ncheck = "python/basedpyright"\npaths = ["linted/**"]\nreason = "This project uses Ruff without a type checker."\n',
 } as const;
 
-export const CONFIG_FILE_PROJECT = {
+export const CONFIG_PROJECT = {
     '.github/workflows/check.yml': `name: Check
 on: push
 jobs:
@@ -224,7 +224,7 @@ version = "1.0.0"
     'script.sh': '#!/usr/bin/env bash\nprintf "example\\n"\n',
 } as const;
 
-export const UNPARSED_CONFIG_FILES = [
+export const UNPARSED_CONFIGS = [
     'LICENSES.md',
     'no-gerunds-in-titles.tengo',
     '.editorconfig',

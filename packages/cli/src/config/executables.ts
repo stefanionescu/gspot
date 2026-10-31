@@ -40,7 +40,7 @@ export const UV_FLAGS = {
     project: '--project',
     with: '--with',
     directory: '--directory',
-    configFile: '--config-file',
+    config: '--config-file',
 } as const;
 
 export const UV_PROJECT_ENVIRONMENT = 'UV_PROJECT_ENVIRONMENT';

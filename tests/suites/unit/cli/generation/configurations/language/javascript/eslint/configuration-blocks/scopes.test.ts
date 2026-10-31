@@ -6,8 +6,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
 import { buildEslint } from '#tests/setup/eslint/lint.ts';
 import type { EslintConfiguration } from '#tests/types/tools.ts';
+import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
 import {
     MATCHING_SCOPE_FILES,
@@ -22,9 +22,7 @@ test("a nested scope whose configuration blocks match its parent's gets no copy,
 
     const eslint = await buildEslint(sandbox.path);
     const session = await openSession(sandbox.path);
-    const generated: unknown = await import(
-        pathToFileURL(join(sandbox.path, getConfigFilePath(session, 'eslint'))).href
-    );
+    const generated: unknown = await import(pathToFileURL(join(sandbox.path, getConfigPath(session, 'eslint'))).href);
     const { default: blocks } = generated as { default: Linter.Config[] };
     const tests = blocks.filter((block) => block.rules?.['@typescript-eslint/no-non-null-assertion'] === 'off');
     expect(tests).toHaveLength(2);

@@ -3,7 +3,7 @@ import { readBytes } from '#cli/system/files/reads.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { extractConfigFileName } from '#cli/manifests/tools.ts';
+import { extractConfigName } from '#cli/manifests/tools.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
@@ -152,11 +152,11 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
     if (configuration === undefined) return true;
     if (configuration.group !== 'general' || configuration.files.languages || check.runs === 'scope') return false;
     const command = [...(check.command ?? []), ...(check.env === undefined ? [] : Object.values(check.env))];
-    return !configuration.configFiles.some(
+    return !configuration.configs.some(
         (config) =>
             config.per_scope &&
             (config.check.includes(check.id) ||
-                command.some((argument) => argument.includes(`{config_file:${extractConfigFileName(config.file)}}`))),
+                command.some((argument) => argument.includes(`{config_file:${extractConfigName(config.file)}}`))),
     );
 }
 

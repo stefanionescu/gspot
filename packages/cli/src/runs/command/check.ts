@@ -32,10 +32,10 @@ import type {
 import {
     expandCommand,
     listCopyFiles,
+    listCommandConfigs,
     replacePlaceholders,
     runsInPackageFolder,
     buildFileCommandLines,
-    listCommandConfigFiles,
 } from '#cli/runs/command/placeholders.ts';
 
 async function runCommands(
@@ -90,17 +90,12 @@ async function runCommands(
     return buildCheckResult(check, { base, state, commandArguments, started });
 }
 
-function findMissingConfigFile(
+function findMissingConfig(
     planned: PlannedCheck,
-    {
-        session,
-        command,
-        base,
-        configFiles,
-    }: { session: Session; command: string[]; base: CheckResult; configFiles: string[] },
+    { session, command, base, configs }: { session: Session; command: string[]; base: CheckResult; configs: string[] },
 ): CheckResult | undefined {
     const files = openFiles(session.root);
-    const missing = [...configFiles, ...listCommandConfigFiles(session, planned, command)].find(
+    const missing = [...configs, ...listCommandConfigs(session, planned, command)].find(
         (path) => (path.startsWith(`${GSPOT_FOLDER}/`) ? files.read(path) : find(session.cache, path)) === undefined,
     );
     if (missing === undefined) return undefined;
@@ -108,12 +103,12 @@ function findMissingConfigFile(
 }
 
 async function runInFolder(run: FolderRun): Promise<CheckResult> {
-    const { session, planned, tool, command, toolPath, setup, base, options, configFiles } = run;
+    const { session, planned, tool, command, toolPath, setup, base, options, configs } = run;
     using copy =
         options.copyRoot === undefined && planned.check.run_in_copy === true
             ? await createCopy({
                   root: session.root,
-                  paths: [...listCopyFiles(session, planned, command), ...configFiles],
+                  paths: [...listCopyFiles(session, planned, command), ...configs],
                   dependencies: [],
                   cancelSignal: session.cancelSignal,
               })
@@ -277,8 +272,8 @@ export async function runCommandCheck(
     const setup = buildCommandSetup(session, planned, { options, root: session.root });
     const command = buildToolCommand(session, planned, options, setup.env);
     const { cwd } = setup;
-    const configFiles = options.listConfigFiles?.(session, planned) ?? [];
-    const missing = findMissingConfigFile(planned, { session, command, base, configFiles });
+    const configs = options.listConfigs?.(session, planned) ?? [];
+    const missing = findMissingConfig(planned, { session, command, base, configs });
     if (missing !== undefined) return missing;
     const availability = buildToolAvailability(
         tool,
@@ -296,7 +291,7 @@ export async function runCommandCheck(
               setup,
               base,
               options,
-              configFiles,
+              configs,
           })
         : { ...base, ...otherToolFailure };
 }

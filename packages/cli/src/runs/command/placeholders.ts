@@ -4,12 +4,12 @@ import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { type Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import type { ConfigFile } from '#cli/types/manifests.ts';
+import type { Config } from '#cli/types/manifests.ts';
+import { buildConfigs } from '#cli/generation/configs.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
-import { buildConfigFiles } from '#cli/generation/configs.ts';
+import { extractConfigName } from '#cli/manifests/tools.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { extractConfigFileName } from '#cli/manifests/tools.ts';
-import { getConfigFileTarget } from '#cli/generation/selection.ts';
+import { getConfigTarget } from '#cli/generation/selection.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { listWorkspaceFolders } from '#cli/repository/javascript/workspaces.ts';
@@ -23,9 +23,9 @@ import {
     SCOPE_PLACEHOLDER,
     LEVEL_PLACEHOLDER,
     INDENT_PLACEHOLDER,
+    CONFIG_PLACEHOLDER,
     LINK_FILE_PLACEHOLDER,
     WORKSPACE_PLACEHOLDER,
-    CONFIG_FILE_PLACEHOLDER,
     MESSAGE_FILE_PLACEHOLDER,
     SETTING_ONLY_PLACEHOLDER,
 } from '#cli/config/runs/command.ts';
@@ -45,13 +45,13 @@ function expandEachPlaceholder(planned: PlannedCheck, argument: string): string[
     ]);
 }
 
-function listConfigFiles(session: Session, planned: PlannedCheck): ConfigFile[] {
+function listConfigs(session: Session, planned: PlannedCheck): Config[] {
     const own = planned.scope.configurations
         .filter((configuration) => configuration.checks.some((check) => check.id === planned.check.id))
-        .flatMap((configuration) => configuration.configFiles);
+        .flatMap((configuration) => configuration.configs);
     const every = session.configurationsByName
         .values()
-        .flatMap((configuration) => configuration.configFiles)
+        .flatMap((configuration) => configuration.configs)
         .toArray();
     return [...own, ...every];
 }
@@ -105,14 +105,14 @@ Find the path of the config file that {config_file:<name>} names, with the confi
 @returns the repository-relative path in the scope of the check.
 @throws the build failure of that config file in the scope.
 */
-export function getConfigFilePath(session: Session, planned: PlannedCheck, name: string): string {
-    const configFile = listConfigFiles(session, planned).find(({ file }) => extractConfigFileName(file) === name);
-    if (!configFile)
+export function getConfigPath(session: Session, planned: PlannedCheck, name: string): string {
+    const config = listConfigs(session, planned).find(({ file }) => extractConfigName(file) === name);
+    if (!config)
         throw new GspotError(
             'settings',
             `Check ${planned.check.id} names {config_file:${name}} and no configuration writes it.`,
         );
-    return getConfigFileTarget(planned.scope.path, configFile, buildConfigFiles(session));
+    return getConfigTarget(planned.scope.path, config, buildConfigs(session));
 }
 
 /**
@@ -123,17 +123,17 @@ Lists the config files that a check command or its environment names.
 @param command the arguments to scan.
 @returns the config file paths, relative to the root.
 */
-export function listCommandConfigFiles(session: Session, planned: PlannedCheck, command: readonly string[]): string[] {
+export function listCommandConfigs(session: Session, planned: PlannedCheck, command: readonly string[]): string[] {
     const words = [...command, ...(planned.check.env === undefined ? [] : Object.values(planned.check.env))];
     const scope = planned.scope.path;
     return [
         ...new Set(
             words.flatMap((segment) => {
                 const configured = segment
-                    .matchAll(CONFIG_FILE_PLACEHOLDER)
+                    .matchAll(CONFIG_PLACEHOLDER)
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
-                    .map((name) => getConfigFilePath(session, planned, name))
+                    .map((name) => getConfigPath(session, planned, name))
                     .toArray();
                 const pointed = segment
                     .matchAll(LINK_FILE_PLACEHOLDER)
@@ -157,13 +157,13 @@ Lists the source and config files that a copy needs for a command.
 */
 export function listCopyFiles(session: Session, planned: PlannedCheck, command: string[]): string[] {
     const scope = planned.scope.path;
-    const owned = (planned.configuration?.configFiles ?? []).map((configFile) =>
-        getConfigFileTarget(scope, configFile, buildConfigFiles(session)),
+    const owned = (planned.configuration?.configs ?? []).map((config) =>
+        getConfigTarget(scope, config, buildConfigs(session)),
     );
     return [
         ...new Set([
             ...planned.files.map(({ path }) => path),
-            ...listCommandConfigFiles(session, planned, command),
+            ...listCommandConfigs(session, planned, command),
             ...owned,
         ]),
     ];
@@ -203,8 +203,8 @@ export function replacePlaceholders(
         .replaceAll(LEVEL_PLACEHOLDER, (_match, defaultLevel: string, all: string) =>
             session.settings.level === 'all' ? all : defaultLevel,
         )
-        .replaceAll(CONFIG_FILE_PLACEHOLDER, (_match, name: string) =>
-            join(substitutions.root, getConfigFilePath(session, planned, name))
+        .replaceAll(CONFIG_PLACEHOLDER, (_match, name: string) =>
+            join(substitutions.root, getConfigPath(session, planned, name))
                 .split('/')
                 .join(sep),
         )

@@ -56,8 +56,8 @@ import { checkFileFolderClashes } from '#cli/checks/general/structure/file-folde
 import { checkEnvironmentReaders } from '#cli/checks/general/structure/environment-readers.ts';
 import { checkPassThroughFolders } from '#cli/checks/general/structure/pass-through-folders.ts';
 import { checkEncoding, checkLargeFiles, checkLocalFiles } from '#cli/checks/general/repository.ts';
+import { listSwiftlintConfigs, checkSwiftlintAnalyze } from '#cli/checks/language/swift/swiftlint.ts';
 import { checkCompose, checkTrivyImage, checkDockerignore } from '#cli/checks/infrastructure/docker.ts';
-import { checkSwiftlintAnalyze, listSwiftlintConfigFiles } from '#cli/checks/language/swift/swiftlint.ts';
 import { checkLockfiles, checkStaleLockfile, checkPackageManagerPin } from '#cli/checks/general/dependencies.ts';
 
 import {
@@ -77,7 +77,7 @@ import {
     checkSuppressions,
     checkGeneratedFiles,
     checkUnmatchedPaths,
-    checkConflictingConfigFiles,
+    checkConflictingConfigs,
 } from '#cli/checks/general/gspot.ts';
 import {
     checkDeptry,
@@ -122,7 +122,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'expo/expo-doctor': { check: checkExpoDoctor },
     'github-actions/actionlint': { run: checkActionlint },
     'gspot/generated-files': { check: checkGeneratedFiles },
-    'gspot/conflicting-config-files': { check: checkConflictingConfigFiles },
+    'gspot/conflicting-config-files': { check: checkConflictingConfigs },
     'gspot/suppressions': { check: checkSuppressions },
     'gspot/unmatched-paths': { check: checkUnmatchedPaths },
     'html/inline-scripts': { check: checkHtmlInlineScripts },
@@ -185,7 +185,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'swift/doc-comments': { check: checkSwiftDocComments },
     'swift/periphery': { check: checkPeriphery },
     'swift/skip-reasons': { check: checkSkipReasons },
-    'swift/swiftlint': { listConfigFiles: listSwiftlintConfigFiles },
+    'swift/swiftlint': { listConfigs: listSwiftlintConfigs },
     'swift/swiftlint-analyze': { check: checkSwiftlintAnalyze },
     'translations/messages': { check: checkMessages },
     'typescript/tsc': { run: checkTsc },

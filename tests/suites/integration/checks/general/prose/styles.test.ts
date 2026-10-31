@@ -61,7 +61,7 @@ test.each(ALT_TEXT_CASES)('Vale identifies the alt attribute in $tag', async ({ 
 test("Vale's version-range rule accepts a minimum version and reports vague ranges", async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
-        [GSPOT_PATHS.valeConfigFile]: VALE_INI,
+        [GSPOT_PATHS.valeConfig]: VALE_INI,
         [`${EXAMPLE_STYLE_FOLDER}/Versions.yml`]: readFileSync(
             buildAssetPath('configurations/general/prose/config/styles/gspot/version-range.yml'),
             'utf8',

@@ -53,7 +53,7 @@ export type FolderRun = {
     setup: CommandSetup;
     base: CheckResult;
     options: CheckRunOptions;
-    configFiles: string[];
+    configs: string[];
 };
 
 export type CommandRun = { root: string; cwd: string; findings: Finding[]; failed: boolean };

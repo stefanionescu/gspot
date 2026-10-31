@@ -127,7 +127,7 @@ test('a nested revision copy links each package of .gspot/node_modules', async (
 
 test.each(['', 'nested/'])('revision copies link the installed Vale packages under %s', async (prefix) => {
     await using sandbox = await testdir();
-    const config = `${prefix}${GSPOT_PATHS.valeConfigFile}`;
+    const config = `${prefix}${GSPOT_PATHS.valeConfig}`;
     const packagePath = `${GSPOT_PATHS.valePackages}/Example/rule.yml`;
     await createFileTree(sandbox.path, {
         [config]: 'StylesPath = ../../../vale\nPackages = Example\n',

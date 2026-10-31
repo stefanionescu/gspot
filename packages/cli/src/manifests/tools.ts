@@ -21,7 +21,7 @@ Get the name that a config-file placeholder uses for a config file.
 @param file the path that the manifest names.
 @returns the file name without its folder and extensions.
 */
-export function extractConfigFileName(file: string): string {
+export function extractConfigName(file: string): string {
     const name = posix.basename(file);
     const dot = name.indexOf('.');
     return dot === -1 ? name : name.slice(0, dot);

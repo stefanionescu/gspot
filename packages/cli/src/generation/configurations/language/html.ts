@@ -1,6 +1,6 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
 
 import {
     HTML_RULES,
@@ -14,7 +14,7 @@ Build html-validate.json: the HTML validation rules for source files or built si
 
 @param planned the config file to build.
 */
-export function buildHtmlValidateFile(planned: PlannedConfigFile): string {
+export function buildHtmlValidateFile(planned: PlannedConfig): string {
     const configuration = planned.configuration.name;
     const check = `${configuration}/html-validate`;
     const rules: Record<string, unknown> = { ...HTML_RULES, ...HTML_VALIDATE_OVERRIDES[configuration] };

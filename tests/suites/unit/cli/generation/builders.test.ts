@@ -7,8 +7,8 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { CONFIG_BUILDERS } from '#cli/generation/builders.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { CONFIG_FILE_BUILDERS } from '#cli/generation/builders.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { SEMGREP_RULE_PACK_FILE } from '#cli/config/generation/generation.ts';
@@ -95,10 +95,10 @@ test('each shipped config file has exactly one producer', () => {
     const missing: string[] = [];
     const records = readConfigurations()
         .values()
-        .flatMap((configuration) => configuration.configFiles.map((file) => ({ configuration, file })));
+        .flatMap((configuration) => configuration.configs.map((file) => ({ configuration, file })));
     for (const { configuration, file } of records) {
         const key = `${configuration.name}/${file.file}`;
-        const hasBuilder = file.source !== undefined && CONFIG_FILE_BUILDERS[key] !== undefined;
+        const hasBuilder = file.source !== undefined && CONFIG_BUILDERS[key] !== undefined;
         const hasSemgrep = file.source !== undefined && file.file === SEMGREP_RULE_PACK_FILE;
         const hasLinkFile = file.source === undefined;
         const hasShipped =

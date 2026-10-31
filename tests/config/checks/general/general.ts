@@ -167,7 +167,7 @@ export const VALE_ALERT = {
 } as const;
 
 export const VALE_SANDBOX_FILES = {
-    [GSPOT_PATHS.valeConfigFile]: 'Packages =\n',
+    [GSPOT_PATHS.valeConfig]: 'Packages =\n',
     'example.md': '# Documentation\n',
 };
 

@@ -87,12 +87,12 @@ test('only declared config files are loaded and each record sets its tool and sc
         ] as const,
     );
     const configuration = configurationsByName.get('example')!;
-    expect(configuration.configFiles.map(({ source, target }) => [source, target])).toStrictEqual([
+    expect(configuration.configs.map(({ source, target }) => [source, target])).toStrictEqual([
         ['config/other.yml', `${GSPOT_PATHS.configurations}/language/example/other.yml`],
         ['config/semgrep/first.yml', `${GSPOT_PATHS.configurations}/language/example/semgrep/first.yml`],
         ['config/semgrep/second.yml', `${GSPOT_PATHS.configurations}/language/example/semgrep/second.yml`],
     ]);
-    expect(configuration.configFiles.slice(1, 3)).toMatchObject([
+    expect(configuration.configs.slice(1, 3)).toMatchObject([
         { tool: ['semgrep'], per_scope: true },
         { tool: ['semgrep'], per_scope: true },
     ]);

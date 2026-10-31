@@ -24,7 +24,7 @@ test('prose/vale reports a finding in a .sh file and passes after the fix', asyn
     await using _change = await changeSandbox(sandbox, {
         files: {
             'gspot.toml': buildSandboxSettings(['prose', 'bash', 'markdown'], { level: 'all' }),
-            [GSPOT_PATHS.valeConfigFile]: VALE_INI,
+            [GSPOT_PATHS.valeConfig]: VALE_INI,
             [`${EXAMPLE_STYLE_FOLDER}/Concrete.yml`]: CONCRETE_RULE,
             [path]: '# We delve into the records.\n',
         },
@@ -73,7 +73,7 @@ test.each([...PROSE_COMMENT_CASES])(
         await using _change = await changeSandbox(sandbox, {
             files: {
                 'gspot.toml': buildSandboxSettings(['prose', 'bash'], { level: 'all' }),
-                [GSPOT_PATHS.valeConfigFile]: `${VALE_INI}[**/british/**]\nExample.Concrete = NO\n`,
+                [GSPOT_PATHS.valeConfig]: `${VALE_INI}[**/british/**]\nExample.Concrete = NO\n`,
                 [`${EXAMPLE_STYLE_FOLDER}/Concrete.yml`]: CONCRETE_RULE,
                 [path]: source,
                 [`british/${path}`]: source,

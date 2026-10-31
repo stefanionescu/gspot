@@ -4,9 +4,9 @@ import { compareText } from '#cli/system/text.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { extractConfigFileName } from '#cli/manifests/tools.ts';
+import { extractConfigName } from '#cli/manifests/tools.ts';
+import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
-import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import type { LintFinding, EslintConfiguration } from '#tests/types/tools.ts';
 
@@ -48,14 +48,14 @@ export async function buildEslint(root: string, options?: Pick<ESLint.Options, '
     const session = await openSession(root);
     const scope = session.scopes.find((each) =>
         each.configurations.some((configuration) =>
-            configuration.configFiles.some((file) => extractConfigFileName(file.file) === 'eslint'),
+            configuration.configs.some((file) => extractConfigName(file.file) === 'eslint'),
         ),
     )?.path;
     if (scope === undefined) throw new Error('The sandbox selects no ESLint config file.');
     return new ESLint({
         ...options,
         cwd: root,
-        overrideConfigFile: join(root, getConfigFilePath(session, 'eslint', scope)),
+        overrideConfigFile: join(root, getConfigPath(session, 'eslint', scope)),
         overrideConfig: { languageOptions: { parserOptions: { noWarnOnMultipleProjects: true } } },
     });
 }

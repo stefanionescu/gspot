@@ -14,12 +14,7 @@ import { readLintJobs, readRepositorySetup } from '#cli/repository/setup.ts';
 import type { Suggestions, SuggestionRow } from '#cli/types/commands/doctor.ts';
 import { expandSuggestions, listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { LEVEL_COMMAND, LINT_JOB_NOTE, GIT_INIT_COMMAND } from '#cli/config/commands/doctor.ts';
-
-import type {
-    RepositorySetup,
-    ConfigurationEvidence,
-    ConflictingConfigFile,
-} from '#cli/types/repository/repository.ts';
+import type { RepositorySetup, ConflictingConfig, ConfigurationEvidence } from '#cli/types/repository/repository.ts';
 
 function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
     const { root, repository, configurationsByName, settings } = session;
@@ -95,48 +90,47 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
 
 function buildInactiveFileRow(
     session: Session,
-    configFile: ConflictingConfigFile,
+    config: ConflictingConfig,
     configuration: Configuration,
 ): SuggestionRow {
     if (configuration.when?.git === true && !session.repository.hasGit)
         return {
-            path: configFile.path,
-            note: `${configFile.tool} requires a Git repository`,
+            path: config.path,
+            note: `${config.tool} requires a Git repository`,
             command: GIT_INIT_COMMAND,
         };
     const checks = configuration.checks.filter(
         (check) =>
-            [check.tool, ...(check.other_tools ?? [])].includes(configFile.tool) ||
-            check.command?.[0] === configFile.tool,
+            [check.tool, ...(check.other_tools ?? [])].includes(config.tool) || check.command?.[0] === config.tool,
     );
-    const note = `no applicable ${configFile.tool} check at level ${session.settings.level}`;
+    const note = `no applicable ${config.tool} check at level ${session.settings.level}`;
     if (session.settings.level === 'basic' && checks.length > 0 && checks.every((check) => check.level === 'all'))
-        return { path: configFile.path, note, command: LEVEL_COMMAND };
-    return { path: configFile.path, note: `${note}; add the source files that this check reads` };
+        return { path: config.path, note, command: LEVEL_COMMAND };
+    return { path: config.path, note: `${note}; add the source files that this check reads` };
 }
 
 function buildFileRow(
     session: Session,
-    configFile: ConflictingConfigFile,
+    config: ConflictingConfig,
     tools: Set<string>,
     configuration: Configuration,
 ): SuggestionRow {
-    if (tools.has(configFile.tool))
+    if (tools.has(config.tool))
         return {
-            path: configFile.path,
-            note: configFile.shared
-                ? `beside the generated ${configFile.tool} config file; move any ${configFile.table ?? configFile.key ?? configFile.tool} setting you still need into gspot.toml, then delete the section`
-                : `beside the generated ${configFile.tool} config file; move any setting you still need into gspot.toml, then delete the file`,
+            path: config.path,
+            note: config.shared
+                ? `beside the generated ${config.tool} config file; move any ${config.table ?? config.key ?? config.tool} setting you still need into gspot.toml, then delete the section`
+                : `beside the generated ${config.tool} config file; move any setting you still need into gspot.toml, then delete the file`,
         };
-    if (configuration.group === 'general') return buildInactiveFileRow(session, configFile, configuration);
+    if (configuration.group === 'general') return buildInactiveFileRow(session, config, configuration);
     return {
-        path: configFile.path,
-        note: `the ${configuration.name} configuration configures ${configFile.tool}`,
+        path: config.path,
+        note: `the ${configuration.name} configuration configures ${config.tool}`,
         command: `gspot add ${configuration.name}`,
     };
 }
 
-function listUnownedConfigFiles(
+function listUnownedConfigs(
     session: Session,
     repositorySetup: RepositorySetup,
     tools: Set<string>,
@@ -144,18 +138,18 @@ function listUnownedConfigFiles(
 ): SuggestionRow[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
     const generatedPaths = new Set(generated.files.map((file) => file.path));
-    return repositorySetup.conflictingConfigFiles
-        .filter((configFile) => tracked.has(configFile.path) && !generatedPaths.has(configFile.path))
-        .filter((configFile) => !isEditedInPlace(configFile, generated.managedKeys))
+    return repositorySetup.conflictingConfigs
+        .filter((config) => tracked.has(config.path) && !generatedPaths.has(config.path))
+        .filter((config) => !isEditedInPlace(config, generated.managedKeys))
         .filter(
-            (configFile) =>
-                !hasGeneratedHeader(readCachedPrefix(session.cache, configFile.path, BANNER_BYTES).toString('utf8')),
+            (config) =>
+                !hasGeneratedHeader(readCachedPrefix(session.cache, config.path, BANNER_BYTES).toString('utf8')),
         )
-        .flatMap((configFile) => {
+        .flatMap((config) => {
             const configuration = session.configurationsByName
                 .values()
-                .find((configuration) => configuration.tools.some((tool) => tool.name === configFile.tool));
-            return configuration === undefined ? [] : [buildFileRow(session, configFile, tools, configuration)];
+                .find((configuration) => configuration.tools.some((tool) => tool.name === config.tool));
+            return configuration === undefined ? [] : [buildFileRow(session, config, tools, configuration)];
         });
 }
 
@@ -172,7 +166,7 @@ export async function listSuggestions(session: Session): Promise<Suggestions> {
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
         ...listConfigurationSuggestions(session),
-        unowned: listUnownedConfigFiles(session, repositorySetup, tools, generated),
+        unowned: listUnownedConfigs(session, repositorySetup, tools, generated),
         lintJobs: readLintJobs(
             session.root,
             repositorySetup.ci.filter((path) => !workflows.has(path)),

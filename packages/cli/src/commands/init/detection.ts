@@ -81,7 +81,7 @@ function formatUncheckedFiles(summary: DetectionSummary): string[] {
     );
 }
 
-function formatConflictingConfigFiles(summary: DetectionSummary): string[] {
+function formatConflictingConfigs(summary: DetectionSummary): string[] {
     const lines = [
         formatDetectionRow(REPLACES_LABEL, summary.owned),
         formatDetectionRow(LEAVES_LABEL, summary.unowned),
@@ -129,6 +129,6 @@ export function formatDetection(summary: DetectionSummary): string {
         '',
         ...rows,
         '',
-        ...formatConflictingConfigFiles(summary),
+        ...formatConflictingConfigs(summary),
     ].join('\n');
 }

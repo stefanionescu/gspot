@@ -7,8 +7,8 @@ import { openSession } from '#cli/planning/session.ts';
 import { XCTEST_SOURCE } from '#tests/config/swift.ts';
 import { buildLinkFiles } from '#cli/generation/links.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import type { SourcedConfig } from '#cli/types/manifests.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import type { SourcedConfigFile } from '#cli/types/manifests.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -52,8 +52,8 @@ test('JavaScript link files import modules from folders with URI characters and 
 
     const session = await openSession(sandbox.path);
     const configuration = session.configurationsByName.get('javascript')!;
-    const configFile = configuration.configFiles
-        .filter((file): file is SourcedConfigFile => file.source !== undefined)
+    const config = configuration.configs
+        .filter((file): file is SourcedConfig => file.source !== undefined)
         .find((file) => file.pointer?.body.includes('{target_module}') === true)!;
     const components = ['100%', '#fragment', '?query', "author's", 'café'].filter(
         (component) => !isWindows || !component.includes('?'),
@@ -67,7 +67,7 @@ test('JavaScript link files import modules from folders with URI characters and 
                 configuration,
                 scope: session.scopes[0]!,
             },
-            { ...configFile, pointer: { ...configFile.pointer!, path: `entry-${String(index)}.mjs` } },
+            { ...config, pointer: { ...config.pointer!, path: `entry-${String(index)}.mjs` } },
             new Map([['', target]]),
         );
         await createFileTree(sandbox.path, {

@@ -1,4 +1,4 @@
-export const CONFLICTING_CONFIG_FILE_CASES = [
+export const CONFLICTING_CONFIG_CASES = [
     ['basic', []],
     [
         'all',

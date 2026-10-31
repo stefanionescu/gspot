@@ -14,7 +14,7 @@ export type PurgecssConstructor = new () => {
     purge(options: Record<string, unknown>): Promise<{ file?: string; rejected?: string[] }[]>;
 };
 
-export type PurgecssRequest = { configFile: string; css: string[]; content: string[] };
+export type PurgecssRequest = { config: string; css: string[]; content: string[] };
 
 export type AssetSource = { path: string; text: string; matches: (path: string) => boolean };
 

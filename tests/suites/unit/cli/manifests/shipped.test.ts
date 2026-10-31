@@ -107,7 +107,7 @@ test('the config files, requirements, and checks of each configuration name decl
     const checks = new Set(configurations.flatMap((configuration) => configuration.checks.map(({ id }) => id)));
     const errors = configurations.flatMap((configuration) => [
         ...[
-            ...configuration.configFiles.flatMap((file) => file.tool),
+            ...configuration.configs.flatMap((file) => file.tool),
             ...configuration.eslint.required_tools,
             ...configuration.tools.flatMap((tool) => tool.requires ?? []),
             ...configuration.checks.flatMap((check) => [
@@ -117,7 +117,7 @@ test('the config files, requirements, and checks of each configuration name decl
         ]
             .filter((name) => !tools.has(name))
             .map((name) => `${configuration.name}: tool ${name} has no declaration.`),
-        ...configuration.configFiles
+        ...configuration.configs
             .flatMap((file) => file.check)
             .filter((name) => !checks.has(name))
             .map((name) => `${configuration.name}: check ${name} has no declaration.`),

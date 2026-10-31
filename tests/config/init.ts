@@ -1,6 +1,6 @@
 import { CLEAN_BASH_SCRIPT } from '#tests/config/bash.ts';
 
-const REPLACED_CONFIG_FILES = {
+const REPLACED_CONFIGS = {
     'typos.toml': `[default.extend-words]
 # The device identifier API name.
 udid = "udid"
@@ -12,7 +12,7 @@ udid = "udid"
 } as const;
 
 export const INIT_FILES = {
-    ...REPLACED_CONFIG_FILES,
+    ...REPLACED_CONFIGS,
     'scripts/a.sh': CLEAN_BASH_SCRIPT,
     'src/a.js': 'export const a = 1;\n',
     'README.md': '# test\n',

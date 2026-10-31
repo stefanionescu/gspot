@@ -9,11 +9,11 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckFinding } from '#cli/types/runs/check.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { getConfigPath } from '#cli/runs/command/placeholders.ts';
 import { jscpdOutputSchema } from '#cli/schemas/checks/general.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
 import { parseJsonFile, parseToolOutput } from '#cli/parsers/formats/json.ts';
 
@@ -46,14 +46,14 @@ export async function checkJscpd(session: CheckSession, planned: PlannedCheck): 
         ),
     );
     const files = openFiles(session.root);
-    const generatedPath = getConfigFilePath(session, planned, JSCPD_TOOL);
+    const generatedPath = getConfigPath(session, planned, JSCPD_TOOL);
     const generated = files.read(generatedPath);
     if (generated === undefined)
         throw new GspotError('tool', `The generated file ${generatedPath} is missing. Run gspot apply.`);
     const shipped = parseJsonFile(generatedPath, generated.bytes.toString('utf8'));
-    const configFile = join(workFolder.path, JSCPD_CONFIG_FILE);
-    writeFileSync(configFile, JSON.stringify({ ...shipped, path: [...owned].map((path) => join(session.root, path)) }));
-    const commandArguments = [JSCPD_TOOL, CONFIG_FLAG, configFile, ...JSCPD_ARGUMENTS, OUTPUT_FLAG, workFolder.path];
+    const config = join(workFolder.path, JSCPD_CONFIG_FILE);
+    writeFileSync(config, JSON.stringify({ ...shipped, path: [...owned].map((path) => join(session.root, path)) }));
+    const commandArguments = [JSCPD_TOOL, CONFIG_FLAG, config, ...JSCPD_ARGUMENTS, OUTPUT_FLAG, workFolder.path];
     const result = await runCheckTool(session, planned, commandArguments, { cwd: session.root });
     if (result.code !== 0) throw new GspotError('check', `The jscpd command failed: ${formatOutputTail(result)}`);
     let bytes: Buffer;

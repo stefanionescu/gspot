@@ -66,8 +66,8 @@ function listRepositoryPaths(session: Session, planned: PlannedCheck): Set<strin
     const repositoryPaths = includeParentFolders(session.repository.files.map((file) => file.path));
     const generatedPaths = includeParentFolders([...listGeneratedPaths(session.repository.files)]);
     for (const path of generatedPaths) repositoryPaths.add(path);
-    const configFiles = planned.scope.configurations.flatMap((configuration) => configuration.configFiles);
-    for (const configFile of configFiles) repositoryPaths.add(configFile.target);
+    const configs = planned.scope.configurations.flatMap((configuration) => configuration.configs);
+    for (const config of configs) repositoryPaths.add(config.target);
     for (const path of listGeneratorPaths(planned)) repositoryPaths.add(path);
     const checks = session.configurationsByName.values().flatMap((configuration) => configuration.checks);
     for (const check of checks) repositoryPaths.add(check.id);

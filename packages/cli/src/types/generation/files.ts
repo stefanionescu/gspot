@@ -2,14 +2,7 @@ import type { Session } from '#cli/types/session.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { ManagedKeys } from '#cli/types/repository/repository.ts';
 import { type CHECK_HOOKS, type IGNORE_SECTION_TITLES } from '#cli/config/generation/generation.ts';
-
-import {
-    type Tool,
-    type Level,
-    type ConfigFile,
-    type Configuration,
-    type SourcedConfigFile,
-} from '#cli/types/manifests.ts';
+import { type Tool, type Level, type Config, type Configuration, type SourcedConfig } from '#cli/types/manifests.ts';
 
 type ManagedBlock = { path: string; body: string };
 
@@ -28,24 +21,24 @@ export type Generation = {
     managedKeys: ManagedKeys[];
 };
 
-export type ConfigFileOwner = { session: Session; scope: Scope; configuration: Configuration };
+export type ConfigOwner = { session: Session; scope: Scope; configuration: Configuration };
 
-export type ConfigFileGeneration = {
+export type ConfigGeneration = {
     files: GeneratedFile[];
     targets: ReadonlyMap<string, ReadonlyMap<string, string>>;
     failures: ReadonlyMap<string, ReadonlyMap<string, Error>>;
 };
 
-export type ConfigFileTargets = Pick<ConfigFileGeneration, 'targets' | 'failures'>;
+export type ConfigTargets = Pick<ConfigGeneration, 'targets' | 'failures'>;
 
 export type SemgrepDocument = { rules: SemgrepRule[] };
 
 export type HookName = (typeof CHECK_HOOKS)[number];
 
-export type PlannedConfigFile = ConfigFileOwner & {
+export type PlannedConfig = ConfigOwner & {
     targetPath: string;
     level: Level;
-    configFile: SourcedConfigFile;
+    config: SourcedConfig;
 };
 
 export type RuleOptionsRun = {
@@ -56,9 +49,9 @@ export type RuleOptionsRun = {
     suffix?: string;
 };
 
-export type ConfigFileOutput = { content: string; companions: GeneratedFile[] };
+export type ConfigOutput = { content: string; companions: GeneratedFile[] };
 
-export type ConfigFileBuilder = (planned: PlannedConfigFile) => string | ConfigFileOutput;
+export type ConfigBuilder = (planned: PlannedConfig) => string | ConfigOutput;
 
 export type PlannedLinkField = {
     scope: Scope;
@@ -66,22 +59,22 @@ export type PlannedLinkField = {
     tool: Tool;
     consumed: boolean;
     paths: ReadonlySet<string>;
-    configFiles: ConfigFileTargets;
+    configs: ConfigTargets;
     scopePaths: string[];
 };
 
 export type IgnoreSection = { key: keyof typeof IGNORE_SECTION_TITLES | 'settings'; title: string; patterns: string[] };
 
-export type OwnedConfigFile = { configFile: ConfigFile; owner: ConfigFileOwner };
+export type OwnedConfig = { config: Config; owner: ConfigOwner };
 
-export type OwnedSourceFile = OwnedConfigFile & { configFile: SourcedConfigFile };
+export type OwnedSourceFile = OwnedConfig & { config: SourcedConfig };
 
-export type BuiltConfigFile = OwnedSourceFile & {
+export type BuiltConfig = OwnedSourceFile & {
     file: GeneratedFile;
     companions: GeneratedFile[];
 };
 
-export type ConfigFileBuildState = {
+export type ConfigBuildState = {
     targets: Map<string, Map<string, string>>;
     files: Map<string, GeneratedFile>;
     failures: Map<string, Map<string, Error>>;

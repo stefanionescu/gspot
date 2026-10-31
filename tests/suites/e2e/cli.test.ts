@@ -12,7 +12,7 @@ import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
 import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/config/e2e.ts';
 
-async function assertConflictingConfigFiles(root: string, output: string): Promise<void> {
+async function assertConflictingConfigs(root: string, output: string): Promise<void> {
     const { plan } = JSON.parse(output) as InitJson;
     expect(plan.delete).toStrictEqual([]);
     expect(plan.write.filter(({ path }) => ['prettier.config.mjs', '.editorconfig'].includes(path))).toStrictEqual([
@@ -37,7 +37,7 @@ test('init replaces formatter files, keeps authored notes and CLAUDE.md, and che
     const initialized = await initSandbox(sandbox.online, {
         configurations: ['bash', 'python', 'swift'],
     });
-    await assertConflictingConfigFiles(root, initialized.stdout);
+    await assertConflictingConfigs(root, initialized.stdout);
     expect(initialized.stdout + initialized.stderr).not.toContain('formatter std');
     const checked = parseCheckReport(
         await sandbox.offline.run(root, [

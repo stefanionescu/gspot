@@ -35,7 +35,7 @@ export type RepositoryListing = Pick<Repository, 'root' | 'hasGit' | 'index' | '
 };
 
 export type RepositorySetup = {
-    conflictingConfigFiles: ConflictingConfigFile[];
+    conflictingConfigs: ConflictingConfig[];
     hooks: {
         kind: 'githooks' | 'husky' | 'lefthook' | 'simple-git-hooks' | 'pre-commit' | 'hooksPath';
         path: string;
@@ -48,7 +48,7 @@ export type RepositorySetup = {
     toolOnlyPackages: string[];
 };
 
-export type ConflictingConfigFile = {
+export type ConflictingConfig = {
     tool: string;
     path: string;
     shared: boolean;

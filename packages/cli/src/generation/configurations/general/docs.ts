@@ -1,8 +1,8 @@
 import { getTable } from '#cli/settings/scopes.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { SITE_CONFIGURATION } from '#cli/config/manifests/names.ts';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 
 import {
     LYCHEE_NOTES,
@@ -18,7 +18,7 @@ Build lychee.toml: a note on why the file exists, and the lychee link exclusions
 
 @param planned the config file to build.
 */
-export function buildLycheeFile(planned: PlannedConfigFile): string {
+export function buildLycheeFile(planned: PlannedConfig): string {
     const { configurations, settings } = planned.scope;
 
     const exclude = [...getTable(settings, 'docs').allowed_urls, LYCHEE_MDX_EXPRESSION];
@@ -29,6 +29,6 @@ export function buildLycheeFile(planned: PlannedConfigFile): string {
     return [
         ...LYCHEE_NOTES,
         isSite ? LYCHEE_SITE_NOTE : LYCHEE_ROOT_NOTE,
-        stringifyToml(document, CONFIG_FILE_TOML_FORMAT),
+        stringifyToml(document, CONFIG_TOML_FORMAT),
     ].join('\n');
 }

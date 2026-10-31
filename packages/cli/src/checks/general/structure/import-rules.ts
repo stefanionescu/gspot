@@ -31,10 +31,10 @@ import {
 } from '#cli/types/checks/general/structure.ts';
 import {
     RELATIVE_IMPORT,
+    CONFIG_PATTERNS,
     IMPORT_RULES_SKIP,
     PYTHON_EXTENSIONS,
     PYTHON_SOURCE_ROOTS,
-    CONFIG_FILE_PATTERNS,
     PYTHON_FROM_STATEMENT,
     PYTHON_MODULE_SUFFIXES,
     UNCOVERED_FILE_MESSAGE,
@@ -59,7 +59,7 @@ function buildExemption(planned: PlannedCheck): (file: TrackedFile) => boolean {
     const { settings, path: scopePath } = planned.scope;
     const matches = buildPathMatcher([
         ...settings.test_files,
-        ...CONFIG_FILE_PATTERNS,
+        ...CONFIG_PATTERNS,
         ...(settings.tables[ESLINT_SETTINGS_TABLE]?.plugins ?? []).map((plugin) => plugin.path),
         ...(settings.tables.javascript?.script_files ?? []),
         joinScope(escapeGlob(scopePath), MISE_TASKS_GLOB),

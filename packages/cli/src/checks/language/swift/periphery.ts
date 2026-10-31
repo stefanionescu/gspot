@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import type { CheckSession } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
+import { getConfigPath } from '#cli/runs/command/placeholders.ts';
 import { runCopiedTool } from '#cli/checks/language/swift/build.ts';
-import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { prepareBuild, readRepositoryCacheFolder } from '#cli/checks/language/swift/cache.ts';
 
 import {
@@ -31,8 +31,8 @@ export async function checkPeriphery(session: CheckSession, planned: PlannedChec
             : `${SCOPE_FOLDER_PREFIX}${Buffer.from(planned.scope.path).toString('hex')}`,
         'periphery',
     );
-    const configFile = join(session.root, getConfigFilePath(session, planned, PERIPHERY_TOOL));
-    const commandArguments = [...PERIPHERY_COMMAND, configFile];
+    const config = join(session.root, getConfigPath(session, planned, PERIPHERY_TOOL));
+    const commandArguments = [...PERIPHERY_COMMAND, config];
     const { files } = prepareBuild(session.root, planned.files, folder);
     return await runCopiedTool(session, planned, {
         source: files.readCanonicalPath(BUILD_SOURCE_FOLDER),

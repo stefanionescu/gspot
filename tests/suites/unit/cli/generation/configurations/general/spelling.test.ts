@@ -4,7 +4,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getManifestTarget, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
+import { getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { BRITISH_SCOPE_SETTINGS } from '#tests/config/generation/configurations/general.ts';
 
 test('typos.toml lists each allowed word once and keeps quoted paths', async () => {
@@ -53,7 +53,7 @@ test('typos.toml selects the spelling locale of each scope', async () => {
         ['british', 'en-gb'],
         ['british/american', 'en-us'],
     ] as const) {
-        const path = getConfigFilePath(session, 'typos', scope);
+        const path = getConfigPath(session, 'typos', scope);
         const target = output.files.find((file) => file.path === path)!;
         expect(parse(target.content)).toHaveProperty('default.locale', locale);
     }

@@ -23,7 +23,7 @@ export const GSPOT_PATHS = {
     uvLockfile: `${GSPOT_FOLDER}/${UV_LOCKFILE}`,
     valePackages: `${GSPOT_FOLDER}/vale`,
     valeReleases: `${GSPOT_FOLDER}/vale/releases.json`,
-    valeConfigFile: `${GSPOT_FOLDER}/configurations/general/prose/vale.ini`,
+    valeConfig: `${GSPOT_FOLDER}/configurations/general/prose/vale.ini`,
 } as const;
 
 export const INSTALLED_TOOL_FOLDERS = {

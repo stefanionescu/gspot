@@ -11,11 +11,11 @@ import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { formatCount, compareText } from '#cli/system/text.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { redactInstallOutput } from '#cli/installers/credentials.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { writePlans, planReplacements } from '#cli/repository/writer.ts';
 import { miseLockfileSchema } from '#cli/schemas/installers/installers.ts';
 import { MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/files/names.ts';
@@ -248,9 +248,6 @@ export function buildMiseInstall(configurations: Configuration[]): GeneratedFile
     );
     return {
         path: GSPOT_PATHS.miseProject,
-        content: stringify(
-            { tools, settings: { lockfile: true } },
-            { ...CONFIG_FILE_TOML_FORMAT, inlineTableStart: 1 },
-        ),
+        content: stringify({ tools, settings: { lockfile: true } }, { ...CONFIG_TOML_FORMAT, inlineTableStart: 1 }),
     };
 }

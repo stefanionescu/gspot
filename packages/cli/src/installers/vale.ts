@@ -71,7 +71,7 @@ Check that the Vale packages exist before prose checks run.
 */
 export function hasValePackages(root: string, level: Settings['level']): boolean {
     const files = openFiles(root);
-    if (files.read(GSPOT_PATHS.valeConfigFile) === undefined) return false;
+    if (files.read(GSPOT_PATHS.valeConfig) === undefined) return false;
     if (level === 'basic') return true;
     return VALE_PACKAGE_FOLDERS.every(
         (name) => files.readStats(`${GSPOT_PATHS.valePackages}/${name}`)?.isDirectory() === true,
@@ -100,12 +100,12 @@ export async function installValePackages(install: ToolInstall, miseBinPaths: st
     if ('status' in available) throw new GspotError('tool', available.note);
     const temporary = mkdtempSync(join(files.readCanonicalPath(GSPOT_FOLDER), VALE_INSTALL_PREFIX));
     try {
-        const config = join(temporary, GSPOT_PATHS.valeConfigFile);
+        const config = join(temporary, GSPOT_PATHS.valeConfig);
         const content = buildValeIni({
             level,
             stylesPaths: [
                 convertToPosixPath(resolve(root, VALE_STYLES_PATH)),
-                posix.relative(posix.dirname(GSPOT_PATHS.valeConfigFile), GSPOT_PATHS.valePackages),
+                posix.relative(posix.dirname(GSPOT_PATHS.valeConfig), GSPOT_PATHS.valePackages),
             ],
             packages: await downloadValePackages(install, temporary),
         });

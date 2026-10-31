@@ -1,6 +1,6 @@
 import { stringify } from 'yaml';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 
 import {
     HADOLINT_CHECK,
@@ -13,7 +13,7 @@ Build hadolint.yml: the Hadolint exclusions and trusted registry settings.
 
 @param planned the config file to build.
 */
-export function buildHadolintFile(planned: PlannedConfigFile): string {
+export function buildHadolintFile(planned: PlannedConfig): string {
     const isAll = planned.level === 'all';
     const off = [...listIgnoredRules(planned.scope, HADOLINT_CHECK), ...(isAll ? [] : HADOLINT_DEFAULT_LEVEL_OFF)];
     const registries = getTable(planned.scope.settings, 'tools.hadolint').trusted_registries;

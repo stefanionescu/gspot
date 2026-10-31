@@ -4,8 +4,8 @@ import { PBXPROJ_FILE } from '#cli/config/files/names.ts';
 import type { RunCache } from '#cli/types/system/system.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 
 import {
     SWIFTFORMAT_CHECK,
@@ -31,7 +31,7 @@ Build swiftformat: the SwiftFormat settings of the repository.
 
 @param planned the config file to build.
 */
-export function buildSwiftformatFile(planned: PlannedConfigFile): string {
+export function buildSwiftformatFile(planned: PlannedConfig): string {
     const { scope } = planned;
     const { cache } = planned.session;
     const { format } = scope.settings.tables;

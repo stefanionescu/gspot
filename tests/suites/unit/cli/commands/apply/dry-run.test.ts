@@ -10,9 +10,9 @@ import { createFileTree, type TestdirResult } from 'testdirs';
 import { type DryRunJson } from '#cli/types/commands/commands.ts';
 import type { ApplyReport } from '#cli/types/generation/files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
+import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PRESERVE_SOURCE } from '#tests/config/commands/contents.ts';
-import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
@@ -84,7 +84,7 @@ test('apply --dry-run shows a hand edit of the ESLint config file as a diff with
 
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const path = getConfigFilePath(await openSession(sandbox.path), 'eslint');
+    const path = getConfigPath(await openSession(sandbox.path), 'eslint');
     const written = await readFile(join(sandbox.path, path), 'utf8');
     const generated = written.split('\n').slice(0, -1);
     const authored = 'throw new Error("The preview executed authored configuration.");\n';
@@ -185,8 +185,8 @@ test('apply --dry-run reports a changed file, a stray, a conflict, and an edited
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const session = await openSession(sandbox.path);
-    const shellcheckrc = getConfigFilePath(session, 'shellcheckrc');
-    const markdownlint = getConfigFilePath(session, 'markdownlint');
+    const shellcheckrc = getConfigPath(session, 'shellcheckrc');
+    const markdownlint = getConfigPath(session, 'markdownlint');
     const editFile = async (path: string, text: (current: string) => string): Promise<void> => {
         const absolute = join(sandbox.path, path);
         await chmod(absolute, 0o644);

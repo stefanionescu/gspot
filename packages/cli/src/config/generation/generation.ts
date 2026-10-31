@@ -263,7 +263,7 @@ export const TOOL_PROJECT_FILES: readonly string[] = [
 
 export const SEMGREP_RULE_PACK_FILE = 'semgrep.yml';
 
-export const CONFIG_FILE_REFERENCE = /(?:['"]\.\/|\bnew\s+URL\(\s*['"])(?<path>[^'"]+)['"]/gu;
+export const CONFIG_REFERENCE = /(?:['"]\.\/|\bnew\s+URL\(\s*['"])(?<path>[^'"]+)['"]/gu;
 
 export const TS_EXTENSION = '.ts';
 
@@ -273,7 +273,7 @@ export const ANSIBLE_LINT_ALWAYS_OFF = ['experimental'] as const;
 
 export const ANSIBLE_LINT_CHECK = 'ansible/ansible-lint';
 
-export const CONFIG_FILE_SCOPES_FOLDER = 'scopes';
+export const CONFIG_SCOPES_FOLDER = 'scopes';
 
 export const BUILD_OUTPUT_FOLDERS: ReadonlySet<string> = new Set(['.build', 'DerivedData']);
 

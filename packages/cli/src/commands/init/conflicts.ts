@@ -5,7 +5,8 @@ import { writePlans } from '#cli/repository/writer.ts';
 import { isEditedInPlace } from '#cli/repository/conflicts.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { parsePrettierFile } from '#cli/commands/init/formatter-settings.ts';
-import type { InitPlan, ConflictingConfigFiles } from '#cli/types/commands/init.ts';
+import type { InitPlan, ConflictingConfigs } from '#cli/types/commands/init.ts';
+import type { WritePlan, ManagedKeys, RepositorySetup, ConflictingConfig } from '#cli/types/repository/repository.ts';
 
 import {
     VERIFY_FLAG,
@@ -13,12 +14,6 @@ import {
     PRETTIER_SCRIPT_NOTE,
     READ_COMMITTED_MESSAGE,
 } from '#cli/config/commands/init.ts';
-import type {
-    WritePlan,
-    ManagedKeys,
-    RepositorySetup,
-    ConflictingConfigFile,
-} from '#cli/types/repository/repository.ts';
 
 function listCommittedPaths(root: string, paths: string[]): Set<string> {
     const head = runGitBlocking(root, ['rev-parse', VERIFY_FLAG, '--quiet', 'HEAD']);
@@ -30,7 +25,7 @@ function listCommittedPaths(root: string, paths: string[]): Set<string> {
     return new Set(tracked.stdout.split('\0').filter((path) => path !== '' && !modified.has(path)));
 }
 
-function addConflictingConfigFile(file: ConflictingConfigFile, conflicts: ConflictingConfigFiles): void {
+function addConflictingConfig(file: ConflictingConfig, conflicts: ConflictingConfigs): void {
     const { tool, path, shared } = file;
     if (shared)
         conflicts.kept.push({
@@ -52,14 +47,14 @@ Read the config files of the chosen tools, and sort them into the files init del
 @param tools what the checks at this level run.
 @param managedKeys the shared config file edits for these configurations.
 */
-export function readConflictingConfigFiles(
+export function readConflictingConfigs(
     root: string,
     repositorySetup: RepositorySetup,
     tools: Set<string>,
     managedKeys: ManagedKeys[],
-): ConflictingConfigFiles {
-    const conflicts: ConflictingConfigFiles = { reviewed: new Map(), deleted: [], kept: [], changed: [] };
-    const owned = repositorySetup.conflictingConfigFiles.filter(({ tool }) => tools.has(tool));
+): ConflictingConfigs {
+    const conflicts: ConflictingConfigs = { reviewed: new Map(), deleted: [], kept: [], changed: [] };
+    const owned = repositorySetup.conflictingConfigs.filter(({ tool }) => tools.has(tool));
     const files = openFiles(root);
     const paths = new Set(owned.filter((file) => !file.shared).map((file) => file.path));
     for (const path of paths) {
@@ -74,7 +69,7 @@ export function readConflictingConfigFiles(
     }
     for (const file of owned) {
         if (file.shared && isEditedInPlace(file, managedKeys)) continue;
-        addConflictingConfigFile(file, conflicts);
+        addConflictingConfig(file, conflicts);
     }
     return conflicts;
 }
@@ -103,7 +98,7 @@ Delete the config files that init replaces, and keep each one that changed after
 @param reviewed the contents init read before it showed the plan.
 @returns the paths that init kept.
 */
-export function deleteConflictingConfigFiles(
+export function deleteConflictingConfigs(
     writer: Files,
     deleted: InitPlan['delete'],
     reviewed: ReadonlyMap<string, FileContents | undefined>,

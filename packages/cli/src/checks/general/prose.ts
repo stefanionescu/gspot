@@ -124,8 +124,8 @@ Runs Vale on the scope files, by path where Vale has a grammar and through stdin
 export async function checkVale(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     if (!hasValePackages(session.toolsRoot, session.settings.level))
         throw new GspotError('tool', VALE_PACKAGES_MESSAGE);
-    const command = [VALE_TOOL, CONFIG_FLAG, join(session.root, GSPOT_PATHS.valeConfigFile), ...VALE_ARGUMENTS];
-    const folder = dirname(join(session.root, GSPOT_PATHS.valeConfigFile));
+    const command = [VALE_TOOL, CONFIG_FLAG, join(session.root, GSPOT_PATHS.valeConfig), ...VALE_ARGUMENTS];
+    const folder = dirname(join(session.root, GSPOT_PATHS.valeConfig));
     const groups = listRouteBatches(
         planned.files.filter(
             (file) => file.kind === 'source' && (session.settings.level === 'all' || file.tags.includes('markdown')),

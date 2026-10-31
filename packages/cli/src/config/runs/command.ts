@@ -27,7 +27,7 @@ export const EACH_PLACEHOLDER = /^\{each:(?<flag>[^:]+):(?<setting>[a-z0-9_.-]+)
 
 export const WORKSPACE_PLACEHOLDER = /^\{workspace:(?<name>[^}]+)\}$/u;
 
-export const CONFIG_FILE_PLACEHOLDER = /\{config_file:(?<name>[a-z0-9-]+)\}/gu;
+export const CONFIG_PLACEHOLDER = /\{config_file:(?<name>[a-z0-9-]+)\}/gu;
 
 export const LINK_FILE_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
 

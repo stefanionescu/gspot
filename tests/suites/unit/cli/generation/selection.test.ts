@@ -20,9 +20,9 @@ import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 
 import {
-    CONFIG_FILE_PROJECT,
+    CONFIG_PROJECT,
+    UNPARSED_CONFIGS,
     IGNORED_CHECK_FILES,
-    UNPARSED_CONFIG_FILES,
     NESTED_PYTHON_SETTINGS,
 } from '#tests/config/generation/configs.ts';
 
@@ -134,11 +134,11 @@ test('Go and Rust sources keep the files and tools of every selected configurati
 test.each([...LEVELS])("every configuration's generated config files parse at level %s", async (level) => {
     const configurations = readConfigurations()
         .values()
-        .filter((configuration) => configuration.configFiles.length > 0)
+        .filter((configuration) => configuration.configs.length > 0)
         .map((configuration) => configuration.name)
         .toArray();
     await using sandbox = await testdir({
-        ...CONFIG_FILE_PROJECT,
+        ...CONFIG_PROJECT,
         'gspot.toml': buildSandboxSettings(configurations, { level, rules: true }),
     });
 
@@ -152,9 +152,9 @@ test.each([...LEVELS])("every configuration's generated config files parse at le
     );
     const failures: { path: string; error: string }[] = [];
     for (const file of generated) {
-        if (new Set<string>(UNPARSED_CONFIG_FILES).has(basename(file.path))) continue;
+        if (new Set<string>(UNPARSED_CONFIGS).has(basename(file.path))) continue;
         try {
-            parseConfigFile(file.content, file.path);
+            parseConfig(file.content, file.path);
         } catch (error) {
             failures.push({ path: file.path, error: String(error) });
         }
@@ -192,7 +192,7 @@ function parseModule(text: string, path: string): void {
     if (errors.length > 0) throw new Error(`${path}: ${errors.join('; ')}`);
 }
 
-function parseConfigFile(text: string, path: string): void {
+function parseConfig(text: string, path: string): void {
     const parsers: Record<string, (text: string, path: string) => void> = {
         coveragerc: (text) => {
             parseIni(text);

@@ -6,10 +6,10 @@ import { MISE_TASKS_GLOB } from '#cli/config/files/names.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { NODE_SHEBANG_TAG } from '#cli/config/repository/files.ts';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
+import type { Config, Configuration } from '#cli/types/manifests.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import type { PlannedEslintFile } from '#cli/types/generation/eslint.ts';
-import type { ConfigFile, Configuration } from '#cli/types/manifests.ts';
 import { buildFilePatterns } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import { BASE_RULES } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 import { buildRuleOptions } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
@@ -20,8 +20,8 @@ import {
     CODE_LANGUAGES,
 } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
-function listConfigFileConfigurations(scopes: Scope[], scope: Scope, configFile: ConfigFile): Configuration[] {
-    if (configFile.per_scope) return scope.configurations;
+function listConfigConfigurations(scopes: Scope[], scope: Scope, config: Config): Configuration[] {
+    if (config.per_scope) return scope.configurations;
     const every = [scope, ...scopes].flatMap((each) => each.configurations);
     return new Map(every.map((configuration) => [configuration.name, configuration])).values().toArray();
 }
@@ -31,8 +31,8 @@ Collect what the ESLint config file of one scope needs: its file patterns and ru
 
 @param planned the config file to build.
 */
-export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslintFile {
-    const { session, scope, configFile } = planned;
+export function buildPlannedEslintFile(planned: PlannedConfig): PlannedEslintFile {
+    const { session, scope, config } = planned;
     const { settings } = scope;
     const { scopes } = session;
     const repositorySettings = session.settings;
@@ -45,7 +45,7 @@ export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslin
     const nodeFiles = session.repository.files
         .filter((file) => !isRecognized(file.path) && file.kind === 'source' && file.tags.includes(NODE_SHEBANG_TAG))
         .map((file) => file.path);
-    const configurations = listConfigFileConfigurations(scopes, scope, configFile);
+    const configurations = listConfigConfigurations(scopes, scope, config);
     const eslintFiles = buildFilePatterns({
         components: configurations,
         nodeFiles,

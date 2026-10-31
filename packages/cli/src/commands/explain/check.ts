@@ -15,19 +15,13 @@ import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import type { Tool, Check, ScopeCheck, Configuration } from '#cli/types/manifests.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
 import type { CheckFacts, CheckIgnore, Explanation, LintRuleDocs } from '#cli/types/commands/explain.ts';
+import { getTool, findToolName, hasRuleOutput, extractRulePrefix, extractConfigName } from '#cli/manifests/tools.ts';
 
 import {
     ESLINT_MANIFEST_TOOL,
     STYLELINT_MANIFEST_TOOL,
     JAVASCRIPT_CONFIGURATION,
 } from '#cli/config/manifests/names.ts';
-import {
-    getTool,
-    findToolName,
-    hasRuleOutput,
-    extractRulePrefix,
-    extractConfigFileName,
-} from '#cli/manifests/tools.ts';
 import {
     REPOSITORY_COMMAND,
     RUN_IN_COPY_MESSAGE,
@@ -221,18 +215,18 @@ export async function importInstalledTool(root: string, specifier: string): Prom
 }
 
 async function readEslintPluginRule(root: string, identifier: string): Promise<unknown> {
-    const configFile = readConfigurations()
+    const config = readConfigurations()
         .get(JAVASCRIPT_CONFIGURATION)
-        ?.configFiles.find((file) => extractConfigFileName(file.file) === ESLINT_MANIFEST_TOOL);
-    if (configFile === undefined) return undefined;
-    let config: { default: { plugins?: Record<string, { rules?: Record<string, unknown> }> }[] };
+        ?.configs.find((file) => extractConfigName(file.file) === ESLINT_MANIFEST_TOOL);
+    if (config === undefined) return undefined;
+    let eslintConfig: { default: { plugins?: Record<string, { rules?: Record<string, unknown> }> }[] };
     try {
-        config = (await import(pathToFileURL(join(root, configFile.target)).href)) as typeof config;
+        eslintConfig = (await import(pathToFileURL(join(root, config.target)).href)) as typeof eslintConfig;
     } catch (error) {
         if (hasErrorCode(error, 'ERR_MODULE_NOT_FOUND')) throw new GspotError('tool', INSTALL_FOR_RULES_MESSAGE);
         throw error;
     }
-    return config.default
+    return eslintConfig.default
         .flatMap((block) => (block.plugins === undefined ? [] : Object.entries(block.plugins)))
         .map(([prefix, plugin]) =>
             identifier.startsWith(`${prefix}/`) ? plugin.rules?.[identifier.slice(prefix.length + 1)] : undefined,

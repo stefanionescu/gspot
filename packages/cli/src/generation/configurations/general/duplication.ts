@@ -1,6 +1,6 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { convertToGlobs, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 import { JSCPD_CHECK, JSCPD_IGNORED, JSCPD_IMPORT_PATTERNS } from '#cli/config/generation/configurations/general.ts';
 
@@ -9,7 +9,7 @@ Build jscpd.json: the duplicate size limits, the skipped import lines, and the i
 
 @param planned the config file to build.
 */
-export function buildJscpdFile(planned: PlannedConfigFile): string {
+export function buildJscpdFile(planned: PlannedConfig): string {
     const limits = getTable(planned.scope.settings, 'duplication');
     const settings = {
         mode: 'strict',

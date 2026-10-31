@@ -11,10 +11,10 @@ import { runCommandBatches } from '#cli/runs/command/check.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { DOCKERFILE_NAME } from '#cli/config/repository/files.ts';
+import { getConfigPath } from '#cli/runs/command/placeholders.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
-import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { parseCheckedFile } from '#cli/checks/cross-configuration/syntax.ts';
 import { type CheckResult, type CheckFinding } from '#cli/types/runs/check.ts';
 import { composeSchema, trivyImageOutputSchema } from '#cli/schemas/checks/infrastructure.ts';
@@ -217,8 +217,8 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Chec
 }
 
 async function scanImage(session: CheckSession, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
-    const configFile = join(session.root, getConfigFilePath(session, planned, TRIVY_CONFIG_FILE));
-    const result = await runCheckTool(session, planned, [...TRIVY_IMAGE_COMMAND, configFile, image], {
+    const config = join(session.root, getConfigPath(session, planned, TRIVY_CONFIG_FILE));
+    const result = await runCheckTool(session, planned, [...TRIVY_IMAGE_COMMAND, config, image], {
         cwd: session.root,
     });
     if (result.code !== 0 && result.code !== TRIVY_FINDINGS_EXIT_CODE) {

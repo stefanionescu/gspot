@@ -30,7 +30,7 @@ test('tool discovery finds nested config files and skips root .gspot and vendore
         files: repository.files,
         dependencyFiles: [],
     });
-    expect(discovered.conflictingConfigFiles.map((conflictingConfigFile) => conflictingConfigFile.path)).toStrictEqual([
+    expect(discovered.conflictingConfigs.map((conflictingConfig) => conflictingConfig.path)).toStrictEqual([
         'src/.prettierrc.json',
     ]);
 });
@@ -70,7 +70,7 @@ test('tool discovery reads tool sections through a link inside the repository', 
         files: [],
         dependencyFiles: [],
     });
-    expect(repositorySetup.conflictingConfigFiles).toStrictEqual([LINKED_RUFF_SECTION]);
+    expect(repositorySetup.conflictingConfigs).toStrictEqual([LINKED_RUFF_SECTION]);
 });
 
 test.each(['.claude/rules'])('a linked %s counts as present without reading a rules folder outside', async (path) => {

@@ -3,19 +3,19 @@ import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { posix, dirname, relative } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
+import type { Config } from '#cli/types/manifests.ts';
 import { listCheckTools } from '#cli/planning/tools.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import type { ConfigFile } from '#cli/types/manifests.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { getConfigFileTarget } from '#cli/generation/selection.ts';
+import { getConfigTarget } from '#cli/generation/selection.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { ManagedKeys } from '#cli/types/repository/repository.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import type { GeneratedFile, ConfigFileOwner, PlannedLinkField } from '#cli/types/generation/files.ts';
+import type { ConfigOwner, GeneratedFile, PlannedLinkField } from '#cli/types/generation/files.ts';
 import { escapeGlob, convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
 
 import {
@@ -47,17 +47,17 @@ List the paths where a config file puts its link file. Every scope shares one li
 Another link file sits at one path, or in each folder that holds files of the configuration and matches pointer.folders.
 
 @param owner the repository and the scope.
-@param configFile the config file from the manifest.
+@param config the config file from the manifest.
 @returns each path where the link file goes, from the repository root.
 */
-export function listLinkFilePaths(owner: ConfigFileOwner, configFile: ConfigFile): string[] {
+export function listLinkFilePaths(owner: ConfigOwner, config: Config): string[] {
     const { scope, configuration } = owner;
     const { scopes, repository } = owner.session;
-    const { pointer } = configFile;
+    const { pointer } = config;
     if (pointer === undefined) return [];
     const scopePath = scope.path;
     if (pointer.folders === undefined)
-        return [configFile.per_scope && pointer.overrides !== true ? joinScope(scopePath, pointer.path) : pointer.path];
+        return [config.per_scope && pointer.overrides !== true ? joinScope(scopePath, pointer.path) : pointer.path];
     const children = listNestedScopes(
         scopes.map((each) => each.path),
         scopePath,
@@ -87,40 +87,32 @@ List every path outside .gspot/ that gspot can write. Include manifest targets a
 @returns the paths, from the repository root.
 */
 export function listOwnablePaths(session: Session): Set<string> {
-    const configFiles = session.scopes.flatMap((scope) =>
+    const configs = session.scopes.flatMap((scope) =>
         readConfigurations()
             .values()
             .flatMap((configuration) =>
-                configuration.configFiles.map((configFile) => ({
+                configuration.configs.map((config) => ({
                     owner: { session, scope, configuration },
-                    configFile,
+                    config,
                 })),
             )
             .toArray(),
     );
-    const paths = configFiles.flatMap(({ owner, configFile }) => [
-        ...(configFile.source === undefined || configFile.target.startsWith(`${GSPOT_FOLDER}/`)
+    const paths = configs.flatMap(({ owner, config }) => [
+        ...(config.source === undefined || config.target.startsWith(`${GSPOT_FOLDER}/`)
             ? []
-            : [configFile.per_scope ? joinScope(owner.scope.path, configFile.target) : configFile.target]),
-        ...listLinkFilePaths(owner, configFile),
+            : [config.per_scope ? joinScope(owner.scope.path, config.target) : config.target]),
+        ...listLinkFilePaths(owner, config),
     ]);
     return new Set([GITHUB_WORKFLOW, GITLAB_WORKFLOW, ...paths]);
 }
 
-function listLinkFieldTargets({
-    scope,
-    configuration,
-    tool,
-    consumed,
-    paths,
-    configFiles,
-    scopePaths,
-}: PlannedLinkField) {
+function listLinkFieldTargets({ scope, configuration, tool, consumed, paths, configs, scopePaths }: PlannedLinkField) {
     return (tool.replace_key ?? [])
         .filter((replacement) => replacement.pointer === true)
         .flatMap((replacement) =>
-            configuration.configFiles
-                .map((file) => ({ file, target: getConfigFileTarget(scope.path, file, configFiles) }))
+            configuration.configs
+                .map((file) => ({ file, target: getConfigTarget(scope.path, file, configs) }))
                 .filter(
                     ({ file, target }) =>
                         file.tool.includes(tool.name) && (!file.per_scope || consumed || !paths.has(target)),
@@ -163,19 +155,19 @@ Point the package fields that manifests declare at the generated config files.
 
 @param session the repository files and scopes.
 @param generated the config files that this run generates.
-@param configFiles the config file path for each scope and config file.
+@param configs the config file path for each scope and config file.
 */
 export function buildLinkFieldEdits(
     session: Session,
     generated: GeneratedFile[],
-    configFiles: PlannedLinkField['configFiles'],
+    configs: PlannedLinkField['configs'],
 ): ManagedKeys[] {
     const { root, repository, scopes } = session;
     const paths = new Set(generated.map(({ path }) => path));
     const scopePaths = scopes.map(({ path }) => path);
     const tools = listLinkFieldTools(session);
     const linkFileTargets = tools.flatMap((selected) =>
-        listLinkFieldTargets({ ...selected, paths, configFiles, scopePaths }),
+        listLinkFieldTargets({ ...selected, paths, configs, scopePaths }),
     );
     const linkFileFields = new Map(
         linkFileTargets.map((row) => [JSON.stringify([row.key, row.scope, row.target]), row]),
@@ -227,17 +219,17 @@ Build the link files of one generated config file. A link file with overrides si
 it extends the config file of that scope. Parents come first, so the config of a nested scope wins.
 
 @param owner the repository and the scope.
-@param configFile the shipped config file.
+@param config the shipped config file.
 @param targets the config file path of each scope that writes it; other link files read the path of the owner's scope.
 */
 export function buildLinkFiles(
-    owner: ConfigFileOwner,
-    configFile: ConfigFile,
+    owner: ConfigOwner,
+    config: Config,
     targets: ReadonlyMap<string, string>,
 ): GeneratedFile[] {
-    const { pointer } = configFile;
+    const { pointer } = config;
     if (pointer === undefined) return [];
-    return listLinkFilePaths(owner, configFile).map((path) => {
+    return listLinkFilePaths(owner, config).map((path) => {
         const body = fillTarget(pointer.body, path, targets.get(owner.scope.path) as string).replace(
             OVERRIDES_PLACEHOLDER,
             () =>

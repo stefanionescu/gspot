@@ -1,7 +1,7 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import { refuseIdleRuleOptions } from '#cli/generation/rule-options.ts';
-import type { OwnedConfigFile, PlannedConfigFile } from '#cli/types/generation/files.ts';
+import type { OwnedConfig, PlannedConfig } from '#cli/types/generation/files.ts';
 
 import {
     PRETTIER_STYLE,
@@ -16,7 +16,7 @@ Build markdownlint.jsonc: the Markdown lint rules for the level, indentation, an
 
 @param planned the config file to build.
 */
-export function buildMarkdownlintFile(planned: Pick<PlannedConfigFile, 'scope' | 'level'>): string {
+export function buildMarkdownlintFile(planned: Pick<PlannedConfig, 'scope' | 'level'>): string {
     const isAll = planned.level === 'all';
     const document: Record<string, string | boolean | Record<string, unknown>> = {
         extends: PRETTIER_STYLE,
@@ -49,14 +49,12 @@ export function buildMarkdownlintFile(planned: Pick<PlannedConfigFile, 'scope' |
 Check whether a Markdown scope inherits the root config because both scopes generate the same text.
 
 @param selected the scoped config file.
-@param configFiles the config files and their owners.
+@param configs the config files and their owners.
 */
-export function isMarkdownlintShared(selected: OwnedConfigFile, configFiles: OwnedConfigFile[]): boolean {
-    const { configFile, owner } = selected;
-    if (configFile.pointer?.inherit !== true || owner.scope.path === '') return false;
-    const root = configFiles.find(
-        (each) => each.configFile.target === configFile.target && each.owner.scope.path === '',
-    );
+export function isMarkdownlintShared(selected: OwnedConfig, configs: OwnedConfig[]): boolean {
+    const { config, owner } = selected;
+    if (config.pointer?.inherit !== true || owner.scope.path === '') return false;
+    const root = configs.find((each) => each.config.target === config.target && each.owner.scope.path === '');
     if (root === undefined) return false;
     const level = owner.session.settings.level;
     const texts = [selected, root].map((owned) => buildMarkdownlintFile({ scope: owned.owner.scope, level }));

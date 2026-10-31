@@ -10,13 +10,13 @@ import { type Configuration } from '#cli/types/manifests.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import { type SpawnResult } from '#cli/types/system/system.ts';
 import { type UvLockfile } from '#cli/types/parsers/projects.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import { formatUnavailableNote } from '#cli/executables/inspect.ts';
 import { uvLockfileSchema } from '#cli/schemas/parsers/projects.ts';
 import { type GeneratedFile } from '#cli/types/generation/files.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
 import { getTool, listToolProjectPins } from '#cli/manifests/tools.ts';
-import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 import type { ReplacementRequest } from '#cli/types/repository/repository.ts';
 import { PRIVATE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { runInstallStep, explainReleaseAgeHold } from '#cli/installers/steps.ts';
@@ -49,7 +49,7 @@ import {
 
 async function runUv(
     install: ToolInstall,
-    { runFolder, commandArguments, executable, credentials, configFile = join(runFolder, UV_SETTINGS_FILE) }: UvCommand,
+    { runFolder, commandArguments, executable, credentials, config = join(runFolder, UV_SETTINGS_FILE) }: UvCommand,
 ): Promise<SpawnResult> {
     const command = [
         executable,
@@ -58,8 +58,8 @@ async function runUv(
         runFolder,
         UV_FLAGS.directory,
         runFolder,
-        UV_FLAGS.configFile,
-        configFile,
+        UV_FLAGS.config,
+        config,
     ];
     const result = await runInstallStep(install, command, {
         cwd: runFolder,
@@ -183,7 +183,7 @@ export async function installPythonTools(install: ToolInstall, executable: strin
             commandArguments,
             executable,
             credentials,
-            configFile: join(settings.path, UV_SETTINGS_FILE),
+            config: join(settings.path, UV_SETTINGS_FILE),
         });
     }
     const count = listToolProjectPins(toolConfigurations).python.length;
@@ -320,7 +320,7 @@ export function buildPythonInstall(configurations: Configuration[]): GeneratedFi
     return [
         {
             path: GSPOT_PATHS.pythonProject,
-            content: stringify({ project }, CONFIG_FILE_TOML_FORMAT),
+            content: stringify({ project }, CONFIG_TOML_FORMAT),
         },
     ];
 }

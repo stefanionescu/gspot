@@ -11,7 +11,7 @@ import {
     CHECK_RUNS,
     CHECK_NEEDS,
     CHECK_CWD_VALUES,
-    SHIPPED_CONFIG_FILES_FOLDER,
+    SHIPPED_CONFIG_FOLDER,
 } from '#cli/config/manifests/names.ts';
 import {
     levelSchema,
@@ -58,7 +58,7 @@ const consumerNamesSchema = z
     .transform((names) => (typeof names === 'string' ? [names] : names))
     .default([]);
 
-const configFileSchema = z
+const configSchema = z
     .strictObject({
         level: levelSchema.optional(),
         target: z.string(),
@@ -71,17 +71,17 @@ const configFileSchema = z
         rule_dependencies: z.record(z.string().min(1), z.string().min(1).array().min(1)).optional(),
         paths_setting: z.string().min(1).optional(),
     })
-    .transform((configFile) => {
-        if (configFile.pointer?.folders !== undefined)
+    .transform((config) => {
+        if (config.pointer?.folders !== undefined)
             return {
-                ...configFile,
-                file: configFile.target,
-                pointer: { ...configFile.pointer, folders: configFile.pointer.folders },
+                ...config,
+                file: config.target,
+                pointer: { ...config.pointer, folders: config.pointer.folders },
             };
         return {
-            ...configFile,
-            file: configFile.target,
-            source: posix.join(SHIPPED_CONFIG_FILES_FOLDER, configFile.source ?? configFile.target),
+            ...config,
+            file: config.target,
+            source: posix.join(SHIPPED_CONFIG_FOLDER, config.source ?? config.target),
         };
     });
 
@@ -194,7 +194,7 @@ export const manifestSchema = z
         detect: detectionSchema.optional(),
         files: filesSchema.prefault({}),
         tool: manifestToolSchema.array().default([]),
-        config_file: configFileSchema.array().default([]),
+        config_file: configSchema.array().default([]),
         check: checkSchema.array().default([]),
         naming: z
             .strictObject({
@@ -218,19 +218,19 @@ export const manifestSchema = z
             .default({}),
         ruff: z.strictObject({ basic: stringsSchema, all: stringsSchema }).prefault({}),
     })
-    .transform(({ tool, config_file: configFiles, check, detect, ...rest }) => ({
+    .transform(({ tool, config_file: configs, check, detect, ...rest }) => ({
         ...rest,
         detect: detect ?? detectionSchema.strip().parse(rest.files),
         tools: tool,
-        configFiles: configFiles.map((configFile) => ({
-            ...configFile,
-            target: configFile.root
-                ? configFile.file
+        configs: configs.map((config) => ({
+            ...config,
+            target: config.root
+                ? config.file
                 : posix.join(
                       GSPOT_PATHS.configurations,
                       rest.configuration.group,
                       rest.configuration.name,
-                      configFile.file,
+                      config.file,
                   ),
         })),
         checks: check.map(({ name, ...fields }) => ({ ...fields, id: `${rest.configuration.name}/${name}` })),

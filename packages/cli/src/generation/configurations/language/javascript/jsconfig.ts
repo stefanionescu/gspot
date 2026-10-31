@@ -6,9 +6,9 @@ import { JSCONFIG_FILE } from '#cli/config/files/names.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers/projects.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { convertToGlobs, buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
@@ -23,7 +23,7 @@ import {
 } from '#cli/config/generation/configurations/language/javascript/javascript.ts';
 
 function buildExtendedExclude(
-    planned: PlannedConfigFile,
+    planned: PlannedConfig,
     paths: { prefix: string; owner: string; ignoredGlobs: string[] },
     authored: ParsedTsconfig,
 ): string[] {
@@ -47,7 +47,7 @@ function buildExtendedExclude(
     return [...paths.ignoredGlobs, ...inherited];
 }
 
-function listTrackedDeclarationFiles(planned: PlannedConfigFile, authored: ParsedTsconfig): string[] {
+function listTrackedDeclarationFiles(planned: PlannedConfig, authored: ParsedTsconfig): string[] {
     const { root } = planned.session;
     const tracked = new Set(planned.session.repository.files.map((file) => file.path));
     const generatedFolder = join(root, dirname(planned.targetPath));
@@ -60,7 +60,7 @@ function listTrackedDeclarationFiles(planned: PlannedConfigFile, authored: Parse
         .map((path) => convertToPosixPath(relative(generatedFolder, path)));
 }
 
-function hasExtensionlessSources(planned: PlannedConfigFile, importStyle: string): boolean {
+function hasExtensionlessSources(planned: PlannedConfig, importStyle: string): boolean {
     const { files } = planned.session.repository;
     const scope = planned.scope.path;
     return (
@@ -79,7 +79,7 @@ Build jsconfig.json: the JavaScript type-checking project and its scoped source 
 
 @param planned the config file to build.
 */
-export function buildJsconfigFile(planned: PlannedConfigFile): string {
+export function buildJsconfigFile(planned: PlannedConfig): string {
     const { root, cache } = planned.session;
     const { targetPath: target } = planned;
     const scope = planned.scope.path;

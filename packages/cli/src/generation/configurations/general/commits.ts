@@ -1,7 +1,7 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import { refuseIdleRuleOptions } from '#cli/generation/rule-options.ts';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { COMMITLINT_CHECK } from '#cli/config/checks/general/general.ts';
 
 import {
@@ -15,7 +15,7 @@ Build commitlint.json: the Commitlint rules with the allowed types and scopes of
 
 @param planned the config file to build.
 */
-export function buildCommitlintFile(planned: PlannedConfigFile): string {
+export function buildCommitlintFile(planned: PlannedConfig): string {
     const { scopes } = planned.session;
 
     const commitlint = getTable(planned.scope.settings, 'tools.commitlint');

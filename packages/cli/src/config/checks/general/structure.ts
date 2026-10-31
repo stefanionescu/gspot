@@ -12,7 +12,7 @@ export const READ_OUTSIDE_READER_RULE = 'read-outside-reader';
 
 export const FILE_FOLDER_CLASH_RULE = 'file-folder-clash';
 
-export const CONFIG_FILE_PATTERNS = ['**/*.config.*', '**/.*rc.*', '**/Package.swift', '**/setup.py'] as const;
+export const CONFIG_PATTERNS = ['**/*.config.*', '**/.*rc.*', '**/Package.swift', '**/setup.py'] as const;
 
 export const IMPORT_RULE_EXTENSIONS = [
     '.ts',

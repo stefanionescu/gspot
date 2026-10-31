@@ -5,8 +5,8 @@ import { CLEAN_SWIFT } from '#tests/config/swift.ts';
 import { openSession } from '#cli/planning/session.ts';
 import type { SwiftlintOutput } from '#tests/types/swift.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/checks/infrastructure/infrastructure.ts';
 import { SWIFT_PROJECT_SETTINGS } from '#tests/config/generation/configurations/language/language.ts';
 
@@ -21,12 +21,12 @@ test("SwiftFormat reads each scope's Swift version from Package.swift", async ()
     });
     const session = await openSession(sandbox.path);
     const outputs = buildGeneratedFiles(session).files;
-    expect(outputs.find((file) => file.path === getConfigFilePath(session, 'swiftformat'))?.content).toContain(
+    expect(outputs.find((file) => file.path === getConfigPath(session, 'swiftformat'))?.content).toContain(
         '--swiftversion 5.9\n',
     );
-    expect(
-        outputs.find((file) => file.path === getConfigFilePath(session, 'swiftformat', 'nested'))?.content,
-    ).toContain('--swiftversion 6.3.2\n');
+    expect(outputs.find((file) => file.path === getConfigPath(session, 'swiftformat', 'nested'))?.content).toContain(
+        '--swiftversion 6.3.2\n',
+    );
 });
 
 test('SwiftFormat uses the Xcode project you choose in each scope', async () => {
@@ -45,12 +45,12 @@ test('SwiftFormat uses the Xcode project you choose in each scope', async () => 
     await using sandbox = await testdir(files);
     const session = await openSession(sandbox.path);
     const outputs = buildGeneratedFiles(session).files;
-    expect(outputs.find((file) => file.path === getConfigFilePath(session, 'swiftformat'))?.content).toContain(
+    expect(outputs.find((file) => file.path === getConfigPath(session, 'swiftformat'))?.content).toContain(
         '--swiftversion 6.0\n',
     );
-    expect(
-        outputs.find((file) => file.path === getConfigFilePath(session, 'swiftformat', 'nested'))?.content,
-    ).toContain('--swiftversion 5.5\n');
+    expect(outputs.find((file) => file.path === getConfigPath(session, 'swiftformat', 'nested'))?.content).toContain(
+        '--swiftversion 5.5\n',
+    );
     expect(outputs.map(({ path }) => path).filter((path) => path.includes('disabled'))).toStrictEqual([]);
 });
 
@@ -66,10 +66,10 @@ test.each(['lf', 'crlf'] as const)('SwiftFormat writes the %s line ending you se
 
     const session = await openSession(sandbox.path);
     const files = buildGeneratedFiles(session).files;
-    expect(files.find((file) => file.path === getConfigFilePath(session, 'swiftformat'))!.content).toContain(
+    expect(files.find((file) => file.path === getConfigPath(session, 'swiftformat'))!.content).toContain(
         `--linebreaks ${ending}\n`,
     );
-    expect(files.find((file) => file.path === getConfigFilePath(session, 'swiftformat', 'child'))!.content).toContain(
+    expect(files.find((file) => file.path === getConfigPath(session, 'swiftformat', 'child'))!.content).toContain(
         `--linebreaks ${ending === 'lf' ? 'crlf' : 'lf'}\n`,
     );
 });
@@ -86,7 +86,7 @@ test.each(['basic', 'all'] as const)(
         });
         const session = await openSession(sandbox.path);
         const text = buildGeneratedFiles(session).files.find(
-            (file) => file.path === getConfigFilePath(session, 'swiftlint'),
+            (file) => file.path === getConfigPath(session, 'swiftlint'),
         )!.content;
         const document = parse(text) as SwiftlintOutput;
         expect(document.function_body_length).toStrictEqual(level === 'all' ? { warning: 17, error: 17 } : undefined);

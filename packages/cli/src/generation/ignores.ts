@@ -8,7 +8,7 @@ import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { listLinkFilePaths } from '#cli/generation/links.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
-import { listOwnedConfigFiles } from '#cli/generation/selection.ts';
+import { listOwnedConfigs } from '#cli/generation/selection.ts';
 import type { IgnoreSection } from '#cli/types/generation/files.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { isMarkdownlintShared } from '#cli/generation/configurations/language/markdown.ts';
@@ -29,17 +29,14 @@ List the paths outside .gspot/ that a run writes: the root targets and link file
 @returns the paths, each from the repository root with a leading slash.
 */
 export function listWrittenPaths(session: Session): string[] {
-    const configFiles = listOwnedConfigFiles(session);
-    const paths = configFiles.flatMap((owned) => {
-        const { configFile, owner } = owned;
+    const configs = listOwnedConfigs(session);
+    const paths = configs.flatMap((owned) => {
+        const { config, owner } = owned;
         const sourceTargets =
-            configFile.source === undefined || configFile.target.startsWith(`${GSPOT_FOLDER}/`)
+            config.source === undefined || config.target.startsWith(`${GSPOT_FOLDER}/`)
                 ? []
-                : [configFile.per_scope ? joinScope(owner.scope.path, configFile.target) : configFile.target];
-        return [
-            ...sourceTargets,
-            ...(isMarkdownlintShared(owned, configFiles) ? [] : listLinkFilePaths(owner, configFile)),
-        ];
+                : [config.per_scope ? joinScope(owner.scope.path, config.target) : config.target];
+        return [...sourceTargets, ...(isMarkdownlintShared(owned, configs) ? [] : listLinkFilePaths(owner, config))];
     });
     if (session.settings.ci?.enabled === true)
         paths.push(session.settings.ci.provider === 'github' ? GITHUB_WORKFLOW : GITLAB_WORKFLOW);
@@ -64,7 +61,7 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
             ),
         ),
     ];
-    const configFiles = listWrittenPaths(session);
+    const configs = listWrittenPaths(session);
     return [
         {
             key: 'build',
@@ -77,7 +74,7 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
                 ...folders.filter((folder) => BUILD_OUTPUT_FOLDERS.has(folder)).map((folder) => `${folder}/`),
             ],
         },
-        { key: 'gspot', title: IGNORE_SECTION_TITLES.gspot, patterns: [...GSPOT_FOLDER_PATTERNS, ...configFiles] },
+        { key: 'gspot', title: IGNORE_SECTION_TITLES.gspot, patterns: [...GSPOT_FOLDER_PATTERNS, ...configs] },
         {
             key: 'generators',
             title: IGNORE_SECTION_TITLES.generators,

@@ -8,7 +8,7 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { getConfigFilePath, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
+import { getConfigPath, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 import {
     LOCAL_PLUGIN,
@@ -38,7 +38,7 @@ test('a scope plugin reaches its scope, and an inherited root plugin writes one 
         ),
     ).toStrictEqual(SCOPE_PLUGIN_FINDINGS);
     const session = await openSession(sandbox.path);
-    const generated = await readFile(join(sandbox.path, getConfigFilePath(session, 'eslint')), 'utf8');
+    const generated = await readFile(join(sandbox.path, getConfigPath(session, 'eslint')), 'utf8');
     expect(generated.matchAll(/"local\/no-forbidden"\s*:/gu).toArray()).toHaveLength(1);
     expect(generated.matchAll(/"scoped\/no-forbidden"\s*:/gu).toArray()).toHaveLength(1);
 });

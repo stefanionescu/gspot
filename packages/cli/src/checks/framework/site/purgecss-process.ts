@@ -9,7 +9,7 @@ const api = (await import(pathToFileURL(createRequire(executable).resolve(PURGEC
     PurgeCSS: PurgecssConstructor;
 };
 const request = JSON.parse(await text(process.stdin)) as PurgecssRequest;
-const options = (await import(pathToFileURL(request.configFile).href)) as Record<string, unknown>;
+const options = (await import(pathToFileURL(request.config).href)) as Record<string, unknown>;
 const results = await new api.PurgeCSS().purge({
     ...options,
     css: request.css,

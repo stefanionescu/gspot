@@ -8,7 +8,7 @@ import { openSession } from '#cli/planning/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { getManifestTarget, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
+import { getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 const { default: stylelint } = (await import(Bun.resolveSync('stylelint', toolModules))) as {
     default: typeof stylelintModule;
@@ -23,7 +23,7 @@ test.each(['vue', 'astro'])('a CSS-only scope checks properties inside a %s comp
     });
     const session = await openSession(sandbox.path);
     const generated = buildGeneratedFiles(session).files.find(
-        ({ path: file }) => file === getConfigFilePath(session, 'stylelint', ''),
+        ({ path: file }) => file === getConfigPath(session, 'stylelint', ''),
     )!;
     const config = JSON.parse(generated.content) as Config;
     const syntax = config.overrides?.find(({ files }) => files.includes(`**/*.${extension}`))?.customSyntax;
@@ -54,7 +54,7 @@ test("your Stylelint rule options reach each scope's file", async () => {
     const generated = buildGeneratedFiles(session);
     expect(generated.files.filter(({ path }) => path.endsWith('/stylelint.json'))).toHaveLength(1);
     for (const scope of ['', 'child']) {
-        const target = getConfigFilePath(session, 'stylelint', scope);
+        const target = getConfigPath(session, 'stylelint', scope);
         const file = generated.files.find(({ path }) => path === target)!;
         const config = JSON.parse(file.content) as Config;
         expect(config.rules!['color-hex-length']).toBe('long');

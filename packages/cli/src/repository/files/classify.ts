@@ -7,9 +7,9 @@ import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import type { Config, Configuration } from '#cli/types/manifests.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
 import { GSPOT_PATHS, GSPOT_FOLDER } from '#cli/config/files/gspot.ts';
-import type { ConfigFile, Configuration } from '#cli/types/manifests.ts';
 
 import type {
     FileTags,
@@ -150,7 +150,7 @@ function tagTextFile(tags: Set<string>, firstLine: string): FileTags {
     return { tags: [...tags], isBinary: false };
 }
 
-function listLinkFiles(path: string, files: ConfigFile[]): string[] {
+function listLinkFiles(path: string, files: Config[]): string[] {
     return files.flatMap((file) => {
         const pointer = file.pointer;
         if (pointer === undefined) return [];
@@ -242,8 +242,8 @@ export function listConfigurationGeneratedPaths(selected: Map<string, Configurat
     return selected
         .entries()
         .flatMap(([path, configurations]) =>
-            configurations.flatMap(({ generated, name, configFiles }) => {
-                const paths = [...generated.map((file) => posix.join(path, file)), ...listLinkFiles(path, configFiles)];
+            configurations.flatMap(({ generated, name, configs }) => {
+                const paths = [...generated.map((file) => posix.join(path, file)), ...listLinkFiles(path, configs)];
                 return paths.length === 0
                     ? []
                     : {

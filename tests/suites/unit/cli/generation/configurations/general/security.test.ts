@@ -8,7 +8,7 @@ import { LEVELS } from '#cli/config/manifests/names.ts';
 import type { SemgrepRuleFile } from '#tests/types/tools.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getManifestTarget, getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
+import { getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 test('a language choice brings its security rules without selecting security', async () => {
     await using sandbox = await testdir({
@@ -87,7 +87,7 @@ test('JWT rules are written only where the nearest package.json has jsonwebtoken
     const session = await openSession(sandbox.path);
     const output = buildGeneratedFiles(session);
     for (const scope of ['', 'jwt', 'jwt/child', 'other']) {
-        const target = getConfigFilePath(session, 'semgrep', scope);
+        const target = getConfigPath(session, 'semgrep', scope);
         const text = output.files.find((file) => file.path === target)!.content;
         const ids = (parseDocument(text).toJS() as SemgrepRuleFile).rules.map(({ id }) => id);
         expect(

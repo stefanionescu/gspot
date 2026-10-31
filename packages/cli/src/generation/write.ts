@@ -76,7 +76,7 @@ function deleteUnusedToolFolders(writer: Files, paths: ReadonlySet<string>, gene
         [
             INSTALLED_TOOL_FOLDERS.vale,
             generated.files.some(
-                (file) => file.path === GSPOT_PATHS.valeConfigFile && file.content.includes('Packages = '),
+                (file) => file.path === GSPOT_PATHS.valeConfig && file.content.includes('Packages = '),
             ),
         ],
     ] as const) {

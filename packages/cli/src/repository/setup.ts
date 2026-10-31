@@ -9,8 +9,8 @@ import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/manifests/names.ts';
+import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { join, dirname, resolve, basename, relative } from 'node:path';
-import { listConflictingConfigFiles } from '#cli/repository/conflicts.ts';
 import { EXECUTABLE_BITS, MARKDOWN_EXTENSION } from '#cli/config/repository/files.ts';
 import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository/repository.ts';
 import { statSync, lstatSync, readdirSync, realpathSync, readFileSync } from 'node:fs';
@@ -230,18 +230,18 @@ export async function readRepositorySetup(
         (a, b) => Number(a === PACKAGE_JSON) - Number(b === PACKAGE_JSON),
     );
 
-    const conflictingConfigFiles = listConflictingConfigFiles(root, files, configurationsByName.values());
+    const conflictingConfigs = listConflictingConfigs(root, files, configurationsByName.values());
     const { hooks } = await readHooks({ root, hasGit: repository.hasGit });
     return {
-        conflictingConfigFiles: new Map(
-            conflictingConfigFiles.map((conflictingConfigFile) => [
+        conflictingConfigs: new Map(
+            conflictingConfigs.map((conflictingConfig) => [
                 JSON.stringify([
-                    conflictingConfigFile.tool,
-                    conflictingConfigFile.path,
-                    conflictingConfigFile.table,
-                    conflictingConfigFile.key,
+                    conflictingConfig.tool,
+                    conflictingConfig.path,
+                    conflictingConfig.table,
+                    conflictingConfig.key,
                 ]),
-                conflictingConfigFile,
+                conflictingConfig,
             ]),
         )
             .values()

@@ -2,10 +2,10 @@ import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { LOCKFILES } from '#cli/config/files/lockfiles.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import type { ManagedKeys } from '#cli/types/repository/repository.ts';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
 
 import {
     SCANNER_KEY,
@@ -19,7 +19,7 @@ Build osv-scanner.toml: a note on why the file exists, and the package ignores a
 
 @param planned the config file to build.
 */
-export function buildOsvScannerFile(planned: PlannedConfigFile): string {
+export function buildOsvScannerFile(planned: PlannedConfig): string {
     const ignores = listIgnores(planned.scope.settings, OSV_SCANNER_CHECK).filter(
         (ignore) => ignore.rule !== undefined && ignore.paths.length === 0,
     );
@@ -29,7 +29,7 @@ export function buildOsvScannerFile(planned: PlannedConfigFile): string {
     }));
     return [
         ...OSV_SCANNER_NOTES,
-        stringifyToml(ignores.length === 0 ? {} : { IgnoredVulns: vulnerabilities }, CONFIG_FILE_TOML_FORMAT),
+        stringifyToml(ignores.length === 0 ? {} : { IgnoredVulns: vulnerabilities }, CONFIG_TOML_FORMAT),
     ].join('\n');
 }
 

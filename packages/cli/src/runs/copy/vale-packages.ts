@@ -22,14 +22,14 @@ Links the installed Vale packages into the copy when the copy keeps the Vale con
 @param paths the files of the copy.
 */
 export function copyValePackages(root: string, copyRoot: string, paths: string[]): void {
-    const valeConfigFiles = paths.filter(
-        (path) => path === GSPOT_PATHS.valeConfigFile || path.endsWith(`/${GSPOT_PATHS.valeConfigFile}`),
+    const valeConfigs = paths.filter(
+        (path) => path === GSPOT_PATHS.valeConfig || path.endsWith(`/${GSPOT_PATHS.valeConfig}`),
     );
     const installed = openFiles(root);
     const destination = openFiles(resolve(copyRoot));
     const source = join(root, GSPOT_PATHS.valePackages);
     if (statSync(source, { throwIfNoEntry: false })?.isDirectory() !== true) return;
-    for (const config of valeConfigFiles) assertValeMatches(installed, destination, config);
+    for (const config of valeConfigs) assertValeMatches(installed, destination, config);
     const target = preparePath({ root: realpathSync(resolve(copyRoot)) }, GSPOT_PATHS.valePackages);
     symlinkSync(source, target, process.platform === 'win32' ? 'junction' : 'dir');
 }

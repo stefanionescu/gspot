@@ -15,7 +15,7 @@ export type InitScan = {
     repositorySetup: RepositorySetup;
     configurations: InitConfigurations;
     everySelected: Configuration[];
-    conflicts: ConflictingConfigFiles;
+    conflicts: ConflictingConfigs;
 };
 
 export type InitPlan = {
@@ -29,7 +29,7 @@ export type InitPlan = {
     lintFolders: InitFileRow[];
 };
 
-export type ConflictingConfigFiles = {
+export type ConflictingConfigs = {
     changed: InitFileRow[];
     reviewed: Map<string, FileContents | undefined>;
     deleted: InitFileRow[];

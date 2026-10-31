@@ -33,8 +33,8 @@ import type { InitJson, InitScan, InitOptions, InitPlanning, DetectionSummary } 
 
 import {
     assertFilesCommitted,
-    readConflictingConfigFiles,
-    deleteConflictingConfigFiles,
+    readConflictingConfigs,
+    deleteConflictingConfigs,
 } from '#cli/commands/init/conflicts.ts';
 import {
     YES_FLAG,
@@ -156,9 +156,9 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
     const everySelected = listSelectedConfigurations(session.scopes);
     const applicable = session.toolConfigurations;
     const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
-    const detectedTools = [
-        ...new Set(repositorySetup.conflictingConfigFiles.map((configFile) => configFile.tool)),
-    ].toSorted((a, b) => compareText(a, b));
+    const detectedTools = [...new Set(repositorySetup.conflictingConfigs.map((config) => config.tool))].toSorted(
+        (a, b) => compareText(a, b),
+    );
     const detection: DetectionSummary = {
         files: repository.files,
         detected: initConfigurations.detected,
@@ -170,7 +170,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         hasGit: repository.hasGit,
     };
     const generated = buildGeneratedFiles(session);
-    const conflicts = readConflictingConfigFiles(root, repositorySetup, tools, generated.managedKeys);
+    const conflicts = readConflictingConfigs(root, repositorySetup, tools, generated.managedKeys);
     assertFilesCommitted(
         root,
         conflicts.deleted.map(({ path }) => path),
@@ -201,7 +201,7 @@ async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<App
     const { session, generated } = initPlan;
     writeSettings(writer, initPlan.settingsText, initPlan.reviewed.get(SETTINGS_FILE));
     const applied = await writeGeneratedFiles(session, generated, writer, { reviewed: initPlan.reviewed });
-    const kept = deleteConflictingConfigFiles(writer, initPlan.plan.delete, initPlan.reviewed);
+    const kept = deleteConflictingConfigs(writer, initPlan.plan.delete, initPlan.reviewed);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
     return applied;
 }

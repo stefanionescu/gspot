@@ -4,23 +4,23 @@ import type { Session } from '#cli/types/session.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { ROOT_LABEL } from '#tests/config/messages.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
-import { buildConfigFiles } from '#cli/generation/configs.ts';
-import { extractConfigFileName } from '#cli/manifests/tools.ts';
+import { buildConfigs } from '#cli/generation/configs.ts';
+import { extractConfigName } from '#cli/manifests/tools.ts';
+import { getConfigTarget } from '#cli/generation/selection.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { getConfigFileTarget } from '#cli/generation/selection.ts';
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 
 /**
 Find the generated config file for a tool and scope.
 */
-export function getConfigFilePath(session: Session, tool: string, scopePath = ''): string {
+export function getConfigPath(session: Session, tool: string, scopePath = ''): string {
     const declaration = session.scopes
         .find((scope) => scope.path === scopePath)
-        ?.configurations.flatMap((configuration) => configuration.configFiles)
-        .find((file) => extractConfigFileName(file.file) === tool);
+        ?.configurations.flatMap((configuration) => configuration.configs)
+        .find((file) => extractConfigName(file.file) === tool);
     if (declaration === undefined)
         throw new Error(`The sandbox generates no ${tool} file for ${scopePath || ROOT_LABEL}.`);
-    return getConfigFileTarget(scopePath, declaration, buildConfigFiles(session));
+    return getConfigTarget(scopePath, declaration, buildConfigs(session));
 }
 
 /**
@@ -29,7 +29,7 @@ Find where gspot writes the root copy of a config file that a configuration ship
 export function getManifestTarget(configuration: string, file: string): string {
     const target = readConfigurations()
         .get(configuration)
-        ?.configFiles.find((configFile) => configFile.file === file)?.target;
+        ?.configs.find((config) => config.file === file)?.target;
     if (target === undefined) throw new Error(`The ${configuration} configuration ships no ${file}.`);
     return target;
 }

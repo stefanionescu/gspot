@@ -5,7 +5,7 @@ import { findValueAt } from '#cli/system/tables.ts';
 import { openSession } from '#cli/planning/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getManifestTarget, getConfigFilePath, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
+import { getConfigPath, getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 import {
     CHILD_MIGRATIONS,
@@ -32,7 +32,7 @@ test('the Squawk config file of a Postgres child scope excludes the frozen migra
         'gspot.toml': buildSandboxSettings([], { level: 'all', tables: CHILD_POSTGRES_SCOPE_TABLES }),
     });
     const session = await openSession(sandbox.path);
-    const path = getConfigFilePath(session, 'squawk', 'app');
+    const path = getConfigPath(session, 'squawk', 'app');
     const text = buildGeneratedFiles(session).files.find((file) => file.path === path)!.content;
     expect(findValueAt(parse(text), ['excluded_paths'])).toStrictEqual([
         'app/migrations/V2_first.sql',

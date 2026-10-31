@@ -8,7 +8,7 @@ import { listPrettierPlugins } from '#cli/planning/tools.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { includeFolderContents } from '#cli/system/matchers.ts';
-import { type PlannedConfigFile } from '#cli/types/generation/files.ts';
+import { type PlannedConfig } from '#cli/types/generation/files.ts';
 import { type Settings, type WrittenFormat } from '#cli/types/settings/settings.ts';
 import { keepFirstPatterns, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 import { type ScopeFormat, type FormatOverride, type PrettierPlugin } from '#cli/types/generation/formatting.ts';
@@ -42,7 +42,7 @@ Build .editorconfig: the EditorConfig sections of this repository.
 
 @param planned the config file to build.
 */
-export function buildEditorconfigFile(planned: PlannedConfigFile): string {
+export function buildEditorconfigFile(planned: PlannedConfig): string {
     const { format } = planned.scope.settings.tables;
     const settings = planned.session.settings;
 
@@ -144,7 +144,7 @@ Build prettier.json, which the root link file loads: the formatter options, plug
 
 @param planned the config file to build.
 */
-export function buildPrettierFile(planned: PlannedConfigFile): string {
+export function buildPrettierFile(planned: PlannedConfig): string {
     const settings = planned.session.settings;
     const format = planned.scope.settings.tables.format;
     const plugins = listPrettierPlugins(planned.session.scopes.flatMap(({ configurations }) => configurations))
@@ -171,7 +171,7 @@ Build .prettierignore: the ignored paths in the shared section order, with the w
 
 @param planned the config file to build.
 */
-export function buildPrettierignoreFile(planned: PlannedConfigFile): string {
+export function buildPrettierignoreFile(planned: PlannedConfig): string {
     const ordered = [
         ...buildIgnoreSections(planned.session),
         ...listCheckIgnoreSections(planned.scope.settings, PRETTIER_CHECK),

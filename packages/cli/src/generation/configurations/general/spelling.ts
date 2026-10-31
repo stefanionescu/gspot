@@ -1,8 +1,8 @@
 import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
-import type { IgnoreSection, PlannedConfigFile } from '#cli/types/generation/files.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
+import type { IgnoreSection, PlannedConfig } from '#cli/types/generation/files.ts';
 
 import {
     convertToGlobs,
@@ -20,7 +20,7 @@ import {
     TYPOS_IGNORE_PATTERNS,
 } from '#cli/config/generation/configurations/general.ts';
 
-function buildTyposSections(planned: PlannedConfigFile): IgnoreSection[] {
+function buildTyposSections(planned: PlannedConfig): IgnoreSection[] {
     const sections = [
         ...buildIgnoreSections(planned.session),
         ...listCheckIgnoreSections(planned.scope.settings, TYPOS_CHECK),
@@ -68,7 +68,7 @@ Build typos.toml: the spelling dictionaries and reason-grouped exclusions as TOM
 
 @param planned the config file to build.
 */
-export function buildTyposFile(planned: PlannedConfigFile): string {
+export function buildTyposFile(planned: PlannedConfig): string {
     const allowed = Object.fromEntries<string>(
         Object.keys(getTable(planned.scope.settings, 'spelling').allowed_words)
             .toSorted(compareText)
@@ -82,7 +82,7 @@ export function buildTyposFile(planned: PlannedConfigFile): string {
                 'extend-words': allowed,
             },
         },
-        CONFIG_FILE_TOML_FORMAT,
+        CONFIG_TOML_FORMAT,
     );
     return [text, '[files]', serializeIgnoredGlobs(buildTyposSections(planned))].join('\n');
 }

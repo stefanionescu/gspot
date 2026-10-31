@@ -1,6 +1,6 @@
 import { stringify as stringifyYaml } from 'yaml';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 
 import {
     V8R_TABLE,
@@ -17,7 +17,7 @@ Build v8r.yml: the v8r schema catalog, including the configured file selectors.
 
 @param planned the config file to build.
 */
-export function buildV8rFile(planned: PlannedConfigFile): string {
+export function buildV8rFile(planned: PlannedConfig): string {
     const schemas = getTable(planned.scope.settings, V8R_TABLE).schema.map(({ paths, url }) => ({
         name: url,
         fileMatch: paths,
@@ -37,7 +37,7 @@ Build yamllint.yml: the YAML lint rules with the configured indentation and disa
 
 @param planned the config file to build.
 */
-export function buildYamllintFile(planned: PlannedConfigFile): string {
+export function buildYamllintFile(planned: PlannedConfig): string {
     const rules: Record<string, unknown> = {
         ...Object.fromEntries(YAMLLINT_RULES.map((rule) => [rule, {}])),
         ...YAMLLINT_RULE_OPTIONS,

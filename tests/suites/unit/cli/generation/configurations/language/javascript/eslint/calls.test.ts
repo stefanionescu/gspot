@@ -5,12 +5,12 @@ import { openSession } from '#cli/planning/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { CONFIG_FILE_PROJECT } from '#tests/config/generation/configs.ts';
+import { CONFIG_PROJECT } from '#tests/config/generation/configs.ts';
 
 test('generated ESLint modules hold static imports and calls without executable expressions', async () => {
     const configurations = [...readConfigurations().keys()];
     await using sandbox = await testdir({
-        ...CONFIG_FILE_PROJECT,
+        ...CONFIG_PROJECT,
         'gspot.toml': buildSandboxSettings(configurations, { level: 'all' }),
     });
     const files = buildGeneratedFiles(await openSession(sandbox.path)).files.filter((file) =>

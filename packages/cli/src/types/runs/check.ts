@@ -4,7 +4,7 @@ import type { SkipCause, PlannedCheck } from '#cli/types/planning.ts';
 export type CheckStatus = 'passed' | 'failed' | 'missing' | 'skipped' | 'error';
 
 export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun; check?: never }) &
-    Pick<CheckRunOptions, 'listFileArguments' | 'listConfigFiles'>;
+    Pick<CheckRunOptions, 'listFileArguments' | 'listConfigs'>;
 
 type CheckRun = (
     session: CheckSession,
@@ -17,7 +17,7 @@ export type CheckRunOptions = {
     command?: string[];
     copyRoot?: string;
     listFileArguments?: ((session: Session, planned: PlannedCheck) => string[]) | undefined;
-    listConfigFiles?: ((session: Session, planned: PlannedCheck) => string[]) | undefined;
+    listConfigs?: ((session: Session, planned: PlannedCheck) => string[]) | undefined;
 };
 
 export type BuiltInCheckResult = { findings: CheckFinding[]; files: string[] };

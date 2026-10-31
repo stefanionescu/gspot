@@ -4,10 +4,10 @@ import { rm, writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/planning/session.ts';
+import { type KnipConfig } from '#tests/types/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { type KnipConfigFile } from '#tests/types/tools.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/typescript.ts';
@@ -165,7 +165,7 @@ test("Knip gets each scope's test_files as entry points without sibling leaks", 
     const content = buildGeneratedFiles(session).files.find(
         ({ path }) => path === getManifestTarget('javascript', 'knip.json'),
     )!.content;
-    const { workspaces } = JSON.parse(content) as KnipConfigFile;
+    const { workspaces } = JSON.parse(content) as KnipConfig;
     const testGlobs = new Set(['**/tests/**', 'specifications/**', 'verification/**', 'sibling-tests/**']);
     expect(
         Object.fromEntries(
@@ -186,14 +186,14 @@ test('Knip workspaces come from package workspaces, your entries and the configu
     });
     const knip = JSON.parse(
         await buildGeneratedFile(settings, getManifestTarget('javascript', 'knip.json'), files),
-    ) as KnipConfigFile;
+    ) as KnipConfig;
     const withoutEntrypoints = JSON.parse(
         await buildGeneratedFile(
             buildSandboxSettings(['javascript']),
             getManifestTarget('javascript', 'knip.json'),
             files,
         ),
-    ) as KnipConfigFile;
+    ) as KnipConfig;
     const namedFiles = new Set(['cli.js', 'serve.js', 'eslint.config.mjs']);
     const cases = [
         { generated: knip, expected: { '.': ['cli.js', 'eslint.config.mjs'], api: ['serve.js'], web: [] } },

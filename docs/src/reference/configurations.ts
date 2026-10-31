@@ -109,7 +109,7 @@ function listInstalledSections(configuration: Configuration): [string, string][]
                 ? ''
                 : SELF_INSTALL_LABEL),
     ]);
-    const targets = [...new Set(configuration.configFiles.map((configFile) => `\`${configFile.target}\``))];
+    const targets = [...new Set(configuration.configs.map((config) => `\`${config.target}\``))];
     const ignored = configuration.ignored_paths.map((path) => `\`${path}\``);
     return [
         [TOOLS_VERSIONS_HEADING, formatTable(['Tool', 'Version'], tools)],

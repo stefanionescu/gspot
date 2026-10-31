@@ -260,6 +260,6 @@ export async function runCheckCode(
     return (code?.run ?? runCommandCheck)(session, planned, {
         ...options,
         listFileArguments: code?.listFileArguments,
-        listConfigFiles: code?.listConfigFiles,
+        listConfigs: code?.listConfigs,
     });
 }

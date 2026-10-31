@@ -94,11 +94,11 @@ export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host)
     return undefined;
 }
 
-function findConfigFileSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
+function findConfigSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
     const tool = check.when?.config_file;
     if (tool === undefined) return undefined;
     const selected = scope.configurations.some((configuration) =>
-        configuration.configFiles.some(
+        configuration.configs.some(
             (file) =>
                 file.tool.includes(tool) &&
                 file.target.endsWith('.yml') &&
@@ -121,7 +121,7 @@ export function findSettingsSkip(settings: Settings, scope: Scope, check: Check)
     if (settings.level !== 'all' && check.level !== 'basic') return { cause: 'level', note: 'off at level basic' };
     const ignored = findIgnoreSkip(scope, check);
     if (ignored !== undefined) return ignored;
-    const ruleFiles = findConfigFileSkip(settings, scope, check);
+    const ruleFiles = findConfigSkip(settings, scope, check);
     if (ruleFiles !== undefined) return ruleFiles;
     const setting = findEmptySetting(scope, check);
     return setting === undefined ? undefined : { cause: 'setting', note: `needs the setting ${setting}` };

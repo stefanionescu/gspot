@@ -27,7 +27,7 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
     const path = 'sample.md';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['prose', 'markdown'], { tables: 'tool_timeout_seconds = 1\n' }),
-        [GSPOT_PATHS.valeConfigFile]: EMPTY_VALE_INI,
+        [GSPOT_PATHS.valeConfig]: EMPTY_VALE_INI,
         [path]: '# Example text\n',
     });
     using resources = new DisposableStack();
@@ -48,7 +48,7 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
     await using sandbox = await testdir({
         ...VALE_INSTALLED_FILES,
         'gspot.toml': buildSandboxSettings(['prose', 'typescript'], { level: 'all' }),
-        [GSPOT_PATHS.valeConfigFile]: EMPTY_VALE_INI,
+        [GSPOT_PATHS.valeConfig]: EMPTY_VALE_INI,
         'first.mts': '// First explanation.\n',
         'second.cts': '// Second explanation.\n',
     });
@@ -131,7 +131,7 @@ test('the Vale check fails before running Vale when the Vale packages are not in
         await testdir({ ...VALE_SANDBOX_FILES, 'gspot.toml': buildSandboxSettings(['prose', 'markdown']) }),
     );
     const session = await openFakeToolSession(sandbox.path, ['vale'], resources);
-    await rm(join(sandbox.path, GSPOT_PATHS.valeConfigFile));
+    await rm(join(sandbox.path, GSPOT_PATHS.valeConfig));
     using run = fakeCommands();
     const uninstalledError = await captureRejection(runSandboxCheck(session.root, 'prose/vale'));
     expect(uninstalledError.message).toBe('The Vale packages are not installed. Run gspot install.');

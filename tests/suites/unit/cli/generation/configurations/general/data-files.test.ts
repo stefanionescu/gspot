@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/planning/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { getConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { MAPPED_SCHEMAS, MAPPED_SCHEMA_RECORDS } from '#tests/config/generation/configurations/general.ts';
 
 test.each([true, false])(
@@ -20,9 +20,7 @@ test.each([true, false])(
         });
 
         const session = await openSession(sandbox.path);
-        const v8rFile = buildGeneratedFiles(session).files.find(
-            (file) => file.path === getConfigFilePath(session, 'v8r'),
-        )!;
+        const v8rFile = buildGeneratedFiles(session).files.find((file) => file.path === getConfigPath(session, 'v8r'))!;
         expect(parse(v8rFile.content)).toStrictEqual({
             ignoreErrors: true,
             customCatalog: {

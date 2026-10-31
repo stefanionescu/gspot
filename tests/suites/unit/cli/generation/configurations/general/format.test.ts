@@ -38,10 +38,10 @@ test('Prettier loads the selected plugin through the root link file', async () =
     });
     const generated = buildGeneratedFiles(await openSession(sandbox.path));
     await createFileTree(sandbox.path, Object.fromEntries(generated.files.map(({ path, content }) => [path, content])));
-    const configFile = JSON.parse(
+    const config = JSON.parse(
         generated.files.find(({ path }) => path === getManifestTarget('format', 'prettier.json'))!.content,
     ) as Options;
-    expect(configFile.plugins).toStrictEqual([`./${GSPOT_PATHS.nodeModules}/prettier-plugin-svelte/plugin.js`]);
+    expect(config.plugins).toStrictEqual([`./${GSPOT_PATHS.nodeModules}/prettier-plugin-svelte/plugin.js`]);
     const editorOptions = await prettier.resolveConfig(join(sandbox.path, 'source.svelte'), {
         config: join(sandbox.path, 'prettier.config.mjs'),
         useCache: false,

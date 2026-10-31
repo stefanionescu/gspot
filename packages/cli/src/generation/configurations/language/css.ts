@@ -1,8 +1,8 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import { refuseIdleRuleOptions } from '#cli/generation/rule-options.ts';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 
 import {
@@ -40,7 +40,7 @@ function buildComponentOverrides(tailwindFunctions: string[], picked: Record<str
 }
 
 function buildCssModulesOverrides(
-    planned: PlannedConfigFile,
+    planned: PlannedConfig,
     tailwindAtRules: readonly string[],
     picked: Record<string, unknown>,
     offRules: string[],
@@ -69,7 +69,7 @@ Build stylelint.json: the CSS lint presets and rules for this level.
 
 @param planned the config file to build.
 */
-export function buildStylelintFile(planned: PlannedConfigFile): string {
+export function buildStylelintFile(planned: PlannedConfig): string {
     const { scope } = planned;
     const { dependencyFiles } = planned.session.repository;
     const options = getTable(scope.settings, 'tools.stylelint');

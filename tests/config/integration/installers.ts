@@ -24,7 +24,7 @@ export const ZIP_FILE_OPTIONS = {
     executable: { os: 3, attrs: 0o10_0755 * 0x1_00_00 },
 } as const;
 
-export const AUTHORED_STYLE_PATH = `${dirname(GSPOT_PATHS.valeConfigFile)}/styles/Google/legacy.yml`;
+export const AUTHORED_STYLE_PATH = `${dirname(GSPOT_PATHS.valeConfig)}/styles/Google/legacy.yml`;
 
 export const AUTHORED_VALE_FILES = {
     files: { 'authored.txt': 'keep\n', [AUTHORED_STYLE_PATH]: 'authored legacy bytes\n' },

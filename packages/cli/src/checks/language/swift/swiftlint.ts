@@ -3,14 +3,14 @@ import { find } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { buildConfigs } from '#cli/generation/configs.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { type CheckFinding } from '#cli/types/runs/check.ts';
-import { buildConfigFiles } from '#cli/generation/configs.ts';
-import { getConfigFileTarget } from '#cli/generation/selection.ts';
+import { getConfigTarget } from '#cli/generation/selection.ts';
+import { getConfigPath } from '#cli/runs/command/placeholders.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import { planSwiftBuild } from '#cli/checks/language/swift/cache.ts';
-import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { runSwiftBuild, runCopiedTool } from '#cli/checks/language/swift/build.ts';
 
 import {
@@ -33,14 +33,8 @@ export async function checkSwiftlintAnalyze(session: CheckSession, planned: Plan
     const build = await runSwiftBuild(session, planned, plan);
     if (build.code !== 0)
         throw new GspotError('check', `Cannot analyze Swift because the build exited ${String(build.code)}.`);
-    const configFile = join(session.root, getConfigFilePath(session, planned, SWIFTLINT_TOOL));
-    const commandArguments = [
-        ...SWIFTLINT_ANALYZE_COMMAND,
-        SWIFTLINT_CONFIG_FLAG,
-        configFile,
-        COMPILER_LOG_FLAG,
-        plan.log,
-    ];
+    const config = join(session.root, getConfigPath(session, planned, SWIFTLINT_TOOL));
+    const commandArguments = [...SWIFTLINT_ANALYZE_COMMAND, SWIFTLINT_CONFIG_FLAG, config, COMPILER_LOG_FLAG, plan.log];
     return runCopiedTool(session, planned, {
         source: build.source,
         commandArguments,
@@ -56,14 +50,14 @@ Lists the SwiftLint files a copy keeps: the scope link file, the config file, an
 @param planned the scope files and config files.
 @returns the repository-relative paths, sorted.
 */
-export function listSwiftlintConfigFiles(session: Session, planned: PlannedCheck): string[] {
+export function listSwiftlintConfigs(session: Session, planned: PlannedCheck): string[] {
     const paths = [
         joinScope(planned.scope.path, SWIFTLINT_CONFIG_FILE),
         ...session.configurationsByName
             .values()
-            .flatMap((configuration) => configuration.configFiles)
-            .filter((configFile) => configFile.pointer?.path === SWIFTLINT_CONFIG_FILE)
-            .map((configFile) => getConfigFileTarget(planned.scope.path, configFile, buildConfigFiles(session))),
+            .flatMap((configuration) => configuration.configs)
+            .filter((config) => config.pointer?.path === SWIFTLINT_CONFIG_FILE)
+            .map((config) => getConfigTarget(planned.scope.path, config, buildConfigs(session))),
     ];
     for (const file of planned.files) {
         const folders = listEnclosingFolders(posix.dirname(file.path));

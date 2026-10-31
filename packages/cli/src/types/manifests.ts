@@ -13,9 +13,9 @@ export type RequirementWalk = {
 
 export type ParsedManifest = z.infer<typeof manifestSchema>;
 
-export type ConfigFile = ParsedManifest['configFiles'][number];
+export type Config = ParsedManifest['configs'][number];
 
-export type SourcedConfigFile = Extract<ConfigFile, { source: string }>;
+export type SourcedConfig = Extract<Config, { source: string }>;
 
 export type Check = Omit<z.infer<typeof checkSchema>, 'example' | 'name'> & {
     id: string;

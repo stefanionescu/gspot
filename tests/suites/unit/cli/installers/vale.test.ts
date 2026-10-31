@@ -23,7 +23,7 @@ test.each([...LEVELS])(
     async (level) => {
         await using sandbox = await testdir();
         expect(hasValePackages(sandbox.path, level)).toBe(false);
-        await createFileTree(sandbox.path, { [GSPOT_PATHS.valeConfigFile]: VALE_PACKAGES_INI });
+        await createFileTree(sandbox.path, { [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI });
         expect(hasValePackages(sandbox.path, level)).toBe(level === 'basic');
         for (const folder of VALE_PACKAGE_FOLDERS)
             await createFileTree(sandbox.path, { [`${GSPOT_PATHS.valePackages}/${folder}/.keep`]: '' });
@@ -34,7 +34,7 @@ test.each([...LEVELS])(
 test.each([...VALE_PACKAGE_FOLDERS])(
     'level all needs the shipped %s folder whatever the Packages line says',
     async (missing) => {
-        await using sandbox = await testdir({ [GSPOT_PATHS.valeConfigFile]: 'Packages = \n' });
+        await using sandbox = await testdir({ [GSPOT_PATHS.valeConfig]: 'Packages = \n' });
 
         for (const folder of VALE_PACKAGE_FOLDERS) {
             if (folder === missing) continue;
@@ -58,7 +58,7 @@ test('at level basic install installs no Vale packages', async () => {
 test('a changed Vale archive is refused before sync and preserves installed packages', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
-        [GSPOT_PATHS.valeConfigFile]: VALE_PACKAGES_INI,
+        [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI,
         [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: PREVIOUS_BYTES,
     });
     const session = await openSession(sandbox.path);
@@ -91,7 +91,7 @@ test.each(['the pinned releases', 'a deleted folder', 'other releases'] as const
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
             [GSPOT_PATHS.valeReleases]: `${JSON.stringify(releases, null, JSON_INDENT)}\n`,
-            [GSPOT_PATHS.valeConfigFile]: VALE_PACKAGES_INI,
+            [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI,
             ...Object.fromEntries(
                 (state === 'a deleted folder' ? kept : [first, ...kept]).map((folder) => [
                     `${GSPOT_PATHS.valePackages}/${folder}/terms.yml`,

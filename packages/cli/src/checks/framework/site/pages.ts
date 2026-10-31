@@ -17,9 +17,9 @@ import { parseToolOutput } from '#cli/parsers/formats/json.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
+import { getConfigPath } from '#cli/runs/command/placeholders.ts';
 import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { readSitemapUrls } from '#cli/checks/framework/site/sitemap.ts';
 import { join, extname, relative, normalize, isAbsolute } from 'node:path';
 import { purgecssOutputSchema } from '#cli/schemas/checks/framework/site.ts';
@@ -117,12 +117,12 @@ export async function checkHtmlValidate(session: CheckSession, planned: PlannedC
         .filter((path) => path.endsWith(HTML_EXTENSION))
         .map((path) => join(build.folder, path));
     if (pages.length === 0) return [];
-    const configFile = join(session.root, getConfigFilePath(session, planned, HTML_VALIDATE_TOOL));
+    const config = join(session.root, getConfigPath(session, planned, HTML_VALIDATE_TOOL));
     using reports = createTemporaryFolder();
     const command = [
         HTML_VALIDATE_TOOL,
         HTML_VALIDATE_CONFIG_FLAG,
-        configFile,
+        config,
         HTML_VALIDATE_FORMATTER_FLAG,
         `json=${join(reports.path, HTML_VALIDATE_OUTPUT)}`,
     ];
@@ -177,7 +177,7 @@ export async function checkPurgecss(session: CheckSession, planned: PlannedCheck
     const build = await readSuccessfulBuild(session, planned);
     const sheets = listBuiltFiles(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
     if (sheets.length === 0) return [];
-    const configFile = join(session.root, getConfigFilePath(session, planned, PURGECSS_TOOL));
+    const config = join(session.root, getConfigPath(session, planned, PURGECSS_TOOL));
     const result = await runCheckTool(
         session,
         planned,
@@ -185,7 +185,7 @@ export async function checkPurgecss(session: CheckSession, planned: PlannedCheck
             tool: PURGECSS_TOOL,
             modulePath: join(import.meta.dirname, PURGECSS_PROCESS + extname(import.meta.filename)),
         },
-        { cwd: build.folder, stdin: JSON.stringify({ configFile, css: sheets, content: PURGECSS_CONTENT }) },
+        { cwd: build.folder, stdin: JSON.stringify({ config, css: sheets, content: PURGECSS_CONTENT }) },
     );
     if (result.code !== 0) throw new GspotError('check', `Unused CSS analysis failed: ${result.stderr}`);
     const report = parseToolOutput('PurgeCSS', result.stdout, purgecssOutputSchema);

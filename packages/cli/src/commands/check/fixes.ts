@@ -61,7 +61,7 @@ async function runFixInCopy(
 ): Promise<FixResult> {
     using scratch = await createCopy({
         root: root,
-        paths: [...listCopyFiles(session, planned, command), ...(options.listConfigFiles?.(session, planned) ?? [])],
+        paths: [...listCopyFiles(session, planned, command), ...(options.listConfigs?.(session, planned) ?? [])],
         dependencies: [],
         cancelSignal: session.cancelSignal,
     });
@@ -98,7 +98,7 @@ async function runFixTool(
         planned.check.generator_outputs === undefined ? CHECK_CODE[planned.check.id] : { check: checkGeneratorOutputs };
     const options: CheckRunOptions = {
         listFileArguments: code?.listFileArguments,
-        listConfigFiles: code?.listConfigFiles,
+        listConfigs: code?.listConfigs,
     };
     const selected = { ...planned, tool };
     const setup = buildCommandSetup(session, selected, { options, root: session.root });

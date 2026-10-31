@@ -7,16 +7,16 @@ import { listCheckedFiles } from '#cli/planning/files.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import { JSCONFIG_FILE } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { extractConfigName } from '#cli/manifests/tools.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { runCommandCheck } from '#cli/runs/command/check.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
-import { extractConfigFileName } from '#cli/manifests/tools.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import { getConfigPath } from '#cli/runs/command/placeholders.ts';
 import type { Session, CheckSession } from '#cli/types/session.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers/projects.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/system.ts';
-import { getConfigFilePath } from '#cli/runs/command/placeholders.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/checks/cross-configuration/tsc.ts';
 import { JSCONFIG_TSBUILDINFO, JAVASCRIPT_TSC_COMMAND } from '#cli/config/checks/language/language.ts';
@@ -47,10 +47,8 @@ function buildScopeCompilerProject(
         options: {
             ...config.options,
             typeRoots: (
-                ts.getEffectiveTypeRoots(
-                    { ...config.options, configFilePath: join(root, scopePath, JSCONFIG_FILE) },
-                    {},
-                ) ?? []
+                ts.getEffectiveTypeRoots({ ...config.options, configPath: join(root, scopePath, JSCONFIG_FILE) }, {}) ??
+                []
             ).filter((path) => isInside(relative(root, path))),
         },
     };
@@ -66,7 +64,7 @@ export async function checkJavascriptTsc(session: CheckSession, planned: Planned
     const scope = planned.scope.path;
     if (listCheckedFiles(session.scopes, planned).length === 0)
         return { ...buildBaseResult(planned, session), fileCount: 0 };
-    const target = getConfigFilePath(session, planned, extractConfigFileName(JSCONFIG_FILE));
+    const target = getConfigPath(session, planned, extractConfigName(JSCONFIG_FILE));
     const generated = readTsconfig(session.root, join(session.root, target), session.cache);
     if (generated === undefined)
         throw new GspotError('tool', `The generated file ${target} is missing. Run gspot apply.`);

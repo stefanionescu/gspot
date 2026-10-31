@@ -81,7 +81,7 @@ test.each([...VALE_INSTALL_FAILURES])(
     async ({ fakeArguments, message, settings }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['prose'], { level: 'all', tables: settings }),
-            [GSPOT_PATHS.valeConfigFile]: VALE_PACKAGES_INI,
+            [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI,
             [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: PREVIOUS_BYTES,
             'guide.md': 'Authored text.\n',
         });

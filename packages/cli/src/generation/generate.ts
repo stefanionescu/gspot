@@ -5,12 +5,12 @@ import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { GSPOT_PATHS } from '#cli/config/files/gspot.ts';
 import { listHookNames } from '#cli/installers/hooks.ts';
+import { buildConfigs } from '#cli/generation/configs.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import { buildMiseInstall } from '#cli/installers/mise.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { buildPythonInstall } from '#cli/installers/pypi.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
-import { buildConfigFiles } from '#cli/generation/configs.ts';
 import { listWrittenPaths } from '#cli/generation/ignores.ts';
 import { listToolProjectPins } from '#cli/manifests/tools.ts';
 import { buildLinkFieldEdits } from '#cli/generation/links.ts';
@@ -143,13 +143,13 @@ export function buildGeneratedFiles(session: Session): Generation {
         blocks: [],
         managedKeys: [],
     };
-    const configFiles = buildConfigFiles(session);
-    const [failure] = configFiles.failures.values().flatMap((failures) => failures.values());
+    const configs = buildConfigs(session);
+    const [failure] = configs.failures.values().flatMap((failures) => failures.values());
     if (failure !== undefined) throw failure;
-    generated.files.push(...configFiles.files);
+    generated.files.push(...configs.files);
     generated.managedKeys.push(
         ...buildBunScannerEdits(session),
-        ...buildLinkFieldEdits(session, generated.files, configFiles),
+        ...buildLinkFieldEdits(session, generated.files, configs),
     );
     generated.files.push(
         ...(settings.hooks?.enabled === true

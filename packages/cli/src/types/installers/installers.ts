@@ -45,7 +45,7 @@ export type UvCommand = {
     commandArguments: readonly string[];
     executable: string;
     credentials: string[];
-    configFile?: string;
+    config?: string;
 };
 
 export type PythonIndexSettings = {

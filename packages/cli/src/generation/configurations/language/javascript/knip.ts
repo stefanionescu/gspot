@@ -8,7 +8,7 @@ import { listDistinctTools } from '#cli/manifests/tools.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/manifests/names.ts';
 import type { Settings, TableSettings } from '#cli/types/settings/settings.ts';
@@ -93,7 +93,7 @@ function listRunPackages(text: string): string[] {
     });
 }
 
-function listFileTaskPackages(planned: PlannedConfigFile): string[] {
+function listFileTaskPackages(planned: PlannedConfig): string[] {
     const { files, dependencyFiles } = planned.session.repository;
     const isFileTask = buildPathMatcher([...MISE_FILE_TASK_GLOBS]);
     const dependencyNames = new Set(dependencyFiles.flatMap((file) => Object.keys(file.dependencies)));
@@ -110,7 +110,7 @@ Build knip.json: the workspace entry points, project selectors, and dependency e
 
 @param planned the config file to build.
 */
-export function buildKnipFile(planned: PlannedConfigFile): string {
+export function buildKnipFile(planned: PlannedConfig): string {
     const { scope } = planned;
     const { scopes, toolConfigurations: configurations } = planned.session;
     const { settings, root, startRunner } = planned.session;

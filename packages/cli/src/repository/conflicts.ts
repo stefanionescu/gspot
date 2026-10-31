@@ -10,14 +10,10 @@ import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import { listProjectFolders } from '#cli/repository/scopes.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
-import type { ManagedKeys, ConflictingConfigFile } from '#cli/types/repository/repository.ts';
+import type { ManagedKeys, ConflictingConfig } from '#cli/types/repository/repository.ts';
 import { TOML_EXTENSION, JSON_EXTENSION, INI_EXTENSIONS, YAML_EXTENSIONS } from '#cli/config/repository/repository.ts';
 
-function listReplacementConflicts(
-    root: string,
-    paths: string[],
-    replacement: ConflictingConfigFile,
-): ConflictingConfigFile[] {
+function listReplacementConflicts(root: string, paths: string[], replacement: ConflictingConfig): ConflictingConfig[] {
     return paths
         .filter((path) => {
             const source = find(root, path);
@@ -40,7 +36,7 @@ function listConfigurationConflicts(
     root: string,
     configuration: Configuration,
     files: { inventory: Set<string>; projectFolders: Set<string> },
-): ConflictingConfigFile[] {
+): ConflictingConfig[] {
     const replacements = configuration.tools.flatMap((tool) =>
         [
             ...(tool.replace ?? []).map((path) => ({ tool: tool.name, path, shared: false })),
@@ -86,7 +82,7 @@ function parseSharedFile(text: string, extension: string, path: string): unknown
     throw new Error(`${path}: gspot cannot read the settings format of this shared file.`);
 }
 
-function hasToolSection(text: string, path: string, selector: Pick<ConflictingConfigFile, 'key' | 'table'>): boolean {
+function hasToolSection(text: string, path: string, selector: Pick<ConflictingConfig, 'key' | 'table'>): boolean {
     const extension = extname(path);
     if (selector.table !== undefined && INI_EXTENSIONS.has(extension)) {
         const header = new RegExp(
@@ -111,11 +107,11 @@ Find the settings files of the tools that gspot writes settings for, such as .co
 @param files the tracked inventory.
 @param configurations the configurations whose tools name their settings files.
 */
-export function listConflictingConfigFiles(
+export function listConflictingConfigs(
     root: string,
     files: TrackedFile[],
     configurations: Iterable<Configuration>,
-): ConflictingConfigFile[] {
+): ConflictingConfig[] {
     const inventory = new Set(
         files
             .filter((file) => file.kind === 'source' && !file.path.startsWith(`${GSPOT_FOLDER}/`))
@@ -129,11 +125,11 @@ export function listConflictingConfigFiles(
 /**
 Check whether generated field edits cover an existing tool settings section.
 
-@param configFile the existing file or section.
+@param config the existing file or section.
 @param fileEdits the generated field edits.
 */
-export function isEditedInPlace(configFile: ConflictingConfigFile, fileEdits: ManagedKeys[]): boolean {
+export function isEditedInPlace(config: ConflictingConfig, fileEdits: ManagedKeys[]): boolean {
     return fileEdits.some(
-        (output) => output.path === configFile.path && output.keys.some((field) => field.key[0] === configFile.key),
+        (output) => output.path === config.path && output.keys.some((field) => field.key[0] === config.key),
     );
 }

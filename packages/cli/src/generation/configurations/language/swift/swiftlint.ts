@@ -1,5 +1,5 @@
 import { stringify } from 'yaml';
-import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
+import type { PlannedConfig } from '#cli/types/generation/files.ts';
 import { getTable, getLimit, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
@@ -13,7 +13,7 @@ import {
     SWIFTLINT_DEFAULT_LEVEL_OFF,
 } from '#cli/config/generation/configurations/language/swift.ts';
 
-function buildSwiftlintOptions(planned: PlannedConfigFile, offSet: Set<string>) {
+function buildSwiftlintOptions(planned: PlannedConfig, offSet: Set<string>) {
     const { format } = planned.scope.settings.tables;
     const options = {
         line_length: { warning: format.print_width, error: format.print_width, ignores_urls: true },
@@ -64,7 +64,7 @@ Build swiftlint.yml: the SwiftLint rules with the source limits of the repositor
 
 @param planned the config file to build.
 */
-export function buildSwiftlintFile(planned: PlannedConfigFile): string {
+export function buildSwiftlintFile(planned: PlannedConfig): string {
     const isAll = planned.level === 'all';
     const off = [...listIgnoredRules(planned.scope, SWIFTLINT_CHECK), ...(isAll ? [] : SWIFTLINT_DEFAULT_LEVEL_OFF)];
     const offSet = new Set(off);

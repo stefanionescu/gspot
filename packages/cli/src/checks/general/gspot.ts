@@ -15,11 +15,11 @@ import type { SourceComment } from '#cli/types/parsers/code.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/settings.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
+import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import { findSettingLine, isReasonedValue } from '#cli/settings/file.ts';
-import { listConflictingConfigFiles } from '#cli/repository/conflicts.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { SuppressionSyntax } from '#cli/types/checks/general/general.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
@@ -42,17 +42,17 @@ Reports each settings file of a tool that gspot writes settings for, such as .co
 @param session the repository and the tools that the selected checks run.
 @param _planned the configured check and selected scope files.
 */
-export function checkConflictingConfigFiles(session: Session, _planned: PlannedCheck): CheckFinding[] {
+export function checkConflictingConfigs(session: Session, _planned: PlannedCheck): CheckFinding[] {
     const tools = new Set(
         session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
     );
     const generated = listGeneratedPaths(session.repository.files);
-    return listConflictingConfigFiles(session.root, session.repository.files, session.configurationsByName.values())
+    return listConflictingConfigs(session.root, session.repository.files, session.configurationsByName.values())
         .filter(({ tool, path, shared }) => !shared && tools.has(tool) && !generated.has(path))
         .map(({ tool, path }) => ({
             file: path,
             line: 1,
-            rule: GSPOT_RULES.conflictingConfigFile,
+            rule: GSPOT_RULES.conflictingConfig,
             message: `gspot writes the settings for ${tool}, so ${path} no longer applies. Delete it, and move any rule you need into gspot.toml.`,
         }));
 }

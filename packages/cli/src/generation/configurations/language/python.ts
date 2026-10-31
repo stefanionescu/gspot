@@ -3,8 +3,8 @@ import { relative } from 'node:path/posix';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { type PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/toml.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/generation/toml.ts';
+import { type PlannedConfig } from '#cli/types/generation/files.ts';
 import { type FormatSettings } from '#cli/types/generation/formatting.ts';
 import { DEFAULT_QUOTES } from '#cli/config/generation/configurations/general.ts';
 import { UV_LOCKFILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
@@ -23,7 +23,7 @@ import {
     BASEDPYRIGHT_ALL_LEVEL_OPTIONS,
 } from '#cli/config/generation/configurations/language/language.ts';
 
-function listIgnoredGlobs(planned: PlannedConfigFile, checkId: string, root: string): string[] {
+function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string): string[] {
     const shared = convertToGlobs(buildIgnoreSections(planned.session)).filter(
         (pattern) =>
             pattern.endsWith('/**') ||
@@ -38,7 +38,7 @@ Build basedpyright.json: the Python environment and source paths used by Basedpy
 
 @param planned the config file to build.
 */
-export function buildBasedpyrightFile(planned: PlannedConfigFile): string {
+export function buildBasedpyrightFile(planned: PlannedConfig): string {
     const root = posix.relative(posix.dirname(planned.targetPath), '.');
     const pythonScopePath = posix.join(root, planned.scope.path);
     const pythonVenv = planned.session.repository.files.some(
@@ -63,7 +63,7 @@ export function buildBasedpyrightFile(planned: PlannedConfigFile): string {
 }
 
 function selectPythonFormat(
-    scopeSettings: PlannedConfigFile['scope']['settings'],
+    scopeSettings: PlannedConfig['scope']['settings'],
 ): Pick<FormatSettings, 'indent_style' | 'indent_width' | 'print_width' | 'line_ending' | 'quotes'> {
     const format = scopeSettings.tables.format;
     const override = format.override.find(({ paths }) =>
@@ -84,7 +84,7 @@ Build ruff.toml: the Ruff lint rules, import settings, and source exclusions.
 
 @param planned the config file to build.
 */
-export function buildRuffFile(planned: PlannedConfigFile): string {
+export function buildRuffFile(planned: PlannedConfig): string {
     const format = selectPythonFormat(planned.scope.settings);
     const root = posix.relative(posix.dirname(planned.targetPath), '.');
     const pythonScopePath = posix.join(root, planned.scope.path);
@@ -131,5 +131,5 @@ export function buildRuffFile(planned: PlannedConfigFile): string {
         },
     };
 
-    return stringify(document, CONFIG_FILE_TOML_FORMAT);
+    return stringify(document, CONFIG_TOML_FORMAT);
 }

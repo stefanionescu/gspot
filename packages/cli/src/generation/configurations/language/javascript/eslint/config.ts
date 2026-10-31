@@ -8,8 +8,8 @@ import { requireTypescript } from '#cli/system/typescript.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
 import { refuseIdleRuleOptions } from '#cli/generation/rule-options.ts';
 import type { BlockWriter, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
+import type { ConfigOutput, GeneratedFile, PlannedConfig } from '#cli/types/generation/files.ts';
 import { buildRuntimes } from '#cli/generation/configurations/language/javascript/eslint/runtimes.ts';
-import type { GeneratedFile, ConfigFileOutput, PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { convertToGlobs, buildIgnoreSections, listCheckIgnoreSections } from '#cli/generation/ignores.ts';
 import { buildBlockCalls } from '#cli/generation/configurations/language/javascript/eslint/block-calls.ts';
 import { buildPlannedEslintFile } from '#cli/generation/configurations/language/javascript/eslint/plan.ts';
@@ -42,7 +42,7 @@ import {
 } from '#cli/config/generation/configurations/language/javascript/eslint/eslint.ts';
 
 function buildConfigurationFiles(
-    planned: PlannedConfigFile,
+    planned: PlannedConfig,
     blocks: Map<Configuration, PlannedEslintBlock[]>,
     imports: (readonly [string, string])[],
     writer: BlockWriter,
@@ -77,7 +77,7 @@ its blocks.
 
 @param planned the config file to build.
 */
-export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
+export function buildEslintFile(planned: PlannedConfig): ConfigOutput {
     const { session } = planned;
     const eslintFile = buildPlannedEslintFile(planned);
     const { blockWriter } = eslintFile;

@@ -2,7 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
-import { listConflictingConfigFiles } from '#cli/repository/conflicts.ts';
+import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 
 import {
     CONFLICT_FILES,
@@ -16,7 +16,7 @@ test('INI tool headings include their exact sections and subsections', async () 
         'tox.ini': '[unrelated]\r\nvalue = 1\r\n[sqlfluff:rules]; selected\r\nvalue = 2\r\n',
     });
     const sql = readConfigurations().get('sql')!;
-    expect(listConflictingConfigFiles(sandbox.path, [], [sql])).toStrictEqual([
+    expect(listConflictingConfigs(sandbox.path, [], [sql])).toStrictEqual([
         { tool: 'sqlfluff', path: 'tox.ini', shared: true, table: 'sqlfluff' },
     ]);
 });
@@ -24,7 +24,7 @@ test('INI tool headings include their exact sections and subsections', async () 
 test.each([...INI_HEADING_CASES])('an INI heading that is %s does not select the tool', async (_, text) => {
     await using sandbox = await testdir({ 'tox.ini': text });
     const sql = readConfigurations().get('sql')!;
-    expect(listConflictingConfigFiles(sandbox.path, [], [sql])).toStrictEqual([]);
+    expect(listConflictingConfigs(sandbox.path, [], [sql])).toStrictEqual([]);
 });
 
 test('conflict candidates retain replacement order, project boundaries, shared fields, and literal root fallbacks', async () => {
@@ -34,7 +34,7 @@ test('conflict candidates retain replacement order, project boundaries, shared f
     const inventory: TrackedFile[] = Object.keys(CONFLICT_FILES)
         .filter((path) => !['root.config', 'ignored.untracked'].includes(path))
         .map((path) => ({ path, kind: 'source', kindOrigin: 'test', tags: [], executable: false, size: 0 }));
-    const conflicts = listConflictingConfigFiles(sandbox.path, inventory, [
+    const conflicts = listConflictingConfigs(sandbox.path, inventory, [
         {
             ...configuration,
             tools: [

@@ -27,7 +27,7 @@ test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (
     const output = buildGeneratedFiles(await openSession(sandbox.path));
     const paths = new Set(output.files.map((file) => file.path));
     expect(paths.has(getManifestTarget('prose', 'styles/gspot/link-text.yml'))).toBe(true);
-    const configuration = output.files.find((file) => file.path === GSPOT_PATHS.valeConfigFile)!;
+    const configuration = output.files.find((file) => file.path === GSPOT_PATHS.valeConfig)!;
     expect(/^Packages = /mu.test(configuration.content)).toBe(level === 'all');
     const styles = configuration.content.split('\n').find((line) => line.startsWith(GSPOT_STYLES_LINE));
     if (level === 'all') expect(styles).toStartWith(`${GSPOT_STYLES_LINE}, Vale, `);
@@ -46,10 +46,10 @@ test('at level basic, gspot writes only the Vale styles that run', async () => {
     const output = buildGeneratedFiles(await openSession(sandbox.path));
     const paths = output.files
         .map((file) => file.path)
-        .filter((path) => path.startsWith(`${dirname(GSPOT_PATHS.valeConfigFile)}/`));
+        .filter((path) => path.startsWith(`${dirname(GSPOT_PATHS.valeConfig)}/`));
     expect(paths.toSorted(compareText)).toStrictEqual([
         ...DEFAULT_LEVEL_STYLE_FILES.map((file) => getManifestTarget('prose', file)),
-        GSPOT_PATHS.valeConfigFile,
+        GSPOT_PATHS.valeConfig,
     ]);
 });
 
