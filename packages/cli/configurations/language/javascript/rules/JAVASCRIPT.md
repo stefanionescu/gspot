@@ -60,6 +60,7 @@ Write a JSDoc comment as `/**` on its own line, then lines with no leading `*`, 
 - Give every exported function and method a JSDoc comment: a summary that says more than the name, a blank line, and
   `@param <name> <what it is>` for each parameter, with no type in braces. Document a destructured parameter and each
   of its properties, such as `@param props` and `@param props.items`.
+- Put the functions that a module does not export, and constants set to a function, above its exported functions.
 - Do not add optional parameters to hide a broken caller contract.
 - Use early returns when they make missing-value and error handling clearer.
 - Keep constructors small. Add inheritance only for a real runtime relationship.

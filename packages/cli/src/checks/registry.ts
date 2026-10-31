@@ -39,6 +39,7 @@ import { checkBashFunctionSize } from '#cli/checks/language/bash/function-size.t
 import { checkSwiftDocComments } from '#cli/checks/language/swift/doc-comments.ts';
 import { checkSiteUnusedAssets } from '#cli/checks/framework/site/unused-assets.ts';
 import { checkMissingPaths, checkRequiredFiles } from '#cli/checks/general/docs.ts';
+import { checkFunctionOrder } from '#cli/checks/general/structure/function-order.ts';
 import { checkBashInlineScripts } from '#cli/checks/language/bash/inline-scripts.ts';
 import { checkUnreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
 import { checkUnusedFunctions } from '#cli/checks/language/bash/unused-functions.ts';
@@ -168,6 +169,7 @@ export const CHECK_CODE: Record<string, CheckCode> = {
     'structure/file-folder-clashes': { check: checkFileFolderClashes },
     'structure/import-rules': { check: checkImportRules },
     'structure/bare-blocks': { check: checkBareBlocks },
+    'structure/function-order': { check: checkFunctionOrder },
     'structure/lone-files': { check: checkLoneFiles },
     'structure/pass-through-folders': { check: checkPassThroughFolders },
     'structure/long-files': { check: checkLongFiles },

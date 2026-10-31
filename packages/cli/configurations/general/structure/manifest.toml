@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Layout rules for code: import rules for Python and Swift, and the files that no import rule covers. Level all adds lone files, pass-through folders, shared name prefixes, file and folder clashes, long files, trivial functions, bare Swift do blocks, and environment reads outside the environment readers."
+description = "Layout rules for code: import rules for Python and Swift, and the files that no import rule covers. Level all adds lone files, pass-through folders, shared name prefixes, file and folder clashes, long files, trivial functions, private functions below public ones, bare Swift do blocks, and environment reads outside the environment readers."
 title = "Structure"
 
 [files]
@@ -77,6 +77,17 @@ runs = "scope"
 stage = "commit"
 summary = "Finds named Python, Swift, and Bash functions at or under `limits.trivial_function_statements`, methods and accessors included, and files whose statements are only imports, re-exports, and aliases."
 why = "A function of one statement makes the reader jump for nothing."
+
+[[check]]
+example = "A TypeScript file whose `function parseRow` sits below `export function loadRows` reports `private-below-public`. Move `parseRow` above `loadRows`."
+files = { extensions = [".py", ".swift", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts"], kinds = ["source"] }
+help = "Move each private function above the first public function of its file."
+level = "all"
+name = "function-order"
+runs = "scope"
+stage = "commit"
+summary = "Finds a private top-level function below a public one in Python, Swift, JavaScript, and TypeScript. A Python name that starts with `_` is private, and so is a Swift function marked `private` or `fileprivate`. In JavaScript and TypeScript, a function declaration or a constant set to a function is private unless the module exports it."
+why = "When private functions come first in every file, a reader knows where the public functions of a file start."
 
 [[check]]
 example = "A Swift `do { ... }` without `catch` reports `bare-block`. Move its statements into a function named after their step, or remove the `do`."

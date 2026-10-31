@@ -114,7 +114,8 @@ explanation, so its order stays visible.
 <!-- level: all -->
 
 A function owns one responsibility. Name it for its action and domain concept. Framework callbacks keep their required
-names. Make side effects clear in its name or docstring.
+names. Make side effects clear in its name or docstring. Put the private functions of a module, whose names start
+with `_`, above its public functions.
 
 A nested function closes over a local value to make the outer code clearer, and keeps its captured state and lifetime
 explicit. It never exists to hide a helper from users or to turn a directly usable expression into a local call. A

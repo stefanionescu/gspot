@@ -143,3 +143,20 @@ export const TRIVIAL_FILE_MESSAGE =
     'This file only imports, re-exports, or renames code. Import from the module that defines it, and delete this file.';
 
 export const TRIVIAL_FUNCTION_RULES = { trivialFunction: 'trivial-function', trivialFile: 'trivial-file' } as const;
+
+export const FUNCTION_ORDER_RULE = 'private-below-public';
+
+export const SCRIPT_FUNCTION_DECLARATIONS: ReadonlySet<string> = new Set([
+    'function_declaration',
+    'generator_function_declaration',
+]);
+
+export const SCRIPT_FUNCTION_VALUES: ReadonlySet<string> = new Set([
+    'arrow_function',
+    'function_expression',
+    'generator_function',
+]);
+
+export const DEFAULT_EXPORT_NAME = 'default';
+
+export const PRIVATE_SWIFT_VISIBILITIES: ReadonlySet<string> = new Set(['private', 'fileprivate']);

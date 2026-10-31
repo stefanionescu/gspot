@@ -21,8 +21,9 @@ with parameters on its own line when it hurts readability inline.
 
 <!-- level: all -->
 
-One primary top-level type per file, with small private helpers allowed beside it. Keep overloads adjacent. Organize
-extensions rather than scattering them across files. Group SwiftUI dynamic properties by wrapper type.
+One primary top-level type per file, with small private helpers allowed beside it. Put `private` and `fileprivate`
+top-level functions above the other functions of the file. Keep overloads adjacent. Organize extensions rather than
+scattering them across files. Group SwiftUI dynamic properties by wrapper type.
 
 ## Practices
 

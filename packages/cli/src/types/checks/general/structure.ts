@@ -16,3 +16,5 @@ export type PythonSearch = { files: ReadonlySet<string>; roots: string[]; extern
 export type SwiftModule = { name: string; files: string[] };
 
 export type RuleLookup = { rules: ImportRule[]; findOwner: (path: string) => number | undefined; allowed: string[][] };
+
+export type TopLevelFunction = { name: string; isPrivate: boolean };
