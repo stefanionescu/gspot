@@ -11,7 +11,7 @@ import {
     ESLINT_BLOCK_DIRECTIVE,
     TOOL_DIRECTIVE_PREFIXES,
     LEADING_COMMENT_LINE_BREAKS,
-} from '../config/rules.ts';
+} from '../config/comments.ts';
 
 function isToolDirective(comment: TSESTree.Comment): boolean {
     const text = comment.value.replace(LEADING_STAR, '').trim();

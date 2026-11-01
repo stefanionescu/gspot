@@ -9,7 +9,7 @@ import {
     COMMENT_DOCUMENTATION,
     COMMENT_CODE_PATTERNS,
     COMMENT_PARSER_OPTIONS,
-} from '../config/rules.ts';
+} from '../config/comments.ts';
 
 function hasProgramBody(program: unknown): boolean {
     if (typeof program !== 'object' || program === null || !('body' in program)) return false;
