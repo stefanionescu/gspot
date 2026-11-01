@@ -121,8 +121,7 @@ test('the text settings list shortens long values', async () => {
     const human = await runGspot(sandbox.path, ['list', 'settings']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
-    expect(human.stdout).toMatch(/^naming\.banned_words\s+\["generated-long-name-one\/\*… /mu);
-    expect(human.stdout).not.toContain('generated-long-name-two');
+    expect(human.stdout).toContain('["generated-long-name-one/**","generated-long-name-two/**"]');
     const structured = await runGspot(sandbox.path, ['list', 'settings', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
@@ -132,6 +131,25 @@ test('the text settings list shortens long values', async () => {
         'generated-long-name-two/**',
     ]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test('the text lists group equal scope states on one line', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash'], {
+            tables: '[[ignore]]\ncheck = "bash/shfmt"\npaths = ["api/**"]\nreason = "Review scoped syntax separately."\n',
+            scopes: [{ path: 'api' }, { path: 'api/worker' }, { path: 'web' }],
+        }),
+        'entry.sh': 'echo root\n',
+        'api/entry.sh': 'echo api\n',
+        'api/worker/entry.sh': 'echo worker\n',
+        'web/entry.sh': 'echo web\n',
+    });
+    const checks = await runGspot(sandbox.path, ['list']);
+    expect(checks.code, checks.stdout + checks.stderr).toBe(0);
+    expect(checks.stdout).toContain('bash/shellcheck  on in . and 3 scopes\n');
+    expect(checks.stdout).toContain(`bash/shfmt  on in ., web; ${OFF_BY_IGNORE} in api, api/worker\n`);
+    const settings = await runGspot(sandbox.path, ['list', 'settings']);
+    expect(settings.stdout).toMatch(/^limits\.file_lines .* in \. and 3 scopes$/mu);
 });
 
 test('list without gspot.toml refuses the command and writes nothing', async () => {

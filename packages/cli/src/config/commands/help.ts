@@ -213,7 +213,7 @@ export const COMMAND_HELP = {
             '[kind]': 'What to list',
         },
         options: {
-            '--json': 'Print the result as JSON, with long values in full and the values that each scope inherits',
+            '--json': 'Print the result as JSON',
         },
         exitCodes: [
             ['0', 'The list was printed.'],
@@ -251,7 +251,7 @@ export const COMMAND_HELP = {
             'Find setup problems: missing or wrong tool versions, Git hooks that do not run, and configurations that the repository needs but does not select.\n\nEach problem line says how to fix it: a command, or what to change. doctor changes nothing.',
         arguments: {},
         options: {
-            '--json': 'Print the full report as JSON, with the tools that are ready',
+            '--json': 'Print the result as JSON',
         },
         exitCodes: [
             ['0', 'No problem found.'],
