@@ -18,7 +18,7 @@ const SVELTE_STYLELINT_OVERRIDE = {
 export const STYLELINT_COMPONENTS: readonly StylelintComponent[] = [
     VUE_STYLELINT_OVERRIDE,
     SVELTE_STYLELINT_OVERRIDE,
-    { files: ['**/*.astro'], customSyntax: 'postcss-html', ignorePseudoClasses: [] },
+    { files: ['**/*.astro'], customSyntax: 'postcss-html', ignorePseudoClasses: ['global'] },
 ];
 
 export const STYLELINT_BASE_RULES = {
