@@ -23,6 +23,8 @@ export const ALL_POSITIONAL_PARAMETERS = new Set(['@', '*', '#']);
 
 export const LOCAL_DECLARATION_WORDS = new Set(['local', 'declare', 'typeset']);
 
+export const GLOBAL_DECLARATION_FLAG = /^-[a-zA-Z]*g/u;
+
 export const POSITIONAL_PARAMETER = /^[1-9]\d*$/u;
 
 export const SHIFT_COMMAND = 'shift';

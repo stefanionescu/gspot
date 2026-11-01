@@ -3,6 +3,7 @@ import { replaceRanges } from '#cli/system/text.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 
 import type {
+    Removal,
     ParseCache,
     TrapScript,
     TrapCleanup,
@@ -32,6 +33,7 @@ import {
     POSITIONAL_PARAMETER,
     TEMPORARY_VALUE_NODES,
     TEMPORARY_FILE_COMMAND,
+    GLOBAL_DECLARATION_FLAG,
     LOCAL_DECLARATION_WORDS,
     ALL_POSITIONAL_PARAMETERS,
 } from '#cli/config/parsers.ts';
@@ -116,14 +118,16 @@ function isTemporaryValue(assignment: Node): boolean {
     return substitution?.namedChild(0)?.childForFieldName('name')?.text === TEMPORARY_FILE_COMMAND;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four sites share this one key format, and top marks a variable outside every function.
+function buildVariableKey(functionId: number | undefined, name: string): string {
+    return `${String(functionId ?? 'top')}:${name}`;
+}
+
 function listLocalNames(syntaxRoot: Node): Set<string> {
-    const declarations = syntaxRoot
-        .descendantsOfType('declaration_command')
-        .filter(
-            (declaration) =>
-                LOCAL_DECLARATION_WORDS.has(declaration.child(0)?.text ?? '') &&
-                declaration.namedChildren.every((child) => !(child.text.startsWith('-') && child.text.includes('g'))),
-        );
+    const declarations = syntaxRoot.descendantsOfType('declaration_command').filter((declaration) => {
+        const isGlobalDeclaration = declaration.namedChildren.some((child) => GLOBAL_DECLARATION_FLAG.test(child.text));
+        return LOCAL_DECLARATION_WORDS.has(declaration.child(0)?.text ?? '') && !isGlobalDeclaration;
+    });
     return new Set(
         declarations.flatMap((declaration) => {
             const owner = findFunctionNode(declaration)?.id;
@@ -132,7 +136,7 @@ function listLocalNames(syntaxRoot: Node): Set<string> {
                 let name: string | undefined;
                 if (child.type === 'variable_assignment') name = child.childForFieldName('name')?.text;
                 else if (child.type === 'variable_name') name = child.text;
-                return name === undefined ? [] : [JSON.stringify([owner, name])];
+                return name === undefined ? [] : [buildVariableKey(owner, name)];
             });
         }),
     );
@@ -146,7 +150,7 @@ function buildScriptTemporaryPaths(syntaxRoot: Node): ScriptTemporaryPaths {
     for (const assignment of assignments) {
         const name = assignment.childForFieldName('name')?.text;
         if (name === undefined) continue;
-        const key = JSON.stringify([findFunctionNode(assignment)?.id, name]);
+        const key = buildVariableKey(findFunctionNode(assignment)?.id, name);
         counts.set(key, (counts.get(key) ?? 0) + 1);
         names.set(name, (names.get(name) ?? 0) + 1);
     }
@@ -154,7 +158,7 @@ function buildScriptTemporaryPaths(syntaxRoot: Node): ScriptTemporaryPaths {
     const paths = assignments.flatMap((assignment) => {
         const name = assignment.childForFieldName('name')?.text;
         if (name === undefined || !isTemporaryValue(assignment)) return [];
-        const key = JSON.stringify([findFunctionNode(assignment)?.id, name]);
+        const key = buildVariableKey(findFunctionNode(assignment)?.id, name);
         const path: TemporaryPath = { name, line: assignment.startPosition.row + 1, cleanupLines: [] };
         const isUnique = (locals.has(key) ? counts.get(key) : names.get(name)) === 1;
         if (isUnique) targets.set(key, path);
@@ -175,18 +179,19 @@ function findTemporaryPath(
     const name = reference.namedChildren[0]?.text;
     if (name === undefined) return undefined;
     if (![`$${name}`, `\${${name}}`].includes(reference.text)) return undefined;
-    const key = JSON.stringify([owner, name]);
-    const target = temporaryPaths.assigned.has(key) ? key : JSON.stringify([null, name]);
+    const key = buildVariableKey(owner, name);
+    const target = temporaryPaths.assigned.has(key) ? key : buildVariableKey(undefined, name);
     return temporaryPaths.variables.get(target);
 }
 
 function addRemovals(removals: Node[], cleanup: TrapCleanup): void {
-    const { sourceRows, owner, temporaryPaths, lines } = cleanup;
+    const { sourceRows, owner, temporaryPaths } = cleanup;
     for (const removal of removals) {
-        const targets = listRemovedPaths(removal);
-        const line = findSourceLine(removal, sourceRows);
-        const paths = targets.map((argument) => findTemporaryPath(argument, owner, temporaryPaths));
-        lines.set(line, [...(lines.get(line) ?? []), ...(paths.length === 0 ? [undefined] : paths)]);
+        const paths = listRemovedPaths(removal).map((argument) => findTemporaryPath(argument, owner, temporaryPaths));
+        cleanup.removals.push({
+            line: findSourceLine(removal, sourceRows),
+            paths: paths.every((path) => path !== undefined) ? paths : [],
+        });
     }
 }
 
@@ -206,11 +211,9 @@ function listRemovedPaths(command: Node): Node[] {
 
 function listTemporaryPaths(syntaxRoot: Node, commands: Node[], traps: TrapScript[]): TemporaryPath[] {
     const temporaryPaths = buildScriptTemporaryPaths(syntaxRoot);
-    const lines = new Map<number, Array<TemporaryPath | undefined>>(
-        commands
-            .filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND)
-            .map((command) => [command.startPosition.row + 1, [undefined]]),
-    );
+    const removedPaths: Removal[] = commands
+        .filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND)
+        .map((command) => ({ line: command.startPosition.row + 1, paths: [] }));
     for (const { trap, sourceRows, syntaxRoot: script } of traps) {
         const assigned = new Set(
             script
@@ -227,14 +230,12 @@ function listTemporaryPaths(syntaxRoot: Node, commands: Node[], traps: TrapScrip
                 ...temporaryPaths,
                 variables: new Map([...temporaryPaths.variables].filter(([, path]) => !assigned.has(path.name))),
             },
-            lines,
+            removals: removedPaths,
         });
     }
-    const safe = [...lines].filter(([, paths]) => !paths.includes(undefined));
-    for (const [line, paths] of safe) {
-        const cleanedPaths = paths.filter((path): path is TemporaryPath => path !== undefined);
-        for (const path of cleanedPaths) path.cleanupLines.push(line);
-    }
+    const unsafeLines = new Set(removedPaths.filter(({ paths }) => paths.length === 0).map(({ line }) => line));
+    for (const { line, paths } of removedPaths)
+        if (!unsafeLines.has(line)) for (const path of paths) path.cleanupLines.push(line);
     return temporaryPaths.paths;
 }
 

@@ -50,7 +50,7 @@ export type TrapCleanup = {
     sourceRows: TrapScript['sourceRows'];
     owner: number | undefined;
     temporaryPaths: ScriptTemporaryPaths;
-    lines: Map<number, Array<TemporaryPath | undefined>>;
+    removals: Removal[];
 };
 
 export type BashForm =
@@ -61,6 +61,8 @@ export type BashForm =
     | 'brace-for'
     | 'seq-loop'
     | 'script-ifs';
+
+export type Removal = { line: number; paths: TemporaryPath[] };
 
 export type ScriptSyntax = {
     commands: { name: string; arguments: (string | undefined)[]; line: number }[];
@@ -212,6 +214,7 @@ export type DependencyFile = {
     installed: Dependencies;
     runtimes?: Record<string, string>;
     scripts?: string[];
+    moduleType?: string;
 };
 
 export type DependencyFileParser = (path: string, text: string) => DependencyFile | Promise<DependencyFile>;
