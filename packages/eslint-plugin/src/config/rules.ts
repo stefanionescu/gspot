@@ -124,6 +124,8 @@ export const ALLOWED_ENVIRONMENT_NAMES = ['NODE_ENV'] as const;
 
 export const ENVIRONMENT_PROPERTY = 'env';
 
+export const ENVIRONMENT_GETTER = 'get';
+
 export const VITE_ENVIRONMENT_NAMES = ['MODE', 'BASE_URL', 'PROD', 'DEV', 'SSR'] as const;
 
 export const PUBLIC_PREFIXES = ['NEXT_PUBLIC_'] as const;

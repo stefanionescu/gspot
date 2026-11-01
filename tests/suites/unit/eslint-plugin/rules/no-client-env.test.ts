@@ -27,6 +27,9 @@ buildRuleTester().run<keyof (typeof plugin.rules)['no-client-env']['meta']['mess
             "'use client';\nconst process = { env: { SECRET: 1 } };\nconst key = process.env.SECRET;",
             { code: 'const url = process.env.NEXT_PUBLIC_URL;', options: [{ client: true }] },
             "'use client';\nconst url = process.env['NEXT_PUBLIC_URL'];",
+            "'use client';\nconst url = Deno.env.get('NEXT_PUBLIC_URL');",
+            "'use client';\nconst { env } = process;\nconst url = env.NEXT_PUBLIC_URL;",
+            "'use client';\nconst { env } = process;",
             {
                 code: "'use client';\nconst url = process.env['VITE_URL'];\nconst mode = process.env.APP_MODE;",
                 options: [{ publicPrefixes: ['VITE_'], allowedNames: ['APP_MODE'] }],
@@ -63,7 +66,20 @@ buildRuleTester().run<keyof (typeof plugin.rules)['no-client-env']['meta']['mess
                 options: [{ client: true, publicPrefixes: ['VITE_'] }],
                 errors: [{ messageId: 'private' }],
             },
-            { code: "'use client';\nconst { env } = process;", errors: [{ messageId: 'private' }] },
+            {
+                code: "'use client';\nconst { env } = process;\nconst key = env.SECRET;",
+                errors: [{ messageId: 'private', line: 3, column: 13 }],
+            },
+            { code: "'use client';\nconst { env } = process;\nsend(env);", errors: [{ messageId: 'private' }] },
+            { code: "'use client';\nconst key = Deno.env.get('SECRET');", errors: [{ messageId: 'private' }] },
+            {
+                code: "'use client';\nconst key = Deno.env.get(name);",
+                errors: [{ messageId: 'private' }],
+            },
+            {
+                code: "'use client';\nconst { env: { SECRET } } = process;",
+                errors: [{ messageId: 'private' }],
+            },
             { code: "'use client';\nconst all = process.env;", errors: [{ messageId: 'private' }] },
             {
                 name: 'private environment value with client option',

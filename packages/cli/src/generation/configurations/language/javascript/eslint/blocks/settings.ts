@@ -34,26 +34,49 @@ import {
     PACKAGE_JSON_PATTERN,
     ENVIRONMENT_LANGUAGES,
     TRIVIAL_FUNCTIONS_RULE,
+    CLIENT_ENVIRONMENT_RULE,
     PACKAGE_JSON_RULE_PREFIX,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/blocks.ts';
 
-function buildRulesOffBlocks(scopes: Scope[]): EslintRuleBlock[] {
-    return scopes.flatMap((scope) => {
-        const scopePath = scope.path;
-        const excluded = listNestedScopes(
-            scopes.map((each) => each.path),
-            scopePath,
-        )
-            .map((path) => joinScope(escapeGlob(path), '**'))
-            .map((path) => `!${path}`);
-        return scope.configurations
-            .flatMap((configuration) => configuration.eslint.rules_off)
+function listManifestRuleBlocks(scope: Scope, excluded: string[]): EslintRuleBlock[] {
+    const tables = scope.configurations.map(({ eslint }) => eslint);
+    return [
+        ...tables
+            .flatMap(({ client_env }) => client_env)
+            .map(({ files, public_prefixes, allowed_names }) => ({
+                scope: scope.path,
+                ...splitGlobs([...files, ...excluded]),
+                rules: {
+                    [CLIENT_ENVIRONMENT_RULE]: [
+                        'error',
+                        {
+                            client: true,
+                            publicPrefixes: public_prefixes,
+                            ...(allowed_names !== undefined && { allowedNames: allowed_names }),
+                        },
+                    ],
+                },
+            })),
+        ...tables
+            .flatMap(({ rules_off }) => rules_off)
             .map(({ files, rules }) => ({
-                scope: scopePath,
+                scope: scope.path,
                 ...splitGlobs([...(files ?? ['**/*']), ...excluded]),
                 rules: Object.fromEntries(rules.map((rule) => [rule, 'off'])),
-            }));
-    });
+            })),
+    ];
+}
+
+function buildManifestRuleBlocks(scopes: Scope[]): EslintRuleBlock[] {
+    return scopes.flatMap((scope) =>
+        listManifestRuleBlocks(
+            scope,
+            listNestedScopes(
+                scopes.map((each) => each.path),
+                scope.path,
+            ).map((path) => `!${joinScope(escapeGlob(path), '**')}`),
+        ),
+    );
 }
 
 function buildEnvironmentRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
@@ -168,7 +191,7 @@ function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'scope
         ...buildLimitRuleBlocks(planned),
         ...buildEnvironmentRuleBlocks(planned),
         ...buildTrivialRuleBlocks(planned),
-        ...buildRulesOffBlocks(session.scopes),
+        ...buildManifestRuleBlocks(session.scopes),
         ...ignored,
     ];
 }

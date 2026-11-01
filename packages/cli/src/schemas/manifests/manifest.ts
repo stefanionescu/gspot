@@ -178,6 +178,12 @@ const rulesOffSchema = z.strictObject({
     files: z.string().min(1).array().min(1).optional(),
 });
 
+const clientEnvironmentSchema = z.strictObject({
+    files: z.string().min(1).array().min(1),
+    public_prefixes: z.string().min(1).array().min(1),
+    allowed_names: z.string().min(1).array().optional(),
+});
+
 const exportNamesSchema = z.strictObject({
     files: z.string().min(1).array().min(1),
     names: z.string().min(1).array().min(1),
@@ -194,6 +200,7 @@ export const manifestSchema = z
                 selectors: selectorSchema.array().default([]),
                 rules_off: rulesOffSchema.array().default([]),
                 export_names: exportNamesSchema.array().default([]),
+                client_env: clientEnvironmentSchema.array().default([]),
                 required_tools: z.string().min(1).array().default([]),
             })
             .prefault({}),

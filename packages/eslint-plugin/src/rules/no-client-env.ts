@@ -6,6 +6,7 @@ import {
     PUBLIC_PREFIXES,
     CLIENT_DIRECTIVE,
     ENVIRONMENT_HOSTS,
+    ENVIRONMENT_GETTER,
     ENVIRONMENT_PROPERTY,
     VITE_ENVIRONMENT_NAMES,
     ALLOWED_ENVIRONMENT_NAMES,
@@ -18,11 +19,18 @@ function listHostEnvironmentReads(host: TSESTree.Identifier, source: TSESLint.So
         return [parent];
     if (parent.type !== AST_NODE_TYPES.VariableDeclarator || parent.init !== host) return [];
     if (parent.id.type === AST_NODE_TYPES.ObjectPattern)
-        return parent.id.properties.filter(
-            (property) =>
-                property.type === AST_NODE_TYPES.Property &&
-                ASTUtils.getPropertyName(property) === ENVIRONMENT_PROPERTY,
-        );
+        return parent.id.properties.flatMap((property): TSESTree.Node[] => {
+            if (
+                property.type !== AST_NODE_TYPES.Property ||
+                ASTUtils.getPropertyName(property) !== ENVIRONMENT_PROPERTY
+            )
+                return [];
+            if (property.value.type !== AST_NODE_TYPES.Identifier) return [property];
+            const variable = ASTUtils.findVariable(source.getScope(property.value), property.value);
+            return (variable?.references ?? [])
+                .filter((reference) => reference.isRead())
+                .map((reference) => reference.identifier);
+        });
     return source
         .getDeclaredVariables(parent)
         .flatMap((variable) => variable.references.filter((reference) => reference.isRead()))
@@ -43,10 +51,18 @@ function listGlobalEnvironmentReads(source: TSESLint.SourceCode): TSESTree.Node[
     return reads;
 }
 
+function readMemberName(member: TSESTree.MemberExpression): string | null {
+    const name = ASTUtils.getPropertyName(member);
+    const call = member.parent;
+    if (name !== ENVIRONMENT_GETTER || call.type !== AST_NODE_TYPES.CallExpression || call.callee !== member)
+        return name;
+    const [argument] = call.arguments;
+    return argument === undefined ? null : ASTUtils.getStringIfConstant(argument);
+}
+
 function listEnvironmentNames(node: TSESTree.Node): (string | null)[] {
     const { parent } = node;
-    if (parent?.type === AST_NODE_TYPES.MemberExpression && parent.object === node)
-        return [ASTUtils.getPropertyName(parent)];
+    if (parent?.type === AST_NODE_TYPES.MemberExpression && parent.object === node) return [readMemberName(parent)];
     if (parent?.type === AST_NODE_TYPES.VariableDeclarator && parent.id.type === AST_NODE_TYPES.ObjectPattern)
         return parent.id.properties.map((property) =>
             property.type === AST_NODE_TYPES.RestElement ? null : ASTUtils.getPropertyName(property),
@@ -64,7 +80,7 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
                 'In a module beginning with `"use client"`, `const key = process.env.SECRET;` reports `private`. Move the secret read and the work that needs it to a server module. A genuinely public URL can use `process.env.NEXT_PUBLIC_URL` in the client. Never rename a secret to make it public. See [Next.js environment variables](https://nextjs.org/docs/app/guides/environment-variables).',
             level: 'recommended',
             description:
-                'Finds private environment reads in client modules, including process.env, Bun.env, Deno.env.get, and import.meta.env, also through a variable that holds process, Bun, or Deno. The publicPrefixes and allowedNames options name public values.',
+                'Finds private environment reads in client modules, including process.env, Bun.env, Deno.env.get, and import.meta.env, also through a variable that holds process, Bun, or Deno, or the env that a destructuring takes from one. Deno.env.get reads the name in its first argument. The publicPrefixes and allowedNames options name public values. gspot sets client and publicPrefixes for the client code of the frameworks that use a prefix instead of a use-client directive.',
             why: 'Client code needs public configuration. Private environment values are unavailable in the browser by default, and exposing a secret to satisfy the read is unsafe.',
             fix: 'Keep private configuration and the work that needs it in a server-only module. Pass only public results to client code, or use NEXT_PUBLIC_ variables for values intended for the browser.',
         },

@@ -2,6 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { buildEslint } from '#tests/setup/eslint/lint.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import type { EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test('Astro and TypeScript parse together and report component defects', async () => {
@@ -16,6 +17,22 @@ test('Astro and TypeScript parse together and report component defects', async (
     expect(results.flatMap(({ messages }) => messages.map(({ ruleId }) => ruleId))).toContain(
         'astro/jsx-a11y/alt-text',
     );
+});
+
+test('an Astro script block may read only PUBLIC_ environment variables', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['astro', 'typescript']),
+        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*"]}',
+        'src/pages/index.astro': '<p>Hello</p>\n',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const script = (await eslint.calculateConfigForFile('src/pages/index.astro/0_0.ts')) as EslintConfiguration;
+    const frontmatter = (await eslint.calculateConfigForFile('src/pages/index.astro')) as EslintConfiguration;
+    expect(script.rules['gspot/no-client-env']).toStrictEqual([
+        2,
+        { client: true, publicPrefixes: ['PUBLIC_'], allowedNames: ['NODE_ENV', 'SITE', 'ASSETS_PREFIX'] },
+    ]);
+    expect(frontmatter.rules['gspot/no-client-env']?.[1]).toMatchObject({ client: false });
 });
 
 test('a failed Astro import restores the working folder', async () => {
